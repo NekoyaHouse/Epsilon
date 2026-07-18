@@ -1,0 +1,73 @@
+{
+  "enable": {
+    "sounds": [
+      "epsilon:enable"
+    ]
+  },
+  "disable": {
+    "sounds": [
+      "epsilon:disable"
+    ]
+  },
+  "settings_open": {
+    "sounds": [
+      "epsilon:settings-open"
+    ]
+  },
+  "settings_close": {
+    "sounds": [
+      "epsilon:settings-close"
+    ]
+  },
+  "shutdown": {
+    "sounds": [
+      "epsilon:shutdown"
+    ]
+  },
+  "reisa_welcome": {
+    "sounds": [
+      {
+        "name": "epsilon:reisa/welcome",
+        "stream": true
+      }
+    ]
+  },
+  "reisa_bye": {
+    "sounds": [
+      {
+        "name": "epsilon:reisa/bye",
+        "stream": true
+      }
+    ]
+  },
+  "uwu": {
+    "sounds": [
+      "epsilon:uwu"
+    ]
+  },
+  "nya": {
+    "sounds": [
+      "epsilon:nya"
+    ]
+  },
+  "moan1": {
+    "sounds": [
+      "epsilon:moan1"
+    ]
+  },
+  "moan2": {
+    "sounds": [
+      "epsilon:moan2"
+    ]
+  },
+  "moan3": {
+    "sounds": [
+      "epsilon:moan3"
+    ]
+  },
+  "moan4": {
+    "sounds": [
+      "epsilon:moan4"
+    ]
+  }
+}

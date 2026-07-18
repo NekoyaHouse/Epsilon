@@ -1,0 +1,53 @@
+accessWidener v2 official
+
+accessible method net/minecraft/client/Minecraft pick (F)V
+
+accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyProgress F
+
+mutable field net/minecraft/world/phys/Vec3 x D
+mutable field net/minecraft/world/phys/Vec3 y D
+mutable field net/minecraft/world/phys/Vec3 z D
+
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
+
+accessible method net/minecraft/client/player/LocalPlayer sendPosition ()V
+
+accessible class net/minecraft/client/ResourceLoadStateTracker$ReloadState
+
+accessible field net/minecraft/client/player/LocalPlayer positionReminder I
+
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen hoveredSlot Lnet/minecraft/world/inventory/Slot;
+
+accessible method net/minecraft/client/multiplayer/ClientLevel getBlockStatePredictionHandler ()Lnet/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler;
+
+accessible field net/minecraft/client/renderer/RenderPipelines MATRICES_PROJECTION_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines GUI_TEXTURED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines LINES_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines ENTITY_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines ITEM_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+
+accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
+
+accessible class net/minecraft/core/component/DataComponentInitializers$InitializerEntry
+
+accessible field net/minecraft/client/Minecraft reloadStateTracker Lnet/minecraft/client/ResourceLoadStateTracker;
+accessible field net/minecraft/client/ResourceLoadStateTracker$ReloadState finished Z
+accessible field net/minecraft/client/ResourceLoadStateTracker reloadState Lnet/minecraft/client/ResourceLoadStateTracker$ReloadState;
+
+accessible field net/minecraft/client/player/LocalPlayer lastSentInput Lnet/minecraft/world/entity/player/Input;
+accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
+mutable field net/minecraft/client/player/LocalPlayer wasSprinting Z
+
+accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+
+accessible method net/minecraft/world/entity/player/Player canPlayerFitWithinBlocksAndEntitiesWhen (Lnet/minecraft/world/entity/Pose;)Z
+
+accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
+
+accessible method net/minecraft/client/player/LocalPlayer isMoving ()Z

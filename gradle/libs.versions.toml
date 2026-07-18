@@ -1,0 +1,41 @@
+[versions]
+project-java = "25"
+project-minecraft = "26.1.2"
+project-minecraft-range = "[26.1.2]"
+project-neoform = "26.1.2-1"
+project-fabric-api = "0.150.0+26.1.2"
+project-fabric-loader = "0.19.2"
+project-neoforge = "26.1.2.76"
+project-neoforge-loader-range = "[4,)"
+fabric-loom = "1.15.5"
+neoforged-moddev = "2.0.140"
+buildconfig = "6.0.9"
+foojay-resolver-convention = "1.0.0"
+mixin = "0.8.5"
+mixinextras = "0.5.3"
+asm = "9.8"
+jsr305 = "3.0.2"
+gson = "2.13.2"
+sodium = "0.8.12+mc26.1.2"
+junit = "5.13.4"
+junit-platform = "1.13.4"
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "project-fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "project-fabric-api" }
+mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
+mixinextras-common = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixinextras" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }
+sodium-neoforge = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+neoforged-moddev = { id = "net.neoforged.moddev", version.ref = "neoforged-moddev" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
+foojay-resolver-convention = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver-convention" }

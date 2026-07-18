@@ -1,0 +1,36 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+.kotlin
+.eclipse
+run
+runs
+run-data
+repo
+
+# Mac OS
+.DS_Store
+
+# AI
+.vscode
+.trae
+.claude
+/references
+/reference
