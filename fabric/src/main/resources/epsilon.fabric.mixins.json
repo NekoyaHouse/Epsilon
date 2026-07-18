@@ -4,6 +4,7 @@
   "plugin": "com.github.epsilon.fabric.mixins.FabricMixinPlugin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "MixinMinecraftFabric",
     "sodium.MixinSodiumAbstractBlockRenderContext"
   ],
   "injectors": {

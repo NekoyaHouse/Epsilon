@@ -7,18 +7,16 @@ import com.github.epsilon.addon.EpsilonAddonSetupEvent;
 import com.github.epsilon.assets.i18n.LanguageReloadListener;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.fabric.addon.FabricEpsilonAddonEntrypoint;
-import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import net.minecraft.server.packs.PackType;
 
-public class EpsilonFabric implements ClientModInitializer {
+public class EpsilonFabric {
 
     public static final String ADDON_ENTRYPOINT_KEY = "epsilon:addon";
 
-    @Override
-    public void onInitializeClient() {
+    public static void init() {
         EpsilonAddonSetupEvent addonEvent = new EpsilonAddonSetupEvent();
         for (EntrypointContainer<FabricEpsilonAddonEntrypoint> container : FabricLoader.getInstance().getEntrypointContainers(ADDON_ENTRYPOINT_KEY, FabricEpsilonAddonEntrypoint.class)) {
             String providerId = container.getProvider().getMetadata().getId();
