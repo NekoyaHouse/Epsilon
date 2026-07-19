@@ -97,7 +97,9 @@ public class MainMenuScreen extends Screen {
             case Dropdown -> DropdownScreen.INSTANCE;
         })));
         entries.add(new MenuEntry("Options", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options, false))));
-        entries.add(new MenuEntry("Quit", minecraft::stop));
+        entries.add(new MenuEntry("Quit", () -> {
+            if (!requestShutdown()) minecraft.stop();
+        }));
     }
 
     @Override
