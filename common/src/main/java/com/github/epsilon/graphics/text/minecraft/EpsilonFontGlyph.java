@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Style;
 import org.joml.Matrix4fc;
-import org.jspecify.annotations.Nullable;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -32,17 +31,17 @@ public final class EpsilonFontGlyph implements BakedGlyph {
 
     private final int codepoint;
     private final TtfFontLoader font;
-    private final @Nullable GlyphDescriptor descriptor;
+    private final GlyphDescriptor descriptor;
     private final GlyphInfo info;
 
-    private EpsilonFontGlyph(int codepoint, TtfFontLoader font, @Nullable GlyphDescriptor descriptor) {
+    private EpsilonFontGlyph(int codepoint, TtfFontLoader font, GlyphDescriptor descriptor) {
         this.codepoint = codepoint;
         this.font = font;
         this.descriptor = descriptor;
         this.info = new EpsilonGlyphInfo(EpsilonFontMetrics.advance(codepoint, Style.EMPTY, font));
     }
 
-    public static @Nullable EpsilonFontGlyph create(int codepoint) {
+    public static EpsilonFontGlyph create(int codepoint) {
         TtfFontLoader font = EpsilonFontMetrics.font();
         if (font == null) {
             return null;
@@ -66,7 +65,7 @@ public final class EpsilonFontGlyph implements BakedGlyph {
     }
 
     @Override
-    public TextRenderable.@Nullable Styled createGlyph(float x, float y, int color, int shadowColor, Style style, float boldOffset, float shadowOffset) {
+    public TextRenderable.Styled createGlyph(float x, float y, int color, int shadowColor, Style style, float boldOffset, float shadowOffset) {
         if (this.descriptor == null) {
             return null;
         }

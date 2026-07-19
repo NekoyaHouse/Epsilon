@@ -22,7 +22,6 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
-import javax.annotation.Nullable;
 import java.nio.ByteOrder;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -199,7 +198,7 @@ public final class LuminImmediateRenderer {
         private long vertexBaseAddr;
 
         private RenderPipeline pipeline;
-        @Nullable
+
         private Identifier texture;
 
         private Channel(VertexFormat format, VertexFormat.Mode mode) {
@@ -219,7 +218,7 @@ public final class LuminImmediateRenderer {
             return format.contains(element) ? format.getOffset(element) : -1;
         }
 
-        private Channel begin(RenderPipeline pipeline, @Nullable Identifier texture) {
+        private Channel begin(RenderPipeline pipeline, Identifier texture) {
             if (this.building) {
                 throw new IllegalStateException("Immediate channel is already building");
             }

@@ -20,7 +20,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -147,7 +146,7 @@ public class PopChams extends Module {
         }
 
         @Override
-        public @Nullable Component belowNameDisplay() {
+        public Component belowNameDisplay() {
             return null;
         }
     }

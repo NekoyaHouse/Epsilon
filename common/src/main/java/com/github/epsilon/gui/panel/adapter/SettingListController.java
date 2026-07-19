@@ -17,7 +17,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -275,7 +274,7 @@ public class SettingListController implements AutoCloseable {
         return false;
     }
 
-    public boolean preeditUpdated(@Nullable PreeditEvent event) {
+    public boolean preeditUpdated(PreeditEvent event) {
         for (SettingEntry entry : settingEntries) {
             if (entry.row.preeditUpdated(event)) {
                 return true;

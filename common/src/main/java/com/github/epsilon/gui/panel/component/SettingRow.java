@@ -9,7 +9,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
-import org.jspecify.annotations.Nullable;
 
 public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable {
 
@@ -53,7 +52,7 @@ public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable 
         return false;
     }
 
-    public boolean preeditUpdated(@Nullable PreeditEvent event) {
+    public boolean preeditUpdated(PreeditEvent event) {
         return false;
     }
 

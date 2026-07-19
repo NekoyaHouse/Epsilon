@@ -42,7 +42,6 @@ import org.joml.Matrix3x2fc;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
@@ -402,7 +401,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         }
     }
 
-    private void recordMesh(BufferBuilder bufferBuilder, RenderPipeline pipeline, TextureSetup textureSetup, @Nullable ScreenRectangle scissorArea) {
+    private void recordMesh(BufferBuilder bufferBuilder, RenderPipeline pipeline, TextureSetup textureSetup, ScreenRectangle scissorArea) {
         MeshData mesh = bufferBuilder.build();
         if (mesh != null) {
             this.meshesToDraw.add(new EpsilonGuiRenderer.MeshToDraw(mesh, pipeline, textureSetup, scissorArea));
@@ -512,7 +511,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         return new BufferBuilder(this.byteBufferBuilder, pipeline.getVertexFormatMode(), pipeline.getVertexFormat());
     }
 
-    private boolean scissorChanged(@Nullable ScreenRectangle newScissor, @Nullable ScreenRectangle oldScissor) {
+    private boolean scissorChanged(ScreenRectangle newScissor, ScreenRectangle oldScissor) {
         if (newScissor == oldScissor) {
             return false;
         } else {

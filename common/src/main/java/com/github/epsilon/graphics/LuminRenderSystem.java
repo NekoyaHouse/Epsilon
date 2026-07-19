@@ -21,7 +21,6 @@ import net.minecraft.client.renderer.state.WindowRenderState;
 import net.minecraft.resources.Identifier;
 import org.joml.*;
 
-import javax.annotation.Nullable;
 import java.lang.Math;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +34,10 @@ public class LuminRenderSystem {
 
     private static final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("lumin-gui");
 
-    @Nullable
     private static LuminRenderTarget activeTarget = null;
     private static long renderFrameId;
 
-    public static void setActiveTarget(@Nullable LuminRenderTarget target) {
+    public static void setActiveTarget(LuminRenderTarget target) {
         activeTarget = target;
     }
 
@@ -73,7 +71,6 @@ public class LuminRenderSystem {
         return renderFrameId;
     }
 
-    @Nullable
     public static LuminRenderTarget getActiveTarget() {
         return activeTarget;
     }
@@ -164,7 +161,6 @@ public class LuminRenderSystem {
         return mc.getMainRenderTarget().getColorTextureView();
     }
 
-    @Nullable
     public static GpuTextureView resolveDepthView() {
         if (activeTarget != null) return activeTarget.depthView();
         return mc.getMainRenderTarget().getDepthTextureView();
@@ -228,7 +224,7 @@ public class LuminRenderSystem {
 
     public record QuadRenderingInfo(
             GpuTextureView colorView,
-            @Nullable GpuTextureView depthView,
+            GpuTextureView depthView,
             VertexFormat.IndexType indexType,
             GpuBuffer ibo,
             int indexCount,
@@ -352,7 +348,6 @@ public class LuminRenderSystem {
             return colorTexture.getTextureView();
         }
 
-        @Nullable
         public GpuTextureView depthView() {
             return depthView;
         }

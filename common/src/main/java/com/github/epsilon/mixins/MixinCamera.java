@@ -35,11 +35,20 @@ public class MixinCamera {
     private float eyeHeightOld;
 
     @Unique
-    private final Pose[] epsilon$lastPoses = new Pose[2];
+    private Pose[] epsilon$lastPoses;
+
+    @Unique
+    private Pose[] epsilon$getLastPoses() {
+        if (epsilon$lastPoses == null) {
+            epsilon$lastPoses = new Pose[2];
+        }
+        return epsilon$lastPoses;
+    }
 
     @Unique
     private boolean epsilon$isStandingCrouchingTransition() {
-        return epsilon$lastPoses[1] == Pose.STANDING && epsilon$lastPoses[0] == Pose.CROUCHING || epsilon$lastPoses[1] == Pose.CROUCHING && epsilon$lastPoses[0] == Pose.STANDING;
+        Pose[] lastPoses = epsilon$getLastPoses();
+        return lastPoses[1] == Pose.STANDING && lastPoses[0] == Pose.CROUCHING || lastPoses[1] == Pose.CROUCHING && lastPoses[0] == Pose.STANDING;
     }
 
     @Inject(method = "getMaxZoom", at = @At("HEAD"), cancellable = true)
@@ -102,10 +111,11 @@ public class MixinCamera {
             return;
         }
 
+        Pose[] lastPoses = epsilon$getLastPoses();
         Pose pose = entity.getPose();
-        if (pose != epsilon$lastPoses[0]) {
-            epsilon$lastPoses[1] = epsilon$lastPoses[0];
-            epsilon$lastPoses[0] = pose;
+        if (pose != lastPoses[0]) {
+            lastPoses[1] = lastPoses[0];
+            lastPoses[0] = pose;
         }
 
         if (SneakTweak.INSTANCE.shouldSnapCameraEyeHeight() && epsilon$isStandingCrouchingTransition()) {

@@ -75,11 +75,14 @@ public abstract class MixinMinecraft {
 
     @ModifyArg(method = "updateTitle", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setTitle(Ljava/lang/String;)V"))
     private String onUpdateTitle(String title) {
-        return switch (ClientSetting.INSTANCE.customTitle.getValue()) {
-            case Vanilla -> title;
-            case Minecraft_1_8_9 -> "Minecraft 1.8.9";
-            case Epsilon -> Constants.NAME + " " + Constants.VERSION + " for " + title;
-        };
+        ClientSetting.TitleMode mode = ClientSetting.INSTANCE.customTitle.getValue();
+        if (mode == ClientSetting.TitleMode.Vanilla) {
+            return title;
+        } else if (mode == ClientSetting.TitleMode.Minecraft_1_8_9) {
+            return "Minecraft 1.8.9";
+        } else {
+            return Constants.NAME + " " + Constants.VERSION + " for " + title;
+        }
     }
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)

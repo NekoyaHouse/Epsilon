@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,7 +53,12 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
     }
 
     @Unique
-    private final Map<Integer, GuiMessage> epsilon$hashedMessages = new HashMap<>();
+    private Map<Integer, GuiMessage> epsilon$hashedMessages;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void epsilon$initHashedMessages(Minecraft minecraft, CallbackInfo ci) {
+        this.epsilon$hashedMessages = new HashMap<>();
+    }
 
     @Override
     public void epsilon$addClientSystemMessage(Component message, int hash) {
