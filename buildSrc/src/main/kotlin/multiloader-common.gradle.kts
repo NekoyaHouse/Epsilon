@@ -35,7 +35,6 @@ val fabricLoaderVersion = project.property("fabric_loader_version").toString()
 val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
-val credits = project.findProperty("credits")?.toString() ?: ""
 
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
@@ -123,7 +122,6 @@ tasks.named<ProcessResources>("processResources") {
         "description" to (project.findProperty("description")?.toString() ?: ""),
         "neoforge_version" to neoforgeVersion,
         "neoforge_loader_version_range" to neoforgeLoaderVersionRange,
-        "credits" to credits,
         "java_version" to javaVersion
     )
 

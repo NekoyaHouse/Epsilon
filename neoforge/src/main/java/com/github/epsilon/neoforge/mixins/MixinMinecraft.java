@@ -1,6 +1,6 @@
 package com.github.epsilon.neoforge.mixins;
 
-import com.github.epsilon.neoforge.EpsilonNeoForge;
+import com.github.epsilon.neoforge.Loader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ public class MixinMinecraft {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(GameConfig gameConfig, CallbackInfo ci) {
-        EpsilonNeoForge.init();
+        new Loader();
     }
 
 }

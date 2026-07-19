@@ -1,6 +1,6 @@
 package com.github.epsilon.fabric.mixins;
 
-import com.github.epsilon.fabric.EpsilonFabric;
+import com.github.epsilon.fabric.Loader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ public class MixinMinecraftFabric {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInitializeClient(GameConfig gameConfig, CallbackInfo ci) {
-        EpsilonFabric.init();
+        new Loader();
     }
 
 }

@@ -16,7 +16,15 @@ public class EpsilonFabric {
 
     public static final String ADDON_ENTRYPOINT_KEY = "epsilon:addon";
 
-    public static void init() {
+    private EpsilonFabric() {
+        init();
+    }
+
+    public static EpsilonFabric newInstance() {
+        return new EpsilonFabric();
+    }
+
+    private void init() {
         EpsilonAddonSetupEvent addonEvent = new EpsilonAddonSetupEvent();
         for (EntrypointContainer<FabricEpsilonAddonEntrypoint> container : FabricLoader.getInstance().getEntrypointContainers(ADDON_ENTRYPOINT_KEY, FabricEpsilonAddonEntrypoint.class)) {
             String providerId = container.getProvider().getMetadata().getId();

@@ -1,0 +1,19 @@
+package com.github.epsilon.neoforge;
+
+import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.LanguageReloadListener;
+import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
+public class NeoForgeEventHandler {
+
+    @SubscribeEvent
+    private static void onResourcesReload(AddClientReloadListenersEvent event) {
+        event.addListener(ResourceLocationUtils.getIdentifier("objects/reload_listener"), new LanguageReloadListener());
+    }
+
+}
