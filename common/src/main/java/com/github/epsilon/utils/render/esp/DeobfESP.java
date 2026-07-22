@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
@@ -17,6 +18,7 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -25,14 +27,27 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
 public final class DeobfESP {
 
-    private static final Identifier TEXTURE = ResourceLocationUtils.getIdentifier("textures/hud/deobf.png");
+    public enum TextureMode {
+        Niuren(ResourceLocationUtils.getIdentifier("textures/esp/niuren.png")),
+        Mengcha(ResourceLocationUtils.getIdentifier("textures/esp/mengcha.png"));
 
-    private static final float TEXTURE_ASPECT_RATIO = 751.0f / 376.0f;
+        private final Identifier texture;
+
+        TextureMode(Identifier texture) {
+            this.texture = texture;
+        }
+
+        public Identifier getTexture() {
+            return texture;
+        }
+    }
+
     private static final long INTRO_DURATION_MS = 1600L;
     private static final long KILL_DURATION_MS = 1800L;
     private static final float CONTINUOUS_ROTATION_SPEED = 180.0f;
@@ -44,14 +59,14 @@ public final class DeobfESP {
             .withCull(false)
             .build();
 
-    private static final RenderType LAYER = RenderType.create("epsilon_deobf_esp", RenderSetup.builder(PIPELINE)
-            .withTexture("Sampler0", TEXTURE)
+    private static final Function<Identifier, RenderType> LAYER = Util.memoize(texture -> RenderType.create("epsilon_deobf_esp", RenderSetup.builder(PIPELINE)
+            .withTexture("Sampler0", texture)
             .sortOnUpload()
             .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
             .setOutputTarget(OutputTarget.MAIN_TARGET)
-            .createRenderSetup());
+            .createRenderSetup()));
 
-    private static final Map<Integer, Effect> EFFECTS = new LinkedHashMap<>();
+    private static final Map<Integer, Effect> effects = new LinkedHashMap<>();
 
     private DeobfESP() {
     }
@@ -60,18 +75,18 @@ public final class DeobfESP {
         if (target == null || target.isDeadOrDying()) return;
 
         long now = System.currentTimeMillis();
-        Effect effect = EFFECTS.get(target.getId());
+        Effect effect = effects.get(target.getId());
         if (effect == null || effect.target != target || effect.killedAtMs >= 0L) {
-            EFFECTS.put(target.getId(), new Effect(target, now));
+            effects.put(target.getId(), new Effect(target, now));
         }
     }
 
     public static void clear() {
-        EFFECTS.clear();
+        effects.clear();
     }
 
     public static void retainRisingEffects() {
-        if (EFFECTS.isEmpty()) return;
+        if (effects.isEmpty()) return;
         if (mc.level == null) {
             clear();
             return;
@@ -79,7 +94,7 @@ public final class DeobfESP {
 
         long now = System.currentTimeMillis();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        Iterator<Effect> iterator = EFFECTS.values().iterator();
+        Iterator<Effect> iterator = effects.values().iterator();
 
         while (iterator.hasNext()) {
             Effect effect = iterator.next();
@@ -98,7 +113,7 @@ public final class DeobfESP {
     }
 
     public static void render(PoseStack poseStack, float size, float spins, float wobble, float flyHeight) {
-        if (EFFECTS.isEmpty()) return;
+        if (effects.isEmpty()) return;
         if (mc.level == null) {
             clear();
             return;
@@ -108,7 +123,7 @@ public final class DeobfESP {
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         Camera camera = mc.gameRenderer.getMainCamera();
         BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        Iterator<Effect> iterator = EFFECTS.values().iterator();
+        Iterator<Effect> iterator = effects.values().iterator();
 
         while (iterator.hasNext()) {
             Effect effect = iterator.next();
@@ -136,7 +151,7 @@ public final class DeobfESP {
 
         MeshData mesh = buffer.build();
         if (mesh != null) {
-            LAYER.draw(mesh);
+            LAYER.apply(KillAura.INSTANCE.deobfMode.getValue().getTexture()).draw(mesh);
         }
     }
 
@@ -145,7 +160,7 @@ public final class DeobfESP {
             long now, float partialTick, float size, float spins, float wobble, float flyHeight
     ) {
         float baseWidth = Math.max(0.01f, size);
-        float baseHeight = baseWidth * TEXTURE_ASPECT_RATIO;
+        float baseHeight = baseWidth * (KillAura.INSTANCE.deobfMode.is(TextureMode.Niuren) ? 751.0f / 376.0f : 1280.0f / 1073.0f);
         float drawWidth;
         float drawHeight;
         float rotation;
