@@ -3,26 +3,25 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
+import com.github.epsilon.utils.network.PacketUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.common.ServerboundPongPacket;
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class NoSlow extends Module {
 
@@ -35,16 +34,9 @@ public class NoSlow extends Module {
     private enum Mode {
         Vanilla,
         Jump,
-        GrimC0F,
+        GrimFull,
         Grim1_2,
         Grim1_3
-    }
-
-    private enum Step {
-        NONE,
-        CANCEL_C0F,
-        SWAP_HANDS,
-        EATING
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Vanilla);
@@ -52,33 +44,111 @@ public class NoSlow extends Module {
     private final BoolSetting bow = boolSetting("Bow", true);
     private final BoolSetting crossbow = boolSetting("Crossbow", true);
 
+    private int ticks;
+    private int useDuration = 32;
     private int onGroundTick = 0;
 
-    private Step step = Step.NONE;
-    private int noUsingItemTicks = 0;
-    private final Queue<Packet<?>> packets = new ConcurrentLinkedQueue<>();
+    private boolean eating;
 
-    @Override
-    protected void onEnable() {
-        onGroundTick = 0;
-    }
+    private final LinkedBlockingQueue<Packet<ClientGamePacketListener>> packets = new LinkedBlockingQueue<>();
 
     @Override
     protected void onDisable() {
-        step = Step.NONE;
-        noUsingItemTicks = 0;
-        releasePackets();
+        flush();
+        eating = false;
+        ticks = 0;
+        useDuration = 32;
     }
 
     @EventHandler
-    private void onSlowdown(SlowdownEvent event) {
-        if (nullCheck()) return;
-
+    private void onSendPosition(SendPositionEvent event) {
         if (mc.player.onGround()) {
             onGroundTick++;
         } else {
             onGroundTick = 0;
         }
+
+        if (!mode.is(Mode.GrimFull)) {
+            return;
+        }
+
+        if (mc.player.tickCount < 30) {
+            return;
+        }
+
+        if (eating) {
+            ticks++;
+        }
+
+        ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
+        if (mc.player.isUsingItem() && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK || anim == ItemUseAnimation.CROSSBOW) && !eating) {
+            eating = true;
+            ticks = 0;
+            ItemStack useItem = mc.player.getUseItem();
+            useDuration = useItem.getItem().getUseDuration(useItem, mc.player);
+        }
+
+        if (eating) {
+            if (ticks == 1) {
+                PacketUtils.sendSilently(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
+                PacketUtils.sendSilently(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));
+            }
+            if (ticks == 2) {
+                InteractionHand hand = mc.player.getUsedItemHand() == InteractionHand.OFF_HAND ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+
+                mc.getConnection().send(new ServerboundUseItemPacket(hand, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence(), mc.player.getYRot(), mc.player.getXRot()));
+            }
+            if (ticks > useDuration + 3) {
+                mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));
+                mc.options.keyUse.setDown(false);
+                ticks = 0;
+                eating = false;
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPacketReceive(PacketEvent.Receive event) {
+        if (nullCheck() || mc.player.tickCount < 30 || !eating || !mode.is(Mode.GrimFull)) return;
+
+        Packet<?> packet = event.getPacket();
+
+        if (packet instanceof ClientboundPlayerPositionPacket) {
+            flush();
+            return;
+        }
+
+        if (packet instanceof ClientboundSetHealthPacket
+                || packet instanceof ClientboundSystemChatPacket
+                || packet instanceof ClientboundMoveEntityPacket
+                || packet instanceof ClientboundTeleportEntityPacket
+                || packet instanceof ClientboundEntityEventPacket
+                || packet instanceof ClientboundAddEntityPacket
+                || packet instanceof ClientboundBlockUpdatePacket
+                || packet instanceof ClientboundBlockEventPacket
+        ) {
+            return;
+        }
+
+        if (packet.type().flow() == PacketFlow.CLIENTBOUND) {
+            event.cancel();
+            packets.add((Packet<ClientGamePacketListener>) packet);
+        }
+    }
+
+    @EventHandler
+    private void onPacketSend(PacketEvent.Send event) {
+        if (mode.is(Mode.GrimFull) && eating && event.getPacket() instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
+            eating = false;
+            ticks = 0;
+            flush();
+            PacketUtils.sendSilently(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
+        }
+    }
+
+    @EventHandler
+    private void onSlowdown(SlowdownEvent event) {
+        if (mc.player.tickCount < 30) return;
 
         if (!food.getValue() && mc.player.getUseItem().has(DataComponents.FOOD)) return;
         if (!bow.getValue() && mc.player.getUseItem().is(Items.BOW)) return;
@@ -86,10 +156,10 @@ public class NoSlow extends Module {
 
         switch (mode.getValue()) {
             case Vanilla -> cancel(event);
+            case GrimFull -> grimFull(event);
             case Jump -> jump(event);
             case Grim1_2 -> grim50(event);
             case Grim1_3 -> grim33(event);
-            case GrimC0F -> grimC0F(event);
         }
     }
 
@@ -100,65 +170,16 @@ public class NoSlow extends Module {
         }
     }
 
-    @EventHandler
-    private void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck() || !mode.is(Mode.GrimC0F)) return;
-
-        if (step != Step.EATING) {
-            noUsingItemTicks = 0;
-            return;
-        }
-
-        if (mc.player.isUsingItem()) {
-            noUsingItemTicks = 0;
-        } else {
-            noUsingItemTicks++;
-            if (noUsingItemTicks >= 5) {
-                releasePackets();
-                swap();
-            }
-        }
-    }
-
-    @EventHandler
-    private void onPacketSend(PacketEvent.Send event) {
-        if (!mode.is(Mode.GrimC0F)) return;
-
-        Packet<?> packet = event.getPacket();
-
-        if (packet instanceof ServerboundPongPacket && step != Step.NONE) {
-            event.cancel();
-            packets.add(packet);
-
-            if (step == Step.CANCEL_C0F) {
-                step = Step.SWAP_HANDS;
-                mc.getConnection().send(new ServerboundPlayerActionPacket(
-                        ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                        BlockPos.ZERO,
-                        Direction.DOWN
-                ));
-            }
-        }
-
-        if (packet instanceof ServerboundPlayerActionPacket actionPacket) {
-            if (actionPacket.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM && step == Step.EATING) {
-                releasePackets();
-                swap();
-            }
-        }
-    }
-
-    @EventHandler
-    private void onPacketReceive(PacketEvent.Receive event) {
-        if (!mode.is(Mode.GrimC0F)) return;
-        if (event.getPacket() instanceof ClientboundContainerSetSlotPacket && step == Step.SWAP_HANDS) {
-            mc.options.keyUse.setDown(true);
-            step = Step.EATING;
-        }
-    }
-
     private void cancel(SlowdownEvent event) {
         event.setSlowdown(false);
+    }
+
+    private void grimFull(SlowdownEvent event) {
+        ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
+        if (mc.player.isUsingItem() && mc.player.getUseItemRemainingTicks() < 30 && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK)) {
+            event.setSlowdown(false);
+            mc.player.setSprinting(true);
+        }
     }
 
     private void jump(SlowdownEvent event) {
@@ -179,58 +200,11 @@ public class NoSlow extends Module {
         }
     }
 
-    private void grimC0F(SlowdownEvent event) {
-        ItemUseAnimation activeUseAnim = mc.player.getUseItem().getUseAnimation();
-        if (!isUsable(activeUseAnim) || mc.player.getUseItemRemainingTicks() <= 0) {
-            return;
+    private void flush() {
+        Packet<ClientGamePacketListener> packet;
+        while ((packet = packets.poll()) != null) {
+            packet.handle(mc.getConnection());
         }
-
-        InteractionHand oppositeHand = mc.player.getUsedItemHand() == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-
-        if (isUsable(mc.player.getItemInHand(oppositeHand).getUseAnimation())) {
-            return;
-        }
-
-        if (step != Step.EATING) {
-            mc.options.keyUse.setDown(false);
-        }
-
-        if (step == Step.NONE) {
-            step = Step.CANCEL_C0F;
-
-            boolean isInventoryOpenServerSide = mc.player.containerMenu != mc.player.inventoryMenu;
-            if (isInventoryOpenServerSide) {
-                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
-            }
-        } else if (step == Step.EATING) {
-            mc.player.setSprinting(true);
-            event.setSlowdown(false);
-        }
-    }
-
-    private void releasePackets() {
-        step = Step.NONE;
-
-        while (!packets.isEmpty()) {
-            Packet<?> p = packets.poll();
-            if (p != null && mc.getConnection() != null) {
-                mc.getConnection().send(p);
-            }
-        }
-    }
-
-    private void swap() {
-        if (mc.getConnection() != null) {
-            mc.getConnection().send(new ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                    BlockPos.ZERO,
-                    Direction.DOWN
-            ));
-        }
-    }
-
-    private boolean isUsable(ItemUseAnimation useAnim) {
-        return useAnim == ItemUseAnimation.EAT || useAnim == ItemUseAnimation.DRINK;
     }
 
 }

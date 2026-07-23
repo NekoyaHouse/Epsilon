@@ -1376,7 +1376,7 @@
         "side color": "Side Color",
         "line color": "Line Color",
         "blur": "Blur",
-        "blur strength": ""
+        "blur strength": "Blur Strength"
       },
       "block highlight": {
         "_value": "Block Highlight",
