@@ -24,7 +24,7 @@ import java.util.List;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class Render3DScheduler {
+public class Render3DScheduler {
 
     public static final Render3DScheduler INSTANCE = new Render3DScheduler();
 

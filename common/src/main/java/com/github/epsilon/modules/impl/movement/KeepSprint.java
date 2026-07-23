@@ -6,8 +6,10 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import love.slmpc.ClInitNative;
 import net.minecraft.world.phys.HitResult;
 
+@ClInitNative
 public class KeepSprint extends Module {
 
     public static final KeepSprint INSTANCE = new KeepSprint();

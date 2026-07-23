@@ -12,6 +12,7 @@ public class MovementFix extends Module {
     private MovementFix() {
         super("Movement Fix", Category.MOVEMENT);
         setDefaultEnabled(true);
+        setDefaultHidden(false);
     }
 
     private float getDirection(float forward, float strafe) {

@@ -21,6 +21,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static com.github.epsilon.Constants.mc;
+
 public class EpsilonLanguageManager {
 
     public static final EpsilonLanguageManager INSTANCE = new EpsilonLanguageManager();
@@ -41,12 +43,12 @@ public class EpsilonLanguageManager {
             language = EpsilonLanguage.English;
         }
         selectedLanguage = language;
-        reload(Constants.mc.getResourceManager());
+        reload(mc.getResourceManager());
     }
 
     public void refreshCustomLanguage() {
         if (selectedLanguage.isCustom()) {
-            reload(Constants.mc.getResourceManager());
+            reload(mc.getResourceManager());
         }
     }
 

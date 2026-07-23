@@ -18,6 +18,7 @@ import com.github.epsilon.utils.render.esp.FireflyESP;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,6 +27,7 @@ import net.minecraft.world.phys.HitResult;
 import java.awt.*;
 import java.util.List;
 
+@ClInitNative
 public class KillAura extends Module {
 
     public static final KillAura INSTANCE = new KillAura();

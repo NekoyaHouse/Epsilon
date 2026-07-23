@@ -28,7 +28,7 @@ import java.awt.*;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class WireframeEntityRenderer {
+public class WireframeEntityRenderer {
 
     private static final PoseStack modelPoseStack = new PoseStack();
     private static final SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();

@@ -8,7 +8,7 @@ import java.util.*;
  * 这里不再根据名称或控件类型自动推断分组，模块和 Addon 需要通过 settingGroup(...).group(...)
  * 手动表达结构；布局层只负责聚合、排序和暴露折叠状态。
  */
-public final class SettingLayoutPlanner {
+public class SettingLayoutPlanner {
 
     private SettingLayoutPlanner() {
     }

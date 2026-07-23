@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  * 调用方通过 {@link #build(Consumer)} 在一个 {@link Scope} 中描述本帧需要绘制的内容，
  * 然后再由 {@link LuminUiRenderer} 将树结构编译进调度器命令或视口缓冲。
  */
-public final class UiTree {
+public class UiTree {
 
     private final List<UiNode> nodes;
     private final boolean hasActiveAnimations;
@@ -786,7 +786,7 @@ public final class UiTree {
          * <p>
          * Stack 会按 item 高度推进游标，并可直接在每个 item 的矩形内下传同一个 {@link Scope}。
          */
-        public final class Stack {
+        public class Stack {
             private final UiRect bounds;
             private float cursor;
 

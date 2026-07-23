@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+@ClInitNative
 public class Eagle extends Module {
 
     public static final Eagle INSTANCE = new Eagle();

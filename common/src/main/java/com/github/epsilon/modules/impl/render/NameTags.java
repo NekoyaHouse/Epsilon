@@ -14,6 +14,7 @@ import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.base.Suppliers;
+import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+@ClInitNative
 public class NameTags extends Module {
 
     private static final Color TAG_BACKGROUND = new Color(0, 0, 0, 130);

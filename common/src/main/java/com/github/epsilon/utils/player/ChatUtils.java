@@ -3,6 +3,7 @@ package com.github.epsilon.utils.player;
 import com.github.epsilon.interfaces.ChatComponentAccessor;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ColorUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -10,6 +11,7 @@ import net.minecraft.util.FormattedCharSequence;
 
 import static com.github.epsilon.Constants.mc;
 
+@ClInitNative
 public class ChatUtils {
 
     public static final String PREFIX = "[Epsilon] ";

@@ -10,7 +10,7 @@ import net.minecraft.util.Util;
 
 import java.awt.*;
 
-public final class ReisaDropdownCompanion {
+public class ReisaDropdownCompanion {
 
     private static final float IMAGE_ASPECT_RATIO = 710.0f / 1280.0f;
 

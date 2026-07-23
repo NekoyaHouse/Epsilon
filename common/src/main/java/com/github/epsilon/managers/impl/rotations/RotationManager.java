@@ -6,6 +6,7 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
@@ -14,6 +15,7 @@ import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
+@ClInitNative
 public abstract class RotationManager {
 
     public enum RotationMode {

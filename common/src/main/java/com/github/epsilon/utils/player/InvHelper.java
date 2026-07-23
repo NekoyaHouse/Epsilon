@@ -576,7 +576,7 @@ public class InvHelper {
 
         final float[] damage = {0.0F};
         stack.forEachModifier(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
-            if (attribute.equals(Attributes.ATTACK_DAMAGE)) {
+            if (attribute == Attributes.ATTACK_DAMAGE) {
                 damage[0] += getAttributeModifierAmount(modifier);
             }
         });
@@ -621,9 +621,9 @@ public class InvHelper {
         final float[] armor = {0.0F};
         final float[] toughness = {0.0F};
         stack.forEachModifier(slot, (attribute, modifier) -> {
-            if (attribute.equals(Attributes.ARMOR)) {
+            if (attribute == Attributes.ARMOR) {
                 armor[0] += getAttributeModifierAmount(modifier);
-            } else if (attribute.equals(Attributes.ARMOR_TOUGHNESS)) {
+            } else if (attribute == Attributes.ARMOR_TOUGHNESS) {
                 toughness[0] += getAttributeModifierAmount(modifier);
             }
         });

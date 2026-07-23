@@ -20,6 +20,7 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
+import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -32,6 +33,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+@ClInitNative
 public class HudEditorScreen extends Screen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();

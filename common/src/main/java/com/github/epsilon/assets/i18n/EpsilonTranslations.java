@@ -8,7 +8,7 @@ import java.util.List;
  * UI 代码只引用这里暴露的语义常量，避免在各个实现类中散落 translation key，
  * 也让 I18NFileGenerator 可以直接从同一份注册表生成静态文案模板。
  */
-public final class EpsilonTranslations {
+public class EpsilonTranslations {
 
     private static final List<TranslateComponent> ALL = List.of(
             Keybind.NONE,

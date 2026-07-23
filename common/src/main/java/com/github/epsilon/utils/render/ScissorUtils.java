@@ -88,4 +88,5 @@ public class ScissorUtils {
         WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
         return windowState.height;
     }
+
 }

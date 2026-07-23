@@ -13,7 +13,7 @@ import java.util.Objects;
  * <p>
  * 控件只接收通用坐标与 {@link UiTheme}，不持有 Panel 或 Dropdown 状态。
  */
-public final class UiScrollBar {
+public class UiScrollBar {
 
     public static final float WIDTH = 2.0f;
     public static final float RIGHT_INSET = 2.5f;

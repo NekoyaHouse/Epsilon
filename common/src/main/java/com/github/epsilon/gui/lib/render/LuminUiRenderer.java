@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 将 {@link UiTree} 编译为 {@link Render2DScheduler} 命令。
  */
-public final class LuminUiRenderer {
+public class LuminUiRenderer {
 
     private LuminUiRenderer() {
     }

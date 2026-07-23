@@ -31,7 +31,7 @@ import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class DeobfESP {
+public class DeobfESP {
 
     public enum TextureMode {
         Niuren(ResourceLocationUtils.getIdentifier("textures/esp/niuren.png")),

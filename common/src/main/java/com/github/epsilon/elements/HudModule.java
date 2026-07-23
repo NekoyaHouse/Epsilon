@@ -5,12 +5,14 @@ import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.modules.Module;
+import love.slmpc.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
 
+@ClInitNative
 public abstract class HudModule extends Module {
 
     protected static final double DEFAULT_SHADOW_BLUR = 10.0;

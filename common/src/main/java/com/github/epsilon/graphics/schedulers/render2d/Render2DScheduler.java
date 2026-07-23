@@ -22,7 +22,7 @@ import java.util.List;
  * <p>
  * GUI 只提交声明式绘制命令；调度器负责 layer、scissor、空间桶、批次规划和 renderer 复用。
  */
-public final class Render2DScheduler implements AutoCloseable {
+public class Render2DScheduler implements AutoCloseable {
 
     public static final int DEFAULT_QUADTREE_THRESHOLD = 192;
     private static final int DEFAULT_QUADTREE_MAX_DEPTH = 5;

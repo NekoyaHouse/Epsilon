@@ -6,10 +6,12 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.network.PacketUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.entity.player.Input;
 
+@ClInitNative
 public class Disabler extends Module {
 
     public static final Disabler INSTANCE = new Disabler();

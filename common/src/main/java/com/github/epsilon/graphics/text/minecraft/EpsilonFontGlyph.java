@@ -21,7 +21,7 @@ import org.joml.Matrix4fc;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-public final class EpsilonFontGlyph implements BakedGlyph {
+public class EpsilonFontGlyph implements BakedGlyph {
 
     private static final float SHADOW_OFFSET = 0.45f;
     private static final float BOLD_OFFSET = 0.45f;

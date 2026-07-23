@@ -8,8 +8,10 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
+@ClInitNative
 public class NoFall extends Module {
 
     public static final NoFall INSTANCE = new NoFall();

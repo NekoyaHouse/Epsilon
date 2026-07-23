@@ -20,6 +20,7 @@ import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.mojang.blaze3d.platform.InputConstants;
+import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@ClInitNative
 public class Scaffold extends Module {
 
     public static final Scaffold INSTANCE = new Scaffold();

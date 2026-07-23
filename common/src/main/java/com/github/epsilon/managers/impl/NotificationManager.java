@@ -5,6 +5,7 @@ import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
+@ClInitNative
 public class NotificationManager {
 
     private static final int MAX_NOTIFICATIONS = 5;

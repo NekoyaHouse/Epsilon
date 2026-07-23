@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 public class Constants {
 
-    public static final Minecraft mc = Minecraft.getInstance();
+    public static Minecraft mc;
 
     public static final String NAME = "Epsilon";
 

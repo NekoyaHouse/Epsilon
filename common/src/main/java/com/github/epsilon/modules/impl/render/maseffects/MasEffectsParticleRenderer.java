@@ -38,7 +38,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 
-public final class MasEffectsParticleRenderer {
+public class MasEffectsParticleRenderer {
 
     private static final int MAX_PARTICLES = 8192;
     private static final Set<Item> DIAMOND_ARMOR = Set.of(

@@ -11,6 +11,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
+import love.slmpc.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
+@ClInitNative
 public class ModuleList extends HudModule {
 
     public static final ModuleList INSTANCE = new ModuleList();

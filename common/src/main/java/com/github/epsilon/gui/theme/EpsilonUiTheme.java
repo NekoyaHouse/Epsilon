@@ -8,7 +8,7 @@ import java.awt.*;
 /**
  * 将 Epsilon 的动态 Material 主题适配到独立 GUI 库。
  */
-public final class EpsilonUiTheme implements UiTheme {
+public class EpsilonUiTheme implements UiTheme {
 
     public static final EpsilonUiTheme INSTANCE = new EpsilonUiTheme();
 

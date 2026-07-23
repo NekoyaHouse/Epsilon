@@ -10,6 +10,7 @@ import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
+import net.minecraft.client.Minecraft;
 
 import java.lang.invoke.MethodHandles;
 
@@ -17,6 +18,8 @@ public class EpsilonCommon {
 
     public static void init() {
         Constants.LOGGER.info("Welcome to " + Constants.NAME + ".");
+
+        Constants.mc = Minecraft.getInstance();
 
         EventBus.INSTANCE.registerLambdaFactory(EpsilonCommon.class.getPackageName(), (lookupInMethod, klass) -> (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup()));
 

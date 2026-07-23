@@ -8,7 +8,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringDecomposer;
 
-public final class EpsilonFontMetrics {
+public class EpsilonFontMetrics {
 
     private static final float VANILLA_LINE_HEIGHT = 9.0f;
     private static final Identifier FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");

@@ -6,11 +6,13 @@ import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.google.common.base.Suppliers;
+import love.slmpc.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 
 import java.awt.*;
 import java.util.function.Supplier;
 
+@ClInitNative
 public class Watermark extends HudModule {
 
     public static final Watermark INSTANCE = new Watermark();

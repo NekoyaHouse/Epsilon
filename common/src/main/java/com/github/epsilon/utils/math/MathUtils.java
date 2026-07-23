@@ -1,7 +1,10 @@
 package com.github.epsilon.utils.math;
 
+import love.slmpc.ClInitNative;
+
 import java.util.concurrent.ThreadLocalRandom;
 
+@ClInitNative
 public class MathUtils {
 
     private MathUtils() {

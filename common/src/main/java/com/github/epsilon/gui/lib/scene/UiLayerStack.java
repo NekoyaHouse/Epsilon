@@ -6,7 +6,7 @@ package com.github.epsilon.gui.lib.scene;
  * 每个语义层预留一段数字空间，调用方可以在该空间内继续使用相对偏移，
  * 例如 Dropdown 的多个 pass 或 popup 内部的局部浮层。
  */
-public final class UiLayerStack {
+public class UiLayerStack {
 
     private static final int STRIDE = 100;
 

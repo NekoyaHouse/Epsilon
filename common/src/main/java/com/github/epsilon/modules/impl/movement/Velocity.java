@@ -11,6 +11,7 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
@@ -22,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
+@ClInitNative
 public class Velocity extends Module {
 
     public static final Velocity INSTANCE = new Velocity();

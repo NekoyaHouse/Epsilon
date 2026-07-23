@@ -9,10 +9,12 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.network.PacketUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
+@ClInitNative
 public class Stuck extends Module {
 
     public static final Stuck INSTANCE = new Stuck();

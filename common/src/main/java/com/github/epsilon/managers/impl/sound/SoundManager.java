@@ -1,5 +1,6 @@
 package com.github.epsilon.managers.impl.sound;
 
+import love.slmpc.ClInitNative;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 import static com.github.epsilon.Constants.mc;
 
+@ClInitNative
 public class SoundManager {
 
     private static final long UI_DEBOUNCE_MS = 40L;

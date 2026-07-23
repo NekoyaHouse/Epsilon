@@ -28,7 +28,7 @@ import java.util.OptionalInt;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class LuminImmediateRenderer {
+public class LuminImmediateRenderer {
 
     private static final long DEFAULT_BUFFER_SIZE = 1024 * 1024;
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;

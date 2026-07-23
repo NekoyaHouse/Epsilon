@@ -3,7 +3,7 @@ package com.github.epsilon.gui.utils;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 
-public final class RegistryListUi {
+public class RegistryListUi {
 
     private RegistryListUi() {
     }

@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public final class ClientIdentityHider {
+public class ClientIdentityHider {
 
     private static final String VANILLA_BRAND = "vanilla";
     private static final Set<String> HIDDEN_NAMESPACES = Set.of(Constants.MOD_ID);
