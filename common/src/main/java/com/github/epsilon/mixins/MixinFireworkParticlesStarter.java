@@ -1,0 +1,19 @@
+package com.github.epsilon.mixins;
+
+import com.llamalad7.mixinextras.sugar.Local;
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.client.particle.FireworkParticles;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(FireworkParticles.Starter.class)
+public class MixinFireworkParticlesStarter {
+
+    @Inject(method = "createParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/FireworkParticles$SparkParticle;setTrail(Z)V"), cancellable = true)
+    private void onAddExplosion(double x, double y, double z, double xa, double ya, double za, IntList rgbColors, IntList fadeColors, boolean trail, boolean twinkle, CallbackInfo ci, @Local(name = "sparkParticle") FireworkParticles.SparkParticle sparkParticle) {
+        if (sparkParticle == null) ci.cancel();
+    }
+
+}

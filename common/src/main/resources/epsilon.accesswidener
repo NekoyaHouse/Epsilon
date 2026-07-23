@@ -51,3 +51,5 @@ accessible method net/minecraft/world/entity/player/Player canPlayerFitWithinBlo
 accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
 
 accessible method net/minecraft/client/player/LocalPlayer isMoving ()Z
+
+accessible class net/minecraft/client/particle/FireworkParticles$SparkParticle

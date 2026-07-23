@@ -10,6 +10,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.network.PacketUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+@ClInitNative
 public class NoSlow extends Module {
 
     public static final NoSlow INSTANCE = new NoSlow();

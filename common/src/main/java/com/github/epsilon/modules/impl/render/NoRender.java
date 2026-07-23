@@ -3,24 +3,19 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
+import love.slmpc.ClInitNative;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.List;
 
+@ClInitNative
 public class NoRender extends Module {
 
     public static final NoRender INSTANCE = new NoRender();
 
     private NoRender() {
         super("No Render", Category.RENDER);
-    }
-
-    public enum BannerRenderMode {
-        Everything,
-        Pillar,
-        None
     }
 
     // Overlay
@@ -33,7 +28,6 @@ public class NoRender extends Module {
     public final BoolSetting liquidOverlay = boolSetting("Liquid Overlay", false);
     public final BoolSetting blockOverlay = boolSetting("Block Overlay", true);
     public final BoolSetting vignette = boolSetting("Vignette", false);
-    public final BoolSetting guiBackground = boolSetting("GUI Background", false);
     public final BoolSetting totemAnimation = boolSetting("Totem Animation", false);
     public final BoolSetting eatParticles = boolSetting("Eat Particles", false);
     public final BoolSetting enchantGlint = boolSetting("Enchant Glint", false);
@@ -61,7 +55,7 @@ public class NoRender extends Module {
     public final BoolSetting caveCulling = boolSetting("Cave Culling", false, _ -> mc.levelRenderer.allChanged());
     public final BoolSetting mapMarkers = boolSetting("Map Markers", false);
     public final BoolSetting mapContents = boolSetting("Map Contents", false);
-    public final EnumSetting<BannerRenderMode> bannerRender = enumSetting("Banners", BannerRenderMode.Everything);
+    public final BoolSetting bannerRender = boolSetting("Banners", false);
     public final BoolSetting fireworkExplosions = boolSetting("Firework Explosions", false);
     public final BoolSetting barrierInvis = boolSetting("Barrier Invisibility", false);
     public final BoolSetting textureRotations = boolSetting("Texture Rotations", false, _ -> mc.levelRenderer.allChanged());
@@ -70,7 +64,6 @@ public class NoRender extends Module {
     public final RegistryListSetting<EntityType<?>> entities = entityTypeListSetting("Entities", List.of());
     public final BoolSetting dropSpawnPacket = boolSetting("Drop Spawn Packet", false);
     public final BoolSetting noArmor = boolSetting("No Armor", false);
-    public final BoolSetting noGlowing = boolSetting("No Glowing", false);
     public final BoolSetting noMobInSpawner = boolSetting("No Mob In Spawner", false);
     public final BoolSetting noDeadEntities = boolSetting("No Dead Entities", false);
     public final BoolSetting noNametags = boolSetting("No Nametags", false);
@@ -87,10 +80,6 @@ public class NoRender extends Module {
 
     public boolean noEntity(EntityType<?> entityType) {
         return isEnabled() && entities.contains(entityType);
-    }
-
-    public BannerRenderMode getBannerRenderMode() {
-        return isEnabled() ? bannerRender.getValue() : BannerRenderMode.Everything;
     }
 
 }

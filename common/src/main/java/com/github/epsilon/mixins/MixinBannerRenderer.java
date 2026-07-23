@@ -14,10 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BannerRenderer.class)
 public abstract class MixinBannerRenderer {
 
-    @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/BannerRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
-            at = @At("HEAD"), cancellable = true)
+    @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/BannerRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At("HEAD"), cancellable = true)
     private void onRenderBanner(BannerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
-        if (NoRender.INSTANCE.getBannerRenderMode() == NoRender.BannerRenderMode.None) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.bannerRender.getValue()) ci.cancel();
     }
 
 }
