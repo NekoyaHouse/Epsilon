@@ -4,7 +4,6 @@ import com.github.epsilon.modules.impl.render.NoRender;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -27,6 +26,13 @@ public class MixinScreenEffectRenderer {
         }
     }
 
+    @Inject(method = "renderWater", at = @At("HEAD"), cancellable = true)
+    private static void onRenderWater(CallbackInfo ci) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.liquidOverlay.getValue()) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "renderFire", at = @At("HEAD"), cancellable = true)
     private static void onRenderFire(PoseStack poseStack, MultiBufferSource bufferSource, TextureAtlasSprite texture, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.fireOverlay.getValue()) {
@@ -35,11 +41,8 @@ public class MixinScreenEffectRenderer {
     }
 
     @Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true)
-    private void onRenderItemActivationAnimation(PoseStack poseStack, float partialTick, SubmitNodeCollector nodeCollector, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled()
-                && NoRender.INSTANCE.totemAnimation.getValue()
-                && itemActivationItem != null
-                && itemActivationItem.is(Items.TOTEM_OF_UNDYING)) {
+    private void onRenderItemActivationAnimation(CallbackInfo ci) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.totemAnimation.getValue() && itemActivationItem != null && itemActivationItem.is(Items.TOTEM_OF_UNDYING)) {
             ci.cancel();
         }
     }

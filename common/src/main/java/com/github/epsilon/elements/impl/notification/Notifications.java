@@ -95,7 +95,7 @@ public class Notifications extends HudModule {
     private float getRenderX(float anchorWidth, float boxWidth) {
         return getHorizontalAnchor() == HorizontalAnchor.Right ? this.x + anchorWidth - boxWidth
                 : getHorizontalAnchor() == HorizontalAnchor.Center ? this.x + (anchorWidth - boxWidth) / 2.0f
-                  : this.x;
+                : this.x;
     }
 
     private float getBaseY(float totalHeight) {

@@ -207,4 +207,5 @@ public interface SettingHost {
     default RegistryListSetting<SoundEvent> soundEventListSetting(String name, Collection<SoundEvent> defaultValue) {
         return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, () -> true));
     }
+
 }

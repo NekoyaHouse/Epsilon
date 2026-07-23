@@ -6,16 +6,18 @@ import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.github.epsilon.Constants.mc;
@@ -74,6 +76,14 @@ public class MixinLivingEntity {
         HandsView handsView = HandsView.INSTANCE;
         if (handsView.isEnabled() && handsView.modifySwingDuration.getValue()) {
             cir.setReturnValue(handsView.swingDuration.getValue());
+        }
+    }
+
+    @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
+    private void onSpawnItemParticles(ItemStack itemStack, int count, CallbackInfo ci) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.eatParticles.getValue()
+                && itemStack.getComponents().has(net.minecraft.core.component.DataComponents.FOOD)) {
+            ci.cancel();
         }
     }
 

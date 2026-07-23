@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.GameJoinedEvent;
 import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.modules.impl.player.NoRotate;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.SneakTweak;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
@@ -103,6 +104,13 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         minecraft.player.setXRot(savedPitch + 0.000001f);
         minecraft.player.yHeadRot = savedYaw;
         minecraft.player.yBodyRot = savedYaw;
+    }
+
+    @Inject(method = "handleAddEntity", at = @At("HEAD"), cancellable = true)
+    private void onHandleAddEntity(net.minecraft.network.protocol.game.ClientboundAddEntityPacket packet, CallbackInfo ci) {
+        if (packet != null && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noEntity(packet.getType()) && NoRender.INSTANCE.dropSpawnPacket.getValue()) {
+            ci.cancel();
+        }
     }
 
 }

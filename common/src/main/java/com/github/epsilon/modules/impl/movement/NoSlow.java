@@ -95,7 +95,6 @@ public class NoSlow extends Module {
             }
             if (ticks == 2) {
                 InteractionHand hand = mc.player.getUsedItemHand() == InteractionHand.OFF_HAND ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-
                 mc.getConnection().send(new ServerboundUseItemPacket(hand, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence(), mc.player.getYRot(), mc.player.getXRot()));
             }
             if (ticks > useDuration + 3) {
@@ -118,14 +117,15 @@ public class NoSlow extends Module {
             return;
         }
 
-        if (packet instanceof ClientboundSetHealthPacket
-                || packet instanceof ClientboundSystemChatPacket
-                || packet instanceof ClientboundMoveEntityPacket
-                || packet instanceof ClientboundTeleportEntityPacket
-                || packet instanceof ClientboundEntityEventPacket
-                || packet instanceof ClientboundAddEntityPacket
-                || packet instanceof ClientboundBlockUpdatePacket
-                || packet instanceof ClientboundBlockEventPacket
+        if (
+                packet instanceof ClientboundSetHealthPacket
+                        || packet instanceof ClientboundSystemChatPacket
+                        || packet instanceof ClientboundMoveEntityPacket
+                        || packet instanceof ClientboundTeleportEntityPacket
+                        || packet instanceof ClientboundEntityEventPacket
+                        || packet instanceof ClientboundAddEntityPacket
+                        || packet instanceof ClientboundBlockUpdatePacket
+                        || packet instanceof ClientboundBlockEventPacket
         ) {
             return;
         }
