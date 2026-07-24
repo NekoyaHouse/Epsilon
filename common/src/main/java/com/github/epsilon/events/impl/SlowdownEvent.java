@@ -9,7 +9,7 @@ public class SlowdownEvent {
     }
 
     public boolean isSlowdown() {
-        return this.slowdown;
+        return slowdown;
     }
 
     public void setSlowdown(boolean slowdown) {

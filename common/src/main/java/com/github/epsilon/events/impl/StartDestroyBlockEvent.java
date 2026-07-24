@@ -15,7 +15,7 @@ public class StartDestroyBlockEvent extends Cancellable {
     }
 
     public BlockPos getBlockPos() {
-        return this.blockPos;
+        return blockPos;
     }
 
     public void setBlockPos(BlockPos blockPos) {
@@ -23,7 +23,7 @@ public class StartDestroyBlockEvent extends Cancellable {
     }
 
     public Direction getDirection() {
-        return this.direction;
+        return direction;
     }
 
     public void setDirection(Direction direction) {

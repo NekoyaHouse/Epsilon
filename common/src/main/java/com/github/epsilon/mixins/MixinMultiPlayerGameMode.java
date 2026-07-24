@@ -1,10 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.AttackEntityEvent;
-import com.github.epsilon.events.impl.DestroyBlockEvent;
-import com.github.epsilon.events.impl.StartDestroyBlockEvent;
-import com.github.epsilon.events.impl.UseItemEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.player.BreakCooldown;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -48,12 +45,17 @@ public class MixinMultiPlayerGameMode {
         }
     }
 
-    @Inject(method = "destroyBlock", at = @At("RETURN"), cancellable = true)
-    public void hookDestroyBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "destroyBlock", at = @At("HEAD"), cancellable = true)
+    private void onDestroyBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         DestroyBlockEvent event = EventBus.INSTANCE.post(new DestroyBlockEvent(pos));
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "destroyBlock", at = @At("RETURN"))
+    private void onDestroyedBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        EventBus.INSTANCE.post(new DestroyedBlockEvent(pos));
     }
 
     @WrapOperation(method = "continueDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.PUTFIELD, ordinal = 2))

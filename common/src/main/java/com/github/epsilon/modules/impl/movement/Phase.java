@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.BlockCollisionEvent;
-import com.github.epsilon.events.impl.DestroyBlockEvent;
+import com.github.epsilon.events.impl.DestroyedBlockEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -116,7 +116,7 @@ public class Phase extends Module {
     }
 
     @EventHandler
-    private void onDestroyBlock(DestroyBlockEvent event) {
+    private void onDestroyedBlock(DestroyedBlockEvent event) {
         clipTimer = afterBreak.getValue();
     }
 

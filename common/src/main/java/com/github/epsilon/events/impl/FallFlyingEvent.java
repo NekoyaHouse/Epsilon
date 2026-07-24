@@ -15,7 +15,7 @@ public class FallFlyingEvent {
     }
 
     public float getYaw() {
-        return this.yaw;
+        return yaw;
     }
 
     public void setPitch(float pitch) {
@@ -23,7 +23,7 @@ public class FallFlyingEvent {
     }
 
     public float getPitch() {
-        return this.pitch;
+        return pitch;
     }
 
 }

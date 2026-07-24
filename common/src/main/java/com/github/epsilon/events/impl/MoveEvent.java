@@ -15,15 +15,15 @@ public class MoveEvent extends Cancellable {
     }
 
     public double getX() {
-        return this.x;
+        return x;
     }
 
     public double getY() {
-        return this.y;
+        return y;
     }
 
     public double getZ() {
-        return this.z;
+        return z;
     }
 
     public void setX(double x) {

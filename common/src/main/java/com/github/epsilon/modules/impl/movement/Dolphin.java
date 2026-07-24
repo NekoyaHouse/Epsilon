@@ -16,7 +16,6 @@ public class Dolphin extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck()) return;
         if (!mc.player.isInWater() || mc.player.isShiftKeyDown()) return;
 
         Vec3 velocity = mc.player.getDeltaMovement();

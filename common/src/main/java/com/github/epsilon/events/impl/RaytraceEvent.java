@@ -11,11 +11,11 @@ public class RaytraceEvent {
     }
 
     public float getYaw() {
-        return this.yaw;
+        return yaw;
     }
 
     public float getPitch() {
-        return this.pitch;
+        return pitch;
     }
 
     public void setYaw(float yaw) {

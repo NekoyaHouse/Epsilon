@@ -139,6 +139,7 @@ public class ModuleHolder {
         addModule(LogoutSpots.INSTANCE);
         addModule(MasEffects.INSTANCE);
         addModule(NameTags.INSTANCE);
+        addModule(NoGhostBlocks.INSTANCE);
         addModule(NoRender.INSTANCE);
         addModule(Particles.INSTANCE);
         addModule(PopChams.INSTANCE);
