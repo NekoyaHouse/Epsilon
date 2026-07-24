@@ -8,6 +8,7 @@ import com.github.epsilon.modules.impl.combat.AntiBot;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Monster;
@@ -60,7 +61,6 @@ public class TargetManager {
         }
 
         if (sharedTarget != null && isValidTarget(sharedTarget, request)) {
-            // Keep the same target as the highest priority when it is still valid for this module.
             if (candidates.remove(sharedTarget)) {
                 candidates.add(0, sharedTarget);
             }
@@ -113,22 +113,30 @@ public class TargetManager {
 
         if (request.fov() < 360.0f && !RotationUtils.isInFov(entity, request.fov())) return false;
 
-        switch (entity) {
-            case Player player -> {
-                if (Managers.FRIEND.isFriend(player)) return false;
-                if (!request.player()) return false;
-                if (entity.isInvisible() && !request.invisible()) return false;
-            }
-            case Villager _ -> {
-                if (!request.villager()) return false;
-            }
-            case Animal _ -> {
-                if (!request.animal()) return false;
-            }
-            case Monster _ -> {
-                if (!request.mob()) return false;
-            }
-            default -> {
+        if (!request.throughWalls() && !mc.player.hasLineOfSight(entity)) return false;
+
+        if (entity instanceof Player player) {
+            if (Managers.FRIEND.isFriend(player)) return false;
+            if (!request.player()) return false;
+            if (entity.isInvisible() && !request.invisible()) return false;
+        } else if (entity instanceof Villager) {
+            if (!request.villager()) return false;
+        } else if (entity instanceof Monster) {
+            if (!request.mob()) return false;
+        } else if (entity instanceof Animal) {
+            if (!request.animal()) return false;
+        } else {
+            MobCategory category = entity.getType().getCategory();
+            switch (category) {
+                case AMBIENT, WATER_AMBIENT -> {
+                    if (!request.ambient()) return false;
+                }
+                case WATER_CREATURE, AXOLOTLS, UNDERGROUND_WATER_CREATURE -> {
+                    if (!request.water()) return false;
+                }
+                default -> {
+                    if (!request.others()) return false;
+                }
             }
         }
 
