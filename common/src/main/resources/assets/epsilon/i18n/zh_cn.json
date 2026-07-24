@@ -787,6 +787,24 @@
         "mobs": "怪物",
         "villagers": "村民"
       },
+      "multi aura": {
+        "_value": "多重光环",
+        "range": "范围",
+        "min cps": "最小CPS",
+        "max cps": "最大CPS",
+        "fov": "视野角度",
+        "swing hand": "挥手",
+        "pause on containers": "容器暂停",
+        "through walls": "穿墙",
+        "player": "玩家",
+        "mob": "怪物",
+        "animal": "动物",
+        "villager": "村民",
+        "ambient": "环境生物",
+        "water": "水生生物",
+        "others": "其他",
+        "invisible": "隐身"
+      },
       "packet mine": {
         "_value": "数据包挖掘",
         "pause on use": "使用时暂停",

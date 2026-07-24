@@ -61,6 +61,7 @@ public class ModuleHolder {
         addModule(KillAura.INSTANCE);
         addModule(KeyPearl.INSTANCE);
         addModule(MaceAura.INSTANCE);
+        addModule(MultiAura.INSTANCE);
         addModule(PacketMine.INSTANCE);
         addModule(SafeAnchor.INSTANCE);
         addModule(SafeCrystal.INSTANCE);

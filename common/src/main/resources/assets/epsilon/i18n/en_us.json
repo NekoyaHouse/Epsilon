@@ -787,6 +787,24 @@
         "mobs": "Mobs",
         "villagers": "Villagers"
       },
+      "multi aura": {
+        "_value": "Multi Aura",
+        "range": "Range",
+        "min cps": "Min CPS",
+        "max cps": "Max CPS",
+        "fov": "FOV",
+        "swing hand": "Swing Hand",
+        "pause on containers": "Pause On Containers",
+        "through walls": "Through Walls",
+        "player": "Player",
+        "mob": "Mob",
+        "animal": "Animal",
+        "villager": "Villager",
+        "ambient": "Ambient",
+        "water": "Water",
+        "others": "Others",
+        "invisible": "Invisible"
+      },
       "packet mine": {
         "_value": "Packet Mine",
         "pause on use": "Pause On Use",
