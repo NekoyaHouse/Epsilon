@@ -83,7 +83,11 @@ public class SilentAim extends Module {
                 mob.getValue(),
                 animal.getValue(),
                 villagers.getValue(),
+                false,
+                false,
+                false,
                 invisible.getValue(),
+                true,
                 1
         ));
 

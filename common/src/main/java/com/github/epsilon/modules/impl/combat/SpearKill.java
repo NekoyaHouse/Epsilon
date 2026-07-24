@@ -111,7 +111,11 @@ public class SpearKill extends Module {
                             mobs.getValue(),
                             animals.getValue(),
                             villagers.getValue(),
+                            false,
+                            false,
+                            false,
                             invisible.getValue(),
+                            true,
                             64
                     )
             );

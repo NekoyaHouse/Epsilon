@@ -79,6 +79,10 @@ public class MaceAura extends Module {
                 mobs.getValue(),
                 animals.getValue(),
                 villagers.getValue(),
+                false,
+                false,
+                false,
+                true,
                 true,
                 64
         ));

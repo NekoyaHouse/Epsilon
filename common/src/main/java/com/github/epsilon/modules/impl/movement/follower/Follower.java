@@ -88,7 +88,11 @@ public class Follower extends Module {
                 false,
                 false,
                 false,
+                false,
+                false,
+                false,
                 !ignoreInvisible.getValue(),
+                true,
                 living -> living instanceof Player,
                 1
         ));

@@ -80,6 +80,9 @@ public class KillAura extends Module {
     private final BoolSetting mob = boolSetting("Mob", true);
     private final BoolSetting animal = boolSetting("Animal", true);
     private final BoolSetting villagers = boolSetting("Villagers", false);
+    private final BoolSetting ambient = boolSetting("Ambient", false);
+    private final BoolSetting water = boolSetting("Water", false);
+    private final BoolSetting others = boolSetting("Others", false);
     private final BoolSetting invisible = boolSetting("Invisible", true);
 
     private final BoolSetting throughWalls = boolSetting("Through Walls", false);
@@ -147,7 +150,11 @@ public class KillAura extends Module {
                 mob.getValue(),
                 animal.getValue(),
                 villagers.getValue(),
+                ambient.getValue(),
+                water.getValue(),
+                others.getValue(),
                 invisible.getValue(),
+                throughWalls.getValue(),
                 64
         ));
 
