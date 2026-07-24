@@ -24,6 +24,8 @@ public class ReverseStep extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Post event) {
+        if (Scaffold.INSTANCE.isEnabled()) return;
+
         Entity vehicle = mc.player.getVehicle();
         if (vehicle != null && vehicles.getValue()) {
             if (canSnap(vehicle)) {
