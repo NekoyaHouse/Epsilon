@@ -708,8 +708,8 @@ public class ZealotCrystalPlus extends Module {
         TargetSnapshot primary = placeInfo != null
                 ? snapshot.targets().stream().filter(targetInfo -> targetInfo.entity() == placeInfo.target()).findFirst().orElse(snapshot.targets().getFirst())
                 : (rotationPlaceInfo != null
-                   ? snapshot.targets().stream().filter(targetInfo -> targetInfo.entity() == rotationPlaceInfo.target()).findFirst().orElse(snapshot.targets().getFirst())
-                   : snapshot.targets().getFirst());
+                ? snapshot.targets().stream().filter(targetInfo -> targetInfo.entity() == rotationPlaceInfo.target()).findFirst().orElse(snapshot.targets().getFirst())
+                : snapshot.targets().getFirst());
 
         return new AsyncResult(snapshot.id(), rotationPlaceInfo, placeInfo, rotationBreakPlan, breakPlan, primary, System.nanoTime() - startTime);
     }

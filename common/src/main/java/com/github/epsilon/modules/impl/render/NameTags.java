@@ -41,7 +41,6 @@ public class NameTags extends Module {
     private final DoubleSetting scale = doubleSetting("Scale", 0.4, 0.1, 1.5, 0.1);
     private final DoubleSetting heightOffset = doubleSetting("Height Offset", 0.15, -0.5, 1.0, 0.05);
     private final ColorSetting backgroundColor = colorSetting("Background Color", TAG_BACKGROUND);
-    public final BoolSetting vanillaNameTags = boolSetting("Vanilla Name Tags", false);
     private final BoolSetting showEquipment = boolSetting("Show Equipment", true);
     private final BoolSetting showHands = boolSetting("Show Hands", true, showEquipment::getValue);
     private final BoolSetting showSelf = boolSetting("Show Self", true);

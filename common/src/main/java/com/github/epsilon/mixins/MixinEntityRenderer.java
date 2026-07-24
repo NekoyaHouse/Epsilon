@@ -37,7 +37,7 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
     @Inject(method = "getNameTag", at = @At("HEAD"), cancellable = true)
     private void onGetNameTag(T entity, CallbackInfoReturnable<Component> cir) {
         boolean hideGlobalNametags = NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noNametags.getValue();
-        boolean hidePlayerNametags = NameTags.INSTANCE.isEnabled() && !NameTags.INSTANCE.vanillaNameTags.getValue() && entity instanceof Player;
+        boolean hidePlayerNametags = NameTags.INSTANCE.isEnabled() && entity instanceof Player;
         if (hideGlobalNametags || hidePlayerNametags) {
             cir.setReturnValue(null);
         }

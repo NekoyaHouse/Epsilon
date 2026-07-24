@@ -108,6 +108,7 @@ public class ModuleHolder {
         addModule(NoFall.INSTANCE);
         addModule(NoSlow.INSTANCE);
         addModule(Phase.INSTANCE);
+        addModule(ReverseStep.INSTANCE);
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
         addModule(Speed.INSTANCE);
