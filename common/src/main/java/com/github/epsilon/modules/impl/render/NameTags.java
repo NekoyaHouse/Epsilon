@@ -16,7 +16,6 @@ import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.base.Suppliers;
 import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -39,7 +38,7 @@ public class NameTags extends Module {
 
     private final DoubleSetting range = doubleSetting("Range", 64.0, 4.0, 128.0, 1.0);
     private final DoubleSetting scale = doubleSetting("Scale", 0.4, 0.1, 1.5, 0.1);
-    private final DoubleSetting heightOffset = doubleSetting("Height Offset", 0.15, -0.5, 1.0, 0.05);
+    private final DoubleSetting heightOffset = doubleSetting("Height Offset", 0.40, -0.5, 1.0, 0.05);
     private final ColorSetting backgroundColor = colorSetting("Background Color", TAG_BACKGROUND);
     private final BoolSetting showEquipment = boolSetting("Show Equipment", true);
     private final BoolSetting showHands = boolSetting("Show Hands", true, showEquipment::getValue);
@@ -120,8 +119,9 @@ public class NameTags extends Module {
             float visualRight = Math.max(x + boxWidth, itemLeft + itemRowWidth);
             float visualTop = equipmentItems.isEmpty() ? y : itemTop;
 
-            if (visualRight < 0.0f || y + boxHeight < 0.0f || visualLeft > screenWidth || visualTop > screenHeight)
+            if (visualRight < 0.0f || y + boxHeight < 0.0f || visualLeft > screenWidth || visualTop > screenHeight) {
                 continue;
+            }
 
             Color healthColor = totalHealth < 10.0f ? new Color(255, 214, 64, 240) : new Color(120, 255, 120, 240);
             final var isFriend = Managers.FRIEND.isFriend(nameText);
@@ -189,7 +189,7 @@ public class NameTags extends Module {
     }
 
     private float getPerspectiveScale(float baseScale, float projectedHeight) {
-        float perspectiveFactor = Mth.clamp(projectedHeight / 36.0f, 0.55f, 2.2f);
+        float perspectiveFactor = Math.max(projectedHeight / 36.0f, 0.55f);
         return baseScale * perspectiveFactor;
     }
 
