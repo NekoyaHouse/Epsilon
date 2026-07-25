@@ -4,12 +4,10 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
-import love.slmpc.ClInitNative;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.List;
 
-@ClInitNative
 public class NoRender extends Module {
 
     public static final NoRender INSTANCE = new NoRender();

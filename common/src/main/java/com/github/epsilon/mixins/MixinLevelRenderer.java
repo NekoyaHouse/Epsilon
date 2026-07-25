@@ -74,10 +74,18 @@ public class MixinLevelRenderer {
         return true;
     }
 
-    @ModifyExpressionValue(method = "addSkyPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;doesMobEffectBlockSky:Z", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(
+            method = {
+                    "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V",
+                    "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Matrix4fc;)V" // For NeoForge
+            },
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;doesMobEffectBlockSky:Z", opcode = Opcodes.GETFIELD),
+            require = 0
+    )
     private boolean modifyMobEffectBlocksSky(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && (NoRender.INSTANCE.blindness.getValue() || NoRender.INSTANCE.darkness.getValue()))
+        if (NoRender.INSTANCE.isEnabled() && (NoRender.INSTANCE.blindness.getValue() || NoRender.INSTANCE.darkness.getValue())) {
             return false;
+        }
         return original;
     }
 

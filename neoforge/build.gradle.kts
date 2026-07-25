@@ -82,3 +82,13 @@ sourceSets.configureEach {
         }
     }
 }
+
+/*
+tasks.register<Copy>("extractRuntimeClasspath") {
+    from(configurations.runtimeClasspath)
+    into("$projectDir/build/runtimeClasspath")
+    doFirst {
+        file("$projectDir/build/runtimeClasspath").mkdirs()
+    }
+}
+*/
