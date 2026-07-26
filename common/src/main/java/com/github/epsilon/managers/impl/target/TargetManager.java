@@ -4,8 +4,11 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.AntiBot;
+import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -18,6 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -107,6 +111,7 @@ public class TargetManager {
     private boolean isValidTarget(LivingEntity entity, TargetRequest request) {
         if (!entity.isAlive() || entity.isDeadOrDying()) return false;
         if (AntiBot.INSTANCE.isBot(entity)) return false;
+        if (isSameTeam(entity)) return false;
 
         double dist = RotationUtils.getEyeDistanceToEntity(entity);
         if (dist > request.range()) return false;
@@ -141,6 +146,32 @@ public class TargetManager {
         }
 
         return request.extraFilter().test(entity);
+    }
+
+    private boolean isSameTeam(Entity entity) {
+        EnumSetting<ClientSetting.Teams> teams = ClientSetting.INSTANCE.teams;
+        if (teams.is(ClientSetting.Teams.None)) {
+            return false;
+        }
+        if (entity instanceof Player) {
+            if (teams.is(ClientSetting.Teams.Color)) {
+                return entity.getTeamColor() == mc.player.getTeamColor();
+            } else {
+                return Objects.equals(getTeam(entity), getTeam(mc.player));
+            }
+        }
+        return false;
+    }
+
+    private String getTeam(Entity entity) {
+        PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(entity.getUUID());
+        if (playerInfo == null) {
+            return null;
+        }
+        if (playerInfo.getTeam() != null) {
+            return playerInfo.getTeam().getName();
+        }
+        return null;
     }
 
 }

@@ -30,6 +30,12 @@ public class ClientSetting extends Module {
         super("Client Setting", null);
     }
 
+    public enum Teams {
+        None,
+        Color,
+        Scoreboard
+    }
+
     public enum GuiMode {
         Dropdown,
         Panel
@@ -82,6 +88,7 @@ public class ClientSetting extends Module {
     }
 
     private final SettingGroup sgGeneral = settingGroup("General");
+    private final SettingGroup sgTeams = settingGroup("Teams");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgReisa = settingGroup("Uzawa Reisa");
@@ -130,6 +137,9 @@ public class ClientSetting extends Module {
     public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
 
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
+
+    // Teams
+    public final EnumSetting<Teams> teams = enumSetting("Teams", Teams.Scoreboard);
 
     // Anti Cheat
     public final EnumSetting<RotationManager.RotationMode> rotationMode =
