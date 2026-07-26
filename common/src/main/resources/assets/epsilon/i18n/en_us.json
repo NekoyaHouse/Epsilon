@@ -422,6 +422,17 @@
         "health": "Health",
         "check gapple": "Check Gapple"
       },
+      "auto throw": {
+        "_value": "Auto Throw",
+        "min range": "Min Range",
+        "max range": "Max Range",
+        "min delay": "Min Delay",
+        "max delay": "Max Delay",
+        "swap back delay": "Swap Back Delay",
+        "wall check": "Wall Check",
+        "rotation speed": "Rotation Speed",
+        "rotation back speed": "Rotation Back Speed"
+      },
       "auto weapon": {
         "_value": "Auto Weapon",
         "page": {
@@ -1371,8 +1382,11 @@
         "mode": {
           "_value": "Mode",
           "cancel": "Cancel",
-          "legit": "Legit"
+          "reduce": "Reduce"
         },
+        "attack counts": "Attack Counts",
+        "sprintticks": "Sprint Ticks",
+        "max delay": "Max Delay",
         "server motion": "Server Motion",
         "explosion": "Explosion",
         "explosion only block": "Explosion Only Block",

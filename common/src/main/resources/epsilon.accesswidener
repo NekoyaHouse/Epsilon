@@ -15,6 +15,9 @@ mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xR
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
 
+accessible field net/minecraft/network/protocol/game/ServerboundUseItemPacket yRot F
+mutable field net/minecraft/network/protocol/game/ServerboundUseItemPacket yRot F
+
 accessible method net/minecraft/client/player/LocalPlayer sendPosition ()V
 
 accessible class net/minecraft/client/ResourceLoadStateTracker$ReloadState

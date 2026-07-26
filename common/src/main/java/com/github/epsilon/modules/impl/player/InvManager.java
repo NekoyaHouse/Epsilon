@@ -1,8 +1,9 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.EventPriority;
+import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -11,15 +12,18 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.timer.TimerUtils;
+import com.mojang.blaze3d.platform.InputConstants;
 import love.slmpc.ClInitNative;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,6 +31,15 @@ import java.util.stream.IntStream;
 public class InvManager extends Module {
 
     public static final InvManager INSTANCE = new InvManager();
+
+    private InvManager() {
+        super("Inv Manager", Category.PLAYER);
+    }
+
+    private enum Mode {
+        Inventory,
+        Silent
+    }
 
     private enum OffhandItemMode {
         None,
@@ -42,11 +55,11 @@ public class InvManager extends Module {
         PunchBow
     }
 
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
     private final IntSetting minDelay = intSetting("Min Delay", 50, 0, 1000, 50);
     private final IntSetting delay = intSetting("Delay", 50, 0, 1000, 50);
     private final EnumSetting<OffhandItemMode> offhandItems = enumSetting("Offhand Items", OffhandItemMode.None);
     private final BoolSetting autoArmor = boolSetting("Auto Armor", true);
-    private final BoolSetting inventoryOnly = boolSetting("Inventory Only", true);
     private final BoolSetting switchSword = boolSetting("Switch Sword", true);
     private final IntSetting swordSlot = intSetting("Sword Slot", 1, 1, 9, 1, switchSword::getValue);
     private final BoolSetting switchBlock = boolSetting("Switch Block", true, () -> !offhandItems.is(OffhandItemMode.Block));
@@ -85,11 +98,16 @@ public class InvManager extends Module {
     private boolean clickOffHand = false;
     private boolean inventoryOpen = false;
 
-    private InvManager() {
-        super("Inv Manager", Category.PLAYER);
+    private int sprintSuppressTicks;
+    private int inventoryActionDelayTicks;
+
+    @Override
+    protected void onEnable() {
+        sprintSuppressTicks = 0;
+        inventoryActionDelayTicks = 0;
     }
 
-    public boolean isItemUseful(ItemStack stack) {
+    private boolean isItemUseful(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (InvHelper.isGodItem(stack)) return true;
         if (stack.getDisplayName().getString().contains("点击使用")) return true;
@@ -125,55 +143,31 @@ public class InvManager extends Module {
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (event.getPacket() instanceof ServerboundContainerClosePacket) this.inventoryOpen = false;
-        if (this.inventoryOpen && !this.inventoryOnly.getValue()) {
+        if (this.inventoryOpen && mode.is(Mode.Silent)) {
             if (event.getPacket() instanceof ServerboundMovePlayerPacket) {
-                if (mc.player.isMoving()) {
+                if (mc.player.isMoving() && !mc.player.isSprinting() && !mc.options.keySprint.isDown()) {
                     mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
                 }
             } else if (event.getPacket() instanceof ServerboundUseItemOnPacket || event.getPacket() instanceof ServerboundUseItemPacket || event.getPacket() instanceof ServerboundInteractPacket || event.getPacket() instanceof ServerboundPlayerActionPacket) {
-                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+                if (!mc.player.isSprinting() && !mc.options.keySprint.isDown()) {
+                    mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+                }
             }
         }
-    }
-
-    private boolean checkConfig() {
-        List<Pair<BoolSetting, IntSetting>> pairs = new ArrayList<>();
-        if (!this.keepProjectile.getValue()) this.switchProjectile.setValue(false);
-        pairs.add(Pair.of(this.switchSword, this.swordSlot));
-        pairs.add(Pair.of(this.switchPickaxe, this.pickaxeSlot));
-        pairs.add(Pair.of(this.switchAxe, this.axeSlot));
-        pairs.add(Pair.of(this.switchBow, this.bowSlot));
-        pairs.add(Pair.of(this.switchWaterBucket, this.waterBucketSlot));
-        pairs.add(Pair.of(this.switchEnderPearl, this.enderPearlSlot));
-        pairs.add(Pair.of(this.switchFireball, this.fireballSlot));
-        if (!this.offhandItems.is(OffhandItemMode.GoldenApple))
-            pairs.add(Pair.of(this.switchGoldenApple, this.goldenAppleSlot));
-        if (!this.offhandItems.is(OffhandItemMode.Projectile))
-            pairs.add(Pair.of(this.switchProjectile, this.projectileSlot));
-        if (!this.offhandItems.is(OffhandItemMode.FishingRod)) pairs.add(Pair.of(this.switchRod, this.rodSlot));
-        if (!this.offhandItems.is(OffhandItemMode.Block)) pairs.add(Pair.of(this.switchBlock, this.blockSlot));
-        Set<Integer> usedSlot = new HashSet<>();
-        for (Pair<BoolSetting, IntSetting> pair : pairs) {
-            if (pair.getKey().getValue()) {
-                int targetSlot = pair.getValue().getValue() - 1;
-                if (usedSlot.contains(targetSlot)) return false;
-                usedSlot.add(targetSlot);
-            }
-        }
-        return true;
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void onTick(ClientTickEvent.Pre event) {
+        if (nullCheck()) return;
         if (InvHelper.shouldDisableFeatures()) return;
         if (mc.player.isMoving()) this.noMoveTicks = 0;
         else this.noMoveTicks++;
-        boolean allowMove = !this.inventoryOnly.getValue();
-        if (Stealer.INSTANCE.isWorking() || (this.inventoryOnly.getValue() ? !(mc.screen instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
+        boolean allowMove = mode.is(Mode.Silent);
+        if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.screen instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
             this.clickOffHand = false;
             return;
         }
-        if (mc.screen instanceof AbstractContainerScreen container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
+        if (mc.screen instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
             return;
         int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
 
@@ -183,9 +177,8 @@ public class InvManager extends Module {
                 ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);
                 if (InvHelper.isArmor(stack)) {
                     if (!stack.isEmpty() && timer.passedMillise(nextDelay) && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
-                        ClickSlotUtils.dropAll(4 + (4 - i));
+                        dropAll(4 + (4 - i));
                         this.inventoryOpen = true;
-                        timer.reset();
                     }
                 }
             }
@@ -196,22 +189,21 @@ public class InvManager extends Module {
                     boolean isBestItem = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)) == currentItemScore;
                     boolean isBetterItem = InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) < currentItemScore;
                     if (isBestItem && isBetterItem && timer.passedMillise(nextDelay)) {
-                        if (ix < 9)
-                            ClickSlotUtils.shiftClick(ix + 36);
-                        else
-                            ClickSlotUtils.shiftClick(ix);
+                        if (ix < 9) {
+                            shiftClick(ix + 36);
+                        } else {
+                            shiftClick(ix);
+                        }
                         this.inventoryOpen = true;
-                        timer.reset();
                     }
                 }
             }
         }
 
         if (this.clickOffHand && timer.passedMillise(nextDelay)) {
-            ClickSlotUtils.click(45);
+            click(45);
             this.inventoryOpen = true;
             this.clickOffHand = false;
-            timer.reset();
         }
 
         if (this.offhandItems.is(OffhandItemMode.GoldenApple)) {
@@ -224,14 +216,13 @@ public class InvManager extends Module {
             if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                 if (offHand.getCount() < offHand.getMaxStackSize() && egapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
-                        int targetSlot = egapSlot;
-                        if (targetSlot < 9)
-                            ClickSlotUtils.click(targetSlot + 36);
-                        else
-                            ClickSlotUtils.click(targetSlot);
+                        if (egapSlot < 9) {
+                            click(egapSlot + 36);
+                        } else {
+                            click(egapSlot);
+                        }
                         this.inventoryOpen = true;
                         this.clickOffHand = true;
-                        timer.reset();
                     }
                 }
             } else if (offHandItem == Items.GOLDEN_APPLE) {
@@ -243,13 +234,13 @@ public class InvManager extends Module {
                 } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
                         int targetSlot = gapSlot;
-                        if (targetSlot < 9)
-                            ClickSlotUtils.click(targetSlot + 36);
-                        else
-                            ClickSlotUtils.click(targetSlot);
+                        if (targetSlot < 9) {
+                            click(targetSlot + 36);
+                        } else {
+                            click(targetSlot);
+                        }
                         this.inventoryOpen = true;
                         this.clickOffHand = true;
-                        timer.reset();
                     }
                 }
             } else {
@@ -418,17 +409,54 @@ public class InvManager extends Module {
                 }
             }
         }
+    }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onSprintTick(ClientTickEvent.Pre event) {
+        if (nullCheck()) return;
+
+        if (sprintSuppressTicks > 0) {
+            sprintSuppressTicks--;
+            mc.player.setSprinting(false);
+            KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
+        }
+
+        if (inventoryActionDelayTicks > 0) {
+            inventoryActionDelayTicks--;
+        }
+
+        if (mc.screen instanceof InventoryScreen) {
+            KeyMapping[] key = {mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keyJump};
+
+            switch (mode.getValue()) {
+                case Inventory -> {
+                    for (KeyMapping b : key) {
+                        KeyMapping.set(b.getDefaultKey(), false);
+                    }
+                    KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
+                }
+                case Silent -> {
+                    setKeyPressed(mc.options.keySprint);
+                    for (KeyMapping b : key) {
+                        setKeyPressed(b);
+                    }
+                }
+            }
+        }
+    }
+
+    private void setKeyPressed(KeyMapping keyBinding) {
+        boolean pressed = InputConstants.isKeyDown(mc.getWindow(), keyBinding.getDefaultKey().getValue());
+        KeyMapping.set(keyBinding.getDefaultKey(), pressed);
     }
 
     private void swapOffHand(int slot) {
         if (slot < 9) {
-            ClickSlotUtils.swap(slot + 36, 40);
+            swap(slot + 36, 40);
         } else {
-            ClickSlotUtils.swap(slot, 40);
+            swap(slot, 40);
         }
         this.inventoryOpen = true;
-        timer.reset();
     }
 
     private void throwItem(ItemStack item) {
@@ -437,12 +465,11 @@ public class InvManager extends Module {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
                 if (itemSlot < 9) {
-                    ClickSlotUtils.dropAll(itemSlot + 36);
+                    dropAll(itemSlot + 36);
                 } else {
-                    ClickSlotUtils.dropAll(itemSlot);
+                    dropAll(itemSlot);
                 }
                 this.inventoryOpen = true;
-                timer.reset();
             }
         }
     }
@@ -454,12 +481,11 @@ public class InvManager extends Module {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
-                    ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
+                    swap(bestItemSlot + 36, targetSlot);
                 } else {
-                    ClickSlotUtils.swap(bestItemSlot, targetSlot);
+                    swap(bestItemSlot, targetSlot);
                 }
                 this.inventoryOpen = true;
-                timer.reset();
             }
         }
     }
@@ -473,15 +499,71 @@ public class InvManager extends Module {
                 ItemStack bestItemStack = InvHelper.getInventoryStack(bestItemSlot);
                 if (currentSlot.getItem() != item || currentSlot.getItem() == item && currentSlot.getCount() < bestItemStack.getCount()) {
                     if (bestItemSlot < 9) {
-                        ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
+                        swap(bestItemSlot + 36, targetSlot);
                     } else {
-                        ClickSlotUtils.swap(bestItemSlot, targetSlot);
+                        swap(bestItemSlot, targetSlot);
                     }
                     this.inventoryOpen = true;
-                    timer.reset();
                 }
             }
         }
+    }
+
+    public boolean isSprintSuppressed() {
+        return sprintSuppressTicks > 0;
+    }
+
+    public void suppressSprintForTicks(int ticks) {
+        if (ticks > sprintSuppressTicks) {
+            sprintSuppressTicks = ticks;
+        }
+        if (mc.player != null) {
+            mc.player.setSprinting(false);
+            KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
+        }
+    }
+
+    public boolean prepareInventoryAction() {
+        if (sprintSuppressTicks > 0) {
+            return inventoryActionDelayTicks <= 0;
+        }
+        boolean wasSprinting = mc.player.isSprinting();
+        boolean keyPressed = mc.options.keySprint.isDown();
+        if (wasSprinting) {
+            suppressSprintForTicks(6);
+            if (inventoryActionDelayTicks < 1) {
+                inventoryActionDelayTicks = 1;
+            }
+            return false;
+        }
+        if (keyPressed) {
+            suppressSprintForTicks(2);
+        }
+        return inventoryActionDelayTicks <= 0;
+    }
+
+    private void click(int slot) {
+        if (!prepareInventoryAction()) return;
+        ClickSlotUtils.click(slot);
+        timer.reset();
+    }
+
+    private void swap(int slot, int hotbarSlot) {
+        if (!prepareInventoryAction()) return;
+        ClickSlotUtils.swap(slot, hotbarSlot);
+        timer.reset();
+    }
+
+    private void shiftClick(int slot) {
+        if (!prepareInventoryAction()) return;
+        ClickSlotUtils.shiftClick(slot);
+        timer.reset();
+    }
+
+    private void dropAll(int slot) {
+        if (!prepareInventoryAction()) return;
+        ClickSlotUtils.dropAll(slot);
+        timer.reset();
     }
 
 }

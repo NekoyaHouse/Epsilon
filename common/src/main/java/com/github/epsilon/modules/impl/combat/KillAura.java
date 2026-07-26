@@ -9,6 +9,7 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
@@ -141,7 +142,7 @@ public class KillAura extends Module {
             DeobfESP.clear();
         }
 
-        if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
+        if (mc.player.isUsingItem() || mc.player.isBlocking() || Scaffold.INSTANCE.isEnabled()) return;
 
         List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
                 aimRange.getValue(),

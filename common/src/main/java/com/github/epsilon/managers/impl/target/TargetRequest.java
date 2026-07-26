@@ -41,7 +41,7 @@ public record TargetRequest(
             boolean throughWalls,
             int maxTargets
     ) {
-        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, throughWalls, living -> true, maxTargets);
+        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, throughWalls, livingEntity -> true, maxTargets);
     }
 
     public static TargetRequest of(

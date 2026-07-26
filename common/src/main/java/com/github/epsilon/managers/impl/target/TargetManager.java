@@ -62,7 +62,7 @@ public class TargetManager {
 
         if (sharedTarget != null && isValidTarget(sharedTarget, request)) {
             if (candidates.remove(sharedTarget)) {
-                candidates.add(0, sharedTarget);
+                candidates.addFirst(sharedTarget);
             }
         } else if (sharedTarget == null) {
             sharedTarget = candidates.getFirst();

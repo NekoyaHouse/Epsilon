@@ -422,6 +422,17 @@
         "health": "生命值",
         "check gapple": "检查金苹果"
       },
+      "auto throw": {
+        "_value": "自动投掷",
+        "min range": "最小距离",
+        "max range": "最大距离",
+        "min delay": "最小延迟",
+        "max delay": "最大延迟",
+        "swap back delay": "切换延迟",
+        "wall check": "墙体检测",
+        "rotation speed": "旋转速度",
+        "rotation back speed": "回转速度"
+      },
       "auto weapon": {
         "_value": "自动武器",
         "page": {
@@ -1371,8 +1382,11 @@
         "mode": {
           "_value": "模式",
           "cancel": "取消",
-          "legit": "合法"
+          "reduce": "减少"
         },
+        "attack counts": "攻击次数",
+        "sprintticks": "冲刺刻数",
+        "max delay": "最大延迟",
         "server motion": "服务端移动",
         "explosion": "爆炸",
         "explosion only block": "仅方块内无爆炸",
