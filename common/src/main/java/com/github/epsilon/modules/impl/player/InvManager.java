@@ -9,6 +9,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -56,8 +57,8 @@ public class InvManager extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
-    private final IntSetting minDelay = intSetting("Min Delay", 50, 0, 1000, 50);
-    private final IntSetting delay = intSetting("Delay", 50, 0, 1000, 50);
+    private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
+    private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
     private final EnumSetting<OffhandItemMode> offhandItems = enumSetting("Offhand Items", OffhandItemMode.None);
     private final BoolSetting autoArmor = boolSetting("Auto Armor", true);
     private final BoolSetting switchSword = boolSetting("Switch Sword", true);
@@ -169,7 +170,7 @@ public class InvManager extends Module {
         }
         if (mc.screen instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
             return;
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
 
         if (this.autoArmor.getValue()) {
             EquipmentSlot[] armorSlots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
@@ -460,7 +461,7 @@ public class InvManager extends Module {
     }
 
     private void throwItem(ItemStack item) {
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
         if (InvHelper.isItemValid(item) && timer.passedMillise(nextDelay)) {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
@@ -476,7 +477,7 @@ public class InvManager extends Module {
 
     private void swapItem(int targetSlot, ItemStack bestItem) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
         if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && timer.passedMillise(nextDelay)) {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
@@ -492,7 +493,7 @@ public class InvManager extends Module {
 
     private void swapItem(int targetSlot, Item item) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
         if (InvHelper.isItemValid(currentSlot) && timer.passedMillise(nextDelay)) {
             int bestItemSlot = InvHelper.getItemSlot(item);
             if (bestItemSlot != -1) {

@@ -6,6 +6,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -29,8 +30,8 @@ public class Stealer extends Module {
         super("Stealer", Category.PLAYER);
     }
 
-    private final IntSetting minDelay = intSetting("Min Delay", 50, 0, 1000, 50);
-    private final IntSetting delay = intSetting("Delay", 50, 0, 1000, 50);
+    private final IntSetting minDelay = intSetting("Min Delay", 110, 0, 1000, 50);
+    private final IntSetting maxDelay = intSetting("Delay", 140, 0, 1000, 50);
     private final BoolSetting closeDelay = boolSetting("Close Delay", true);
     private final IntSetting cDelay = intSetting("Close Delay Value", 150, 0, 1000, 1, closeDelay::getValue);
     private final BoolSetting pickEnderChest = boolSetting("Ender Chest", false);
@@ -155,7 +156,7 @@ public class Stealer extends Module {
                         || chestTitle.equals("Chest")
                         || this.pickEnderChest.getValue() && chestTitle.equals(enderChest)
                 ) {
-                    int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+                    int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
                     if (this.isChestEmpty(menu) && timer.passedMillise(nextDelay)) {
                         if (mc.player != null && closeDelay.getValue() && timer.passedMillise(cDelay.getValue())) {
                             mc.player.closeContainer();
