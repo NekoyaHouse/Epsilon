@@ -105,7 +105,7 @@ public class KillAura extends Module {
     private final DoubleSetting attackRange = doubleSetting("Attack Range", 4.0, 3.0, 6.0, 0.01);
     public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 3.0, 6.0, 0.01);
     private final IntSetting fov = intSetting("FOV", 180, 1, 360, 1);
-    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 1.3, 1.0, 10.0, 0.5);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18);
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight, _ -> attacks = 0.0);
     private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
@@ -402,10 +402,6 @@ public class KillAura extends Module {
 
     public boolean isBlocking() {
         return mode.is(Mode.OnePointEight) && !abMode.is(AutoBlockMode.None) && targets != null && !targets.isEmpty() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).is(ItemTags.SWORDS);
-    }
-
-    public LivingEntity getTarget() {
-        return target;
     }
 
 }

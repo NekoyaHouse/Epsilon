@@ -6,12 +6,15 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.combat.KillAura;
+import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import love.slmpc.ClInitNative;
@@ -57,6 +60,9 @@ public class InvManager extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
+    private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
+    private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
     private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
     private final EnumSetting<OffhandItemMode> offhandItems = enumSetting("Offhand Items", OffhandItemMode.None);
@@ -161,8 +167,17 @@ public class InvManager extends Module {
     private void onTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         if (InvHelper.shouldDisableFeatures()) return;
-        if (mc.player.isMoving()) this.noMoveTicks = 0;
-        else this.noMoveTicks++;
+
+        if (mc.player.isMoving()) {
+            this.noMoveTicks = 0;
+        } else {
+            this.noMoveTicks++;
+        }
+
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
+        if (pauseOnKillAura.getValue() && KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) return;
+        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
+        
         boolean allowMove = mode.is(Mode.Silent);
         if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.screen instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
             this.clickOffHand = false;
