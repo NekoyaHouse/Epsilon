@@ -4,7 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.network.ClientIdentityHider;
-import com.github.epsilon.utils.network.PacketUtils;
+import com.github.epsilon.utils.network.NetworkUtils;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.netty.channel.ChannelFutureListener;
@@ -33,8 +33,8 @@ public class MixinConnection {
         if (Managers.C2SPACKET.onPacketSend(packet)) {
             return;
         }
-        if (PacketUtils.bypassedPackets.contains(packet)) {
-            PacketUtils.bypassedPackets.remove(packet);
+        if (NetworkUtils.bypassedPackets.contains(packet)) {
+            NetworkUtils.bypassedPackets.remove(packet);
             Packet<?> filteredPacket = ClientIdentityHider.filterServerboundPacket(packet);
             if (filteredPacket != null) {
                 original.call(instance, filteredPacket, listener, flush);

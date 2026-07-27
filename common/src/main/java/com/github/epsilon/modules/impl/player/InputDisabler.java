@@ -4,7 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.utils.network.PacketUtils;
+import com.github.epsilon.utils.network.NetworkUtils;
 import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
@@ -30,7 +30,7 @@ public class InputDisabler extends Module {
         if (packet instanceof ServerboundContainerClickPacket || packet instanceof ServerboundContainerClosePacket) {
             event.cancel();
             spoofInput();
-            PacketUtils.sendSilently(packet);
+            NetworkUtils.sendPacketNoEvent(packet);
             restoreInput();
         }
     }

@@ -12,7 +12,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.*;
-import com.github.epsilon.utils.network.PacketUtils;
+import com.github.epsilon.utils.network.NetworkUtils;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
 import com.github.epsilon.utils.render.esp.DeobfESP;
@@ -394,7 +394,7 @@ public class KillAura extends Module {
     public void flush() {
         while (!packets.isEmpty()) {
             packets.removeIf(packet -> {
-                PacketUtils.sendSilently(packet);
+                NetworkUtils.sendPacketNoEvent(packet);
                 return true;
             });
         }

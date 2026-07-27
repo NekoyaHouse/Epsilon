@@ -7,11 +7,11 @@ import java.util.Set;
 
 import static com.github.epsilon.Constants.mc;
 
-public class PacketUtils {
+public class NetworkUtils {
 
     public static final Set<Packet<?>> bypassedPackets = new HashSet<>();
 
-    public static void sendSilently(Packet<?> packet) {
+    public static void sendPacketNoEvent(Packet<?> packet) {
         bypassedPackets.add(packet);
         mc.getConnection().send(packet);
     }

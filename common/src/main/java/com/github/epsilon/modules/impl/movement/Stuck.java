@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.utils.network.PacketUtils;
+import com.github.epsilon.utils.network.NetworkUtils;
 import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -63,7 +63,7 @@ public class Stuck extends Module {
                 if (ticks > 0) {
                     event.cancel();
                     if (ticks == 10) {
-                        PacketUtils.sendSilently(new ServerboundMovePlayerPacket.StatusOnly(mc.player.onGround(), mc.player.horizontalCollision));
+                        NetworkUtils.sendPacketNoEvent(new ServerboundMovePlayerPacket.StatusOnly(mc.player.onGround(), mc.player.horizontalCollision));
                     }
                     ticks--;
                 } else {
@@ -74,7 +74,7 @@ public class Stuck extends Module {
             case 2 -> {
                 while (!packets.isEmpty()) {
                     Packet<?> poll = packets.poll();
-                    PacketUtils.sendSilently(poll);
+                    NetworkUtils.sendPacketNoEvent(poll);
                 }
                 stage = 0;
             }

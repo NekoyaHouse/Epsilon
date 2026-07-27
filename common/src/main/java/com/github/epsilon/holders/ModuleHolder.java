@@ -107,7 +107,6 @@ public class ModuleHolder {
         addModule(JumpReset.INSTANCE);
         addModule(KeepSprint.INSTANCE);
         addModule(MovementFix.INSTANCE);
-        addModule(NoFall.INSTANCE);
         addModule(NoSlow.INSTANCE);
         addModule(Phase.INSTANCE);
         addModule(ReverseStep.INSTANCE);
