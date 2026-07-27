@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
@@ -39,7 +40,6 @@ import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @ClInitNative
@@ -93,8 +93,9 @@ public class Scaffold extends Module {
     }
 
     private enum RotationMode {
-        Rise,
-        Hypixel
+        Static,
+        Hypixel,
+        Heypixel
     }
 
     private enum RaytraceMode {
@@ -112,12 +113,14 @@ public class Scaffold extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
-    private final BoolSetting skipTicks = boolSetting("Skip Ticks", false);
     private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
-    private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Rise);
+    private final DoubleSetting snapDist = doubleSetting("Snap Dist", 0, 1, 0.1, 0.01, snap::getValue);
+    private final BoolSetting degrees45 = boolSetting("45 Degrees", false);
+    private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Static);
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
-    private final IntSetting rotateSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> rotationMode.is(RotationMode.Rise));
-    private final IntSetting rotateBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> !rotationMode.is(RotationMode.Hypixel));
+    private final IntSetting rotationSpeed2 = intSetting("Rotation Speed 2", 180, 10, 180, 10, () -> rotationMode.is(RotationMode.Heypixel));
+    private final IntSetting rotationBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
     private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
@@ -134,6 +137,10 @@ public class Scaffold extends Module {
     private Direction direction;
     private Rot2f rotation;
     private int rotateCount = 0;
+    private float forwardInput, strafeInput;
+    private float inputYaw;
+    private float rawInputYaw;
+    private double lengthSqr = 4.5D * 4.5D;
 
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
@@ -228,44 +235,53 @@ public class Scaffold extends Module {
 
         getBlockInfo();
 
-        if (skipTicks.getValue() && blockPos != null) {
-            boolean reachable = true;
+        boolean reachable = true;
+        if (mc.player.getDeltaMovement().y < -0.1 && blockPos != null) {
+            FallingPlayer fallingPlayer = new FallingPlayer(mc.player);
+            fallingPlayer.calculate(2);
+            if (blockPos.getY() > fallingPlayer.getY()) {
+                reachable = false;
+            }
+        }
+        double strength = new Vec3(mc.player.getDeltaMovement().x, 0, mc.player.getDeltaMovement().z).length();
+        if (strength >= 1.5D) {
+            Managers.NOTIFICATION.error("你也是要飞了", String.valueOf(strength));
+        }
+        if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
+            event.cancel();
 
-            if (mc.player.getDeltaMovement().y < -0.1) {
-                FallingPlayer fallingPlayer = new FallingPlayer(mc.player);
-                fallingPlayer.calculate(2);
-                if (blockPos.getY() > fallingPlayer.getY()) {
-                    reachable = false;
+            rotateCount++;
+            if (blockPos == null) return;
+            Rot2f rotation = getRotation(blockPos, direction);
+            Managers.ROTATION.rotations = rotation;
+            Managers.ROTATION.setActive(true);
+            mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
+
+            swap();
+
+            InteractionHand hand = blockResult.getHand();
+
+            InteractionResult result = mc.gameMode.useItemOn(
+                    mc.player,
+                    hand,
+                    new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false)
+            );
+            if (result.consumesAction()) {
+                if (swingHand.getValue()) {
+                    mc.player.swing(hand);
+                } else {
+                    mc.getConnection().send(new ServerboundSwingPacket(hand));
+                }
+                if (render.getValue()) {
+                    renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
                 }
             }
 
-            if ((!reachable || mc.player.getDeltaMovement().horizontal().length() >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
-                Rot2f rotation = getRotation(blockPos, direction);
-                event.cancel();
-
-                rotateCount++;
-                Managers.ROTATION.rotations = rotation;
-                Managers.ROTATION.setActive(true);
-                mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
-
-                swap();
-
-                InteractionHand hand = blockResult.getHand();
-                InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
-                if (result.consumesAction()) {
-                    if (swingHand.getValue()) mc.player.swing(hand);
-                    else mc.getConnection().send(new ServerboundSwingPacket(hand));
-
-                    if (render.getValue()) {
-                        renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
-                    }
-                }
-
-                swapBack();
-                return;
-            } else {
-                rotateCount = 0;
-            }
+            swapBack();
+            onPlayerTick(event);
+            return;
+        } else {
+            rotateCount = 0;
         }
 
         switch (mode.getValue()) {
@@ -274,9 +290,14 @@ public class Scaffold extends Module {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void onMoveInput(KeyboardInputEvent event) {
-        if (mc.player.onGround() && !mc.options.keyJump.isDown() && mc.player.isMoving() && mode.is(Mode.TellyBridge)) {
+        forwardInput = event.getForward();
+        strafeInput = event.getStrafe();
+        inputYaw = Mth.wrapDegrees(Math.round((mc.player.getYRot() + (float) Math.toDegrees(Math.atan2(-strafeInput, forwardInput))) / 45.0F) * 45.0F);
+        rawInputYaw = Mth.wrapDegrees(Math.round(mc.player.getYRot() + (float) Math.toDegrees(Math.atan2(-strafeInput, forwardInput))));
+
+        if (mode.is(Mode.TellyBridge) && mc.player.onGround() && !mc.options.keyJump.isDown() && mc.player.isMoving()) {
             event.setJump(true);
         }
     }
@@ -302,16 +323,21 @@ public class Scaffold extends Module {
     }
 
     private void handleTelly() {
-        if (mc.player.onGround()) {
-            Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotateBackSpeed.getValue());
+        if (mc.player.onGround() && (strafeInput != 0 || forwardInput != 0)) {
+            Managers.ROTATION.setRotations(new Rot2f(rawInputYaw, rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotationBackSpeed.getValue());
             return;
         }
 
         rotation = getRotation(blockPos, direction);
-        double speed = rotateSpeed.getValue();
+        int speed = rotationSpeed.getValue();
 
         if (rotationMode.is(RotationMode.Hypixel)) {
             speed = airTicks <= 1 ? 127 : 35;
+        } else if (rotationMode.is(RotationMode.Heypixel)) {
+            speed = switch (airTicks) {
+                case 1 -> rotationSpeed.getValue();
+                default -> rotationSpeed2.getValue();
+            };
         }
 
         Managers.ROTATION.setRotations(rotation, speed);
@@ -322,9 +348,9 @@ public class Scaffold extends Module {
     }
 
     private void handleNormal() {
-        if (onAir() || !snap.getValue()) {
+        if (Eagle.INSTANCE.isOverEdge() || !snap.getValue() | !mc.player.onGround()) {
             rotation = getRotation(blockPos, direction);
-            Managers.ROTATION.setRotations(rotation, rotateSpeed.getValue());
+            Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue());
         }
         place();
     }
@@ -344,12 +370,9 @@ public class Scaffold extends Module {
         swap();
 
         InteractionHand hand = blockResult.getHand();
-        if (!isValidStack(mc.player.getItemInHand(hand))) {
-            swapBack();
-            return;
-        }
 
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
+
         if (result.consumesAction()) {
             if (swingHand.getValue()) {
                 mc.player.swing(hand);
@@ -366,13 +389,14 @@ public class Scaffold extends Module {
     }
 
     private int getYLevel() {
-        if (!mc.options.keyJump.isDown() && mc.player.isMoving() && mc.player.fallDistance <= 0.25f && mode.is(Mode.TellyBridge)) {
+        if (((!mc.options.keyJump.isDown() && mc.player.isMoving() && mode.is(Mode.TellyBridge))) && Math.abs(yLevel - (Mth.floor(mc.player.getY()) - 1)) <= 1.25) {
             return yLevel;
         }
         return Mth.floor(mc.player.getY()) - 1;
     }
 
     private void getBlockInfo() {
+        lengthSqr = 4.5 * 4.5;
         blockPos = null;
         direction = null;
 
@@ -399,10 +423,12 @@ public class Scaffold extends Module {
                     int y = d - x - z;
                     for (int rev1 = 0; rev1 <= 1; rev1++) {
                         for (int rev2 = 0; rev2 <= 1; rev2++) {
-                            BlockPos pos = new BlockPos(baseX + (rev1 == 0 ? x : -x), getYLevel() - y, baseZ + (rev2 == 0 ? z : -z));
-                            if (checkBlock(baseVec, pos)) {
-                                return;
-                            }
+                            BlockPos pos = new BlockPos(
+                                    baseX + (rev1 == 0 ? x : -x),
+                                    getYLevel() - y,
+                                    baseZ + (rev2 == 0 ? z : -z)
+                            );
+                            checkBlock(baseVec, pos);
                         }
                     }
                 }
@@ -427,7 +453,9 @@ public class Scaffold extends Module {
             }
 
             Direction face = dir.getOpposite();
-            if (hit.distanceToSqr(baseVec) > 4.5 * 4.5 || hit.subtract(baseVec).dot(normal) < 0.0) {
+            Vec3 relevant = hit.subtract(baseVec);
+
+            if (relevant.lengthSqr() > lengthSqr || relevant.dot(normal) < 0.0) {
                 continue;
             }
 
@@ -435,6 +463,7 @@ public class Scaffold extends Module {
                 continue;
             }
 
+            lengthSqr = relevant.lengthSqr();
             blockPos = baseBlockPos;
             direction = face;
             return true;
@@ -453,7 +482,7 @@ public class Scaffold extends Module {
         }
 
         Rot2f calculated = RotationUtils.calculate(pos, direction);
-        Float[] yawArray = {
+        float[] yawArray = new float[]{
                 -135F,
                 -90F,
                 -45F,
@@ -461,22 +490,35 @@ public class Scaffold extends Module {
                 45F,
                 90F,
                 135F,
-                180F,
-                calculated.getYaw()
+                180F
         };
-        Arrays.sort(yawArray, (a, b) ->
-                Float.compare(
-                        Math.abs(Mth.wrapDegrees(mc.player.getYRot() - 180 - a)),
-                        Math.abs(Mth.wrapDegrees(mc.player.getYRot() - 180 - b))
-                )
-        );
+        float baseYaw = Mth.wrapDegrees(inputYaw - 180);
+
+        for (int i = 1; i < yawArray.length; i++) {
+            float key = yawArray[i];
+            int j = i - 1;
+            while (j >= 0 && Math.abs(Mth.wrapDegrees(baseYaw - yawArray[j])) > Math.abs(Mth.wrapDegrees(baseYaw - key))) {
+                yawArray[j + 1] = yawArray[j];
+                j = j - 1;
+            }
+            yawArray[j + 1] = key;
+        }
 
         float[] pitchArray = {75.0F, 82.0F, 87.0F};
 
-        for (float yaw : yawArray) {
+        float[] finalYawArray = new float[yawArray.length + 1];
+        System.arraycopy(yawArray, 0, finalYawArray, 0, yawArray.length);
+        finalYawArray[yawArray.length] = calculated.getYaw();
+
+        for (float yaw : finalYawArray) {
+            if (degrees45.getValue() && yaw % 90 == 0) {
+                continue;
+            }
             for (float pitch : pitchArray) {
-                Rot2f candidate = new Rot2f(yaw + MathUtils.getRandom(-0.3F, 0.3F), pitch + MathUtils.getRandom(-0.3F, 0.3F));
-                boolean matches = raytrace.is(RaytraceMode.Normal) ? RaytraceUtils.overBlock(candidate, pos) : RaytraceUtils.overBlock(candidate, pos, direction);
+                Rot2f candidate = new Rot2f(yaw + MathUtils.getRandom(-0.3f, 0.3f), pitch + MathUtils.getRandom(-0.3f, 0.3f));
+                boolean matches = raytrace.is(RaytraceMode.Normal)
+                        ? RaytraceUtils.overBlock(candidate, pos)
+                        : RaytraceUtils.overBlock(candidate, pos, direction);
                 if (matches) {
                     return candidate;
                 }
@@ -484,7 +526,9 @@ public class Scaffold extends Module {
 
             for (int pitch = -90; pitch < 90; pitch++) {
                 Rot2f candidate = new Rot2f(yaw, pitch);
-                boolean matches = raytrace.is(RaytraceMode.Normal) ? RaytraceUtils.overBlock(candidate, pos) : RaytraceUtils.overBlock(candidate, pos, direction);
+                boolean matches = raytrace.is(RaytraceMode.Normal)
+                        ? RaytraceUtils.overBlock(candidate, pos)
+                        : RaytraceUtils.overBlock(candidate, pos, direction);
                 if (matches) {
                     return candidate;
                 }
