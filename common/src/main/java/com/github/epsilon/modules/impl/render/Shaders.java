@@ -4,6 +4,8 @@ import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -20,37 +22,28 @@ public class Shaders extends Module {
         super("Shaders", Category.RENDER);
     }
 
-    private final BoolSetting hands = boolSetting("Hands", true);
-    private final BoolSetting players = boolSetting("Players", true);
-    private final BoolSetting self = boolSetting("Self", true, players::getValue);
-    private final BoolSetting friends = boolSetting("Friends", true);
-    private final BoolSetting crystals = boolSetting("Crystals", true);
-    private final BoolSetting chests = boolSetting("Chests", true);
-    private final BoolSetting creatures = boolSetting("Creatures", false);
-    private final BoolSetting monsters = boolSetting("Monsters", false);
-    private final BoolSetting ambients = boolSetting("Ambients", false);
-    private final BoolSetting others = boolSetting("Others", false);
+    private final SettingGroup sgTargets = settingGroup("Targets");
+    private final SettingGroup sgEntityShader = settingGroup("Entity Shader");
+    private final SettingGroup sgHandsShader = settingGroup("Hands Shader");
+    private final SettingGroup sgChestShader = settingGroup("Chest Shader");
 
-    public final EnumSetting<ShaderHolder.Shader> mode = enumSetting("Mode", ShaderHolder.Shader.Default);
-    public final EnumSetting<ShaderHolder.Shader> handsMode = enumSetting("Hands Mode", ShaderHolder.Shader.Default);
-    public final EnumSetting<ShaderHolder.Shader> chestMode = enumSetting("Chest Mode", ShaderHolder.Shader.Default);
+    private final BoolSetting hands = boolSetting("Hands", true).group(sgTargets);
+    private final BoolSetting players = boolSetting("Players", true).group(sgTargets);
+    private final BoolSetting self = boolSetting("Self", true, players::getValue).group(sgTargets);
+    private final BoolSetting friends = boolSetting("Friends", true).group(sgTargets);
+    private final BoolSetting crystals = boolSetting("Crystals", true).group(sgTargets);
+    private final BoolSetting chests = boolSetting("Chests", true).group(sgTargets);
+    private final BoolSetting creatures = boolSetting("Creatures", false).group(sgTargets);
+    private final BoolSetting monsters = boolSetting("Monsters", false).group(sgTargets);
+    private final BoolSetting ambients = boolSetting("Ambients", false).group(sgTargets);
+    private final BoolSetting others = boolSetting("Others", false).group(sgTargets);
 
-    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || chests.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
-    public final DoubleSetting factor = doubleSetting("Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
-    public final DoubleSetting gradient = doubleSetting("Gradient", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
-    public final IntSetting alpha2 = intSetting("Gradient Alpha", 170, 0, 255, 1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
-    public final IntSetting lineWidth = intSetting("Line Width", 2, 0, 500, 1);
-    public final IntSetting quality = intSetting("Quality", 3, 0, 6, 1);
-    public final IntSetting octaves = intSetting("Smoke Octaves", 10, 5, 30, 1);
-    public final IntSetting fillAlpha = intSetting("Fill Alpha", 170, 0, 255, 1);
-    public final BoolSetting smokeGlow = boolSetting("Smoke Glow", true);
+    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1,
+            () -> hasEntityTargets() || chests.getValue()).group(sgTargets);
 
-    public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136));
-    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke));
-    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke));
-    public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136));
-    public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136));
-    public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136));
+    public final ShaderSettings entityShader = new ShaderSettings("", sgEntityShader, this::hasEntityTargets);
+    public final ShaderSettings handsShader = new ShaderSettings("Hands ", sgHandsShader, hands::getValue);
+    public final ShaderSettings chestShader = new ShaderSettings("Chest ", sgChestShader, chests::getValue);
 
     public boolean shouldRenderHands() {
         return hands.getValue();
@@ -93,6 +86,62 @@ public class Shaders extends Module {
             case AMBIENT, WATER_AMBIENT -> ambients.getValue();
             default -> others.getValue();
         };
+    }
+
+    private boolean hasEntityTargets() {
+        return players.getValue() || friends.getValue() || crystals.getValue() || creatures.getValue()
+                || monsters.getValue() || ambients.getValue() || others.getValue();
+    }
+
+    public final class ShaderSettings {
+
+        public final EnumSetting<ShaderHolder.Shader> mode;
+        public final DoubleSetting factor;
+        public final DoubleSetting gradient;
+        public final IntSetting gradientAlpha;
+        public final IntSetting lineWidth;
+        public final IntSetting quality;
+        public final IntSetting octaves;
+        public final IntSetting fillAlpha;
+        public final BoolSetting glow;
+        public final ColorSetting outlineColor;
+        public final ColorSetting smokeOutlineColor1;
+        public final ColorSetting smokeOutlineColor2;
+        public final ColorSetting fillColor1;
+        public final ColorSetting fillColor2;
+        public final ColorSetting fillColor3;
+
+        private ShaderSettings(String prefix, SettingGroup group, Setting.Dependency targetEnabled) {
+            mode = enumSetting(prefix + "Mode", ShaderHolder.Shader.Default, targetEnabled).group(group);
+            factor = doubleSetting(prefix + "Gradient Factor", 2.0, 0.0, 20.0, 0.1,
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            gradient = doubleSetting(prefix + "Gradient", 2.0, 0.0, 20.0, 0.1,
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            gradientAlpha = intSetting(prefix + "Gradient Alpha", 170, 0, 255, 1,
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            lineWidth = intSetting(prefix + "Line Width", 2, 0, 500, 1,
+                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            quality = intSetting(prefix + "Quality", 3, 0, 6, 1, targetEnabled).group(group);
+            octaves = intSetting(prefix + "Smoke Octaves", 10, 5, 30, 1,
+                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient))).group(group);
+            fillAlpha = intSetting(prefix + "Fill Alpha", 170, 0, 255, 1,
+                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient) || mode.is(ShaderHolder.Shader.Fade))).group(group);
+            glow = boolSetting(prefix + "Smoke Glow", true,
+                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            outlineColor = colorSetting(prefix + "Outline", new Color(255, 255, 255, 136),
+                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Gradient) && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            smokeOutlineColor1 = colorSetting(prefix + "Smoke Outline", new Color(255, 0, 0, 136),
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+            smokeOutlineColor2 = colorSetting(prefix + "Smoke Outline 2", new Color(255, 0, 0, 136),
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+            fillColor1 = colorSetting(prefix + "Fill", new Color(255, 255, 255, 136),
+                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            fillColor2 = colorSetting(prefix + "Smoke Fill", new Color(255, 255, 255, 136),
+                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Fade))).group(group);
+            fillColor3 = colorSetting(prefix + "Smoke Fill 2", new Color(255, 255, 255, 136),
+                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+        }
+
     }
 
 }

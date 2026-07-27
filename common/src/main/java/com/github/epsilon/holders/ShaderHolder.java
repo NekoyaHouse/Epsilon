@@ -79,14 +79,15 @@ public class ShaderHolder {
     private ShaderHolder() {
     }
 
-    public void processEntityOutlineTarget(RenderTarget target, Shader shader) {
+    public void processOutlineTarget(RenderTarget target, Shaders.ShaderSettings settings) {
         if (target == null || target.width <= 0 || target.height <= 0 || target.getColorTextureView() == null) {
             return;
         }
 
         ensureProgram();
         ensureSwap(target.width, target.height);
-        ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height);
+        Shader shader = settings.mode.getValue();
+        ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height, settings, usesColors(shader));
 
         renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderUniforms, usesColors(shader));
         // This fullscreen copy pass measured higher FPS than CommandEncoder.copyTextureToTexture on the tested renderer.
@@ -147,7 +148,7 @@ public class ShaderHolder {
                 return;
             }
 
-            processEntityOutlineTarget(handTarget, Shaders.INSTANCE.handsMode.getValue());
+            processOutlineTarget(handTarget, Shaders.INSTANCE.handsShader);
             handTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
         }
     }
@@ -170,7 +171,7 @@ public class ShaderHolder {
                 return;
             }
 
-            processEntityOutlineTarget(chestTarget, Shaders.INSTANCE.chestMode.getValue());
+            processOutlineTarget(chestTarget, Shaders.INSTANCE.chestShader);
             chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
         }
         preparedChests = false;
@@ -202,18 +203,17 @@ public class ShaderHolder {
         }
     }
 
-    private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight) {
-        Shaders shaders = Shaders.INSTANCE;
+    private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight, Shaders.ShaderSettings settings, boolean writeColors) {
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
         float scaledWidth = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledWidth());
         float scaledHeight = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledHeight());
-        Color outline = shaders.outlineColor.getValue();
-        Color smokeOutline1 = shaders.smokeOutlineColor1.getValue();
-        Color smokeOutline2 = shaders.smokeOutlineColor2.getValue();
-        Color fill = shaders.fillColor1.getValue();
-        Color smokeFill1 = shaders.fillColor2.getValue();
-        Color smokeFill2 = shaders.fillColor3.getValue();
+        Color outline = settings.outlineColor.getValue();
+        Color smokeOutline1 = settings.smokeOutlineColor1.getValue();
+        Color smokeOutline2 = settings.smokeOutlineColor2.getValue();
+        Color fill = settings.fillColor1.getValue();
+        Color smokeFill1 = settings.fillColor2.getValue();
+        Color smokeFill2 = settings.fillColor3.getValue();
 
         return new ShaderUniforms(
                 LuminRenderSystem.writeDynamicUniform(
@@ -224,26 +224,26 @@ public class ShaderHolder {
                         new ShaderParams(
                                 width,
                                 height,
-                                shaders.quality.getValue(),
-                                shaders.lineWidth.getValue(),
-                                shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
-                                shaders.fillAlpha.getValue() / 255.0f,
-                                shaders.alpha2.getValue() / 255.0f,
+                                settings.quality.getValue(),
+                                settings.lineWidth.getValue(),
+                                settings.glow.getValue() ? -1.0f : alpha(outline),
+                                settings.fillAlpha.getValue() / 255.0f,
+                                settings.gradientAlpha.getValue() / 255.0f,
                                 (Util.getMillis() % 100_000L) / 1000.0f,
-                                shaders.factor.getValue().floatValue(),
-                                shaders.gradient.getValue().floatValue(),
-                                shaders.octaves.getValue(),
+                                settings.factor.getValue().floatValue(),
+                                settings.gradient.getValue().floatValue(),
+                                settings.octaves.getValue(),
                                 scaledWidth,
                                 scaledHeight
                         )
                 ),
-                LuminRenderSystem.writeDynamicUniform(
+                writeColors ? LuminRenderSystem.writeDynamicUniform(
                         "shader_colors",
                         "Epsilon Shader Colors UBO",
                         COLOR_UNIFORMS_SIZE,
                         8,
                         new ShaderColors(outline, smokeOutline1, smokeOutline2, fill, smokeFill1, smokeFill2)
-                )
+                ) : null
         );
     }
 

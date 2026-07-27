@@ -16,7 +16,7 @@ public class MixinBaseEntityRenderer<T extends Entity, S extends EntityRenderSta
     private void onExtractRenderStateReturn(T entity, S state, float partialTicks, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.shouldRender(entity)) {
-            state.outlineColor = shaders.outlineColor.getValue().getRGB();
+            state.outlineColor = shaders.entityShader.outlineColor.getValue().getRGB();
         }
     }
 

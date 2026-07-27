@@ -135,7 +135,7 @@ public abstract class MixinItemInHandRenderer {
     @ModifyArg(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"), index = 4)
     private int applyShadersHandOutline(int outlineColor) {
         Shaders shaders = Shaders.INSTANCE;
-        return shaders.isEnabled() && shaders.shouldRenderHands() ? shaders.outlineColor.getValue().getRGB() : outlineColor;
+        return shaders.isEnabled() && shaders.shouldRenderHands() ? shaders.handsShader.outlineColor.getValue().getRGB() : outlineColor;
     }
 
 }

@@ -26,7 +26,7 @@ public class MixinModelFeatureRenderer {
     private void redirectChestOutlineColor(OutlineBufferSource outlineBufferSource, int color, Operation<Void> original) {
         epsilon$renderingChestOutline = color == ShaderHolder.EPSILON_CHEST_OUTLINE_MARKER;
         if (epsilon$renderingChestOutline) {
-            ShaderHolder.INSTANCE.getChestOutlineBufferSource().setColor(Shaders.INSTANCE.outlineColor.getValue().getRGB());
+            ShaderHolder.INSTANCE.getChestOutlineBufferSource().setColor(Shaders.INSTANCE.chestShader.outlineColor.getValue().getRGB());
             return;
         }
 
