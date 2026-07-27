@@ -22,15 +22,13 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import love.slmpc.ClInitNative;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
-import net.minecraft.network.protocol.game.ServerGamePacketListener;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -52,15 +50,13 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
-            DeobfESP.render(
-                    event.getPoseStack(),
-                    deobfSize.getValue().floatValue(),
-                    deobfSpins.getValue().floatValue(),
-                    deobfWobble.getValue().floatValue(),
-                    deobfFlyHeight.getValue().floatValue()
-            );
-        }));
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> DeobfESP.render(
+                event.getPoseStack(),
+                deobfSize.getValue().floatValue(),
+                deobfSpins.getValue().floatValue(),
+                deobfWobble.getValue().floatValue(),
+                deobfFlyHeight.getValue().floatValue()
+        )));
     }
 
     private enum Mode {
@@ -102,18 +98,24 @@ public class KillAura extends Module {
     private final BoolSetting water = boolSetting("Water", false);
     private final BoolSetting others = boolSetting("Others", false);
     private final BoolSetting invisible = boolSetting("Invisible", true);
+
     private final BoolSetting throughWalls = boolSetting("Through Walls", false);
     private final BoolSetting hitSelect = boolSetting("Hit Select", true);
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight, _ -> attacks = 0.0);
-    private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
+    private final BoolSetting swingHand = boolSetting("SwingHand", true);
     private final DoubleSetting attackRange = doubleSetting("Attack Range", 4.0, 3.0, 6.0, 0.01);
     public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 3.0, 6.0, 0.01);
     private final IntSetting fov = intSetting("FOV", 180, 1, 360, 1);
     private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 1.3, 1.0, 10.0, 0.5);
+
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight, _ -> attacks = 0.0);
+    private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
+
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
     private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));
-    private final EnumSetting<AutoBlockMode> abMode = enumSetting("Auto Block Mode", AutoBlockMode.None);
-    private final IntSetting blinkTicks = intSetting("Blink Ticks", 3, 1, 5, 1, () -> abMode.is(AutoBlockMode.Blink1));
+
+    private final EnumSetting<AutoBlockMode> abMode = enumSetting("Auto Block Mode", AutoBlockMode.None, () -> mode.is(Mode.OnePointEight));
+    private final IntSetting blinkTicks = intSetting("Blink Ticks", 3, 1, 5, 1, () -> mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1));
+
     private final EnumSetting<PriorityMode> priority = enumSetting("Priority", PriorityMode.Range);
 
     private final BoolSetting esp = boolSetting("ESP", true);
@@ -161,6 +163,7 @@ public class KillAura extends Module {
 
     @Override
     public void onDisable() {
+        DeobfESP.retainRisingEffects();
         targets = null;
         targetNumber = 0;
         target = null;
@@ -240,8 +243,11 @@ public class KillAura extends Module {
             attacks = 0.0;
             return;
         }
-        if (abMode.is(AutoBlockMode.Blink1) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS))
+
+        if (mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS)) {
             blinking = true;
+        }
+
         if (this.priority.is(PriorityMode.Range)) {
             targets.sort(Comparator.comparingDouble(o -> (double) o.distanceTo(mc.player)));
         } else if (this.priority.is(PriorityMode.Fov)) {
@@ -287,7 +293,7 @@ public class KillAura extends Module {
             attacks = mc.player.getAttackStrengthScale(0.5F) >= 1.0F ? 1.0 : 0.0;
         }
 
-        if (abMode.is(AutoBlockMode.Legit) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS) && targets != null && !targets.isEmpty()) {
+        if (mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Legit) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS) && targets != null && !targets.isEmpty()) {
             if (mc.player.hurtTime == 7) {
                 mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
             } else if (mc.player.hurtTime == 1) {
@@ -296,33 +302,41 @@ public class KillAura extends Module {
             }
             if (mc.player.isUsingItem()) return;
         }
-        if (!abMode.is(AutoBlockMode.Legit) || mc.player.hurtTime != 1) {
+
+        if (!(mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Legit)) || mc.player.hurtTime != 1) {
             boolean hitSelectReady = true;
-            if (hitSelect.getValue()
-                    && mc.hitResult instanceof EntityHitResult entityHitResult
-                    && entityHitResult.getEntity() instanceof Player player) {
-                var playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
+            if (hitSelect.getValue() && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player) {
+                PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
                 int latencyTicks = playerInfo == null ? 0 : playerInfo.getLatency() / 50;
                 hitSelectReady = player.hurtTime <= latencyTicks + 1 || mc.player.hurtTime >= 7;
             }
 
             if (attacks >= 1.0 && hitSelectReady) {
                 attacks -= 1.0;
-                if (mc.player.isUsingItem() && !abMode.is(AutoBlockMode.Blink1)) {
+                if (mc.player.isUsingItem() && !(mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1))) {
                     return;
                 }
 
                 if (throughWalls.getValue()) {
                     if (target.distanceTo(mc.player) <= attackRange.getValue()) {
-                        mc.gameMode.attack(mc.player, target);
-                        mc.player.swing(InteractionHand.MAIN_HAND);
+                        doAttack();
                     }
-                } else if (RaytraceUtils.raytrace(Managers.ROTATION.getRotation(), attackRange.getValue()) instanceof EntityHitResult entityHitResult
-                        && entityHitResult.getEntity() == target) {
-                    mc.gameMode.attack(mc.player, entityHitResult.getEntity());
-                    mc.player.swing(InteractionHand.MAIN_HAND);
+                } else if (RaytraceUtils.raytrace(Managers.ROTATION.getRotation(), attackRange.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target) {
+                    doAttack();
                 }
             }
+        }
+    }
+
+    private void doAttack() {
+        mc.gameMode.attack(mc.player, target);
+        if (esp.getValue() && espMode.is(ESPMode.Deobf)) {
+            DeobfESP.markHit(target);
+        }
+        if (swingHand.getValue()) {
+            mc.player.swing(InteractionHand.MAIN_HAND);
+        } else {
+            mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
         }
     }
 
@@ -387,7 +401,7 @@ public class KillAura extends Module {
     }
 
     public boolean isBlocking() {
-        return !abMode.is(AutoBlockMode.None) && targets != null && !targets.isEmpty() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).is(ItemTags.SWORDS);
+        return mode.is(Mode.OnePointEight) && !abMode.is(AutoBlockMode.None) && targets != null && !targets.isEmpty() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).is(ItemTags.SWORDS);
     }
 
     public LivingEntity getTarget() {
