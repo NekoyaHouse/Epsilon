@@ -139,7 +139,7 @@ public class ClientSetting extends Module {
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
 
     // Teams
-    public final EnumSetting<Teams> teams = enumSetting("Teams", Teams.Scoreboard);
+    public final EnumSetting<Teams> teams = enumSetting("Teams", Teams.None).group(sgTeams);
 
     // Anti Cheat
     public final EnumSetting<RotationManager.RotationMode> rotationMode =
