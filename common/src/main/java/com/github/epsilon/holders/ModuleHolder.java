@@ -76,10 +76,10 @@ public class ModuleHolder {
         addModule(AutoKouZi.INSTANCE);
         addModule(AutoTool.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
-        addModule(InputDisabler.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
         addModule(FakePlayer.INSTANCE);
         addModule(GhostHand.INSTANCE);
+        addModule(InputDisabler.INSTANCE);
         addModule(InvManager.INSTANCE);
         addModule(JumpCooldown.INSTANCE);
         addModule(MultiTask.INSTANCE);

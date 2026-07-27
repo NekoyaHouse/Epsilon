@@ -56,7 +56,7 @@ public class HandsView extends Module {
 
     public boolean isBlocking() {
         KillAura killAura = KillAura.INSTANCE;
-        return (killAura.isEnabled() && killAura.target != null) || (isBlockableWeapon(mc.player.getMainHandItem()) && mc.options.keyUse.isDown());
+        return (killAura.isEnabled() && killAura.getTarget() != null) || (isBlockableWeapon(mc.player.getMainHandItem()) && mc.options.keyUse.isDown());
     }
 
     public boolean shouldApplyBlockingAnimation(InteractionHand hand, ItemStack itemStack) {
