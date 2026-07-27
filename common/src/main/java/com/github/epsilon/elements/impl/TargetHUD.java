@@ -283,7 +283,7 @@ public class TargetHUD extends HudModule {
     }
 
     private LivingEntity resolveTarget() {
-        LivingEntity target = KillAura.INSTANCE.getTarget();
+        LivingEntity target = KillAura.INSTANCE.target;
         if (isRenderableTarget(target)) {
             return target;
         }

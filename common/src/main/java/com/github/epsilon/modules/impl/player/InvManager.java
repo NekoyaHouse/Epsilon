@@ -177,7 +177,7 @@ public class InvManager extends Module {
         if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
         if (pauseOnKillAura.getValue() && KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) return;
         if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
-        
+
         boolean allowMove = mode.is(Mode.Silent);
         if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.screen instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
             this.clickOffHand = false;
