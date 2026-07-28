@@ -106,23 +106,23 @@ Minecraft.<init> TAIL
 
 所有共享 Java 代码位于 `common/src/main/java/com/github/epsilon/`。
 
-| 包 | 职责 |
-|---|---|
-| `addon/` | `EpsilonAddon`、公共 Addon 收集事件与 `AddonBootstrap` |
-| `assets/` | 配置迁移、i18n、资源位置工具 |
-| `elements/` | `HudModule`、9 个已注册 HUD 元素及通知模型 |
-| `events/` | 自定义 EventBus、监听器实现和事件类型 |
-| `graphics/` | Lumin GPU 抽象、buffer、renderer、shader、2D/3D scheduler、字体与即时绘制 |
-| `gui/` | Dropdown、Panel、HUD 编辑器、主菜单、UI Tree/Scene、主题和控件 |
+| 包 | 职责                                                                                     |
+|---|------------------------------------------------------------------------------------------|
+| `addon/` | `EpsilonAddon`、公共 Addon 收集事件与 `AddonBootstrap`                                   |
+| `assets/` | 配置迁移、i18n、资源位置工具                                                             |
+| `elements/` | `HudModule`、若干个已注册 HUD 元素及通知模型                                             |
+| `events/` | 自定义 EventBus、监听器实现和事件类型                                                    |
+| `graphics/` | Lumin GPU 抽象、buffer、renderer、shader、2D/3D scheduler、字体与即时绘制                |
+| `gui/` | Dropdown、Panel、HUD 编辑器、主菜单、UI Tree/Scene、主题和控件                           |
 | `holders/` | 模块、HUD、Addon、配置、翻译、Renderer、RenderTarget、Shader、纹理缓存的所有权与生命周期 |
-| `interfaces/` | Mixin accessor/duck 接口 |
-| `managers/` | Rotation、Target、Extrapolation、Health、Packet、Friend、Sound、Notification、Timer |
-| `mixins/` | 共享客户端 Mixin；实际启用列表以 `epsilon.mixins.json` 为准 |
-| `modules/` | `Module`、`Category`、`ClientSetting` 和 combat/player/movement/render 模块 |
-| `settings/` | `SettingHost` DSL、分组、布局规划和 10 种 Setting 实现 |
-| `utils/` | client、combat、math、network、player、render、rotation、timer、world 工具 |
+| `interfaces/` | Mixin accessor/duck 接口                                                                 |
+| `managers/` | Rotation、Target、Extrapolation、Health、Packet、Friend、Sound、Notification、Timer      |
+| `mixins/` | 共享客户端 Mixin；实际启用列表以 `epsilon.mixins.json` 为准                              |
+| `modules/` | `Module`、`Category`、`ClientSetting` 和 combat/player/movement/render 模块              |
+| `settings/` | `SettingHost` DSL、分组、布局规划和 10 种 Setting 实现                                   |
+| `utils/` | client、combat、math、network、player、render、rotation、timer、world 工具               |
 
-截至本文档更新时，`ModuleHolder` 注册 100 个本体模块（含 `ClientSetting`），`HudElementHolder` 注册 10 个 HUD 元素。这个数字仅用于发现注册遗漏；新增功能时仍以两个 Holder 的注册表为准并同步 i18n。
+截至本文档更新时，`ModuleHolder` 注册若干个本体模块（含 `ClientSetting`），`HudElementHolder` 注册若干个 HUD 元素。这个数字仅用于发现注册遗漏；新增功能时仍以两个 Holder 的注册表为准并同步 i18n。
 
 ## Module 开发
 
