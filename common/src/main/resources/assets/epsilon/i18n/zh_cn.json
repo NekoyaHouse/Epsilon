@@ -17,7 +17,7 @@
       "hidden": "隐藏",
       "from": "来自:",
       "state": {
-        "prefix": "",
+        "prefix": "已",
         "enabled": "开启",
         "disabled": "关闭"
       }
@@ -32,8 +32,7 @@
         "multiplayer": "多人游戏",
         "options": "选项",
         "quit": "退出游戏",
-        "reisa_greeting": "嗨，老师！玲纱前来报到！",
-        "reisa_farewell": "老师，明天也要再见！玲纱收队啦！"
+        "reisa_greeting": "嗨，老师！玲纱前来报到！"
       },
       "tab": {
         "general": "常规",
@@ -228,6 +227,12 @@
       "client setting": {
         "_value": "客户端设置",
         "general": "常规",
+        "teams": {
+          "_value": "队伍",
+          "none": "无",
+          "color": "颜色",
+          "scoreboard": "计分板"
+        },
         "anti cheat": "反作弊",
         "appearance": "外观",
         "uzawa reisa": "宇泽玲纱",
@@ -416,12 +421,6 @@
         },
         "swing hand": "挥手"
       },
-      "auto totem": {
-        "_value": "自动图腾",
-        "strict": "严格模式",
-        "health": "生命值",
-        "check gapple": "检查金苹果"
-      },
       "auto throw": {
         "_value": "自动投掷",
         "min distance": "最小距离",
@@ -436,6 +435,12 @@
         "self extrapolation smoothening": "自身外推平滑",
         "render extrapolation": "渲染目标外推",
         "render self extrapolation": "渲染自身外推"
+      },
+      "auto totem": {
+        "_value": "自动图腾",
+        "strict": "严格模式",
+        "health": "生命值",
+        "check gapple": "检查金苹果"
       },
       "auto weapon": {
         "_value": "自动武器",
@@ -731,6 +736,9 @@
         "mob": "怪物",
         "animal": "动物",
         "villagers": "村民",
+        "ambient": "环境生物",
+        "water": "水生生物",
+        "others": "其他",
         "invisible": "隐身",
         "through walls": "穿墙",
         "swinghand": "挥手",
@@ -741,6 +749,11 @@
           "circle": "圆形",
           "firefly": "萤火虫",
           "deobf": "牛人"
+        },
+        "deobf mode": {
+          "_value": "牛人模式",
+          "niuren": "牛人",
+          "mengcha": "梦泪"
         },
         "deobf size": "牛人大小",
         "deobf spins": "入场旋转圈数",
@@ -1007,12 +1020,6 @@
         "_value": "挖掘冷却",
         "cooldown": "冷却时间"
       },
-      "disabler": {
-        "_value": "禁用器",
-        "badpacketsa": "Bad Packets A",
-        "sprinting": "疾跑",
-        "input": "输入"
-      },
       "elytra swap": {
         "_value": "鞘翅切换",
         "activate key": "激活按键",
@@ -1030,11 +1037,20 @@
         "playback": "回放"
       },
       "ghost hand": "幽灵手",
+      "input disabler": "输入禁用器",
       "inv manager": {
         "_value": "背包管理",
+        "mode": {
+          "_value": "模式",
+          "inventory": "背包",
+          "silent": "静默"
+        },
+        "pause on eat": "进食时暂停",
+        "pause on killaura": "KillAura 运行时暂停",
+        "pause on scaffold": "搭路时暂停",
         "min delay": "最小延迟",
-        "delay": "延迟",
-        "offhand items": {
+        "max delay": "最大延迟",
+        "offhand item": {
           "_value": "副手物品",
           "none": "无",
           "goldenapple": "金苹果",
@@ -1043,7 +1059,6 @@
           "block": "方块"
         },
         "auto armor": "自动穿甲",
-        "inventory only": "仅背包界面",
         "switch sword": "切换剑",
         "sword slot": "剑槽位",
         "switch block": "切换方块",
@@ -1140,8 +1155,8 @@
         "path color": "路径颜色",
         "path line width": "路径线宽"
       },
-      "auto sprint": "自动疾跑",
       "dolphin": "海豚",
+      "auto sprint": "自动疾跑",
       "blink": {
         "_value": "闪现",
         "tick": "闪现刻数",
@@ -1227,22 +1242,13 @@
         "reach only": "仅攻击范围"
       },
       "movement fix": "移动修复",
-      "no fall": {
-        "_value": "防摔落",
-        "mode": {
-          "_value": "模式",
-          "groundspoof": "伪装着地",
-          "grim2b2t": "Grim 2B2T"
-        },
-        "fall distance": "摔落距离"
-      },
       "no slow": {
         "_value": "无减速",
         "mode": {
           "_value": "模式",
           "vanilla": "原版",
           "jump": "跳跃",
-          "grimc0f": "Grim C0F",
+          "grimfull": "Grim Full",
           "grim1_2": "Grim 1/2",
           "grim1_3": "Grim 1/3"
         },
@@ -1276,6 +1282,12 @@
         "pitch": "俯仰角",
         "strict": "严格"
       },
+      "reverse step": {
+        "_value": "反向踏步",
+        "fall speed": "下落速度",
+        "fall distance": "下落距离",
+        "vehicles": "载具"
+      },
       "safe walk": {
         "_value": "安全行走",
         "motion": "移动倍率",
@@ -1301,12 +1313,14 @@
           "invswitch": "背包切换"
         },
         "swap back": "停用还原",
-        "skip ticks": "跳过刻数",
         "snap": "吸附",
+        "snap dist": "吸附距离",
+        "45 degrees": "45 度",
         "rotation mode": {
           "_value": "旋转模式",
-          "rise": "Rise",
-          "hypixel": "Hypixel"
+          "static": "静态",
+          "hypixel": "Hypixel",
+          "heypixel": "Heypixel"
         },
         "raytrace mode": {
           "_value": "射线追踪模式",
@@ -1314,6 +1328,7 @@
           "strict": "严格"
         },
         "rotation speed": "旋转速度",
+        "rotation speed 2": "旋转速度 2",
         "rotation back speed": "回转速度",
         "telly ticks": "Telly刻数",
         "swing hand": "挥手",
@@ -1373,46 +1388,32 @@
         "air stop": "空中停止",
         "auto jump": "自动跳跃"
       },
-      "stuck": {
-        "_value": "卡空",
-        "mode": {
-          "_value": "模式",
-          "nopacket": "无数据包",
-          "cancelmove": "取消移动"
-        }
-      },
+      "stuck": "卡空",
       "target strafe": {
         "_value": "目标环绕",
         "radius": "环绕半径",
         "points": "路径点数",
         "require press": "需要按住跳跃",
         "speed only": "仅速度/飞行模块",
-        "show target": {
-          "_value": "显示目标",
-          "none": "关闭",
-          "default": "默认",
-          "hud": "HUD 主题"
-        }
+        "draw radius": "绘制半径"
       },
       "velocity": {
         "_value": "反击退",
-        "exclusions": "排除项",
         "mode": {
           "_value": "模式",
           "cancel": "取消",
           "reduce": "减少"
         },
-        "attack counts": "攻击次数",
-        "sprintticks": "冲刺刻数",
-        "max delay": "最大延迟",
         "server motion": "服务端移动",
         "explosion": "爆炸",
         "explosion only block": "仅方块内无爆炸",
         "no water push": "无水流推动",
         "no entity push": "无实体推动",
         "no block push": "无方块推动",
-        "exclude spear lunge": "排除突进附魔长矛",
-        "exclude wind charge": "排除风弹"
+        "pause on eat": "进食时暂停",
+        "attack counts": "攻击次数",
+        "sprintticks": "冲刺刻数",
+        "max delay": "最大延迟"
       },
       "anti alias": "抗锯齿",
       "aspect ratio": {
@@ -1427,7 +1428,7 @@
         "side color": "侧面颜色",
         "line color": "线条颜色",
         "blur": "模糊",
-        "blur strength": ""
+        "blur strength": "模糊强度"
       },
       "block highlight": {
         "_value": "方块高亮",
@@ -1644,6 +1645,18 @@
         "circle scale": "圆环缩放",
         "only self": "仅自身"
       },
+      "logout spots": {
+        "_value": "登出位置",
+        "notifications": "通知",
+        "ignore bots": "忽略机器人",
+        "render mode": {
+          "_value": "渲染模式",
+          "model": "模型",
+          "box": "方框"
+        },
+        "side color": "侧面颜色",
+        "line color": "线条颜色"
+      },
       "mas effects": {
         "_value": "战斗视觉特效",
         "general": "常规",
@@ -1681,23 +1694,59 @@
         "scale": "缩放",
         "height offset": "高度偏移",
         "background color": "背景颜色",
-        "vanilla name tags": "显示原版名字标签",
         "show equipment": "显示装备",
         "show hands": "显示手部",
         "show self": "显示自己"
       },
+      "no ghost blocks": {
+        "_value": "无幽灵方块",
+        "breaking": "挖掘",
+        "placing": "放置"
+      },
       "no render": {
         "_value": "移除渲染",
-        "potion effects": "药水效果",
-        "block overlay": "方块遮罩",
-        "explosions": "爆炸粒子",
-        "totems": "图腾粒子",
-        "totem animation": "图腾动画",
-        "portal": "传送门粒子",
-        "fireworks": "烟花粒子",
+        "portal overlay": "传送门遮罩",
+        "spyglass overlay": "望远镜遮罩",
+        "nausea": "反胃",
+        "pumpkin overlay": "南瓜遮罩",
+        "powdered snow overlay": "细雪遮罩",
         "fire overlay": "火焰遮罩",
-        "negative effects": "负面视觉效果",
-        "potion particles": "药水粒子"
+        "liquid overlay": "液体遮罩",
+        "block overlay": "方块遮罩",
+        "vignette": "暗角",
+        "totem animation": "图腾动画",
+        "eat particles": "进食粒子",
+        "enchant glint": "附魔光效",
+        "boss bar": "Boss 血条",
+        "scoreboard": "计分板",
+        "crosshair": "准星",
+        "title": "标题",
+        "held item name": "手持物品名称",
+        "obfuscation": "混淆文字",
+        "potion icons": "药水图标",
+        "weather": "天气",
+        "world border": "世界边界",
+        "blindness": "失明",
+        "darkness": "黑暗",
+        "fog": "迷雾",
+        "ench table book": "附魔台书本",
+        "sign text": "告示牌文字",
+        "block break overlay": "方块破坏遮罩",
+        "beacon beams": "信标光束",
+        "falling blocks": "下落方块",
+        "cave culling": "洞穴剔除",
+        "map markers": "地图标记",
+        "map contents": "地图内容",
+        "banners": "旗帜",
+        "firework explosions": "烟花爆炸",
+        "barrier invisibility": "屏障隐形效果",
+        "texture rotations": "纹理旋转",
+        "entities": "实体",
+        "drop spawn packet": "丢弃生成数据包",
+        "no armor": "无盔甲",
+        "no mob in spawner": "刷怪笼内无生物",
+        "no dead entities": "无死亡实体",
+        "no nametags": "无名称标签"
       },
       "particles": {
         "_value": "粒子",
@@ -1785,6 +1834,7 @@
         "monsters": "怪物",
         "ambients": "环境生物",
         "others": "其他",
+        "max range": "最大范围",
         "mode": {
           "_value": "模式",
           "default": "默认",
@@ -1793,16 +1843,22 @@
           "snow": "雪花",
           "fade": "淡出"
         },
+        "gradient factor": "渐变因子",
+        "gradient": "渐变",
+        "gradient alpha": "渐变透明度",
+        "line width": "线条宽度",
+        "quality": "质量",
+        "smoke octaves": "烟雾八度",
+        "fill alpha": "填充透明度",
+        "smoke glow": "烟雾发光",
+        "outline": "轮廓",
+        "smoke outline": "烟雾轮廓",
+        "smoke outline 2": "烟雾轮廓 2",
+        "fill": "填充",
+        "smoke fill": "烟雾填充",
+        "smoke fill 2": "烟雾填充 2",
         "hands mode": {
           "_value": "手部模式",
-          "default": "默认",
-          "smoke": "烟雾",
-          "gradient": "渐变",
-          "snow": "雪花",
-          "fade": "淡出"
-        },
-        "chest mode": {
-          "_value": "箱子模式",
           "default": "默认",
           "smoke": "烟雾",
           "gradient": "渐变",
@@ -1823,6 +1879,14 @@
         "hands fill": "手部填充",
         "hands smoke fill": "手部烟雾填充",
         "hands smoke fill 2": "手部烟雾填充 2",
+        "chest mode": {
+          "_value": "箱子模式",
+          "default": "默认",
+          "smoke": "烟雾",
+          "gradient": "渐变",
+          "snow": "雪花",
+          "fade": "淡出"
+        },
         "chest gradient factor": "箱子渐变因子",
         "chest gradient": "箱子渐变",
         "chest gradient alpha": "箱子渐变透明度",
@@ -1836,22 +1900,7 @@
         "chest smoke outline 2": "箱子烟雾轮廓 2",
         "chest fill": "箱子填充",
         "chest smoke fill": "箱子烟雾填充",
-        "chest smoke fill 2": "箱子烟雾填充 2",
-        "max range": "最大范围",
-        "gradient factor": "渐变因子",
-        "gradient": "渐变",
-        "gradient alpha": "渐变透明度",
-        "line width": "线条宽度",
-        "quality": "质量",
-        "smoke octaves": "烟雾八度",
-        "fill alpha": "填充透明度",
-        "smoke glow": "烟雾发光",
-        "outline": "轮廓",
-        "smoke outline": "烟雾轮廓",
-        "smoke outline 2": "烟雾轮廓 2",
-        "fill": "填充",
-        "smoke fill": "烟雾填充",
-        "smoke fill 2": "烟雾填充 2"
+        "chest smoke fill 2": "箱子烟雾填充 2"
       },
       "sneak tweak": {
         "_value": "潜行优化",

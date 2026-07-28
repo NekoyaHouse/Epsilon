@@ -65,12 +65,12 @@ public class InvManager extends Module {
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
     private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
-    private final EnumSetting<OffhandItemMode> offhandItems = enumSetting("Offhand Items", OffhandItemMode.None);
+    private final EnumSetting<OffhandItemMode> offhandItem = enumSetting("Offhand Item", OffhandItemMode.None);
     private final BoolSetting autoArmor = boolSetting("Auto Armor", true);
     private final BoolSetting switchSword = boolSetting("Switch Sword", true);
     private final IntSetting swordSlot = intSetting("Sword Slot", 1, 1, 9, 1, switchSword::getValue);
-    private final BoolSetting switchBlock = boolSetting("Switch Block", true, () -> !offhandItems.is(OffhandItemMode.Block));
-    private final IntSetting blockSlot = intSetting("Block Slot", 2, 1, 9, 1, () -> switchBlock.getValue() && !offhandItems.is(OffhandItemMode.Block));
+    private final BoolSetting switchBlock = boolSetting("Switch Block", true, () -> !offhandItem.is(OffhandItemMode.Block));
+    private final IntSetting blockSlot = intSetting("Block Slot", 2, 1, 9, 1, () -> switchBlock.getValue() && !offhandItem.is(OffhandItemMode.Block));
     public final IntSetting maxBlockSize = intSetting("Max Block Size", 256, 64, 512, 64, switchBlock::getValue);
     private final BoolSetting switchPickaxe = boolSetting("Switch Pickaxe", true);
     private final IntSetting pickaxeSlot = intSetting("Pickaxe Slot", 3, 1, 9, 1, switchPickaxe::getValue);
@@ -86,17 +86,17 @@ public class InvManager extends Module {
     private final IntSetting enderPearlSlot = intSetting("Ender Pearl Slot", 7, 1, 9, 1, switchEnderPearl::getValue);
     private final BoolSetting switchFireball = boolSetting("Switch Fireball", true);
     private final IntSetting fireballSlot = intSetting("Fireball Slot", 8, 1, 9, 1, switchFireball::getValue);
-    private final BoolSetting switchGoldenApple = boolSetting("Switch Golden Apple", true, () -> !offhandItems.is(OffhandItemMode.GoldenApple));
-    private final IntSetting goldenAppleSlot = intSetting("Golden Apple Slot", 9, 1, 9, 1, () -> switchGoldenApple.getValue() && !offhandItems.is(OffhandItemMode.GoldenApple));
+    private final BoolSetting switchGoldenApple = boolSetting("Switch Golden Apple", true, () -> !offhandItem.is(OffhandItemMode.GoldenApple));
+    private final IntSetting goldenAppleSlot = intSetting("Golden Apple Slot", 9, 1, 9, 1, () -> switchGoldenApple.getValue() && !offhandItem.is(OffhandItemMode.GoldenApple));
     private final BoolSetting throwItems = boolSetting("Throw Items", true);
     public final IntSetting waterBucketCount = intSetting("Keep Water Buckets", 1, 0, 5, 1, throwItems::getValue);
     public final IntSetting lavaBucketCount = intSetting("Keep Lava Buckets", 1, 0, 5, 1, throwItems::getValue);
     public final BoolSetting keepProjectile = boolSetting("Keep Eggs & Snowballs", true);
-    private final BoolSetting switchProjectile = boolSetting("Switch Eggs & Snowballs", false, () -> keepProjectile.getValue() && !offhandItems.is(OffhandItemMode.Projectile));
-    private final IntSetting projectileSlot = intSetting("Eggs & Snowballs Slot", 9, 1, 9, 1, () -> switchProjectile.getValue() && keepProjectile.getValue() && !offhandItems.is(OffhandItemMode.Projectile));
+    private final BoolSetting switchProjectile = boolSetting("Switch Eggs & Snowballs", false, () -> keepProjectile.getValue() && !offhandItem.is(OffhandItemMode.Projectile));
+    private final IntSetting projectileSlot = intSetting("Eggs & Snowballs Slot", 9, 1, 9, 1, () -> switchProjectile.getValue() && keepProjectile.getValue() && !offhandItem.is(OffhandItemMode.Projectile));
     public final IntSetting maxProjectileSize = intSetting("Max Eggs & Snowballs Size", 64, 16, 256, 16, keepProjectile::getValue);
-    private final BoolSetting switchRod = boolSetting("Switch Rod", false, () -> !offhandItems.is(OffhandItemMode.FishingRod));
-    private final IntSetting rodSlot = intSetting("Rod Slot", 9, 1, 9, 1, () -> switchRod.getValue() && !offhandItems.is(OffhandItemMode.FishingRod));
+    private final BoolSetting switchRod = boolSetting("Switch Rod", false, () -> !offhandItem.is(OffhandItemMode.FishingRod));
+    private final IntSetting rodSlot = intSetting("Rod Slot", 9, 1, 9, 1, () -> switchRod.getValue() && !offhandItem.is(OffhandItemMode.FishingRod));
 
     private static final TimerUtils timer = new TimerUtils();
     private static final Random random = new Random();
@@ -222,7 +222,7 @@ public class InvManager extends Module {
             this.clickOffHand = false;
         }
 
-        if (this.offhandItems.is(OffhandItemMode.GoldenApple)) {
+        if (this.offhandItem.is(OffhandItemMode.GoldenApple)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             Item offHandItem = offHand.getItem();
 
@@ -272,7 +272,7 @@ public class InvManager extends Module {
                     }
                 }
             }
-        } else if (this.offhandItems.is(OffhandItemMode.Projectile)) {
+        } else if (this.offhandItem.is(OffhandItemMode.Projectile)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             ItemStack bestProjectile = InvHelper.getBestProjectile();
             if (bestProjectile != null) {
@@ -280,12 +280,12 @@ public class InvManager extends Module {
                 boolean shouldSwap = offHand.getItem() != Items.EGG && offHand.getItem() != Items.SNOWBALL || offHand.getCount() < bestProjectile.getCount();
                 if (shouldSwap && slot != -1 && timer.passedMillise(nextDelay)) this.swapOffHand(slot);
             }
-        } else if (this.offhandItems.is(OffhandItemMode.FishingRod)) {
+        } else if (this.offhandItem.is(OffhandItemMode.FishingRod)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             int slotx = InvHelper.getItemSlot(Items.FISHING_ROD);
             if (slotx != -1 && timer.passedMillise(nextDelay) && offHand.getItem() != Items.FISHING_ROD)
                 this.swapOffHand(slotx);
-        } else if (this.offhandItems.is(OffhandItemMode.Block)) {
+        } else if (this.offhandItem.is(OffhandItemMode.Block)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             ItemStack bestBlock = InvHelper.getBestBlock();
             if (bestBlock != null) {
@@ -295,7 +295,7 @@ public class InvManager extends Module {
             }
         }
 
-        if (this.switchGoldenApple.getValue() && !this.offhandItems.is(OffhandItemMode.GoldenApple)) {
+        if (this.switchGoldenApple.getValue() && !this.offhandItem.is(OffhandItemMode.GoldenApple)) {
             int targetSlotIdx = this.goldenAppleSlot.getValue() - 1;
             int egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE);
             int gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE);
@@ -313,7 +313,7 @@ public class InvManager extends Module {
             int blockSlotIndex = this.blockSlot.getValue() - 1;
             ItemStack currentBlock = InvHelper.getInventoryStack(blockSlotIndex);
             ItemStack bestBlock = InvHelper.getBestBlock();
-            if (bestBlock != null && (bestBlock.getCount() > currentBlock.getCount() || !InvHelper.isValidStack(currentBlock)) && !this.offhandItems.is(OffhandItemMode.Block)) {
+            if (bestBlock != null && (bestBlock.getCount() > currentBlock.getCount() || !InvHelper.isValidStack(currentBlock)) && !this.offhandItem.is(OffhandItemMode.Block)) {
                 this.swapItem(blockSlotIndex, bestBlock);
             }
             if ((float) InvHelper.getBlockCountInInventory() > this.maxBlockSize.getValue()) {
@@ -351,7 +351,7 @@ public class InvManager extends Module {
                 this.swapItem(slotIndex, bestAxe);
         }
 
-        if (this.switchRod.getValue() && !this.offhandItems.is(OffhandItemMode.FishingRod)) {
+        if (this.switchRod.getValue() && !this.offhandItem.is(OffhandItemMode.FishingRod)) {
             int slotIndex = this.rodSlot.getValue() - 1;
             ItemStack bestRod = InvHelper.getFishingRod();
             ItemStack currentRod = InvHelper.getInventoryStack(slotIndex);
@@ -406,7 +406,7 @@ public class InvManager extends Module {
         if (this.keepProjectile.getValue()) {
             if ((float) (InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)) > this.maxProjectileSize.getValue())
                 this.throwItem(InvHelper.getWorstProjectile());
-            if (this.switchProjectile.getValue() && !this.offhandItems.is(OffhandItemMode.Projectile)) {
+            if (this.switchProjectile.getValue() && !this.offhandItem.is(OffhandItemMode.Projectile)) {
                 int pSlot = this.projectileSlot.getValue() - 1;
                 if (InvHelper.getItemCount(Items.EGG) > 0) this.swapItem(pSlot, Items.EGG);
                 else if (InvHelper.getItemCount(Items.SNOWBALL) > 0) this.swapItem(pSlot, Items.SNOWBALL);

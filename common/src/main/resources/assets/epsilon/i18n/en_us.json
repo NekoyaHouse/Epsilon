@@ -32,8 +32,7 @@
         "multiplayer": "Multiplayer",
         "options": "Options",
         "quit": "Quit",
-        "reisa_greeting": "Hi, Sensei! Reisa reporting in!",
-        "reisa_farewell": "Sensei, see you tomorrow! Reisa is signing off!"
+        "reisa_greeting": "Hi, Sensei! Reisa reporting in!"
       },
       "tab": {
         "general": "General",
@@ -228,6 +227,12 @@
       "client setting": {
         "_value": "Client Setting",
         "general": "General",
+        "teams": {
+          "_value": "Teams",
+          "none": "None",
+          "color": "Color",
+          "scoreboard": "Scoreboard"
+        },
         "anti cheat": "Anti Cheat",
         "appearance": "Appearance",
         "uzawa reisa": "Uzawa Reisa",
@@ -416,12 +421,6 @@
         },
         "swing hand": "Swing Hand"
       },
-      "auto totem": {
-        "_value": "Auto Totem",
-        "strict": "Strict",
-        "health": "Health",
-        "check gapple": "Check Gapple"
-      },
       "auto throw": {
         "_value": "Auto Throw",
         "min distance": "Min Distance",
@@ -436,6 +435,12 @@
         "self extrapolation smoothening": "Self Extrapolation Smoothening",
         "render extrapolation": "Render Extrapolation",
         "render self extrapolation": "Render Self Extrapolation"
+      },
+      "auto totem": {
+        "_value": "Auto Totem",
+        "strict": "Strict",
+        "health": "Health",
+        "check gapple": "Check Gapple"
       },
       "auto weapon": {
         "_value": "Auto Weapon",
@@ -731,6 +736,9 @@
         "mob": "Mob",
         "animal": "Animal",
         "villagers": "Villagers",
+        "ambient": "Ambient",
+        "water": "Water",
+        "others": "Others",
         "invisible": "Invisible",
         "through walls": "Through Walls",
         "swinghand": "Swing Hand",
@@ -741,6 +749,11 @@
           "circle": "Circle",
           "firefly": "Firefly",
           "deobf": "Deobf"
+        },
+        "deobf mode": {
+          "_value": "Deobf Mode",
+          "niuren": "Niuren",
+          "mengcha": "Mengcha"
         },
         "deobf size": "Deobf Size",
         "deobf spins": "Deobf Spins",
@@ -1007,12 +1020,6 @@
         "_value": "Break Cooldown",
         "cooldown": "Cooldown"
       },
-      "disabler": {
-        "_value": "Disabler",
-        "badpacketsa": "Bad Packets A",
-        "sprinting": "Sprinting",
-        "input": "Input"
-      },
       "elytra swap": {
         "_value": "Elytra Swap",
         "activate key": "Activate Key",
@@ -1030,12 +1037,21 @@
         "playback": "Playback"
       },
       "ghost hand": "Ghost Hand",
+      "input disabler": "Input Disabler",
       "inv manager": {
         "_value": "Inv Manager",
+        "mode": {
+          "_value": "Mode",
+          "inventory": "Inventory",
+          "silent": "Silent"
+        },
+        "pause on eat": "Pause On Eat",
+        "pause on killaura": "Pause On KillAura",
+        "pause on scaffold": "Pause On Scaffold",
         "min delay": "Min Delay",
-        "delay": "Delay",
-        "offhand items": {
-          "_value": "Offhand Items",
+        "max delay": "Max Delay",
+        "offhand item": {
+          "_value": "Offhand Item",
           "none": "None",
           "goldenapple": "Golden Apple",
           "projectile": "Projectile",
@@ -1043,7 +1059,6 @@
           "block": "Block"
         },
         "auto armor": "Auto Armor",
-        "inventory only": "Inventory Only",
         "switch sword": "Switch Sword",
         "sword slot": "Sword Slot",
         "switch block": "Switch Block",
@@ -1140,8 +1155,8 @@
         "path color": "Path Color",
         "path line width": "Path Line Width"
       },
-      "auto sprint": "Auto Sprint",
       "dolphin": "Dolphin",
+      "auto sprint": "Auto Sprint",
       "blink": {
         "_value": "Blink",
         "tick": "Tick",
@@ -1227,22 +1242,13 @@
         "reach only": "Reach Only"
       },
       "movement fix": "Movement Fix",
-      "no fall": {
-        "_value": "No Fall",
-        "mode": {
-          "_value": "Mode",
-          "groundspoof": "Ground Spoof",
-          "grim2b2t": "Grim 2B2T"
-        },
-        "fall distance": "Fall Distance"
-      },
       "no slow": {
         "_value": "No Slow",
         "mode": {
           "_value": "Mode",
           "vanilla": "Vanilla",
           "jump": "Jump",
-          "grimc0f": "Grim C0F",
+          "grimfull": "Grim Full",
           "grim1_2": "Grim 1/2",
           "grim1_3": "Grim 1/3"
         },
@@ -1276,6 +1282,12 @@
         "pitch": "Pitch",
         "strict": "Strict"
       },
+      "reverse step": {
+        "_value": "Reverse Step",
+        "fall speed": "Fall Speed",
+        "fall distance": "Fall Distance",
+        "vehicles": "Vehicles"
+      },
       "safe walk": {
         "_value": "Safe Walk",
         "motion": "Motion",
@@ -1301,12 +1313,14 @@
           "invswitch": "Inv Switch"
         },
         "swap back": "Swap Back",
-        "skip ticks": "Skip Ticks",
         "snap": "Snap",
+        "snap dist": "Snap Distance",
+        "45 degrees": "45 Degrees",
         "rotation mode": {
           "_value": "Rotation Mode",
-          "rise": "Rise",
-          "hypixel": "Hypixel"
+          "static": "Static",
+          "hypixel": "Hypixel",
+          "heypixel": "Heypixel"
         },
         "raytrace mode": {
           "_value": "Raytrace Mode",
@@ -1314,6 +1328,7 @@
           "strict": "Strict"
         },
         "rotation speed": "Rotation Speed",
+        "rotation speed 2": "Rotation Speed 2",
         "rotation back speed": "Rotation Back Speed",
         "telly ticks": "Telly Ticks",
         "swing hand": "Swing Hand",
@@ -1373,46 +1388,32 @@
         "air stop": "Air Stop",
         "auto jump": "Auto Jump"
       },
-      "stuck": {
-        "_value": "Stuck",
-        "mode": {
-          "_value": "Mode",
-          "nopacket": "No Packet",
-          "cancelmove": "Cancel Move"
-        }
-      },
+      "stuck": "Stuck",
       "target strafe": {
         "_value": "Target Strafe",
         "radius": "Radius",
         "points": "Points",
         "require press": "Require Jump",
         "speed only": "Speed/Flight Only",
-        "show target": {
-          "_value": "Show Target",
-          "none": "None",
-          "default": "Default",
-          "hud": "HUD"
-        }
+        "draw radius": "Draw Radius"
       },
       "velocity": {
         "_value": "Velocity",
-        "exclusions": "Exclusions",
         "mode": {
           "_value": "Mode",
           "cancel": "Cancel",
           "reduce": "Reduce"
         },
-        "attack counts": "Attack Counts",
-        "sprintticks": "Sprint Ticks",
-        "max delay": "Max Delay",
         "server motion": "Server Motion",
         "explosion": "Explosion",
         "explosion only block": "Explosion Only Block",
         "no water push": "No Water Push",
         "no entity push": "No Entity Push",
         "no block push": "No Block Push",
-        "exclude spear lunge": "Exclude Spear Lunge",
-        "exclude wind charge": "Exclude Wind Charge"
+        "pause on eat": "Pause On Eat",
+        "attack counts": "Attack Counts",
+        "sprintticks": "Sprint Ticks",
+        "max delay": "Max Delay"
       },
       "anti alias": "Anti Alias",
       "aspect ratio": {
@@ -1644,6 +1645,18 @@
         "circle scale": "Circle Scale",
         "only self": "Only Self"
       },
+      "logout spots": {
+        "_value": "Logout Spots",
+        "notifications": "Notifications",
+        "ignore bots": "Ignore Bots",
+        "render mode": {
+          "_value": "Render Mode",
+          "model": "Model",
+          "box": "Box"
+        },
+        "side color": "Side Color",
+        "line color": "Line Color"
+      },
       "mas effects": {
         "_value": "Mas Effects",
         "general": "General",
@@ -1681,23 +1694,59 @@
         "scale": "Scale",
         "height offset": "Height Offset",
         "background color": "Background Color",
-        "vanilla name tags": "Vanilla Name Tags",
         "show equipment": "Show Equipment",
         "show hands": "Show Hands",
         "show self": "Show Self"
       },
+      "no ghost blocks": {
+        "_value": "No Ghost Blocks",
+        "breaking": "Breaking",
+        "placing": "Placing"
+      },
       "no render": {
         "_value": "No Render",
-        "potion effects": "Potion Effects",
-        "block overlay": "Block Overlay",
-        "explosions": "Explosions",
-        "totems": "Totems",
-        "totem animation": "Totem Animation",
-        "portal": "Portal",
-        "fireworks": "Fireworks",
+        "portal overlay": "Portal Overlay",
+        "spyglass overlay": "Spyglass Overlay",
+        "nausea": "Nausea",
+        "pumpkin overlay": "Pumpkin Overlay",
+        "powdered snow overlay": "Powdered Snow Overlay",
         "fire overlay": "Fire Overlay",
-        "negative effects": "Negative Effects",
-        "potion particles": "Potion Particles"
+        "liquid overlay": "Liquid Overlay",
+        "block overlay": "Block Overlay",
+        "vignette": "Vignette",
+        "totem animation": "Totem Animation",
+        "eat particles": "Eat Particles",
+        "enchant glint": "Enchant Glint",
+        "boss bar": "Boss Bar",
+        "scoreboard": "Scoreboard",
+        "crosshair": "Crosshair",
+        "title": "Title",
+        "held item name": "Held Item Name",
+        "obfuscation": "Obfuscation",
+        "potion icons": "Potion Icons",
+        "weather": "Weather",
+        "world border": "World Border",
+        "blindness": "Blindness",
+        "darkness": "Darkness",
+        "fog": "Fog",
+        "ench table book": "Ench Table Book",
+        "sign text": "Sign Text",
+        "block break overlay": "Block Break Overlay",
+        "beacon beams": "Beacon Beams",
+        "falling blocks": "Falling Blocks",
+        "cave culling": "Cave Culling",
+        "map markers": "Map Markers",
+        "map contents": "Map Contents",
+        "banners": "Banners",
+        "firework explosions": "Firework Explosions",
+        "barrier invisibility": "Barrier Invisibility",
+        "texture rotations": "Texture Rotations",
+        "entities": "Entities",
+        "drop spawn packet": "Drop Spawn Packet",
+        "no armor": "No Armor",
+        "no mob in spawner": "No Mob In Spawner",
+        "no dead entities": "No Dead Entities",
+        "no nametags": "No Nametags"
       },
       "particles": {
         "_value": "Particles",
@@ -1785,6 +1834,7 @@
         "monsters": "Monsters",
         "ambients": "Ambients",
         "others": "Others",
+        "max range": "Max Range",
         "mode": {
           "_value": "Mode",
           "default": "Default",
@@ -1793,16 +1843,22 @@
           "snow": "Snow",
           "fade": "Fade"
         },
+        "gradient factor": "Gradient Factor",
+        "gradient": "Gradient",
+        "gradient alpha": "Gradient Alpha",
+        "line width": "Line Width",
+        "quality": "Quality",
+        "smoke octaves": "Smoke Octaves",
+        "fill alpha": "Fill Alpha",
+        "smoke glow": "Smoke Glow",
+        "outline": "Outline",
+        "smoke outline": "Smoke Outline",
+        "smoke outline 2": "Smoke Outline 2",
+        "fill": "Fill",
+        "smoke fill": "Smoke Fill",
+        "smoke fill 2": "Smoke Fill 2",
         "hands mode": {
           "_value": "Hands Mode",
-          "default": "Default",
-          "smoke": "Smoke",
-          "gradient": "Gradient",
-          "snow": "Snow",
-          "fade": "Fade"
-        },
-        "chest mode": {
-          "_value": "Chest Mode",
           "default": "Default",
           "smoke": "Smoke",
           "gradient": "Gradient",
@@ -1823,6 +1879,14 @@
         "hands fill": "Hands Fill",
         "hands smoke fill": "Hands Smoke Fill",
         "hands smoke fill 2": "Hands Smoke Fill 2",
+        "chest mode": {
+          "_value": "Chest Mode",
+          "default": "Default",
+          "smoke": "Smoke",
+          "gradient": "Gradient",
+          "snow": "Snow",
+          "fade": "Fade"
+        },
         "chest gradient factor": "Chest Gradient Factor",
         "chest gradient": "Chest Gradient",
         "chest gradient alpha": "Chest Gradient Alpha",
@@ -1836,22 +1900,7 @@
         "chest smoke outline 2": "Chest Smoke Outline 2",
         "chest fill": "Chest Fill",
         "chest smoke fill": "Chest Smoke Fill",
-        "chest smoke fill 2": "Chest Smoke Fill 2",
-        "max range": "Max Range",
-        "gradient factor": "Gradient Factor",
-        "gradient": "Gradient",
-        "gradient alpha": "Gradient Alpha",
-        "line width": "Line Width",
-        "quality": "Quality",
-        "smoke octaves": "Smoke Octaves",
-        "fill alpha": "Fill Alpha",
-        "smoke glow": "Smoke Glow",
-        "outline": "Outline",
-        "smoke outline": "Smoke Outline",
-        "smoke outline 2": "Smoke Outline 2",
-        "fill": "Fill",
-        "smoke fill": "Smoke Fill",
-        "smoke fill 2": "Smoke Fill 2"
+        "chest smoke fill 2": "Chest Smoke Fill 2"
       },
       "sneak tweak": {
         "_value": "Sneak Tweak",
