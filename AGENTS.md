@@ -1,490 +1,445 @@
 # Epsilon 本体开发
 
-## 概述
+## 项目定位
 
-Epsilon 是一个面向 Minecraft 的多加载器（Multi-Loader）客户端工具模组，同时支持 Fabric 和 NeoForge，采用三层架构。
+Epsilon 是面向 Minecraft 客户端的多加载器工具模组，同时支持 Fabric 和 NeoForge。项目把共享业务代码放在 `common/`，再由两个加载器子项目复用同一份 Java 源码与资源。
 
-## 项目架构
+本文档描述本体仓库的实际架构和开发约定。遇到文档与源码不一致时，以当前源码、`gradle/libs.versions.toml` 和本地 Minecraft 参考源码为准，并在同一次修改中更新本文档。
 
+## 开发前的强制检查
+
+1. 先查看 `git status --short`，不得覆盖或回滚不属于本次任务的改动。
+2. 先查看 `gradle/libs.versions.toml`，确认 Minecraft、加载器、映射和依赖版本。
+3. 涉及 Minecraft 类、方法、字段、渲染流程、网络包或 Mixin 目标时，必须直接查阅当前版本源码：
+
+   `references/Fabric-26.1.2/`、`references/NeoForge-26.1.2/`
+
+4. 不得根据训练数据或记忆猜测 Minecraft API。类名存在并不代表方法签名、调用时机或线程约束仍然相同。
+5. 涉及 Fabric 或 NeoForge API 时，再查对应加载器实现和官方文档；不要把加载器专有调用放进 `common/`。
+6. 修改本文档描述的架构、公共 API、配置格式、资源格式、注册流程或构建流程时，必须同步更新 `AGENTS.md`。
+
+可优先用 `rg` 定位参考源码，例如：
+
+```powershell
+rg -n "class Minecraft|record KeyEvent" references/Fabric-26.1.2 -g "*.java"
+rg -n "methodName" references/Fabric-26.1.2/net/minecraft -g "*.java"
 ```
+
+## 仓库结构
+
+```text
 Epsilon/
-├── common/          ← 平台无关核心代码（模块、事件、图形、工具类）
-├── fabric/          ← Fabric 加载器适配层
-├── neoforge/        ← NeoForge 加载器适配层
-├── buildSrc/        ← Gradle 自定义插件（multiloader-common、multiloader-loader）
-└── docs/            ← 文档
+├── common/       # 共享核心：模块、事件、GUI、渲染、配置、工具类和公共资源
+├── fabric/       # Fabric 启动、Addon 入口、资源重载和平台 Mixin
+├── neoforge/     # NeoForge 启动、事件桥接和平台 Mixin
+├── buildSrc/     # Gradle 约定插件
+├── gradle/       # 版本目录与 Gradle Wrapper 配置
+├── scripts/      # 维护脚本，目前主要是 i18n 同步脚本
+├── references/   # 当前 Minecraft/Fabric 反编译参考源码
+└── .github/      # CI 工作流
 ```
 
-> 以下结构图仅描述 `common/` 下的核心代码组织。所有平台无关代码位于 `common/src/main/java/com/github/epsilon/`。
+### 分层边界
 
-## 关键原则
-- `common/` 中的代码**不能调用任何 ModLoader 的 API**
-- 需要加载器 API 时，在 `fabric/` 或 `neoforge/` 子项目中实现，通过 compat 接口传入 common
-- `common/` 中的 Java 源码会被 Gradle 自动共享到 fabric/ 和 neoforge/ 的编译路径
-- 编写前必须查阅 Minecraft 源码！
-- 修改本文档已说明的架构、API、开发约定、文件格式或工作流时，必须在同一次修改中同步更新 `AGENTS.md`
+- `common/` 可以调用 Minecraft API，但不能导入 `net.fabricmc.*`、`net.neoforged.*` 或其他 ModLoader API。
+- 加载器专有功能放在 `fabric/` 或 `neoforge/`。需要共享能力时，先在 `common/` 定义与加载器无关的协议或数据结构，再由平台层接入。
+- `multiloader-loader` 会把 `common/src/main/java`、生成的 `BuildConfig` 和 `common/src/main/resources` 加入两个加载器子项目；不要在三个子项目复制同一份共享实现。
+- Access Widener 只服务 Fabric，Access Transformer 只服务 NeoForge。修改共享代码所需的访问权限时，要核验两个平台是否都需要对应条目。
 
-### 查阅 Minecraft 源代码
+## 构建与版本
 
-**编写前必须查阅 Minecraft 源码！**
+### 版本来源
 
-绝对不要基于训练数据中的知识判断版本信息。 Minecraft 版本迭代很快，任何关于最新版本号、版本兼容性、API 变更、 迁移步骤的判断都必须通过查阅官方文档或在线搜索确认。即便是"当前最新版本是什么"这种看似简单的问题，也优先查文档而非依赖记忆。
-任何关于调用哪个方法、哪个事件、哪个类的判断都必须基于对当前版本 Minecraft 代码的直接查阅，而非依赖过时的训练数据。
+- `gradle.properties`：Epsilon 自身的 `version`、`group`、`mod_id`、`mod_name`、`mod_author`、许可证和描述。
+- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、测试库等依赖版本。
+- 根 `build.gradle.kts` 把版本目录中的值映射为各子项目使用的 Gradle 属性；不要在子项目脚本再次硬编码版本。
+- 普通开发构建会在版本后追加当前 Git 短提交号；`buildRelease` 使用 `gradle.properties` 中的纯发布版本。
+- `common/build.gradle.kts` 生成 `com.github.epsilon.BuildConfig`，当前只暴露 `MOD_ID` 和有效构建版本。
 
-源代码位于：`C:\Users\L3MonKe\Documents\GitHub\Epsilon-Private\references\Fabric-26.1.2`
+### 约定插件
 
-## 构建系统
+- `multiloader-common.gradle.kts`：Java 25 工具链、仓库、资源展开、Jar 元数据、源码 Jar、发布和 `buildRelease`。
+- `multiloader-loader.gradle.kts`：把 `:common` 的 Java、资源和生成源码加入 Fabric/NeoForge 编译与打包流程。
 
-### 版本信息
+### 常用命令
 
-- **项目元信息**（`mod_id`、`mod_name`、`mod_author`、`version`）在 `gradle.properties` 中定义
-- **依赖版本**（Minecraft、Fabric API、Fabric Loader、NeoForge、NeoForm、Mixin、Sodium 等）在 `gradle/libs.versions.toml` 中定义
+Windows PowerShell：
 
-编写代码时优先参考 `gradle/libs.versions.toml` 获取准确的依赖版本号。`gradle.properties` 中的 `version` 字段是 Epsilon 自身的发布版本号。
+```powershell
+.\gradlew.bat buildRelease --stacktrace
+.\gradlew.bat :common:test
+.\gradlew.bat :fabric:runClient
+.\gradlew.bat :neoforge:runClient
+```
 
-### buildSrc 约定插件
+CI 使用 Java 25 执行 `buildRelease --no-daemon --stacktrace`，并上传 Fabric 与 NeoForge Jar。提交前至少运行与改动范围匹配的任务；共享代码、资源或 Mixin 变更应运行完整 `buildRelease`。
 
-- `multiloader-common.gradle.kts` — common 子项目的共享配置：JDK 工具链、Maven 仓库、资源处理、发布配置
-- `multiloader-loader.gradle.kts` — fabric/neoforge 子项目的共享配置：自动关联 `:common` 源码和资源
+当前仓库没有 Java 测试文件。新增可脱离游戏运行的配置、解析、排序或数学逻辑时，应优先在 `common/src/test/java` 添加 JUnit 5 测试。
 
-## 核心包结构
+## 启动与生命周期
 
-所有平台无关代码位于 `common/src/main/java/com/github/epsilon/`：
+两个平台都通过平台 Mixin 注入 `Minecraft` 构造函数尾部，然后进入各自的 `Loader`：
 
-| 包名 | 用途 |
-|------|------|
-| `addon/` | Addon 基类、注册事件、Bootstrap 工具 |
-| `assets/` | i18n 翻译、配置文件迁移、资源持有者 |
-| `elements/` | HUD 元素基类 `HudModule` 与具体实现（`Notifications`、`BPS`、`MTF`、`Inventory`、`ModuleList`、`Potions`、`ScaffoldBlock`、`TargetHUD`、`Watermark`） |
-| `events/` | 自定义事件总线与事件类型 |
-| `graphics/` | Lumin Graphics 渲染框架（含 `renderers/`、`shaders/`、`text/`、`buffer/`、`immediate/`、`schedulers/` 子包） |
-| `gui/` | 点击 GUI（Panel、Dropdown、HUD 编辑器、Scene 系统） |
-| `holders/` | 各种持有者（`ModuleHolder`、`ConfigHolder`、`AddonHolder`、`HudElementHolder`、`RendererHolder`、`ShaderHolder` 等，负责初始化与生命周期） |
-| `interfaces/` | Mixin 用的 accessor 接口（`ChatComponentAccessor`、`EntityRenderStateAccessor`、`WalkAnimationStateAccessor`） |
-| `managers/` | 各种管理器（Rotation、Target、Health、Friend、Sound、Notification、Packet 等） |
-| `mixins/` | Mixin 注入类 |
-| `modules/` | Module 基类、Category 枚举、`ClientSetting`、若干个内置模块（combat/movement/player/render 四大类） |
-| `settings/` | Setting 基类与 10 种设置类型（Bool、Button、Color、Double、Enum、Int、Keybind、RegistryList、StringList、String） |
-| `utils/` | 工具类（client、combat、math、network、player、render、rotation、timer、world） |
+```text
+Minecraft.<init> TAIL
+  -> fabric/neoforge Loader
+  -> EpsilonFabric/EpsilonNeoForge
+  -> 收集并注册 Addon
+  -> EpsilonCommon.init()
+```
+
+`EpsilonCommon.init()` 当前顺序：
+
+1. 设置 `Constants.mc`，注册 `com.github.epsilon` 包的 EventBus lambda factory。
+2. `ModuleHolder.initModules()`。
+3. `HudElementHolder.initElements()`。
+4. `AddonHolder.setupAddons()`。
+5. `ConfigHolder.initConfig()`。
+6. 选择当前语言。
+7. `Managers.initManagers()`。
+8. 初始化 `Render3DScheduler`。
+9. 生成空 i18n 模板，并注册退出时保存配置的 shutdown hook。
+
+不要随意改变这个顺序。Addon 必须在 `setupAddons()` 之前完成收集；配置加载依赖模块、HUD 和 Addon Setting 已经注册；运行时模块若在初始化阶段启用，还要注意 Managers 是否已经可用。
+
+## `common` 核心包
+
+所有共享 Java 代码位于 `common/src/main/java/com/github/epsilon/`。
+
+| 包 | 职责 |
+|---|---|
+| `addon/` | `EpsilonAddon`、公共 Addon 收集事件与 `AddonBootstrap` |
+| `assets/` | 配置迁移、i18n、资源位置工具 |
+| `elements/` | `HudModule`、9 个已注册 HUD 元素及通知模型 |
+| `events/` | 自定义 EventBus、监听器实现和事件类型 |
+| `graphics/` | Lumin GPU 抽象、buffer、renderer、shader、2D/3D scheduler、字体与即时绘制 |
+| `gui/` | Dropdown、Panel、HUD 编辑器、主菜单、UI Tree/Scene、主题和控件 |
+| `holders/` | 模块、HUD、Addon、配置、翻译、Renderer、RenderTarget、Shader、纹理缓存的所有权与生命周期 |
+| `interfaces/` | Mixin accessor/duck 接口 |
+| `managers/` | Rotation、Target、Extrapolation、Health、Packet、Friend、Sound、Notification、Timer |
+| `mixins/` | 共享客户端 Mixin；实际启用列表以 `epsilon.mixins.json` 为准 |
+| `modules/` | `Module`、`Category`、`ClientSetting` 和 combat/player/movement/render 模块 |
+| `settings/` | `SettingHost` DSL、分组、布局规划和 10 种 Setting 实现 |
+| `utils/` | client、combat、math、network、player、render、rotation、timer、world 工具 |
+
+截至本文档更新时，`ModuleHolder` 注册 100 个本体模块（含 `ClientSetting`），`HudElementHolder` 注册 9 个 HUD 元素。这个数字仅用于发现注册遗漏；新增功能时仍以两个 Holder 的注册表为准并同步 i18n。
 
 ## Module 开发
 
-### Module 基类 (`common/.../modules/Module.java`)
+### 基本模式
 
-所有功能模块继承 `Module`，参考现有模块（如 `common/.../modules/impl/combat/KillAura.java`）。
+本体功能模块继承 `Module`。现有模块通常使用单例和私有构造函数：
 
 ```java
 public class MyModule extends Module {
 
     public static final MyModule INSTANCE = new MyModule();
 
+    private final SettingGroup sgGeneral = settingGroup("General");
+    private final BoolSetting enabledOption = boolSetting("Enabled Option", true).group(sgGeneral);
+    private final DoubleSetting range = doubleSetting(
+            "Range", 3.0, 1.0, 6.0, 0.1,
+            enabledOption::getValue
+    ).group(sgGeneral);
+
     private MyModule() {
-        super("My Module", Category.COMBAT); // 名称 + 分类
+        super("My Module", Category.COMBAT);
     }
 
-    // -- Setting DSL --
-
-    // Boolean 设置
-    private final BoolSetting enabled = boolSetting("Enabled", true);
-
-    // Boolean 设置 + 可见性依赖
-    private final BoolSetting advanced = boolSetting("Advanced", false, () -> enabled.getValue());
-
-    // Integer 设置 (name, default, min, max, step)
-    private final IntSetting speed = intSetting("Speed", 5, 1, 10, 1);
-
-    // Integer 设置 + 依赖
-    private final IntSetting range = intSetting("Range", 4, 1, 64, 1, () -> advanced.getValue());
-
-    // Double 设置 (name, default, min, max, step)
-    private final DoubleSetting reach = doubleSetting("Reach", 3.0, 1.0, 6.0, 0.1);
-
-    // Enum 设置
-    private enum Mode { Fast, Slow }
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Fast);
-
-    // Enum 设置 + 依赖 + onChanged 回调
-    private final EnumSetting<Mode> mode2 = enumSetting("Mode 2", Mode.Slow, () -> enabled.getValue(), newMode -> { /* ... */ });
-
-    // Color 设置 (name, default, allowAlpha: boolean)
-    private final ColorSetting color = colorSetting("Color", new Color(255, 0, 0), true);
-
-    // Keybind 设置 (name, defaultKeyCode: int)
-    private final KeybindSetting key = keybindSetting("Key", -1);
-
-    // Button 设置 (name, action: Runnable)
-    private final ButtonSetting reset = buttonSetting("Reset", () -> { /* ... */ });
-
-    // String 设置
-    private final StringSetting text = stringSetting("Text", "default");
-
-    // -- 生命周期 --
     @Override
     protected void onEnable() {
-        // 模块启用时调用
     }
 
     @Override
     protected void onDisable() {
-        // 模块禁用时调用
     }
 
-    // -- 事件监听 --
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck()) return; // 检查 mc.player == null || mc.level == null
-        // 处理每 tick 逻辑
-    }
-
-    @EventHandler
-    private void onRender3D(Render3DEvent event) {
-        // 3D 渲染逻辑
-        PoseStack stack = event.getPoseStack();
+        if (nullCheck()) return;
     }
 }
 ```
 
-### Module 开发约定
+约定：
 
-1. **单例模式**：每个 Module 使用 `public static final MyModule INSTANCE = new MyModule()`，构造函数私有
-2. **私有构造函数**：防止外部实例化
-3. **nullCheck()**：事件处理方法中先调用 `nullCheck()` 确保世界中存在玩家
-4. **Setting 字段**：Setting 必须声明为类的**实例字段**，构造时初始化
-5. **@EventHandler 注解**：事件监听方法必须用 `@EventHandler` 标记，且必须是**实例方法**（非 static），访问修饰符任意
-6. **事件方法签名**：必须 `void` 返回，只有一个参数（事件类型），参数类型不能是原始类型
-7. **注册**：内部模块在 `ModuleHolder.initModules()` 列表中注册；Addon 模块通过 `EpsilonAddon.registerModule()` 注册
-8. **i18n 翻译**：需要为模块名称和设置名称添加 i18n 翻译，详见后文 i18n 章节
+- 本体模块优先采用 `public static final ... INSTANCE`，并使用私有构造函数。维护已有例外时遵循该类现状，不要为了形式统一做无关重构。
+- `Module` 构造函数本身是 public；单例约束来自具体模块，而不是基类强制。
+- Setting 必须是实例字段，字段初始化会自动通过 `SettingHost.addSetting()` 注册。
+- 世界内事件先调用 `nullCheck()`；只依赖主菜单或资源系统的处理器按实际前置条件判断。
+- 启用时 `Module.setEnabled(true)` 先订阅事件、发送通知，再调用 `onEnable()`；禁用时先取消订阅、发送通知，再调用 `onDisable()`。
+- 模块禁用必须恢复按键、计时器、物品栏、旋转 pending 状态、缓存和其他外部状态。
+- 内置模块必须加入 `ModuleHolder.initModules()`；不要只创建 `INSTANCE` 而漏掉注册。
+- `Module.resetCustomState()`、`saveCustomState()`、`loadCustomState(JsonObject)` 用于 Setting 之外的持久化状态。只有确有自定义状态时才重写。
+- `setDefaultEnabled()` 和 `setDefaultHidden()` 同时影响 reset 行为；普通模块默认 disabled、hidden。
+- 键位默认 `-1`。`Module.BindMode.Toggle` 按下切换，`Hold` 按下启用、松开禁用；鼠标键通过 `KeybindUtils` 编码。
 
-### Module.Setting 可见性依赖（Dependency）
+### Setting DSL
 
-Setting 的第四个参数（如果有）是一个 `Setting.Dependency` 函数式接口（`() -> boolean`），返回 `false` 时该设置在 GUI 中隐藏。
+`Module` 与 `EpsilonAddon` 都实现 `SettingHost`，共享同一套 DSL，也都支持适用类型的 `onChanged` 重载。不要在文档或实现中再假设 Addon 不支持回调。
 
-```java
-private final BoolSetting enableEsp = boolSetting("Enable ESP", true);
-private final ColorSetting espColor = colorSetting("ESP Color", Color.WHITE, () -> enableEsp.getValue());
-// 使用已有的 EnumSetting/BoolSetting::getValue 引用作为依赖
-```
+可用设置：
 
-也可用 lambda 实现 cross-setting 引用（A 依赖 B，而 B 也在同一个类中）：
+- `boolSetting`、`intSetting`、`doubleSetting`、`enumSetting`、`colorSetting`
+- `stringSetting`、`stringListSetting`、`keybindSetting`、`buttonSetting`
+- `blockListSetting`、`itemListSetting`、`entityTypeListSetting`、`enchantmentListSetting`、`soundEventListSetting`
+
+每个支持的 DSL 都以 `SettingHost.java` 中的当前重载为准。依赖是 `Setting.Dependency`，返回 `false` 时设置不可用/不可见：
 
 ```java
 private final BoolSetting advanced = boolSetting("Advanced", false);
-// 使用 lambda 延迟引用，解决声明顺序问题
-private final IntSetting threshold = intSetting("Threshold", 50, 0, 100, 1, () -> advanced.getValue());
+private final IntSetting threshold = intSetting(
+        "Threshold", 50, 0, 100, 1,
+        advanced::getValue,
+        value -> refresh(value)
+);
 ```
 
-**注意**：EpsilonAddon 的 Setting 不支持带 `onChanged` 参数的 DSL 变体（与 Module 不同）。
+- 使用 lambda 或方法引用延迟读取其他 Setting，不要在字段初始化时直接固化依赖结果。
+- `settingGroup(name)` 按名称忽略大小写复用已有分组。
+- `.group(group)` 只指定 GUI 分组，不负责注册 Setting。
+- `.rootSetting()` 表示该值由根配置单独持久化；目前 `ClientSetting.showWelcomeScreen` 使用它。
+- `.applyWhenRelease()` 用于滑动或编辑结束后再应用昂贵更新。
+- `Setting.isAvailable()` 的实际语义由 dependency 决定；所有 DSL 默认传入恒真的 dependency。
 
-### Setting 分组
+## Addon 开发
 
-```java
-private final SettingGroup sgCombat = settingGroup("Combat");
-private final BoolSetting autoAttack = boolSetting("Auto Attack", true).group(sgCombat);
-```
+`EpsilonAddon` 实现 `SettingHost`，提供元信息、Addon 自身设置和模块注册：
 
-### 模块键位
-
-- `getKeyBind()` / `setKeyBind(int)` — 键位代码（GLFW key code）
-- `BindMode.Toggle` — 按下切换开关（默认）
-- `BindMode.Hold` — 按住启用，松开禁用
+- 重写 `onSetup()`；可选重写 `getDisplayName()`、`getDescription()`、`getVersion()`、`getAuthors()`。
+- 在 `onSetup()` 中通过受保护的 `registerModule(module)` 注册 Addon 模块。
+- Addon ID 必须非空且全局唯一；重复 ID 会被 `AddonHolder` 忽略。
+- Addon 必须在 `AddonHolder.setupAddons()` 前注册。该方法只执行一次，晚注册对象不会自动执行初始化。
+- Fabric 通过自定义 entrypoint key `epsilon:addon` 收集实现 `FabricEpsilonAddonEntrypoint` 的入口。
+- NeoForge 通过 `NeoForge.EVENT_BUS` 发布平台 `EpsilonAddonSetupEvent` 收集 Addon。
+- 外部 Addon 若在 `com.github.epsilon` 之外声明 `@EventHandler`，需要为自己的包前缀注册 EventBus lambda factory，否则订阅时会失败。
 
 ## 事件系统
 
-### EventBus (`common/.../events/bus/EventBus.java`)
+### EventBus 规则
 
-Epsilon 使用**自定义事件总线**，与 Minecraft 原生事件系统独立。
+`EventBus.INSTANCE` 是独立于加载器事件系统的精确类型事件总线：
 
-- **订阅**：`EventBus.INSTANCE.subscribe(object)` / `EventBus.INSTANCE.subscribe(Class)`
-- **取消订阅**：`EventBus.INSTANCE.unsubscribe(object)` / `EventBus.INSTANCE.unsubscribe(Class)`
-- **发布**：`EventBus.INSTANCE.post(event)`
-- **Lambda 工厂注册**：`EventBus.INSTANCE.registerLambdaFactory("com.github.epsilon", factory)` — 已由 EpsilonCommon.init() 自动注册
+```java
+EventBus.INSTANCE.subscribe(object);
+EventBus.INSTANCE.unsubscribe(object);
+EventBus.INSTANCE.subscribe(SomeStaticListener.class);
+EventBus.INSTANCE.post(event);
+```
 
-Module 启用时自动 `subscribe(this)`，禁用时自动 `unsubscribe(this)`。
-
-### 可用事件类型（`common/.../events/impl/`）
-
-| 事件类 | 描述 |
-|--------|------|
-| `PlayerTickEvent.Pre` / `PlayerTickEvent.Post` | 玩家每 tick 前后（最常用，可取消 Pre） |
-| `ClientTickEvent.Pre` / `ClientTickEvent.Post` | 客户端每 tick 前后 |
-| `Render2DEvent.Level` / `Render2DEvent.HUD` | 2D 渲染（含 GuiGraphics） |
-| `Render3DEvent` / `AfterRender3DEvent` | 3D 渲染（含 PoseStack）及渲染后回调 |
-| `PacketEvent.Send` / `PacketEvent.Receive` | 网络包收发（可取消） |
-| `KeyPressEvent` | 按键按下/释放 |
-| `MousePressEvent` | 鼠标按键 |
-| `AttackEntityEvent` / `AttackBlockEvent` / `DestroyBlockEvent` | 攻击实体/方块/破坏方块 |
-| `ClickEvent` | 点击 |
-| `JumpEvent` | 跳跃 |
-| `CollisionEvent` | 碰撞检测 |
-| `SlowdownEvent` / `AttackSlowDownEvent` | 减速（灵魂沙等）/攻击减速 |
-| `StrafeEvent` / `MoveEvent` / `TravelEvent` | 侧移 / 移动 / 行进 |
-| `KeyboardInputEvent` | 键盘输入 |
-| `RotationAnimationEvent` | 旋转动画（可设置渲染用的 yaw/pitch） |
-| `AttackYawEvent` | 攻击偏航角 |
-| `SendPositionEvent` | 发送位置包（RotationManager 在此写入旋转） |
-| `SwingHandEvent` | 挥手 |
-| `RaytraceEvent` / `UseItemRaytraceEvent` | 射线追踪 / 使用物品射线追踪 |
-| `UseItemEvent` / `StartUseItemEvent` | 使用物品 |
-| `FallFlyingEvent` / `FireworkRotationEvent` | 鞘翅飞行 / 烟花旋转 |
-| `LevelUpdateEvent` / `RespawnEvent` | 世界切换 / 重生 |
-| ... | 其余事件及字段以 `common/src/main/java/com/github/epsilon/events/impl/` 中的当前源码为准 |
-
-### 事件优先级
-
-`@EventHandler(priority = EventPriority.HIGH)` — 优先级：`HIGHEST` > `HIGH` > `MEDIUM` > `LOW` > `LOWEST`
-
-支持直接传入 int 值（如 `priority = -1000`）。**数值越大越先执行**，数值越小越晚执行。`EventPriority` 常量映射：`HIGHEST=200`, `HIGH=100`, `MEDIUM=0`, `LOW=-100`, `LOWEST=-200`。
+- `subscribe(object)` 订阅实例方法；`subscribe(Class)` 只订阅 static 监听器。
+- 监听方法必须有 `@EventHandler`、返回 `void`、只有一个非 primitive 参数。
+- EventBus 按事件的精确运行时 class 查找监听器，不会把子类事件自动分发给父类参数监听器。例如监听 `Render2DEvent` 不会收到 `Render2DEvent.HUD`。
+- priority 数值越大越先执行。`EventPriority` 为 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。
+- 同优先级保留插入顺序，不应依赖跨对象的隐式注册先后；有明确顺序需求时显式设置 priority。
 
 ### 可取消事件
 
-实现 `Cancellable` 接口的事件可以通过 `event.setCancelled(true)` 取消。取消后，后续低优先级监听器不再执行。
-
-## Mixin 开发
-
-Mixin 类位于 `common/src/main/java/com/github/epsilon/mixins/`。
-
-### Mixin 配置
-
-- `common/src/main/resources/epsilon.mixins.json` — common 层 mixins
-- `fabric/src/main/resources/epsilon.fabric.mixins.json` — Fabric 专有 mixins
-- `neoforge/src/main/resources/epsilon.neoforge.mixins.json` — NeoForge 专有 mixins
-
-### Access Widener / Access Transformer
-
-- `common/src/main/resources/epsilon.accesswidener` — Fabric 访问拓宽
-- `common/src/main/resources/META-INF/accesstransformer.cfg` — NeoForge 访问转换
-
-### Mixin 编写规则
-
-1. **不要凭空猜测 API**。优先查阅官方文档：
-    - NeoForge 文档：https://docs.neoforged.net/
-    - Porting Primers（中文）：https://gu-zt.github.io/Porting-Primers/
-    - Mixin 文档：https://wiki.fabricmc.net/zh_cn:tutorial:mixin_introduction
-    - Mixin 示例：https://wiki.fabricmc.net/zh_cn:tutorial:mixin_examples
-2. Mixin 类命名：`Mixin<目标类名>`（如 `MixinLocalPlayer`）
-3. 优先使用 `@Inject` + `@WrapOperation` 而非 `@Overwrite`
-4. 事件发布通常在 Mixin 的 `@Inject` 回调中进行：`EventBus.INSTANCE.post(new SomeEvent(...))`
-5. 如果遇到不熟悉的类/方法签名，必须查阅文档确认
-
-## 管理器（Managers）与持有者（Holders）
-
-Epsilon 把"持有者"（Holders，负责初始化与生命周期）和"管理器"（Managers，负责运行时逻辑）分开：
-
-- **Holders** 位于 `common/.../holders/`，单例模式，由 `EpsilonCommon.init()` 依次调用其 `initXxx()` 方法
-- **Managers** 位于 `common/.../managers/`，运行时业务逻辑，部分通过 `Managers.initManagers()` 实例化并暴露为 `Managers.XXX` 静态字段
-
-### ModuleHolder (`common/.../holders/ModuleHolder.java`)
-
-- `initModules()` — 注册所有内置模块（在 `EpsilonCommon.init()` 中调用，当前注册 94 个内置模块）
-- `registerAddonModule(addonId, module, translateComponent)` — 注册 Addon 的模块
-- `getModules()` — 获取所有已注册模块列表
-- 内部订阅 `KeyPressEvent` / `MousePressEvent`，负责把键位分发到对应模块（Toggle / Hold 模式）
-
-### AddonHolder (`common/.../holders/AddonHolder.java`)
-
-- `registerAddon(addon)` — 注册单个 addon（含重复 ID 校验）
-- `registerAddons(Iterable)` — 批量注册
-- `setupAddons()` — 依次初始化所有 addon 的 i18n 并调用 `onSetup()`（含异常隔离）
-- `getAddons()` — 获取已注册 addon 列表
-
-### 其他 Holder / Manager
-
-| 类 | 职责 |
-|--------|------|
-| `ConfigHolder` | 配置序列化/反序列化、自动保存（`initConfig()` / `saveNow()`） |
-| `HudElementHolder` | HUD 元素初始化（`initElements()`） |
-| `RotationManager`（抽象基类） | 旋转角度管理（优先级队列、平滑插值、raytrace 偏移） |
-| `SilentRotationManager` / `SnapRotationManager` | RotationManager 的两种实现，由 `Managers.switchRotationManager()` 动态切换 |
-| `TargetManager` | 目标选择（FOV、距离、实体类型过滤） |
-| `HealthManager` | 实体生命值缓存 |
-| `FriendManager` | 好友管理 |
-| `SoundManager` | 音效播放 |
-| `NotificationManager` | 通知系统 |
-| `ServerboundPacketManager` / `ClientboundPacketManager` | 网络包管理 |
-
-> 注意：Rotation / Target / Health / C2SPacket / S2CPacket / Friend / Sound / Notification 这些管理器实例通过 `Managers.ROTATION`、`Managers.TARGET` 等静态字段访问，而非各自类的 `INSTANCE`。
-
-### RotationManager (`common/.../managers/impl/rotations/RotationManager.java`)
-
-RotationManager 是**抽象基类**，管理玩家视角旋转，支持优先级队列、平滑插值和射线追踪偏移。有两种实现：
-
-- `SilentRotationManager` — 静默旋转（不改变玩家可见视角，只在发包时写入旋转）
-- `SnapRotationManager` — 瞬时旋转（直接 snap 到目标角度）
-
-通过 `ClientSetting.rotationMode` 配置选择，由 `Managers.switchRotationManager(mode)` 动态切换。**所有访问必须通过 `Managers.ROTATION`**（而非 `RotationManager.INSTANCE`，因为是抽象类）。
-
-**核心概念**：
-- `setRotations()` 设置目标旋转角度后，RotationManager 每 tick 自动平滑旋转，并在 `SendPositionEvent` 中将旋转角度写入发包
-- 旋转完成后（与真实角度差值 < 1 度）自动 `active = false`
-- 多个模块可同时调用 `setRotations()`，高优先级覆盖低优先级（仅当新 priority 数值 ≥ 当前 priority 时才接受）
-- 收到 `ClientboundPlayerPositionPacket` / `ClientboundPlayerRotationPacket`（S08 旋转包）时自动重置状态以避免与服务端冲突
-- RotationManager 不提供 callback 或旋转完成事件；旋转后的攻击、放置等操作必须由模块自己的事件监听与状态字段驱动
-
-**主要 API**：
+`Cancellable` 是类，不是接口。可取消事件通过继承它获得：
 
 ```java
-import com.github.epsilon.utils.rotation.Rot2f;
-import com.github.epsilon.utils.rotation.Priority;
-import com.github.epsilon.managers.Managers;
-
-// 获取当前旋转角度（active 时返回平滑后的旋转，否则返回玩家真实视角）
-float yaw = Managers.ROTATION.getYaw();     // 水平角度
-float pitch = Managers.ROTATION.getPitch(); // 垂直角度
-Rot2f current = Managers.ROTATION.getRotation();       // Rot2f(yaw, pitch)
-Rot2f last = Managers.ROTATION.getLastRotation();      // 上一 tick 旋转
-
-// 设置旋转（默认优先级 Medium）
-Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed);
-
-// 设置旋转 + 优先级
-Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed, Priority.High);
-
-// 设置旋转 + 射线追踪偏移（用于绕过反作弊）
-Managers.ROTATION.setRotations(rotations, rotationSpeed, rayTraceFunction, Priority.High);
-
-// 检查旋转是否激活（注意：没有 isDone() 方法，用 !isActive() 判断完成）
-boolean active = Managers.ROTATION.isActive();
-```
-
-> 类型说明：旋转角度使用 `Rot2f`（位于 `utils.rotation.Rot2f`，含 `getYaw()` / `getPitch()`），不是 Mojang 的 `Vector2f`。
-
-**优先级（`com.github.epsilon.utils.rotation.Priority`）**：
-
-| 优先级 | 值    | 用途 |
-|--------|------|------|
-| `Lowest` | 0    | 预旋转（Pre Rotation） |
-| `Low` | 10   | 低优先级旋转 |
-| `Medium` | 50   | 默认优先级 |
-| `High` | 100  | 攻击/放置等即时操作 |
-| `Highest` | 1000 | 最高优先级 |
-
-> 注意：Priority 枚举的数值与 EventBus 的 `EventPriority` 是**两套独立的系统**，不要混淆。EventPriority 的 HIGHEST=200、HIGH=100、MEDIUM=0、LOW=-100、LOWEST=-200。
-
-**旋转后操作模式**：
-
-`setRotations` 只负责更新旋转状态。需要等待 raycast 命中后再操作时，由模块保存 pending 状态，并在自己的 tick 等事件中持续设置旋转、检查当前角度和执行操作。
-
-```java
-@EventHandler
-private void onTick(PlayerTickEvent.Pre event) {
-    if (nullCheck() || !pendingPlace) return;
-
-    Managers.ROTATION.setRotations(targetRotation, rotationSpeed.getValue(), Priority.High);
-    Rot2f current = Managers.ROTATION.getRotation();
-    if (RaytraceUtils.overBlock(current, side, blockPos, true)) {
-        mc.gameMode.useItemOn(mc.player, hand, hitResult);
-        pendingPlace = false;
-    }
+event.cancel();
+if (event.isCancelled()) {
+    return;
 }
 ```
 
-**关键设计要点**：
-- `setRotations` 的可用重载只有 `(rotations, speed)`、`(rotations, speed, priority)`、`(rotations, speed, raytrace)` 和 `(rotations, speed, raytrace, priority)`
-- raytrace 函数（`Function<Rot2f, Boolean>`）仅用于在平滑旋转时校验随机偏移；它可能被多次调用，必须无副作用，不能在其中执行攻击或放置
-- 需要基于当前平滑角度判断时，使用 `Managers.ROTATION.getRotation()`，或通过 `getYaw()` / `getPitch()` 读取
-- `Managers.switchRotationManager()` 切换实现时会通过 `copyStateFrom()` 把当前状态迁移到新实例
-- 模块禁用时应清理 pending 状态并 `InvUtils.swapBack()` 恢复物品栏
+不存在 `setCancelled(boolean)`。EventBus 在某个监听器取消事件后立即停止调用后续监听器。
 
-## Lumin Graphics 渲染系统
+### 当前事件分组
 
-Lumin Graphics 是 Epsilon 的轻量高性能渲染框架，位于 `common/.../graphics/`。
+实际字段和构造参数以 `common/src/main/java/com/github/epsilon/events/impl/` 为准。
 
-### 核心 Renderer
+| 分组 | 事件 |
+|---|---|
+| Tick/生命周期 | `ClientTickEvent.Pre/Post`、`PlayerTickEvent.Pre/Post`、`GameJoinedEvent`、`GameLeftEvent`、`LevelUpdateEvent`、`RespawnEvent` |
+| 渲染 | `Render2DEvent.Level/HUD`、`Render3DEvent`、`AfterRender3DEvent`、`RotationAnimationEvent`、`ChunkOcclusionEvent` |
+| 输入/界面 | `KeyPressEvent`、`MousePressEvent`、`MouseScrollEvent`、`KeyboardInputEvent`、`OpenScreenEvent` |
+| 网络 | `PacketEvent.Send/Receive`、`SendPositionEvent` |
+| 战斗/交互 | `AttackEntityEvent`、`AttackSlowDownEvent`、`AttackYawEvent`、`RightClickEvent`、`UseItemEvent`、`StartUseItemEvent`、`SwingHandEvent` |
+| 方块 | `BlockCollisionEvent`、`StartDestroyBlockEvent`、`DestroyBlockEvent`、`DestroyedBlockEvent`、`PlaceBlockEvent` |
+| 移动 | `MoveEvent`、`StrafeEvent`、`TravelEvent`、`JumpEvent`、`SlowdownEvent`、`FallFlyingEvent`、`FireworkRotationEvent` |
+| Raytrace | `RaytraceEvent`、`UseItemRaytraceEvent` |
 
-| Renderer | 用途 |
-|----------|------|
-| `RectRenderer` | 矩形渲染（纯色/渐变） |
-| `RoundRectRenderer` | SDF 圆角矩形（Shader 实现，支持独立四角半径） |
-| `RoundRectOutlineRenderer` | 圆角矩形边框 |
-| `TextureRenderer` | 纹理批量渲染 |
-| `ShadowRenderer` | 阴影渲染 |
-| `TriangleRenderer` | 三角形渲染 |
-| `TextRenderer` | 文本渲染（静态字体 + TTF） |
-| `TtfTextRenderer` | TTF TrueType 字体渲染（Atlas 批处理） |
+`Render2DEvent` 当前携带的是 Minecraft 26.1.2 的 `GuiGraphicsExtractor`，不是旧版 `GuiGraphics`。修改 2D 渲染代码前必须核验本地参考源码中的提取/提交渲染流程。
 
-### Renderer 生命周期
+## Mixin 开发
 
-1. **线程安全**：Renderer 必须在**渲染线程**初始化
-2. **推荐初始化方式**：使用 `Suppliers.memoize` 延迟初始化
+### 配置与访问权限
 
-```java
-private final Supplier<RectRenderer> rectRenderer = Suppliers.memoize(RectRenderer::create);
+- 共享 Mixin：`common/src/main/resources/epsilon.mixins.json`
+- Fabric Mixin：`fabric/src/main/resources/epsilon.fabric.mixins.json`
+- NeoForge Mixin：`neoforge/src/main/resources/epsilon.neoforge.mixins.json`
+- Fabric Access Widener：`common/src/main/resources/epsilon.accesswidener`
+- NeoForge Access Transformer：`common/src/main/resources/META-INF/accesstransformer.cfg`
+
+规则：
+
+1. 先在 `references/Fabric-26.1.2/net/minecraft/` 找到目标类并核对完整方法描述符、局部变量和调用点。
+2. 共享目标优先放 `common/mixins`；只有加载器字节码或调用链不同才拆到平台 Mixin。
+3. 类名使用 `Mixin<目标类名>`。优先 `@Inject`、MixinExtras 的 `@WrapOperation` 等局部注入，避免 `@Overwrite`。
+4. 新 Mixin 必须加入相应 JSON。删除或重命名 Mixin 时同步移除旧条目。
+5. `defaultRequire` 为 1，错误注入点会使启动失败；不要用 `require = 0` 掩盖未核验的目标。
+6. Sodium 条件 Mixin 由两个平台的 `IMixinConfigPlugin` 判断依赖是否加载；添加兼容 Mixin 时沿用该门控方式。
+7. Mixin 发布事件时，事件对象字段必须足够表达可修改状态，并在注入点明确处理 `isCancelled()` 或事件修改后的值。
+
+## Holders、Managers 与配置
+
+### Holders
+
+| Holder | 职责 |
+|---|---|
+| `ModuleHolder` | 注册本体/Addon 模块，处理键盘与鼠标绑定 |
+| `HudElementHolder` | 注册 HUD，统一通过 `UiScene` 渲染并处理原版 overlay |
+| `AddonHolder` | Addon 去重、一次性 setup 与查询 |
+| `ConfigHolder` | 多配置、导入导出、Setting/custom state、好友与迁移 |
+| `TranslateHolder` | 跟踪 `TranslateComponent` 并在切换语言时刷新缓存 |
+| `RendererHolder` | 跟踪并销毁 `IRenderer` GPU 资源 |
+| `RenderTargetHolder` | 跟踪并销毁 Lumin render target |
+| `ShaderHolder` | 手部/箱子 outline 和屏幕后处理状态 |
+| `TextureCacheHolder` | `Identifier -> LuminTexture` 缓存与释放 |
+
+### Managers
+
+通过 `Managers` 静态字段访问运行时管理器：
+
+`ROTATION`、`EXTRAPOLATION`、`TARGET`、`HEALTH`、`C2SPACKET`、`S2CPACKET`、`FRIEND`、`SOUND`、`NOTIFICATION`、`TIMER`。
+
+这些字段在 `Managers.initManagers()` 前可能为 null。不要为它们另造 `INSTANCE`，也不要长期缓存可替换的 `Managers.ROTATION` 引用。
+
+### 配置系统
+
+`ConfigHolder` 的根目录是用户目录下的 `.epsilon/`，不是仓库或游戏运行目录：
+
+```text
+~/.epsilon/
+├── active-config.txt
+├── client-settings.json
+├── configs/<name>/
+├── imports/
+└── exports/
 ```
 
-3. **使用模式一：即时绘制并清理**
+- 模块、HUD、Addon Setting 和好友按当前活动配置保存。
+- `client-settings.json` 保存标记为 root 的客户端设置。
+- 配置支持新建、切换、删除、另存、重载、Zip 导入和导出。
+- 导入 Zip 必须继续使用 `ConfigHolder` 的安全解压逻辑，不能另写不校验路径穿越的实现。
+- 修改配置 schema 时同步更新版本、迁移逻辑和本文档；不得直接丢弃旧配置。
+- `saveNow()` 已在 JVM shutdown hook 调用，但影响数据完整性的操作仍应在合适时机主动保存。
+
+## RotationManager
+
+`RotationManager` 是抽象基类，实例只能通过 `Managers.ROTATION` 获取。模式由 `ClientSetting.rotationMode` 选择：
+
+- `SilentRotationManager`：静默发包旋转。
+- `SnapRotationManager`：直接修改/恢复玩家旋转。
+
+主要 API：
 
 ```java
-rectRenderer.get().addRect(10, 10, 100, 100, Color.WHITE);
-rectRenderer.get().drawAndClear(); // 等价于 draw() + clear()
+Managers.ROTATION.setRotations(rotation, speed);
+Managers.ROTATION.setRotations(rotation, speed, Priority.High);
+Managers.ROTATION.setRotations(rotation, speed, raytrace);
+Managers.ROTATION.setRotations(rotation, speed, raytrace, Priority.High);
+
+Rot2f current = Managers.ROTATION.getRotation();
+Rot2f previous = Managers.ROTATION.getLastRotation();
+boolean active = Managers.ROTATION.isActive();
 ```
 
-4. **使用模式二：缓冲区复用（内容不变时更高效）**
+- 旋转类型是 `com.github.epsilon.utils.rotation.Rot2f`。
+- Rotation priority 与 EventBus priority 是两套系统：`Lowest=0`、`Low=10`、`Medium=50`、`High=100`、`Highest=1000`。
+- 仅当新 priority 不低于当前活动 priority 时才覆盖请求。
+- `Function<Rot2f, Boolean>` raytrace 会在平滑随机偏移校验中多次调用，必须无副作用。
+- 服务端位置/旋转包会设置 S08 重置标记；下一次请求先同步真实视角。
+- 旋转接近玩家真实角度时自动结束，没有 callback 或 `isDone()`。
+- 需要等待命中后攻击/放置时，由模块保存 pending 状态，每 tick 继续请求旋转并用当前 `getRotation()` 做 raytrace，再执行一次性动作。
+- 切换旋转模式会 `copyStateFrom()` 并替换实例，因此每次从 `Managers.ROTATION` 读取。
+
+## Lumin、GUI 与 HUD
+
+### 资源生命周期
+
+- GPU renderer、render target、字体 atlas 和 shader 必须在渲染线程创建/使用。
+- `RectRenderer.create()`、`TextRenderer.create()` 等工厂会向 `RendererHolder` 注册；Lumin render target 工厂会向 `RenderTargetHolder` 注册。
+- 需要在字段中持有 renderer 时，使用 `Suppliers.memoize(Renderer::create)` 延迟到首次渲染，避免类初始化线程创建 GPU 资源。
+- 不再使用的资源调用 `close()`；全局销毁由对应 Holder/Lumin 生命周期处理。
+
+### GUI/HUD 首选路径
+
+Panel、Dropdown、popup 和 HUD chrome 使用声明式流水线：
+
+```text
+UiTree / UiTree.Scope
+  -> LuminUiRenderer
+  -> UiRenderBatch
+  -> Render2DScheduler
+  -> 合批 renderer
+```
+
+- 一个 Screen 或 HUD 帧共享一个 `UiScene`；调用 `beginFrame()` 后提交各语义 `UiLayer`，最后 `endFrame()`。
+- 业务 UI 优先构造 `UiTree`，不要为每个面板各自创建一组 renderer。
+- `UiRenderBatch.view()`/Scene layer 用于局部层级；scissor 和 popup 层级必须通过共享 scheduler 管理。
+- `HudModule.render(DeltaTracker)` 内通过 `renderScope()` 提交 UI；只有原版物品等无法进入 Lumin batch 的内容才放在 `renderOverlay(GuiGraphicsExtractor, DeltaTracker)`。
+- HUD 尺寸变化调用 `setBounds()`，位置使用 anchor/move API；不要直接绕过 anchor 状态写持久化坐标。
+
+### 直接 Renderer
+
+直接渲染仍用于部分模块和底层组件：`RectRenderer`、`RoundRectRenderer`、`RoundRectOutlineRenderer`、`TextureRenderer`、`ShadowRenderer`、`TriangleRenderer`、`TextRenderer`。
 
 ```java
-// 初始化时添加顶点一次
-rectRenderer.get().addRect(10, 10, 100, 100, Color.WHITE);
-// 渲染循环中每帧只 draw 不清除
-rectRenderer.get().draw(); // GPU 数据已存在，无需重新上传
+private final Supplier<RectRenderer> renderer = Suppliers.memoize(RectRenderer::create);
+
+renderer.get().addRect(x, y, width, height, color);
+renderer.get().drawAndClear();
 ```
 
-5. **关闭**：关闭时释放 GPU 资源
+`IRenderer` 的帧内约束必须遵守：
 
-```java
-rectRenderer.get().close();
-```
+- `drawAndClear()` 等价于 `draw()` 后 `clear()`。
+- 同一帧调用 `clear()` 或 `drawAndClear()` 后，不得再次对该 renderer 调用 `draw()`/`drawAndClear()`。
+- 内容长期不变时可以只 `draw()` 并复用 GPU 数据；内容变化时在下一帧重新填充。
+- 需要同帧多个独立 pass 时，使用不同 renderer 或 `Render2DScheduler`，不要反复 clear/rebuild 同一个实例。
 
-### 重要约束
+### 3D Scheduler
 
-**同一帧内，不要在 `draw()` 之后再 `clear()` 然后继续 `draw()`** — 这会导致帧内多次缓冲区分配，破坏 In-Flight 优化。如需多次清空-绘制循环，请创建新的 Renderer 实例。
+普通方框、边框、面、线和 3D 模糊框提交到 `Render3DScheduler.INSTANCE`。它以 `Render3DEvent` priority `-999` 统一 flush 并清空，因此模块应在更高优先级监听器中提交命令。底层特殊效果才直接使用 `LuminImmediateRenderer`。
 
-### 文本渲染
+### 文本与特效
 
-静态字体加载器（实际为 `TtfFontLoader` 实例）：`StaticFontLoader.DEFAULT`、`StaticFontLoader.ICONS`、`StaticFontLoader.JURA_LIGHT`、`StaticFontLoader.OSAKA_CHIPS`。
+- 默认字体通过 `StaticFontLoader.defaultFont()` 获取，可随客户端设置切换。
+- 固定字体：`StaticFontLoader.ICONS`、`JURA_LIGHT`、`OSAKA_CHIPS`。
+- `TextRenderer.getWidth/getHeight` 必须使用与绘制相同的 scale 和 font loader。
+- 后处理入口包括 `BlurShader.INSTANCE`、`FXAAShader.INSTANCE`、`FilterShader.INSTANCE` 和 `ShaderHolder`；调用前核验 render target、采样器和当前 Minecraft 26.1.2 RenderPipeline 状态。
 
-```java
-TextRenderer textRenderer = textRendererSupplier.get();
-textRenderer.addText("Hello", x, y, scale, color, StaticFontLoader.OSAKA_CHIPS);
-float width = textRenderer.getWidth("Hello", scale);
-float height = textRenderer.getHeight(scale);
-textRenderer.drawAndClear();
-```
+## i18n
 
-### 特效
+### Key 规则
 
-- `BlurShader.INSTANCE.render(x, y, width, height, radius, strength)` — 背景模糊
-- `FXAAShader` — FXAA 抗锯齿
-- `FilterShader` — 色彩滤镜
+- 本体模块：`epsilon.modules.{module name lower-case}`。
+- 本体 HUD：`epsilon.elements.{element name lower-case}`。
+- 分类：`epsilon.categories.{category}`。
+- Addon 模块：`{addonId}.modules.{module name lower-case}`。
+- Addon 自身设置：`{addonId}.settings.{setting/group name lower-case}`。
+- Module/HUD 的 Setting、SettingGroup 和 Enum 选项是所属组件 key 的子 key。
+- 名称使用 `toLowerCase()`，空格会保留，不会自动改成下划线。
+- 静态 UI 文案集中到 `EpsilonTranslations`，不要在各 GUI 类散落重复 key。
 
-### 参考示例
+`EpsilonTranslateComponent.create(prefix, suffix)` 自动添加 `epsilon.`；任意 owner 使用 `DefaultTranslateComponent.create(fullKey)`。
 
-完整 HUD 渲染示例：`common/.../elements/impl/Watermark.java`
+### JSON 格式
 
-## i18n 翻译系统
-
-- `TranslateComponent` — 翻译组件接口
-- `EpsilonTranslateComponent.create("modules", "kill aura")` → key: `epsilon.modules.kill aura`
-- `DefaultTranslateComponent.create("example_addon.settings.enable_particles")` → key: `example_addon.settings.enable_particles`
-- 本体语言文件位于 `common/src/main/resources/assets/epsilon/i18n/{languageCode}.json`
-- `I18NFileGenerator.generate("epsilon-empty-i18n.json")` 生成全部 owner 的空模板；传入第二个参数（如 `"epsilon"` 或 Addon ID）可只生成指定 owner
-
-### i18n JSON 格式
-
-语言文件使用与 dotted key 对应的**嵌套 JSON object**，不再把完整 key 直接写成根节点属性。叶节点的翻译值必须是字符串。
-
-当一个 key 既有自己的翻译，又有子 key 时，使用保留属性 `_value` 保存该 key 自身的翻译。例如下列 JSON 同时定义 `epsilon`、`epsilon.modules.kill aura`、`epsilon.modules.kill aura.mode` 和枚举选项 `epsilon.modules.kill aura.mode.single`：
+语言文件位于 `common/src/main/resources/assets/epsilon/i18n/en_us.json` 和 `zh_cn.json`。格式是与 dotted key 对应的嵌套 object；叶节点必须是字符串。父 key 同时有自身翻译和子 key 时使用保留属性 `_value`：
 
 ```json
 {
   "epsilon": {
-    "_value": "Epsilon",
     "modules": {
       "kill aura": {
         "_value": "Kill Aura",
-        "range": "Range",
         "mode": {
           "_value": "Mode",
-          "single": "Single",
-          "switch": "Switch"
+          "single": "Single"
         }
       }
     }
@@ -492,37 +447,37 @@ textRenderer.drawAndClear();
 }
 ```
 
-- `_value` 只能用于 object 内保存父 key 的字符串值，不能作为翻译 key 的普通路径段
-- object 中除 `_value` 外的属性会按层级用 `.` 拼接为运行时 key
-- 不允许数组、数字、布尔值或 null；翻译叶节点和 `_value` 都必须是字符串
-- 新增或删除模块、HUD 元素、Setting、SettingGroup、Enum 选项或静态 `EpsilonTranslations` 时，应重新生成空模板并同步语言文件
-- 使用 `python scripts/complete_i18n.py` 可按模板补全、排序并删除多余 key；用 `--owner epsilon` 或 `--owner <addonId>` 可只同步指定 owner
+- `_value` 只能保存当前 object 对应 key 的翻译，不能作为普通路径段。
+- 不允许数组、数字、布尔或 null。
+- 资源重载时 `EpsilonLanguageManager` 会读取资源栈、刷新 `TranslateHolder` 并清理纹理缓存。
 
-### Module 翻译 key 约定
+### 同步流程
 
-- 名称通过 `toLowerCase()` 生成 key 段，空格会保留，不会自动转换为下划线
-- 内置模块：`epsilon.modules.{moduleNameLowerCase}`（如 `epsilon.modules.kill aura`）
-- 内置 HUD 元素：`epsilon.elements.{elementNameLowerCase}`
-- Addon 模块：`{addonId}.modules.{moduleNameLowerCase}`（如 `example_addon.modules.my module`）
-- `Module.getTranslatedName()` — 获取翻译后的显示名称
-- 模块/HUD 内的 Setting 与 SettingGroup：直接作为所属模块 key 的子 key，如 `epsilon.modules.kill aura.range`
-- EnumSetting 选项：直接作为 Setting key 的子 key，如 `epsilon.modules.kill aura.mode.single`
-- Addon 自身的 Setting 与 SettingGroup（不属于模块）：`{addonId}.settings.{nameLowerCase}`
+新增/删除模块、HUD、Setting、SettingGroup、Enum 选项或 `EpsilonTranslations` 后：
 
-## 代码规范
+1. 让 `I18NFileGenerator.generate("epsilon-empty-i18n.json")` 生成当前模板；可传 owner ID 只生成一个 owner。
+2. 运行 `python scripts/complete_i18n.py` 补全、排序并删除多余 key；需要时使用 `--owner epsilon` 或 `--owner <addonId>`。
+3. 人工填写新增翻译，不要把空模板直接当成已完成语言文件。
+4. 校验 `en_us.json`、`zh_cn.json` 都是合法嵌套 object，并在完整构建中验证资源处理。
 
-1. 使用 Java 编写，遵循项目现有代码风格
-2. 私有构造函数 + 单例 `INSTANCE` 模式用于 Module 和 Addon
-3. 所有注释用中文
-4. Logger 通过 `Constants.LOGGER` 获取
-5. Minecraft 实例通过 `Constants.mc` 或 Module 中的 `this.mc` 获取
-6. 编译环境使用 JDK 25
+## 代码规范与提交前检查
 
-## 查阅文档资源
+- Java 25，UTF-8，沿用相邻代码的格式和命名。
+- 新增解释性注释使用中文；只注释不明显的约束、线程或算法原因。
+- Logger 使用 `Constants.LOGGER`。
+- Minecraft 实例使用 `Constants.mc`，Module/HudModule 内优先使用继承的 `mc`。
+- 不要吞掉异常；边界层需要隔离单个 Addon/资源失败时，应记录包含上下文的日志。
+- 不做与任务无关的重构、批量格式化或生成文件改写。
+- 修改共享行为后至少检查 Fabric 和 NeoForge 编译；Mixin、资源、启动或 Gradle 变更运行完整 `buildRelease`。
+- 最终审阅 `git diff --check`、`git diff -- AGENTS.md` 和 `git status --short`。
 
-- **NeoForge 官方文档**：https://docs.neoforged.net/
-- **NeoForge 迁移入门**：https://docs.neoforged.net/primer/docs/
-- **Porting Primers（中文）**：https://gu-zt.github.io/Porting-Primers/
-- **Mixin 文档**：https://wiki.fabricmc.net/zh_cn:tutorial:mixin_introduction
-- **Fabric API 文档**：https://docs.fabricmc.net/develop/
-- **项目自身 graphics 文档**：`common/src/main/java/com/github/epsilon/graphics/README.md`
+## 外部文档
+
+- NeoForge：https://docs.neoforged.net/
+- NeoForge Primer：https://docs.neoforged.net/primer/docs/
+- Fabric：https://docs.fabricmc.net/develop/
+- Mixin：https://wiki.fabricmc.net/tutorial:mixin_introduction
+- Mixin Examples：https://wiki.fabricmc.net/tutorial:mixin_examples
+- Porting Primers：https://gu-zt.github.io/Porting-Primers/
+
+外部文档用于理解加载器与 Mixin 机制；具体到本项目当前 Minecraft 版本的类和签名，仍以 `references/Fabric-26.1.2/` 和 `references/NeoForge-26.1.2/` 为准。

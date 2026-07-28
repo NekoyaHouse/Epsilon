@@ -5,7 +5,6 @@ import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.events.impl.StrafeEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
@@ -14,6 +13,8 @@ import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -57,8 +58,11 @@ public class TargetStrafe extends Module {
             direction = left ? 1 : -1;
         }
 
-        if (!canStrafe()) {
-            resetTarget();
+        if (speedOnly.getValue() && !Speed.INSTANCE.isEnabled() && !Flight.INSTANCE.isEnabled()) {
+            return;
+        }
+
+        if (requirePress.getValue() && (mc.screen != null || !mc.options.keyJump.isDown())) {
             return;
         }
 
@@ -95,22 +99,17 @@ public class TargetStrafe extends Module {
 
         double deltaX = nextPosition.x - mc.player.getX();
         double deltaZ = nextPosition.z - mc.player.getZ();
+
         targetYaw = Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90.0f);
+
+        Managers.ROTATION.setRotations(new Rot2f(targetYaw, Managers.ROTATION.getPitch()), 180.0f, Priority.Low);
     }
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (Float.isNaN(targetYaw) || !isMovementPressed(event)) return;
-
+        if (Float.isNaN(targetYaw) || (event.getForward() == 0.0f && event.getStrafe() == 0.0f)) return;
         event.setStrafe(0.0f);
         event.setForward(1.0f);
-    }
-
-    @EventHandler
-    private void onStrafe(StrafeEvent event) {
-        if (!Float.isNaN(targetYaw)) {
-            event.setYaw(targetYaw);
-        }
     }
 
     @EventHandler
@@ -120,13 +119,6 @@ public class TargetStrafe extends Module {
         Color color = getTargetColor(target);
         drawCircle(target, darken(color, 0.2f), 3.0f);
         drawCircle(target, color, 1.5f);
-    }
-
-    private boolean canStrafe() {
-        if (speedOnly.getValue() && !Speed.INSTANCE.isEnabled() && !Flight.INSTANCE.isEnabled()) {
-            return false;
-        }
-        return !requirePress.getValue() || mc.screen == null && mc.options.keyJump.isDown();
     }
 
     private List<OrbitOffset> createOrbitOffsets() {
@@ -189,10 +181,6 @@ public class TargetStrafe extends Module {
             }
         }
         return true;
-    }
-
-    private boolean isMovementPressed(KeyboardInputEvent event) {
-        return event.getForward() != 0.0f || event.getStrafe() != 0.0f;
     }
 
     private int wrapIndex(int index, int size) {
