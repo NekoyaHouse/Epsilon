@@ -116,6 +116,7 @@ public class ModuleHolder {
         addModule(Step.INSTANCE);
         addModule(Strafe.INSTANCE);
         addModule(Stuck.INSTANCE);
+        addModule(TargetStrafe.INSTANCE);
         addModule(Velocity.INSTANCE);
 
         // Render

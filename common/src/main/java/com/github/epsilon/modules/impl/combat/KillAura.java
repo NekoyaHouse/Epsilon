@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.Managers;
@@ -11,37 +10,26 @@ import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
+import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.settings.impl.*;
-import com.github.epsilon.utils.network.NetworkUtils;
+import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
 import com.github.epsilon.utils.render.esp.DeobfESP;
 import com.github.epsilon.utils.render.esp.FireflyESP;
-import com.github.epsilon.utils.rotation.RaytraceUtils;
+import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import love.slmpc.ClInitNative;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Mth;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 @ClInitNative
 public class KillAura extends Module {
@@ -50,13 +38,15 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> DeobfESP.render(
-                event.getPoseStack(),
-                deobfSize.getValue().floatValue(),
-                deobfSpins.getValue().floatValue(),
-                deobfWobble.getValue().floatValue(),
-                deobfFlyHeight.getValue().floatValue()
-        )));
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
+            DeobfESP.render(
+                    event.getPoseStack(),
+                    deobfSize.getValue().floatValue(),
+                    deobfSpins.getValue().floatValue(),
+                    deobfWobble.getValue().floatValue(),
+                    deobfFlyHeight.getValue().floatValue()
+            );
+        }));
     }
 
     private enum Mode {
@@ -64,23 +54,10 @@ public class KillAura extends Module {
         OnePointNinePlus
     }
 
-    private enum TargetMode {
+    public enum TargetMode {
         Single,
-        Switch
-    }
-
-    private enum AutoBlockMode {
-        None,
-        Fake,
-        Legit,
-        Blink1
-    }
-
-    private enum PriorityMode {
-        Health,
-        Fov,
-        Range,
-        None
+        Switch,
+        Multiple,
     }
 
     private enum ESPMode {
@@ -90,6 +67,14 @@ public class KillAura extends Module {
         Deobf
     }
 
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
+    private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
+    public final DoubleSetting range = doubleSetting("Aim Range", 4.0, 1.0, 6.0, 0.1);
+    private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
+    private final IntSetting minCPS = intSetting("Min CPS", 10, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
+    private final IntSetting maxCPS = intSetting("Max CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
+
     private final BoolSetting player = boolSetting("Player", true);
     private final BoolSetting mob = boolSetting("Mob", true);
     private final BoolSetting animal = boolSetting("Animal", true);
@@ -98,25 +83,9 @@ public class KillAura extends Module {
     private final BoolSetting water = boolSetting("Water", false);
     private final BoolSetting others = boolSetting("Others", false);
     private final BoolSetting invisible = boolSetting("Invisible", true);
-
     private final BoolSetting throughWalls = boolSetting("Through Walls", false);
-    private final BoolSetting hitSelect = boolSetting("Hit Select", true);
+
     private final BoolSetting swingHand = boolSetting("SwingHand", true);
-    public final DoubleSetting range = doubleSetting("Range", 3.0, 3.0, 6.0, 0.01);
-    private final IntSetting fov = intSetting("FOV", 180, 1, 360, 1);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18);
-
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight, _ -> attacks = 0.0);
-    private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
-
-    private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
-    private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));
-
-    private final EnumSetting<AutoBlockMode> abMode = enumSetting("Auto Block Mode", AutoBlockMode.None, () -> mode.is(Mode.OnePointEight));
-    private final IntSetting blinkTicks = intSetting("Blink Ticks", 3, 1, 5, 1, () -> mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1));
-
-    private final EnumSetting<PriorityMode> priority = enumSetting("Priority", PriorityMode.Range);
-
     private final BoolSetting esp = boolSetting("ESP", true);
     private final EnumSetting<ESPMode> espMode = enumSetting("ESP Mode", ESPMode.Circle, esp::getValue);
     public final EnumSetting<DeobfESP.TextureMode> deobfMode = enumSetting("Deobf Mode", DeobfESP.TextureMode.Mengcha, () -> esp.getValue() && espMode.is(ESPMode.Deobf));
@@ -146,82 +115,27 @@ public class KillAura extends Module {
     private final DoubleSetting fireflyShaking = doubleSetting("Firefly Shaking", 1.8, 0.25, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
     private final DoubleSetting fireflyAmplitude = doubleSetting("Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
 
-    public static List<LivingEntity> targets;
-    public static int targetNumber;
     public LivingEntity target;
-    private double attacks;
-    private boolean blinking;
-    private final TimerUtils switchTimer = new TimerUtils();
-    private final Queue<Packet<ServerGamePacketListener>> packets = new ConcurrentLinkedQueue<>();
+
+    private int switchIndex = 0;
+    private double attacks = 0.0;
 
     @Override
-    protected void onEnable() {
-        attacks = 0.0;
-        switchTimer.reset();
-    }
-
-    @Override
-    public void onDisable() {
-        DeobfESP.retainRisingEffects();
-        targets = null;
-        targetNumber = 0;
+    protected void onDisable() {
         target = null;
-        attacks = 0.0;
-        if (mc.player != null && mc.player.isUsingItem() && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS)) {
-            mc.gameMode.releaseUsingItem(mc.player);
-        }
-        blinking = false;
-        flush();
+        switchIndex = 0;
+        DeobfESP.retainRisingEffects();
     }
 
     @EventHandler
-    private void onPacketReceive(PacketEvent.Receive event) {
-        if (nullCheck()) return;
-
-        if (event.getPacket() instanceof ClientboundDisconnectPacket) {
-            blinking = false;
-            packets.clear();
-        }
-    }
-
-    @EventHandler
-    private void onPacketSend(PacketEvent.Send event) {
-        Packet<?> packet = event.getPacket();
-
-        if (blinking) {
-            if (packet instanceof ServerboundMovePlayerPacket) {
-                int c03Counts = 0;
-                for (Packet<ServerGamePacketListener> p : packets) {
-                    if (p instanceof ServerboundMovePlayerPacket) {
-                        c03Counts++;
-                    }
-                }
-                if (c03Counts >= blinkTicks.getValue()) {
-                    mc.getConnection().send(new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, 0, Managers.ROTATION.getRotation().getYaw(), Managers.ROTATION.getRotation().getPitch()));
-                    flush();
-                    mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));
-                }
-            }
-            if (packet.type().flow() == PacketFlow.SERVERBOUND) {
-                packets.add((Packet<ServerGamePacketListener>) packet);
-                event.cancel();
-            }
-        } else {
-            flush();
-        }
-    }
-
-    @EventHandler
-    private void onPlayerTick(PlayerTickEvent.Pre event) {
-        if (nullCheck()) return;
-
+    private void onTick(PlayerTickEvent.Pre event) {
         if (!esp.getValue() || !espMode.is(ESPMode.Deobf)) {
             DeobfESP.clear();
         }
 
-        if (Scaffold.INSTANCE.isEnabled()) return;
+        if (mc.player.isUsingItem() || mc.player.isBlocking() || Scaffold.INSTANCE.isEnabled()) return;
 
-        targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
+        List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
                 range.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),
@@ -234,100 +148,68 @@ public class KillAura extends Module {
                 invisible.getValue(),
                 throughWalls.getValue(),
                 64
-        )));
+        ));
 
-        blinking = false;
         if (targets.isEmpty()) {
             target = null;
-            attacks = 0.0;
             return;
         }
 
-        if (mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS)) {
-            blinking = true;
-        }
-
-        if (this.priority.is(PriorityMode.Range)) {
-            targets.sort(Comparator.comparingDouble(o -> (double) o.distanceTo(mc.player)));
-        } else if (this.priority.is(PriorityMode.Fov)) {
+        Velocity velocity = Velocity.INSTANCE;
+        if (velocity.delay) {
             targets.sort(
-                    Comparator.comparingDouble(o -> (double) Math.abs(Mth.wrapDegrees(mc.player.getXRot() - RotationUtils.calculate(o).getYaw())))
-            );
-        } else if (this.priority.is(PriorityMode.Health)) {
-            targets.sort(Comparator.comparingDouble(o -> o instanceof LivingEntity living ? (double) living.getHealth() : 0.0));
-        }
-
-        switch (targetMode.getValue()) {
-            case Single -> targetNumber = 0;
-            case Switch -> {
-                if (switchTimer.passedMillise(switchDelay.getValue())) {
-                    switchTimer.reset();
-                    if (++targetNumber >= targets.size()) {
-                        targetNumber = 0;
-                    }
-                }
-            }
-        }
-
-        if (targetNumber < 0 || targetNumber >= targets.size()) {
-            targetNumber = 0;
-        }
-
-        target = targets.get(targetNumber);
-
-        if (throughWalls.getValue()) {
-            Managers.ROTATION.setRotations(RotationUtils.calculate(target), rotationSpeed.getValue());
-        } else {
-            Managers.ROTATION.setRotations(
-                    RotationUtils.calculate(target),
-                    rotationSpeed.getValue(),
-                    rotation -> RaytraceUtils.raytrace(rotation, range.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target
+                    Comparator.comparingDouble(o -> (double) Math.abs(velocity.yaw - RotationUtils.calculate(o).getYaw()))
             );
         }
 
-        if (mode.is(Mode.OnePointEight)) {
-            double attacksPerTick = cps.getValue() / 20.0;
-            attacks = Math.min(1.0 + attacksPerTick, attacks + attacksPerTick);
-        } else {
-            attacks = mc.player.getAttackStrengthScale(0.5F) >= 1.0F ? 1.0 : 0.0;
+        if (targetMode.is(TargetMode.Single)) {
+            target = targets.getFirst();
+        } else if (targetMode.is(TargetMode.Switch)) {
+            if (switchIndex >= targets.size()) {
+                switchIndex = 0;
+            }
+            target = targets.get(switchIndex);
+        } else if (targetMode.is(TargetMode.Multiple)) {
+            target = targets.getFirst();
         }
 
-        if (mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Legit) && mc.player.getInventory().getSelectedItem().is(ItemTags.SWORDS) && targets != null && !targets.isEmpty()) {
-            if (mc.player.hurtTime == 7) {
-                mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
-            } else if (mc.player.hurtTime == 1) {
-                mc.gameMode.releaseUsingItem(mc.player);
-                return;
-            }
-            if (mc.player.isUsingItem()) return;
-        }
+        attacks += MathUtils.getRandom(minCPS.getValue().doubleValue(), maxCPS.getValue().doubleValue()) / 20.0;
 
-        if (!(mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Legit)) || mc.player.hurtTime != 1) {
-            boolean hitSelectReady = true;
-            if (hitSelect.getValue() && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player) {
-                PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
-                int latencyTicks = playerInfo == null ? 0 : playerInfo.getLatency() / 50;
-                hitSelectReady = player.hurtTime <= latencyTicks + 1 || mc.player.hurtTime >= 7;
-            }
-
-            if (attacks >= 1.0 && hitSelectReady) {
-                attacks -= 1.0;
-                if (mc.player.isUsingItem() && !(mode.is(Mode.OnePointEight) && abMode.is(AutoBlockMode.Blink1))) {
-                    return;
+        if (target != null) {
+            Rot2f rotations = RotationUtils.calculate(target, true, range.getValue());
+            Managers.ROTATION.setRotations(rotations, rotationSpeed.getValue().floatValue(), Priority.Medium);
+            if (mode.is(Mode.OnePointEight)) {
+                while (attacks >= 1.0) {
+                    clickTargets(targets);
+                    attacks -= 1.0;
                 }
-
-                if (throughWalls.getValue()) {
-                    if (target.distanceTo(mc.player) <= range.getValue()) {
-                        doAttack();
-                    }
-                } else if (RaytraceUtils.raytrace(Managers.ROTATION.getRotation(), range.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target) {
-                    doAttack();
+            } else {
+                if (mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
+                    clickTargets(targets);
                 }
             }
         }
     }
 
-    private void doAttack() {
+    private void clickTargets(List<LivingEntity> targets) {
+        if (targetMode.is(TargetMode.Multiple)) {
+            for (LivingEntity target : targets) {
+                if (throughWalls.getValue() || mc.hitResult.getType() == HitResult.Type.ENTITY) {
+                    doAttack(target);
+                }
+            }
+            switchIndex++;
+        } else {
+            if (throughWalls.getValue() || (mc.hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target))) {
+                doAttack(target);
+            }
+            if (targetMode.is(TargetMode.Switch)) {
+                switchIndex++;
+            }
+        }
+    }
+
+    private void doAttack(LivingEntity target) {
         mc.gameMode.attack(mc.player, target);
         if (esp.getValue() && espMode.is(ESPMode.Deobf)) {
             DeobfESP.markHit(target);
@@ -341,66 +223,51 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (targets != null && !targets.isEmpty()) {
-            if (esp.getValue()) {
-                LivingEntity target = targets.get(targetNumber);
-                PoseStack stack = event.getPoseStack();
-                switch (espMode.getValue()) {
-                    case CaptureMark -> {
-                        CaptureMarkESP.render(
-                                stack,
-                                target,
-                                espSize.getValue(),
-                                espRotSpeed.getValue(),
-                                waveSpeed.getValue(),
-                                espColor1.getValue(),
-                                espColor2.getValue()
-                        );
-                    }
-                    case Circle -> {
-                        CircleESP.render(
-                                stack,
-                                target,
-                                circleRadius.getValue().floatValue(),
-                                sideColor.getValue(),
-                                lineColor.getValue(),
-                                circleAlphaFactor.getValue().floatValue()
-                        );
-                    }
-                    case Firefly -> {
-                        FireflyESP.render(
-                                stack,
-                                target,
-                                fireflyLength.getValue(),
-                                fireflyFactor.getValue(),
-                                fireflyShaking.getValue(),
-                                fireflyAmplitude.getValue(),
-                                fireflyColor.getValue(),
-                                fireflyColorMode.getValue(),
-                                fireflyColor2.getValue(),
-                                fireflyColorMix.getValue(),
-                                fireflyColorSpeed.getValue(),
-                                fireflyRainbowSpeed.getValue(),
-                                fireflyRainbowSaturation.getValue(),
-                                fireflyRainbowBrightness.getValue()
-                        );
-                    }
-                }
+        if (!esp.getValue() || espMode.is(ESPMode.Deobf) || target == null) return;
+
+        PoseStack stack = event.getPoseStack();
+
+        switch (espMode.getValue()) {
+            case CaptureMark -> {
+                CaptureMarkESP.render(
+                        stack,
+                        target,
+                        espSize.getValue(),
+                        espRotSpeed.getValue(),
+                        waveSpeed.getValue(),
+                        espColor1.getValue(),
+                        espColor2.getValue()
+                );
+            }
+            case Circle -> {
+                CircleESP.render(
+                        stack,
+                        target,
+                        circleRadius.getValue().floatValue(),
+                        sideColor.getValue(),
+                        lineColor.getValue(),
+                        circleAlphaFactor.getValue().floatValue()
+                );
+            }
+            case Firefly -> {
+                FireflyESP.render(
+                        stack,
+                        target,
+                        fireflyLength.getValue(),
+                        fireflyFactor.getValue(),
+                        fireflyShaking.getValue(),
+                        fireflyAmplitude.getValue(),
+                        fireflyColor.getValue(),
+                        fireflyColorMode.getValue(),
+                        fireflyColor2.getValue(),
+                        fireflyColorMix.getValue(),
+                        fireflyColorSpeed.getValue(),
+                        fireflyRainbowSpeed.getValue(),
+                        fireflyRainbowSaturation.getValue(),
+                        fireflyRainbowBrightness.getValue()
+                );
             }
         }
-    }
-
-    public void flush() {
-        while (!packets.isEmpty()) {
-            packets.removeIf(packet -> {
-                NetworkUtils.sendPacketNoEvent(packet);
-                return true;
-            });
-        }
-    }
-
-    public boolean isBlocking() {
-        return mode.is(Mode.OnePointEight) && !abMode.is(AutoBlockMode.None) && targets != null && !targets.isEmpty() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).is(ItemTags.SWORDS);
     }
 
 }

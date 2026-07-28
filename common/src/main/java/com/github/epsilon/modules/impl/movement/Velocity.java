@@ -60,8 +60,8 @@ public class Velocity extends Module {
     private long startDelay;
     private int attackQueue;
     private int sprintQueue;
-    private float yaw;
-    private boolean delay;
+    public float yaw;
+    public boolean delay;
     private boolean jump;
 
     private final Queue<Packet<? super ClientPacketListener>> packets = new ConcurrentLinkedQueue<>();

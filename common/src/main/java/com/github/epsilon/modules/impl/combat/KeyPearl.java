@@ -58,6 +58,10 @@ public class KeyPearl extends Module {
                 return;
             }
 
+            if (mc.player.getCooldowns().isOnCooldown(Items.ENDER_PEARL.getDefaultInstance())) {
+                return;
+            }
+
             InvUtils.swap(pearl.slot(), switchBack.getValue());
 
             if (clock < delay.getValue()) {

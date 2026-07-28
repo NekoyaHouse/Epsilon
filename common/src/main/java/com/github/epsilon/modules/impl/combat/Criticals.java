@@ -82,7 +82,7 @@ public class Criticals extends Module {
             if (killAura.isEnabled() && killAura.target != null) {
                 if (mc.player.fallDistance > 0) {
                     double dist = mc.player.distanceTo(killAura.target);
-                    if (dist <= killAura.range.getValue().doubleValue() + 0.3) {
+                    if (dist <= killAura.range.getValue() + 0.3) {
                         event.setSprint(false);
                         mc.player.setSprinting(false);
                         mc.options.keySprint.setDown(false);
