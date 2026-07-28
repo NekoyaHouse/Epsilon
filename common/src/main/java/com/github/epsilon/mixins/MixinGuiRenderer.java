@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.utils.render.EpsilonGuiRenderer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -75,6 +76,8 @@ public class MixinGuiRenderer {
 
         int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
         int mouseY = (int) mc.mouseHandler.getScaledYPos(mc.getWindow());
+
+        HudEditorScreen.INSTANCE.renderPendingHudElements();
 
         GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
         EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));

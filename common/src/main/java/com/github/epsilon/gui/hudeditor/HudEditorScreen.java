@@ -59,6 +59,7 @@ public class HudEditorScreen extends Screen {
     private UiRenderBatch editorBatch;
     private UiTree.Scope editorScope;
     private int editorLayer;
+    private boolean shouldRenderElements;
 
     private HudEditorScreen() {
         super(Component.literal("HudEditor"));
@@ -87,7 +88,8 @@ public class HudEditorScreen extends Screen {
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         drawEditor(graphics, epsilonMouseX, epsilonMouseY);
-        scene.endFrame();
+
+        shouldRenderElements = true;
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
@@ -123,11 +125,6 @@ public class HudEditorScreen extends Screen {
         drawSnapGuides(editorScope, screenW, screenH);
         flushEditorLayer();
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            if (!element.isEnabled()) continue;
-            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
-        }
-
         beginEditorLayer(100);
         List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
         HudModule hovered = findElementAt(mouseX, mouseY, true);
@@ -143,6 +140,28 @@ public class HudEditorScreen extends Screen {
         drawCanvasChrome();
 
         drawPanel(mouseX, mouseY);
+    }
+
+    /**
+     * 在世界画面提交后执行 HUD 预览，确保背景模糊能读取到主渲染目标的有效内容。
+     */
+    public void renderPendingHudElements() {
+        if (!shouldRenderElements || minecraft.screen != this || renderTarget == null) {
+            return;
+        }
+
+        LuminRenderSystem.LuminRenderTarget previousTarget = LuminRenderSystem.getActiveTarget();
+        LuminRenderSystem.setActiveTarget(renderTarget);
+
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            if (element.isEnabled()) {
+                element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
+            }
+        }
+        scene.endFrame();
+
+        shouldRenderElements = false;
+        LuminRenderSystem.setActiveTarget(previousTarget);
     }
 
     private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {
@@ -556,6 +575,8 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
+        shouldRenderElements = false;
+        scene.clear();
         draggingElement = null;
         currentSnap = SnapInfo.none();
     }
