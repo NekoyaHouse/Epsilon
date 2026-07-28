@@ -19,7 +19,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import org.joml.Vector4d;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -72,15 +73,14 @@ public class NameTags extends Module {
             double distanceSq = mc.player.distanceToSqr(target);
             if (distanceSq > maxDistanceSq) continue;
 
-            Vector4d projected = WorldToScreen.getEntityPositionsOn2D(target, partialTick);
-            if (projected == null) continue;
-
             float screenWidth = LuminRenderSystem.getScaledWidth();
             float screenHeight = LuminRenderSystem.getScaledHeight();
-            if (projected.z < 0 || projected.w < 0 || projected.x > screenWidth || projected.y > screenHeight) continue;
+            Vec3 anchor = target.getPosition(partialTick)
+                    .add(0.0, heightOffset.getValue() + target.getEyeHeight(), 0.0);
+            Vector3f projectedPosition = WorldToScreen.calcWorld2Screen(anchor);
+            if (projectedPosition == null) continue;
 
-            float projectedHeight = (float) Math.max(1.0, projected.w - projected.y);
-            float renderScale = getPerspectiveScale(textScale, projectedHeight);
+            float renderScale = textScale * WorldToScreen.calcScale(anchor);
 
             List<ItemStack> equipmentItems = buildEquipmentItems(target);
             String nameText = target.getName().getString();
@@ -103,16 +103,9 @@ public class NameTags extends Module {
             float itemRowGap = equipmentItems.isEmpty() ? 0.0f : (3.0f * renderScale);
             float totalHeight = boxHeight + (equipmentItems.isEmpty() ? 0.0f : itemRowGap + itemSize);
 
-            final var currentPosition = WorldToScreen.interpolate(target, partialTick);
-
-            final var projectedPosition = WorldToScreen.getWorldPositionToScreen(currentPosition.add(0.0f, heightOffset.getValue() + target.getEyeHeight(), 0.0f));
-            if (projectedPosition.z > 1.0f || projectedPosition.z < 0.0f) continue;
-
-            float guiScale = (float) LuminRenderSystem.getGuiScale();
-
-            float centerX = projectedPosition.x / guiScale;
+            float centerX = projectedPosition.x;
             float x = centerX - boxWidth / 2.0f;
-            float y = projectedPosition.y / guiScale - totalHeight - 4.0f * renderScale;
+            float y = projectedPosition.y - totalHeight - 4.0f * renderScale;
             float itemLeft = centerX - itemRowWidth / 2.0f;
             float itemTop = y - (equipmentItems.isEmpty() ? 0.0f : itemRowGap + itemSize);
             float visualLeft = Math.min(x, itemLeft);
@@ -186,11 +179,6 @@ public class NameTags extends Module {
             appendItem(items, player.getMainHandItem());
         }
         return items;
-    }
-
-    private float getPerspectiveScale(float baseScale, float projectedHeight) {
-        float perspectiveFactor = Math.max(projectedHeight / 36.0f, 0.55f);
-        return baseScale * perspectiveFactor;
     }
 
     private float getItemScale(float renderScale) {

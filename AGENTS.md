@@ -406,6 +406,16 @@ renderer.get().drawAndClear();
 
 普通方框、边框、面、线和 3D 模糊框提交到 `Render3DScheduler.INSTANCE`。它以 `Render3DEvent` priority `-999` 统一 flush 并清空，因此模块应在更高优先级监听器中提交命令。底层特殊效果才直接使用 `LuminImmediateRenderer`。
 
+### World To Screen
+
+`WorldToScreen` 只提供三个公共函数：
+
+- `calcWorld2ScreenRaw(Vec3)`：返回 Lumin Render Scale 坐标系中的屏幕 `x/y`，`z` 是以世界单位表示的视图空间前向深度。
+- `calcWorld2Screen(Vec3)`：默认入口；深度小于 `Camera.PROJECTION_Z_NEAR` 时返回 `null`，调用方不再自行用归一化深度判断摄像机后方。
+- `calcScale(Vec3)`：根据当前投影矩阵和前向深度返回透视 UI 缩放；以每世界单位投影为 20 个 Lumin 像素时作为 `1.0`。
+
+所有 2D 世界覆盖层优先使用 `calcWorld2Screen`，不得再次除以 GUI scale。2D AABB 边界通过投影 8 个顶点并取屏幕空间最小/最大坐标计算。
+
 ### 文本与特效
 
 - 默认字体通过 `StaticFontLoader.defaultFont()` 获取，可随客户端设置切换。

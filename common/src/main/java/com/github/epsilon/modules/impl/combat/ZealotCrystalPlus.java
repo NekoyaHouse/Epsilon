@@ -1698,12 +1698,11 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private Vector2f projectToScreen(Vec3 pos) {
-        Vector3f projected = WorldToScreen.getWorldPositionToScreen(pos);
-        float guiScale = (float) LuminRenderSystem.getGuiScale();
-        if (projected.z < 0.0f || projected.z > 1.0f) return null;
+        Vector3f projected = WorldToScreen.calcWorld2Screen(pos);
+        if (projected == null) return null;
 
-        float centerX = projected.x / guiScale;
-        float centerY = projected.y / guiScale;
+        float centerX = projected.x;
+        float centerY = projected.y;
         if (centerX < 0.0f || centerY < 0.0f
                 || centerX > LuminRenderSystem.getScaledWidth()
                 || centerY > LuminRenderSystem.getScaledHeight()) {

@@ -32,7 +32,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Ent
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
-import org.joml.Vector4d;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
@@ -141,17 +140,16 @@ public class LogoutSpots extends Module {
         TextRenderer textRenderer = textRendererSupplier.get();
 
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        float screenWidth = mc.getWindow().getGuiScaledWidth();
-        float screenHeight = mc.getWindow().getGuiScaledHeight();
+        float screenWidth = LuminRenderSystem.getScaledWidth();
+        float screenHeight = LuminRenderSystem.getScaledHeight();
 
         for (LogoutPlayer player : logoutCache.values()) {
-            Vector4d projected = WorldToScreen.getEntityPositionsOn2D(player, partialTick);
-            if (projected == null || projected.z < 0.0 || projected.w < 0.0 || projected.x > screenWidth || projected.y > screenHeight) {
-                continue;
-            }
+            Vec3 anchor = player.getPosition(partialTick)
+                    .add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0);
+            Vector3f projectedAnchor = WorldToScreen.calcWorld2Screen(anchor);
+            if (projectedAnchor == null) continue;
 
-            float projectedHeight = (float) Math.max(1.0, projected.w - projected.y);
-            float textScale = Math.max(projectedHeight / 36.0f, 0.55f) * 0.4f;
+            float textScale = WorldToScreen.calcScale(anchor) * 0.4f;
             float padding = 2.0f * textScale;
             String text = player.getName().getString() + " " + String.format(Locale.ROOT, "%.1f", player.getHealth() + player.getAbsorptionAmount())
                     + " X: " + (int) player.getX() + " Z: " + (int) player.getZ();
@@ -160,16 +158,13 @@ public class LogoutSpots extends Module {
             float textHeight = textRenderer.getHeight(textScale);
             float boxWidth = textWidth + padding * 2.0f;
             float boxHeight = textHeight + padding * 2.0f;
-            Vec3 position = WorldToScreen.interpolate(player, partialTick);
-            Vector3f projectedAnchor = WorldToScreen.getWorldPositionToScreen(position.add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0));
-            if (projectedAnchor.z < 0.0f || projectedAnchor.z > 1.0f || !Float.isFinite(projectedAnchor.x) || !Float.isFinite(projectedAnchor.y)) {
+            if (!Float.isFinite(projectedAnchor.x) || !Float.isFinite(projectedAnchor.y)) {
                 continue;
             }
 
-            float guiScale = (float) LuminRenderSystem.getGuiScale();
-            float centerX = (float) ((projected.x + projected.z) * 0.5);
+            float centerX = projectedAnchor.x;
             float boxX = centerX - boxWidth * 0.5f;
-            float boxY = projectedAnchor.y / guiScale - boxHeight - 2.0f * textScale;
+            float boxY = projectedAnchor.y - boxHeight - 2.0f * textScale;
 
             if (boxX + boxWidth < 0.0f || boxY + boxHeight < 0.0f || boxX > screenWidth || boxY > screenHeight) {
                 continue;

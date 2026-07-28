@@ -17,7 +17,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.player.Player;
-import org.joml.Vector4d;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 import java.awt.*;
 import java.util.function.Supplier;
@@ -65,14 +67,29 @@ public class ESP2D extends Module {
         for (Entity entity : mc.level.entitiesForRendering()) {
             if (!(entity instanceof LivingEntity livingEntity) || !shouldRender(livingEntity)) continue;
 
-            Vector4d position = WorldToScreen.getEntityPositionsOn2D(livingEntity, partialTick);
-            if (position == null || position.z < 0.0 || position.w < 0.0 || position.x > screenWidth || position.y > screenHeight)
-                continue;
+            Vec3 renderPosition = livingEntity.getPosition(partialTick);
+            AABB box = livingEntity.getBoundingBox().move(renderPosition.subtract(livingEntity.position()));
+            float x = Float.POSITIVE_INFINITY;
+            float y = Float.POSITIVE_INFINITY;
+            float endX = Float.NEGATIVE_INFINITY;
+            float endY = Float.NEGATIVE_INFINITY;
 
-            float x = (float) position.x;
-            float y = (float) position.y;
-            float endX = (float) position.z;
-            float endY = (float) position.w;
+            for (int vertex = 0; vertex < 8; vertex++) {
+                Vec3 worldVertex = new Vec3(
+                        (vertex & 1) == 0 ? box.minX : box.maxX,
+                        (vertex & 2) == 0 ? box.minY : box.maxY,
+                        (vertex & 4) == 0 ? box.minZ : box.maxZ
+                );
+                Vector3f projected = WorldToScreen.calcWorld2Screen(worldVertex);
+                if (projected == null || !Float.isFinite(projected.x) || !Float.isFinite(projected.y)) continue;
+
+                x = Math.min(x, projected.x);
+                y = Math.min(y, projected.y);
+                endX = Math.max(endX, projected.x);
+                endY = Math.max(endY, projected.y);
+            }
+
+            if (!Float.isFinite(x) || endX < 0.0f || endY < 0.0f || x > screenWidth || y > screenHeight) continue;
 
             if (renderBox.getValue()) {
                 if (boxOutline.getValue()) {

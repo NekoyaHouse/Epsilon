@@ -3,105 +3,67 @@ package com.github.epsilon.utils.render;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector4d;
-import org.joml.Vector4f;
+
+import javax.annotation.Nullable;
 
 import static com.github.epsilon.Constants.mc;
 
-public class WorldToScreen {
+public final class WorldToScreen {
+
+    private static final float REFERENCE_PIXELS_PER_WORLD_UNIT = 20.0f;
 
     private WorldToScreen() {
     }
 
-    public static Vector3f getWorldPositionToScreen(Vec3 pos) {
-        Camera camera = mc.gameRenderer.getMainCamera();
-        Vector3f cameraRelativePos = pos.subtract(camera.position()).toVector3f();
-        Vector4f projected = new Vector4f();
-        int[] viewport = getViewport();
-
-        getViewProjectionMatrix().project(cameraRelativePos, viewport, projected);
-        projected.y = viewport[3] - projected.y;
-
-        return new Vector3f(projected.x, projected.y, projected.z);
-    }
-
-    public static Vector4d getEntityPositionsOn2D(Entity entity, float tickDelta) {
-        Vec3 position = interpolate(entity, tickDelta);
-        float halfWidth = entity.getBbWidth() / 2.0f;
-        float height = entity.getBbHeight() + (entity.isCrouching() ? 0.1f : 0.2f);
-        AABB boundingBox = new AABB(
-                position.x - halfWidth, position.y, position.z - halfWidth,
-                position.x + halfWidth, position.y + height, position.z + halfWidth
-        );
-        return projectAbsoluteAABBOn2D(boundingBox);
-    }
-
-    public static Vector4d projectAbsoluteAABBOn2D(AABB absoluteBoundingBox) {
-        Vector4d projection = projectEntity(
-                getViewport(),
-                getViewProjectionMatrix(),
-                absoluteBoundingBox
-        );
-        if (projection == null) {
-            return null;
-        }
-
-        return projection.div(LuminRenderSystem.getGuiScale());
-    }
-
-    public static Vector4d projectEntity(int[] viewport, Matrix4f matrix, AABB absoluteBoundingBox) {
-        Vector4f projected = new Vector4f();
-        Vector4d bounds = null;
-
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
-
-        for (int i = 0; i < 8; i++) {
-            Vector3f point = new Vector3f(
-                    (float) (((i & 1) == 0 ? absoluteBoundingBox.minX : absoluteBoundingBox.maxX) - cameraPos.x),
-                    (float) (((i & 2) == 0 ? absoluteBoundingBox.minY : absoluteBoundingBox.maxY) - cameraPos.y),
-                    (float) (((i & 4) == 0 ? absoluteBoundingBox.minZ : absoluteBoundingBox.maxZ) - cameraPos.z)
-            );
-
-            matrix.project(point, viewport, projected);
-            projected.y = viewport[3] - projected.y;
-            if (!Float.isFinite(projected.x) || !Float.isFinite(projected.y) || projected.z < 0.0f || projected.z > 1.0f) {
-                continue;
-            }
-
-            if (bounds == null) {
-                bounds = new Vector4d(projected.x, projected.y, projected.x, projected.y);
-            } else {
-                bounds.x = Math.min(bounds.x, projected.x);
-                bounds.y = Math.min(bounds.y, projected.y);
-                bounds.z = Math.max(bounds.z, projected.x);
-                bounds.w = Math.max(bounds.w, projected.y);
-            }
-        }
-
-        return bounds;
-    }
-
-    public static Vec3 interpolate(Entity entity, float tickDelta) {
-        return new Vec3(
-                Mth.lerp(tickDelta, entity.xOld, entity.getX()),
-                Mth.lerp(tickDelta, entity.yOld, entity.getY()),
-                Mth.lerp(tickDelta, entity.zOld, entity.getZ())
-        );
-    }
-
-    private static Matrix4f getViewProjectionMatrix() {
+    /**
+     * 原始投影的 x/y 使用 Lumin 坐标，z 使用世界单位的视图空间前向深度。
+     *
+     * @param pos 世界空间中的绝对坐标
+     * @return 未执行深度剔除的屏幕坐标
+     */
+    public static Vector3f calcWorld2ScreenRaw(Vec3 pos) {
         CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
-        return new Matrix4f(cameraState.projectionMatrix).mul(cameraState.viewRotationMatrix);
+        Vector3f cameraRelativePos = pos.subtract(cameraState.pos).toVector3f();
+        Vector3f viewPos = cameraState.viewRotationMatrix.transformPosition(cameraRelativePos, new Vector3f());
+        Vector3f projected = cameraState.projectionMatrix.transformProject(viewPos, new Vector3f());
+
+        float width = LuminRenderSystem.getScaledWidth();
+        float height = LuminRenderSystem.getScaledHeight();
+        return projected.set(
+                (projected.x + 1.0f) * 0.5f * width,
+                (1.0f - projected.y) * 0.5f * height,
+                -viewPos.z
+        );
     }
 
-    private static int[] getViewport() {
-        return new int[]{0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight()};
+    /**
+     * 将世界坐标投影到 Lumin Render Scale 坐标系，并剔除摄像机后方及近裁面内的点。
+     *
+     * @param pos 世界空间中的绝对坐标
+     * @return 屏幕坐标；前向深度小于固定近裁面时返回 {@code null}
+     */
+    @Nullable
+    public static Vector3f calcWorld2Screen(Vec3 pos) {
+        Vector3f projected = calcWorld2ScreenRaw(pos);
+        return projected.z < Camera.PROJECTION_Z_NEAR ? null : projected;
+    }
+
+    /**
+     * 计算世界坐标处的透视 UI 缩放，以每世界单位投影为 20 个 Lumin 像素时作为 1.0。
+     *
+     * @param pos 世界空间中的绝对坐标
+     * @return 该位置的 UI 缩放；位于摄像机后方或近裁面内时返回 0
+     */
+    public static float calcScale(Vec3 pos) {
+        CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+        Vector3f cameraRelativePos = pos.subtract(cameraState.pos).toVector3f();
+        float depth = -cameraState.viewRotationMatrix.transformPosition(cameraRelativePos, new Vector3f()).z;
+        if (depth < Camera.PROJECTION_Z_NEAR) return 0.0f;
+
+        return LuminRenderSystem.getScaledHeight() * cameraState.projectionMatrix.m11()
+                / (2.0f * depth * REFERENCE_PIXELS_PER_WORLD_UNIT);
     }
 
 }
