@@ -424,14 +424,18 @@
       },
       "auto throw": {
         "_value": "自动投掷",
-        "min range": "最小距离",
-        "max range": "最大距离",
-        "min delay": "最小延迟",
-        "max delay": "最大延迟",
-        "swap back delay": "切换延迟",
-        "wall check": "墙体检测",
-        "rotation speed": "旋转速度",
-        "rotation back speed": "回转速度"
+        "min distance": "最小距离",
+        "max distance": "最大距离",
+        "fov": "视野角度",
+        "delay": "延迟",
+        "prediction": "预测倍率",
+        "swing hand": "挥手",
+        "target extrapolation": "目标外推",
+        "target extrapolation smoothening": "目标外推平滑",
+        "self extrapolation": "自身外推",
+        "self extrapolation smoothening": "自身外推平滑",
+        "render extrapolation": "渲染目标外推",
+        "render self extrapolation": "渲染自身外推"
       },
       "auto weapon": {
         "_value": "自动武器",

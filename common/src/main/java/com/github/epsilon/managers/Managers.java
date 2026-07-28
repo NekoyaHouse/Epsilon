@@ -1,10 +1,7 @@
 package com.github.epsilon.managers;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.managers.impl.FriendManager;
-import com.github.epsilon.managers.impl.HealthManager;
-import com.github.epsilon.managers.impl.NotificationManager;
-import com.github.epsilon.managers.impl.TimerManager;
+import com.github.epsilon.managers.impl.*;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
@@ -17,6 +14,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 public class Managers {
 
     public static RotationManager ROTATION;
+    public static ExtrapolationManager EXTRAPOLATION;
     public static TargetManager TARGET;
     public static HealthManager HEALTH;
     public static ServerboundPacketManager C2SPACKET;
@@ -28,6 +26,7 @@ public class Managers {
 
     public static void initManagers() {
         switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
+        EXTRAPOLATION = new ExtrapolationManager();
         TARGET = new TargetManager();
         HEALTH = new HealthManager();
         C2SPACKET = new ServerboundPacketManager();

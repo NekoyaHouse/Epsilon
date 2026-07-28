@@ -424,14 +424,18 @@
       },
       "auto throw": {
         "_value": "Auto Throw",
-        "min range": "Min Range",
-        "max range": "Max Range",
-        "min delay": "Min Delay",
-        "max delay": "Max Delay",
-        "swap back delay": "Swap Back Delay",
-        "wall check": "Wall Check",
-        "rotation speed": "Rotation Speed",
-        "rotation back speed": "Rotation Back Speed"
+        "min distance": "Min Distance",
+        "max distance": "Max Distance",
+        "fov": "FOV",
+        "delay": "Delay",
+        "prediction": "Prediction",
+        "swing hand": "Swing Hand",
+        "target extrapolation": "Target Extrapolation",
+        "target extrapolation smoothening": "Target Extrapolation Smoothening",
+        "self extrapolation": "Self Extrapolation",
+        "self extrapolation smoothening": "Self Extrapolation Smoothening",
+        "render extrapolation": "Render Extrapolation",
+        "render self extrapolation": "Render Self Extrapolation"
       },
       "auto weapon": {
         "_value": "Auto Weapon",

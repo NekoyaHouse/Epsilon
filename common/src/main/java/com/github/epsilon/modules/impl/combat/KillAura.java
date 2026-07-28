@@ -102,8 +102,7 @@ public class KillAura extends Module {
     private final BoolSetting throughWalls = boolSetting("Through Walls", false);
     private final BoolSetting hitSelect = boolSetting("Hit Select", true);
     private final BoolSetting swingHand = boolSetting("SwingHand", true);
-    private final DoubleSetting attackRange = doubleSetting("Attack Range", 4.0, 3.0, 6.0, 0.01);
-    public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 3.0, 6.0, 0.01);
+    public final DoubleSetting range = doubleSetting("Range", 3.0, 3.0, 6.0, 0.01);
     private final IntSetting fov = intSetting("FOV", 180, 1, 360, 1);
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18);
 
@@ -223,7 +222,7 @@ public class KillAura extends Module {
         if (Scaffold.INSTANCE.isEnabled()) return;
 
         targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
-                aimRange.getValue(),
+                range.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),
                 mob.getValue(),
@@ -282,7 +281,7 @@ public class KillAura extends Module {
             Managers.ROTATION.setRotations(
                     RotationUtils.calculate(target),
                     rotationSpeed.getValue(),
-                    rotation -> RaytraceUtils.raytrace(rotation, attackRange.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target
+                    rotation -> RaytraceUtils.raytrace(rotation, range.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target
             );
         }
 
@@ -318,10 +317,10 @@ public class KillAura extends Module {
                 }
 
                 if (throughWalls.getValue()) {
-                    if (target.distanceTo(mc.player) <= attackRange.getValue()) {
+                    if (target.distanceTo(mc.player) <= range.getValue()) {
                         doAttack();
                     }
-                } else if (RaytraceUtils.raytrace(Managers.ROTATION.getRotation(), attackRange.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target) {
+                } else if (RaytraceUtils.raytrace(Managers.ROTATION.getRotation(), range.getValue()) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target) {
                     doAttack();
                 }
             }
