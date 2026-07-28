@@ -6,6 +6,9 @@ layout(std140) uniform BlurUniforms {
     vec3 InputInfo;
     vec4 Rect;
     vec4 CornerRadii;
+    vec4 SegmentInfo;
+    vec4 SegmentRects[64];
+    vec4 SegmentRadii[64];
 };
 
 layout(location = 0) out vec4 fragColor;
@@ -24,6 +27,19 @@ float roundRectDistance(vec2 position, vec4 innerRect, vec4 radius) {
 
     vec2 q = abs(p) - halfSize + rCurrent;
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - rCurrent;
+}
+
+float segmentedDistance(vec2 position, int count) {
+    float distance = 1e20;
+    for (int i = 0; i < 64; i++) {
+        if (i >= count) break;
+
+        vec4 rect = SegmentRects[i];
+        vec4 bounds = vec4(rect.xy, rect.xy + rect.zw);
+        float radius = max(0.0, SegmentRadii[i].x);
+        distance = min(distance, roundRectDistance(position, bounds, vec4(radius)));
+    }
+    return distance;
 }
 
 vec4 blur() {
@@ -54,7 +70,10 @@ void main() {
     vec4 radii = CornerRadii;
     vec4 bounds = vec4(uLocation, uLocation + uSize);
 
-    float dist = roundRectDistance(gl_FragCoord.xy, bounds, radii);
+    int segmentCount = int(SegmentInfo.x);
+    float dist = segmentCount > 0
+        ? segmentedDistance(gl_FragCoord.xy, segmentCount)
+        : roundRectDistance(gl_FragCoord.xy, bounds, radii);
     float delta = fwidth(dist);
     float alpha = 1.0 - smoothstep(-delta, delta, dist);
 

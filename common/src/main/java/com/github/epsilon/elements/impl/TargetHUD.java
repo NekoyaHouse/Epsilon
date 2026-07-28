@@ -59,8 +59,8 @@ public class TargetHUD extends HudModule {
     private final ColorSetting barOutlineColor = colorSetting("Bar Outline Color", new Color(255, 255, 255, 85), barOutline::getValue);
     private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", DEFAULT_SHADOW_BLUR, MIN_SHADOW_BLUR, MAX_SHADOW_BLUR, SHADOW_BLUR_STEP, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", DEFAULT_SHADOW_COLOR, drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), drawShadow::getValue);
 
     private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
     private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;

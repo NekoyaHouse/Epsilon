@@ -37,14 +37,12 @@ public class BlurShader {
 
     public static final BlurShader INSTANCE = new BlurShader();
 
+    private static final int MAX_SEGMENTS = 64;
+
     private static final Identifier BLUR_PATH = ResourceLocationUtils.getIdentifier("blur");
     private static final Identifier BLUR_3D_BOX_PATH = ResourceLocationUtils.getIdentifier("blur_3d_box");
 
-    private static final int UNIFORMS_SIZE = new Std140SizeCalculator()
-            .putVec3()
-            .putVec4()
-            .putVec4()
-            .get();
+    private static final int UNIFORMS_SIZE = blurUniformsSize();
 
     private static final int BOX_UNIFORMS_SIZE = new Std140SizeCalculator()
             .putVec4()
@@ -84,6 +82,10 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
+        render(x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, null, null, 0);
+    }
+
+    public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
         this.ensureProgram();
 
         if (width <= 0.0f || height <= 0.0f) {
@@ -131,6 +133,7 @@ public class BlurShader {
         float rBLPx = Math.max(0.0f, rBL * scale);
 
         float quality = Math.max(0.0f, blurStrength);
+        int count = clampSegmentCount(segmentRects, segmentCount);
 
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         encoder.copyTextureToTexture(
@@ -145,7 +148,12 @@ public class BlurShader {
                 "Lumin Blur UBO",
                 UNIFORMS_SIZE,
                 16,
-                new BlurUniforms(sourceTarget.width, sourceTarget.height, quality, pxW, pxH, pxX, pxY, rTLPx, rTRPx, rBRPx, rBLPx)
+                new BlurUniforms(
+                        sourceTarget.width, sourceTarget.height, quality,
+                        pxW, pxH, pxX, pxY,
+                        rTLPx, rTRPx, rBRPx, rBLPx,
+                        scale, targetHeight, segmentRects, segmentRadii, count
+                )
         );
 
         try (RenderPass renderPass = encoder.createRenderPass(
@@ -164,6 +172,11 @@ public class BlurShader {
 
     public void render(float x, float y, float width, float height, float radius, float blurStrength) {
         render(x, y, width, height, radius, radius, radius, radius, blurStrength);
+    }
+
+    public void render(float x, float y, float width, float height, float radius, float blurStrength,
+                       float[] segmentRects, float[] segmentRadii, int segmentCount) {
+        render(x, y, width, height, radius, radius, radius, radius, blurStrength, segmentRects, segmentRadii, segmentCount);
     }
 
     public void render3DBox(AABB box, double blurStrength) {
@@ -287,6 +300,21 @@ public class BlurShader {
         buffer.addVertex(matrix, x, y, z).setColor(-1);
     }
 
+    private static int blurUniformsSize() {
+        Std140SizeCalculator calculator = new Std140SizeCalculator().putVec3().putVec4().putVec4().putVec4();
+        for (int i = 0; i < MAX_SEGMENTS * 2; i++) {
+            calculator.putVec4();
+        }
+        return calculator.get();
+    }
+
+    private static int clampSegmentCount(float[] segmentRects, int segmentCount) {
+        if (segmentRects == null || segmentCount <= 0) {
+            return 0;
+        }
+        return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.length / 4));
+    }
+
     private record BlurUniforms(
             float width,
             float height,
@@ -298,27 +326,55 @@ public class BlurShader {
             float radiusTopLeft,
             float radiusTopRight,
             float radiusBottomRight,
-            float radiusBottomLeft
+            float radiusBottomLeft,
+            float scale,
+            float targetHeight,
+            float[] segmentRects,
+            float[] segmentRadii,
+            int segmentCount
     ) implements DynamicUniformStorage.DynamicUniform {
-
         @Override
         public void write(ByteBuffer buffer) {
-            Std140Builder.intoBuffer(buffer)
+            Std140Builder builder = Std140Builder.intoBuffer(buffer)
                     .putVec3(width, height, quality)
                     .putVec4(rectWidth, rectHeight, rectX, rectY)
-                    .putVec4(radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
-        }
+                    .putVec4(radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft)
+                    .putVec4(segmentCount, 0.0f, 0.0f, 0.0f);
 
+            for (int i = 0; i < MAX_SEGMENTS; i++) {
+                if (i < segmentCount) {
+                    int offset = i * 4;
+                    float segmentX = segmentRects[offset];
+                    float segmentY = segmentRects[offset + 1];
+                    float segmentWidth = segmentRects[offset + 2];
+                    float segmentHeight = segmentRects[offset + 3];
+                    builder.putVec4(
+                            segmentX * scale,
+                            targetHeight - (segmentY + segmentHeight) * scale,
+                            segmentWidth * scale,
+                            segmentHeight * scale
+                    );
+                } else {
+                    builder.putVec4(0.0f, 0.0f, 0.0f, 0.0f);
+                }
+            }
+
+            for (int i = 0; i < MAX_SEGMENTS; i++) {
+                float radius = segmentRadii != null && i < segmentCount && i < segmentRadii.length
+                        ? Math.max(0.0f, segmentRadii[i] * scale)
+                        : 0.0f;
+                builder.putVec4(radius, 0.0f, 0.0f, 0.0f);
+            }
+        }
     }
 
-    private record BoxBlurUniforms(float width, float height,
-                                   float quality) implements DynamicUniformStorage.DynamicUniform {
-
+    private record BoxBlurUniforms(
+            float width, float height, float quality
+    ) implements DynamicUniformStorage.DynamicUniform {
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer).putVec4(width, height, quality, 0.0f);
         }
-
     }
 
 }

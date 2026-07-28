@@ -35,8 +35,8 @@ public class Watermark extends HudModule {
 
         renderScope().text(traditionText, this.x, this.y, scaledScale, textColor.getValue(), StaticFontLoader.OSAKA_CHIPS);
 
-        float totalWidth = textRenderer.getWidth(traditionText, scaledScale, StaticFontLoader.OSAKA_CHIPS) + 3f * scaledScale;
-        float totalHeight = textRenderer.getHeight(scaledScale, StaticFontLoader.OSAKA_CHIPS) + 3f * scaledScale;
+        float totalWidth = textRenderer.getWidth(traditionText, scaledScale, StaticFontLoader.OSAKA_CHIPS);
+        float totalHeight = textRenderer.getHeight(scaledScale, StaticFontLoader.OSAKA_CHIPS);
 
         setBounds(totalWidth, totalHeight);
     }

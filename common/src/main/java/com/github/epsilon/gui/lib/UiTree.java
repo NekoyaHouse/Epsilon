@@ -211,6 +211,19 @@ public class UiTree {
             return new UiRect(resolveX(rect.x()), resolveY(rect.y()), rect.width(), rect.height());
         }
 
+        private float[] resolveSegmentRects(float[] segmentRects) {
+            if (segmentRects == null) {
+                return null;
+            }
+            float[] resolved = segmentRects.clone();
+            UiRect bound = currentBound();
+            for (int i = 0; i + 3 < resolved.length; i += 4) {
+                resolved[i] += bound.x();
+                resolved[i + 1] += bound.y();
+            }
+            return resolved;
+        }
+
         private ButtonElement resolveButton(ButtonElement element) {
             return new ButtonElement(resolveRect(element.bounds()), element.radius(), element.background(),
                     element.label(), element.labelScale(), element.labelColor());
@@ -293,6 +306,15 @@ public class UiTree {
 
         public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {
             nodes.add(new ShadowNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, blurRadius, color));
+        }
+
+        public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                           float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            nodes.add(new SegmentedShadowNode(
+                    resolveX(x), resolveY(y), width, height,
+                    radius, radius, radius, radius, blurRadius, color,
+                    resolveSegmentRects(segmentRects), segmentRadii == null ? null : segmentRadii.clone(), segmentCount
+            ));
         }
 
         public void shadow(int layer, float x, float y, float width, float height, float radius, float blurRadius, Color color) {
@@ -993,7 +1015,7 @@ public class UiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -1047,6 +1069,13 @@ public class UiTree {
     public record ShadowNode(float x, float y, float width, float height,
                              float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                              float blurRadius, Color color) implements UiNode {
+    }
+
+    public record SegmentedShadowNode(float x, float y, float width, float height,
+                                      float radiusTopLeft, float radiusTopRight,
+                                      float radiusBottomRight, float radiusBottomLeft,
+                                      float blurRadius, Color color,
+                                      float[] segmentRects, float[] segmentRadii, int segmentCount) implements UiNode {
     }
 
     public record RoundRectNode(float x, float y, float width, float height,

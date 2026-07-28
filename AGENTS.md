@@ -122,7 +122,7 @@ Minecraft.<init> TAIL
 | `settings/` | `SettingHost` DSL、分组、布局规划和 10 种 Setting 实现 |
 | `utils/` | client、combat、math、network、player、render、rotation、timer、world 工具 |
 
-截至本文档更新时，`ModuleHolder` 注册 100 个本体模块（含 `ClientSetting`），`HudElementHolder` 注册 9 个 HUD 元素。这个数字仅用于发现注册遗漏；新增功能时仍以两个 Holder 的注册表为准并同步 i18n。
+截至本文档更新时，`ModuleHolder` 注册 100 个本体模块（含 `ClientSetting`），`HudElementHolder` 注册 10 个 HUD 元素。这个数字仅用于发现注册遗漏；新增功能时仍以两个 Holder 的注册表为准并同步 i18n。
 
 ## Module 开发
 
@@ -400,6 +400,7 @@ renderer.get().drawAndClear();
 - 同一帧调用 `clear()` 或 `drawAndClear()` 后，不得再次对该 renderer 调用 `draw()`/`drawAndClear()`。
 - 内容长期不变时可以只 `draw()` 并复用 GPU 数据；内容变化时在下一帧重新填充。
 - 需要同帧多个独立 pass 时，使用不同 renderer 或 `Render2DScheduler`，不要反复 clear/rebuild 同一个实例。
+- `ShadowRenderer` 与 `UiTree.Scope.shadow(...)` 的 segmented 重载接受 `segmentRects`（每段依次为 `x, y, width, height`）、`segmentRadii` 和 `segmentCount`；一次最多提交 64 段，所有段按并集生成一份阴影。
 
 ### 3D Scheduler
 

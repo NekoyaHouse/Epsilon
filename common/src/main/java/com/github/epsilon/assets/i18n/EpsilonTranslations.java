@@ -104,7 +104,13 @@ public class EpsilonTranslations {
             PlayerAlarms.GAMEMODE_CREATIVE,
             PlayerAlarms.GAMEMODE_ADVENTURE,
             PlayerAlarms.GAMEMODE_SPECTATOR,
-            PlayerAlarms.UNKNOWN_GAMEMODE
+            PlayerAlarms.UNKNOWN_GAMEMODE,
+            PlayerInfo.PLAYERS,
+            PlayerInfo.DISTANCE,
+            PlayerInfo.HEALTH,
+            PlayerInfo.POPS,
+            PlayerInfo.DIRECTION,
+            PlayerInfo.EMPTY
     );
 
     private EpsilonTranslations() {
@@ -244,6 +250,18 @@ public class EpsilonTranslations {
         public static final TranslateComponent UNKNOWN_GAMEMODE = create("modules.player alarms", "unknown_gamemode");
 
         private PlayerAlarms() {
+        }
+    }
+
+    public static final class PlayerInfo {
+        public static final TranslateComponent PLAYERS = create("elements.player info", "players");
+        public static final TranslateComponent DISTANCE = create("elements.player info", "distance");
+        public static final TranslateComponent HEALTH = create("elements.player info", "health");
+        public static final TranslateComponent POPS = create("elements.player info", "pops");
+        public static final TranslateComponent DIRECTION = create("elements.player info", "direction");
+        public static final TranslateComponent EMPTY = create("elements.player info", "empty");
+
+        private PlayerInfo() {
         }
     }
 

@@ -4,6 +4,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -62,6 +63,15 @@ public class LuminRenderPipelines {
             .withVertexFormat(LuminVertexFormats.ROUND_RECT, VertexFormat.Mode.QUADS)
             .withVertexShader(ResourceLocationUtils.getIdentifier("shadow"))
             .withFragmentShader(ResourceLocationUtils.getIdentifier("shadow"))
+            .withCull(false)
+            .build();
+
+    public final static RenderPipeline SEGMENTED_SHADOW = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipelines/segmented_shadow"))
+            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
+            .withVertexShader(ResourceLocationUtils.getIdentifier("segmented_shadow"))
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("segmented_shadow"))
+            .withUniform("SegmentedShadowUniforms", UniformType.UNIFORM_BUFFER)
             .withCull(false)
             .build();
 

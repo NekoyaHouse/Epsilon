@@ -10,16 +10,8 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
-import java.awt.*;
-
 @ClInitNative
 public abstract class HudModule extends Module {
-
-    protected static final double DEFAULT_SHADOW_BLUR = 10.0;
-    protected static final double MIN_SHADOW_BLUR = 2.0;
-    protected static final double MAX_SHADOW_BLUR = 32.0;
-    protected static final double SHADOW_BLUR_STEP = 1.0;
-    protected static final Color DEFAULT_SHADOW_COLOR = new Color(0, 0, 0, 110);
 
     public enum HorizontalAnchor {
         Left,

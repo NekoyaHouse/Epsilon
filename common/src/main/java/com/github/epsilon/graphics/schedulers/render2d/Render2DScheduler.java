@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.schedulers.render2d;
 
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -12,6 +13,7 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.resources.Identifier;
 
 import java.awt.*;
 import java.util.*;
@@ -210,6 +212,12 @@ public class Render2DScheduler implements AutoCloseable {
                     shadow.radiusTopLeft(), shadow.radiusTopRight(), shadow.radiusBottomRight(), shadow.radiusBottomLeft(),
                     shadow.blurRadius(), shadow.color()
             );
+            case Render2DCommand.SegmentedShadow shadow -> renderers.shadowRenderer().addShadow(
+                    shadow.bounds().x(), shadow.bounds().y(), shadow.bounds().width(), shadow.bounds().height(),
+                    shadow.radiusTopLeft(), shadow.radiusTopRight(), shadow.radiusBottomRight(), shadow.radiusBottomLeft(),
+                    shadow.blurRadius(), shadow.color(),
+                    shadow.segmentRects(), shadow.segmentRadii(), shadow.segmentCount()
+            );
             case Render2DCommand.RoundRect rect -> renderers.roundRectRenderer().addRoundRectGradient(
                     rect.bounds().x(), rect.bounds().y(), rect.bounds().width(), rect.bounds().height(),
                     rect.radiusTopLeft(), rect.radiusTopRight(), rect.radiusBottomRight(), rect.radiusBottomLeft(),
@@ -228,26 +236,30 @@ public class Render2DScheduler implements AutoCloseable {
                     triangle.centerX(), triangle.centerY(), triangle.size(), triangle.progress(), triangle.color()
             );
             case Render2DCommand.Texture texture -> {
-                if (texture.texture() instanceof Render2DTexture.IdentifierRef ref) {
+                if (texture.texture() instanceof Render2DTexture.IdentifierRef(
+                        Identifier identifier, boolean linearFilter
+                )) {
                     if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(ref.identifier(),
+                        renderers.textureRenderer().addRoundedTexture(identifier,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), ref.linearFilter());
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), linearFilter);
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(ref.identifier(),
+                        renderers.textureRenderer().addRotatedTexture(identifier,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
-                                texture.originX(), texture.originY(), texture.rotationDegrees(), ref.linearFilter());
+                                texture.originX(), texture.originY(), texture.rotationDegrees(), linearFilter);
                     }
-                } else if (texture.texture() instanceof Render2DTexture.LuminRef ref) {
+                } else if (texture.texture() instanceof Render2DTexture.LuminRef(
+                        LuminTexture luminTexture
+                )) {
                     if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(ref.texture(),
+                        renderers.textureRenderer().addRoundedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(ref.texture(),
+                        renderers.textureRenderer().addRotatedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
                                 texture.originX(), texture.originY(), texture.rotationDegrees());
@@ -316,6 +328,22 @@ public class Render2DScheduler implements AutoCloseable {
             scheduler.add(new Render2DCommand.Shadow(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor,
                     topLeft, topRight, bottomRight, bottomLeft, blurRadius, color));
+        }
+
+        public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
+                    segmentRects, segmentRadii, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height,
+                              float topLeft, float topRight, float bottomRight, float bottomLeft,
+                              float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            scheduler.add(new Render2DCommand.SegmentedShadow(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x, y, width, height), scissor,
+                    topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
+                    segmentRects, segmentRadii, segmentCount));
         }
 
         public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {

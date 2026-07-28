@@ -26,6 +26,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -87,16 +88,30 @@ public class HudEditorScreen extends Screen {
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        drawEditor(graphics, epsilonMouseX, epsilonMouseY);
+
+        drawEditor(epsilonMouseX, epsilonMouseY);
 
         shouldRenderElements = true;
 
         LuminRenderSystem.setActiveTarget(null);
-        graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+                renderTarget.getIdentifier(),
+                0,
+                0,
+                0.0f,
+                window.getHeight(),
+                window.getGuiScaledWidth(),
+                window.getGuiScaledHeight(),
+                window.getWidth(),
+                -window.getHeight(),
+                window.getWidth(),
+                window.getHeight()
+        );
         drawElementOverlays(graphics);
     }
 
-    private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    private void drawEditor(int mouseX, int mouseY) {
         ensureHudPanel();
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {

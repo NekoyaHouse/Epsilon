@@ -32,9 +32,10 @@ public class HudElementHolder {
     public void initElements() {
         addElement(Notifications.INSTANCE);
         addElement(BPS.INSTANCE);
-        addElement(MTF.INSTANCE);
         addElement(Inventory.INSTANCE);
         addElement(ModuleList.INSTANCE);
+        addElement(MTF.INSTANCE);
+        addElement(PlayerInfo.INSTANCE);
         addElement(Potions.INSTANCE);
         addElement(ScaffoldBlock.INSTANCE);
         addElement(TargetHUD.INSTANCE);
