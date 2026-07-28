@@ -1380,6 +1380,19 @@
           "cancelmove": "Cancel Move"
         }
       },
+      "target strafe": {
+        "_value": "Target Strafe",
+        "radius": "Radius",
+        "points": "Points",
+        "require press": "Require Jump",
+        "speed only": "Speed/Flight Only",
+        "show target": {
+          "_value": "Show Target",
+          "none": "None",
+          "default": "Default",
+          "hud": "HUD"
+        }
+      },
       "velocity": {
         "_value": "Velocity",
         "exclusions": "Exclusions",

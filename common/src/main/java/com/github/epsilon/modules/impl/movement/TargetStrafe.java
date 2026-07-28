@@ -1,23 +1,30 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.StrafeEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TargetStrafe extends Module {
 
@@ -27,140 +34,216 @@ public class TargetStrafe extends Module {
         super("Target Strafe", Category.MOVEMENT);
     }
 
-    private final DoubleSetting range = doubleSetting("Range", 1.0, 0.1, 8.0, 0.1);
-    private final DoubleSetting followRange = doubleSetting("Follow Range", 1.5, 0.1, 10.0, 0.1);
-    private final BoolSetting controlDirection = boolSetting("Control Direction", true);
-    private final BoolSetting edgeCheck = boolSetting("Edge Check", true);
-    private final BoolSetting voidCheck = boolSetting("Void Check", true);
-    private final BoolSetting jumpOnly = boolSetting("Jump Only", true);
-    private final BoolSetting moveOnly = boolSetting("Move Only", true);
+    private final DoubleSetting radius = doubleSetting("Radius", 1.0, 0.0, 6.0, 0.1);
+    private final IntSetting points = intSetting("Points", 6, 3, 24, 1);
+    private final BoolSetting requirePress = boolSetting("Require Press", true);
+    private final BoolSetting speedOnly = boolSetting("Speed Only", true);
     private final BoolSetting drawRadius = boolSetting("Draw Radius", true);
-    private final ColorSetting circleColor = colorSetting("Color", new Color(255, 255, 255));
-    private final IntSetting circlePoints = intSetting("Points", 32, 3, 120, 1);
 
+    private LivingEntity target;
+    private float targetYaw = Float.NaN;
     private int direction = 1;
 
-    @EventHandler
-    public void onMoveInput(KeyboardInputEvent event) {
-        if (nullCheck()) return;
+    @Override
+    protected void onDisable() {
+        resetTarget();
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTick(PlayerTickEvent.Pre event) {
+        boolean left = mc.options.keyLeft.isDown();
+        boolean right = mc.options.keyRight.isDown();
+        if (left ^ right) {
+            direction = left ? 1 : -1;
+        }
+
+        if (!canStrafe()) {
+            resetTarget();
+            return;
+        }
 
         KillAura killAura = KillAura.INSTANCE;
-        if (!killAura.isEnabled()) return;
-        LivingEntity target = killAura.target;
+        if (killAura.isEnabled() && !Scaffold.INSTANCE.isEnabled() && !mc.player.isUsingItem() && !mc.player.isBlocking()) {
+            target = killAura.target;
+        } else {
+            target = null;
+        }
 
-        if (target == null) return;
+        if (target == null) {
+            targetYaw = Float.NaN;
+            return;
+        }
 
-        if (moveOnly.getValue() && !mc.player.isMoving()) return;
-        if (jumpOnly.getValue() && !mc.options.keyJump.isDown()) return;
-
-        double distance = mc.player.distanceTo(target);
-        if (distance > followRange.getValue()) return;
+        List<OrbitOffset> offsets = createOrbitOffsets();
+        int closestIndex = findClosestIndex(offsets);
+        if (closestIndex < 0) {
+            resetTarget();
+            return;
+        }
 
         if (mc.player.horizontalCollision) {
-            direction = -direction;
+            direction *= -1;
         }
 
-        if (controlDirection.getValue()) {
-            if (mc.options.keyLeft.isDown()) direction = 1;
-            if (mc.options.keyRight.isDown()) direction = -1;
+        int nextIndex = wrapIndex(closestIndex + direction, offsets.size());
+        Vec3 nextPosition = getOrbitPosition(offsets.get(nextIndex));
+        if (isOverVoid(nextPosition.x, nextPosition.z)) {
+            direction *= -1;
+            nextIndex = wrapIndex(closestIndex + direction, offsets.size());
+            nextPosition = getOrbitPosition(offsets.get(nextIndex));
         }
 
-        double speed = Math.sqrt(mc.player.getDeltaMovement().x * mc.player.getDeltaMovement().x + mc.player.getDeltaMovement().z * mc.player.getDeltaMovement().z);
-        double strafeYaw = Math.atan2(target.getZ() - mc.player.getZ(), target.getX() - mc.player.getX());
+        double deltaX = nextPosition.x - mc.player.getX();
+        double deltaZ = nextPosition.z - mc.player.getZ();
+        targetYaw = Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90.0f);
+    }
 
-        Vec3 strafeVec = computeDirectionVec(strafeYaw, distance, speed, range.getValue().floatValue(), direction);
-        Vec3 pointCoords = new Vec3(mc.player.getX(), mc.player.getY(), mc.player.getZ()).add(strafeVec);
+    @EventHandler
+    private void onKeyboardInput(KeyboardInputEvent event) {
+        if (Float.isNaN(targetYaw) || !isMovementPressed(event)) return;
 
-        if (!validatePoint(pointCoords)) {
-            direction = -direction;
-            strafeVec = computeDirectionVec(strafeYaw, distance, speed, range.getValue().floatValue(), direction);
-        }
+        event.setStrafe(0.0f);
+        event.setForward(1.0f);
+    }
 
-        double targetYaw = Math.toDegrees(Math.atan2(-strafeVec.x, strafeVec.z));
-        MovementFix.INSTANCE.fixMovement(event, (float) targetYaw);
-
-        if (event.getForward() < 0.8f) {
-            mc.player.setSprinting(false);
+    @EventHandler
+    private void onStrafe(StrafeEvent event) {
+        if (!Float.isNaN(targetYaw)) {
+            event.setYaw(targetYaw);
         }
     }
 
-    private Vec3 computeDirectionVec(double strafeYaw, double distance, double speed, float range, int direction) {
-        double yaw = strafeYaw - (0.5f * Math.PI);
-        double encirclement = distance - range;
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (!drawRadius.getValue() || target == null) return;
 
-        if (encirclement < -speed) encirclement = -speed;
-
-        double encirclementX = -Math.sin(yaw) * encirclement;
-        double encirclementZ = Math.cos(yaw) * encirclement;
-
-        double strafeX = -Math.sin(strafeYaw) * speed * direction;
-        double strafeZ = Math.cos(strafeYaw) * speed * direction;
-
-        return new Vec3(encirclementX + strafeX, 0.0, encirclementZ + strafeZ);
+        Color color = getTargetColor(target);
+        drawCircle(target, darken(color, 0.2f), 3.0f);
+        drawCircle(target, color, 1.5f);
     }
 
-    private boolean validatePoint(Vec3 point) {
-        AABB box = mc.player.getDimensions(mc.player.getPose()).makeBoundingBox(point);
-        if (mc.level.getBlockCollisions(mc.player, box).iterator().hasNext()) return false;
-
-        if (edgeCheck.getValue() && isCloseToFall(point)) return false;
-
-        if (voidCheck.getValue() && wouldFallIntoVoid(point)) return false;
-
-        return true;
+    private boolean canStrafe() {
+        if (speedOnly.getValue() && !Speed.INSTANCE.isEnabled() && !Flight.INSTANCE.isEnabled()) {
+            return false;
+        }
+        return !requirePress.getValue() || mc.screen == null && mc.options.keyJump.isDown();
     }
 
-    private boolean isCloseToFall(Vec3 point) {
-        point = new Vec3(point.x, Math.floor(point.y), point.z);
-        AABB box = mc.player.getDimensions(mc.player.getPose()).makeBoundingBox(point)
-                .inflate(-0.05, 0.0, -0.05) // 稍微收缩
-                .move(0.0, -1.2, 0.0); // 检查下方 1.2 格
-
-        return !mc.level.getBlockCollisions(mc.player, box).iterator().hasNext();
+    private List<OrbitOffset> createOrbitOffsets() {
+        int pointCount = points.getValue();
+        double orbitRadius = radius.getValue();
+        List<OrbitOffset> offsets = new ArrayList<>(pointCount);
+        for (int i = 0; i < pointCount; i++) {
+            double angle = i * (Math.PI * 2.0 / pointCount);
+            offsets.add(new OrbitOffset(orbitRadius * Math.cos(angle), orbitRadius * Math.sin(angle)));
+        }
+        return offsets;
     }
 
-    private boolean wouldFallIntoVoid(Vec3 point) {
-        for (int i = 0; i < 5; i++) {
-            BlockPos pos = BlockPos.containing(point.x, point.y - i, point.z);
-            if (!mc.level.getBlockState(pos).getCollisionShape(mc.level, pos).isEmpty()) {
-                return false;
+    private int findClosestIndex(List<OrbitOffset> offsets) {
+        double closestDistance = Double.MAX_VALUE;
+        int closestIndex = -1;
+        for (int i = 0; i < offsets.size(); i++) {
+            Vec3 position = getOrbitPosition(offsets.get(i));
+            double distance = mc.player.distanceToSqr(position.x, mc.player.getY(), position.z);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        return closestIndex;
+    }
+
+    private Vec3 getOrbitPosition(OrbitOffset offset) {
+        return new Vec3(target.getX() + offset.x(), mc.player.getY(), target.getZ() + offset.z());
+    }
+
+    private boolean isOverVoid(double x, double z) {
+        if (mc.player.isInWater() || mc.player.isInLava()) return false;
+
+        AABB box = new AABB(
+                x - 0.015,
+                mc.player.getY(),
+                z - 0.015,
+                x + 0.015,
+                mc.player.getY() + mc.player.getBbHeight(),
+                z + 0.015
+        );
+        int minY = Mth.floor(box.minY);
+        if (minY < mc.level.getMinY()) return true;
+
+        int minX = Mth.floor(box.minX);
+        int maxX = Mth.floor(box.maxX + 1.0);
+        int minZ = Mth.floor(box.minZ);
+        int maxZ = Mth.floor(box.maxZ + 1.0);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+
+        for (int blockX = minX; blockX < maxX; blockX++) {
+            for (int blockZ = minZ; blockZ < maxZ; blockZ++) {
+                for (int blockY = minY; blockY >= mc.level.getMinY(); blockY--) {
+                    BlockState state = mc.level.getBlockState(pos.set(blockX, blockY, blockZ));
+                    if (!state.canBeReplaced()) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
     }
 
-    @EventHandler
-    private void onRender3D(Render3DEvent event) {
-        if (!drawRadius.getValue()) return;
-
-        KillAura killAura = KillAura.INSTANCE;
-        if (!killAura.isEnabled()) return;
-        LivingEntity target = killAura.target;
-        if (target == null) return;
-
-        drawCircle(target, range.getValue(), circleColor.getValue());
+    private boolean isMovementPressed(KeyboardInputEvent event) {
+        return event.getForward() != 0.0f || event.getStrafe() != 0.0f;
     }
 
-    private void drawCircle(LivingEntity entity, double radius, Color color) {
+    private int wrapIndex(int index, int size) {
+        if (index < 0) return size - 1;
+        return index >= size ? 0 : index;
+    }
+
+    private Color getTargetColor(LivingEntity entity) {
+        if (entity instanceof Player player) {
+            if (Managers.FRIEND.isFriend(player)) {
+                return new Color(85, 255, 85);
+            } else {
+                new Color(entity.getTeamColor());
+            }
+        }
+        return Color.WHITE;
+    }
+
+    private Color darken(Color color, float amount) {
+        float factor = 1.0f - Mth.clamp(amount, 0.0f, 1.0f);
+        return new Color(
+                Math.round(color.getRed() * factor),
+                Math.round(color.getGreen() * factor),
+                Math.round(color.getBlue() * factor),
+                color.getAlpha()
+        );
+    }
+
+    private void drawCircle(LivingEntity entity, Color color, float width) {
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         double x = Mth.lerp(tickDelta, entity.xOld, entity.getX());
         double y = Mth.lerp(tickDelta, entity.yOld, entity.getY());
         double z = Mth.lerp(tickDelta, entity.zOld, entity.getZ());
+        int pointCount = points.getValue();
+        double orbitRadius = radius.getValue();
 
-        int points = circlePoints.getValue();
-        double anglePerPoint = 360.0 / points;
-
-        for (int i = 0; i < points; i++) {
-            double rad = Math.toRadians(i * anglePerPoint);
-            double radNext = Math.toRadians((i + 1) * anglePerPoint);
-
-            double x1 = Math.sin(rad) * radius;
-            double z1 = Math.cos(rad) * radius;
-            double x2 = Math.sin(radNext) * radius;
-            double z2 = Math.cos(radNext) * radius;
-
-            Render3DScheduler.INSTANCE.addLine(new Vec3(x + x1, y, z + z1), new Vec3(x + x2, y, z + z2), color, 2.0f);
+        for (int i = 0; i < pointCount; i++) {
+            double angle = i * (Math.PI * 2.0 / pointCount);
+            double nextAngle = (i + 1) * (Math.PI * 2.0 / pointCount);
+            Vec3 from = new Vec3(x + Math.cos(angle) * orbitRadius, y, z + Math.sin(angle) * orbitRadius);
+            Vec3 to = new Vec3(x + Math.cos(nextAngle) * orbitRadius, y, z + Math.sin(nextAngle) * orbitRadius);
+            Render3DScheduler.INSTANCE.addLine(from, to, color, width);
         }
+    }
+
+    private void resetTarget() {
+        target = null;
+        targetYaw = Float.NaN;
+    }
+
+    private record OrbitOffset(double x, double z) {
     }
 
 }

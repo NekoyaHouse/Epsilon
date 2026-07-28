@@ -28,6 +28,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.HitResult;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -135,7 +136,7 @@ public class KillAura extends Module {
 
         if (mc.player.isUsingItem() || mc.player.isBlocking() || Scaffold.INSTANCE.isEnabled()) return;
 
-        List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
+        List<LivingEntity> targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
                 range.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),
@@ -148,7 +149,7 @@ public class KillAura extends Module {
                 invisible.getValue(),
                 throughWalls.getValue(),
                 64
-        ));
+        )));
 
         if (targets.isEmpty()) {
             target = null;

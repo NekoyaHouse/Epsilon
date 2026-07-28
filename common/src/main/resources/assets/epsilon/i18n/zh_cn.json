@@ -1380,6 +1380,19 @@
           "cancelmove": "取消移动"
         }
       },
+      "target strafe": {
+        "_value": "目标环绕",
+        "radius": "环绕半径",
+        "points": "路径点数",
+        "require press": "需要按住跳跃",
+        "speed only": "仅速度/飞行模块",
+        "show target": {
+          "_value": "显示目标",
+          "none": "关闭",
+          "default": "默认",
+          "hud": "HUD 主题"
+        }
+      },
       "velocity": {
         "_value": "反击退",
         "exclusions": "排除项",

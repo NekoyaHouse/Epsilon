@@ -64,7 +64,6 @@ Epsilon/
 | `managers/` | 各种管理器（Rotation、Target、Health、Friend、Sound、Notification、Packet 等） |
 | `mixins/` | Mixin 注入类 |
 | `modules/` | Module 基类、Category 枚举、`ClientSetting`、若干个内置模块（combat/movement/player/render 四大类） |
-| `music/` | 内置网易云音乐 API、Cookie/音频缓存、MP3/FLAC 解码器与播放队列 |
 | `settings/` | Setting 基类与 10 种设置类型（Bool、Button、Color、Double、Enum、Int、Keybind、RegistryList、StringList、String） |
 | `utils/` | 工具类（client、combat、math、network、player、render、rotation、timer、world） |
 
@@ -509,15 +508,6 @@ textRenderer.drawAndClear();
 - 模块/HUD 内的 Setting 与 SettingGroup：直接作为所属模块 key 的子 key，如 `epsilon.modules.kill aura.range`
 - EnumSetting 选项：直接作为 Setting key 的子 key，如 `epsilon.modules.kill aura.mode.single`
 - Addon 自身的 Setting 与 SettingGroup（不属于模块）：`{addonId}.settings.{nameLowerCase}`
-
-## 内置网易云音乐
-
-- `MusicPlayer.INSTANCE` 是唯一播放状态机，负责队列、播放模式、进度、音量、异步下载与切歌代次校验。
-- `NeteaseApi` 的网络请求必须在后台线程执行；Cookie 和音频/封面缓存位于游戏目录下的 `epsilon/netease/`，不能写入项目目录。
-- 音频播放使用独立的 `MusicAudioPlayer`（JLayer MP3、jFLAC FLAC），不调用 Minecraft `SoundEngine`。
-- `MusicScreen` 和 `MusicLoginScreen` 遵循 Minecraft 26.1.2 的 `extractRenderState`、`GuiGraphicsExtractor` 和动态纹理线程规则；NativeImage/DynamicTexture 只在客户端渲染线程创建或上传。
-- `MusicPlayerModule` 与 `MusicNowPlaying` 分别注册到 `ModuleHolder`、`HudElementHolder`，新增 Setting/HUD 必须同步 `i18n` 文件。
-- Fabric/NeoForge loader 必须把 JLayer、jFLAC、ZXing 依赖内嵌到发布包；游戏退出时通过 `EpsilonCommon` 关闭音频线程和网络 Executor。
 
 ## 代码规范
 
