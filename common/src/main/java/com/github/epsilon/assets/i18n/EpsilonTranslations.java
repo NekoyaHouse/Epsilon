@@ -29,6 +29,7 @@ public class EpsilonTranslations {
             Gui.MAINMENU_OPTIONS,
             Gui.MAINMENU_QUIT,
             Gui.MAINMENU_REISA_GREETING,
+            Gui.MAINMENU_REISA_FAREWELL,
             Gui.TAB_GENERAL,
             Gui.TAB_FRIEND,
             Gui.TAB_CONFIG,

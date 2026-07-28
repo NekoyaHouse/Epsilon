@@ -32,7 +32,8 @@
         "multiplayer": "多人游戏",
         "options": "选项",
         "quit": "退出游戏",
-        "reisa_greeting": "嗨，老师！玲纱前来报到！"
+        "reisa_greeting": "嗨，老师！玲纱前来报到！",
+        "reisa_farewell": "再见，老师！玲纱先行告退！"
       },
       "tab": {
         "general": "常规",
@@ -1968,6 +1969,30 @@
       }
     },
     "elements": {
+      "player info": {
+        "_value": "玩家信息",
+        "players": "玩家",
+        "distance": "距离",
+        "health": "生命",
+        "pops": "图腾",
+        "direction": "朝向",
+        "empty": "附近没有玩家",
+        "scale": "缩放",
+        "width": "宽度",
+        "range": "范围",
+        "max players": "最大玩家数",
+        "show self": "显示自己",
+        "show heads": "显示头像",
+        "corner radius": "圆角半径",
+        "background color": "背景颜色",
+        "header color": "表头颜色",
+        "text color": "文本颜色",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度"
+      },
       "notifications": {
         "_value": "通知",
         "scale": "缩放",
@@ -1999,12 +2024,6 @@
         "blur strength": "模糊强度",
         "smooth number": "平滑数字",
         "number delay": "数字延迟"
-      },
-      "mtf": {
-        "_value": "补佳乐",
-        "size": "大小",
-        "speed": "速度",
-        "color": "颜色"
       },
       "inventory hud": {
         "_value": "背包 HUD",
@@ -2049,29 +2068,11 @@
         "theme color 1": "主题颜色 1",
         "theme color 2": "主题颜色 2"
       },
-      "player info": {
-        "_value": "玩家信息",
-        "scale": "缩放",
-        "width": "宽度",
-        "range": "范围",
-        "max players": "最大玩家数",
-        "show self": "显示自己",
-        "show heads": "显示头像",
-        "corner radius": "圆角半径",
-        "background color": "背景颜色",
-        "header color": "表头颜色",
-        "text color": "文本颜色",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度",
-        "players": "玩家",
-        "distance": "距离",
-        "health": "生命",
-        "pops": "图腾",
-        "direction": "朝向",
-        "empty": "附近没有玩家"
+      "mtf": {
+        "_value": "补佳乐",
+        "size": "大小",
+        "speed": "速度",
+        "color": "颜色"
       },
       "potions": {
         "_value": "药水效果",

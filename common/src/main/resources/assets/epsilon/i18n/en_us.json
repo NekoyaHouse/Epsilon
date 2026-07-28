@@ -32,7 +32,8 @@
         "multiplayer": "Multiplayer",
         "options": "Options",
         "quit": "Quit",
-        "reisa_greeting": "Hi, Sensei! Reisa reporting in!"
+        "reisa_greeting": "Hi, Sensei! Reisa reporting in!",
+        "reisa_farewell": "Goodbye, Sensei! Reisa signing off!"
       },
       "tab": {
         "general": "General",
@@ -1968,6 +1969,30 @@
       }
     },
     "elements": {
+      "player info": {
+        "_value": "Player Info",
+        "players": "Players",
+        "distance": "Distance",
+        "health": "Health",
+        "pops": "Pops",
+        "direction": "Dir",
+        "empty": "No players nearby",
+        "scale": "Scale",
+        "width": "Width",
+        "range": "Range",
+        "max players": "Max Players",
+        "show self": "Show Self",
+        "show heads": "Show Heads",
+        "corner radius": "Corner Radius",
+        "background color": "Background Color",
+        "header color": "Header Color",
+        "text color": "Text Color",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength"
+      },
       "notifications": {
         "_value": "Notifications",
         "scale": "Scale",
@@ -1999,12 +2024,6 @@
         "blur strength": "Blur Strength",
         "smooth number": "Smooth Number",
         "number delay": "Number Delay"
-      },
-      "mtf": {
-        "_value": "MTF",
-        "size": "Size",
-        "speed": "Speed",
-        "color": "Color"
       },
       "inventory hud": {
         "_value": "Inventory HUD",
@@ -2049,29 +2068,11 @@
         "theme color 1": "Theme Color 1",
         "theme color 2": "Theme Color 2"
       },
-      "player info": {
-        "_value": "Player Info",
-        "scale": "Scale",
-        "width": "Width",
-        "range": "Range",
-        "max players": "Max Players",
-        "show self": "Show Self",
-        "show heads": "Show Heads",
-        "corner radius": "Corner Radius",
-        "background color": "Background Color",
-        "header color": "Header Color",
-        "text color": "Text Color",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength",
-        "players": "Players",
-        "distance": "Distance",
-        "health": "Health",
-        "pops": "Pops",
-        "direction": "Dir",
-        "empty": "No players nearby"
+      "mtf": {
+        "_value": "MTF",
+        "size": "Size",
+        "speed": "Speed",
+        "color": "Color"
       },
       "potions": {
         "_value": "Potions",
