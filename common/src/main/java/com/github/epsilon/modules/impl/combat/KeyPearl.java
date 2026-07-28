@@ -30,42 +30,35 @@ public class KeyPearl extends Module {
     private final IntSetting switchDelay = intSetting("Switch Delay", 0, 0, 20, 1);
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
 
-    private boolean active, hasActivated;
-    private int clock, previousSlot, switchClock;
-    private boolean isKeyDown;
+    private boolean hasActivated;
+    private int clock, switchClock;
 
     @Override
     protected void onEnable() {
         resetState();
-        isKeyDown = false;
     }
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck() || mc.screen != null) return;
+        if (mc.screen != null) return;
+
+        if (hasActivated) {
+            if (switchBack.getValue()) {
+                handleSwitchBack();
+            } else {
+                resetState();
+            }
+        }
 
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());
-        if (!pressed) {
-            isKeyDown = false;
-        }
-
         if (pressed) {
-            if (isKeyDown && !active) return;
-            isKeyDown = true;
-            active = true;
-        }
-
-        if (active) {
-            if (previousSlot == -1)
-                previousSlot = mc.player.getInventory().getSelectedSlot();
-
             FindItemResult pearl = InvUtils.findInHotbar(Items.ENDER_PEARL);
             if (!pearl.found()) {
                 resetState();
                 return;
             }
 
-            InvUtils.swap(pearl.slot(), false);
+            InvUtils.swap(pearl.slot(), switchBack.getValue());
 
             if (clock < delay.getValue()) {
                 clock++;
@@ -83,12 +76,6 @@ public class KeyPearl extends Module {
                 }
                 hasActivated = true;
             }
-
-            if (switchBack.getValue()) {
-                handleSwitchBack();
-            } else {
-                resetState();
-            }
         }
     }
 
@@ -97,17 +84,13 @@ public class KeyPearl extends Module {
             switchClock++;
             return;
         }
-        if (previousSlot != -1) {
-            InvUtils.swap(previousSlot, false);
-        }
+        InvUtils.swapBack();
         resetState();
     }
 
     private void resetState() {
-        previousSlot = -1;
         clock = 0;
         switchClock = 0;
-        active = false;
         hasActivated = false;
     }
 
