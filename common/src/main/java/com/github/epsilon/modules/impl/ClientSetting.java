@@ -180,7 +180,7 @@ public class ClientSetting extends Module {
 
     public final BoolSetting showReisaOnShutdown = boolSetting("Show Reisa On Shutdown", true).group(sgReisa);
 
-    public final DoubleSetting reisaVolume = doubleSetting("Reisa Volume", 1.0, 0.0, 1.0, 0.05).group(sgReisa);
+    public final DoubleSetting reisaVolume = doubleSetting("Reisa Volume", 0.15, 0.0, 0.5, 0.05).group(sgReisa);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
