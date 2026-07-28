@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ItemTags;
@@ -24,10 +25,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.enchantment.Enchantments;
-
-/**
- * @author Nykrop
- */
 
 public class AutoWeapon extends Module {
 
@@ -57,6 +54,7 @@ public class AutoWeapon extends Module {
     private final IntSetting targetSlot = intSetting("Target Slot", 1, 1, 9, 1, () -> page.is(Page.General) && mode.is(Mode.Simple));
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> page.is(Page.General));
     private final IntSetting swapBackDelay = intSetting("Swap Back Delay", 200, 0, 500, 10, () -> page.is(Page.General));
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, () -> page.is(Page.General));
 
     private final BoolSetting smartDurability = boolSetting("Smart Durability Saver", false, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
     private final BoolSetting smartShieldBreak = boolSetting("Smart Shield Breaker", true, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
@@ -98,6 +96,7 @@ public class AutoWeapon extends Module {
 
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
         if (!canSwapByWeapon()) return;
         performSwap(event.getEntity());
     }

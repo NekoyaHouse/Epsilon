@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
+import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
@@ -52,6 +53,7 @@ public class Velocity extends Module {
     public final BoolSetting entityPush = boolSetting("No Entity Push", true, () -> mode.is(Mode.Cancel));
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, () -> mode.is(Mode.Reduce));
     private final IntSetting attackCounts = intSetting("Attack Counts", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
@@ -113,6 +115,8 @@ public class Velocity extends Module {
             packets.add((Packet<? super ClientPacketListener>) packet);
         }
 
+        if (shouldPauseReduce()) return;
+
         if (packet instanceof ClientboundPlayerPositionPacket || packet instanceof ClientboundExplodePacket) {
             lag = System.currentTimeMillis();
         }
@@ -141,8 +145,16 @@ public class Velocity extends Module {
     }
 
     @EventHandler
-    private void onReduceTick(PlayerTickEvent.Pre event) {
+    private void onReduceTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.Reduce)) return;
+
+        if (shouldPauseReduce()) {
+            flush();
+            attackQueue = 0;
+            sprintQueue = 0;
+            jump = false;
+            return;
+        }
 
         long now = System.currentTimeMillis();
         if (delay && (mc.player.onGround() || now - lag < 100L || now - startDelay >= maxDelay.getValue())) {
@@ -163,7 +175,7 @@ public class Velocity extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onAttackTick(PlayerTickEvent.Pre event) {
-        if (nullCheck() || !mode.is(Mode.Reduce) || attackQueue <= 0) return;
+        if (!mode.is(Mode.Reduce) || shouldPauseReduce() || attackQueue <= 0) return;
 
         if (mc.hitResult instanceof EntityHitResult hit
                 && hit.getEntity() instanceof Player player
@@ -176,7 +188,7 @@ public class Velocity extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (nullCheck() || !mode.is(Mode.Reduce)) return;
+        if (!mode.is(Mode.Reduce) || shouldPauseReduce()) return;
 
         long elapsed = System.currentTimeMillis() - lag;
         if (delay && mc.player.fallDistance == 0.0f
@@ -208,11 +220,15 @@ public class Velocity extends Module {
         return !KillAura.INSTANCE.isEnabled() && !Scaffold.INSTANCE.isEnabled();
     }
 
+    private boolean shouldPauseReduce() {
+        return pauseOnEat.getValue() && PlayerUtils.isEating();
+    }
+
     private void flush() {
         if (!delay) return;
 
         Packet<? super ClientPacketListener> packet;
-        while ((packet = packets.poll()) != null && mc.getConnection() != null) {
+        while ((packet = packets.poll()) != null) {
             packet.handle(mc.getConnection());
         }
         delay = false;
