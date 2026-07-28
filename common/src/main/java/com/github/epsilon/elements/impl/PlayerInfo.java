@@ -20,6 +20,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 
@@ -62,6 +63,8 @@ public class PlayerInfo extends HudModule {
     private static final float HEAD_TEXT_GAP = 5.0f;
     private static final float COLUMN_GAP = 12.0f;
     private static final float HEADER_BODY_GAP = 6.0f;
+    private static final float NAME_SCROLL_SPEED = 18.0f;
+    private static final long NAME_SCROLL_HOLD_MS = 800L;
 
     private static final Color FRIEND_COLOR = new Color(112, 225, 168, 235);
     private static final Color HEALTH_HIGH_COLOR = new Color(116, 228, 135, 235);
@@ -69,16 +72,19 @@ public class PlayerInfo extends HudModule {
     private static final Color HEALTH_LOW_COLOR = new Color(244, 93, 94, 235);
 
     private final Map<UUID, Integer> popCounts = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> nameScrollStartTimes = new HashMap<>();
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     protected void onEnable() {
         popCounts.clear();
+        nameScrollStartTimes.clear();
     }
 
     @Override
     protected void onDisable() {
         popCounts.clear();
+        nameScrollStartTimes.clear();
     }
 
     @Override
@@ -87,6 +93,7 @@ public class PlayerInfo extends HudModule {
 
         TextRenderer textRenderer = textRendererSupplier.get();
         List<PlayerRow> rows = collectRows();
+        pruneNameScrollState(rows);
         Layout layout = createLayout(textRenderer, rows);
         setBounds(layout.panelWidth(), layout.panelHeight());
 
@@ -110,7 +117,7 @@ public class PlayerInfo extends HudModule {
 
         float rowY = panelY + layout.paddingY() + layout.headerHeight() + layout.headerBodyGap();
         if (rows.isEmpty()) {
-            String emptyText = trimToWidth(EpsilonTranslations.PlayerInfo.EMPTY.getTranslatedName(), layout.textScale(), layout.tableWidth(), textRenderer);
+            String emptyText = EpsilonTranslations.PlayerInfo.EMPTY.getTranslatedName();
             float emptyX = panelX + (layout.panelWidth() - textRenderer.getWidth(emptyText, layout.textScale())) * 0.5f;
             float emptyY = rowY + (layout.rowHeight() - textRenderer.getHeight(layout.textScale())) * 0.5f;
             scope.text(emptyText, emptyX, emptyY, layout.textScale(), withAlpha(textColor.getValue(), 0.72f));
@@ -160,6 +167,16 @@ public class PlayerInfo extends HudModule {
         return rows;
     }
 
+    private void pruneNameScrollState(List<PlayerRow> rows) {
+        if (nameScrollStartTimes.isEmpty()) return;
+
+        Set<UUID> visiblePlayers = new HashSet<>(rows.size());
+        for (PlayerRow row : rows) {
+            visiblePlayers.add(row.player().getUUID());
+        }
+        nameScrollStartTimes.keySet().retainAll(visiblePlayers);
+    }
+
     private Layout createLayout(TextRenderer textRenderer, List<PlayerRow> rows) {
         float scale = this.scale.getValue().floatValue();
         float headerScale = HEADER_SCALE * scale;
@@ -203,7 +220,7 @@ public class PlayerInfo extends HudModule {
         float y = panelY + layout.paddingY();
         Color color = headerColor.getValue();
 
-        String playersText = trimToWidth(EpsilonTranslations.PlayerInfo.PLAYERS.getTranslatedName(), layout.headerScale(), layout.nameWidth(), textRenderer);
+        String playersText = EpsilonTranslations.PlayerInfo.PLAYERS.getTranslatedName();
         scope.text(playersText, x, y, layout.headerScale(), color);
         x += layout.nameWidth() + layout.columnGap();
         scope.text(EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), x, y, layout.headerScale(), color);
@@ -230,8 +247,21 @@ public class PlayerInfo extends HudModule {
         }
 
         float nameTextWidth = Math.max(0.0f, layout.nameWidth() - layout.headSize() - layout.headTextGap());
-        String name = trimToWidth(row.name(), layout.textScale(), nameTextWidth, textRenderer);
-        scope.text(name, x, textY, layout.textScale(), row.nameColor());
+        float fullNameWidth = textRenderer.getWidth(row.name(), layout.textScale());
+        UUID playerId = row.player().getUUID();
+        if (nameTextWidth > 0.0f && fullNameWidth > nameTextWidth) {
+            float overflow = fullNameWidth - nameTextWidth;
+            float scrollOffset = getNameScrollOffset(playerId, overflow, layout.scale());
+            float nameX = x;
+            scope.scissor(nameX, rowY, nameTextWidth, layout.rowHeight(), clipped ->
+                    clipped.text(row.name(), nameX - scrollOffset, textY, layout.textScale(), row.nameColor())
+            );
+        } else {
+            nameScrollStartTimes.remove(playerId);
+            if (nameTextWidth > 0.0f) {
+                scope.text(row.name(), x, textY, layout.textScale(), row.nameColor());
+            }
+        }
         x = panelX + layout.paddingX() + layout.nameWidth() + layout.columnGap();
         scope.text(row.distance(), x, textY, layout.textScale(), textColor.getValue());
         x += layout.distanceWidth() + layout.columnGap();
@@ -257,18 +287,20 @@ public class PlayerInfo extends HudModule {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
     }
 
-    private String trimToWidth(String value, float scale, float maxWidth, TextRenderer textRenderer) {
-        if (value == null || value.isEmpty() || maxWidth <= 0.0f) return "";
-        if (textRenderer.getWidth(value, scale) <= maxWidth) return value;
+    private float getNameScrollOffset(UUID playerId, float overflow, float scale) {
+        long now = Util.getMillis();
+        long startedAt = nameScrollStartTimes.computeIfAbsent(playerId, ignored -> now);
+        double travelDurationMs = overflow / (NAME_SCROLL_SPEED * scale) * 1000.0;
+        double cycleDurationMs = NAME_SCROLL_HOLD_MS * 2.0 + travelDurationMs * 2.0;
+        double phase = (now - startedAt) % cycleDurationMs;
 
-        String ellipsis = "...";
-        if (textRenderer.getWidth(ellipsis, scale) > maxWidth) return "";
-
-        for (int length = value.length() - 1; length >= 0; length--) {
-            String candidate = value.substring(0, length) + ellipsis;
-            if (textRenderer.getWidth(candidate, scale) <= maxWidth) return candidate;
-        }
-        return ellipsis;
+        if (phase < NAME_SCROLL_HOLD_MS) return 0.0f;
+        phase -= NAME_SCROLL_HOLD_MS;
+        if (phase < travelDurationMs) return (float) (overflow * phase / travelDurationMs);
+        phase -= travelDurationMs;
+        if (phase < NAME_SCROLL_HOLD_MS) return overflow;
+        phase -= NAME_SCROLL_HOLD_MS;
+        return overflow - (float) (overflow * phase / travelDurationMs);
     }
 
     @EventHandler
@@ -286,6 +318,7 @@ public class PlayerInfo extends HudModule {
     @EventHandler
     private void onGameLeft(GameLeftEvent event) {
         popCounts.clear();
+        nameScrollStartTimes.clear();
     }
 
     private record PlayerRow(
