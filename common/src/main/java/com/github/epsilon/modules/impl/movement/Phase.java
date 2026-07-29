@@ -165,7 +165,7 @@ public class Phase extends Module {
             }
 
             if (blockToBreak == null) return;
-            int bestTool = AutoTool.INSTANCE.getTool(blockToBreak);
+            int bestTool = AutoTool.INSTANCE.getBestTool(blockToBreak);
             if (bestTool == -1) return;
 
             InvUtils.swap(bestTool, true);

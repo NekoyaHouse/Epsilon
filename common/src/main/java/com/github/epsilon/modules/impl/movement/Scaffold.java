@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
@@ -20,7 +21,6 @@ import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import com.mojang.blaze3d.platform.InputConstants;
 import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,6 +37,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -143,6 +144,7 @@ public class Scaffold extends Module {
 
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
+    private boolean emergencyPlacementActive;
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
@@ -205,23 +207,30 @@ public class Scaffold extends Module {
         rotateCount = 0;
         blockResult = null;
         shouldSwapBack = false;
+        emergencyPlacementActive = false;
     }
 
     @Override
     protected void onDisable() {
         yLevel = 0;
-        if (!nullCheck()) {
-            if (shouldSwapBack) {
-                InvUtils.swapBack();
-                shouldSwapBack = false;
-            }
-            boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow(), mc.options.keyShift.getDefaultKey().getValue());
-            mc.options.keyShift.setDown(isHoldingShift);
+        emergencyPlacementActive = false;
+        if (shouldSwapBack) {
+            InvUtils.swapBack();
+            shouldSwapBack = false;
+        }
+    }
+
+    @EventHandler
+    private void onMousePress(MousePressEvent event) {
+        if (mc.screen == null && (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1 || event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2)) {
+            event.cancel();
         }
     }
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (!event.isCancelled()) emergencyPlacementActive = false;
+
         blockResult = findBlockResult();
         if (!blockResult.found()) return;
 
@@ -243,10 +252,11 @@ public class Scaffold extends Module {
             }
         }
         double strength = new Vec3(mc.player.getDeltaMovement().x, 0, mc.player.getDeltaMovement().z).length();
-        if (strength >= 1.5D) {
+        if (strength >= 1.5) {
             Managers.NOTIFICATION.error("你也是要飞了", String.valueOf(strength));
         }
         if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
+            emergencyPlacementActive = true;
             event.cancel();
 
             rotateCount++;
@@ -628,6 +638,10 @@ public class Scaffold extends Module {
         }
 
         return !(block instanceof SlabBlock) && !blacklistedBlocks.contains(block);
+    }
+
+    public boolean isEmergencyPlacementActive() {
+        return isEnabled() && emergencyPlacementActive;
     }
 
 

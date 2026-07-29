@@ -424,6 +424,7 @@
       },
       "auto throw": {
         "_value": "Auto Throw",
+        "pause on eat": "Pause On Eat",
         "min distance": "Min Distance",
         "max distance": "Max Distance",
         "fov": "FOV",
@@ -445,15 +446,13 @@
       },
       "auto weapon": {
         "_value": "Auto Weapon",
-        "page": {
-          "_value": "Page",
-          "general": "General",
-          "swapping": "Swapping",
-          "swordenchants": "Sword Enchants",
-          "maceenchants": "Mace Enchants",
-          "otherenchants": "Other Enchants",
-          "weapon": "Weapon"
-        },
+        "general": "General",
+        "swapping": "Swapping",
+        "sword enchants": "Sword Enchants",
+        "mace enchants": "Mace Enchants",
+        "other enchants": "Other Enchants",
+        "weapon": "Weapon",
+        "pause on eat": "Pause On Eat",
         "mode": {
           "_value": "Mode",
           "simple": "Simple",
@@ -462,7 +461,6 @@
         "target slot": "Target Slot",
         "swap back": "Swap Back",
         "swap back delay": "Swap Back Delay",
-        "pause on eat": "Pause On Eat",
         "smart durability saver": "Smart Durability Saver",
         "smart shield breaker": "Smart Shield Breaker",
         "sword swapping": "Sword Swapping",
@@ -488,16 +486,7 @@
         "mace": "Mace",
         "trident": "Trident"
       },
-      "criticals": {
-        "_value": "Criticals",
-        "packet mode": {
-          "_value": "Packet Mode",
-          "pure": "Pure",
-          "legit": "Legit"
-        },
-        "groundo nly": "Ground Only",
-        "show crit particles": "Show Crit Particles"
-      },
+      "criticals": "Criticals",
       "zealot crystal+": {
         "_value": "Zealot Crystal+",
         "general": "General",
@@ -717,6 +706,9 @@
       },
       "kill aura": {
         "_value": "Kill Aura",
+        "pause on eat": "Pause On Eat",
+        "pause on scaffold": "Pause On Scaffold",
+        "only crosshair": "Only Crosshair",
         "mode": {
           "_value": "Mode",
           "onepointeight": "1.8",
@@ -725,14 +717,14 @@
         "target mode": {
           "_value": "Target Mode",
           "single": "Single",
-          "switch": "Switch",
-          "multiple": "Multiple"
+          "switch": "Switch"
         },
+        "switch delay": "Switch Delay",
+        "search range": "Search Range",
         "aim range": "Aim Range",
         "fov": "FOV",
         "rotation speed": "Rotation Speed",
-        "min cps": "Min CPS",
-        "max cps": "Max CPS",
+        "cps": "CPS",
         "player": "Player",
         "mob": "Mob",
         "animal": "Animal",
@@ -1010,16 +1002,27 @@
         "delay": "Delay",
         "custom path": "Custom Path"
       },
+      "auto mlg": {
+        "_value": "Auto MLG",
+        "mlg mode": {
+          "_value": "MLG Mode",
+          "grim": "Grim",
+          "hypixel": "Hypixel"
+        },
+        "interact delay": "Interact Delay",
+        "collect delay ticks": "Collect Delay Ticks"
+      },
       "auto tool": {
         "_value": "Auto Tool",
-        "swap back": "Swap Back",
-        "save item": "Save Item",
-        "silent": "Silent",
-        "ender chest silk touch": "Ender Chest Silk Touch"
+        "swap back": "Swap Back"
       },
       "break cooldown": {
         "_value": "Break Cooldown",
         "cooldown": "Cooldown"
+      },
+      "disabler": {
+        "_value": "Disabler",
+        "duplicate rot place": "Duplicate Rot Place"
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -1315,7 +1318,6 @@
         },
         "swap back": "Swap Back",
         "snap": "Snap",
-        "snap dist": "Snap Distance",
         "45 degrees": "45 Degrees",
         "rotation mode": {
           "_value": "Rotation Mode",

@@ -180,9 +180,7 @@ public class KillAura extends Module {
         }
 
         switch (targetMode.getValue()) {
-            case Single -> {
-                targetNumber = 0;
-            }
+            case Single -> targetNumber = 0;
             case Switch -> {
                 if (switchTimer.passedMillise(switchDelay.getValue())) {
                     switchTimer.reset();

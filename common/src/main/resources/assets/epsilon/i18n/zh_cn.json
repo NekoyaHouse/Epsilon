@@ -424,6 +424,7 @@
       },
       "auto throw": {
         "_value": "自动投掷",
+        "pause on eat": "进食时暂停",
         "min distance": "最小距离",
         "max distance": "最大距离",
         "fov": "视野角度",
@@ -445,15 +446,13 @@
       },
       "auto weapon": {
         "_value": "自动武器",
-        "page": {
-          "_value": "页面",
-          "general": "常规",
-          "swapping": "切换",
-          "swordenchants": "剑附魔",
-          "maceenchants": "重锤附魔",
-          "otherenchants": "其他附魔",
-          "weapon": "武器"
-        },
+        "general": "常规",
+        "swapping": "切换",
+        "sword enchants": "剑附魔",
+        "mace enchants": "重锤附魔",
+        "other enchants": "其他附魔",
+        "weapon": "武器",
+        "pause on eat": "进食时暂停",
         "mode": {
           "_value": "模式",
           "simple": "简单",
@@ -462,7 +461,6 @@
         "target slot": "目标槽位",
         "swap back": "交换回原槽位",
         "swap back delay": "交换回原槽位延迟",
-        "pause on eat": "进食时暂停",
         "smart durability saver": "智能耐久保存",
         "smart shield breaker": "智能护盾破坏",
         "sword swapping": "剑附魔交换",
@@ -488,16 +486,7 @@
         "mace": "仅在重锤上交换",
         "trident": "仅在三叉戟上交换"
       },
-      "criticals": {
-        "_value": "暴击",
-        "packet mode": {
-          "_value": "发包模式",
-          "pure": "纯发包",
-          "legit": "合法"
-        },
-        "groundo nly": "仅在地面",
-        "show crit particles": "显示暴击粒子"
-      },
+      "criticals": "暴击",
       "zealot crystal+": {
         "_value": "狂暴水晶+",
         "general": "常规",
@@ -717,6 +706,9 @@
       },
       "kill aura": {
         "_value": "杀戮光环",
+        "pause on eat": "进食时暂停",
+        "pause on scaffold": "搭路时暂停",
+        "only crosshair": "仅准星目标",
         "mode": {
           "_value": "模式",
           "onepointeight": "1.8",
@@ -725,14 +717,14 @@
         "target mode": {
           "_value": "目标模式",
           "single": "单个",
-          "switch": "切换",
-          "multiple": "多个"
+          "switch": "切换"
         },
+        "switch delay": "切换延迟",
+        "search range": "搜索范围",
         "aim range": "瞄准范围",
         "fov": "视野角度",
         "rotation speed": "旋转速度",
-        "min cps": "最小CPS",
-        "max cps": "最大CPS",
+        "cps": "每秒点击数",
         "player": "玩家",
         "mob": "怪物",
         "animal": "动物",
@@ -1010,16 +1002,27 @@
         "delay": "延迟",
         "custom path": "自定义路径"
       },
+      "auto mlg": {
+        "_value": "自动 MLG",
+        "mlg mode": {
+          "_value": "MLG 模式",
+          "grim": "Grim",
+          "hypixel": "Hypixel"
+        },
+        "interact delay": "交互延迟",
+        "collect delay ticks": "收集延迟刻数"
+      },
       "auto tool": {
         "_value": "自动工具",
-        "swap back": "切换回来",
-        "save item": "保存物品",
-        "silent": "静默",
-        "ender chest silk touch": "末影箱精准采集"
+        "swap back": "切换回来"
       },
       "break cooldown": {
         "_value": "挖掘冷却",
         "cooldown": "冷却时间"
+      },
+      "disabler": {
+        "_value": "禁用器",
+        "duplicate rot place": "重复旋转放置"
       },
       "elytra swap": {
         "_value": "鞘翅切换",
@@ -1315,7 +1318,6 @@
         },
         "swap back": "停用还原",
         "snap": "吸附",
-        "snap dist": "吸附距离",
         "45 degrees": "45 度",
         "rotation mode": {
           "_value": "旋转模式",

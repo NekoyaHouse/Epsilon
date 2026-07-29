@@ -47,7 +47,13 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         epsilon$sendPositionEvent = EventBus.INSTANCE.post(new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()));
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
+            EventBus.INSTANCE.post(new AfterSendPositionEvent());
         }
+    }
+
+    @Inject(method = "sendPosition", at = @At("TAIL"))
+    private void onPostSendPosition(CallbackInfo ci) {
+        EventBus.INSTANCE.post(new AfterSendPositionEvent());
     }
 
     @Inject(method = "swing", at = @At("HEAD"), cancellable = true)
