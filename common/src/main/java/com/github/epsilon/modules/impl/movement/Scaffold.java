@@ -114,7 +114,6 @@ public class Scaffold extends Module {
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
     private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
-    private final DoubleSetting snapDist = doubleSetting("Snap Dist", 0, 1, 0.1, 0.01, snap::getValue);
     private final BoolSetting degrees45 = boolSetting("45 Degrees", false);
     private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Static);
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
@@ -247,7 +246,7 @@ public class Scaffold extends Module {
         if (strength >= 1.5D) {
             Managers.NOTIFICATION.error("你也是要飞了", String.valueOf(strength));
         }
-        if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
+        if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
             event.cancel();
 
             rotateCount++;
@@ -356,7 +355,7 @@ public class Scaffold extends Module {
     }
 
     private void place() {
-        if (!onAir() || blockPos == null || direction == null) {
+        if (!onAir() || blockPos == null || direction == null || !canUseBlockResult()) {
             return;
         }
 
@@ -573,6 +572,11 @@ public class Scaffold extends Module {
             return new FindItemResult(40, offhandStack.getCount(), offhandStack.getMaxStackSize());
         }
         return swapMode.is(SwapMode.InvSwitch) ? InvUtils.find(this::isValidStack) : InvUtils.findInHotbar(this::isValidStack);
+    }
+
+    private boolean canUseBlockResult() {
+        if (blockResult.isOffhand()) return isValidStack(mc.player.getOffhandItem());
+        return !swapMode.is(SwapMode.None) || isValidStack(mc.player.getInventory().getSelectedItem());
     }
 
     private void swap() {

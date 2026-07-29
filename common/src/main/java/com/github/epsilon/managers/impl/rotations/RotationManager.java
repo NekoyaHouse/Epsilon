@@ -2,13 +2,14 @@ package com.github.epsilon.managers.impl.rotations;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
-import com.github.epsilon.events.impl.*;
+import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.RespawnEvent;
+import com.github.epsilon.events.impl.RotationAnimationEvent;
+import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import love.slmpc.ClInitNative;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
 
 import java.util.function.Function;
@@ -35,7 +36,6 @@ public abstract class RotationManager {
     protected double rotationSpeed;
     protected Function<Rot2f, Boolean> raytrace;
     private float randomAngle;
-    private boolean s08;
 
     protected int priority;
 
@@ -55,13 +55,6 @@ public abstract class RotationManager {
         if (rotations == null) return;
 
         if (this.active && priority.priority < this.priority) {
-            return;
-        }
-
-        if (s08) {
-            this.rotations = this.lastRotations = this.targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-            resetModeState();
-            s08 = false;
             return;
         }
 
@@ -197,14 +190,6 @@ public abstract class RotationManager {
         raytrace = null;
         randomAngle = 0;
         resetModeState();
-        s08 = false;
-    }
-
-    @EventHandler
-    protected void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
-            s08 = true;
-        }
     }
 
     @EventHandler(priority = -1000)
