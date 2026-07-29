@@ -540,6 +540,11 @@ public class UiTree {
             roundedTexture(texture, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color);
         }
 
+        public void playerHead(Identifier identifier, float x, float y, float size, float radius, Color color) {
+            roundedTexture(identifier, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color);
+            roundedTexture(identifier, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color);
+        }
+
         public void button(float x, float y, float width, float height, float radius, Color background,
                            String label, float labelScale, Color labelColor) {
             button(new ButtonElement(new UiRect(x, y, width, height), radius, background, label, labelScale, labelColor));

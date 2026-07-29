@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-@ClInitNative
 public class ModuleList extends HudModule {
 
     public static final ModuleList INSTANCE = new ModuleList();
@@ -260,7 +259,7 @@ public class ModuleList extends HudModule {
             if (animation <= 0.001f) continue;
 
             Module module = animationEntry.getKey();
-            String name = module.getTranslatedName().replace(" ", "");
+            String name = module.getTranslatedName();
             String info = showSuffix ? normalizeInfo(module.getInfo()) : "";
             float nameWidth = textRenderer.getWidth(name, textScale);
             float suffixWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" " + info, textScale);

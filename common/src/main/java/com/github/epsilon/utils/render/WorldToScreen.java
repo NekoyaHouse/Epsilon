@@ -44,7 +44,6 @@ public final class WorldToScreen {
      * @param pos 世界空间中的绝对坐标
      * @return 屏幕坐标；前向深度小于固定近裁面时返回 {@code null}
      */
-    @Nullable
     public static Vector3f calcWorld2Screen(Vec3 pos) {
         Vector3f projected = calcWorld2ScreenRaw(pos);
         return projected.z < Camera.PROJECTION_Z_NEAR ? null : projected;

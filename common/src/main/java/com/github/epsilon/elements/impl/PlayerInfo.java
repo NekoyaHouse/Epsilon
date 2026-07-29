@@ -5,7 +5,7 @@ import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.graphics.LuminTexture;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.lib.UiTree;
@@ -17,8 +17,8 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
@@ -74,17 +74,23 @@ public class PlayerInfo extends HudModule {
     private final Map<UUID, Integer> popCounts = new ConcurrentHashMap<>();
     private final Map<UUID, Long> nameScrollStartTimes = new HashMap<>();
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+    private List<PlayerRow> cachedRows = List.of();
+    private boolean rowsInitialized;
 
     @Override
     protected void onEnable() {
         popCounts.clear();
         nameScrollStartTimes.clear();
+        cachedRows = List.of();
+        rowsInitialized = false;
     }
 
     @Override
     protected void onDisable() {
         popCounts.clear();
         nameScrollStartTimes.clear();
+        cachedRows = List.of();
+        rowsInitialized = false;
     }
 
     @Override
@@ -92,8 +98,10 @@ public class PlayerInfo extends HudModule {
         if (nullCheck()) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        List<PlayerRow> rows = collectRows();
-        pruneNameScrollState(rows);
+        if (!rowsInitialized) {
+            refreshRows();
+        }
+        List<PlayerRow> rows = cachedRows;
         Layout layout = createLayout(textRenderer, rows);
         setBounds(layout.panelWidth(), layout.panelHeight());
 
@@ -130,6 +138,12 @@ public class PlayerInfo extends HudModule {
         }
     }
 
+    private void refreshRows() {
+        cachedRows = collectRows();
+        rowsInitialized = true;
+        pruneNameScrollState(cachedRows);
+    }
+
     private List<PlayerRow> collectRows() {
         double maxDistanceSquared = Mth.square(playerRange.getValue());
         List<AbstractClientPlayer> players = new ArrayList<>();
@@ -154,7 +168,8 @@ public class PlayerInfo extends HudModule {
             int direction = Math.round(Mth.wrapDegrees(player.getYRot()));
 
             rows.add(new PlayerRow(
-                    player,
+                    player.getUUID(),
+                    player.getSkin().body().texturePath(),
                     player.getGameProfile().name(),
                     distance + "m",
                     String.format(Locale.ROOT, "%.1f", health),
@@ -172,7 +187,7 @@ public class PlayerInfo extends HudModule {
 
         Set<UUID> visiblePlayers = new HashSet<>(rows.size());
         for (PlayerRow row : rows) {
-            visiblePlayers.add(row.player().getUUID());
+            visiblePlayers.add(row.playerId());
         }
         nameScrollStartTimes.keySet().retainAll(visiblePlayers);
     }
@@ -238,17 +253,13 @@ public class PlayerInfo extends HudModule {
 
         if (showHeads.getValue()) {
             float headY = rowY + (layout.rowHeight() - layout.headSize()) * 0.5f;
-            AbstractTexture texture = mc.getTextureManager().getTexture(row.player().getSkin().body().texturePath());
-            scope.playerHead(
-                    new LuminTexture(texture.getTexture(), texture.getTextureView(), texture.getSampler(), false, false),
-                    x, headY, layout.headSize(), layout.headSize() * 0.12f, Color.WHITE
-            );
+            scope.playerHead(row.skinTexture(), x, headY, layout.headSize(), layout.headSize() * 0.12f, Color.WHITE);
             x += layout.headSize() + layout.headTextGap();
         }
 
         float nameTextWidth = Math.max(0.0f, layout.nameWidth() - layout.headSize() - layout.headTextGap());
         float fullNameWidth = textRenderer.getWidth(row.name(), layout.textScale());
-        UUID playerId = row.player().getUUID();
+        UUID playerId = row.playerId();
         if (nameTextWidth > 0.0f && fullNameWidth > nameTextWidth) {
             float overflow = fullNameWidth - nameTextWidth;
             float scrollOffset = getNameScrollOffset(playerId, overflow, layout.scale());
@@ -316,13 +327,21 @@ public class PlayerInfo extends HudModule {
     }
 
     @EventHandler
+    private void onPlayerTick(PlayerTickEvent.Post event) {
+        refreshRows();
+    }
+
+    @EventHandler
     private void onGameLeft(GameLeftEvent event) {
         popCounts.clear();
         nameScrollStartTimes.clear();
+        cachedRows = List.of();
+        rowsInitialized = false;
     }
 
     private record PlayerRow(
-            AbstractClientPlayer player,
+            UUID playerId,
+            Identifier skinTexture,
             String name,
             String distance,
             String health,
