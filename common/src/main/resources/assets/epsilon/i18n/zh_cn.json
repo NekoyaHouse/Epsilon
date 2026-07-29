@@ -1022,7 +1022,15 @@
       },
       "disabler": {
         "_value": "禁用器",
-        "duplicate rot place": "重复旋转放置"
+        "grim bad packetsa": "Grim 坏包 A",
+        "grim duplicate rotplace": "Grim 重复旋转放置",
+        "aca fast switch": "ACA 快速切换",
+        "aca inventory frequency": "ACA 背包操作频率",
+        "aca aim step": "ACA 瞄准步进",
+        "aca perfect rotation": "ACA 完美旋转",
+        "themis blink": "Themis Blink",
+        "only remote server": "仅远程服务器",
+        "logging": "日志"
       },
       "elytra swap": {
         "_value": "鞘翅切换",

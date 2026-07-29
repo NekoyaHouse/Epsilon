@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.player.InvUtils;
+import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.block.RedStoneOreBlock;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
+@ClInitNative
 public class AutoTool extends Module {
 
     public static final AutoTool INSTANCE = new AutoTool();
@@ -30,29 +32,31 @@ public class AutoTool extends Module {
 
     private final BoolSetting swapBack = boolSetting("Swap Back", true);
 
-    private boolean shouldSwapBack;
+    private int oldSlot = -1;
 
     @Override
     protected void onDisable() {
-        if (shouldSwapBack) {
-            InvUtils.swapBack();
-            shouldSwapBack = false;
+        if (oldSlot != -1) {
+            InvUtils.swap(oldSlot, false);
         }
+        oldSlot = -1;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onStartDestroyBlock(StartDestroyBlockEvent event) {
         int bestTool = this.getBestTool(event.getBlockPos());
         if (bestTool != -1) {
-            InvUtils.swap(bestTool, swapBack.getValue());
-            shouldSwapBack = swapBack.getValue();
+            if (swapBack.getValue()) oldSlot = mc.player.getInventory().getSelectedSlot();
+            else oldSlot = -1;
+            InvUtils.swap(bestTool, false);
         }
     }
 
     @EventHandler
     private void onAfterSendPosition(AfterSendPositionEvent event) {
-        if (!mc.gameMode.isDestroying() && shouldSwapBack) {
-            InvUtils.swapBack();
+        if (!mc.gameMode.isDestroying() && oldSlot != -1) {
+            InvUtils.swap(oldSlot, false);
+            oldSlot = -1;
         }
     }
 
