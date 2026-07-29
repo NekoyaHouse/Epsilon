@@ -105,6 +105,11 @@ public class InvHelper {
         return 0;
     }
 
+    /**
+     * 判断当前界面是否应禁用背包辅助功能。
+     *
+     * @return 判断结果
+     */
     public static boolean shouldDisableFeatures() {
         return getAllItems().stream().anyMatch(item -> {
             if (item.isEmpty()) {
@@ -122,6 +127,12 @@ public class InvHelper {
         });
     }
 
+    /**
+     * 判断物品是否为带自定义名称的金头。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isGoldenHead(ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
@@ -134,10 +145,22 @@ public class InvHelper {
         return false;
     }
 
+    /**
+     * 判断物品是否可装备到护甲槽位。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isArmor(ItemStack stack) {
         return getArmorSlot(stack) != null;
     }
 
+    /**
+     * 获取物品对应的护甲装备槽位。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static EquipmentSlot getArmorSlot(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return null;
@@ -152,14 +175,32 @@ public class InvHelper {
         return slot.isArmor() && slot != EquipmentSlot.BODY ? slot : null;
     }
 
+    /**
+     * 判断物品是否为剑。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isSword(ItemStack stack) {
         return stack != null && !stack.isEmpty() && SWORDS.contains(stack.getItem());
     }
 
+    /**
+     * 判断物品是否为镐。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isPickaxe(ItemStack stack) {
         return stack != null && !stack.isEmpty() && PICKAXES.contains(stack.getItem());
     }
 
+    /**
+     * 获取指定普通背包槽位中的物品堆。
+     *
+     * @param slot 背包、容器或装备槽位
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getInventoryStack(int slot) {
         if (mc.player == null || slot < 0 || slot >= mc.player.getInventory().getNonEquipmentItems().size()) {
             return ItemStack.EMPTY;
@@ -168,6 +209,12 @@ public class InvHelper {
         return mc.player.getInventory().getNonEquipmentItems().get(slot);
     }
 
+    /**
+     * 获取指定护甲槽位中的物品堆。
+     *
+     * @param slot 背包、容器或装备槽位
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getArmorStack(EquipmentSlot slot) {
         if (mc.player == null) {
             return ItemStack.EMPTY;
@@ -176,6 +223,11 @@ public class InvHelper {
         return mc.player.getInventory().getItem(slot.getIndex(36));
     }
 
+    /**
+     * 获取副手槽位中的物品堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getOffhandStack() {
         if (mc.player == null) {
             return ItemStack.EMPTY;
@@ -184,6 +236,12 @@ public class InvHelper {
         return mc.player.getInventory().getItem(Inventory.SLOT_OFFHAND);
     }
 
+    /**
+     * 判断物品是否为高等级锋利斧。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isSharpnessAxe(ItemStack stack) {
         return !stack.isEmpty()
                 && stack.getItem() instanceof AxeItem
@@ -191,32 +249,67 @@ public class InvHelper {
                 && getEnchantmentLevel(stack, Enchantments.SHARPNESS) < 50;
     }
 
+    /**
+     * 判断物品是否为特殊高伤害金斧。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isGodAxe(ItemStack stack) {
         return !stack.isEmpty()
                 && stack.getItem() == Items.GOLDEN_AXE
                 && getEnchantmentLevel(stack, Enchantments.SHARPNESS) > 100;
     }
 
+    /**
+     * 判断物品是否为附魔金苹果。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isEnchantedGApple(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE;
     }
 
+    /**
+     * 判断物品是否为末影水晶。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isEndCrystal(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == Items.END_CRYSTAL;
     }
 
+    /**
+     * 判断物品是否为高击退黏液球。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isKBBall(ItemStack stack) {
         return !stack.isEmpty()
                 && stack.getItem() == Items.SLIME_BALL
                 && getEnchantmentLevel(stack, Enchantments.KNOCKBACK) > 1;
     }
 
+    /**
+     * 判断物品是否为高击退木棍。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isKBStick(ItemStack stack) {
         return !stack.isEmpty()
                 && stack.getItem() == Items.STICK
                 && getEnchantmentLevel(stack, Enchantments.KNOCKBACK) > 1;
     }
 
+    /**
+     * 查找普通背包区域中的空槽位。
+     *
+     * @return 操作结果
+     */
     public static int findEmptyInventory() {
         if (mc.player == null) {
             return -1;
@@ -231,6 +324,11 @@ public class InvHelper {
         return -1;
     }
 
+    /**
+     * 查找快捷栏中的空槽位。
+     *
+     * @return 操作结果
+     */
     public static int findEmptySlot() {
         if (mc.player == null) {
             return -1;
@@ -245,6 +343,12 @@ public class InvHelper {
         return -1;
     }
 
+    /**
+     * 在快捷栏中查找指定物品。
+     *
+     * @param item 物品
+     * @return 匹配槽位；未找到或玩家不存在时返回 null
+     */
     public static Integer findItemHotbar(Item item) {
         if (mc.player == null) {
             return null;
@@ -259,14 +363,31 @@ public class InvHelper {
         return null;
     }
 
+    /**
+     * 获取弓的冲击附魔等级。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static int getPunchLevel(ItemStack stack) {
         return getEnchantmentLevel(stack, Enchantments.PUNCH);
     }
 
+    /**
+     * 获取弓的力量附魔等级。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static int getPowerLevel(ItemStack stack) {
         return getEnchantmentLevel(stack, Enchantments.POWER);
     }
 
+    /**
+     * 获取玩家背包中的全部物品堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static List<ItemStack> getAllItems() {
         ArrayList<ItemStack> list = new ArrayList<>();
         if (mc.player == null) {
@@ -280,6 +401,12 @@ public class InvHelper {
         return list;
     }
 
+    /**
+     * 获取指定护甲槽位可用物品的最高评分。
+     *
+     * @param slot 背包、容器或装备槽位
+     * @return 获取或计算得到的结果
+     */
     public static float getBestArmorScore(EquipmentSlot slot) {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && getArmorSlot(item) == slot)
@@ -288,10 +415,21 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取指定护甲槽位当前装备的评分。
+     *
+     * @param slot 背包、容器或装备槽位
+     * @return 获取或计算得到的结果
+     */
     public static float getCurrentArmorScore(EquipmentSlot slot) {
         return getProtection(getArmorStack(slot));
     }
 
+    /**
+     * 获取背包内剑的最高伤害评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestSwordDamage() {
         return getAllItems().stream()
                 .filter(InvHelper::isSword)
@@ -300,6 +438,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内伤害评分最高的剑。
+     *
+     * @return 评分最高的剑；不存在时返回 null
+     */
     public static ItemStack getBestSword() {
         return getAllItems().stream()
                 .filter(InvHelper::isSword)
@@ -307,6 +450,12 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 按对象引用查找物品堆所在的背包槽位。
+     *
+     * @param stack 物品堆
+     * @return 操作结果
+     */
     public static int getItemStackSlot(ItemStack stack) {
         if (stack == null || mc.player == null) {
             return -1;
@@ -321,6 +470,12 @@ public class InvHelper {
         return -1;
     }
 
+    /**
+     * 判断物品是否适合背包辅助逻辑处理。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isItemValid(ItemStack stack) {
         if (stack.isEmpty()) {
             return true;
@@ -340,6 +495,12 @@ public class InvHelper {
                 && !name.contains("再来");
     }
 
+    /**
+     * 在普通背包槽位中查找指定物品。
+     *
+     * @param item 物品
+     * @return 操作结果
+     */
     public static int getItemSlot(Item item) {
         if (mc.player == null) {
             return -1;
@@ -354,6 +515,11 @@ public class InvHelper {
         return -1;
     }
 
+    /**
+     * 获取数量最多的可用投掷物。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestProjectile() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && (item.getItem() == Items.EGG || item.getItem() == Items.SNOWBALL) && isItemValid(item))
@@ -361,6 +527,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取任意可用钓鱼竿。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getFishingRod() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof FishingRodItem && isItemValid(item))
@@ -368,6 +539,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 统计背包内可放置方块的总数。
+     *
+     * @return 操作结果
+     */
     public static int getBlockCountInInventory() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && isValidStack(item) && isItemValid(item))
@@ -375,6 +551,11 @@ public class InvHelper {
                 .sum();
     }
 
+    /**
+     * 获取数量最少的投掷物堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getWorstProjectile() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && (item.getItem() == Items.EGG || item.getItem() == Items.SNOWBALL))
@@ -382,6 +563,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取数量最少的可用箭矢堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getWorstArrow() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof ArrowItem && isItemValid(item))
@@ -389,6 +575,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取数量最少的可用方块堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getWorstBlock() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && isValidStack(item) && isItemValid(item))
@@ -396,6 +587,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取数量最多的可用方块堆。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestBlock() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && isValidStack(item) && isItemValid(item))
@@ -403,6 +599,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内镐的最高工具评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestPickaxeScore() {
         return getAllItems().stream()
                 .filter(item -> isPickaxe(item) && isItemValid(item))
@@ -411,6 +612,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的镐。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestPickaxe() {
         return getAllItems().stream()
                 .filter(item -> isPickaxe(item) && isItemValid(item))
@@ -418,6 +624,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内普通斧的最高工具评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestAxeScore() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && !isSharpnessAxe(item) && isItemValid(item))
@@ -426,6 +637,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的普通斧。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestAxe() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && !isSharpnessAxe(item) && isItemValid(item))
@@ -433,6 +649,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内伤害评分最高的锋利斧。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestShapeAxe() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && isSharpnessAxe(item) && isItemValid(item) && !isGodAxe(item))
@@ -440,6 +661,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内锹的最高工具评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestShovelScore() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof ShovelItem && isItemValid(item))
@@ -448,6 +674,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的锹。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestShovel() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof ShovelItem && isItemValid(item))
@@ -455,6 +686,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内弩的最高附魔评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestCrossbowScore() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && isItemValid(item))
@@ -463,6 +699,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的弩。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestCrossbow() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && isItemValid(item))
@@ -470,6 +711,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内冲击弓的最高评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestPunchBowScore() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && isItemValid(item))
@@ -478,6 +724,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的冲击弓。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestPunchBow() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && isItemValid(item))
@@ -485,6 +736,11 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 获取背包内力量弓的最高评分。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static float getBestPowerBowScore() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && isItemValid(item))
@@ -493,6 +749,11 @@ public class InvHelper {
                 .orElse(0.0F);
     }
 
+    /**
+     * 获取背包内评分最高的力量弓。
+     *
+     * @return 获取或计算得到的结果
+     */
     public static ItemStack getBestPowerBow() {
         return getAllItems().stream()
                 .filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && isItemValid(item))
@@ -500,18 +761,42 @@ public class InvHelper {
                 .orElse(null);
     }
 
+    /**
+     * 判断物品是否为可用的冲击弓。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isPunchBow(ItemStack stack) {
         return getPunchBowScore(stack) > 10.0F && isItemValid(stack);
     }
 
+    /**
+     * 判断物品是否为可用的力量弓。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isPowerBow(ItemStack stack) {
         return getPowerBowScore(stack) > 10.0F && isItemValid(stack);
     }
 
+    /**
+     * 判断背包中是否含有指定物品。
+     *
+     * @param item 物品
+     * @return 判断结果
+     */
     public static boolean hasItem(Item item) {
         return getAllItems().stream().anyMatch(stack -> !stack.isEmpty() && stack.getItem() == item);
     }
 
+    /**
+     * 统计背包中指定物品的总数。
+     *
+     * @param item 物品
+     * @return 操作结果
+     */
     public static int getItemCount(Item item) {
         return getAllItems().stream()
                 .filter(stack -> !stack.isEmpty() && stack.getItem() == item)
@@ -519,6 +804,12 @@ public class InvHelper {
                 .sum();
     }
 
+    /**
+     * 计算弓偏向冲击用途的评分。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static float getPunchBowScore(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BowItem)) {
             return 0.0F;
@@ -532,6 +823,12 @@ public class InvHelper {
         return valence + (float) stack.getDamageValue() / (float) stack.getMaxDamage();
     }
 
+    /**
+     * 计算弓偏向伤害用途的评分。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static float getPowerBowScore(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BowItem)) {
             return 0.0F;
@@ -545,6 +842,12 @@ public class InvHelper {
         return valence + (float) stack.getDamageValue() / (float) stack.getMaxDamage();
     }
 
+    /**
+     * 根据挖掘速度和附魔计算工具评分。
+     *
+     * @param stack 物品堆
+     * @return 操作结果
+     */
     public static float getToolScore(ItemStack stack) {
         if (stack == null || stack.isEmpty() || isGodItem(stack) || isSharpnessAxe(stack)) {
             return 0.0F;
@@ -592,6 +895,12 @@ public class InvHelper {
         return (float) modifier.amount();
     }
 
+    /**
+     * 计算斧的主手攻击伤害评分。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static float getAxeDamage(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof AxeItem)) {
             return 0.0F;
@@ -600,6 +909,12 @@ public class InvHelper {
         return getMainhandAttackDamage(stack) + getSharpnessBonus(stack);
     }
 
+    /**
+     * 计算剑的主手攻击伤害评分。
+     *
+     * @param stack 物品堆
+     * @return 获取或计算得到的结果
+     */
     public static float getSwordDamage(ItemStack stack) {
         if (!isSword(stack)) {
             return 0.0F;
@@ -608,6 +923,12 @@ public class InvHelper {
         return getMainhandAttackDamage(stack) + getSharpnessBonus(stack);
     }
 
+    /**
+     * 根据护甲、韧性和附魔计算防具评分。
+     *
+     * @param stack 物品堆
+     * @return 操作结果
+     */
     public static float getProtection(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return 0.0F;
@@ -633,6 +954,12 @@ public class InvHelper {
                 + getEnchantmentLevel(stack, Enchantments.PROTECTION);
     }
 
+    /**
+     * 根据附魔计算弩的评分。
+     *
+     * @param stack 物品堆
+     * @return 操作结果
+     */
     public static float getCrossbowScore(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof CrossbowItem)) {
             return 0.0F;
@@ -645,6 +972,12 @@ public class InvHelper {
         return valence;
     }
 
+    /**
+     * 判断物品是否属于需要保留的特殊强力物品。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isGodItem(ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
@@ -663,6 +996,12 @@ public class InvHelper {
         return stack.getItem() == Items.TOTEM_OF_UNDYING || stack.getItem() == Items.END_CRYSTAL;
     }
 
+    /**
+     * 判断普通物品是否适合保留。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isCommonItemUseful(ItemStack stack) {
         if (stack.isEmpty()) {
             return true;
@@ -688,6 +1027,12 @@ public class InvHelper {
         return item != Items.FLINT_AND_STEEL;
     }
 
+    /**
+     * 判断物品堆是否为可用于放置的有效方块堆。
+     *
+     * @param stack 物品堆
+     * @return 判断结果
+     */
     public static boolean isValidStack(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BlockItem) || stack.getCount() <= 1) {
             return false;

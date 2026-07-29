@@ -12,6 +12,12 @@ import static com.github.epsilon.Constants.mc;
 
 public class BlockUtils {
 
+    /**
+     * 判断本地玩家是否可在指定位置放置方块。
+     *
+     * @param pos 目标位置
+     * @return 判断结果
+     */
     public static boolean canPlaceAt(BlockPos pos) {
         if (!mc.level.getBlockState(pos).canBeReplaced()) return false;
         return mc.level.getEntities((Entity) null, new AABB(pos), entity -> !(entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof ThrownExperienceBottle || entity instanceof Arrow)).isEmpty();

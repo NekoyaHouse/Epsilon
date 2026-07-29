@@ -59,6 +59,24 @@ public class FireflyESP {
                     .createRenderSetup())
     );
 
+    /**
+     * 在目标周围渲染萤火轨迹 ESP。
+     *
+     * @param stack             渲染姿态栈
+     * @param target            目标实体
+     * @param espLength         轨迹长度
+     * @param factor            轨迹采样因子
+     * @param shaking           轨迹抖动幅度
+     * @param amplitude         轨迹振幅
+     * @param color             主颜色
+     * @param colorMode         颜色模式
+     * @param secondColor       第二种颜色
+     * @param colorMix          双色混合比例
+     * @param colorSpeed        颜色动画速度
+     * @param rainbowSpeed      彩虹颜色变化速度
+     * @param rainbowSaturation 彩虹颜色饱和度
+     * @param rainbowBrightness 彩虹颜色亮度
+     */
     public static void render(PoseStack stack, LivingEntity target, int espLength, int factor, double shaking, double amplitude, Color color, ColorMode colorMode, Color secondColor, double colorMix, double colorSpeed, double rainbowSpeed, double rainbowSaturation, double rainbowBrightness) {
         boolean canSee = mc.player.hasLineOfSight(target);
 

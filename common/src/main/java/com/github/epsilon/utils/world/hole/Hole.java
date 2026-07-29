@@ -10,6 +10,12 @@ public class Hole {
     public final BlockPos[] positions;
     public final Vec3 middle;
 
+    /**
+     * 创建指定起点和类型的洞结构描述。
+     *
+     * @param pos  目标位置
+     * @param type 洞结构类型
+     */
     public Hole(BlockPos pos, HoleType type) {
         this.pos = pos;
         this.type = type;
@@ -37,6 +43,11 @@ public class Hole {
         }
     }
 
+    /**
+     * 获取该洞结构覆盖的全部方块位置。
+     *
+     * @return 获取或计算得到的结果
+     */
     public BlockPos[] positions() {
         return positions;
     }

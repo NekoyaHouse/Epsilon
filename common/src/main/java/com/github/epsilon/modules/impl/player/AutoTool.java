@@ -1,13 +1,15 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.AfterSendPositionEvent;
-import com.github.epsilon.events.impl.SendPositionEvent;
+import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvHelper;
+import com.github.epsilon.utils.player.InvUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
@@ -17,8 +19,6 @@ import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.RedStoneOreBlock;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 
 public class AutoTool extends Module {
 
@@ -30,27 +30,29 @@ public class AutoTool extends Module {
 
     private final BoolSetting swapBack = boolSetting("Swap Back", true);
 
-    private int originSlot = -1;
+    private boolean shouldSwapBack;
 
-    @EventHandler
-    private void onSendPosition(SendPositionEvent event) {
-        if (mc.gameMode.isDestroying()) {
-            if (mc.hitResult.getType() == HitResult.Type.BLOCK) {
-                BlockHitResult hitResult = (BlockHitResult) mc.hitResult;
-                int bestTool = this.getBestTool(hitResult.getBlockPos());
-                if (bestTool != -1 && bestTool != mc.player.getInventory().getSelectedSlot()) {
-                    this.originSlot = mc.player.getInventory().getSelectedSlot();
-                    mc.player.getInventory().setSelectedSlot(bestTool);
-                }
-            }
+    @Override
+    protected void onDisable() {
+        if (shouldSwapBack) {
+            InvUtils.swapBack();
+            shouldSwapBack = false;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void onStartDestroyBlock(StartDestroyBlockEvent event) {
+        int bestTool = this.getBestTool(event.getBlockPos());
+        if (bestTool != -1) {
+            InvUtils.swap(bestTool, swapBack.getValue());
+            shouldSwapBack = swapBack.getValue();
         }
     }
 
     @EventHandler
     private void onAfterSendPosition(AfterSendPositionEvent event) {
-        if (!mc.gameMode.isDestroying() && this.swapBack.getValue() && this.originSlot != -1) {
-            mc.player.getInventory().setSelectedSlot(originSlot);
-            this.originSlot = -1;
+        if (!mc.gameMode.isDestroying() && shouldSwapBack) {
+            InvUtils.swapBack();
         }
     }
 

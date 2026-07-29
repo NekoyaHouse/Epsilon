@@ -16,7 +16,6 @@ import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
-import com.mojang.blaze3d.platform.InputConstants;
 import love.slmpc.ClInitNative;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -440,30 +439,6 @@ public class InvManager extends Module {
         if (inventoryActionDelayTicks > 0) {
             inventoryActionDelayTicks--;
         }
-
-        if (mc.screen instanceof InventoryScreen) {
-            KeyMapping[] key = {mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keyJump};
-
-            switch (mode.getValue()) {
-                case Inventory -> {
-                    for (KeyMapping b : key) {
-                        KeyMapping.set(b.getDefaultKey(), false);
-                    }
-                    KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
-                }
-                case Silent -> {
-                    setKeyPressed(mc.options.keySprint);
-                    for (KeyMapping b : key) {
-                        setKeyPressed(b);
-                    }
-                }
-            }
-        }
-    }
-
-    private void setKeyPressed(KeyMapping keyBinding) {
-        boolean pressed = InputConstants.isKeyDown(mc.getWindow(), keyBinding.getDefaultKey().getValue());
-        KeyMapping.set(keyBinding.getDefaultKey(), pressed);
     }
 
     private void swapOffHand(int slot) {

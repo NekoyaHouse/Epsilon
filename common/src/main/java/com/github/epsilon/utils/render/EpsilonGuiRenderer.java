@@ -92,6 +92,14 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private TextureSetup previousTextureSetup = null;
     private BufferBuilder bufferBuilder = null;
 
+    /**
+     * 创建 Epsilon GUI 提取渲染器。
+     *
+     * @param renderState             GUI 渲染状态
+     * @param bufferSource            Minecraft 顶点缓冲源
+     * @param submitNodeCollector     GUI 提交节点收集器
+     * @param featureRenderDispatcher 实体特征渲染调度器
+     */
     public EpsilonGuiRenderer(
             GuiRenderState renderState,
             MultiBufferSource.BufferSource bufferSource,
@@ -104,12 +112,20 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         this.featureRenderDispatcher = featureRenderDispatcher;
     }
 
+    /**
+     * 结束当前 GUI 帧并清理帧内渲染状态。
+     */
     public void endFrame() {
         if (this.itemAtlas != null) {
             this.itemAtlas.endFrame();
         }
     }
 
+    /**
+     * 将已提取的 GUI 内容提交到渲染管线。
+     *
+     * @param fogBuffer 当前雾参数缓冲区切片
+     */
     public void render(GpuBufferSlice fogBuffer) {
         ProfilerFiller profiler = Profiler.get();
         if (this.renderState.panoramaRenderState != null) {
@@ -280,11 +296,21 @@ public class EpsilonGuiRenderer implements AutoCloseable {
                     Objects.requireNonNull(EpsilonGuiRenderer.this);
                 }
 
+                /**
+                 * 接收并提交一个样式化字形。
+                 *
+                 * @param glyph 样式化字形
+                 */
                 @Override
                 public void acceptGlyph(TextRenderable.Styled glyph) {
                     this.accept(glyph);
                 }
 
+                /**
+                 * 接收并提交一个文本特效。
+                 *
+                 * @param effect 文本特效
+                 */
                 @Override
                 public void acceptEffect(TextRenderable effect) {
                     this.accept(effect);
@@ -532,10 +558,18 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         return ScissorUtils.enableScissor(renderPass, scissor);
     }
 
+    /**
+     * 向纹理管理器注册主菜单全景图纹理。
+     *
+     * @param textureManager Minecraft 纹理管理器
+     */
     public void registerPanoramaTextures(TextureManager textureManager) {
         this.cubeMap.registerTextures(textureManager);
     }
 
+    /**
+     * 释放该对象持有的渲染资源。
+     */
     @Override
     public void close() {
         this.byteBufferBuilder.close();
@@ -567,6 +601,9 @@ public class EpsilonGuiRenderer implements AutoCloseable {
 
     private record MeshToDraw(MeshData mesh, RenderPipeline pipeline, TextureSetup textureSetup,
                               ScreenRectangle scissorArea) implements AutoCloseable {
+        /**
+         * 释放该对象持有的渲染资源。
+         */
         @Override
         public void close() {
             this.mesh.close();

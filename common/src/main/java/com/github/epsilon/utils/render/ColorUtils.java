@@ -6,6 +6,14 @@ import java.awt.*;
 
 public class ColorUtils {
 
+    /**
+     * 在两种颜色之间进行线性插值。
+     *
+     * @param color1   第一种颜色
+     * @param color2   第二种颜色
+     * @param fraction 从第一种颜色到第二种颜色的插值比例
+     * @return 操作结果
+     */
     public static Color interpolateColor(Color color1, Color color2, float fraction) {
         fraction = Mth.clamp(fraction, 0.0f, 1.0f);
 

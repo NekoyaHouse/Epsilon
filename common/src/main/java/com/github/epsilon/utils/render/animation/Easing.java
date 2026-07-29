@@ -42,6 +42,11 @@ public enum Easing {
         this.function = function;
     }
 
+    /**
+     * 获取该缓动类型对应的插值函数。
+     *
+     * @return 获取或计算得到的结果
+     */
     public Function<Float, Float> getFunction() {
         return function;
     }

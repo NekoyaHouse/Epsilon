@@ -23,6 +23,12 @@ public class ClientIdentityHider {
     private ClientIdentityHider() {
     }
 
+    /**
+     * 按客户端身份隐藏模式过滤即将发送的自定义负载包。
+     *
+     * @param packet 待发送或过滤的网络包
+     * @return 原包、重写后的包，或表示丢弃该包的 null
+     */
     public static Packet<?> filterServerboundPacket(Packet<?> packet) {
         if (!(packet instanceof ServerboundCustomPayloadPacket customPayloadPacket)) {
             return packet;
@@ -55,6 +61,12 @@ public class ClientIdentityHider {
         return new ServerboundCustomPayloadPacket(filteredPayload);
     }
 
+    /**
+     * 按客户端身份隐藏模式过滤客户端品牌字符串。
+     *
+     * @param brand 原始客户端品牌字符串
+     * @return 操作结果
+     */
     public static String filterClientBrand(String brand) {
         return ClientSetting.INSTANCE.hideMode.is(ClientSetting.HideMode.Vanilla) ? VANILLA_BRAND : brand;
     }

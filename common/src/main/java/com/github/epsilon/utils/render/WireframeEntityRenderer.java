@@ -74,6 +74,11 @@ public class WireframeEntityRenderer {
     private WireframeEntityRenderer() {
     }
 
+    /**
+     * 开始实体线框批次并保存当前姿态。
+     *
+     * @param renderStack 渲染姿态栈
+     */
     public static void beginBatch(PoseStack renderStack) {
         if (isBatching()) {
             throw new IllegalStateException("Wireframe entity renderer is already batching");
@@ -82,6 +87,9 @@ public class WireframeEntityRenderer {
         beginDraw(renderStack);
     }
 
+    /**
+     * 结束并提交当前实体线框批次。
+     */
     public static void endBatch() {
         if (!isBatching()) {
             return;
@@ -90,6 +98,16 @@ public class WireframeEntityRenderer {
         endDraw();
     }
 
+    /**
+     * 将实体模型提交为带填充面和轮廓线的线框效果。
+     *
+     * @param renderStack 渲染姿态栈
+     * @param entity      实体
+     * @param scale       缩放值或 GUI 到帧缓冲的比例
+     * @param sideColor   填充面颜色
+     * @param lineColor   轮廓线颜色
+     * @param lineWidth   轮廓线宽度
+     */
     public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
         boolean startedBatch = false;
         if (!isBatching()) {
@@ -221,6 +239,12 @@ public class WireframeEntityRenderer {
             super(null, null);
         }
 
+        /**
+         * 获取指定渲染类型对应的顶点缓冲区。
+         *
+         * @param renderType 渲染类型
+         * @return 获取或计算得到的结果
+         */
         @Override
         public @NonNull VertexConsumer getBuffer(RenderType renderType) {
             if (renderType.outputTarget() == OutputTarget.ITEM_ENTITY_TARGET) {
@@ -230,10 +254,18 @@ public class WireframeEntityRenderer {
             return buffers.computeIfAbsent(renderType, ignored -> new WireframeVertexConsumer());
         }
 
+        /**
+         * 结束并提交当前实体线框批次。
+         */
         @Override
         public void endBatch() {
         }
 
+        /**
+         * 结束并提交当前实体线框批次。
+         *
+         * @param renderType 渲染类型
+         */
         @Override
         public void endBatch(@NonNull RenderType renderType) {
         }
@@ -251,6 +283,14 @@ public class WireframeEntityRenderer {
         private final float[] zs = new float[4];
         private int index;
 
+        /**
+         * 向当前顶点缓冲区添加顶点。
+         *
+         * @param x X 坐标
+         * @param y Y 坐标
+         * @param z Z 坐标
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer addVertex(float x, float y, float z) {
             xs[index] = x;
@@ -271,36 +311,86 @@ public class WireframeEntityRenderer {
             return this;
         }
 
+        /**
+         * 设置当前顶点颜色。
+         *
+         * @param red   红色通道值
+         * @param green 绿色通道值
+         * @param blue  蓝色通道值
+         * @param alpha 透明度
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
+        /**
+         * 设置当前顶点颜色。
+         *
+         * @param color 主颜色
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setColor(int color) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的主纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv(float u, float v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的覆盖层纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的光照纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点法线。
+         *
+         * @param x X 坐标
+         * @param y Y 坐标
+         * @param z Z 坐标
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
+        /**
+         * 设置当前线条宽度。
+         *
+         * @param width 宽度
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setLineWidth(float width) {
             return this;
@@ -314,41 +404,99 @@ public class WireframeEntityRenderer {
     private static final class WireframeEntityVertexConsumer implements VertexConsumer {
         private static final WireframeEntityVertexConsumer INSTANCE = new WireframeEntityVertexConsumer();
 
+        /**
+         * 向当前顶点缓冲区添加顶点。
+         *
+         * @param x X 坐标
+         * @param y Y 坐标
+         * @param z Z 坐标
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer addVertex(float x, float y, float z) {
             return this;
         }
 
+        /**
+         * 设置当前顶点颜色。
+         *
+         * @param red   红色通道值
+         * @param green 绿色通道值
+         * @param blue  蓝色通道值
+         * @param alpha 透明度
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
+        /**
+         * 设置当前顶点颜色。
+         *
+         * @param color 主颜色
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setColor(int color) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的主纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv(float u, float v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的覆盖层纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点的光照纹理坐标。
+         *
+         * @param u U 坐标或打包后的低位值
+         * @param v V 坐标或打包后的高位值
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
+        /**
+         * 设置当前顶点法线。
+         *
+         * @param x X 坐标
+         * @param y Y 坐标
+         * @param z Z 坐标
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
+        /**
+         * 设置当前线条宽度。
+         *
+         * @param width 宽度
+         * @return 操作结果
+         */
         @Override
         public @NonNull VertexConsumer setLineWidth(float width) {
             return this;
@@ -362,15 +510,29 @@ public class WireframeEntityRenderer {
             super(null, null);
         }
 
+        /**
+         * 获取指定渲染类型对应的顶点缓冲区。
+         *
+         * @param renderType 渲染类型
+         * @return 获取或计算得到的结果
+         */
         @Override
         public @NonNull VertexConsumer getBuffer(RenderType renderType) {
             return WireframeEntityVertexConsumer.INSTANCE;
         }
 
+        /**
+         * 结束并提交当前实体线框批次。
+         */
         @Override
         public void endBatch() {
         }
 
+        /**
+         * 结束并提交当前实体线框批次。
+         *
+         * @param renderType 渲染类型
+         */
         @Override
         public void endBatch(@NonNull RenderType renderType) {
         }
@@ -379,11 +541,20 @@ public class WireframeEntityRenderer {
     private static final class WireframeEntityOutlineBufferSource extends OutlineBufferSource {
         private static final WireframeEntityOutlineBufferSource INSTANCE = new WireframeEntityOutlineBufferSource();
 
+        /**
+         * 获取指定渲染类型对应的顶点缓冲区。
+         *
+         * @param renderType 渲染类型
+         * @return 获取或计算得到的结果
+         */
         @Override
         public @NonNull VertexConsumer getBuffer(@NonNull RenderType renderType) {
             return WireframeEntityVertexConsumer.INSTANCE;
         }
 
+        /**
+         * 结束并提交轮廓线批次。
+         */
         @Override
         public void endOutlineBatch() {
         }

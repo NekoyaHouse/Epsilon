@@ -7,6 +7,12 @@ import static com.github.epsilon.Constants.mc;
 
 public class MoveUtils {
 
+    /**
+     * 根据当前旋转计算忽略横移输入的水平速度向量。
+     *
+     * @param speed 移动速度或最大旋转速度
+     * @return 操作结果
+     */
     public static double[] forwardWithoutStrafe(double speed) {
         float yaw = Managers.ROTATION.getYaw();
 
@@ -18,6 +24,12 @@ public class MoveUtils {
         return new double[]{d4, d5};
     }
 
+    /**
+     * 根据当前旋转和移动输入计算水平速度向量。
+     *
+     * @param speed 移动速度或最大旋转速度
+     * @return 操作结果
+     */
     public static double[] forward(double speed) {
         float yaw = Managers.ROTATION.getYaw();
         Vec2 moveVector = mc.player.input.getMoveVector();

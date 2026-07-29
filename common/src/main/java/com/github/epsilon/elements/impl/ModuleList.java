@@ -11,7 +11,6 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
-import love.slmpc.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 

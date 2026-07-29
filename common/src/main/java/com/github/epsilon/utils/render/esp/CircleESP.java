@@ -46,6 +46,16 @@ public class CircleESP {
             .withCull(false)
             .build();
 
+    /**
+     * 在目标周围渲染圆形 ESP。
+     *
+     * @param poseStack   渲染姿态栈
+     * @param target      目标实体
+     * @param radius      爆炸或特效半径
+     * @param sideColor   填充面颜色
+     * @param lineColor   轮廓线颜色
+     * @param alphaFactor 透明度系数
+     */
     public static void render(PoseStack poseStack, LivingEntity target, float radius, Color sideColor, Color lineColor, float alphaFactor) {
         boolean canSee = mc.player.hasLineOfSight(target);
 

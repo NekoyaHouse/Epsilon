@@ -6,8 +6,6 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
-import javax.annotation.Nullable;
-
 import static com.github.epsilon.Constants.mc;
 
 public final class WorldToScreen {
@@ -18,9 +16,9 @@ public final class WorldToScreen {
     }
 
     /**
-     * 原始投影的 x/y 使用 Lumin 坐标，z 使用世界单位的视图空间前向深度。
+     * 将世界坐标原始投影到 Lumin 坐标系。
      *
-     * @param pos 世界空间中的绝对坐标
+     * @param pos 目标位置
      * @return 未执行深度剔除的屏幕坐标
      */
     public static Vector3f calcWorld2ScreenRaw(Vec3 pos) {
@@ -39,10 +37,10 @@ public final class WorldToScreen {
     }
 
     /**
-     * 将世界坐标投影到 Lumin Render Scale 坐标系，并剔除摄像机后方及近裁面内的点。
+     * 将世界坐标投影到 Lumin 坐标系并执行近裁面剔除。
      *
-     * @param pos 世界空间中的绝对坐标
-     * @return 屏幕坐标；前向深度小于固定近裁面时返回 {@code null}
+     * @param pos 目标位置
+     * @return 屏幕坐标；位于近裁面内或摄像机后方时返回 null
      */
     public static Vector3f calcWorld2Screen(Vec3 pos) {
         Vector3f projected = calcWorld2ScreenRaw(pos);
@@ -50,10 +48,10 @@ public final class WorldToScreen {
     }
 
     /**
-     * 计算世界坐标处的透视 UI 缩放，以每世界单位投影为 20 个 Lumin 像素时作为 1.0。
+     * 计算世界坐标处的透视 UI 缩放。
      *
-     * @param pos 世界空间中的绝对坐标
-     * @return 该位置的 UI 缩放；位于摄像机后方或近裁面内时返回 0
+     * @param pos 目标位置
+     * @return 透视 UI 缩放；无效深度返回 0
      */
     public static float calcScale(Vec3 pos) {
         CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;

@@ -42,6 +42,17 @@ public class CaptureMarkESP {
             .setOutputTarget(OutputTarget.MAIN_TARGET)
             .createRenderSetup());
 
+    /**
+     * 为目标渲染旋转波形捕获标记。
+     *
+     * @param poseStack 渲染姿态栈
+     * @param target    目标实体
+     * @param espSize   特效尺寸
+     * @param rotSpeed  旋转速度
+     * @param waveSpeed 波形动画速度
+     * @param color1    第一种颜色
+     * @param color2    第二种颜色
+     */
     public static void render(PoseStack poseStack, LivingEntity target, double espSize, double rotSpeed, double waveSpeed, Color color1, Color color2) {
         double timeSeconds = System.nanoTime() * 1.0E-9;
         float rotation = (float) (-((timeSeconds * rotSpeed * 60.0) % 360.0));

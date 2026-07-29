@@ -18,18 +18,40 @@ public class ChatUtils {
 
     private static final double GRADIENT_CHAR_STEP = 0.55D;
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param message 消息内容
+     */
     public static void addChatMessage(String message) {
         addChatMessage(true, Component.literal(message));
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param message 消息内容
+     */
     public static void addChatMessage(Component message) {
         addChatMessage(true, message);
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     */
     public static void addChatMessage(boolean prefix, String message) {
         addChatMessage(prefix, Component.literal(message));
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     */
     public static void addChatMessage(boolean prefix, Component message) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
@@ -39,18 +61,44 @@ public class ChatUtils {
         }
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param message 消息内容
+     * @param hash    用于替换同一条聊天消息的稳定标识
+     */
     public static void addChatMessage(String message, int hash) {
         addChatMessage(true, Component.literal(message), hash);
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param message 消息内容
+     * @param hash    用于替换同一条聊天消息的稳定标识
+     */
     public static void addChatMessage(Component message, int hash) {
         addChatMessage(true, message, hash);
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     * @param hash    用于替换同一条聊天消息的稳定标识
+     */
     public static void addChatMessage(boolean prefix, String message, int hash) {
         addChatMessage(prefix, Component.literal(message), hash);
     }
 
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     * @param hash    用于替换同一条聊天消息的稳定标识
+     */
     public static void addChatMessage(boolean prefix, Component message, int hash) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
@@ -60,10 +108,24 @@ public class ChatUtils {
         }
     }
 
+    /**
+     * 构建可选带 Epsilon 前缀的客户端聊天消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     * @return 操作结果
+     */
     public static Component buildClientMessage(boolean prefix, String message) {
         return buildClientMessage(prefix, Component.literal(message));
     }
 
+    /**
+     * 构建可选带 Epsilon 前缀的客户端聊天消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     * @return 操作结果
+     */
     public static Component buildClientMessage(boolean prefix, Component message) {
         MutableComponent component = Component.empty();
         if (prefix) {
@@ -72,6 +134,12 @@ public class ChatUtils {
         return component.append(message);
     }
 
+    /**
+     * 为消息中的 Epsilon 前缀应用动态渐变颜色。
+     *
+     * @param original 原始格式化文本
+     * @return 操作结果
+     */
     public static FormattedCharSequence applyAnimatedPrefix(FormattedCharSequence original) {
         if (!ClientSetting.INSTANCE.animatedChatPrefix.getValue()) {
             return original;
