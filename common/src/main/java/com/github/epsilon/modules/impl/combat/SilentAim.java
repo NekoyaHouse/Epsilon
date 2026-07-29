@@ -55,7 +55,7 @@ public class SilentAim extends Module {
         Rot2f rotations = RotationUtils.calculate(target.getEyePosition());
         Managers.ROTATION.setRotations(rotations, 180, Priority.High);
 
-        HitResult hitResult = mc.hitResult;
+        HitResult hitResult = Managers.ROTATION.getHitResult();
         if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
             mc.gameMode.attack(mc.player, target);
             mc.player.swing(InteractionHand.MAIN_HAND);

@@ -205,7 +205,8 @@ public class KillAura extends Module {
         if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
         Managers.ROTATION.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target);
 
-        if (onlyCrosshair.getValue() && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && velocity.attackQueue <= 0) {
+        HitResult hitResult = Managers.ROTATION.getHitResult();
+        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && velocity.attackQueue <= 0) {
             if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
@@ -228,10 +229,11 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
+        HitResult hitResult = Managers.ROTATION.getHitResult();
         while (attacks > 0) {
             attacks--;
             if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
-            if (mc.hitResult instanceof EntityHitResult entityHitResult) {
+            if (hitResult instanceof EntityHitResult entityHitResult) {
                 mc.gameMode.attack(mc.player, entityHitResult.getEntity());
             }
             if (swingHand.getValue()) {
@@ -245,7 +247,8 @@ public class KillAura extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (targets != null && !targets.isEmpty() && Velocity.INSTANCE.attackQueue <= 0) {
-            if (!onlyCrosshair.getValue() || !(mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
+            HitResult hitResult = Managers.ROTATION.getHitResult();
+            if (!onlyCrosshair.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {

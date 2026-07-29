@@ -37,10 +37,11 @@ Managers.ROTATION.setRotations(rotation, speed, raytrace, Priority.High);
 
 Rot2f current = Managers.ROTATION.getRotation();
 Rot2f previous = Managers.ROTATION.getLastRotation();
+HitResult hitResult = Managers.ROTATION.getHitResult();
 boolean active = Managers.ROTATION.isActive();
 ```
 
-旋转值类型为 `com.github.epsilon.utils.rotation.Rot2f`。
+旋转值类型为 `com.github.epsilon.utils.rotation.Rot2f`。`getHitResult()` 返回按当前托管旋转计算的逻辑命中结果；没有活动旋转时返回原版 `mc.hitResult`。
 
 Rotation priority 与 EventBus priority 是两套系统：
 
@@ -57,6 +58,9 @@ Rotation priority 与 EventBus priority 是两套系统：
 运行时行为：
 
 - `Function<Rot2f, Boolean>` raytrace 会在平滑随机偏移校验中多次调用。
+- 每次平滑后通过 `LocalPlayer.raycastHitResult(1.0f, mc.player)` 更新逻辑命中结果，计算期间由 `RaytraceEvent` 临时应用托管旋转。
+- `ClientSetting.modifyCrosshair` 只控制是否把托管旋转应用到视觉准星。关闭后，模块仍可通过 `getHitResult()` 使用托管旋转进行命中检测；FreeCamera 的视觉准星继续使用自由相机结果。
+- 物品使用射线仍通过独立的 `UseItemRaytraceEvent` 处理。
 - 服务端位置/旋转包会设置 S08 重置标记；下一次请求先同步真实视角。
 - 旋转接近玩家真实角度时自动结束，没有 callback 或 `isDone()`。
 - 需要等待命中后攻击/放置时，模块保存 pending 状态，每 tick 继续请求旋转，并用当前 `getRotation()` 做 raytrace 后执行一次性动作。

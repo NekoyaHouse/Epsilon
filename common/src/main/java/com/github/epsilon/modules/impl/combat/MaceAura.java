@@ -99,7 +99,8 @@ public class MaceAura extends Module {
     }
 
     private boolean isReadyToAttack() {
-        if (mc.hitResult.getType() != HitResult.Type.ENTITY) {
+        HitResult hitResult = Managers.ROTATION.getHitResult();
+        if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
             return false;
         }
         if (cooldown.getValue()) {

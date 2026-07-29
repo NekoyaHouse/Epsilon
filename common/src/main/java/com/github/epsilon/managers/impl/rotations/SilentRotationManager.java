@@ -6,7 +6,6 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.modules.impl.render.FreeCamera;
-import net.minecraft.util.Mth;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -26,22 +25,19 @@ public class SilentRotationManager extends RotationManager {
     @EventHandler(priority = EventPriority.HIGH)
     private void onMoveInput(KeyboardInputEvent event) {
         MovementFix moveFix = MovementFix.INSTANCE;
-        if (moveFix.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
+        if (moveFix.isEnabled() && hasActiveRotation() && !mc.player.isFallFlying()) {
             moveFix.fixMovement(event, rotations.getYaw());
         }
     }
 
-    @EventHandler
-    private void onRaytrace(RaytraceEvent event) {
-        if (ClientSetting.INSTANCE.modifyCrosshair.getValue() && active && rotations != null && !FreeCamera.INSTANCE.isEnabled()) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(clampPitch(rotations.getPitch()));
-        }
+    @Override
+    protected boolean shouldModifyCrosshair() {
+        return ClientSetting.INSTANCE.modifyCrosshair.getValue() && !FreeCamera.INSTANCE.isEnabled();
     }
 
     @EventHandler
     private void onItemRaytrace(UseItemRaytraceEvent event) {
-        if (active && rotations != null) {
+        if (hasActiveRotation()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(clampPitch(rotations.getPitch()));
         }
@@ -49,21 +45,21 @@ public class SilentRotationManager extends RotationManager {
 
     @EventHandler
     private void onStrafe(StrafeEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
+        if (MovementFix.INSTANCE.isEnabled() && hasActiveRotation() && !mc.player.isFallFlying()) {
             event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onJump(JumpEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
+        if (MovementFix.INSTANCE.isEnabled() && hasActiveRotation() && !mc.player.isFallFlying()) {
             event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onFallFlying(FallFlyingEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
+        if (MovementFix.INSTANCE.isEnabled() && hasActiveRotation()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(clampPitch(rotations.getPitch()));
         }
@@ -71,7 +67,7 @@ public class SilentRotationManager extends RotationManager {
 
     @EventHandler
     private void onUseItem(UseItemEvent event) {
-        if (active && rotations != null) {
+        if (hasActiveRotation()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(clampPitch(rotations.getPitch()));
         }
@@ -79,7 +75,7 @@ public class SilentRotationManager extends RotationManager {
 
     @EventHandler
     private void onFireworkUpdate(FireworkRotationEvent event) {
-        if (active && rotations != null) {
+        if (hasActiveRotation()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(clampPitch(rotations.getPitch()));
         }
@@ -90,10 +86,6 @@ public class SilentRotationManager extends RotationManager {
         if (rotations != null) {
             event.setYaw(rotations.getYaw());
         }
-    }
-
-    private static float clampPitch(float pitch) {
-        return Mth.clamp(pitch, -90.0F, 90.0F);
     }
 
 }
