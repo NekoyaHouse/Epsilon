@@ -26,7 +26,6 @@ import net.minecraft.world.item.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -97,9 +96,6 @@ public class InvManager extends Module {
     private final BoolSetting switchRod = boolSetting("Switch Rod", false, () -> !offhandItem.is(OffhandItemMode.FishingRod));
     private final IntSetting rodSlot = intSetting("Rod Slot", 9, 1, 9, 1, () -> switchRod.getValue() && !offhandItem.is(OffhandItemMode.FishingRod));
 
-    private static final TimerUtils timer = new TimerUtils();
-    private static final Random random = new Random();
-
     private int noMoveTicks = 0;
     private boolean clickOffHand = false;
     private boolean inventoryOpen = false;
@@ -107,10 +103,26 @@ public class InvManager extends Module {
     private int sprintSuppressTicks;
     private int inventoryActionDelayTicks;
 
+    private final TimerUtils timer = new TimerUtils();
+
     @Override
     protected void onEnable() {
+        clickOffHand = false;
+        inventoryOpen = false;
         sprintSuppressTicks = 0;
         inventoryActionDelayTicks = 0;
+    }
+
+    @Override
+    protected void onDisable() {
+        boolean closeSilentInventory = inventoryOpen && mode.is(Mode.Silent) && mc.getConnection() != null && mc.player != null;
+        clickOffHand = false;
+        inventoryOpen = false;
+        sprintSuppressTicks = 0;
+        inventoryActionDelayTicks = 0;
+        if (closeSilentInventory) {
+            mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+        }
     }
 
     private boolean isItemUseful(ItemStack stack) {
@@ -150,14 +162,16 @@ public class InvManager extends Module {
     private void onPacketSend(PacketEvent.Send event) {
         if (event.getPacket() instanceof ServerboundContainerClosePacket) this.inventoryOpen = false;
         if (this.inventoryOpen && mode.is(Mode.Silent)) {
-            if (event.getPacket() instanceof ServerboundMovePlayerPacket) {
-                if (mc.player.isMoving() && !mc.player.isSprinting() && !mc.options.keySprint.isDown()) {
-                    mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
-                }
-            } else if (event.getPacket() instanceof ServerboundUseItemOnPacket || event.getPacket() instanceof ServerboundUseItemPacket || event.getPacket() instanceof ServerboundInteractPacket || event.getPacket() instanceof ServerboundPlayerActionPacket) {
-                if (!mc.player.isSprinting() && !mc.options.keySprint.isDown()) {
-                    mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
-                }
+            if (
+                    event.getPacket() instanceof ServerboundMovePlayerPacket
+                            || event.getPacket() instanceof ServerboundUseItemOnPacket
+                            || event.getPacket() instanceof ServerboundUseItemPacket
+                            || event.getPacket() instanceof ServerboundInteractPacket
+                            || event.getPacket() instanceof ServerboundAttackPacket
+                            || event.getPacket() instanceof ServerboundPlayerActionPacket
+            ) {
+                this.inventoryOpen = false;
+                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
             }
         }
     }
@@ -193,7 +207,6 @@ public class InvManager extends Module {
                 if (InvHelper.isArmor(stack)) {
                     if (!stack.isEmpty() && timer.passedMillise(nextDelay) && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
                         dropAll(4 + (4 - i));
-                        this.inventoryOpen = true;
                     }
                 }
             }
@@ -209,16 +222,15 @@ public class InvManager extends Module {
                         } else {
                             shiftClick(ix);
                         }
-                        this.inventoryOpen = true;
                     }
                 }
             }
         }
 
         if (this.clickOffHand && timer.passedMillise(nextDelay)) {
-            click(45);
-            this.inventoryOpen = true;
-            this.clickOffHand = false;
+            if (click(45)) {
+                this.clickOffHand = false;
+            }
         }
 
         if (this.offhandItem.is(OffhandItemMode.GoldenApple)) {
@@ -231,43 +243,44 @@ public class InvManager extends Module {
             if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                 if (offHand.getCount() < offHand.getMaxStackSize() && egapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
+                        boolean clicked;
                         if (egapSlot < 9) {
-                            click(egapSlot + 36);
+                            clicked = click(egapSlot + 36);
                         } else {
-                            click(egapSlot);
+                            clicked = click(egapSlot);
                         }
-                        this.inventoryOpen = true;
-                        this.clickOffHand = true;
+                        if (clicked) {
+                            this.clickOffHand = true;
+                        }
                     }
                 }
             } else if (offHandItem == Items.GOLDEN_APPLE) {
                 if (egapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
                         this.swapOffHand(egapSlot);
-                        timer.reset();
                     }
                 } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
                         int targetSlot = gapSlot;
+                        boolean clicked;
                         if (targetSlot < 9) {
-                            click(targetSlot + 36);
+                            clicked = click(targetSlot + 36);
                         } else {
-                            click(targetSlot);
+                            clicked = click(targetSlot);
                         }
-                        this.inventoryOpen = true;
-                        this.clickOffHand = true;
+                        if (clicked) {
+                            this.clickOffHand = true;
+                        }
                     }
                 }
             } else {
                 if (egapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
                         this.swapOffHand(egapSlot);
-                        timer.reset();
                     }
                 } else if (gapSlot != -1) {
                     if (timer.passedMillise(nextDelay)) {
                         this.swapOffHand(gapSlot);
-                        timer.reset();
                     }
                 }
             }
@@ -431,7 +444,6 @@ public class InvManager extends Module {
         if (nullCheck()) return;
 
         if (sprintSuppressTicks > 0) {
-            sprintSuppressTicks--;
             mc.player.setSprinting(false);
             KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
         }
@@ -441,13 +453,17 @@ public class InvManager extends Module {
         }
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void onPostTick(ClientTickEvent.Post event) {
+        if (sprintSuppressTicks > 0) sprintSuppressTicks--;
+    }
+
     private void swapOffHand(int slot) {
         if (slot < 9) {
             swap(slot + 36, 40);
         } else {
             swap(slot, 40);
         }
-        this.inventoryOpen = true;
     }
 
     private void throwItem(ItemStack item) {
@@ -460,7 +476,6 @@ public class InvManager extends Module {
                 } else {
                     dropAll(itemSlot);
                 }
-                this.inventoryOpen = true;
             }
         }
     }
@@ -476,7 +491,6 @@ public class InvManager extends Module {
                 } else {
                     swap(bestItemSlot, targetSlot);
                 }
-                this.inventoryOpen = true;
             }
         }
     }
@@ -494,7 +508,6 @@ public class InvManager extends Module {
                     } else {
                         swap(bestItemSlot, targetSlot);
                     }
-                    this.inventoryOpen = true;
                 }
             }
         }
@@ -533,28 +546,39 @@ public class InvManager extends Module {
         return inventoryActionDelayTicks <= 0;
     }
 
-    private void click(int slot) {
-        if (!prepareInventoryAction()) return;
+    private void completeInventoryAction() {
+        timer.reset();
+        this.inventoryOpen = true;
+        int delayTicks = (maxDelay.getValue() + 49) / 50;
+        suppressSprintForTicks(Math.max(10, delayTicks + 2));
+    }
+
+    private boolean click(int slot) {
+        if (!prepareInventoryAction()) return false;
         ClickSlotUtils.click(slot);
-        timer.reset();
+        completeInventoryAction();
+        return true;
     }
 
-    private void swap(int slot, int hotbarSlot) {
-        if (!prepareInventoryAction()) return;
+    private boolean swap(int slot, int hotbarSlot) {
+        if (!prepareInventoryAction()) return false;
         ClickSlotUtils.swap(slot, hotbarSlot);
-        timer.reset();
+        completeInventoryAction();
+        return true;
     }
 
-    private void shiftClick(int slot) {
-        if (!prepareInventoryAction()) return;
+    private boolean shiftClick(int slot) {
+        if (!prepareInventoryAction()) return false;
         ClickSlotUtils.shiftClick(slot);
-        timer.reset();
+        completeInventoryAction();
+        return true;
     }
 
-    private void dropAll(int slot) {
-        if (!prepareInventoryAction()) return;
+    private boolean dropAll(int slot) {
+        if (!prepareInventoryAction()) return false;
         ClickSlotUtils.dropAll(slot);
-        timer.reset();
+        completeInventoryAction();
+        return true;
     }
 
 }

@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
+import com.github.epsilon.modules.impl.player.InvManager;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.github.epsilon.modules.impl.render.NoRender;
@@ -24,6 +25,14 @@ import static com.github.epsilon.Constants.mc;
 
 @Mixin(LivingEntity.class)
 public class MixinLivingEntity {
+
+    @Inject(method = "setSprinting", at = @At("HEAD"), cancellable = true)
+    private void preventSprintDuringInventorySorting(boolean sprinting, CallbackInfo ci) {
+        InvManager invManager = InvManager.INSTANCE;
+        if (sprinting && (LivingEntity) (Object) this == mc.player && invManager.isEnabled() && invManager.isSprintSuppressed()) {
+            ci.cancel();
+        }
+    }
 
     @WrapOperation(method = "tickHeadTurn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float modifyHeadYaw(LivingEntity entity, Operation<Float> original) {
