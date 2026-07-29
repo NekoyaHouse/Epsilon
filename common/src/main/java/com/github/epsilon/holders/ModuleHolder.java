@@ -77,7 +77,6 @@ public class ModuleHolder {
         addModule(AutoMLG.INSTANCE);
         addModule(AutoTool.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
-        addModule(Disabler.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
         addModule(FakePlayer.INSTANCE);
         addModule(GhostHand.INSTANCE);

@@ -111,10 +111,11 @@ public class FallingPlayer {
      *
      * @param ticks 模拟的 tick 数
      */
-    public void calculate(int ticks) {
+    public FallingPlayer calculate(int ticks) {
         for (int i = 0; i < ticks; i++) {
             calculateForTick();
         }
+        return this;
     }
 
     /**

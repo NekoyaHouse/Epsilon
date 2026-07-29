@@ -14,7 +14,7 @@ public class MixinKeyboardInput {
 
     @Shadow
     private static float calculateImpulse(boolean positive, boolean negative) {
-        return 0.0f;
+        return positive == negative ? 0.0f : positive ? 1.0F : -1.0F;
     }
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "NEW", target = "(ZZZZZZZ)Lnet/minecraft/world/entity/player/Input;"))

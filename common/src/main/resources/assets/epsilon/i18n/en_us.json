@@ -1020,18 +1020,6 @@
         "_value": "Break Cooldown",
         "cooldown": "Cooldown"
       },
-      "disabler": {
-        "_value": "Disabler",
-        "grim bad packetsa": "Grim Bad Packets A",
-        "grim duplicate rotplace": "Grim Duplicate RotPlace",
-        "aca fast switch": "ACA Fast Switch",
-        "aca inventory frequency": "ACA Inventory Frequency",
-        "aca aim step": "ACA Aim Step",
-        "aca perfect rotation": "ACA Perfect Rotation",
-        "themis blink": "Themis Blink",
-        "only remote server": "Only Remote Server",
-        "logging": "Logging"
-      },
       "elytra swap": {
         "_value": "Elytra Swap",
         "activate key": "Activate Key",

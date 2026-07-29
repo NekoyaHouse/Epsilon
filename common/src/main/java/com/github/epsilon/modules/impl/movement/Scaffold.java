@@ -245,13 +245,12 @@ public class Scaffold extends Module {
 
         boolean reachable = true;
         if (mc.player.getDeltaMovement().y < -0.1 && blockPos != null) {
-            FallingPlayer fallingPlayer = new FallingPlayer(mc.player);
-            fallingPlayer.calculate(2);
+            FallingPlayer fallingPlayer = new FallingPlayer(mc.player).calculate(2);
             if (blockPos.getY() > fallingPlayer.getY()) {
                 reachable = false;
             }
         }
-        double strength = new Vec3(mc.player.getDeltaMovement().x, 0, mc.player.getDeltaMovement().z).length();
+        double strength = mc.player.getDeltaMovement().horizontal().length();
         if (strength >= 1.5) {
             Managers.NOTIFICATION.error("你也是要飞了", String.valueOf(strength));
         }
@@ -287,7 +286,7 @@ public class Scaffold extends Module {
             }
 
             swapBack();
-            onPlayerTick(event);
+            //onPlayerTick(event);
             return;
         } else {
             rotateCount = 0;
