@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
+import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.Managers;
@@ -12,25 +13,29 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.settings.impl.*;
-import com.github.epsilon.utils.math.MathUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
 import com.github.epsilon.utils.render.esp.DeobfESP;
 import com.github.epsilon.utils.render.esp.FireflyESP;
-import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @ClInitNative
 public class KillAura extends Module {
@@ -57,8 +62,7 @@ public class KillAura extends Module {
 
     public enum TargetMode {
         Single,
-        Switch,
-        Multiple,
+        Switch
     }
 
     private enum ESPMode {
@@ -68,13 +72,17 @@ public class KillAura extends Module {
         Deobf
     }
 
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
+    private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
+    private final BoolSetting onlyCrosshair = boolSetting("Only Crosshair", true);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
-    public final DoubleSetting range = doubleSetting("Aim Range", 4.0, 1.0, 6.0, 0.1);
+    private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));
+    public final DoubleSetting searchRange = doubleSetting("Search Range", 4.0, 1.0, 6.0, 0.1);
+    public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 1.0, 6.0, 0.1);
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
-    private final IntSetting minCPS = intSetting("Min CPS", 10, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
-    private final IntSetting maxCPS = intSetting("Max CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
+    private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
 
     private final BoolSetting player = boolSetting("Player", true);
     private final BoolSetting mob = boolSetting("Mob", true);
@@ -116,28 +124,40 @@ public class KillAura extends Module {
     private final DoubleSetting fireflyShaking = doubleSetting("Firefly Shaking", 1.8, 0.25, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
     private final DoubleSetting fireflyAmplitude = doubleSetting("Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
 
+    public List<LivingEntity> targets;
     public LivingEntity target;
+    private int targetNumber;
 
-    private int switchIndex = 0;
-    private double attacks = 0.0;
+    private long lastAttackTime;
+    private int attacks;
+
+    private final TimerUtils switchTimer = new TimerUtils();
+
+    @Override
+    public String getInfo() {
+        return mode.getTranslatedValue();
+    }
 
     @Override
     protected void onDisable() {
+        targets = null;
         target = null;
-        switchIndex = 0;
+        attacks = 0;
         DeobfESP.retainRisingEffects();
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void onClientTick(ClientTickEvent.Pre event) {
+        if (nullCheck()) return;
+
         if (!esp.getValue() || !espMode.is(ESPMode.Deobf)) {
             DeobfESP.clear();
         }
 
-        if (mc.player.isUsingItem() || mc.player.isBlocking() || Scaffold.INSTANCE.isEnabled()) return;
+        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
 
-        List<LivingEntity> targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
-                range.getValue(),
+        targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
+                searchRange.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),
                 mob.getValue(),
@@ -151,80 +171,105 @@ public class KillAura extends Module {
                 64
         )));
 
-        if (targets.isEmpty()) {
-            target = null;
-            return;
-        }
-
         Velocity velocity = Velocity.INSTANCE;
+
         if (velocity.delay) {
             targets.sort(
                     Comparator.comparingDouble(o -> (double) Math.abs(velocity.yaw - RotationUtils.calculate(o).getYaw()))
             );
         }
 
-        if (targetMode.is(TargetMode.Single)) {
-            target = targets.getFirst();
-        } else if (targetMode.is(TargetMode.Switch)) {
-            if (switchIndex >= targets.size()) {
-                switchIndex = 0;
+        switch (targetMode.getValue()) {
+            case Single -> {
+                targetNumber = 0;
             }
-            target = targets.get(switchIndex);
-        } else if (targetMode.is(TargetMode.Multiple)) {
-            target = targets.getFirst();
+            case Switch -> {
+                if (switchTimer.passedMillise(switchDelay.getValue())) {
+                    switchTimer.reset();
+                    if (++targetNumber >= targets.size()) {
+                        targetNumber = 0;
+                    }
+                }
+            }
         }
 
-        attacks += MathUtils.getRandom(minCPS.getValue().doubleValue(), maxCPS.getValue().doubleValue()) / 20.0;
+        if (targetNumber >= targets.size()) {
+            targetNumber = 0;
+        }
 
-        if (target != null) {
-            Rot2f rotations = RotationUtils.calculate(target, true, range.getValue());
-            Managers.ROTATION.setRotations(rotations, rotationSpeed.getValue().floatValue(), Priority.Medium);
-            if (mode.is(Mode.OnePointEight)) {
-                while (attacks >= 1.0) {
-                    clickTargets(targets);
-                    attacks -= 1.0;
+        if (targets.isEmpty()) {
+            target = null;
+            return;
+        }
+
+        target = targets.get(targetNumber);
+        Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
+        if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
+        Managers.ROTATION.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target);
+
+        if (onlyCrosshair.getValue() && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && velocity.attackQueue <= 0) {
+            if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
+                switch (mode.getValue()) {
+                    case OnePointNinePlus -> {
+                        if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
+                            attacks++;
+                        }
+                    }
+                    case OnePointEight -> {
+                        long time = System.currentTimeMillis();
+                        long delay = (long) (1000.0 / Math.max(0.01, ThreadLocalRandom.current().nextGaussian(cps.getValue(), 5)));
+                        if (time - lastAttackTime >= delay) {
+                            attacks++;
+                            lastAttackTime = time;
+                        }
+                    }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
+        while (attacks > 0) {
+            attacks--;
+            if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
+            if (mc.hitResult instanceof EntityHitResult entityHitResult) {
+                mc.gameMode.attack(mc.player, entityHitResult.getEntity());
+            }
+            if (swingHand.getValue()) {
+                mc.player.swing(InteractionHand.MAIN_HAND);
             } else {
-                if (mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
-                    clickTargets(targets);
-                }
+                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
             }
-        }
-    }
-
-    private void clickTargets(List<LivingEntity> targets) {
-        if (targetMode.is(TargetMode.Multiple)) {
-            for (LivingEntity target : targets) {
-                if (throughWalls.getValue() || mc.hitResult.getType() == HitResult.Type.ENTITY) {
-                    doAttack(target);
-                }
-            }
-            switchIndex++;
-        } else {
-            if (throughWalls.getValue() || (mc.hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target))) {
-                doAttack(target);
-            }
-            if (targetMode.is(TargetMode.Switch)) {
-                switchIndex++;
-            }
-        }
-    }
-
-    private void doAttack(LivingEntity target) {
-        mc.gameMode.attack(mc.player, target);
-        if (esp.getValue() && espMode.is(ESPMode.Deobf)) {
-            DeobfESP.markHit(target);
-        }
-        if (swingHand.getValue()) {
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        } else {
-            mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
         }
     }
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (!esp.getValue() || espMode.is(ESPMode.Deobf) || target == null) return;
+        if (targets != null && !targets.isEmpty() && Velocity.INSTANCE.attackQueue <= 0) {
+            if (!onlyCrosshair.getValue() || !(mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
+                switch (mode.getValue()) {
+                    case OnePointNinePlus -> {
+                        if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
+                            attacks++;
+                        }
+                    }
+                    case OnePointEight -> {
+                        long time = System.currentTimeMillis();
+                        long delay = (long) (1000.0 / Math.max(0.01, ThreadLocalRandom.current().nextGaussian(cps.getValue(), 5)));
+                        if (time - lastAttackTime >= delay) {
+                            attacks++;
+                            lastAttackTime = time;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!esp.getValue() || espMode.is(ESPMode.Deobf)) return;
+
+        LivingEntity target = getTarget();
+        if (target == null) return;
 
         PoseStack stack = event.getPoseStack();
 
@@ -269,6 +314,10 @@ public class KillAura extends Module {
                 );
             }
         }
+    }
+
+    public LivingEntity getTarget() {
+        return target;
     }
 
 }

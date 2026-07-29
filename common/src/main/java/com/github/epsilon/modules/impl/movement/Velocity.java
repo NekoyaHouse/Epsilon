@@ -60,7 +60,7 @@ public class Velocity extends Module {
 
     private long lag;
     private long startDelay;
-    private int attackQueue;
+    public int attackQueue;
     private int sprintQueue;
     public float yaw;
     public boolean delay;

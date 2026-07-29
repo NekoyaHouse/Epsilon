@@ -15,6 +15,7 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -45,6 +46,7 @@ public class AutoThrow extends Module {
         super("Auto Throw", Category.COMBAT);
     }
 
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final DoubleSetting minDistance = doubleSetting("Min Distance", 2.0, 0.0, 12.0, 0.5);
     private final DoubleSetting maxDistance = doubleSetting("Max Distance", 10.0, 1.0, 30.0, 0.5);
     private final DoubleSetting fov = doubleSetting("FOV", 360.0, 0.0, 360.0, 1.0);
@@ -84,6 +86,7 @@ public class AutoThrow extends Module {
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (Scaffold.INSTANCE.isEnabled()) return;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
         if (pendingUse) {
             if (pendingRotation != null) {
