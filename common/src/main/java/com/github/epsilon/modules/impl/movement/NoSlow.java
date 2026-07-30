@@ -54,6 +54,10 @@ public class NoSlow extends Module {
 
     private final LinkedBlockingQueue<Packet<ClientGamePacketListener>> packets = new LinkedBlockingQueue<>();
 
+    public boolean isGrimFullWorking() {
+        return isEnabled() && mode.is(Mode.GrimFull) && eating;
+    }
+
     @Override
     protected void onDisable() {
         flush();
