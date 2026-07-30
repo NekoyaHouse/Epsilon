@@ -2119,6 +2119,22 @@
         "background blur": "Background Blur",
         "blur strength": "Blur Strength"
       },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "Color Mode",
+          "single": "Single",
+          "double": "Double"
+        },
+        "color": "Color",
+        "color 1": "Color 1",
+        "color 2": "Color 2",
+        "shadow color": {
+          "_value": "Shadow Color",
+          "black": "Black",
+          "follow": "Follow"
+        }
+      },
       "scaffold block": {
         "_value": "Scaffold Block",
         "scale": "Scale",

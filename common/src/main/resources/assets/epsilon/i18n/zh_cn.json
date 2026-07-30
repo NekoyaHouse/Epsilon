@@ -1101,7 +1101,7 @@
       },
       "multi task": "多任务",
       "no rotate": "禁止旋转",
-      "packet eat": "发包进食",
+      "packet eat": "包进食",
       "sound fx": {
         "_value": "音效",
         "volume": "音量",
@@ -1166,7 +1166,7 @@
         "fake player": "假人"
       },
       "eagle": {
-        "_value": "自动蹲起搭",
+        "_value": "自动潜行",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
         "direction check": "方向检查",
@@ -2118,6 +2118,22 @@
         "shadow color": "阴影颜色",
         "background blur": "背景模糊",
         "blur strength": "模糊强度"
+      },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "颜色模式",
+          "single": "单色",
+          "double": "双色"
+        },
+        "color": "颜色",
+        "color 1": "颜色 1",
+        "color 2": "颜色 2",
+        "shadow color": {
+          "_value": "阴影颜色",
+          "black": "黑色",
+          "follow": "跟随"
+        }
       },
       "scaffold block": {
         "_value": "搭路方块",

@@ -34,6 +34,7 @@ public class HudElementHolder {
         addElement(BPS.INSTANCE);
         addElement(Inventory.INSTANCE);
         addElement(ModuleList.INSTANCE);
+        addElement(Hotkey.INSTANCE);
         addElement(MTF.INSTANCE);
         addElement(PlayerInfo.INSTANCE);
         addElement(Potions.INSTANCE);
