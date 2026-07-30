@@ -44,6 +44,7 @@ public class ModuleList extends HudModule {
     private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
     private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 4.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 3.5, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting lineWidth = doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
     private final DoubleSetting fontSize = doubleSetting("Font Size", 16.0, 8.0, 32.0, 1.0);
     private final BoolSetting textGlow = boolSetting("Text Glow", true);
@@ -188,14 +189,15 @@ public class ModuleList extends HudModule {
             drawModuleText(scope, row.entry(), row.textX(), textY, textScale, withAlpha(row.color(), animation), animation);
         }
 
+        float lineWidth = this.lineWidth.getValue().floatValue();
         for (int i = 0; i < rows.size(); i++) {
             NormalRow row = rows.get(i);
-            float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() - 1.0f : row.backgroundX();
+            float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() - lineWidth : row.backgroundX();
             float lineBottom = row.backgroundY() + row.backgroundHeight();
             if (i + 1 < rows.size()) {
                 lineBottom = Math.max(lineBottom, rows.get(i + 1).backgroundY());
             }
-            scope.rect(lineX, row.backgroundY(), 1.0f, Math.max(0.0f, lineBottom - row.backgroundY()), withAlpha(row.color(), row.entry().animation()));
+            scope.rect(lineX, row.backgroundY(), lineWidth, Math.max(0.0f, lineBottom - row.backgroundY()), withAlpha(row.color(), row.entry().animation()));
         }
     }
 
@@ -312,13 +314,15 @@ public class ModuleList extends HudModule {
     private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameColor, float animation) {
         float glowRadius = this.glowRadius.getValue().floatValue();
         int glowIntensity = this.glowIntensity.getValue();
-        if (textGlow.getValue()) scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, nameColor);
+        if (textGlow.getValue())
+            scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, nameColor);
         scope.text(entry.name, x, y, textScale, nameColor);
         if (!entry.info.isEmpty()) {
             String text = " " + entry.info;
             float textX = x + entry.nameWidth;
             Color color = withAlpha(new Color(170, 170, 170), animation);
-            if (textGlow.getValue()) scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color);
+            if (textGlow.getValue())
+                scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color);
             scope.text(text, textX, y, textScale, color);
         }
     }

@@ -143,7 +143,8 @@ public class LuminUiRenderer {
             return;
         }
         if (node instanceof UiTree.BlurTextNode(
-                String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader
+                String text, float x, float y, float scale, Color color, float blurRadius, int intensity,
+                TtfFontLoader fontLoader
         )) {
             layer.addBlurredText(text, x, y, scale, color, blurRadius, intensity, fontLoader);
             return;

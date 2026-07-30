@@ -288,7 +288,7 @@ public class Render2DScheduler implements AutoCloseable {
                 if (text.fontLoader() != null) {
                     renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity(), text.fontLoader());
                 } else {
-                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(),  text.blurRadius(), text.intensity());
+                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity());
                 }
             }
         }
