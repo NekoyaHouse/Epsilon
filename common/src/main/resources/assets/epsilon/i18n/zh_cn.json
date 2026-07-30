@@ -1101,7 +1101,7 @@
       },
       "multi task": "多任务",
       "no rotate": "禁止旋转",
-      "packet eat": "包进食",
+      "packet eat": "发包进食",
       "sound fx": {
         "_value": "音效",
         "volume": "音量",
@@ -1166,7 +1166,7 @@
         "fake player": "假人"
       },
       "eagle": {
-        "_value": "自动潜行",
+        "_value": "自动蹲起搭",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
         "direction check": "方向检查",
