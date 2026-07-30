@@ -54,7 +54,7 @@ public class Velocity extends Module {
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, () -> mode.is(Mode.Reduce));
-    private final IntSetting attackCounts = intSetting("Attack Counts", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
+    private final IntSetting attackCounts = intSetting("Attack Counts", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
 

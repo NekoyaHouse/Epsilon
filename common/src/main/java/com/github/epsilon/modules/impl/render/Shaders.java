@@ -22,6 +22,16 @@ public class Shaders extends Module {
         super("Shaders", Category.RENDER);
     }
 
+    public enum OutlineMode {
+        Outline,
+        Glow
+    }
+
+    public enum GlowColorMode {
+        Solid,
+        Gradient
+    }
+
     private final SettingGroup sgTargets = settingGroup("Targets");
     private final SettingGroup sgEntityShader = settingGroup("Entity Shader");
     private final SettingGroup sgHandsShader = settingGroup("Hands Shader");
@@ -38,8 +48,7 @@ public class Shaders extends Module {
     private final BoolSetting ambients = boolSetting("Ambients", false).group(sgTargets);
     private final BoolSetting others = boolSetting("Others", false).group(sgTargets);
 
-    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1,
-            () -> hasEntityTargets() || chests.getValue()).group(sgTargets);
+    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> hasEntityTargets() || chests.getValue()).group(sgTargets);
 
     public final ShaderSettings entityShader = new ShaderSettings("", sgEntityShader, this::hasEntityTargets);
     public final ShaderSettings handsShader = new ShaderSettings("Hands ", sgHandsShader, hands::getValue);
@@ -88,14 +97,31 @@ public class Shaders extends Module {
         };
     }
 
+    public int getOutlineColor(ShaderSettings settings) {
+        if (settings.outlineMode.is(OutlineMode.Glow)) {
+            Color glowColor = settings.glowColorMode.is(GlowColorMode.Gradient)
+                    ? settings.glowColor1.getValue()
+                    : settings.glowColor.getValue();
+            return glowColor.getRGB();
+        }
+        return settings.outlineColor.getValue().getRGB();
+    }
+
     private boolean hasEntityTargets() {
         return players.getValue() || friends.getValue() || crystals.getValue() || creatures.getValue()
                 || monsters.getValue() || ambients.getValue() || others.getValue();
     }
 
-    public final class ShaderSettings {
-
+    public class ShaderSettings {
         public final EnumSetting<ShaderHolder.Shader> mode;
+        public final EnumSetting<OutlineMode> outlineMode;
+        public final EnumSetting<GlowColorMode> glowColorMode;
+        public final IntSetting glowRadius;
+        public final DoubleSetting glowExposure;
+        public final ColorSetting glowColor;
+        public final ColorSetting glowColor1;
+        public final ColorSetting glowColor2;
+        public final DoubleSetting glowGradientSpeed;
         public final DoubleSetting factor;
         public final DoubleSetting gradient;
         public final IntSetting gradientAlpha;
@@ -113,35 +139,31 @@ public class Shaders extends Module {
 
         private ShaderSettings(String prefix, SettingGroup group, Setting.Dependency targetEnabled) {
             mode = enumSetting(prefix + "Mode", ShaderHolder.Shader.Default, targetEnabled).group(group);
-            factor = doubleSetting(prefix + "Gradient Factor", 2.0, 0.0, 20.0, 0.1,
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
-            gradient = doubleSetting(prefix + "Gradient", 2.0, 0.0, 20.0, 0.1,
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
-            gradientAlpha = intSetting(prefix + "Gradient Alpha", 170, 0, 255, 1,
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
-            lineWidth = intSetting(prefix + "Line Width", 2, 0, 500, 1,
-                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
-            quality = intSetting(prefix + "Quality", 3, 0, 6, 1, targetEnabled).group(group);
-            octaves = intSetting(prefix + "Smoke Octaves", 10, 5, 30, 1,
-                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient))).group(group);
-            fillAlpha = intSetting(prefix + "Fill Alpha", 170, 0, 255, 1,
-                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient) || mode.is(ShaderHolder.Shader.Fade))).group(group);
-            glow = boolSetting(prefix + "Smoke Glow", true,
-                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
-            outlineColor = colorSetting(prefix + "Outline", new Color(255, 255, 255, 136),
-                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Gradient) && !mode.is(ShaderHolder.Shader.Snow)).group(group);
-            smokeOutlineColor1 = colorSetting(prefix + "Smoke Outline", new Color(255, 0, 0, 136),
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
-            smokeOutlineColor2 = colorSetting(prefix + "Smoke Outline 2", new Color(255, 0, 0, 136),
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
-            fillColor1 = colorSetting(prefix + "Fill", new Color(255, 255, 255, 136),
-                    () -> targetEnabled.check() && !mode.is(ShaderHolder.Shader.Gradient)).group(group);
-            fillColor2 = colorSetting(prefix + "Smoke Fill", new Color(255, 255, 255, 136),
-                    () -> targetEnabled.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Fade))).group(group);
-            fillColor3 = colorSetting(prefix + "Smoke Fill 2", new Color(255, 255, 255, 136),
-                    () -> targetEnabled.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+            outlineMode = enumSetting(prefix + "Outline Mode", OutlineMode.Outline, targetEnabled).group(group);
+            Setting.Dependency outlineAvailable = () -> targetEnabled.check() && outlineMode.is(OutlineMode.Outline);
+            Setting.Dependency glowAvailable = () -> targetEnabled.check() && outlineMode.is(OutlineMode.Glow);
+            glowColorMode = enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, glowAvailable).group(group);
+            glowRadius = intSetting(prefix + "Glow Radius", 4, 2, 30, 1, glowAvailable).group(group);
+            glowExposure = doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, glowAvailable).group(group);
+            glowColor = colorSetting(prefix + "Glow Color", new Color(255, 183, 197), () -> glowAvailable.check() && glowColorMode.is(GlowColorMode.Solid)).group(group);
+            glowColor1 = colorSetting(prefix + "Glow Color 1", new Color(255, 183, 197), () -> glowAvailable.check() && glowColorMode.is(GlowColorMode.Gradient)).group(group);
+            glowColor2 = colorSetting(prefix + "Glow Color 2", new Color(0, 255, 200), () -> glowAvailable.check() && glowColorMode.is(GlowColorMode.Gradient)).group(group);
+            glowGradientSpeed = doubleSetting(prefix + "Glow Gradient Speed", 2.0, 0.1, 10.0, 0.1, () -> glowAvailable.check() && glowColorMode.is(GlowColorMode.Gradient)).group(group);
+            factor = doubleSetting(prefix + "Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            gradient = doubleSetting(prefix + "Gradient", 2.0, 0.0, 20.0, 0.1, () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            gradientAlpha = intSetting(prefix + "Gradient Alpha", 170, 0, 255, 1, () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            lineWidth = intSetting(prefix + "Line Width", 2, 0, 500, 1, () -> outlineAvailable.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            quality = intSetting(prefix + "Quality", 3, 0, 6, 1, outlineAvailable).group(group);
+            octaves = intSetting(prefix + "Smoke Octaves", 10, 5, 30, 1, () -> outlineAvailable.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient))).group(group);
+            fillAlpha = intSetting(prefix + "Fill Alpha", 170, 0, 255, 1, () -> outlineAvailable.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Gradient) || mode.is(ShaderHolder.Shader.Fade))).group(group);
+            glow = boolSetting(prefix + "Smoke Glow", true, () -> outlineAvailable.check() && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            outlineColor = colorSetting(prefix + "Outline", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && !mode.is(ShaderHolder.Shader.Gradient) && !mode.is(ShaderHolder.Shader.Snow)).group(group);
+            smokeOutlineColor1 = colorSetting(prefix + "Smoke Outline", new Color(255, 0, 0, 136), () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+            smokeOutlineColor2 = colorSetting(prefix + "Smoke Outline 2", new Color(255, 0, 0, 136), () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
+            fillColor1 = colorSetting(prefix + "Fill", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && !mode.is(ShaderHolder.Shader.Gradient)).group(group);
+            fillColor2 = colorSetting(prefix + "Smoke Fill", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && (mode.is(ShaderHolder.Shader.Smoke) || mode.is(ShaderHolder.Shader.Fade))).group(group);
+            fillColor3 = colorSetting(prefix + "Smoke Fill 2", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && mode.is(ShaderHolder.Shader.Smoke)).group(group);
         }
-
     }
 
 }

@@ -1842,6 +1842,22 @@
           "snow": "Snow",
           "fade": "Fade"
         },
+        "outline mode": {
+          "_value": "Outline Mode",
+          "outline": "Outline",
+          "glow": "Glow"
+        },
+        "glow color mode": {
+          "_value": "Glow Color Mode",
+          "solid": "Solid",
+          "gradient": "Gradient"
+        },
+        "glow radius": "Glow Radius",
+        "glow exposure": "Glow Exposure",
+        "glow color": "Glow Color",
+        "glow color 1": "Glow Color 1",
+        "glow color 2": "Glow Color 2",
+        "glow gradient speed": "Glow Gradient Speed",
         "gradient factor": "Gradient Factor",
         "gradient": "Gradient",
         "gradient alpha": "Gradient Alpha",
@@ -1864,6 +1880,22 @@
           "snow": "Snow",
           "fade": "Fade"
         },
+        "hands outline mode": {
+          "_value": "Hands Outline Mode",
+          "outline": "Outline",
+          "glow": "Glow"
+        },
+        "hands glow color mode": {
+          "_value": "Hands Glow Color Mode",
+          "solid": "Solid",
+          "gradient": "Gradient"
+        },
+        "hands glow radius": "Hands Glow Radius",
+        "hands glow exposure": "Hands Glow Exposure",
+        "hands glow color": "Hands Glow Color",
+        "hands glow color 1": "Hands Glow Color 1",
+        "hands glow color 2": "Hands Glow Color 2",
+        "hands glow gradient speed": "Hands Glow Gradient Speed",
         "hands gradient factor": "Hands Gradient Factor",
         "hands gradient": "Hands Gradient",
         "hands gradient alpha": "Hands Gradient Alpha",
@@ -1886,6 +1918,22 @@
           "snow": "Snow",
           "fade": "Fade"
         },
+        "chest outline mode": {
+          "_value": "Chest Outline Mode",
+          "outline": "Outline",
+          "glow": "Glow"
+        },
+        "chest glow color mode": {
+          "_value": "Chest Glow Color Mode",
+          "solid": "Solid",
+          "gradient": "Gradient"
+        },
+        "chest glow radius": "Chest Glow Radius",
+        "chest glow exposure": "Chest Glow Exposure",
+        "chest glow color": "Chest Glow Color",
+        "chest glow color 1": "Chest Glow Color 1",
+        "chest glow color 2": "Chest Glow Color 2",
+        "chest glow gradient speed": "Chest Glow Gradient Speed",
         "chest gradient factor": "Chest Gradient Factor",
         "chest gradient": "Chest Gradient",
         "chest gradient alpha": "Chest Gradient Alpha",

@@ -6,9 +6,9 @@ import com.github.epsilon.modules.impl.render.Shaders;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.pipeline.*;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -26,10 +26,6 @@ import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.OptionalInt;
 
-/**
- * @author 06789
- * Thanks to furry client.
- */
 public class ShaderHolder {
 
     public static final ShaderHolder INSTANCE = new ShaderHolder();
@@ -58,13 +54,26 @@ public class ShaderHolder {
             .putVec4()
             .get();
 
+    private static final int GLOW_UNIFORMS_SIZE = new Std140SizeCalculator()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .get();
+
     private RenderPipeline defaultPipeline;
     private RenderPipeline smokePipeline;
     private RenderPipeline gradientPipeline;
     private RenderPipeline snowPipeline;
     private RenderPipeline fadePipeline;
+    private RenderPipeline glowPipeline;
+    private RenderPipeline glowMaskPipeline;
     private RenderPipeline copyPipeline;
     private RenderTarget shaderSwap;
+    private RenderTarget glowSwap;
     private RenderTarget handTarget;
     private RenderTarget chestTarget;
     private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
@@ -85,6 +94,12 @@ public class ShaderHolder {
         }
 
         ensureProgram();
+        boolean useGlow = settings.outlineMode.is(Shaders.OutlineMode.Glow);
+        if (useGlow) {
+            processGlowTarget(target, settings);
+            return;
+        }
+
         ensureSwap(target.width, target.height);
         Shader shader = settings.mode.getValue();
         ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height, settings, usesColors(shader));
@@ -203,6 +218,105 @@ public class ShaderHolder {
         }
     }
 
+    private void processGlowTarget(RenderTarget target, Shaders.ShaderSettings settings) {
+        ensureSwap(target.width, target.height);
+        ensureGlowSwap(target.width, target.height);
+
+        if (shaderSwap.getColorTexture() == null || glowSwap.getColorTexture() == null) {
+            return;
+        }
+
+        GpuBufferSlice horizontalGlow = writeGlowUniforms(settings, target.width, target.height, 1.0f, 0.0f);
+        GpuBufferSlice verticalGlow = writeGlowUniforms(settings, target.width, target.height, 0.0f, 1.0f);
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        encoder.copyTextureToTexture(
+                target.getColorTexture(),
+                shaderSwap.getColorTexture(),
+                0, 0, 0, 0, 0,
+                target.width, target.height
+        );
+
+        renderGlowPass(
+                encoder,
+                shaderSwap,
+                glowSwap,
+                horizontalGlow
+        );
+        renderGlowPass(
+                encoder,
+                glowSwap,
+                target,
+                verticalGlow
+        );
+        renderMaskPass(encoder, shaderSwap, target);
+    }
+
+    private void renderGlowPass(CommandEncoder encoder, RenderTarget input, RenderTarget output, GpuBufferSlice glowUniforms) {
+        if (input.getColorTextureView() == null || output.getColorTextureView() == null) {
+            return;
+        }
+
+        GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+
+        try (RenderPass renderPass = encoder.createRenderPass(
+                () -> "epsilon_shader_glow",
+                output.getColorTextureView(),
+                OptionalInt.empty()
+        )) {
+            renderPass.setPipeline(glowPipeline);
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.setUniform("GlowConfig", glowUniforms);
+            renderPass.bindTexture("InputSampler", input.getColorTextureView(), sampler);
+            renderPass.draw(0, 3);
+        }
+    }
+
+    private void renderMaskPass(CommandEncoder encoder, RenderTarget input, RenderTarget output) {
+        if (input.getColorTextureView() == null || output.getColorTextureView() == null) {
+            return;
+        }
+
+        try (RenderPass renderPass = encoder.createRenderPass(
+                () -> "epsilon_shader_glow_mask",
+                output.getColorTextureView(),
+                OptionalInt.empty()
+        )) {
+            renderPass.setPipeline(glowMaskPipeline);
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.bindTexture("InputSampler", input.getColorTextureView(),
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+            renderPass.draw(0, 3);
+        }
+    }
+
+    private GpuBufferSlice writeGlowUniforms(Shaders.ShaderSettings settings, int targetWidth, int targetHeight,
+                                             float directionX, float directionY) {
+        boolean gradient = settings.glowColorMode.is(Shaders.GlowColorMode.Gradient);
+        Color color = gradient ? settings.glowColor1.getValue() : settings.glowColor.getValue();
+        return LuminRenderSystem.writeDynamicUniform(
+                "shader_glow_config",
+                "Epsilon Shader Glow Config UBO",
+                GLOW_UNIFORMS_SIZE,
+                8,
+                new GlowParams(
+                        targetWidth,
+                        targetHeight,
+                        Minecraft.getInstance().getWindow().getGuiScaledWidth(),
+                        Minecraft.getInstance().getWindow().getGuiScaledHeight(),
+                        color,
+                        settings.glowColor1.getValue(),
+                        settings.glowColor2.getValue(),
+                        settings.glowRadius.getValue().floatValue(),
+                        settings.glowExposure.getValue().floatValue(),
+                        gradient ? settings.glowGradientSpeed.getValue().floatValue() : 0.0f,
+                        gradient ? 1.0f : 0.0f,
+                        (Util.getMillis() % 100_000L) / 1000.0f,
+                        directionX,
+                        directionY
+                )
+        );
+    }
+
     private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight, Shaders.ShaderSettings settings, boolean writeColors) {
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
@@ -254,6 +368,24 @@ public class ShaderHolder {
             gradientPipeline = pipeline("gradient", false);
             snowPipeline = pipeline("snow", true);
             fadePipeline = pipeline("fade", true);
+            glowPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+                    .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow"))
+                    .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
+                    .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow"))
+                    .withUniform("GlowConfig", UniformType.UNIFORM_BUFFER)
+                    .withSampler("InputSampler")
+                    .withCull(false)
+                    .build();
+            glowMaskPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+                    .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow_mask"))
+                    .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
+                    .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow_mask"))
+                    .withSampler("InputSampler")
+                    .withColorTargetState(new ColorTargetState(
+                            new BlendFunction(SourceFactor.ZERO, DestFactor.ONE_MINUS_SRC_ALPHA)
+                    ))
+                    .withCull(false)
+                    .build();
             copyPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_copy"))
                     .withVertexShader(("core/screenquad"))
@@ -271,6 +403,16 @@ public class ShaderHolder {
 
         if (shaderSwap.width != width || shaderSwap.height != height) {
             shaderSwap.resize(width, height);
+        }
+    }
+
+    private void ensureGlowSwap(int width, int height) {
+        if (glowSwap == null) {
+            glowSwap = new TextureTarget("Epsilon Shader Glow Swap", width, height, false);
+        }
+
+        if (glowSwap.width != width || glowSwap.height != height) {
+            glowSwap.resize(width, height);
         }
     }
 
@@ -369,7 +511,6 @@ public class ShaderHolder {
             float resolutionWidth,
             float resolutionHeight
     ) implements DynamicUniformStorage.DynamicUniform {
-
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer)
@@ -386,7 +527,6 @@ public class ShaderHolder {
                     .putFloat(octaves)
                     .putVec2(resolutionWidth, resolutionHeight);
         }
-
     }
 
     private record ShaderColors(
@@ -397,7 +537,6 @@ public class ShaderHolder {
             Color smokeFill1,
             Color smokeFill2
     ) implements DynamicUniformStorage.DynamicUniform {
-
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer)
@@ -408,7 +547,35 @@ public class ShaderHolder {
                     .putVec4(red(smokeFill1), green(smokeFill1), blue(smokeFill1), alpha(smokeFill1))
                     .putVec4(red(smokeFill2), green(smokeFill2), blue(smokeFill2), alpha(smokeFill2));
         }
+    }
 
+    private record GlowParams(
+            float targetWidth,
+            float targetHeight,
+            float resolutionWidth,
+            float resolutionHeight,
+            Color color,
+            Color color1,
+            Color color2,
+            float radius,
+            float exposure,
+            float gradientSpeed,
+            float gradient,
+            float time,
+            float directionX,
+            float directionY
+    ) implements DynamicUniformStorage.DynamicUniform {
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer)
+                    .putVec4(targetWidth, targetHeight, 0.0f, 0.0f)
+                    .putVec4(resolutionWidth, resolutionHeight, 0.0f, 0.0f)
+                    .putVec4(red(color), green(color), blue(color), alpha(color))
+                    .putVec4(red(color1), green(color1), blue(color1), alpha(color1))
+                    .putVec4(red(color2), green(color2), blue(color2), alpha(color2))
+                    .putVec4(radius, exposure, gradientSpeed, gradient)
+                    .putVec4(time, directionX, directionY, 0.0f);
+        }
     }
 
 }

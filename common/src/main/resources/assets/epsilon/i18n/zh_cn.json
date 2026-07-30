@@ -1842,6 +1842,22 @@
           "snow": "雪花",
           "fade": "淡出"
         },
+        "outline mode": {
+          "_value": "描边模式",
+          "outline": "描边",
+          "glow": "发光"
+        },
+        "glow color mode": {
+          "_value": "发光颜色模式",
+          "solid": "单色",
+          "gradient": "渐变"
+        },
+        "glow radius": "发光半径",
+        "glow exposure": "发光曝光",
+        "glow color": "发光颜色",
+        "glow color 1": "发光颜色 1",
+        "glow color 2": "发光颜色 2",
+        "glow gradient speed": "发光渐变速度",
         "gradient factor": "渐变因子",
         "gradient": "渐变",
         "gradient alpha": "渐变透明度",
@@ -1864,6 +1880,22 @@
           "snow": "雪花",
           "fade": "淡出"
         },
+        "hands outline mode": {
+          "_value": "手部描边模式",
+          "outline": "描边",
+          "glow": "发光"
+        },
+        "hands glow color mode": {
+          "_value": "手部发光颜色模式",
+          "solid": "单色",
+          "gradient": "渐变"
+        },
+        "hands glow radius": "手部发光半径",
+        "hands glow exposure": "手部发光曝光",
+        "hands glow color": "手部发光颜色",
+        "hands glow color 1": "手部发光颜色 1",
+        "hands glow color 2": "手部发光颜色 2",
+        "hands glow gradient speed": "手部发光渐变速度",
         "hands gradient factor": "手部渐变因子",
         "hands gradient": "手部渐变",
         "hands gradient alpha": "手部渐变透明度",
@@ -1886,6 +1918,22 @@
           "snow": "雪花",
           "fade": "淡出"
         },
+        "chest outline mode": {
+          "_value": "箱子描边模式",
+          "outline": "描边",
+          "glow": "发光"
+        },
+        "chest glow color mode": {
+          "_value": "箱子发光颜色模式",
+          "solid": "单色",
+          "gradient": "渐变"
+        },
+        "chest glow radius": "箱子发光半径",
+        "chest glow exposure": "箱子发光曝光",
+        "chest glow color": "箱子发光颜色",
+        "chest glow color 1": "箱子发光颜色 1",
+        "chest glow color 2": "箱子发光颜色 2",
+        "chest glow gradient speed": "箱子发光渐变速度",
         "chest gradient factor": "箱子渐变因子",
         "chest gradient": "箱子渐变",
         "chest gradient alpha": "箱子渐变透明度",

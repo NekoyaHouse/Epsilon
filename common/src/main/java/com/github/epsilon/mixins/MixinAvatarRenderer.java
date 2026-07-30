@@ -49,7 +49,7 @@ public class MixinAvatarRenderer {
     private void applyShadersHandArmOutline(SubmitNodeCollector submitNodeCollector, ModelPart modelPart, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, TextureAtlasSprite sprite, Operation<Void> original) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.shouldRenderHands()) {
-            submitNodeCollector.submitModelPart(modelPart, poseStack, renderType, lightCoords, overlayCoords, sprite, false, false, -1, null, shaders.handsShader.outlineColor.getValue().getRGB());
+            submitNodeCollector.submitModelPart(modelPart, poseStack, renderType, lightCoords, overlayCoords, sprite, false, false, -1, null, shaders.getOutlineColor(shaders.handsShader));
         } else {
             original.call(submitNodeCollector, modelPart, poseStack, renderType, lightCoords, overlayCoords, sprite);
         }
