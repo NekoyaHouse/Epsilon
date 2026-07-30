@@ -10,28 +10,37 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class TtfTextRenderer implements ITextRenderer {
 
     private static final float DEFAULT_SCALE = 0.35f;
     private static final float SPACING = 0f;
-    private static final int STRIDE = 24;
-    private static final long GLYPH_BYTES = STRIDE * 4L;
+    private static final int STANDARD_STRIDE = 24;
+    private static final int FONT_BLUR_STRIDE = 40;
+    private static final int FONT_BLUR_UNIFORM_SIZE = 16;
+    private static final float MAX_FONT_BLUR_RADIUS = 20.0f;
+    private static final float FONT_BLUR_EXTRA_PADDING = 2.0f;
     private static final int LAYOUT_FLOATS_PER_GLYPH = 10;
     private static final int LAYOUT_CACHE_LIMIT = 256;
     private static final int WIDTH_CACHE_LIMIT = 256;
     private static final float SPACE_WIDTH = 3.0f;
     private final long bufferSize;
+    private final boolean fontBlur;
+    private final int stride;
+    private final long glyphBytes;
 
-    private final Map<TtfGlyphAtlas, Batch> batches = new LinkedHashMap<>();
+    private final Map<BatchKey, Batch> batches = new LinkedHashMap<>();
     // 缓存与 scale 无关的布局数据，绘制时只做平移和缩放。
     private final Map<LayoutKey, TextLayout> layoutCache = new LinkedHashMap<>(64, 0.75f, true) {
         @Override
@@ -53,7 +62,14 @@ public class TtfTextRenderer implements ITextRenderer {
     private int sharedMaxIndexCount;
 
     public TtfTextRenderer(long bufferSize) {
+        this(bufferSize, false);
+    }
+
+    public TtfTextRenderer(long bufferSize, boolean fontBlur) {
         this.bufferSize = bufferSize;
+        this.fontBlur = fontBlur;
+        this.stride = fontBlur ? FONT_BLUR_STRIDE : STANDARD_STRIDE;
+        this.glyphBytes = stride * 4L;
     }
 
     public TtfTextRenderer() {
@@ -65,7 +81,20 @@ public class TtfTextRenderer implements ITextRenderer {
         if (text.isEmpty() || color.getAlpha() == 0) return;
 
         fontLoader.prepareChars(text);
-        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()));
+        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), 0.0f);
+    }
+
+    @Override
+    public void addBlurredText(String text, float x, float y, float scale, Color color,
+                               float blurRadius, TtfFontLoader fontLoader) {
+        if (!fontBlur) {
+            throw new IllegalStateException("Font blur text requires TextRenderer.createFontBlur().");
+        }
+        if (text.isEmpty() || color.getAlpha() == 0 || !Float.isFinite(blurRadius) || blurRadius <= 0.0f) return;
+
+        fontLoader.prepareChars(text);
+        float clampedBlur = Math.clamp(blurRadius, 0.0f, MAX_FONT_BLUR_RADIUS);
+        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), clampedBlur);
     }
 
     @Override
@@ -159,16 +188,20 @@ public class TtfTextRenderer implements ITextRenderer {
         return new TextLayout(runs, glyphCount, maxLine, complete, revision, atlasRevision);
     }
 
-    private void emitLayout(TextLayout layout, float x, float y, float scale, int argb) {
+    private void emitLayout(TextLayout layout, float x, float y, float scale, int argb, float blurRadius) {
         if (layout.glyphCount == 0) return;
 
         for (LayoutRun run : layout.runs) {
-            Batch batch = batchFor(run.atlas);
+            Batch batch = batchFor(run.atlas, blurRadius);
             long p = batch.beginWrite(run.glyphCount);
             float[] data = run.data;
             for (int i = 0; i < run.glyphCount; i++) {
-                writeGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb);
-                p += GLYPH_BYTES;
+                if (fontBlur) {
+                    writeFontBlurGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, blurRadius);
+                } else {
+                    writeGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb);
+                }
+                p += glyphBytes;
             }
         }
     }
@@ -180,12 +213,12 @@ public class TtfTextRenderer implements ITextRenderer {
         float cos = (float) Math.cos(radians);
         float sin = (float) Math.sin(radians);
         for (LayoutRun run : layout.runs) {
-            Batch batch = batchFor(run.atlas);
+            Batch batch = batchFor(run.atlas, 0.0f);
             long p = batch.beginWrite(run.glyphCount);
             float[] data = run.data;
             for (int i = 0; i < run.glyphCount; i++) {
                 writeRotatedGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb, originX, originY, cos, sin);
-                p += GLYPH_BYTES;
+                p += glyphBytes;
             }
         }
     }
@@ -195,7 +228,7 @@ public class TtfTextRenderer implements ITextRenderer {
 
         float totalWidth = Math.max(width, 1.0f);
         for (LayoutRun run : layout.runs) {
-            Batch batch = batchFor(run.atlas);
+            Batch batch = batchFor(run.atlas, 0.0f);
             long p = batch.beginWrite(run.glyphCount);
             float[] data = run.data;
             for (int i = 0; i < run.glyphCount; i++) {
@@ -203,13 +236,16 @@ public class TtfTextRenderer implements ITextRenderer {
                 int leftArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 8] / totalWidth), startArgb, endArgb));
                 int rightArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 9] / totalWidth), startArgb, endArgb));
                 writeGlyph(p, x, y, scale, data, base, leftArgb, rightArgb);
-                p += GLYPH_BYTES;
+                p += glyphBytes;
             }
         }
     }
 
-    private Batch batchFor(TtfGlyphAtlas atlas) {
-        return batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+    private Batch batchFor(TtfGlyphAtlas atlas, float blurRadius) {
+        BatchKey key = new BatchKey(atlas, blurRadius);
+        return batches.computeIfAbsent(key, k -> new Batch(
+                new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX), atlas, blurRadius
+        ));
     }
 
     private static void writeGlyph(long p, float x, float y, float scale, float[] data, int base, int leftArgb, int rightArgb) {
@@ -223,9 +259,47 @@ public class TtfTextRenderer implements ITextRenderer {
         float v1 = data[base + 7];
 
         BufferUtils.writeUvRectToAddr(p, x1, y1, u0, v0, leftArgb);
-        BufferUtils.writeUvRectToAddr(p + STRIDE, x1, y2, u0, v1, leftArgb);
-        BufferUtils.writeUvRectToAddr(p + STRIDE * 2L, x2, y2, u1, v1, rightArgb);
-        BufferUtils.writeUvRectToAddr(p + STRIDE * 3L, x2, y1, u1, v0, rightArgb);
+        BufferUtils.writeUvRectToAddr(p + STANDARD_STRIDE, x1, y2, u0, v1, leftArgb);
+        BufferUtils.writeUvRectToAddr(p + STANDARD_STRIDE * 2L, x2, y2, u1, v1, rightArgb);
+        BufferUtils.writeUvRectToAddr(p + STANDARD_STRIDE * 3L, x2, y1, u1, v0, rightArgb);
+    }
+
+    private static void writeFontBlurGlyph(long p, float x, float y, float scale, float[] data, int base,
+                                           int argb, float blurRadius) {
+        float x1 = x + data[base] * scale;
+        float y1 = y + data[base + 1] * scale;
+        float x2 = x + data[base + 2] * scale;
+        float y2 = y + data[base + 3] * scale;
+        float u0 = data[base + 4];
+        float v0 = data[base + 5];
+        float u1 = data[base + 6];
+        float v1 = data[base + 7];
+        float padding = blurRadius + FONT_BLUR_EXTRA_PADDING;
+        float uPadding = padding * (u1 - u0) / Math.max(x2 - x1, 0.0001f);
+        float vPadding = padding * (v1 - v0) / Math.max(y2 - y1, 0.0001f);
+
+        writeFontBlurVertex(p, x1 - padding, y1 - padding, u0 - uPadding, v0 - vPadding,
+                argb, u0, v0, u1, v1);
+        writeFontBlurVertex(p + FONT_BLUR_STRIDE, x1 - padding, y2 + padding, u0 - uPadding, v1 + vPadding,
+                argb, u0, v0, u1, v1);
+        writeFontBlurVertex(p + FONT_BLUR_STRIDE * 2L, x2 + padding, y2 + padding, u1 + uPadding, v1 + vPadding,
+                argb, u0, v0, u1, v1);
+        writeFontBlurVertex(p + FONT_BLUR_STRIDE * 3L, x2 + padding, y1 - padding, u1 + uPadding, v0 - vPadding,
+                argb, u0, v0, u1, v1);
+    }
+
+    private static void writeFontBlurVertex(long p, float x, float y, float u, float v, int color,
+                                            float u0, float v0, float u1, float v1) {
+        MemoryUtil.memPutFloat(p, x);
+        MemoryUtil.memPutFloat(p + 4, y);
+        MemoryUtil.memPutFloat(p + 8, 0.0f);
+        MemoryUtil.memPutFloat(p + 12, u);
+        MemoryUtil.memPutFloat(p + 16, v);
+        MemoryUtil.memPutInt(p + 20, color);
+        MemoryUtil.memPutFloat(p + 24, u0);
+        MemoryUtil.memPutFloat(p + 28, v0);
+        MemoryUtil.memPutFloat(p + 32, u1);
+        MemoryUtil.memPutFloat(p + 36, v1);
     }
 
     private static void writeRotatedGlyph(long p, float x, float y, float scale, float[] data, int base, int leftArgb, int rightArgb, float originX, float originY, float cos, float sin) {
@@ -239,9 +313,9 @@ public class TtfTextRenderer implements ITextRenderer {
         float v1 = data[base + 7];
 
         writeRotatedVertex(p, x1, y1, u0, v0, leftArgb, originX, originY, cos, sin);
-        writeRotatedVertex(p + STRIDE, x1, y2, u0, v1, leftArgb, originX, originY, cos, sin);
-        writeRotatedVertex(p + STRIDE * 2L, x2, y2, u1, v1, rightArgb, originX, originY, cos, sin);
-        writeRotatedVertex(p + STRIDE * 3L, x2, y1, u1, v0, rightArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STANDARD_STRIDE, x1, y2, u0, v1, leftArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STANDARD_STRIDE * 2L, x2, y2, u1, v1, rightArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STANDARD_STRIDE * 3L, x2, y1, u1, v0, rightArgb, originX, originY, cos, sin);
     }
 
     private static void writeRotatedVertex(long p, float x, float y, float u, float v, int color, float originX, float originY, float cos, float sin) {
@@ -307,7 +381,9 @@ public class TtfTextRenderer implements ITextRenderer {
                 colorView, OptionalInt.empty(),
                 depthView, OptionalDouble.empty())
         ) {
-            pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
+            pass.setPipeline(fontBlur
+                    ? LuminRenderPipelines.TTF_FONT_BLUR
+                    : ClientSetting.INSTANCE.fontAntiAliasing.getValue()
                     ? LuminRenderPipelines.TTF_FONT_AA
                     : LuminRenderPipelines.TTF_FONT_NO_AA);
             if (scissorEnabled) {
@@ -356,8 +432,17 @@ public class TtfTextRenderer implements ITextRenderer {
                 batch.mappedAddress = 0L;
             }
 
-            int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
+            int vertexCount = (int) (batch.offsetInAtlas / stride);
             maxIndexCount = Math.max(maxIndexCount, (vertexCount / 4) * 6);
+            if (fontBlur) {
+                batch.blurUniforms = LuminRenderSystem.writeDynamicUniform(
+                        "font_blur_uniforms",
+                        "Lumin Font Blur UBO",
+                        FONT_BLUR_UNIFORM_SIZE,
+                        16,
+                        new FontBlurUniforms(batch.blurRadius)
+                );
+            }
         }
         return maxIndexCount;
     }
@@ -372,17 +457,19 @@ public class TtfTextRenderer implements ITextRenderer {
         }
 
         // 不同 atlas 共享同一字体 pipeline，在同一个 pass 内只切换纹理并连续 draw。
-        for (Map.Entry<TtfGlyphAtlas, Batch> entry : batches.entrySet()) {
-            final var atlas = entry.getKey();
-            final var batch = entry.getValue();
+        for (Batch batch : batches.values()) {
+            TtfGlyphAtlas atlas = batch.atlas;
 
             if (batch.offsetInAtlas == 0) continue;
 
-            int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
+            int vertexCount = (int) (batch.offsetInAtlas / stride);
             int indexCount = (vertexCount / 4) * 6;
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
             pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
+            if (fontBlur) {
+                pass.setUniform("FontBlurUniforms", batch.blurUniforms);
+            }
 
             pass.drawIndexed(0, 0, indexCount, 1);
         }
@@ -399,6 +486,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 batch.buffer.rotate();
             }
             batch.offsetInAtlas = 0;
+            batch.blurUniforms = null;
         }
         sharedDynamicUniforms = null;
         sharedMaxIndexCount = 0;
@@ -441,18 +529,23 @@ public class TtfTextRenderer implements ITextRenderer {
         scissorEnabled = false;
     }
 
-    private static final class Batch {
+    private final class Batch {
         final LuminRingBuffer buffer;
+        final TtfGlyphAtlas atlas;
+        final float blurRadius;
         long offsetInAtlas = 0;
         long mappedAddress = 0L;
+        GpuBufferSlice blurUniforms;
 
-        private Batch(LuminRingBuffer buffer) {
+        private Batch(LuminRingBuffer buffer, TtfGlyphAtlas atlas, float blurRadius) {
             this.buffer = buffer;
+            this.atlas = atlas;
+            this.blurRadius = blurRadius;
         }
 
         private long beginWrite(int glyphCount) {
             long start = offsetInAtlas;
-            long requiredBytes = start + glyphCount * GLYPH_BYTES;
+            long requiredBytes = start + glyphCount * glyphBytes;
             buffer.ensureCapacity(requiredBytes);
 
             // 同一 atlas run 只映射一次，后续 glyph 直接顺序写入 mapped memory。
@@ -464,6 +557,16 @@ public class TtfTextRenderer implements ITextRenderer {
 
             offsetInAtlas = requiredBytes;
             return mappedAddress + start;
+        }
+    }
+
+    private record BatchKey(TtfGlyphAtlas atlas, float blurRadius) {
+    }
+
+    private record FontBlurUniforms(float blurRadius) implements DynamicUniformStorage.DynamicUniform {
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer).putVec4(blurRadius, 0.0f, 0.0f, 0.0f);
         }
     }
 

@@ -2,11 +2,7 @@ package com.github.epsilon.managers.impl.rotations;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.RaytraceEvent;
-import com.github.epsilon.events.impl.RespawnEvent;
-import com.github.epsilon.events.impl.RotationAnimationEvent;
-import com.github.epsilon.events.impl.SendPositionEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;

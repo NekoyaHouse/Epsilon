@@ -42,6 +42,16 @@ public class LuminRenderPipelines {
             .withCull(false)
             .build();
 
+    public final static RenderPipeline TTF_FONT_BLUR = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipelines/ttf_font_blur"))
+            .withVertexFormat(LuminVertexFormats.FONT_BLUR, VertexFormat.Mode.QUADS)
+            .withVertexShader(ResourceLocationUtils.getIdentifier("ttf_font_blur"))
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("ttf_font_blur"))
+            .withSampler("Sampler0")
+            .withUniform("FontBlurUniforms", UniformType.UNIFORM_BUFFER)
+            .withCull(false)
+            .build();
+
     public final static RenderPipeline ROUND_RECT = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipelines/round_rectangle"))
             .withVertexFormat(LuminVertexFormats.ROUND_RECT, VertexFormat.Mode.QUADS)

@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TtfFontLoader implements IFontLoader {
 
     private static final int ASCII_LIMIT = 128;
+    private static final int FONT_PIXEL_HEIGHT = 40;
+    private static final int SDF_PADDING = 16;
     private static final int ADVANCE_UNSET = Integer.MIN_VALUE;
     private static final int DEFAULT_MAX_GLYPH_UPLOADS_PER_FRAME = 8;
     private static final AtomicInteger WORKER_ID = new AtomicInteger();
@@ -48,12 +50,12 @@ public class TtfFontLoader implements IFontLoader {
     private static int glyphUploadsThisFrame;
 
     public TtfFontLoader(Identifier ttfFile) {
-        this.fontFile = new TtfFontFile(ttfFile, 48, 4);
+        this.fontFile = new TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + SDF_PADDING * 2, SDF_PADDING);
         Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
     }
 
     public TtfFontLoader(Path ttfFile) {
-        this.fontFile = new TtfFontFile(ttfFile, 48, 4);
+        this.fontFile = new TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + SDF_PADDING * 2, SDF_PADDING);
         Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
     }
 

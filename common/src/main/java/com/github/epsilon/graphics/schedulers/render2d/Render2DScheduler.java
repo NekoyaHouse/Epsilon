@@ -27,6 +27,7 @@ import java.util.List;
 public class Render2DScheduler implements AutoCloseable {
 
     public static final int DEFAULT_QUADTREE_THRESHOLD = 192;
+    private static final float MAX_FONT_BLUR_RADIUS = 20.0f;
     private static final int DEFAULT_QUADTREE_MAX_DEPTH = 5;
     private static final Comparator<Render2DCommand> STABLE_SEQUENCE_ORDER = Comparator.comparingLong(Render2DCommand::sequence);
     private static final List<Render2DCommandKind> KIND_FLUSH_ORDER = List.of(
@@ -36,6 +37,7 @@ public class Render2DScheduler implements AutoCloseable {
             Render2DCommandKind.RECT,
             Render2DCommandKind.TRIANGLE,
             Render2DCommandKind.TEXTURE,
+            Render2DCommandKind.BLUR_TEXT,
             Render2DCommandKind.TEXT
     );
 
@@ -199,6 +201,7 @@ public class Render2DScheduler implements AutoCloseable {
             case RECT -> LuminRenderPipelines.RECTANGLE;
             case TRIANGLE -> LuminRenderPipelines.TRIANGLE;
             case TEXTURE -> LuminRenderPipelines.TEXTURE;
+            case BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR;
             case TEXT -> ClientSetting.INSTANCE.fontAntiAliasing.getValue()
                     ? LuminRenderPipelines.TTF_FONT_AA
                     : LuminRenderPipelines.TTF_FONT_NO_AA;
@@ -279,6 +282,13 @@ public class Render2DScheduler implements AutoCloseable {
                     } else {
                         renderers.textRenderer().addRotatedText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.originX(), text.originY(), text.rotationDegrees());
                     }
+                }
+            }
+            case Render2DCommand.BlurText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(),  text.blurRadius(), text.intensity());
                 }
             }
         }
@@ -435,6 +445,24 @@ public class Render2DScheduler implements AutoCloseable {
 
         public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
             addText(text, x, y, scale, color, fontLoader, x, y, 0.0f);
+        }
+
+        public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {
+            addBlurredText(text, x, y, scale, color, blurRadius, intensity, null);
+        }
+
+        public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
+            if (!Float.isFinite(blurRadius) || blurRadius <= 0.0f) {
+                return;
+            }
+            float clampedBlur = Math.min(blurRadius, MAX_FONT_BLUR_RADIUS);
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            float padding = clampedBlur + 2.0f;
+            scheduler.add(new Render2DCommand.BlurText(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x - padding, y - padding, width + padding * 2.0f, height + padding * 2.0f),
+                    scissor, text, x, y, scale, color, clampedBlur, intensity, fontLoader));
         }
 
         public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
@@ -918,6 +946,7 @@ public class Render2DScheduler implements AutoCloseable {
                 case RECT -> new RendererBundle(kind, RectRenderer.create());
                 case TRIANGLE -> new RendererBundle(kind, TriangleRenderer.create());
                 case TEXTURE -> new RendererBundle(kind, TextureRenderer.create());
+                case BLUR_TEXT -> new RendererBundle(kind, TextRenderer.createFontBlur());
                 case TEXT -> new RendererBundle(kind, TextRenderer.create());
             };
         }

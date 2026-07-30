@@ -142,6 +142,12 @@ public class LuminUiRenderer {
             layer.addText(text, x, y, scale, color, fontLoader);
             return;
         }
+        if (node instanceof UiTree.BlurTextNode(
+                String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader
+        )) {
+            layer.addBlurredText(text, x, y, scale, color, blurRadius, intensity, fontLoader);
+            return;
+        }
         if (node instanceof UiTree.RotatedTextNode(
                 String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX,
                 float originY, float rotationDegrees

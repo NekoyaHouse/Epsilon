@@ -42,10 +42,13 @@ public class ModuleList extends HudModule {
     }
 
     private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
-    private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
-    private final DoubleSetting fontSize = doubleSetting("Font Size", 16.0, 8.0, 32.0, 1.0);
     private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 4.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 3.5, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
+    private final DoubleSetting fontSize = doubleSetting("Font Size", 16.0, 8.0, 32.0, 1.0);
+    private final BoolSetting textGlow = boolSetting("Text Glow", true);
+    private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
+    private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
     private final DoubleSetting doubleGradientLength = doubleSetting("Double Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting sliderSpeed = doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01);
     private final BoolSetting background = boolSetting("Background", false, () -> mode.is(DisplayMode.Normal));
@@ -307,9 +310,16 @@ public class ModuleList extends HudModule {
     }
 
     private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameColor, float animation) {
-        scope.text(entry.name(), x, y, textScale, nameColor);
-        if (!entry.info().isEmpty()) {
-            scope.text(" " + entry.info(), x + entry.nameWidth(), y, textScale, withAlpha(new Color(170, 170, 170), animation));
+        float glowRadius = this.glowRadius.getValue().floatValue();
+        int glowIntensity = this.glowIntensity.getValue();
+        if (textGlow.getValue()) scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, nameColor);
+        scope.text(entry.name, x, y, textScale, nameColor);
+        if (!entry.info.isEmpty()) {
+            String text = " " + entry.info;
+            float textX = x + entry.nameWidth;
+            Color color = withAlpha(new Color(170, 170, 170), animation);
+            if (textGlow.getValue()) scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color);
+            scope.text(text, textX, y, textScale, color);
         }
     }
 

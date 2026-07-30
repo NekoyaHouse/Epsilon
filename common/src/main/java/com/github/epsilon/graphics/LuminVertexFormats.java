@@ -8,10 +8,12 @@ public class LuminVertexFormats {
     private static final int ROUND_INNER_RECT_ID = findNextId();
     private static final int ROUND_RADIUS_ID = findNextId(ROUND_INNER_RECT_ID + 1);
     private static final int ROUND_OUTLINE_WIDTH_ID = findNextId(ROUND_RADIUS_ID + 1);
+    private static final int GLYPH_UV_BOUNDS_ID = findNextId(ROUND_OUTLINE_WIDTH_ID + 1);
 
     public static final VertexFormatElement ROUND_INNER_RECT = VertexFormatElement.register(ROUND_INNER_RECT_ID, 2, VertexFormatElement.Type.FLOAT, false, 4);
     public static final VertexFormatElement ROUND_RADIUS = VertexFormatElement.register(ROUND_RADIUS_ID, 4, VertexFormatElement.Type.FLOAT, false, 4);
     public static final VertexFormatElement ROUND_OUTLINE_WIDTH = VertexFormatElement.register(ROUND_OUTLINE_WIDTH_ID, 1, VertexFormatElement.Type.FLOAT, false, 1);
+    public static final VertexFormatElement GLYPH_UV_BOUNDS = VertexFormatElement.register(GLYPH_UV_BOUNDS_ID, 5, VertexFormatElement.Type.FLOAT, false, 4);
 
     public static final VertexFormat ROUND_RECT = VertexFormat.builder()
             .add("Position", VertexFormatElement.POSITION)
@@ -34,6 +36,13 @@ public class LuminVertexFormats {
             .add("UV0", VertexFormatElement.UV0)
             .add("InnerRect", ROUND_INNER_RECT)
             .add("Radius", ROUND_RADIUS)
+            .build();
+
+    public static final VertexFormat FONT_BLUR = VertexFormat.builder()
+            .add("Position", VertexFormatElement.POSITION)
+            .add("UV0", VertexFormatElement.UV0)
+            .add("Color", VertexFormatElement.COLOR)
+            .add("GlyphUvBounds", GLYPH_UV_BOUNDS)
             .build();
 
     private static int findNextId() {

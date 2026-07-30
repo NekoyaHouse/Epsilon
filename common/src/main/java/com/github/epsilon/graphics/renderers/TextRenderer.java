@@ -19,6 +19,10 @@ public class TextRenderer implements IRenderer {
         textRenderer = new TtfTextRenderer(bufferSize);
     }
 
+    private TextRenderer(long bufferSize, boolean fontBlur) {
+        textRenderer = new TtfTextRenderer(bufferSize, fontBlur);
+    }
+
     private TextRenderer() {
         textRenderer = new TtfTextRenderer();
     }
@@ -31,9 +35,24 @@ public class TextRenderer implements IRenderer {
         return RendererHolder.INSTANCE.register(new TextRenderer());
     }
 
+    public static TextRenderer createFontBlur() {
+        return RendererHolder.INSTANCE.register(new TextRenderer(64 * 1024L, true));
+    }
+
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
         ensureRegistered();
         textRenderer.addText(text, x, y, scale, color, fontLoader);
+    }
+
+    public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
+        ensureRegistered();
+        for (int i = 0; i < intensity; i++) {
+            textRenderer.addBlurredText(text, x, y, scale, color, blurRadius, fontLoader);
+        }
+    }
+
+    public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {
+        addBlurredText(text, x, y, scale, color, blurRadius, intensity, StaticFontLoader.defaultFont());
     }
 
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {

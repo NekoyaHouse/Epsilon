@@ -452,6 +452,22 @@ public class UiTree {
             addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
         }
 
+        public void blurredText(String text, float x, float y, float scale, float blurRadius, int intensity, Color color) {
+            nodes.add(new BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, null));
+        }
+
+        public void blurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
+            nodes.add(new BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader));
+        }
+
+        public void blurredText(int layer, String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {
+            blurredText(layer, text, x, y, scale, color, blurRadius, intensity, null);
+        }
+
+        public void blurredText(int layer, String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
+            addNode(layer, new BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader));
+        }
+
         public void rotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
             nodes.add(new RotatedTextNode(text, resolveX(x), resolveY(y), scale, color, null, resolveX(originX), resolveY(originY), rotationDegrees));
         }
@@ -1020,7 +1036,7 @@ public class UiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -1116,6 +1132,10 @@ public class UiTree {
 
     public record TextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader) implements UiNode {
+    }
+
+    public record BlurTextNode(String text, float x, float y, float scale, Color color,
+                               float blurRadius, int intensity, TtfFontLoader fontLoader) implements UiNode {
     }
 
     public record RotatedTextNode(String text, float x, float y, float scale, Color color,
