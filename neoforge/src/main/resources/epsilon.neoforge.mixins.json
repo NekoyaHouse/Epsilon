@@ -6,6 +6,7 @@
   "client": [
     "MixinCamera",
     "MixinMinecraft",
+    "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext"
   ],
   "injectors": {

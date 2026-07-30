@@ -61,10 +61,11 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
     private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-        if (ShaderHolder.INSTANCE.isRenderingHands()) {
+        if (ShaderHolder.INSTANCE.renderingHands && !ShaderHolder.INSTANCE.customHandOutlineComplete) {
             minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
         }
-        ShaderHolder.INSTANCE.endHandOutlineCapture();
+        ShaderHolder.INSTANCE.renderingHands = false;
+        ;
     }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"))

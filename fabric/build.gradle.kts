@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
     compileOnly(libs.sodium.fabric)
+    compileOnly(libs.iris.fabric)
     compileOnly(libs.jsr305)
 }
 

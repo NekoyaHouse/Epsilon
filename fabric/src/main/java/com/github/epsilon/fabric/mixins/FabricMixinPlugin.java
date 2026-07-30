@@ -11,8 +11,10 @@ import java.util.Set;
 public class FabricMixinPlugin implements IMixinConfigPlugin {
 
     private static final String SODIUM_MIXIN_PACKAGE = "com.github.epsilon.fabric.mixins.sodium.";
+    private static final String IRIS_MIXIN_PACKAGE = "com.github.epsilon.fabric.mixins.iris.";
 
     private final boolean sodiumLoaded = FabricLoader.getInstance().isModLoaded("sodium");
+    private final boolean irisLoaded = FabricLoader.getInstance().isModLoaded("iris");
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -25,7 +27,13 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return !mixinClassName.startsWith(SODIUM_MIXIN_PACKAGE) || this.sodiumLoaded;
+        if (mixinClassName.startsWith(SODIUM_MIXIN_PACKAGE)) {
+            return this.sodiumLoaded;
+        }
+        if (mixinClassName.startsWith(IRIS_MIXIN_PACKAGE)) {
+            return this.irisLoaded;
+        }
+        return true;
     }
 
     @Override

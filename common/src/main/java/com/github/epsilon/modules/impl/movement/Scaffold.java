@@ -118,8 +118,8 @@ public class Scaffold extends Module {
     private final BoolSetting degrees45 = boolSetting("45 Degrees", false);
     private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Static);
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> !rotationMode.is(RotationMode.Hypixel));
-    private final IntSetting rotationSpeed2 = intSetting("Rotation Speed 2", 180, 10, 180, 10, () -> rotationMode.is(RotationMode.Heypixel));
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 127, 10, 180, 10, () -> !rotationMode.is(RotationMode.Hypixel));
+    private final IntSetting rotationSpeed2 = intSetting("Rotation Speed 2", 36, 10, 180, 10, () -> rotationMode.is(RotationMode.Heypixel));
     private final IntSetting rotationBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
     private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
 

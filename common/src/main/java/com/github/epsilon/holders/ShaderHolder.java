@@ -77,7 +77,8 @@ public class ShaderHolder {
     private RenderTarget handTarget;
     private RenderTarget chestTarget;
     private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
-    private boolean renderingHands;
+    public boolean renderingHands;
+    public boolean customHandOutlineComplete;
     private boolean capturedHands;
     private boolean renderingChests;
     private boolean capturedChests;
@@ -112,19 +113,15 @@ public class ShaderHolder {
     public void beginHandOutlineCapture(int width, int height) {
         if (Shaders.INSTANCE.hands.getValue()) {
             ensureHandTarget(Math.max(1, width), Math.max(1, height));
-            CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-            encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
+            // Iris 在 shader pack 下会分别渲染 solid 和 translucent hands；两次调用必须累积到同一帧目标。
+            if (!capturedHands) {
+                CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+                encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
+            }
             renderingHands = true;
+            customHandOutlineComplete = false;
             capturedHands = true;
         }
-    }
-
-    public void endHandOutlineCapture() {
-        renderingHands = false;
-    }
-
-    public boolean isRenderingHands() {
-        return renderingHands;
     }
 
     public RenderTarget getHandOutlineTarget() {

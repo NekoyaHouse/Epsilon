@@ -17,6 +17,8 @@ asm = "9.8"
 jsr305 = "3.0.2"
 gson = "2.13.2"
 sodium = "0.8.12+mc26.1.2"
+iris-fabric = "1.11.2+26.1-fabric"
+iris-neoforge = "1.11.2+26.1-neoforge"
 junit = "5.13.4"
 junit-platform = "1.13.4"
 
@@ -31,6 +33,8 @@ jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }
 sodium-neoforge = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
+iris-fabric = { module = "maven.modrinth:iris", version.ref = "iris-fabric" }
+iris-neoforge = { module = "maven.modrinth:iris", version.ref = "iris-neoforge" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 

@@ -3,7 +3,7 @@
 ## 版本来源
 
 - `gradle.properties`：Epsilon 自身的 `version`、`group`、`mod_id`、`mod_name`、`mod_author`、许可证和描述。
-- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium 和测试库版本。
+- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、Iris 和测试库版本。
 - 根 `build.gradle.kts`：将版本目录中的值映射为各子项目使用的 Gradle 属性。
 - `common/build.gradle.kts`：生成 `com.github.epsilon.BuildConfig`，当前暴露 `MOD_ID` 和有效构建版本。
 
@@ -13,6 +13,8 @@
 
 - `multiloader-common.gradle.kts`：Java 25 工具链、仓库、资源展开、Jar 元数据、源码 Jar、发布和 `buildRelease`。
 - `multiloader-loader.gradle.kts`：将 `:common` 的 Java、资源和生成源码加入 Fabric/NeoForge 编译与打包流程。
+
+Sodium 与 Iris 兼容代码只在对应平台编译；Iris 的 Fabric/NeoForge Jar 从 Modrinth Maven 以 `compileOnly` 引入，不会打入 Epsilon 成品。
 
 ## 常用命令
 

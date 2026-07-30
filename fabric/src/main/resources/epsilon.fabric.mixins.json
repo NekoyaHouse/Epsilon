@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "MixinMinecraftFabric",
+    "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext"
   ],
   "injectors": {

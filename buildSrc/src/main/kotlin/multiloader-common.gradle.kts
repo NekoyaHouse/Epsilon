@@ -75,6 +75,15 @@ repositories {
         }
         filter { includeGroup("net.caffeinemc") }
     }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = uri("https://api.modrinth.com/maven")
+            }
+        }
+        filter { includeGroup("maven.modrinth") }
+    }
 }
 
 val licenseFileName = "LICENSE_${modName}"

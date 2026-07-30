@@ -31,6 +31,7 @@ dependencies {
     compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
+    compileOnly(libs.iris.neoforge)
 }
 
 neoForge {

@@ -11,8 +11,10 @@ import java.util.Set;
 public class NeoForgeMixinPlugin implements IMixinConfigPlugin {
 
     private static final String SODIUM_MIXIN_PACKAGE = "com.github.epsilon.neoforge.mixins.sodium.";
+    private static final String IRIS_MIXIN_PACKAGE = "com.github.epsilon.neoforge.mixins.iris.";
 
-    private final boolean sodiumLoaded = isSodiumLoaded();
+    private final boolean sodiumLoaded = isModLoaded("sodium");
+    private final boolean irisLoaded = isModLoaded("iris");
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -25,7 +27,13 @@ public class NeoForgeMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return !mixinClassName.startsWith(SODIUM_MIXIN_PACKAGE) || this.sodiumLoaded;
+        if (mixinClassName.startsWith(SODIUM_MIXIN_PACKAGE)) {
+            return this.sodiumLoaded;
+        }
+        if (mixinClassName.startsWith(IRIS_MIXIN_PACKAGE)) {
+            return this.irisLoaded;
+        }
+        return true;
     }
 
     @Override
@@ -45,14 +53,14 @@ public class NeoForgeMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 
-    private static boolean isSodiumLoaded() {
+    private static boolean isModLoaded(String modId) {
         var loader = FMLLoader.getCurrentOrNull();
         if (loader == null) {
             return false;
         }
 
         try {
-            return loader.getLoadingModList().getModFileById("sodium") != null;
+            return loader.getLoadingModList().getModFileById(modId) != null;
         } catch (IllegalStateException ignored) {
             return false;
         }
