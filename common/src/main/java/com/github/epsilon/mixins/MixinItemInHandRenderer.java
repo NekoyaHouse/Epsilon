@@ -54,7 +54,7 @@ public abstract class MixinItemInHandRenderer {
     @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
     private void beginShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
-        if (shaders.isEnabled() && shaders.shouldRenderHands()) {
+        if (shaders.isEnabled() && shaders.hands.getValue()) {
             ShaderHolder.INSTANCE.beginHandOutlineCapture(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
         }
     }
@@ -135,7 +135,7 @@ public abstract class MixinItemInHandRenderer {
     @ModifyArg(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"), index = 4)
     private int applyShadersHandOutline(int outlineColor) {
         Shaders shaders = Shaders.INSTANCE;
-        return shaders.isEnabled() && shaders.shouldRenderHands() ? shaders.getOutlineColor(shaders.handsShader) : outlineColor;
+        return shaders.isEnabled() && shaders.hands.getValue() ? shaders.getOutlineColor(shaders.handsShader) : outlineColor;
     }
 
 }

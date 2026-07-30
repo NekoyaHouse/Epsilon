@@ -110,7 +110,7 @@ public class ShaderHolder {
     }
 
     public void beginHandOutlineCapture(int width, int height) {
-        if (Shaders.INSTANCE.shouldRenderHands()) {
+        if (Shaders.INSTANCE.hands.getValue()) {
             ensureHandTarget(Math.max(1, width), Math.max(1, height));
             CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
             encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
@@ -159,7 +159,7 @@ public class ShaderHolder {
         if (capturedHands) {
             capturedHands = false;
 
-            if (!Shaders.INSTANCE.shouldRenderHands() || handTarget == null || mainTarget == null || mainTarget.getColorTextureView() == null) {
+            if (!Shaders.INSTANCE.hands.getValue() || handTarget == null || mainTarget == null || mainTarget.getColorTextureView() == null) {
                 return;
             }
 

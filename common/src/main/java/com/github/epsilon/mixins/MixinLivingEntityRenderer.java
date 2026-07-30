@@ -30,8 +30,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyReturnValue(method = "getRenderType", at = @At("RETURN"))
     private RenderType modifyRenderType(RenderType original, S state, boolean isBodyVisible, boolean forceTransparent, boolean appearGlowing) {
         Chams chamsModule = Chams.INSTANCE;
-        if (chamsModule.isEnabled() && chamsModule.noDepth.getValue() && ((EntityRenderStateAccessor) state).epsilon$getEntity() instanceof Player player && player != mc.player) {
-            return Chams.INSTANCE.getRenderType(getTextureLocation(state));
+        if (((EntityRenderStateAccessor) state).epsilon$getEntity() instanceof Player player && chamsModule.shouldRenderPlayer(player)) {
+            return chamsModule.getRenderType(getTextureLocation(state));
         }
         return original;
     }

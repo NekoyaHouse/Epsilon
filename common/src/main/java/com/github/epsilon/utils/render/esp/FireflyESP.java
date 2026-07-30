@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.modules.impl.render.Chams;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
@@ -19,6 +20,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 
 import java.awt.*;
@@ -47,6 +49,13 @@ public class FireflyESP {
             .withLocation("pipeline/epsilon_target_icon")
             .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withCull(false)
+            .build();
+
+    private static final RenderPipeline TARGET_ICON_CHAMS_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            .withLocation("pipeline/epsilon_target_icon_chams")
+            .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
+            .withDepthStencilState(Chams.depthState(false))
             .withCull(false)
             .build();
 
@@ -79,6 +88,7 @@ public class FireflyESP {
      */
     public static void render(PoseStack stack, LivingEntity target, int espLength, int factor, double shaking, double amplitude, Color color, ColorMode colorMode, Color secondColor, double colorMix, double colorSpeed, double rainbowSpeed, double rainbowSaturation, double rainbowBrightness) {
         boolean canSee = mc.player.hasLineOfSight(target);
+        boolean targetHasChams = target instanceof Player player && Chams.INSTANCE.shouldRenderPlayer(player);
 
         Camera camera = mc.gameRenderer.getMainCamera();
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
@@ -130,7 +140,10 @@ public class FireflyESP {
             }
         }
 
-        TARGET_ICON_LAYER.apply(canSee ? TARGET_ICON_PIPELINE : TARGET_ICON_NO_DEPTH_PIPELINE).draw(buffer.buildOrThrow());
+        RenderPipeline pipeline = canSee
+                ? targetHasChams ? TARGET_ICON_CHAMS_PIPELINE : TARGET_ICON_PIPELINE
+                : TARGET_ICON_NO_DEPTH_PIPELINE;
+        TARGET_ICON_LAYER.apply(pipeline).draw(buffer.buildOrThrow());
     }
 
     private static Color resolveColor(float age, int index, int ringIndex, int espLength, ColorMode mode, Color primaryColor, Color secondaryColor, float mixAmount, float blendSpeed, float rainbowSpeed, float rainbowSaturation, float rainbowBrightness) {

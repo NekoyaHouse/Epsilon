@@ -37,7 +37,7 @@ public class Shaders extends Module {
     private final SettingGroup sgHandsShader = settingGroup("Hands Shader");
     private final SettingGroup sgChestShader = settingGroup("Chest Shader");
 
-    private final BoolSetting hands = boolSetting("Hands", true).group(sgTargets);
+    public final BoolSetting hands = boolSetting("Hands", true).group(sgTargets);
     private final BoolSetting players = boolSetting("Players", true).group(sgTargets);
     private final BoolSetting self = boolSetting("Self", true, players::getValue).group(sgTargets);
     private final BoolSetting friends = boolSetting("Friends", true).group(sgTargets);
@@ -54,15 +54,10 @@ public class Shaders extends Module {
     public final ShaderSettings handsShader = new ShaderSettings("Hands ", sgHandsShader, hands::getValue);
     public final ShaderSettings chestShader = new ShaderSettings("Chest ", sgChestShader, chests::getValue);
 
-    public boolean shouldRenderHands() {
-        return hands.getValue();
-    }
-
     public boolean shouldRenderChest(BlockPos blockPos) {
         if (mc.player == null) {
             return false;
         }
-
         return chests.getValue() && mc.player.blockPosition().distSqr(blockPos) <= maxRange.getValue() * maxRange.getValue();
     }
 

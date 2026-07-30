@@ -2,6 +2,7 @@ package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
+import com.github.epsilon.modules.impl.render.Chams;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
@@ -11,6 +12,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
@@ -34,6 +36,13 @@ public class CircleESP {
             .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_STRIP)
             .build();
 
+    private static final RenderPipeline TRIANGLE_STRIP_CHAMS_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/triangle_strip_chams"))
+            .withDepthStencilState(Chams.depthState(false))
+            .withCull(false)
+            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_STRIP)
+            .build();
+
     private static final RenderPipeline CIRCLE_LINES_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines"))
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
@@ -43,6 +52,12 @@ public class CircleESP {
     private static final RenderPipeline CIRCLE_LINES_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines"))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withCull(false)
+            .build();
+
+    private static final RenderPipeline CIRCLE_LINES_CHAMS_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines_chams"))
+            .withDepthStencilState(Chams.depthState(false))
             .withCull(false)
             .build();
 
@@ -58,6 +73,7 @@ public class CircleESP {
      */
     public static void render(PoseStack poseStack, LivingEntity target, float radius, Color sideColor, Color lineColor, float alphaFactor) {
         boolean canSee = mc.player.hasLineOfSight(target);
+        boolean targetHasChams = target instanceof Player player && Chams.INSTANCE.shouldRenderPlayer(player);
 
         float ticks = (float) (System.currentTimeMillis() % 1000000) * 0.004f;
         float alpha = 0.35f + 0.65f * ((Mth.sin(ticks * 1.8f) + 1.0f) * 0.5f) * alphaFactor;
@@ -73,7 +89,9 @@ public class CircleESP {
 
         Matrix4f matrix = poseStack.last().pose();
 
-        RenderPipeline triPipeline = canSee ? TRIANGLE_STRIP_PIPELINE : TRIANGLE_STRIP_NO_DEPTH_PIPELINE;
+        RenderPipeline triPipeline = canSee
+                ? targetHasChams ? TRIANGLE_STRIP_CHAMS_PIPELINE : TRIANGLE_STRIP_PIPELINE
+                : TRIANGLE_STRIP_NO_DEPTH_PIPELINE;
         LuminImmediateRenderer.PosColorTriangleStrip triBuilder = LuminImmediateRenderer.beginPosColorTriangleStrip(triPipeline);
 
         for (float i = 0; i <= (Math.PI * 2); i += ((float) Math.PI * 2) / 64.F) {
@@ -86,7 +104,9 @@ public class CircleESP {
 
         triBuilder.end();
 
-        RenderPipeline linePipeline = canSee ? CIRCLE_LINES_PIPELINE : CIRCLE_LINES_NO_DEPTH_PIPELINE;
+        RenderPipeline linePipeline = canSee
+                ? targetHasChams ? CIRCLE_LINES_CHAMS_PIPELINE : CIRCLE_LINES_PIPELINE
+                : CIRCLE_LINES_NO_DEPTH_PIPELINE;
         LuminImmediateRenderer.Lines lineBuilder = LuminImmediateRenderer.beginLines(linePipeline);
         PoseStack.Pose entry = poseStack.last();
 

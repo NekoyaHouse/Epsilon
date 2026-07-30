@@ -1455,7 +1455,9 @@
       },
       "chams": {
         "_value": "透视模型",
-        "no depth": "无视深度"
+        "no depth": "无视深度",
+        "players": "玩家",
+        "chests": "箱子"
       },
       "crystal chams": {
         "_value": "水晶透视",

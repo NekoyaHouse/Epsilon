@@ -1455,7 +1455,9 @@
       },
       "chams": {
         "_value": "Chams",
-        "no depth": "No Depth"
+        "no depth": "No Depth",
+        "players": "Players",
+        "chests": "Chests"
       },
       "crystal chams": {
         "_value": "Crystal Chams",

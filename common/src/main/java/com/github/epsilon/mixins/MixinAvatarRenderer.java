@@ -48,7 +48,7 @@ public class MixinAvatarRenderer {
     @WrapOperation(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModelPart(Lnet/minecraft/client/model/geom/ModelPart;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IILnet/minecraft/client/renderer/texture/TextureAtlasSprite;)V"))
     private void applyShadersHandArmOutline(SubmitNodeCollector submitNodeCollector, ModelPart modelPart, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, TextureAtlasSprite sprite, Operation<Void> original) {
         Shaders shaders = Shaders.INSTANCE;
-        if (shaders.isEnabled() && shaders.shouldRenderHands()) {
+        if (shaders.isEnabled() && shaders.hands.getValue()) {
             submitNodeCollector.submitModelPart(modelPart, poseStack, renderType, lightCoords, overlayCoords, sprite, false, false, -1, null, shaders.getOutlineColor(shaders.handsShader));
         } else {
             original.call(submitNodeCollector, modelPart, poseStack, renderType, lightCoords, overlayCoords, sprite);

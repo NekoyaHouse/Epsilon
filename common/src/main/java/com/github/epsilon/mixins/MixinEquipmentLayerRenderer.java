@@ -17,17 +17,15 @@ import net.minecraft.world.item.equipment.EquipmentAsset;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-import static com.github.epsilon.Constants.mc;
-
 @Mixin(EquipmentLayerRenderer.class)
 public class MixinEquipmentLayerRenderer {
 
     @WrapOperation(method = "renderLayers(Lnet/minecraft/client/resources/model/EquipmentClientInfo$LayerType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/world/item/ItemStack;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/resources/Identifier;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;armorCutoutNoCull(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
     private RenderType redirectRenderType(Identifier texture, Operation<RenderType> original, EquipmentClientInfo.LayerType layerType, ResourceKey<EquipmentAsset> equipmentAssetId, Model<?> model, Object state, ItemStack itemStack) {
-        if (state instanceof EntityRenderState entityState && ((EntityRenderStateAccessor) entityState).epsilon$getEntity() instanceof Player player && player != mc.player) {
+        if (state instanceof EntityRenderState entityState && ((EntityRenderStateAccessor) entityState).epsilon$getEntity() instanceof Player player) {
             Chams chamsModule = Chams.INSTANCE;
-            if (chamsModule.isEnabled() && chamsModule.noDepth.getValue()) {
-                return Chams.INSTANCE.getRenderType(texture);
+            if (chamsModule.shouldRenderPlayer(player)) {
+                return chamsModule.getRenderType(texture);
             }
         }
         return original.call(texture);

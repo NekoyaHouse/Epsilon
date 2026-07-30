@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.modules.impl.render.Chams;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.Model;
@@ -21,7 +22,12 @@ public class MixinChestRenderer {
     private <S> void applyShadersChestOutline(SubmitNodeCollector submitNodeCollector, Model<S> model, S modelState, PoseStack poseStack, int lightCoords, int overlayCoords, int tintedColor, SpriteId sprite, SpriteGetter sprites, int outlineColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, ChestRenderState state) {
         Shaders shaders = Shaders.INSTANCE;
         int finalOutlineColor = shaders.isEnabled() && shaders.shouldRenderChest(state.blockPos) ? ShaderHolder.EPSILON_CHEST_OUTLINE_MARKER : outlineColor;
-        submitNodeCollector.submitModel(model, modelState, poseStack, lightCoords, overlayCoords, tintedColor, sprite, sprites, finalOutlineColor, crumblingOverlay);
+        Chams chams = Chams.INSTANCE;
+        if (chams.shouldRenderChests()) {
+            submitNodeCollector.submitModel(model, modelState, poseStack, chams.getRenderType(sprite.atlasLocation()), lightCoords, overlayCoords, tintedColor, sprites.get(sprite), finalOutlineColor, crumblingOverlay);
+        } else {
+            submitNodeCollector.submitModel(model, modelState, poseStack, lightCoords, overlayCoords, tintedColor, sprite, sprites, finalOutlineColor, crumblingOverlay);
+        }
     }
 
 }
