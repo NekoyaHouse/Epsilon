@@ -40,6 +40,9 @@ public class PlayerInfo extends HudModule {
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05);
     private final DoubleSetting width = doubleSetting("Width", 250.0, 200.0, 300.0, 1.0);
+    private final BoolSetting textGlow = boolSetting("Text Glow", true);
+    private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
+    private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
     private final DoubleSetting playerRange = doubleSetting("Range", 128.0, 8.0, 256.0, 1.0);
     private final IntSetting maxPlayers = intSetting("Max Players", 8, 1, 20, 1);
     private final BoolSetting showSelf = boolSetting("Show Self", false);
@@ -128,7 +131,7 @@ public class PlayerInfo extends HudModule {
             String emptyText = EpsilonTranslations.PlayerInfo.EMPTY.getTranslatedName();
             float emptyX = panelX + (layout.panelWidth() - textRenderer.getWidth(emptyText, layout.textScale())) * 0.5f;
             float emptyY = rowY + (layout.rowHeight() - textRenderer.getHeight(layout.textScale())) * 0.5f;
-            scope.text(emptyText, emptyX, emptyY, layout.textScale(), withAlpha(textColor.getValue(), 0.72f));
+            text(scope, emptyText, emptyX, emptyY, layout.textScale(), withAlpha(textColor.getValue(), 0.72f));
             return;
         }
 
@@ -136,6 +139,31 @@ public class PlayerInfo extends HudModule {
             drawRow(scope, textRenderer, layout, row, panelX, rowY);
             rowY += layout.rowHeight();
         }
+    }
+
+    @EventHandler
+    private void onPacketReceive(PacketEvent.Receive event) {
+        if (nullCheck() || !(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH) {
+            return;
+        }
+
+        Entity entity = packet.getEntity(mc.level);
+        if (entity instanceof AbstractClientPlayer player) {
+            popCounts.merge(player.getUUID(), 1, Integer::sum);
+        }
+    }
+
+    @EventHandler
+    private void onPlayerTick(PlayerTickEvent.Post event) {
+        refreshRows();
+    }
+
+    @EventHandler
+    private void onGameLeft(GameLeftEvent event) {
+        popCounts.clear();
+        nameScrollStartTimes.clear();
+        cachedRows = List.of();
+        rowsInitialized = false;
     }
 
     private void refreshRows() {
@@ -236,15 +264,15 @@ public class PlayerInfo extends HudModule {
         Color color = headerColor.getValue();
 
         String playersText = EpsilonTranslations.PlayerInfo.PLAYERS.getTranslatedName();
-        scope.text(playersText, x, y, layout.headerScale(), color);
+        text(scope, playersText, x, y, layout.headerScale(), color);
         x += layout.nameWidth() + layout.columnGap();
-        scope.text(EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), x, y, layout.headerScale(), color);
+        text(scope, EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), x, y, layout.headerScale(), color);
         x += layout.distanceWidth() + layout.columnGap();
-        scope.text(EpsilonTranslations.PlayerInfo.HEALTH.getTranslatedName(), x, y, layout.headerScale(), color);
+        text(scope, EpsilonTranslations.PlayerInfo.HEALTH.getTranslatedName(), x, y, layout.headerScale(), color);
         x += layout.healthWidth() + layout.columnGap();
-        scope.text(EpsilonTranslations.PlayerInfo.POPS.getTranslatedName(), x, y, layout.headerScale(), color);
+        text(scope, EpsilonTranslations.PlayerInfo.POPS.getTranslatedName(), x, y, layout.headerScale(), color);
         x += layout.popsWidth() + layout.columnGap();
-        scope.text(EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), x, y, layout.headerScale(), color);
+        text(scope, EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), x, y, layout.headerScale(), color);
     }
 
     private void drawRow(UiTree.Scope scope, TextRenderer textRenderer, Layout layout, PlayerRow row, float panelX, float rowY) {
@@ -265,22 +293,22 @@ public class PlayerInfo extends HudModule {
             float scrollOffset = getNameScrollOffset(playerId, overflow, layout.scale());
             float nameX = x;
             scope.scissor(nameX, rowY, nameTextWidth, layout.rowHeight(), clipped ->
-                    clipped.text(row.name(), nameX - scrollOffset, textY, layout.textScale(), row.nameColor())
+                    text(clipped, row.name(), nameX - scrollOffset, textY, layout.textScale(), row.nameColor())
             );
         } else {
             nameScrollStartTimes.remove(playerId);
             if (nameTextWidth > 0.0f) {
-                scope.text(row.name(), x, textY, layout.textScale(), row.nameColor());
+                text(scope, row.name(), x, textY, layout.textScale(), row.nameColor());
             }
         }
         x = panelX + layout.paddingX() + layout.nameWidth() + layout.columnGap();
-        scope.text(row.distance(), x, textY, layout.textScale(), textColor.getValue());
+        text(scope, row.distance(), x, textY, layout.textScale(), textColor.getValue());
         x += layout.distanceWidth() + layout.columnGap();
-        scope.text(row.health(), x, textY, layout.textScale(), row.healthColor());
+        text(scope, row.health(), x, textY, layout.textScale(), row.healthColor());
         x += layout.healthWidth() + layout.columnGap();
-        scope.text(row.pops(), x, textY, layout.textScale(), textColor.getValue());
+        text(scope, row.pops(), x, textY, layout.textScale(), textColor.getValue());
         x += layout.popsWidth() + layout.columnGap();
-        scope.text(row.direction(), x, textY, layout.textScale(), textColor.getValue());
+        text(scope, row.direction(), x, textY, layout.textScale(), textColor.getValue());
     }
 
     private Color resolveNameColor(AbstractClientPlayer player) {
@@ -314,29 +342,11 @@ public class PlayerInfo extends HudModule {
         return overflow - (float) (overflow * phase / travelDurationMs);
     }
 
-    @EventHandler
-    private void onPacketReceive(PacketEvent.Receive event) {
-        if (nullCheck() || !(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH) {
-            return;
+    private void text(UiTree.Scope scope, String text, float x, float y, float scale, Color color) {
+        if (textGlow.getValue()) {
+            scope.blurredText(text, x, y, scale, glowRadius.getValue().floatValue(), glowIntensity.getValue(), color);
         }
-
-        Entity entity = packet.getEntity(mc.level);
-        if (entity instanceof AbstractClientPlayer player) {
-            popCounts.merge(player.getUUID(), 1, Integer::sum);
-        }
-    }
-
-    @EventHandler
-    private void onPlayerTick(PlayerTickEvent.Post event) {
-        refreshRows();
-    }
-
-    @EventHandler
-    private void onGameLeft(GameLeftEvent event) {
-        popCounts.clear();
-        nameScrollStartTimes.clear();
-        cachedRows = List.of();
-        rowsInitialized = false;
+        scope.text(text, x, y, scale, color);
     }
 
     private record PlayerRow(

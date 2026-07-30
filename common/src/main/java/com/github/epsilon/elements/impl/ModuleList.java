@@ -192,7 +192,7 @@ public class ModuleList extends HudModule {
         float lineWidth = this.lineWidth.getValue().floatValue();
         for (int i = 0; i < rows.size(); i++) {
             NormalRow row = rows.get(i);
-            float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() - lineWidth : row.backgroundX();
+            float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() : row.backgroundX() - lineWidth;
             float lineBottom = row.backgroundY() + row.backgroundHeight();
             if (i + 1 < rows.size()) {
                 lineBottom = Math.max(lineBottom, rows.get(i + 1).backgroundY());
