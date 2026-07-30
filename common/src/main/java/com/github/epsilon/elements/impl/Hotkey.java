@@ -8,6 +8,7 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.ColorUtils;
@@ -43,6 +44,7 @@ public class Hotkey extends HudModule {
     private static final float CORNER_RADIUS = 3.0f;
     private static final float SHADOW_BLUR = 10.0f;
     private static final Color SHADOW_COLOR = new Color(0, 0, 0, 110);
+    private static final Color SUFFIX_COLOR = new Color(170, 170, 170);
     private static final int ANIMATION_DURATION_MS = 200;
 
     private enum ColorMode {
@@ -60,6 +62,7 @@ public class Hotkey extends HudModule {
     private final ColorSetting doubleColor1 = colorSetting("Color 1", Color.WHITE, false, () -> colorMode.is(ColorMode.Double));
     private final ColorSetting doubleColor2 = colorSetting("Color 2", Color.RED, false, () -> colorMode.is(ColorMode.Double));
     private final EnumSetting<ShadowColorMode> shadowColorMode = enumSetting("Shadow Color", ShadowColorMode.Black);
+    private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     private final Map<Module, ToggleAnimation> moduleAnimations = new HashMap<>();
@@ -100,8 +103,10 @@ public class Hotkey extends HudModule {
             if (category == null || module.getName().isEmpty()) continue;
 
             String name = module.getTranslatedName();
-            float textWidth = textRenderer.getWidth(name, TEXT_SCALE);
-            entries.add(new Entry(module, name, category.icon, textWidth, animation));
+            String info = showSuffix.getValue() ? normalizeInfo(module.getInfo()) : "";
+            float nameWidth = textRenderer.getWidth(name, TEXT_SCALE);
+            float suffixWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" " + info, TEXT_SCALE);
+            entries.add(new Entry(module, name, info, category.icon, nameWidth, nameWidth + suffixWidth, animation));
         }
         entries.sort(Comparator.comparingDouble(Entry::textWidth).reversed());
 
@@ -157,6 +162,11 @@ public class Hotkey extends HudModule {
             scope.text(entry.name(), textBackgroundX + TEXT_PADDING,
                     rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f,
                     TEXT_SCALE, textColor);
+            if (!entry.info().isEmpty()) {
+                scope.text(" " + entry.info(), textBackgroundX + TEXT_PADDING + entry.nameWidth(),
+                        rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f,
+                        TEXT_SCALE, withAlpha(SUFFIX_COLOR, animation));
+            }
             rowY += (ROW_HEIGHT + ROW_GAP) * animation;
         }
     }
@@ -185,6 +195,10 @@ public class Hotkey extends HudModule {
 
     private boolean isVisible(Module module) {
         return module.isEnabled() && !module.isHidden() && module.getCategory() != null && !module.getName().isEmpty();
+    }
+
+    private String normalizeInfo(String info) {
+        return info == null || info.isBlank() ? "" : info;
     }
 
     private Color withAlpha(Color color, float multiplier) {
@@ -220,6 +234,7 @@ public class Hotkey extends HudModule {
         }
     }
 
-    private record Entry(Module module, String name, String icon, float textWidth, float animation) {
+    private record Entry(Module module, String name, String info, String icon, float nameWidth, float textWidth,
+                         float animation) {
     }
 }

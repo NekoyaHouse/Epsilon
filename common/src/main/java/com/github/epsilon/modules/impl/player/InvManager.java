@@ -7,7 +7,6 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
-import com.github.epsilon.modules.impl.movement.NoSlow;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -181,7 +180,6 @@ public class InvManager extends Module {
     private void onTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         if (InvHelper.shouldDisableFeatures()) return;
-        if (NoSlow.INSTANCE.isGrimFullWorking()) return;
 
         if (mc.player.isMoving()) {
             this.noMoveTicks = 0;

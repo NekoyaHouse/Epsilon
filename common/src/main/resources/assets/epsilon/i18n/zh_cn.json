@@ -2133,7 +2133,8 @@
           "_value": "阴影颜色",
           "black": "黑色",
           "follow": "跟随"
-        }
+        },
+        "show suffix": "显示后缀"
       },
       "scaffold block": {
         "_value": "搭路方块",

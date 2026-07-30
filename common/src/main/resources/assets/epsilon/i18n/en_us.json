@@ -2133,7 +2133,8 @@
           "_value": "Shadow Color",
           "black": "Black",
           "follow": "Follow"
-        }
+        },
+        "show suffix": "Show Suffix"
       },
       "scaffold block": {
         "_value": "Scaffold Block",
