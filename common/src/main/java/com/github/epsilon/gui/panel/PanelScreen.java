@@ -348,6 +348,7 @@ public class PanelScreen extends Screen {
         super.removed();
         popupHost.close();
         moduleListPanel.resetTransientState();
+        state.setSearchQuery("");
         moduleDetailPanel.resetTransientState();
         clientSettingPanel.resetTransientState();
         state.setListeningKeyBindModule(null);
@@ -364,4 +365,5 @@ public class PanelScreen extends Screen {
     public LuminRenderSystem.LuminRenderTarget getRenderTarget() {
         return renderTarget;
     }
+
 }
