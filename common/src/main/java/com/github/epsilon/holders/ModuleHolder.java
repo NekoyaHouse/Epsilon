@@ -147,6 +147,7 @@ public class ModuleHolder {
         addModule(PopChams.INSTANCE);
         addModule(Shaders.INSTANCE);
         addModule(SneakTweak.INSTANCE);
+        addModule(TotemAnimation.INSTANCE);
         addModule(WorldTweaks.INSTANCE);
         addModule(Xray.INSTANCE);
 

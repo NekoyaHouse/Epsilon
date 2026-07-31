@@ -725,9 +725,9 @@
         "fov": "视野角度",
         "rotation speed": "旋转速度",
         "cps": "每秒点击数",
-        "player": "玩家",
-        "mob": "怪物",
-        "animal": "动物",
+        "players": "玩家",
+        "mobs": "怪物",
+        "animals": "动物",
         "villagers": "村民",
         "ambient": "环境生物",
         "water": "水生生物",
@@ -1518,15 +1518,6 @@
           "potion": "夜视效果"
         }
       },
-      "world tweaks": {
-        "_value": "世界调整",
-        "fog modify": "修改迷雾",
-        "fog start": "迷雾起点",
-        "fog end": "迷雾终点",
-        "fog color": "迷雾颜色",
-        "change time": "修改时间",
-        "time": "时间"
-      },
       "game animation": {
         "_value": "游戏动画",
         "hotbar": "快捷栏"
@@ -1974,6 +1965,30 @@
         "custom sneaking eye height": "自定义潜行视野高度",
         "third person eye height": "第三人称视野高度"
       },
+      "totem animation": {
+        "_value": "图腾动画",
+        "mode": {
+          "_value": "模式",
+          "fadeout": "淡出",
+          "size": "大小",
+          "otkisuli": "Otkisuli",
+          "insert": "插入",
+          "fall": "下落",
+          "rocket": "火箭",
+          "roll": "翻滚",
+          "off": "关闭"
+        },
+        "speed": "速度"
+      },
+      "world tweaks": {
+        "_value": "世界调整",
+        "fog modify": "修改迷雾",
+        "fog start": "迷雾起点",
+        "fog end": "迷雾终点",
+        "fog color": "迷雾颜色",
+        "change time": "修改时间",
+        "time": "时间"
+      },
       "xray": {
         "_value": "X光",
         "plugin": {
@@ -2012,6 +2027,9 @@
         "empty": "附近没有玩家",
         "scale": "缩放",
         "width": "宽度",
+        "text glow": "文字辉光",
+        "glow radius": "辉光半径",
+        "glow intensity": "辉光强度",
         "range": "范围",
         "max players": "最大玩家数",
         "show self": "显示自己",
@@ -2080,6 +2098,7 @@
         },
         "horizontal padding": "左右内边距",
         "vertical padding": "上下内边距",
+        "line width": "线宽",
         "show suffix": "显示后缀",
         "font size": "字体大小",
         "text glow": "文字辉光",
@@ -2104,6 +2123,23 @@
         "theme color 1": "主题颜色 1",
         "theme color 2": "主题颜色 2"
       },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "颜色模式",
+          "single": "单色",
+          "double": "双色"
+        },
+        "color": "颜色",
+        "color 1": "颜色 1",
+        "color 2": "颜色 2",
+        "shadow color": {
+          "_value": "阴影颜色",
+          "black": "黑色",
+          "follow": "跟随"
+        },
+        "show suffix": "显示后缀"
+      },
       "mtf": {
         "_value": "补佳乐",
         "size": "大小",
@@ -2127,23 +2163,6 @@
         "shadow color": "阴影颜色",
         "background blur": "背景模糊",
         "blur strength": "模糊强度"
-      },
-      "hotkey": {
-        "_value": "Hotkey",
-        "color mode": {
-          "_value": "颜色模式",
-          "single": "单色",
-          "double": "双色"
-        },
-        "color": "颜色",
-        "color 1": "颜色 1",
-        "color 2": "颜色 2",
-        "shadow color": {
-          "_value": "阴影颜色",
-          "black": "黑色",
-          "follow": "跟随"
-        },
-        "show suffix": "显示后缀"
       },
       "scaffold block": {
         "_value": "搭路方块",

@@ -725,9 +725,9 @@
         "fov": "FOV",
         "rotation speed": "Rotation Speed",
         "cps": "CPS",
-        "player": "Player",
-        "mob": "Mob",
-        "animal": "Animal",
+        "players": "Players",
+        "mobs": "Mobs",
+        "animals": "Animals",
         "villagers": "Villagers",
         "ambient": "Ambient",
         "water": "Water",
@@ -1518,15 +1518,6 @@
           "potion": "Potion"
         }
       },
-      "world tweaks": {
-        "_value": "World Tweaks",
-        "fog modify": "Modify Fog",
-        "fog start": "Fog Start",
-        "fog end": "Fog End",
-        "fog color": "Fog Color",
-        "change time": "Change Time",
-        "time": "Time"
-      },
       "game animation": {
         "_value": "Game Animation",
         "hotbar": "Hotbar"
@@ -1974,6 +1965,30 @@
         "custom sneaking eye height": "Custom Sneaking Eye Height",
         "third person eye height": "Third Person Eye Height"
       },
+      "totem animation": {
+        "_value": "Totem Animation",
+        "mode": {
+          "_value": "Mode",
+          "fadeout": "Fade Out",
+          "size": "Size",
+          "otkisuli": "Otkisuli",
+          "insert": "Insert",
+          "fall": "Fall",
+          "rocket": "Rocket",
+          "roll": "Roll",
+          "off": "Off"
+        },
+        "speed": "Speed"
+      },
+      "world tweaks": {
+        "_value": "World Tweaks",
+        "fog modify": "Modify Fog",
+        "fog start": "Fog Start",
+        "fog end": "Fog End",
+        "fog color": "Fog Color",
+        "change time": "Change Time",
+        "time": "Time"
+      },
       "xray": {
         "_value": "Xray",
         "plugin": {
@@ -2012,6 +2027,9 @@
         "empty": "No players nearby",
         "scale": "Scale",
         "width": "Width",
+        "text glow": "Text Glow",
+        "glow radius": "Glow Radius",
+        "glow intensity": "Glow Intensity",
         "range": "Range",
         "max players": "Max Players",
         "show self": "Show Self",
@@ -2080,6 +2098,7 @@
         },
         "horizontal padding": "Horizontal Padding",
         "vertical padding": "Vertical Padding",
+        "line width": "Line Width",
         "show suffix": "Show Suffix",
         "font size": "Font Size",
         "text glow": "Text Glow",
@@ -2104,6 +2123,23 @@
         "theme color 1": "Theme Color 1",
         "theme color 2": "Theme Color 2"
       },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "Color Mode",
+          "single": "Single",
+          "double": "Double"
+        },
+        "color": "Color",
+        "color 1": "Color 1",
+        "color 2": "Color 2",
+        "shadow color": {
+          "_value": "Shadow Color",
+          "black": "Black",
+          "follow": "Follow"
+        },
+        "show suffix": "Show Suffix"
+      },
       "mtf": {
         "_value": "MTF",
         "size": "Size",
@@ -2127,23 +2163,6 @@
         "shadow color": "Shadow Color",
         "background blur": "Background Blur",
         "blur strength": "Blur Strength"
-      },
-      "hotkey": {
-        "_value": "Hotkey",
-        "color mode": {
-          "_value": "Color Mode",
-          "single": "Single",
-          "double": "Double"
-        },
-        "color": "Color",
-        "color 1": "Color 1",
-        "color 2": "Color 2",
-        "shadow color": {
-          "_value": "Shadow Color",
-          "black": "Black",
-          "follow": "Follow"
-        },
-        "show suffix": "Show Suffix"
       },
       "scaffold block": {
         "_value": "Scaffold Block",
