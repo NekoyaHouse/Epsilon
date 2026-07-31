@@ -140,9 +140,7 @@ public class KillAura extends Module {
 
     @Override
     protected void onDisable() {
-        targets = null;
-        target = null;
-        attacks = 0;
+        resetState();
         DeobfESP.retainRisingEffects();
     }
 
@@ -154,7 +152,10 @@ public class KillAura extends Module {
             DeobfESP.clear();
         }
 
-        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
+        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) {
+            resetState();
+            return;
+        }
 
         targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
                 searchRange.getValue(),
@@ -313,6 +314,12 @@ public class KillAura extends Module {
                 );
             }
         }
+    }
+
+    private void resetState() {
+        targets = null;
+        target = null;
+        attacks = 0;
     }
 
 }

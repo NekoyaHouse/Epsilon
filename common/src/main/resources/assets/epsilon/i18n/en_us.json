@@ -486,7 +486,16 @@
         "mace": "Mace",
         "trident": "Trident"
       },
-      "criticals": "Criticals",
+      "criticals": {
+        "_value": "Criticals",
+        "packet mode": {
+          "_value": "Packet Mode",
+          "pure": "Pure",
+          "legit": "Legit"
+        },
+        "groundo nly": "Ground Only",
+        "show crit particles": "Show Crit Particles"
+      },
       "zealot crystal+": {
         "_value": "Zealot Crystal+",
         "general": "General",
@@ -1004,11 +1013,6 @@
       },
       "auto mlg": {
         "_value": "Auto MLG",
-        "mlg mode": {
-          "_value": "MLG Mode",
-          "grim": "Grim",
-          "hypixel": "Hypixel"
-        },
         "interact delay": "Interact Delay",
         "collect delay ticks": "Collect Delay Ticks"
       },
@@ -1392,7 +1396,7 @@
         "_value": "Target Strafe",
         "radius": "Radius",
         "points": "Points",
-        "require press": "Require Jump",
+        "require jump": "Require Jump",
         "speed only": "Speed/Flight Only",
         "draw radius": "Draw Radius"
       },
@@ -1409,7 +1413,6 @@
         "no water push": "No Water Push",
         "no entity push": "No Entity Push",
         "no block push": "No Block Push",
-        "pause on eat": "Pause On Eat",
         "attack counts": "Attack Counts",
         "sprintticks": "Sprint Ticks",
         "max delay": "Max Delay"

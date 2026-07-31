@@ -15,6 +15,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.Packet;
@@ -53,9 +54,8 @@ public class Velocity extends Module {
     public final BoolSetting entityPush = boolSetting("No Entity Push", true, () -> mode.is(Mode.Cancel));
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
-    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", false, () -> mode.is(Mode.Reduce));
     private final IntSetting attackCounts = intSetting("Attack Counts", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
-    private final IntSetting sprintTicks = intSetting("SprintTicks", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
+    private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
 
     private long lag;
@@ -77,13 +77,11 @@ public class Velocity extends Module {
     }
 
     @Override
-    protected void onEnable() {
-        resetReduceState();
-    }
-
-    @Override
     protected void onDisable() {
-        resetReduceState();
+        delay = false;
+        packets.clear();
+        attackQueue = 0;
+        jump = false;
     }
 
     @EventHandler
@@ -91,27 +89,29 @@ public class Velocity extends Module {
         if (nullCheck()) return;
 
         switch (mode.getValue()) {
-            case Cancel -> {
-                if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
-                    event.cancel();
-                    return;
-                }
-
-                if (explosion.getValue()
-                        && event.getPacket() instanceof ClientboundExplodePacket packet
-                        && (!explosionOnlyBlock.getValue() || PlayerUtils.isInBlock())) {
-                    event.setPacket(new ClientboundExplodePacket(
-                            packet.center(),
-                            packet.radius(),
-                            packet.blockCount(),
-                            Optional.empty(),
-                            packet.explosionParticle(),
-                            packet.explosionSound(),
-                            packet.blockParticles()
-                    ));
-                }
-            }
+            case Cancel -> cancelPacket(event);
             case Reduce -> reducePacket(event);
+        }
+    }
+
+    private void cancelPacket(PacketEvent.Receive event) {
+        if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
+            event.cancel();
+            return;
+        }
+
+        if (explosion.getValue()
+                && event.getPacket() instanceof ClientboundExplodePacket packet
+                && (!explosionOnlyBlock.getValue() || PlayerUtils.isInBlock())) {
+            event.setPacket(new ClientboundExplodePacket(
+                    packet.center(),
+                    packet.radius(),
+                    packet.blockCount(),
+                    Optional.empty(),
+                    packet.explosionParticle(),
+                    packet.explosionSound(),
+                    packet.blockParticles()
+            ));
         }
     }
 
@@ -128,8 +128,6 @@ public class Velocity extends Module {
             event.cancel();
             packets.add((Packet<? super ClientPacketListener>) packet);
         }
-
-        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
         if (packet instanceof ClientboundPlayerPositionPacket || packet instanceof ClientboundExplodePacket) {
             lag = System.currentTimeMillis();
@@ -153,14 +151,6 @@ public class Velocity extends Module {
     private void onReduceTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.Reduce)) return;
 
-        if (pauseOnEat.getValue() && PlayerUtils.isEating()) {
-            flush();
-            attackQueue = 0;
-            sprintQueue = 0;
-            jump = false;
-            return;
-        }
-
         if (delay && (mc.player.onGround() || System.currentTimeMillis() - lag < 100 || System.currentTimeMillis() - startDelay >= maxDelay.getValue())) {
             flush();
             if (System.currentTimeMillis() - lag >= 100) {
@@ -171,17 +161,16 @@ public class Velocity extends Module {
 
         KillAura killAura = KillAura.INSTANCE;
         if (sprintQueue >= 1 && killAura.target == null && !Scaffold.INSTANCE.isEnabled()) {
-            Managers.ROTATION.setRotations(new Rot2f(yaw, Managers.ROTATION.getRotation().getPitch()), 180f);
+            Managers.ROTATION.setRotations(new Rot2f(yaw, Managers.ROTATION.getRotation().getPitch()), 180f, Priority.Highest);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     private void onAttackTick(PlayerTickEvent.Pre event) {
         if (!mode.is(Mode.Reduce)) return;
-        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
         if (attackQueue >= 1) {
-            if (mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+            if (Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
                 mc.gameMode.attack(mc.player, pl);
                 mc.player.swing(InteractionHand.MAIN_HAND);
             }
@@ -192,9 +181,8 @@ public class Velocity extends Module {
     @EventHandler(priority = EventPriority.LOW)
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (!mode.is(Mode.Reduce)) return;
-        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
-        if (delay && mc.player.fallDistance == 0 && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+        if (delay && mc.player.fallDistance == 0 && Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
             if (System.currentTimeMillis() - lag >= 100) {
                 event.setForward(1.0f);
                 event.setStrafe(0.0f);

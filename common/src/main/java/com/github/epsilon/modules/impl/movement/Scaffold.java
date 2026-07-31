@@ -644,8 +644,9 @@ public class Scaffold extends Module {
     }
 
 
-    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
-                              boolean shrink) {
+    private record RenderInfo(
+            AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink
+    ) {
     }
 
 }

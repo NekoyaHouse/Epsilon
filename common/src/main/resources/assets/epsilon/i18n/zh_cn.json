@@ -486,7 +486,16 @@
         "mace": "仅在重锤上交换",
         "trident": "仅在三叉戟上交换"
       },
-      "criticals": "暴击",
+      "criticals": {
+        "_value": "暴击",
+        "packet mode": {
+          "_value": "封包模式",
+          "pure": "纯粹",
+          "legit": "合法"
+        },
+        "groundo nly": "仅地面",
+        "show crit particles": "显示暴击粒子"
+      },
       "zealot crystal+": {
         "_value": "狂暴水晶+",
         "general": "常规",
@@ -1004,11 +1013,6 @@
       },
       "auto mlg": {
         "_value": "自动 MLG",
-        "mlg mode": {
-          "_value": "MLG 模式",
-          "grim": "Grim",
-          "hypixel": "Hypixel"
-        },
         "interact delay": "交互延迟",
         "collect delay ticks": "收集延迟刻数"
       },
@@ -1392,7 +1396,7 @@
         "_value": "目标环绕",
         "radius": "环绕半径",
         "points": "路径点数",
-        "require press": "需要按住跳跃",
+        "require jump": "需要跳跃",
         "speed only": "仅速度/飞行模块",
         "draw radius": "绘制半径"
       },
@@ -1409,7 +1413,6 @@
         "no water push": "无水流推动",
         "no entity push": "无实体推动",
         "no block push": "无方块推动",
-        "pause on eat": "进食时暂停",
         "attack counts": "攻击次数",
         "sprintticks": "冲刺刻数",
         "max delay": "最大延迟"
