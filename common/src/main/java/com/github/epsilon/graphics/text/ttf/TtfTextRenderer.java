@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.text.ttf;
 
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.BufferUtils;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.text.GlyphDescriptor;
@@ -466,7 +467,8 @@ public class TtfTextRenderer implements ITextRenderer {
             int indexCount = (vertexCount / 4) * 6;
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
-            pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
+            LuminTexture fontTexture = fontBlur ? atlas.getAlphaTexture() : atlas.getTexture();
+            pass.bindTexture("Sampler0", fontTexture.getTextureView(), fontTexture.getSampler());
             if (fontBlur) {
                 pass.setUniform("FontBlurUniforms", batch.blurUniforms);
             }

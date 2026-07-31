@@ -18,14 +18,9 @@ import love.slmpc.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
 @ClInitNative
@@ -33,19 +28,9 @@ public class Hotkey extends HudModule {
 
     public static final Hotkey INSTANCE = new Hotkey();
 
-    private static final float ICON_SIZE = 16.0f;
-    private static final float ROW_HEIGHT = 16.0f;
-    private static final float ROW_GAP = 2.0f;
-    private static final float TEXT_PADDING = 4.0f;
-    private static final float ICON_TEXT_GAP = 2.0f;
-    private static final float TEXT_SCALE = 0.65f;
-    private static final float ICON_SCALE = 0.72f;
-    private static final float BLUR_STRENGTH = 8.0f;
-    private static final float CORNER_RADIUS = 3.0f;
-    private static final float SHADOW_BLUR = 10.0f;
-    private static final Color SHADOW_COLOR = new Color(0, 0, 0, 110);
-    private static final Color SUFFIX_COLOR = new Color(170, 170, 170);
-    private static final int ANIMATION_DURATION_MS = 200;
+    private Hotkey() {
+        super("Hotkey", 96.0f, ROW_HEIGHT);
+    }
 
     private enum ColorMode {
         Single,
@@ -64,12 +49,22 @@ public class Hotkey extends HudModule {
     private final EnumSetting<ShadowColorMode> shadowColorMode = enumSetting("Shadow Color", ShadowColorMode.Black);
     private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-    private final Map<Module, ToggleAnimation> moduleAnimations = new HashMap<>();
+    private static final float ICON_SIZE = 16.0f;
+    private static final float ROW_HEIGHT = 16.0f;
+    private static final float ROW_GAP = 2.0f;
+    private static final float TEXT_PADDING = 4.0f;
+    private static final float ICON_TEXT_GAP = 2.0f;
+    private static final float TEXT_SCALE = 0.65f;
+    private static final float ICON_SCALE = 0.72f;
+    private static final float BLUR_STRENGTH = 8.0f;
+    private static final float CORNER_RADIUS = 3.0f;
+    private static final float SHADOW_BLUR = 10.0f;
+    private static final Color SHADOW_COLOR = new Color(0, 0, 0, 110);
+    private static final Color SUFFIX_COLOR = new Color(170, 170, 170);
+    private static final int ANIMATION_DURATION_MS = 200;
 
-    private Hotkey() {
-        super("Hotkey", 96.0f, ROW_HEIGHT);
-    }
+    private final Map<Module, ToggleAnimation> moduleAnimations = new HashMap<>();
+    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     public void render(DeltaTracker deltaTracker) {
@@ -237,4 +232,5 @@ public class Hotkey extends HudModule {
     private record Entry(Module module, String name, String info, String icon, float nameWidth, float textWidth,
                          float animation) {
     }
+
 }

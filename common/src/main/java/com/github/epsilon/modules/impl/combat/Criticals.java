@@ -34,7 +34,7 @@ public class Criticals extends Module {
         } else {
             fallTicks++;
             KillAura killAura = KillAura.INSTANCE;
-            if (killAura.getTarget() != null && !killAura.targets.isEmpty() && Velocity.INSTANCE.attackQueue == 0) {
+            if (killAura.target != null && Velocity.INSTANCE.attackQueue == 0) {
                 stopSprint = true;
             }
         }

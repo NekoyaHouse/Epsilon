@@ -1518,6 +1518,15 @@
           "potion": "夜视效果"
         }
       },
+      "world tweaks": {
+        "_value": "世界调整",
+        "fog modify": "修改迷雾",
+        "fog start": "迷雾起点",
+        "fog end": "迷雾终点",
+        "fog color": "迷雾颜色",
+        "change time": "修改时间",
+        "time": "时间"
+      },
       "game animation": {
         "_value": "游戏动画",
         "hotbar": "快捷栏"

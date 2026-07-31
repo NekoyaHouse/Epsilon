@@ -148,7 +148,7 @@ public class TargetManager {
         return request.extraFilter().test(entity);
     }
 
-    private boolean isSameTeam(Entity entity) {
+    public boolean isSameTeam(Entity entity) {
         EnumSetting<ClientSetting.Teams> teams = ClientSetting.INSTANCE.teams;
         if (teams.is(ClientSetting.Teams.None)) {
             return false;

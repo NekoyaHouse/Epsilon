@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.IFontLoader;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.stb.STBTruetype;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -212,7 +213,11 @@ public class TtfFontLoader implements IFontLoader {
     }
 
     private void appendGlyph(int codepoint, TtfGlyph glyph) {
-        if (glyph == null || glyph.glyphData() == null) return;
+        if (glyph == null) return;
+        if (glyph.glyphData() == null || glyph.alphaData() == null) {
+            freeGlyph(glyph);
+            return;
+        }
 
         if (currentAtlas == null) {
             createNewAtlas();
@@ -284,6 +289,9 @@ public class TtfFontLoader implements IFontLoader {
     private void freeGlyph(TtfGlyph glyph) {
         if (glyph != null && glyph.glyphData() != null) {
             STBTruetype.stbtt_FreeSDF(glyph.glyphData());
+        }
+        if (glyph != null && glyph.alphaData() != null) {
+            MemoryUtil.memFree(glyph.alphaData());
         }
     }
 

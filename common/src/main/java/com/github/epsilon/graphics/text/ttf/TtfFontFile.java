@@ -103,11 +103,47 @@ public class TtfFontFile {
                     xOff, yOff
             );
 
+            int glyphWidth = width.get(0);
+            int glyphHeight = height.get(0);
+            ByteBuffer alphaPixels = MemoryUtil.memCalloc(Math.max(1, glyphWidth * glyphHeight));
+            try (MemoryStack bitmapStack = MemoryStack.stackPush()) {
+                final var bitmapWidth = bitmapStack.callocInt(1);
+                final var bitmapHeight = bitmapStack.callocInt(1);
+                final var bitmapX = bitmapStack.callocInt(1);
+                final var bitmapY = bitmapStack.callocInt(1);
+                ByteBuffer bitmap = STBTruetype.stbtt_GetGlyphBitmap(
+                        fontInfo, scale, scale, glyphIndex,
+                        bitmapWidth, bitmapHeight, bitmapX, bitmapY
+                );
+                try {
+                    if (bitmap != null && glyphWidth > 0 && glyphHeight > 0) {
+                        int copyWidth = Math.min(bitmapWidth.get(0), glyphWidth);
+                        int copyHeight = Math.min(bitmapHeight.get(0), glyphHeight);
+                        int dstX = bitmapX.get(0) - xOff.get(0);
+                        int dstY = bitmapY.get(0) - yOff.get(0);
+                        for (int row = 0; row < copyHeight; row++) {
+                            int targetY = row + dstY;
+                            if (targetY < 0 || targetY >= glyphHeight) continue;
+                            for (int column = 0; column < copyWidth; column++) {
+                                int targetX = column + dstX;
+                                if (targetX >= 0 && targetX < glyphWidth) {
+                                    alphaPixels.put(targetY * glyphWidth + targetX, bitmap.get(row * bitmapWidth.get(0) + column));
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    if (bitmap != null) {
+                        STBTruetype.stbtt_FreeBitmap(bitmap);
+                    }
+                }
+            }
+
             final var advance = stack.callocInt(1);
             final var lsb = stack.callocInt(1);
             STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, advance, lsb);
 
-            return new TtfGlyph(sdfPixels, width.get(), height.get(), xOff.get(), yOff.get(), (int) (advance.get() * scale));
+            return new TtfGlyph(sdfPixels, alphaPixels, glyphWidth, glyphHeight, xOff.get(), yOff.get(), (int) (advance.get() * scale));
         }
     }
 

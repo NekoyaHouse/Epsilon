@@ -7,7 +7,6 @@ import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.system.MemoryUtil;
 
@@ -15,13 +14,17 @@ import java.nio.ByteBuffer;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.github.epsilon.Constants.mc;
+
 public class TtfGlyphAtlas {
 
     private static final int SIZE = 1024;
     private static final int GLYPH_GUTTER = 2;
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
     private final LuminTexture texture;
+    private final LuminTexture alphaTexture;
     private final Identifier textureId;
+    private final Identifier alphaTextureId;
 
     private int currentX = 0;
     private int currentY = 0;
@@ -29,9 +32,17 @@ public class TtfGlyphAtlas {
 
     public TtfGlyphAtlas(int atlasId) {
         this.textureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_atlas/" + NEXT_TEXTURE_ID.getAndIncrement());
+        this.alphaTextureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_alpha_atlas/" + NEXT_TEXTURE_ID.getAndIncrement());
 
         final var texture = RenderSystem.getDevice().createTexture(
                 () -> "Lumin-TtfGlyphAtlas",
+                GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
+                TextureFormat.RED8,
+                SIZE, SIZE,
+                1, 1
+        );
+        final var alphaTexture = RenderSystem.getDevice().createTexture(
+                () -> "Lumin-TtfGlyphAlphaAtlas",
                 GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
                 TextureFormat.RED8,
                 SIZE, SIZE,
@@ -46,17 +57,26 @@ public class TtfGlyphAtlas {
         );
 
         this.texture = new LuminTexture(texture, textureView, sampler);
-        fillTextureWithTransparentDistance(texture);
-        Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
+        final var alphaTextureView = RenderSystem.getDevice().createTextureView(alphaTexture);
+        final var alphaSampler = RenderSystem.getDevice().createSampler(
+                AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE,
+                FilterMode.LINEAR, FilterMode.LINEAR,
+                1, OptionalDouble.empty()
+        );
+        this.alphaTexture = new LuminTexture(alphaTexture, alphaTextureView, alphaSampler);
+        fillTexture(texture, (byte) 0xFF);
+        fillTexture(alphaTexture, (byte) 0x00);
+        mc.getTextureManager().register(this.textureId, this.texture);
+        mc.getTextureManager().register(this.alphaTextureId, this.alphaTexture);
     }
 
-    private static void fillTextureWithTransparentDistance(GpuTexture texture) {
-        ByteBuffer transparent = MemoryUtil.memAlloc(SIZE * SIZE);
+    private static void fillTexture(GpuTexture texture, byte value) {
+        ByteBuffer pixels = MemoryUtil.memAlloc(SIZE * SIZE);
         try {
-            MemoryUtil.memSet(MemoryUtil.memAddress(transparent), 0xFF, SIZE * SIZE);
+            MemoryUtil.memSet(MemoryUtil.memAddress(pixels), value & 0xFF, SIZE * SIZE);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(
                     texture,
-                    transparent,
+                    pixels,
                     NativeImage.Format.LUMINANCE,
                     0,
                     0,
@@ -65,7 +85,7 @@ public class TtfGlyphAtlas {
                     SIZE
             );
         } finally {
-            MemoryUtil.memFree(transparent);
+            MemoryUtil.memFree(pixels);
         }
     }
 
@@ -104,6 +124,18 @@ public class TtfGlyphAtlas {
                 glyph.width(),
                 glyph.height()
         );
+        if (glyph.alphaData() != null) {
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(
+                    this.alphaTexture.getTexture(),
+                    glyph.alphaData(),
+                    NativeImage.Format.LUMINANCE,
+                    0,
+                    0,
+                    glyphX, glyphY,
+                    glyph.width(),
+                    glyph.height()
+            );
+        }
 
         GlyphUV uv = new GlyphUV(
                 (float) glyphX / SIZE,
@@ -122,6 +154,10 @@ public class TtfGlyphAtlas {
         return texture;
     }
 
+    public LuminTexture getAlphaTexture() {
+        return alphaTexture;
+    }
+
     public static int getSize() {
         return SIZE;
     }
@@ -131,7 +167,8 @@ public class TtfGlyphAtlas {
     }
 
     public void destroy() {
-        Minecraft.getInstance().getTextureManager().release(this.textureId);
+        mc.getTextureManager().release(this.textureId);
+        mc.getTextureManager().release(this.alphaTextureId);
     }
 
     public record GlyphUV(float u0, float v0, float u1, float v1) {

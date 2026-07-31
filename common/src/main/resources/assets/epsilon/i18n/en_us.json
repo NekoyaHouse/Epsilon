@@ -1518,6 +1518,15 @@
           "potion": "Potion"
         }
       },
+      "world tweaks": {
+        "_value": "World Tweaks",
+        "fog modify": "Modify Fog",
+        "fog start": "Fog Start",
+        "fog end": "Fog End",
+        "fog color": "Fog Color",
+        "change time": "Change Time",
+        "time": "Time"
+      },
       "game animation": {
         "_value": "Game Animation",
         "hotbar": "Hotbar"

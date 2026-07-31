@@ -21,7 +21,7 @@ public abstract class MixinIrisHandRenderer {
     private void flushHandOutline(CallbackInfo ci) {
         if (ShaderHolder.INSTANCE.renderingHands) {
             bufferSource.outlineBufferSource().endOutlineBatch();
-            ShaderHolder.INSTANCE.customHandOutlineComplete = true;;
+            ShaderHolder.INSTANCE.customHandOutlineComplete = true;
         }
     }
 

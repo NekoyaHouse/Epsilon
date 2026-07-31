@@ -84,9 +84,9 @@ public class KillAura extends Module {
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
     private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
 
-    private final BoolSetting player = boolSetting("Player", true);
-    private final BoolSetting mob = boolSetting("Mob", true);
-    private final BoolSetting animal = boolSetting("Animal", true);
+    private final BoolSetting players = boolSetting("Players", true);
+    private final BoolSetting mobs = boolSetting("Mobs", true);
+    private final BoolSetting animals = boolSetting("Animals", true);
     private final BoolSetting villagers = boolSetting("Villagers", false);
     private final BoolSetting ambient = boolSetting("Ambient", false);
     private final BoolSetting water = boolSetting("Water", false);
@@ -124,7 +124,7 @@ public class KillAura extends Module {
     private final DoubleSetting fireflyShaking = doubleSetting("Firefly Shaking", 1.8, 0.25, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
     private final DoubleSetting fireflyAmplitude = doubleSetting("Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
 
-    public List<LivingEntity> targets;
+    private List<LivingEntity> targets;
     public LivingEntity target;
     private int targetNumber;
 
@@ -135,7 +135,7 @@ public class KillAura extends Module {
 
     @Override
     public String getInfo() {
-        return mode.getTranslatedValue();
+        return target == null ? null : target.getName().getString();
     }
 
     @Override
@@ -159,9 +159,9 @@ public class KillAura extends Module {
         targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
                 searchRange.getValue(),
                 fov.getValue().floatValue(),
-                player.getValue(),
-                mob.getValue(),
-                animal.getValue(),
+                players.getValue(),
+                mobs.getValue(),
+                animals.getValue(),
                 villagers.getValue(),
                 ambient.getValue(),
                 water.getValue(),
@@ -201,12 +201,13 @@ public class KillAura extends Module {
         }
 
         target = targets.get(targetNumber);
+
         Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
         if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
         Managers.ROTATION.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target);
 
         HitResult hitResult = Managers.ROTATION.getHitResult();
-        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && velocity.attackQueue <= 0) {
+        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !Managers.TARGET.isSameTeam(player) && velocity.attackQueue <= 0) {
             if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
@@ -246,7 +247,7 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (targets != null && !targets.isEmpty() && Velocity.INSTANCE.attackQueue <= 0) {
+        if (target != null && Velocity.INSTANCE.attackQueue <= 0) {
             HitResult hitResult = Managers.ROTATION.getHitResult();
             if (!onlyCrosshair.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
                 switch (mode.getValue()) {
@@ -267,10 +268,7 @@ public class KillAura extends Module {
             }
         }
 
-        if (!esp.getValue() || espMode.is(ESPMode.Deobf)) return;
-
-        LivingEntity target = getTarget();
-        if (target == null) return;
+        if (!esp.getValue() || espMode.is(ESPMode.Deobf) || target == null) return;
 
         PoseStack stack = event.getPoseStack();
 
@@ -315,10 +313,6 @@ public class KillAura extends Module {
                 );
             }
         }
-    }
-
-    public LivingEntity getTarget() {
-        return target;
     }
 
 }

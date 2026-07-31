@@ -53,9 +53,9 @@ public class Velocity extends Module {
     public final BoolSetting entityPush = boolSetting("No Entity Push", true, () -> mode.is(Mode.Cancel));
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
-    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, () -> mode.is(Mode.Reduce));
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", false, () -> mode.is(Mode.Reduce));
     private final IntSetting attackCounts = intSetting("Attack Counts", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
-    private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
+    private final IntSetting sprintTicks = intSetting("SprintTicks", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
 
     private long lag;
@@ -67,6 +67,14 @@ public class Velocity extends Module {
     private boolean jump;
 
     private final Queue<Packet<? super ClientPacketListener>> packets = new ConcurrentLinkedQueue<>();
+
+    @Override
+    public String getInfo() {
+        return switch (mode.getValue()) {
+            case Cancel -> "Cancel";
+            case Reduce -> "Reduce " + (delay ? System.currentTimeMillis() - startDelay + "ms" : "");
+        };
+    }
 
     @Override
     protected void onEnable() {
@@ -110,12 +118,18 @@ public class Velocity extends Module {
     private void reducePacket(PacketEvent.Receive event) {
         Packet<?> packet = event.getPacket();
 
-        if (delay && isDelayedPacket(packet)) {
+        if (delay && (packet instanceof ClientboundSetEntityMotionPacket
+                || packet instanceof ClientboundMoveEntityPacket
+                || packet instanceof ClientboundTeleportEntityPacket
+                || packet instanceof ClientboundPingPacket
+                || packet instanceof ClientboundPlayerLookAtPacket
+                || packet instanceof ClientboundPlayerPositionPacket)
+        ) {
             event.cancel();
             packets.add((Packet<? super ClientPacketListener>) packet);
         }
 
-        if (shouldPauseReduce()) return;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
         if (packet instanceof ClientboundPlayerPositionPacket || packet instanceof ClientboundExplodePacket) {
             lag = System.currentTimeMillis();
@@ -135,20 +149,11 @@ public class Velocity extends Module {
         }
     }
 
-    private boolean isDelayedPacket(Packet<?> packet) {
-        return packet instanceof ClientboundSetEntityMotionPacket
-                || packet instanceof ClientboundMoveEntityPacket
-                || packet instanceof ClientboundTeleportEntityPacket
-                || packet instanceof ClientboundPingPacket
-                || packet instanceof ClientboundPlayerLookAtPacket
-                || packet instanceof ClientboundPlayerPositionPacket;
-    }
-
     @EventHandler
     private void onReduceTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.Reduce)) return;
 
-        if (shouldPauseReduce()) {
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) {
             flush();
             attackQueue = 0;
             sprintQueue = 0;
@@ -156,52 +161,48 @@ public class Velocity extends Module {
             return;
         }
 
-        long now = System.currentTimeMillis();
-        if (delay && (mc.player.onGround() || now - lag < 100L || now - startDelay >= maxDelay.getValue())) {
+        if (delay && (mc.player.onGround() || System.currentTimeMillis() - lag < 100 || System.currentTimeMillis() - startDelay >= maxDelay.getValue())) {
             flush();
-            if (now - lag >= 100L) {
+            if (System.currentTimeMillis() - lag >= 100) {
                 attackQueue = attackCounts.getValue();
                 sprintQueue = sprintTicks.getValue();
             }
         }
 
-        if (sprintQueue > 0 && canForceMovementInput() && now - lag >= 100L) {
-            Managers.ROTATION.setRotations(
-                    new Rot2f(yaw, Managers.ROTATION.getRotation().getPitch()),
-                    180.0
-            );
+        KillAura killAura = KillAura.INSTANCE;
+        if (sprintQueue >= 1 && killAura.target == null && !Scaffold.INSTANCE.isEnabled()) {
+            Managers.ROTATION.setRotations(new Rot2f(yaw, Managers.ROTATION.getRotation().getPitch()), 180f);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     private void onAttackTick(PlayerTickEvent.Pre event) {
-        if (!mode.is(Mode.Reduce) || shouldPauseReduce() || attackQueue <= 0) return;
+        if (!mode.is(Mode.Reduce)) return;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
-        if (mc.hitResult instanceof EntityHitResult hit
-                && hit.getEntity() instanceof Player player
-                && !AntiBot.INSTANCE.isBot(player)) {
-            mc.gameMode.attack(mc.player, player);
-            mc.player.swing(InteractionHand.MAIN_HAND);
+        if (attackQueue >= 1) {
+            if (mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+                mc.gameMode.attack(mc.player, pl);
+                mc.player.swing(InteractionHand.MAIN_HAND);
+            }
+            attackQueue--;
         }
-        attackQueue--;
     }
 
     @EventHandler(priority = EventPriority.LOW)
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (!mode.is(Mode.Reduce) || shouldPauseReduce()) return;
+        if (!mode.is(Mode.Reduce)) return;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
 
-        long elapsed = System.currentTimeMillis() - lag;
-        if (delay && mc.player.fallDistance == 0.0f
-                && mc.hitResult instanceof EntityHitResult hit
-                && hit.getEntity() instanceof Player player
-                && !AntiBot.INSTANCE.isBot(player)
-                && elapsed >= 100L) {
-            event.setForward(1.0f);
-            event.setStrafe(0.0f);
+        if (delay && mc.player.fallDistance == 0 && mc.hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+            if (System.currentTimeMillis() - lag >= 100) {
+                event.setForward(1.0f);
+                event.setStrafe(0.0f);
+            }
         }
 
         if (jump && mc.player.onGround()) {
-            if (elapsed >= 100L) {
+            if (System.currentTimeMillis() - lag >= 100) {
                 event.setJump(true);
                 event.setForward(1.0f);
                 event.setStrafe(0.0f);
@@ -209,19 +210,11 @@ public class Velocity extends Module {
             jump = false;
         }
 
-        if (sprintQueue > 0 && canForceMovementInput() && elapsed >= 100L) {
+        KillAura killAura = KillAura.INSTANCE;
+        if (sprintQueue-- >= 1 && killAura.target == null && !Scaffold.INSTANCE.isEnabled() && System.currentTimeMillis() - lag >= 100) {
             event.setForward(1.0f);
             event.setStrafe(0.0f);
-            sprintQueue--;
         }
-    }
-
-    private boolean canForceMovementInput() {
-        return !KillAura.INSTANCE.isEnabled() && !Scaffold.INSTANCE.isEnabled();
-    }
-
-    private boolean shouldPauseReduce() {
-        return pauseOnEat.getValue() && PlayerUtils.isEating();
     }
 
     private void flush() {

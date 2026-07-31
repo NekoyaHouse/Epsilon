@@ -12,49 +12,54 @@ layout(std140) uniform FontBlurUniforms {
 
 layout(location = 0) out vec4 f_Color;
 
-const float EDGE_THRESHOLD = 0.5;
-const float NANOVG_SIGMA_SCALE = 0.57735;
-const float ATLAS_SIZE = 1024.0;
-const float SDF_PADDING = 16.0;
-const float SDF_DISTANCE_PER_ATLAS_PIXEL = EDGE_THRESHOLD / SDF_PADDING;
-const float SQRT_TWO = 1.41421356237;
+const float GLOW_SIGMA_SCALE = 0.65;
+const float GLOW_ALPHA_POWER = 1.35;
+const float GLOW_ALPHA_SCALE = 0.78;
 
-float erfApprox(float value) {
-    float signValue = value < 0.0 ? -1.0 : 1.0;
-    float x = abs(value);
-    float t = 1.0 / (1.0 + 0.3275911 * x);
-    float polynomial = (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t
-        - 0.284496736) * t + 0.254829592) * t;
-    return signValue * (1.0 - polynomial * exp(-x * x));
+float glyphAlpha(vec2 uv) {
+    vec2 lower = v_GlyphUvBounds.xy;
+    vec2 upper = v_GlyphUvBounds.zw;
+    if (uv.x < lower.x || uv.y < lower.y || uv.x > upper.x || uv.y > upper.y) {
+        return 0.0;
+    }
+    return texture(Sampler0, uv).r;
 }
 
-float signedDistancePixels(vec2 uv, vec2 screenDx, vec2 screenDy) {
-    vec2 clampedUv = clamp(uv, v_GlyphUvBounds.xy, v_GlyphUvBounds.zw);
-    float encodedDistance = 1.0 - texture(Sampler0, clampedUv).r;
-    float atlasPixelsPerScreenPixel = max(length(screenDx), length(screenDy)) * ATLAS_SIZE;
-    float encodedDistancePerScreenPixel = max(
-        atlasPixelsPerScreenPixel * SDF_DISTANCE_PER_ATLAS_PIXEL,
-        0.0001
-    );
-    float distance = (encodedDistance - EDGE_THRESHOLD) / encodedDistancePerScreenPixel;
+float blurredAlpha(vec2 uv, vec2 screenDx, vec2 screenDy, float radius) {
+    // 在真实 glyph alpha 位图上做密集 Gaussian 近似；采样范围跟随半径，避免把 quad 边界当成字形。
+    float sigma = max(radius * GLOW_SIGMA_SCALE, 0.5);
+    float sampleRadius = max(radius * 1.1, 1.0);
+    float total = 0.0;
+    float weightTotal = 0.0;
 
-    vec2 uvPerScreenPixel = max(vec2(length(screenDx), length(screenDy)), vec2(0.0000001));
-    vec2 outsideDistance = abs(uv - clampedUv) / uvPerScreenPixel;
-    return distance - length(outsideDistance);
+    for (int y = -3; y <= 3; y++) {
+        for (int x = -3; x <= 3; x++) {
+            vec2 offset = screenDx * (float(x) * sampleRadius * 0.3333333)
+                        + screenDy * (float(y) * sampleRadius * 0.3333333);
+            float distanceSquared = float(x * x + y * y) * sampleRadius * sampleRadius * 0.1111111;
+            float weight = exp(-distanceSquared / (2.0 * sigma * sigma));
+            total += glyphAlpha(uv + offset) * weight;
+            weightTotal += weight;
+        }
+    }
+
+    return total / max(weightTotal, 0.0001);
 }
 
 void main() {
     float blurRadius = max(FontBlurInfo.x, 0.001);
-    vec2 screenDx = dFdx(v_TexCoord);
-    vec2 screenDy = dFdy(v_TexCoord);
-    float distance = signedDistancePixels(v_TexCoord, screenDx, screenDy);
-    float blurSigma = blurRadius * NANOVG_SIGMA_SCALE;
-    float effectiveSigma = sqrt(blurSigma * blurSigma + 0.25);
-    float coverage = 0.5 + 0.5 * erfApprox(distance / (SQRT_TWO * effectiveSigma));
-    float alpha = v_Color.a * clamp(coverage, 0.0, 1.0);
+    float blurred = blurredAlpha(
+        v_TexCoord,
+        dFdx(v_TexCoord),
+        dFdy(v_TexCoord),
+        blurRadius
+    );
+    // 降低中心不透明度并压低中间灰度，避免模糊字形形成一圈外描边。
+    float glow = pow(clamp(blurred, 0.0, 1.0), GLOW_ALPHA_POWER) * GLOW_ALPHA_SCALE;
+    float alpha = v_Color.a * glow;
+
     if (alpha < 0.001) {
         discard;
     }
-
     f_Color = vec4(v_Color.rgb, alpha);
 }
