@@ -2207,8 +2207,24 @@
       },
       "watermark": {
         "_value": "Watermark",
+        "style": {
+          "_value": "Style",
+          "traditional": "Traditional",
+          "sakura": "Sakura"
+        },
         "scale": "Scale",
-        "text color": "Text Color"
+        "text color": "Text Color",
+        "color mode": {
+          "_value": "Color Mode",
+          "single": "Single",
+          "double": "Double"
+        },
+        "color": "Color",
+        "color 1": "Color 1",
+        "color 2": "Color 2",
+        "glow": "Glow",
+        "glow radius": "Glow Radius",
+        "glow intensity": "Glow Intensity"
       }
     }
   }

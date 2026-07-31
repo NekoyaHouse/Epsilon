@@ -2207,8 +2207,24 @@
       },
       "watermark": {
         "_value": "水印",
+        "style": {
+          "_value": "风格",
+          "traditional": "传统",
+          "sakura": "Sakura"
+        },
         "scale": "缩放",
-        "text color": "文本颜色"
+        "text color": "文本颜色",
+        "color mode": {
+          "_value": "颜色模式",
+          "single": "单色",
+          "double": "双色"
+        },
+        "color": "颜色",
+        "color 1": "颜色 1",
+        "color 2": "颜色 2",
+        "glow": "辉光",
+        "glow radius": "辉光半径",
+        "glow intensity": "辉光强度"
       }
     }
   }

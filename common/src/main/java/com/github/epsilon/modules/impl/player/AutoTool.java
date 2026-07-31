@@ -9,6 +9,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvHelper;
+import com.github.epsilon.utils.player.InvUtils;
 import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;
@@ -36,29 +37,25 @@ public class AutoTool extends Module {
     @Override
     protected void onDisable() {
         if (oldSlot != -1) {
-            mc.player.getInventory().setSelectedSlot(oldSlot);
+            InvUtils.swap(oldSlot, false);
         }
         oldSlot = -1;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onStartDestroyBlock(StartDestroyBlockEvent event) {
-        int bestTool = getBestTool(event.getBlockPos());
-        int selectedSlot = mc.player.getInventory().getSelectedSlot();
-        if (bestTool == -1 || bestTool == selectedSlot) return;
-        if (swapBack.getValue()) {
-            if (oldSlot == -1) oldSlot = selectedSlot;
-        } else {
-            oldSlot = -1;
+        int bestTool = this.getBestTool(event.getBlockPos());
+        if (bestTool != -1) {
+            if (swapBack.getValue()) oldSlot = mc.player.getInventory().getSelectedSlot();
+            else oldSlot = -1;
+            InvUtils.swap(bestTool, false);
         }
-        mc.player.getInventory().setSelectedSlot(bestTool);
-        mc.gameMode.ensureHasSentCarriedItem();
     }
 
     @EventHandler
     private void onAfterSendPosition(AfterSendPositionEvent event) {
         if (!mc.gameMode.isDestroying() && oldSlot != -1) {
-            mc.player.getInventory().setSelectedSlot(oldSlot);
+            InvUtils.swap(oldSlot, false);
             oldSlot = -1;
         }
     }

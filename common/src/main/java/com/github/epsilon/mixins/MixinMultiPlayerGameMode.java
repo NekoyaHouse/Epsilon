@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -21,6 +22,11 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(MultiPlayerGameMode.class)
 public class MixinMultiPlayerGameMode {
+
+    @Shadow
+    private void ensureHasSentCarriedItem() {
+        throw new AssertionError();
+    }
 
     @ModifyArgs(method = "lambda$useItem$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ServerboundUseItemPacket;<init>(Lnet/minecraft/world/InteractionHand;IFF)V"))
     private void modifyUseItemPacketArgs(Args args) {
@@ -42,6 +48,9 @@ public class MixinMultiPlayerGameMode {
         StartDestroyBlockEvent event = EventBus.INSTANCE.post(new StartDestroyBlockEvent(pos, direction));
         if (event.isCancelled()) {
             cir.setReturnValue(false);
+        } else {
+            // 事件监听器可能切换手持槽位，必须先同步选槽再发送开始挖掘包。
+            this.ensureHasSentCarriedItem();
         }
     }
 
