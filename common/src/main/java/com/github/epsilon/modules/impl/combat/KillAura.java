@@ -208,7 +208,7 @@ public class KillAura extends Module {
 
         HitResult hitResult = Managers.ROTATION.getHitResult();
         if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !Managers.TARGET.isSameTeam(player) && velocity.attackQueue <= 0) {
-            if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
+            if (player.hurtTime <= 1 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
