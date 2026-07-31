@@ -37,7 +37,7 @@ public class TargetStrafe extends Module {
 
     private final DoubleSetting radius = doubleSetting("Radius", 1.0, 0.0, 6.0, 0.1);
     private final IntSetting points = intSetting("Points", 6, 3, 24, 1);
-    private final BoolSetting requirePress = boolSetting("Require Press", true);
+    private final BoolSetting requireJump = boolSetting("Require Jump", true);
     private final BoolSetting speedOnly = boolSetting("Speed Only", true);
     private final BoolSetting drawRadius = boolSetting("Draw Radius", true);
 
@@ -59,10 +59,12 @@ public class TargetStrafe extends Module {
         }
 
         if (speedOnly.getValue() && !Speed.INSTANCE.isEnabled() && !Flight.INSTANCE.isEnabled()) {
+            resetTarget();
             return;
         }
 
-        if (requirePress.getValue() && (mc.screen != null || !mc.options.keyJump.isDown())) {
+        if (requireJump.getValue() && (mc.screen != null || !mc.options.keyJump.isDown())) {
+            resetTarget();
             return;
         }
 
@@ -70,7 +72,7 @@ public class TargetStrafe extends Module {
         if (killAura.isEnabled() && !Scaffold.INSTANCE.isEnabled() && !mc.player.isUsingItem() && !mc.player.isBlocking()) {
             target = killAura.target;
         } else {
-            target = null;
+            resetTarget();
         }
 
         if (target == null) {

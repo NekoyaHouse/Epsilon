@@ -1,12 +1,18 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.EventPriority;
-import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.Velocity;
+import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.EnumSetting;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class Criticals extends Module {
 
@@ -16,35 +22,99 @@ public class Criticals extends Module {
         super("Criticals", Category.COMBAT);
     }
 
-    public int fallTicks;
-    private boolean stopSprint;
-
-    @Override
-    public void onDisable() {
-        fallTicks = 0;
-        stopSprint = false;
+    private enum Mode {
+        Pure,
+        Legit
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    private void onClientTick(ClientTickEvent.Pre event) {
-        if (nullCheck()) return;
+    private final EnumSetting<Mode> mode = enumSetting("Packet Mode", Mode.Legit);
+    private final BoolSetting groundOnly = boolSetting("GroundO nly", false, () -> mode.is(Mode.Pure));
+    private final BoolSetting alwaysShowCritParticles = boolSetting("Show Crit Particles", true, () -> mode.is(Mode.Legit));
 
-        if (mc.player.fallDistance <= 0 || mc.player.fallDistance >= 1) {
-            fallTicks = 0;
-        } else {
-            fallTicks++;
-            KillAura killAura = KillAura.INSTANCE;
-            if (killAura.target != null && Velocity.INSTANCE.attackQueue == 0) {
-                stopSprint = true;
+    private boolean shouldShowCritParticles = false;
+    private Entity lastAttackedEntity = null;
+
+    @Override
+    public String getInfo() {
+        return mode.getTranslatedValue();
+    }
+
+    @Override
+    protected void onEnable() {
+        shouldShowCritParticles = false;
+        lastAttackedEntity = null;
+    }
+
+    @EventHandler
+    private void onAttackEntity(AttackEntityEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity)) return;
+
+        if (mode.is(Mode.Pure)) {
+            if (!isCriticalHitAvailable() || (groundOnly.getValue() && !mc.player.onGround())) {
+                return;
+            }
+            AABB box = mc.player.getBoundingBox().move(0.0, 0.0625, 0.0);
+            if (!mc.level.getBlockCollisions(mc.player, box).iterator().hasNext()) {
+                doPacketCriticals();
+            }
+        } else if (mode.is("Legit")) {
+            if (alwaysShowCritParticles.getValue()) {
+                lastAttackedEntity = event.getEntity();
+                shouldShowCritParticles = true;
             }
         }
     }
 
     @EventHandler
-    private void onMoveInput(KeyboardInputEvent event) {
-        if (!stopSprint) return;
-        stopSprint = false;
-        event.setForward(0);
+    private void onTick(PlayerTickEvent.Pre event) {
+        if (mode.is(Mode.Legit)) {
+            if (shouldShowCritParticles && lastAttackedEntity != null) {
+                mc.player.crit(lastAttackedEntity);
+                shouldShowCritParticles = false;
+            }
+        }
+    }
+
+    @EventHandler
+    private void onKeyboardInput(KeyboardInputEvent event) {
+        if (mode.is(Mode.Legit)) {
+            KillAura killAura = KillAura.INSTANCE;
+            if (killAura.isEnabled() && killAura.target != null) {
+                if (mc.player.fallDistance > 0) {
+                    double dist = mc.player.distanceTo(killAura.target);
+                    if (dist <= killAura.aimRange.getValue() + 0.3) {
+                        event.setSprint(false);
+                        mc.player.setSprinting(false);
+                        mc.options.keySprint.setDown(false);
+                    }
+                }
+            }
+        }
+    }
+
+    private void doPacketCriticals() {
+        Vec3 pos = mc.player.position();
+        boolean ground = mc.player.onGround();
+
+        mc.player.setPos(pos.add(0.0, 0.0625, 0.0));
+        mc.player.setOnGround(false);
+        mc.player.sendPosition();
+
+        mc.player.setPos(pos.add(0.0, 0.00125, 0.0));
+        mc.player.setOnGround(false);
+        mc.player.sendPosition();
+
+        mc.player.setPos(pos);
+        mc.player.setOnGround(ground);
+    }
+
+    private boolean isCriticalHitAvailable() {
+        return mc.player.onGround() &&
+                !mc.player.isInWater() &&
+                !mc.player.isInLava() &&
+                !mc.player.onClimbable() &&
+                !mc.player.hasEffect(MobEffects.BLINDNESS) &&
+                !mc.player.isPassenger();
     }
 
 }
