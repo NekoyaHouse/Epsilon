@@ -26,17 +26,15 @@ float glyphAlpha(vec2 uv) {
 }
 
 float blurredAlpha(vec2 uv, vec2 screenDx, vec2 screenDy, float radius) {
-    // 在真实 glyph alpha 位图上做密集 Gaussian 近似；采样范围跟随半径，避免把 quad 边界当成字形。
     float sigma = max(radius * GLOW_SIGMA_SCALE, 0.5);
     float sampleRadius = max(radius * 1.1, 1.0);
     float total = 0.0;
     float weightTotal = 0.0;
 
-    for (int y = -3; y <= 3; y++) {
-        for (int x = -3; x <= 3; x++) {
-            vec2 offset = screenDx * (float(x) * sampleRadius * 0.3333333)
-                        + screenDy * (float(y) * sampleRadius * 0.3333333);
-            float distanceSquared = float(x * x + y * y) * sampleRadius * sampleRadius * 0.1111111;
+    for (int y = -4; y <= 4; y++) {
+        for (int x = -4; x <= 4; x++) {
+            vec2 offset = screenDx * (float(x) * sampleRadius * 0.25) + screenDy * (float(y) * sampleRadius * 0.25);
+            float distanceSquared = float(x * x + y * y) * sampleRadius * sampleRadius * 0.0625;
             float weight = exp(-distanceSquared / (2.0 * sigma * sigma));
             total += glyphAlpha(uv + offset) * weight;
             weightTotal += weight;
@@ -48,13 +46,7 @@ float blurredAlpha(vec2 uv, vec2 screenDx, vec2 screenDy, float radius) {
 
 void main() {
     float blurRadius = max(FontBlurInfo.x, 0.001);
-    float blurred = blurredAlpha(
-        v_TexCoord,
-        dFdx(v_TexCoord),
-        dFdy(v_TexCoord),
-        blurRadius
-    );
-    // 降低中心不透明度并压低中间灰度，避免模糊字形形成一圈外描边。
+    float blurred = blurredAlpha(v_TexCoord, dFdx(v_TexCoord), dFdy(v_TexCoord), blurRadius);
     float glow = pow(clamp(blurred, 0.0, 1.0), GLOW_ALPHA_POWER) * GLOW_ALPHA_SCALE;
     float alpha = v_Color.a * glow;
 
