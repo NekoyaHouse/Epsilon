@@ -36,15 +36,15 @@ public class NoSlow extends Module {
     private enum Mode {
         Vanilla,
         Jump,
-        GrimFull,
+        GrimBlink,
         Grim1_2,
         Grim1_3
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Vanilla);
     private final BoolSetting food = boolSetting("Food", true);
-    private final BoolSetting bow = boolSetting("Bow", true);
-    private final BoolSetting crossbow = boolSetting("Crossbow", true);
+    private final BoolSetting bow = boolSetting("Bow", true, () -> !mode.is(Mode.GrimBlink));
+    private final BoolSetting crossbow = boolSetting("Crossbow", true, () -> !mode.is(Mode.GrimBlink));
 
     private int ticks;
     private int useDuration = 32;
@@ -54,8 +54,15 @@ public class NoSlow extends Module {
 
     private final LinkedBlockingQueue<Packet<ClientGamePacketListener>> packets = new LinkedBlockingQueue<>();
 
-    public boolean isGrimFullWorking() {
-        return isEnabled() && mode.is(Mode.GrimFull) && eating;
+    public boolean isWorking() {
+        return isEnabled() && mode.is(Mode.GrimBlink) && eating;
+    }
+
+    public void stopIfWorking() {
+        if (isWorking()) {
+            mc.options.keyUse.setDown(false);
+            mc.gameMode.releaseUsingItem(mc.player);
+        }
     }
 
     @Override
@@ -74,7 +81,7 @@ public class NoSlow extends Module {
             onGroundTick = 0;
         }
 
-        if (!mode.is(Mode.GrimFull)) {
+        if (!mode.is(Mode.GrimBlink)) {
             return;
         }
 
@@ -87,7 +94,7 @@ public class NoSlow extends Module {
         }
 
         ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
-        if (mc.player.isUsingItem() && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK || anim == ItemUseAnimation.CROSSBOW) && !eating) {
+        if (mc.player.isUsingItem() && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) && !eating) {
             eating = true;
             ticks = 0;
             ItemStack useItem = mc.player.getUseItem();
@@ -114,7 +121,7 @@ public class NoSlow extends Module {
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
-        if (nullCheck() || mc.player.tickCount < 30 || !eating || !mode.is(Mode.GrimFull)) return;
+        if (nullCheck() || mc.player.tickCount < 30 || !eating || !mode.is(Mode.GrimBlink)) return;
 
         Packet<?> packet = event.getPacket();
 
@@ -144,7 +151,7 @@ public class NoSlow extends Module {
 
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
-        if (mode.is(Mode.GrimFull) && eating && event.getPacket() instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
+        if (mode.is(Mode.GrimBlink) && eating && event.getPacket() instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
             eating = false;
             ticks = 0;
             flush();
@@ -157,12 +164,12 @@ public class NoSlow extends Module {
         if (mc.player.tickCount < 30) return;
 
         if (!food.getValue() && mc.player.getUseItem().has(DataComponents.FOOD)) return;
-        if (!bow.getValue() && mc.player.getUseItem().is(Items.BOW)) return;
-        if (!crossbow.getValue() && mc.player.getUseItem().is(Items.CROSSBOW)) return;
+        if ((!bow.getValue() || mode.is(Mode.GrimBlink)) && mc.player.getUseItem().is(Items.BOW)) return;
+        if ((!crossbow.getValue() || mode.is(Mode.GrimBlink)) && mc.player.getUseItem().is(Items.CROSSBOW)) return;
 
         switch (mode.getValue()) {
             case Vanilla -> cancel(event);
-            case GrimFull -> grimFull(event);
+            case GrimBlink -> grimBlink(event);
             case Jump -> jump(event);
             case Grim1_2 -> grim50(event);
             case Grim1_3 -> grim33(event);
@@ -180,7 +187,7 @@ public class NoSlow extends Module {
         event.setSlowdown(false);
     }
 
-    private void grimFull(SlowdownEvent event) {
+    private void grimBlink(SlowdownEvent event) {
         ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
         if (mc.player.isUsingItem() && mc.player.getUseItemRemainingTicks() < 30 && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK)) {
             event.setSlowdown(false);

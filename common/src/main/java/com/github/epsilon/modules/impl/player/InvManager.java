@@ -181,7 +181,7 @@ public class InvManager extends Module {
     private void onTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         if (InvHelper.shouldDisableFeatures()) return;
-        if (NoSlow.INSTANCE.isGrimFullWorking()) return;
+        if (NoSlow.INSTANCE.isWorking()) return;
 
         if (mc.player.isMoving()) {
             this.noMoveTicks = 0;

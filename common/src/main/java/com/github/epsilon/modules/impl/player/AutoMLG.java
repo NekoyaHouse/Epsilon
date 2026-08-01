@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.NoSlow;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
@@ -231,6 +232,7 @@ public class AutoMLG extends Module {
                             Rot2f preciseRotation = RotationUtils.calculate(hitVec);
                             Managers.ROTATION.setRotations(preciseRotation, 180.0f, Priority.High);
 
+                            NoSlow.INSTANCE.stopIfWorking();
                             pendingSlot = waterBucket.slot();
                             shouldInteract = true;
 
