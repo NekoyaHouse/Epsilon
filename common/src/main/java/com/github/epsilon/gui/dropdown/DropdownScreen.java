@@ -482,6 +482,8 @@ public class DropdownScreen extends Screen {
     public void removed() {
         super.removed();
         popupHost.close();
+        searchField.clear();
+        syncSearchQuery();
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
