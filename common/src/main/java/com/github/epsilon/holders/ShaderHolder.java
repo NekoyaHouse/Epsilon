@@ -78,7 +78,7 @@ public class ShaderHolder {
     private RenderTarget chestTarget;
     private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
     public boolean renderingHands;
-    public boolean customHandOutlineComplete;
+    public boolean irisHandOutlinePending;
     private boolean capturedHands;
     private boolean renderingChests;
     private boolean capturedChests;
@@ -119,7 +119,6 @@ public class ShaderHolder {
                 encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
             }
             renderingHands = true;
-            customHandOutlineComplete = false;
             capturedHands = true;
         }
     }

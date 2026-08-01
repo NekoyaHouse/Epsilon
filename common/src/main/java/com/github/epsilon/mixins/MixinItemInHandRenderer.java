@@ -1,5 +1,6 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.compat.IrisCompat;
 import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.github.epsilon.modules.impl.render.Shaders;
@@ -61,11 +62,14 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
     private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-        if (ShaderHolder.INSTANCE.renderingHands && !ShaderHolder.INSTANCE.customHandOutlineComplete) {
-            minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
+        if (ShaderHolder.INSTANCE.renderingHands) {
+            if (!IrisCompat.isHandActive()) {
+                minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
+            } else {
+                ShaderHolder.INSTANCE.irisHandOutlinePending = true;
+            }
         }
         ShaderHolder.INSTANCE.renderingHands = false;
-        ;
     }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"))

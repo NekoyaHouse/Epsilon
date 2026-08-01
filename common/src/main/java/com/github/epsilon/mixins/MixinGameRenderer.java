@@ -1,5 +1,6 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.compat.IrisCompat;
 import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;
@@ -27,6 +28,13 @@ public class MixinGameRenderer {
     private void processShadersOutline(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
+            if (ShaderHolder.INSTANCE.irisHandOutlinePending) {
+                ShaderHolder.INSTANCE.renderingHands = true;
+                IrisCompat.drainHandOutline();
+                ShaderHolder.INSTANCE.renderingHands = false;
+                ShaderHolder.INSTANCE.irisHandOutlinePending = false;
+            }
+
             RenderTarget target = minecraft.levelRenderer.entityOutlineTarget;
             ShaderHolder.INSTANCE.processOutlineTarget(target, shaders.entityShader);
             ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.getMainRenderTarget());

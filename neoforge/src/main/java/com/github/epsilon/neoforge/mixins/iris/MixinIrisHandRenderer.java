@@ -1,6 +1,6 @@
 package com.github.epsilon.neoforge.mixins.iris;
 
-import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.compat.IrisCompat;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.minecraft.client.renderer.RenderBuffers;
 import org.spongepowered.asm.mixin.Final;
@@ -13,16 +13,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = HandRenderer.class, remap = false)
 public abstract class MixinIrisHandRenderer {
 
-    @Final
     @Shadow
+    @Final
     private RenderBuffers bufferSource;
 
-    @Inject(method = "endRender", at = @At("RETURN"))
-    private void flushHandOutline(CallbackInfo ci) {
-        if (ShaderHolder.INSTANCE.renderingHands) {
-            bufferSource.outlineBufferSource().endOutlineBatch();
-            ShaderHolder.INSTANCE.customHandOutlineComplete = true;
-        }
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void epsilon$registerIrisCompat(CallbackInfo ci) {
+        IrisCompat.register(
+                true,
+                () -> HandRenderer.INSTANCE.isActive(),
+                () -> ((MixinIrisHandRenderer) (Object) HandRenderer.INSTANCE).bufferSource.outlineBufferSource().endOutlineBatch()
+        );
     }
 
 }
