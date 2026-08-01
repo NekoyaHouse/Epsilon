@@ -1469,6 +1469,18 @@
         "scale": "缩放",
         "line width": "线条宽度"
       },
+      "customsky": {
+        "_value": "自定义天空",
+        "shader": {
+          "_value": "着色器",
+          "cine": "电影",
+          "euabe": "Euabe",
+          "local": "Local"
+        },
+        "speed": "速度",
+        "color": "颜色",
+        "background color (local)": "背景颜色（Local）"
+      },
       "esp 2d": {
         "_value": "2D 透视",
         "players": "玩家",

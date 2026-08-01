@@ -1469,6 +1469,18 @@
         "scale": "Scale",
         "line width": "Line Width"
       },
+      "customsky": {
+        "_value": "Custom Sky",
+        "shader": {
+          "_value": "Shader",
+          "cine": "Cine",
+          "euabe": "Euabe",
+          "local": "Local"
+        },
+        "speed": "Speed",
+        "color": "Color",
+        "background color (local)": "Background Color (Local)"
+      },
       "esp 2d": {
         "_value": "ESP 2D",
         "players": "Players",

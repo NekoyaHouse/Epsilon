@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "MixinCamera",
+    "MixinLevelRenderer",
     "MixinMinecraft",
     "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext"

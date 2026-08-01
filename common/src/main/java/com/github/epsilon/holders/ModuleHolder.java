@@ -129,6 +129,7 @@ public class ModuleHolder {
         addModule(CameraClip.INSTANCE);
         addModule(Chams.INSTANCE);
         addModule(CrystalChams.INSTANCE);
+        addModule(CustomSky.INSTANCE);
         addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
         addModule(FreeCamera.INSTANCE);
