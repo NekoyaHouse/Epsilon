@@ -342,10 +342,7 @@ public class Scaffold extends Module {
         if (rotationMode.is(RotationMode.Hypixel)) {
             speed = airTicks <= 1 ? 127 : 35;
         } else if (rotationMode.is(RotationMode.Heypixel)) {
-            speed = switch (airTicks) {
-                case 1 -> rotationSpeed.getValue();
-                default -> rotationSpeed2.getValue();
-            };
+            speed = airTicks <= 1 ? rotationSpeed.getValue() : rotationSpeed2.getValue();
         }
 
         Managers.ROTATION.setRotations(rotation, speed);

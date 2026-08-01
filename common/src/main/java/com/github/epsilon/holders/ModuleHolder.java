@@ -76,6 +76,7 @@ public class ModuleHolder {
         addModule(AutoKouZi.INSTANCE);
         addModule(AutoMLG.INSTANCE);
         addModule(AutoTool.INSTANCE);
+        addModule(BedNuker.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
         addModule(FakePlayer.INSTANCE);
