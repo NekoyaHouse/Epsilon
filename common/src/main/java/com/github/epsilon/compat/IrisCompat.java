@@ -2,7 +2,7 @@ package com.github.epsilon.compat;
 
 import java.util.function.BooleanSupplier;
 
-public final class IrisCompat {
+public class IrisCompat {
 
     private static boolean irisPresent;
     private static BooleanSupplier handActiveChecker;

@@ -72,7 +72,7 @@ public class BlockESP extends Module {
                     Blocks.BLACK_SHULKER_BOX
             )
     );
-    private final BoolSetting illegals = boolSetting("Illegals", true);
+    private final BoolSetting illegals = boolSetting("Illegals", false);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(160, 210, 255, 180));

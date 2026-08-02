@@ -2,6 +2,8 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -14,6 +16,8 @@ import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
@@ -21,9 +25,15 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.joml.Quaternionf;
+
+import java.awt.*;
+import java.util.Locale;
 
 public class BedNuker extends Module {
 
@@ -36,14 +46,22 @@ public class BedNuker extends Module {
     private final DoubleSetting range = doubleSetting("Range", 4.5, 1.0, 6.0, 0.1);
     private final BoolSetting throughWalls = boolSetting("Through Walls", false);
     private final BoolSetting rotate = boolSetting("Rotate", true);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 1, 180, 1, rotate::getValue);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, rotate::getValue);
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
+    private final BoolSetting esp = boolSetting("ESP", true);
 
     private BlockPos currentTarget;
     private Direction currentFace;
     private boolean startedBreaking;
     private BlockPos trackedBedPos;
     private Direction trackedBedFace;
+
+    @Override
+    public void onDisable() {
+        resetBreaking();
+        trackedBedPos = null;
+        trackedBedFace = null;
+    }
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
@@ -52,26 +70,32 @@ public class BedNuker extends Module {
             return;
         }
 
-        TargetData nextTarget = findTarget();
-        if (nextTarget == null) {
-            resetBreaking();
-            return;
-        }
+        double maxRange = range.getValue();
+        Vec3 eyes = mc.player.getEyePosition();
+        boolean bedTargetNow;
 
-        if (!nextTarget.pos.equals(currentTarget) || currentFace != nextTarget.face) {
+        if (isCurrentBreakStillValid(eyes, maxRange)) {
+            bedTargetNow = isBedBlock(currentTarget);
+        } else {
+            TargetData nextTarget = findTarget();
+            if (nextTarget == null) {
+                resetBreaking();
+                return;
+            }
             resetBreaking();
             currentTarget = nextTarget.pos;
             currentFace = nextTarget.face;
+            trackedBedPos = nextTarget.sourceBedPos;
+            trackedBedFace = nextTarget.sourceBedFace;
+            bedTargetNow = nextTarget.bedTarget;
         }
 
-        trackedBedPos = nextTarget.sourceBedPos;
-        trackedBedFace = nextTarget.sourceBedFace;
-
         if (rotate.getValue()) {
-            if (nextTarget.bedTarget) {
-                Managers.ROTATION.setRotations(nextTarget.rotation, rotationSpeed.getValue(), candidate -> isBedHit(candidate, range.getValue()), Priority.Low);
+            Rot2f rot = RotationUtils.calculate(currentAimPoint(bedTargetNow));
+            if (bedTargetNow) {
+                Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), candidate -> isBedHit(candidate, maxRange), Priority.Low);
             } else {
-                Managers.ROTATION.setRotations(nextTarget.rotation, rotationSpeed.getValue(), Priority.Low);
+                Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), Priority.Low);
             }
         }
 
@@ -93,11 +117,45 @@ public class BedNuker extends Module {
         }
     }
 
-    @Override
-    public void onDisable() {
-        resetBreaking();
-        trackedBedPos = null;
-        trackedBedFace = null;
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (!esp.getValue() || currentTarget == null) return;
+        VoxelShape shape = mc.level.getBlockState(currentTarget).getShape(mc.level, currentTarget);
+        AABB box = shape.isEmpty() ? new AABB(currentTarget) : shape.bounds().move(currentTarget);
+        Render3DScheduler.INSTANCE.addFilledBox(box, new Color(255, 0, 0, 50));
+    }
+
+    public BlockPos getCurrentTarget() {
+        return currentTarget;
+    }
+
+    public boolean isBreakingTarget() {
+        return isEnabled() && startedBreaking && currentTarget != null;
+    }
+
+    private boolean isCurrentBreakStillValid(Vec3 eyes, double maxRange) {
+        if (currentTarget == null || currentFace == null) {
+            return false;
+        }
+        BlockState state = mc.level.getBlockState(currentTarget);
+        if (state.isAir()) {
+            return false;
+        }
+        if (eyes.distanceToSqr(Vec3.atCenterOf(currentTarget)) > maxRange * maxRange + 1.0) {
+            return false;
+        }
+        if (trackedBedPos != null && !isBedBlock(currentTarget) && !isBedBlock(trackedBedPos)) {
+            return false;
+        }
+        return true;
+    }
+
+    private Vec3 currentAimPoint(boolean bedTarget) {
+        if (bedTarget) {
+            return getFaceAimPoint(currentTarget, currentFace);
+        }
+        Vec3 center = Vec3.atCenterOf(currentTarget);
+        return center.add(currentFace.getStepX() * 0.5, currentFace.getStepY() * 0.5, currentFace.getStepZ() * 0.5);
     }
 
     private void resetBreaking() {
@@ -107,34 +165,11 @@ public class BedNuker extends Module {
         clearBreakingState();
     }
 
-    private void clearBreakingState() {
-        currentTarget = null;
-        currentFace = null;
-        startedBreaking = false;
-        trackedBedPos = null;
-        trackedBedFace = null;
-    }
-
     private boolean shouldPauseBreaking() {
-        if (mc.options.keyAttack.isDown()) {
-            return true;
-        }
-
-        Scaffold scaffold = Scaffold.INSTANCE;
-        if (scaffold.isEnabled()) {
-            return true;
-        }
-
+        if (mc.options.keyAttack.isDown()) return true;
+        if (Scaffold.INSTANCE.isEnabled()) return true;
         KillAura killAura = KillAura.INSTANCE;
         return killAura.isEnabled() && killAura.target != null;
-    }
-
-    public BlockPos getCurrentTarget() {
-        return currentTarget;
-    }
-
-    public boolean isBreakingTarget() {
-        return startedBreaking && currentTarget != null;
     }
 
     private TargetData findTarget() {
@@ -180,7 +215,7 @@ public class BedNuker extends Module {
     }
 
     private TargetData getTrackedBedTarget() {
-        if (trackedBedPos == null || trackedBedFace == null) {
+        if (trackedBedPos == null || trackedBedFace == null || mc.level == null || mc.player == null) {
             return null;
         }
 
@@ -307,6 +342,10 @@ public class BedNuker extends Module {
         );
     }
 
+    private boolean isBedBlock(BlockPos pos) {
+        return mc.level.getBlockState(pos).getBlock() instanceof BedBlock;
+    }
+
     private Direction getClosestFace(BlockPos pos, Vec3 eyes) {
         Vec3 center = Vec3.atCenterOf(pos);
         Direction bestFace = Direction.UP;
@@ -330,7 +369,7 @@ public class BedNuker extends Module {
 
     private boolean isBedHit(Rot2f rotation, double rayRange) {
         HitResult result = RaytraceUtils.raytrace(rotation, rayRange);
-        return result instanceof BlockHitResult blockHitResult && mc.level.getBlockState(blockHitResult.getBlockPos()).getBlock() instanceof BedBlock;
+        return result instanceof BlockHitResult blockHitResult && isBedBlock(blockHitResult.getBlockPos());
     }
 
     private record TargetData(
@@ -343,6 +382,14 @@ public class BedNuker extends Module {
             BlockPos sourceBedPos,
             Direction sourceBedFace
     ) {
+    }
+
+    private void clearBreakingState() {
+        currentTarget = null;
+        currentFace = null;
+        startedBreaking = false;
+        trackedBedPos = null;
+        trackedBedFace = null;
     }
 
 }

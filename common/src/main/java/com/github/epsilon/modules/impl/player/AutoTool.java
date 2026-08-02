@@ -7,6 +7,7 @@ import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import love.slmpc.ClInitNative;
@@ -30,8 +31,10 @@ public class AutoTool extends Module {
     }
 
     private final BoolSetting swapBack = boolSetting("Swap Back", true);
+    private final IntSetting swapBackDelay = intSetting("Swap Back Delay", 0, 0, 15, 1, swapBack::getValue);
 
     private int oldSlot = -1;
+    private int lastDestroyTick = -1;
 
     @Override
     protected void onDisable() {
@@ -39,10 +42,12 @@ public class AutoTool extends Module {
             mc.player.getInventory().setSelectedSlot(oldSlot);
         }
         oldSlot = -1;
+        lastDestroyTick = -1;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onStartDestroyBlock(StartDestroyBlockEvent event) {
+        lastDestroyTick = mc.player.tickCount;
         int bestTool = getBestTool(event.getBlockPos());
         int selectedSlot = mc.player.getInventory().getSelectedSlot();
         if (bestTool == -1 || bestTool == selectedSlot) return;
@@ -57,7 +62,14 @@ public class AutoTool extends Module {
 
     @EventHandler
     private void onAfterSendPosition(AfterSendPositionEvent event) {
-        if (!mc.gameMode.isDestroying() && oldSlot != -1) {
+        if (oldSlot == -1) return;
+
+        if (mc.gameMode.isDestroying() || BedNuker.INSTANCE.isBreakingTarget()) {
+            lastDestroyTick = mc.player.tickCount;
+            return;
+        }
+
+        if (mc.player.tickCount - lastDestroyTick >= swapBackDelay.getValue()) {
             mc.player.getInventory().setSelectedSlot(oldSlot);
             oldSlot = -1;
         }

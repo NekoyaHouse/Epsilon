@@ -214,9 +214,9 @@ public class AutoArmor extends Module {
         double[] armor = {0.0};
         double[] toughness = {0.0};
         stack.forEachModifier(slot, (attribute, modifier) -> {
-            if (attribute.equals(Attributes.ARMOR)) {
+            if (attribute == Attributes.ARMOR) {
                 armor[0] += modifier.amount();
-            } else if (attribute.equals(Attributes.ARMOR_TOUGHNESS)) {
+            } else if (attribute == Attributes.ARMOR_TOUGHNESS) {
                 toughness[0] += modifier.amount();
             }
         });
