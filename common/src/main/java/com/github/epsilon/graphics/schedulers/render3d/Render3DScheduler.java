@@ -168,7 +168,7 @@ public class Render3DScheduler {
         }
 
         LuminImmediateRenderer.PosColorQuads builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE);
-        Matrix4f matrix = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
+        Matrix4f matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
         Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
 
         for (FilledBoxCommand command : filledBoxes) {

@@ -5,20 +5,18 @@ import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.Objective;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-@Mixin(Gui.class)
-public class MixinGui {
+@Mixin(Hud.class)
+public class MixinHud {
 
     @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)
     private int modifyHotbarSelectionX(int x) {
@@ -31,23 +29,13 @@ public class MixinGui {
     }
 
     @Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)
-    private void onExtractEffects(CallbackInfo ci) {
+    private void onExtractEffects(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.potionIcons.getValue()) ci.cancel();
     }
 
     @Inject(method = "extractPortalOverlay", at = @At("HEAD"), cancellable = true)
     private void onExtractPortalOverlay(GuiGraphicsExtractor graphics, float alpha, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.portalOverlay.getValue()) ci.cancel();
-    }
-
-    @ModifyArgs(method = "extractCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;extractTextureOverlay(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/resources/Identifier;F)V", ordinal = 0))
-    private void onExtractPumpkinOverlay(Args args) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.pumpkinOverlay.getValue()) args.set(2, 0f);
-    }
-
-    @ModifyArgs(method = "extractCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;extractTextureOverlay(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/resources/Identifier;F)V", ordinal = 1))
-    private void onExtractPowderedSnowOverlay(Args args) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.powderedSnowOverlay.getValue()) args.set(2, 0f);
     }
 
     @Inject(method = "extractVignette", at = @At("HEAD"), cancellable = true)

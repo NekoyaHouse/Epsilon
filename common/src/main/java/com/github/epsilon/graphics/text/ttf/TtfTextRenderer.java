@@ -427,7 +427,7 @@ public class TtfTextRenderer implements ITextRenderer {
         GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Lumin TTF Draws",
-                colorView, OptionalInt.empty(),
+                colorView, Optional.empty(),
                 depthView, OptionalDouble.empty())
         ) {
             pass.setPipeline(pipeline());
@@ -518,7 +518,7 @@ public class TtfTextRenderer implements ITextRenderer {
             int vertexCount = (int) (batch.offsetInAtlas / stride);
             int indexCount = (vertexCount / 4) * 6;
 
-            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice());
             LuminTexture fontTexture = mode == Mode.STANDARD ? atlas.getTexture() : atlas.getAlphaTexture();
             pass.bindTexture("Sampler0", fontTexture.getTextureView(), fontTexture.getSampler());
             if (mode == Mode.FONT_BLUR) {
@@ -527,7 +527,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 pass.setUniform("GlitchData", batch.glitchUniforms);
             }
 
-            pass.drawIndexed(0, 0, indexCount, 1);
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
     }
 

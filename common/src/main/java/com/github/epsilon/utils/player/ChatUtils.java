@@ -55,9 +55,9 @@ public class ChatUtils {
     public static void addChatMessage(boolean prefix, Component message) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
-            mc.gui.getChat().addClientSystemMessage(component);
+            mc.gui.hud.getChat().addClientSystemMessage(component);
         } else {
-            mc.execute(() -> mc.gui.getChat().addClientSystemMessage(component));
+            mc.execute(() -> mc.gui.hud.getChat().addClientSystemMessage(component));
         }
     }
 
@@ -102,9 +102,9 @@ public class ChatUtils {
     public static void addChatMessage(boolean prefix, Component message, int hash) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
-            ((ChatComponentAccessor) mc.gui.getChat()).epsilon$addClientSystemMessage(component, hash);
+            ((ChatComponentAccessor) mc.gui.hud.getChat()).epsilon$addClientSystemMessage(component, hash);
         } else {
-            mc.execute(() -> ((ChatComponentAccessor) mc.gui.getChat()).epsilon$addClientSystemMessage(component, hash));
+            mc.execute(() -> ((ChatComponentAccessor) mc.gui.hud.getChat()).epsilon$addClientSystemMessage(component, hash));
         }
     }
 

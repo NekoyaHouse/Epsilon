@@ -1,14 +1,15 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -18,7 +19,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
 import java.nio.ByteBuffer;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -42,8 +43,8 @@ public class FXAAShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/fxaa"))
                     .withVertexShader(vertexShader)
                     .withFragmentShader(fragmentShader)
-                    .withUniform("FxaaInfo", UniformType.UNIFORM_BUFFER)
-                    .withSampler("InputSampler")
+                    .withBindGroupLayout(LuminBindGroupLayouts.FXAA_INFO)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withCull(false)
                     .build();
         }
@@ -54,7 +55,7 @@ public class FXAAShader {
         int fbHeight = framebuffer.height;
 
         if (this.input == null) {
-            this.input = new TextureTarget("Epsilon FXAA Input", fbWidth, fbHeight, false);
+            this.input = new TextureTarget("Epsilon FXAA Input", fbWidth, fbHeight, false, GpuFormat.RGBA8_UNORM);
         }
 
         if (this.input.width != fbWidth || this.input.height != fbHeight) {
@@ -63,7 +64,7 @@ public class FXAAShader {
     }
 
     public void renderMainTarget() {
-        render(mc.getMainRenderTarget());
+        render(mc.gameRenderer.mainRenderTarget());
     }
 
     public void render(RenderTarget framebuffer) {
@@ -102,13 +103,13 @@ public class FXAAShader {
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "Epsilon FXAA",
                 framebuffer.getColorTextureView(),
-                OptionalInt.empty()
+                Optional.empty()
         )) {
             renderPass.setPipeline(this.pipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("FxaaInfo", fxaaInfo);
             renderPass.bindTexture("InputSampler", this.input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-            renderPass.draw(0, 3);
+            renderPass.draw(3, 1, 0, 0);
         }
     }
 

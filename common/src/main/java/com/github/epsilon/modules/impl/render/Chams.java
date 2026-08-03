@@ -8,7 +8,9 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
@@ -32,27 +34,21 @@ public class Chams extends Module {
     private final BoolSetting players = boolSetting("Players", true, noDepth::getValue);
     private final BoolSetting chests = boolSetting("Chests", true, noDepth::getValue);
 
-    private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
-
-    public static DepthStencilState depthState(boolean writeDepth) {
-        return new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, writeDepth, -1.0f, -1100000.0f);
-    }
-
     private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
             .withLocation("pipeline/epsilon_entity_chams")
             .withShaderDefine("ALPHA_CUTOUT", 0.1f)
             .withShaderDefine("PER_FACE_LIGHTING")
-            .withSampler("Sampler1")
+            .withBindGroupLayout(BindGroupLayouts.SAMPLER1)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
             .withCull(false)
-            .withDepthStencilState(depthState(true))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, true))
             .build();
 
     private static final RenderPipeline ITEM_TRANSLUCENT_PIPELINE = RenderPipeline.builder(RenderPipelines.ITEM_SNIPPET)
             .withLocation("pipeline/epsilon_item_chams_translucent")
             .withShaderDefine("ALPHA_CUTOUT", 0.1f)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(depthState(true))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, true))
             .build();
 
     private static final Function<Identifier, RenderType> TYPE = Util.memoize(
@@ -68,11 +64,15 @@ public class Chams extends Module {
     private static final Function<Identifier, RenderType> ITEM_TRANSLUCENT_TYPE = Util.memoize(
             texture -> RenderType.create("epsilon_item_chams_translucent", RenderSetup.builder(ITEM_TRANSLUCENT_PIPELINE)
                     .withTexture("Sampler0", texture)
+                    .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
                     .useLightmap()
+                    .useOverlay()
                     .affectsCrumbling()
                     .sortOnUpload()
                     .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
                     .createRenderSetup()));
+
+    private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
 
     public RenderType getRenderType(Identifier texture) {
         return TYPE.apply(texture);

@@ -189,7 +189,7 @@ public class ModuleList extends HudModule {
             drawModuleText(scope, row.entry(), row.textX(), textY, textScale, withAlpha(row.color(), animation), animation);
         }
 
-        float lineWidth = this.lineWidth.getValue().floatValue();
+        float lineWidth = this.lineWidth.getValue().floatValue() * textScale;
         for (int i = 0; i < rows.size(); i++) {
             NormalRow row = rows.get(i);
             float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() : row.backgroundX() - lineWidth;

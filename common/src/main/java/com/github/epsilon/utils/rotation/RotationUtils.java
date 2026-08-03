@@ -44,7 +44,7 @@ public class RotationUtils {
         for (Direction direction : Direction.values()) {
             if (!predicate.test(direction)) continue;
 
-            double distanceSq = eyePos.distanceToSqr(pos.relative(direction).getCenter());
+            double distanceSq = eyePos.distanceToSqr(Vec3.atCenterOf(pos.relative(direction)));
             if (distanceSq >= closestDistanceSq) continue;
 
             side = direction;
@@ -62,7 +62,7 @@ public class RotationUtils {
      * @return 判断结果
      */
     public static boolean canSee(BlockPos pos, Direction side) {
-        Vec3 testVec = pos.getCenter().relative(side, 0.5);
+        Vec3 testVec = Vec3.atCenterOf(pos).relative(side, 0.5);
         ClipContext context = new ClipContext(mc.player.getEyePosition(), testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
         HitResult result = mc.level.clip(context);
         return result.getType() == HitResult.Type.MISS;
@@ -235,7 +235,7 @@ public class RotationUtils {
      * @return 计算得到的旋转角
      */
     public static Rot2f calculate(BlockPos to) {
-        return calculate(mc.player.getEyePosition(), to.getCenter());
+        return calculate(mc.player.getEyePosition(), Vec3.atCenterOf(to));
     }
 
     /**

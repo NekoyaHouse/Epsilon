@@ -12,8 +12,8 @@ import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 public class RoundRectRenderer implements IRenderer {
 
@@ -106,7 +106,7 @@ public class RoundRectRenderer implements IRenderer {
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                () -> "Round Rect Draw", info.colorView(), OptionalInt.empty(),
+                () -> "Round Rect Draw", info.colorView(), Optional.empty(),
                 info.depthView(), OptionalDouble.empty())
         ) {
             pass.setPipeline(LuminRenderPipelines.ROUND_RECT);
@@ -144,9 +144,9 @@ public class RoundRectRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer());
+        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice());
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
-        pass.drawIndexed(0, 0, info.indexCount(), 1);
+        pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
     }
 
     @Override

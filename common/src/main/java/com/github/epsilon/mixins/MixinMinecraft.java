@@ -85,14 +85,6 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-    private void onSetScreen(Screen screen, CallbackInfo ci) {
-        OpenScreenEvent event = EventBus.INSTANCE.post(new OpenScreenEvent(screen));
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
-    }
-
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
     private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
         if (level != null) {

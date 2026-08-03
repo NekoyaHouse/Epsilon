@@ -1,12 +1,15 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.compat.IrisCompat;
 import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Final;
@@ -23,14 +26,30 @@ public class MixinGameRenderer {
     @Shadow
     private Minecraft minecraft;
 
+    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;renderAllFeatures(Lnet/minecraft/client/renderer/SubmitNodeStorage;)V"))
+    private void renderHandFeaturesWithOutline(FeatureRenderDispatcher dispatcher, SubmitNodeStorage storage, Operation<Void> original) {
+        if (Shaders.INSTANCE.isEnabled() && Shaders.INSTANCE.hands.getValue()) {
+            try (FeatureRenderDispatcher.PreparedFrame frame = dispatcher.prepareFrame(storage)) {
+                frame.executeSolid();
+                frame.executeTranslucent();
+                frame.executeOutline();
+                frame.executeTranslucentAfterTerrain();
+                frame.executeAlwaysOnTop();
+            } finally {
+                ShaderHolder.INSTANCE.endHandOutlineCapture();
+            }
+        } else {
+            original.call(dispatcher, storage);
+        }
+    }
+
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doEntityOutline()V", shift = At.Shift.BEFORE))
     private void processShadersOutline(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
-            ShaderHolder.INSTANCE.drainDeferredHandOutline(IrisCompat::drainHandOutline);
             ShaderHolder.INSTANCE.processOutlineTarget(minecraft.levelRenderer.entityOutlineTarget, shaders.entityShader);
-            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.getMainRenderTarget());
-            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.getMainRenderTarget());
+            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
+            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
         }
     }
 

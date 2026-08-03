@@ -222,7 +222,7 @@ public class Scaffold extends Module {
 
     @EventHandler
     private void onMousePress(MousePressEvent event) {
-        if (mc.screen == null && (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1 || event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2)) {
+        if (mc.gui.screen() == null && (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1 || event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2)) {
             event.cancel();
         }
     }
@@ -446,7 +446,7 @@ public class Scaffold extends Module {
             return false;
         }
 
-        Vec3 center = pos.getBottomCenter();
+        Vec3 center = Vec3.atBottomCenterOf(pos);
         for (Direction dir : Direction.values()) {
             Vec3 normal = dir.getUnitVec3();
             Vec3 hit = center.add(normal.scale(0.5));

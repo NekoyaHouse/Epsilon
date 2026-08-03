@@ -87,16 +87,16 @@ public class MainMenuScreen extends Screen {
 
     private MainMenuScreen() {
         super(Component.literal("MainMenuScreen"));
-        entries.add(new MenuEntry("Singleplayer", () -> minecraft.setScreen(new SelectWorldScreen(this))));
+        entries.add(new MenuEntry("Singleplayer", () -> minecraft.gui.setScreen(new SelectWorldScreen(this))));
         entries.add(new MenuEntry("Multiplayer", () -> {
             Screen screen = this.minecraft.options.skipMultiplayerWarning ? new JoinMultiplayerScreen(this) : new SafetyScreen(this);
-            this.minecraft.setScreen(screen);
+            this.minecraft.gui.setScreen(screen);
         }));
-        entries.add(new MenuEntry("GUI", () -> minecraft.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
+        entries.add(new MenuEntry("GUI", () -> minecraft.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
             case Panel -> PanelScreen.INSTANCE;
             case Dropdown -> DropdownScreen.INSTANCE;
         })));
-        entries.add(new MenuEntry("Options", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options, false))));
+        entries.add(new MenuEntry("Options", () -> minecraft.gui.setScreen(new OptionsScreen(this, minecraft.options, false))));
         entries.add(new MenuEntry("Quit", () -> {
             if (!requestShutdown()) minecraft.stop();
         }));
@@ -125,7 +125,7 @@ public class MainMenuScreen extends Screen {
             return;
         }
         reisaGreetingQueued = true;
-        if (initialized && minecraft.screen == this) {
+        if (initialized && minecraft.gui.screen() == this) {
             startReisaGreeting();
         }
     }
@@ -146,7 +146,7 @@ public class MainMenuScreen extends Screen {
 
     public boolean requestShutdown() {
         if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue()) return false;
-        if (!initialized || minecraft.screen != this || reisaShutdownCommitted) return false;
+        if (!initialized || minecraft.gui.screen() != this || reisaShutdownCommitted) return false;
         if (reisaShutdownStartMs >= 0L) return true;
 
         if (reisaWelcomeSound != null) {
@@ -211,8 +211,8 @@ public class MainMenuScreen extends Screen {
             backgroundRenderTarget = LuminRenderSystem.LuminRenderTarget.create("main-menu-background", window.getWidth(), window.getHeight());
         }
 
-        backgroundRenderTarget.clear();
         backgroundRenderTarget.resize(window.getWidth(), window.getHeight());
+        backgroundRenderTarget.clear();
         LuminRenderSystem.setActiveTarget(backgroundRenderTarget);
 
         final var background = switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
@@ -238,8 +238,8 @@ public class MainMenuScreen extends Screen {
             uiRenderTarget = LuminRenderSystem.LuminRenderTarget.create("main-menu-ui", window.getWidth(), window.getHeight());
         }
 
-        uiRenderTarget.clear();
         uiRenderTarget.resize(window.getWidth(), window.getHeight());
+        uiRenderTarget.clear();
         LuminRenderSystem.setActiveTarget(uiRenderTarget);
 
         scene.beginFrame();

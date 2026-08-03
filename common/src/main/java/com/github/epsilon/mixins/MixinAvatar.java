@@ -23,10 +23,9 @@ public class MixinAvatar {
                         && mc.player.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING)
         ) {
             return dimensions.withEyeHeight(sneakTweak.modifySneakingEyeHeight(dimensions.eyeHeight()));
+        } else {
+            return dimensions;
         }
-
-
-        return dimensions;
     }
 
 }

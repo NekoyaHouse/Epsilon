@@ -1,16 +1,15 @@
 package com.github.epsilon.holders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.modules.impl.render.Shaders;
-import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.*;
-import com.mojang.blaze3d.platform.DestFactor;
-import com.mojang.blaze3d.platform.SourceFactor;
-import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.platform.BlendFactor;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -18,16 +17,18 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicUniformStorage;
-import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fStack;
+import org.joml.Vector4f;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
-import java.util.OptionalInt;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class ShaderHolder {
 
@@ -79,18 +80,19 @@ public class ShaderHolder {
     private RenderTarget glowSwap;
     private RenderTarget handTarget;
     private RenderTarget chestTarget;
-    private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
+    private final OutputTarget chestOutlineOutputTarget = new OutputTarget("epsilon_chest_outline", () -> chestTarget);
+    private final Function<Identifier, RenderType> chestOutlineRenderTypes = Util.memoize(texture -> RenderType.create(
+            "epsilon_chest_outline",
+            RenderSetup.builder(RenderPipelines.OUTLINE_NO_CULL)
+                    .withTexture("Sampler0", texture)
+                    .setOutputTarget(chestOutlineOutputTarget)
+                    .setOutline(RenderSetup.OutlineProperty.IS_OUTLINE)
+                    .createRenderSetup()
+    ));
     private boolean renderingHands;
     private boolean capturedHands;
-    private boolean deferredHandOutline;
-    private GpuBufferSlice deferredHandProjection;
-    private ProjectionType deferredHandProjectionType;
-    private Matrix4f deferredHandModelView;
-    private boolean renderingChests;
     private boolean capturedChests;
     private boolean preparedChests;
-
-    public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
     private ShaderHolder() {
     }
@@ -112,60 +114,25 @@ public class ShaderHolder {
         ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height, settings, usesColors(shader));
 
         renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderUniforms, usesColors(shader));
-        // This fullscreen copy pass measured higher FPS than CommandEncoder.copyTextureToTexture on the tested renderer.
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null, false);
     }
 
     public void beginHandOutlineCapture(int width, int height) {
         if (Shaders.INSTANCE.hands.getValue()) {
             ensureHandTarget(Math.max(1, width), Math.max(1, height));
-            // Iris 在 shader pack 下会分别渲染 solid 和 translucent hands；两次调用必须累积到同一帧目标。
             if (!capturedHands) {
                 CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-                encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
+                encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), handTarget.getDepthTexture(), 1.0);
             }
             renderingHands = true;
             capturedHands = true;
         }
     }
 
-    public void endHandOutlineCapture(Runnable outlineDrainer) {
-        if (renderingHands) {
-            outlineDrainer.run();
-            renderingHands = false;
-        }
-    }
-
-    public void deferHandOutlineCapture() {
+    public void endHandOutlineCapture() {
         if (renderingHands) {
             renderingHands = false;
-            deferredHandProjection = RenderSystem.getProjectionMatrixBuffer();
-            deferredHandProjectionType = RenderSystem.getProjectionType();
-            deferredHandModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
-            deferredHandOutline = true;
         }
-    }
-
-    public void drainDeferredHandOutline(Runnable outlineDrainer) {
-        if (!deferredHandOutline || deferredHandProjection == null || deferredHandProjectionType == null || deferredHandModelView == null) {
-            return;
-        }
-
-        GpuBufferSlice previousProjection = RenderSystem.getProjectionMatrixBuffer();
-        ProjectionType previousProjectionType = RenderSystem.getProjectionType();
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        RenderSystem.setProjectionMatrix(deferredHandProjection, deferredHandProjectionType);
-        modelViewStack.set(deferredHandModelView);
-        renderingHands = true;
-        outlineDrainer.run();
-        renderingHands = false;
-        modelViewStack.popMatrix();
-        if (previousProjection != null) RenderSystem.setProjectionMatrix(previousProjection, previousProjectionType);
-        deferredHandOutline = false;
-        deferredHandProjection = null;
-        deferredHandProjectionType = null;
-        deferredHandModelView = null;
     }
 
     public RenderTarget getHandOutlineTarget() {
@@ -173,27 +140,17 @@ public class ShaderHolder {
     }
 
     public RenderTarget getChestOutlineTarget() {
-        return renderingChests ? chestTarget : null;
+        return chestTarget;
     }
 
-    public OutlineBufferSource getChestOutlineBufferSource() {
+    public RenderType prepareChestOutline(Identifier texture) {
         if (!preparedChests) {
-            RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
+            RenderTarget mainTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
             prepareChestOutlineTarget(mainTarget);
             preparedChests = true;
         }
         capturedChests = true;
-        return chestOutlineBufferSource;
-    }
-
-    public void endChestOutlineBatch() {
-        if (!capturedChests || chestTarget == null) {
-            return;
-        }
-
-        renderingChests = true;
-        chestOutlineBufferSource.endOutlineBatch();
-        renderingChests = false;
+        return chestOutlineRenderTypes.apply(texture);
     }
 
     public void processHandOutlineTarget(RenderTarget mainTarget) {
@@ -205,7 +162,7 @@ public class ShaderHolder {
             }
 
             processOutlineTarget(handTarget, Shaders.INSTANCE.handsShader);
-            handTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
+            handTarget.blitAndBlendToTexture(mainTarget.getColorTextureView(), mainTarget.getDepthTextureView());
         }
     }
 
@@ -216,7 +173,7 @@ public class ShaderHolder {
 
         ensureChestTarget(referenceTarget.width, referenceTarget.height);
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-        encoder.clearColorAndDepthTextures(chestTarget.getColorTexture(), 0, chestTarget.getDepthTexture(), 1.0);
+        encoder.clearColorAndDepthTextures(chestTarget.getColorTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), chestTarget.getDepthTexture(), 1.0);
     }
 
     public void processChestOutlineTarget(RenderTarget mainTarget) {
@@ -228,7 +185,7 @@ public class ShaderHolder {
             }
 
             processOutlineTarget(chestTarget, Shaders.INSTANCE.chestShader);
-            chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
+            chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView(), mainTarget.getDepthTextureView());
         }
         preparedChests = false;
     }
@@ -244,7 +201,7 @@ public class ShaderHolder {
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> name,
                 output.getColorTextureView(),
-                OptionalInt.empty()
+                Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
@@ -255,7 +212,7 @@ public class ShaderHolder {
                 }
             }
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), sampler);
-            renderPass.draw(0, 3);
+            renderPass.draw(3, 1, 0, 0);
         }
     }
 
@@ -302,13 +259,13 @@ public class ShaderHolder {
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "epsilon_shader_glow",
                 output.getColorTextureView(),
-                OptionalInt.empty()
+                Optional.empty()
         )) {
             renderPass.setPipeline(glowPipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("GlowConfig", glowUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), sampler);
-            renderPass.draw(0, 3);
+            renderPass.draw(3, 1, 0, 0);
         }
     }
 
@@ -320,13 +277,13 @@ public class ShaderHolder {
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "epsilon_shader_glow_mask",
                 output.getColorTextureView(),
-                OptionalInt.empty()
+                Optional.empty()
         )) {
             renderPass.setPipeline(glowMaskPipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(),
                     RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
-            renderPass.draw(0, 3);
+            renderPass.draw(3, 1, 0, 0);
         }
     }
 
@@ -413,17 +370,17 @@ public class ShaderHolder {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow"))
                     .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow"))
-                    .withUniform("GlowConfig", UniformType.UNIFORM_BUFFER)
-                    .withSampler("InputSampler")
+                    .withBindGroupLayout(LuminBindGroupLayouts.GLOW_CONFIG)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withCull(false)
                     .build();
             glowMaskPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow_mask"))
                     .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow_mask"))
-                    .withSampler("InputSampler")
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withColorTargetState(new ColorTargetState(
-                            new BlendFunction(SourceFactor.ZERO, DestFactor.ONE_MINUS_SRC_ALPHA)
+                            new BlendFunction(BlendFactor.ZERO, BlendFactor.ONE_MINUS_SRC_ALPHA)
                     ))
                     .withCull(false)
                     .build();
@@ -431,7 +388,7 @@ public class ShaderHolder {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_copy"))
                     .withVertexShader(("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_copy"))
-                    .withSampler("InputSampler")
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withCull(false)
                     .build();
         }
@@ -439,7 +396,7 @@ public class ShaderHolder {
 
     private void ensureSwap(int width, int height) {
         if (shaderSwap == null) {
-            shaderSwap = new TextureTarget("Epsilon Shader Swap", width, height, false);
+            shaderSwap = new TextureTarget("Epsilon Shader Swap", width, height, false, GpuFormat.RGBA8_UNORM);
         }
 
         if (shaderSwap.width != width || shaderSwap.height != height) {
@@ -449,7 +406,7 @@ public class ShaderHolder {
 
     private void ensureGlowSwap(int width, int height) {
         if (glowSwap == null) {
-            glowSwap = new TextureTarget("Epsilon Shader Glow Swap", width, height, false);
+            glowSwap = new TextureTarget("Epsilon Shader Glow Swap", width, height, false, GpuFormat.RGBA8_UNORM);
         }
 
         if (glowSwap.width != width || glowSwap.height != height) {
@@ -459,7 +416,7 @@ public class ShaderHolder {
 
     private void ensureHandTarget(int width, int height) {
         if (handTarget == null) {
-            handTarget = new TextureTarget("Epsilon Shader Hands", width, height, true);
+            handTarget = new TextureTarget("Epsilon Shader Hands", width, height, true, GpuFormat.RGBA8_UNORM);
         }
 
         if (handTarget.width != width || handTarget.height != height) {
@@ -469,7 +426,7 @@ public class ShaderHolder {
 
     private void ensureChestTarget(int width, int height) {
         if (chestTarget == null) {
-            chestTarget = new TextureTarget("Epsilon Shader Chests", width, height, true);
+            chestTarget = new TextureTarget("Epsilon Shader Chests", width, height, true, GpuFormat.RGBA8_UNORM);
         }
 
         if (chestTarget.width != width || chestTarget.height != height) {
@@ -484,12 +441,12 @@ public class ShaderHolder {
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_" + shader))
                 .withCull(false);
 
-        builder.withUniform("ShaderParams", UniformType.UNIFORM_BUFFER);
+        builder.withBindGroupLayout(LuminBindGroupLayouts.SHADER_PARAMS);
         if (useColors) {
-            builder.withUniform("ShaderColors", UniformType.UNIFORM_BUFFER);
+            builder.withBindGroupLayout(LuminBindGroupLayouts.SHADER_COLORS);
         }
 
-        return builder.withSampler("InputSampler")
+        return builder.withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                 .build();
     }
 

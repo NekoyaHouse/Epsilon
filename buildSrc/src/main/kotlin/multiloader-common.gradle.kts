@@ -69,15 +69,6 @@ repositories {
     exclusiveContent {
         forRepository {
             maven {
-                name = "CaffeineMC"
-                url = uri("https://maven.caffeinemc.net/releases")
-            }
-        }
-        filter { includeGroup("net.caffeinemc") }
-    }
-    exclusiveContent {
-        forRepository {
-            maven {
                 name = "Modrinth"
                 url = uri("https://api.modrinth.com/maven")
             }

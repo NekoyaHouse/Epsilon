@@ -19,7 +19,7 @@ public class MixinCompassAngleState {
     @ModifyExpressionValue(method = "getWrappedVisualRotationY", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ItemOwner;getVisualRotationYInDegrees()F"))
     private static float hookGetWrappedVisualRotationY(float original) {
         if (FreeCamera.INSTANCE.isEnabled()) {
-            return mc.gameRenderer.getMainCamera().yRot();
+            return mc.gameRenderer.mainCamera().yRot();
         }
         return original;
     }
@@ -28,7 +28,7 @@ public class MixinCompassAngleState {
     private static double modifyGetAngleTo(double original, ItemOwner owner, BlockPos position) {
         if (FreeCamera.INSTANCE.isEnabled()) {
             Vec3 vec3d = Vec3.atCenterOf(position);
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
             return Math.atan2(vec3d.z() - camera.position().z, vec3d.x() - camera.position().x) / (float) (Math.PI * 2);
         }
         return original;

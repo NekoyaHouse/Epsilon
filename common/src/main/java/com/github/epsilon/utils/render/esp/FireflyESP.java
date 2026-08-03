@@ -1,30 +1,23 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.modules.impl.render.Chams;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 
 import java.awt.*;
-import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -48,25 +41,9 @@ public class FireflyESP {
     private static final RenderPipeline TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
             .withLocation("pipeline/epsilon_target_icon")
             .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
             .build();
-
-    private static final RenderPipeline TARGET_ICON_CHAMS_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            .withLocation("pipeline/epsilon_target_icon_chams")
-            .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
-            .withDepthStencilState(Chams.depthState(false))
-            .withCull(false)
-            .build();
-
-    private static final Function<RenderPipeline, RenderType> TARGET_ICON_LAYER = Util.memoize(
-            renderPipeline -> RenderType.create("epsilon_target_icon", RenderSetup.builder(renderPipeline)
-                    .withTexture("Sampler0", FIREFLY_TEX)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputTarget(OutputTarget.MAIN_TARGET)
-                    .createRenderSetup())
-    );
 
     /**
      * 在目标周围渲染萤火轨迹 ESP。
@@ -88,9 +65,8 @@ public class FireflyESP {
      */
     public static void render(PoseStack stack, LivingEntity target, int espLength, int factor, double shaking, double amplitude, Color color, ColorMode colorMode, Color secondColor, double colorMix, double colorSpeed, double rainbowSpeed, double rainbowSaturation, double rainbowBrightness) {
         boolean canSee = mc.player.hasLineOfSight(target);
-        boolean targetHasChams = target instanceof Player player && Chams.INSTANCE.shouldRenderPlayer(player);
 
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         double tPosX = Mth.lerp(tickDelta, target.xOld, target.getX()) - camera.position().x;
@@ -98,7 +74,8 @@ public class FireflyESP {
         double tPosZ = Mth.lerp(tickDelta, target.zOld, target.getZ()) - camera.position().z;
         float iAge = (float) (target.tickCount - 1) + tickDelta;
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        RenderPipeline pipeline = canSee ? TARGET_ICON_PIPELINE : TARGET_ICON_NO_DEPTH_PIPELINE;
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, FIREFLY_TEX);
 
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i <= espLength; i++) {
@@ -131,19 +108,16 @@ public class FireflyESP {
                         (float) rainbowBrightness
                 ).getRGB();
 
-                buffer.addVertex(matrix, -scale, scale, 0).setUv(0f, 1f).setColor(renderColor);
-                buffer.addVertex(matrix, scale, scale, 0).setUv(1f, 1f).setColor(renderColor);
-                buffer.addVertex(matrix, scale, -scale, 0).setUv(1f, 0f).setColor(renderColor);
-                buffer.addVertex(matrix, -scale, -scale, 0).setUv(0f, 0f).setColor(renderColor);
+                renderer.vertex(matrix, -scale, scale, 0, 0f, 1f, renderColor);
+                renderer.vertex(matrix, scale, scale, 0, 1f, 1f, renderColor);
+                renderer.vertex(matrix, scale, -scale, 0, 1f, 0f, renderColor);
+                renderer.vertex(matrix, -scale, -scale, 0, 0f, 0f, renderColor);
 
                 stack.popPose();
             }
         }
 
-        RenderPipeline pipeline = canSee
-                ? targetHasChams ? TARGET_ICON_CHAMS_PIPELINE : TARGET_ICON_PIPELINE
-                : TARGET_ICON_NO_DEPTH_PIPELINE;
-        TARGET_ICON_LAYER.apply(pipeline).draw(buffer.buildOrThrow());
+        renderer.end();
     }
 
     private static Color resolveColor(float age, int index, int ringIndex, int espLength, ColorMode mode, Color primaryColor, Color secondaryColor, float mixAmount, float blendSpeed, float rainbowSpeed, float rainbowSaturation, float rainbowBrightness) {

@@ -39,39 +39,7 @@ public class BlockESP extends Module {
         super("Block ESP", Category.RENDER);
     }
 
-    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List",
-            List.of(
-                    Blocks.CHEST,
-                    Blocks.TRAPPED_CHEST,
-                    Blocks.COPPER_CHEST,
-                    Blocks.EXPOSED_COPPER_CHEST,
-                    Blocks.WEATHERED_COPPER_CHEST,
-                    Blocks.OXIDIZED_COPPER_CHEST,
-                    Blocks.WAXED_COPPER_CHEST,
-                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
-                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
-                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
-                    Blocks.ENDER_CHEST,
-                    Blocks.BARREL,
-                    Blocks.SHULKER_BOX,
-                    Blocks.WHITE_SHULKER_BOX,
-                    Blocks.ORANGE_SHULKER_BOX,
-                    Blocks.MAGENTA_SHULKER_BOX,
-                    Blocks.LIGHT_BLUE_SHULKER_BOX,
-                    Blocks.YELLOW_SHULKER_BOX,
-                    Blocks.LIME_SHULKER_BOX,
-                    Blocks.PINK_SHULKER_BOX,
-                    Blocks.GRAY_SHULKER_BOX,
-                    Blocks.LIGHT_GRAY_SHULKER_BOX,
-                    Blocks.CYAN_SHULKER_BOX,
-                    Blocks.PURPLE_SHULKER_BOX,
-                    Blocks.BLUE_SHULKER_BOX,
-                    Blocks.BROWN_SHULKER_BOX,
-                    Blocks.GREEN_SHULKER_BOX,
-                    Blocks.RED_SHULKER_BOX,
-                    Blocks.BLACK_SHULKER_BOX
-            )
-    );
+    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List", defaultBlocks());
     private final BoolSetting illegals = boolSetting("Illegals", false);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
@@ -84,6 +52,18 @@ public class BlockESP extends Module {
     private boolean canContinue;
 
     public static List<AABB> boxes = new ArrayList<>();
+
+    private static List<Block> defaultBlocks() {
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(Blocks.CHEST);
+        blocks.add(Blocks.TRAPPED_CHEST);
+        blocks.addAll(Blocks.COPPER_CHEST.asList());
+        blocks.add(Blocks.ENDER_CHEST);
+        blocks.add(Blocks.BARREL);
+        blocks.add(Blocks.SHULKER_BOX);
+        blocks.addAll(Blocks.DYED_SHULKER_BOX.asList());
+        return blocks;
+    }
 
     @Override
     protected void onEnable() {

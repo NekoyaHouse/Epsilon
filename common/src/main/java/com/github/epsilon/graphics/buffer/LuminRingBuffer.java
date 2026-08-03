@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.buffer;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.system.MemoryUtil;
@@ -27,7 +28,7 @@ public class LuminRingBuffer {
     private final int[] sizes = new int[BUFFER_COUNT];
     private final List<GpuBuffer> retiredBuffers = new ArrayList<>();
 
-    private GpuBuffer.MappedView mappedBuffer;
+    private GpuBufferSlice.MappedView mappedBuffer;
     private int current;
     private boolean mapped;
     private long frameId = Long.MIN_VALUE;
@@ -101,7 +102,7 @@ public class LuminRingBuffer {
     public void tryMap() {
         if (mapped) return;
         beginFrameIfNeeded();
-        mappedBuffer = RenderSystem.getDevice().createCommandEncoder().mapBuffer(getGpuBuffer(), false, true);
+        mappedBuffer = getGpuBuffer().map(false, true);
         mapped = true;
     }
 
@@ -153,9 +154,7 @@ public class LuminRingBuffer {
      */
     public void write(CommandEncoder commandEncoder, long offset, ByteBuffer source) {
         ensureCapacity(offset + source.remaining());
-        try (GpuBuffer.MappedView mappedView = commandEncoder.mapBuffer(getGpuBuffer().slice((int) offset, source.remaining()), false, true)) {
-            MemoryUtil.memCopy(source, mappedView.data());
-        }
+        commandEncoder.writeToBuffer(getGpuBuffer().slice(offset, source.remaining()), source);
     }
 
     /**
@@ -200,9 +199,7 @@ public class LuminRingBuffer {
                 MemoryUtil.memFree(preservedMappedData);
             }
         } else if (preservedBytes > 0) {
-            RenderSystem.getDevice()
-                    .createCommandEncoder()
-                    .copyToBuffer(oldBuffer.slice(0, preservedBytes), nextBuffer.slice(0, preservedBytes));
+            RenderSystem.getDevice().createCommandEncoder().copyToBuffer(oldBuffer.slice(0, preservedBytes), nextBuffer.slice(0, preservedBytes));
         }
 
         retiredBuffers.add(oldBuffer);

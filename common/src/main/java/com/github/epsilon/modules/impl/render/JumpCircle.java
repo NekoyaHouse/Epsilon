@@ -4,6 +4,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -15,17 +16,12 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -35,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class JumpCircle extends Module {
 
@@ -69,16 +64,6 @@ public class JumpCircle extends Module {
             .withCull(false)
             .build();
 
-    private static final Function<Identifier, RenderType> JUMP_CIRCLE_LAYER = Util.memoize(texture -> RenderType.create(
-            "epsilon_jump_circle",
-            RenderSetup.builder(JUMP_CIRCLE_PIPELINE)
-                    .withTexture("Sampler0", texture)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputTarget(OutputTarget.MAIN_TARGET)
-                    .createRenderSetup()
-    ));
-
     @Override
     protected void onDisable() {
         circles.clear();
@@ -111,29 +96,27 @@ public class JumpCircle extends Module {
         if (circles.isEmpty()) return;
 
         PoseStack poseStack = event.getPoseStack();
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Identifier texture = mode.is(Mode.Portal) ? BUBBLE_TEXTURE : CIRCLE_TEXTURE;
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(JUMP_CIRCLE_PIPELINE, texture);
 
         Collections.reverse(circles);
         for (Circle circle : circles) {
-            renderCircle(poseStack, buffer, circle);
+            renderCircle(poseStack, renderer, circle);
         }
         Collections.reverse(circles);
 
-        MeshData mesh = buffer.build();
-        if (mesh != null) {
-            JUMP_CIRCLE_LAYER.apply(mode.is(Mode.Portal) ? BUBBLE_TEXTURE : CIRCLE_TEXTURE).draw(mesh);
-        }
+        renderer.end();
     }
 
     private boolean shouldTrack(Player player) {
         return player != null && player.isAlive() && (!onlySelf.getValue() || player == mc.player);
     }
 
-    private void renderCircle(PoseStack poseStack, BufferBuilder buffer, Circle circle) {
+    private void renderCircle(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Circle circle) {
         float colorAnim = (float) (circle.timer.getMs()) / 6000f;
         float sizeAnim = circleScale.getValue().floatValue() - (float) Math.pow(1 - ((circle.timer.getMs() * (easeOut.getValue() ? 2f : 1f)) / 5000f), 4);
 
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
         Vec3 pos = circle.pos();
 
         poseStack.pushPose();
@@ -144,10 +127,10 @@ public class JumpCircle extends Module {
         float scale = sizeAnim * 2.0f;
         Matrix4f matrix = poseStack.last().pose();
 
-        buffer.addVertex(matrix, -sizeAnim, -sizeAnim + scale, 0.0f).setUv(0.0f, 1.0f).setColor(applyOpacity(syncColor(270), 1.0f - colorAnim).getRGB());
-        buffer.addVertex(matrix, -sizeAnim + scale, -sizeAnim + scale, 0.0f).setUv(1.0f, 1.0f).setColor(applyOpacity(syncColor(0), 1.0f - colorAnim).getRGB());
-        buffer.addVertex(matrix, -sizeAnim + scale, -sizeAnim, 0.0f).setUv(1.0f, 0.0f).setColor(applyOpacity(syncColor(180), 1.0f - colorAnim).getRGB());
-        buffer.addVertex(matrix, -sizeAnim, -sizeAnim, 0.0f).setUv(0.0f, 0.0f).setColor(applyOpacity(syncColor(90), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim, -sizeAnim + scale, 0.0f, 0.0f, 1.0f, applyOpacity(syncColor(270), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim + scale, 0.0f, 1.0f, 1.0f, applyOpacity(syncColor(0), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim, 0.0f, 1.0f, 0.0f, applyOpacity(syncColor(180), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim, -sizeAnim, 0.0f, 0.0f, 0.0f, applyOpacity(syncColor(90), 1.0f - colorAnim).getRGB());
 
         poseStack.popPose();
     }

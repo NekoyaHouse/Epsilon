@@ -50,7 +50,7 @@ public class GhostHand extends Module {
 
             if (mc.level.getBlockState(pos).hasBlockEntity()) {
                 for (InteractionHand hand : InteractionHand.values()) {
-                    InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(pos.getCenter(), RotationUtils.getDirection(pos), pos, true));
+                    InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true));
                     if (result instanceof InteractionResult.Success || result instanceof InteractionResult.Fail) {
                         mc.player.swing(hand);
                         event.cancel();

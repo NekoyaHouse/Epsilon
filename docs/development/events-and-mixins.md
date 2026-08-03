@@ -46,7 +46,7 @@ EventBus 在某个监听器取消事件后立即停止调用后续监听器。
 | 移动 | `MoveEvent`、`StrafeEvent`、`TravelEvent`、`JumpEvent`、`SlowdownEvent`、`FallFlyingEvent`、`FireworkRotationEvent` |
 | Raytrace | `RaytraceEvent`、`UseItemRaytraceEvent` |
 
-`Render2DEvent` 当前携带 Minecraft 26.1.2 的 `GuiGraphicsExtractor`。
+`Render2DEvent` 当前携带 Minecraft 26.2 的 `GuiGraphicsExtractor`。26.2 的实体、物品和模型渲染先提交到 `SubmitNodeStorage`，再由 `FeatureRenderDispatcher.PreparedFrame` 分阶段执行；描边必须在对应 frame 的 `executeOutline()` 阶段提交。
 
 ## Mixin 配置
 

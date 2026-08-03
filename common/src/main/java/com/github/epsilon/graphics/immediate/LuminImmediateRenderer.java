@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.immediate;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -23,8 +24,9 @@ import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteOrder;
+import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
+import java.util.function.Consumer;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -33,17 +35,21 @@ public class LuminImmediateRenderer {
     private static final long DEFAULT_BUFFER_SIZE = 1024 * 1024;
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 
-    private static final Channel POS_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS);
-    private static final Channel POS_COLOR_TRIANGLE_STRIP = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_STRIP);
-    private static final Channel POS_COLOR_TRIANGLE_FAN = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_FAN);
-    private static final Channel POS_TEX_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS);
-    private static final Channel POS_COLOR_NORMAL_LINE_WIDTH_LINES = new Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES);
+    private static final Channel POS_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.QUADS);
+    private static final Channel POS_COLOR_TRIANGLE_STRIP = new Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_STRIP);
+    private static final Channel POS_COLOR_TRIANGLE_FAN = new Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_FAN);
+    private static final Channel POS_TEX_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_TEX_COLOR, PrimitiveTopology.QUADS);
+    private static final Channel POS_COLOR_NORMAL_LINE_WIDTH_LINES = new Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, PrimitiveTopology.LINES);
 
     private LuminImmediateRenderer() {
     }
 
     public static PosColorQuads beginPosColorQuads(RenderPipeline pipeline) {
-        return new PosColorQuads(POS_COLOR_QUADS.begin(pipeline, null));
+        return beginPosColorQuads(pipeline, null);
+    }
+
+    public static PosColorQuads beginPosColorQuads(RenderPipeline pipeline, Consumer<RenderPass> passConfigurer) {
+        return new PosColorQuads(POS_COLOR_QUADS.begin(pipeline, null, passConfigurer));
     }
 
     public static PosColorTriangleStrip beginPosColorTriangleStrip(RenderPipeline pipeline) {
@@ -177,7 +183,7 @@ public class LuminImmediateRenderer {
 
         private final LuminRingBuffer ringBuffer;
         private final VertexFormat format;
-        private final VertexFormat.Mode mode;
+        private final PrimitiveTopology mode;
         private final int stride;
 
         private final int positionOffset;
@@ -200,25 +206,31 @@ public class LuminImmediateRenderer {
         private RenderPipeline pipeline;
 
         private Identifier texture;
+        private Consumer<RenderPass> passConfigurer;
 
-        private Channel(VertexFormat format, VertexFormat.Mode mode) {
+        private Channel(VertexFormat format, PrimitiveTopology mode) {
             this.ringBuffer = new LuminRingBuffer(DEFAULT_BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
             this.format = format;
             this.mode = mode;
             this.stride = format.getVertexSize();
 
-            this.positionOffset = resolveOffset(format, VertexFormatElement.POSITION);
-            this.colorOffset = resolveOffset(format, VertexFormatElement.COLOR);
-            this.uvOffset = resolveOffset(format, VertexFormatElement.UV0);
-            this.normalOffset = resolveOffset(format, VertexFormatElement.NORMAL);
-            this.lineWidthOffset = resolveOffset(format, VertexFormatElement.LINE_WIDTH);
+            this.positionOffset = resolveOffset(format, DefaultVertexFormat.POSITION_SEMANTIC_NAME);
+            this.colorOffset = resolveOffset(format, DefaultVertexFormat.COLOR_SEMANTIC_NAME);
+            this.uvOffset = resolveOffset(format, DefaultVertexFormat.UV0_SEMANTIC_NAME);
+            this.normalOffset = resolveOffset(format, DefaultVertexFormat.NORMAL_SEMANTIC_NAME);
+            this.lineWidthOffset = resolveOffset(format, DefaultVertexFormat.LINE_WIDTH_SEMANTIC_NAME);
         }
 
-        private static int resolveOffset(VertexFormat format, VertexFormatElement element) {
-            return format.contains(element) ? format.getOffset(element) : -1;
+        private static int resolveOffset(VertexFormat format, String semanticName) {
+            VertexFormatElement element = format.getElement(semanticName);
+            return element != null ? element.offset() : -1;
         }
 
         private Channel begin(RenderPipeline pipeline, Identifier texture) {
+            return begin(pipeline, texture, null);
+        }
+
+        private Channel begin(RenderPipeline pipeline, Identifier texture, Consumer<RenderPass> passConfigurer) {
             if (this.building) {
                 throw new IllegalStateException("Immediate channel is already building");
             }
@@ -228,7 +240,7 @@ public class LuminImmediateRenderer {
             this.vertexCount = 0;
             this.pipeline = pipeline;
             this.texture = texture;
-
+            this.passConfigurer = passConfigurer;
             this.ringBuffer.tryMap();
             return this;
         }
@@ -287,7 +299,7 @@ public class LuminImmediateRenderer {
             this.currentOffset += this.stride;
             this.vertexCount++;
 
-            if (this.mode == VertexFormat.Mode.LINES) {
+            if (this.mode == PrimitiveTopology.LINES) {
                 long duplicateVertexBaseAddr = MemoryUtil.memAddress(this.ringBuffer.getMappedBuffer()) + this.currentOffset;
                 MemoryUtil.memCopy(completedVertexBaseAddr, duplicateVertexBaseAddr, this.stride);
                 this.currentOffset += this.stride;
@@ -304,7 +316,7 @@ public class LuminImmediateRenderer {
             if (this.vertexBaseAddr != 0L) {
                 return true;
             }
-            long requiredBytes = this.mode == VertexFormat.Mode.LINES ? this.stride * 2L : this.stride;
+            long requiredBytes = this.mode == PrimitiveTopology.LINES ? this.stride * 2L : this.stride;
             this.ringBuffer.ensureCapacity(this.currentOffset + requiredBytes);
             if (!this.ringBuffer.isMapped()) {
                 this.ringBuffer.tryMap();
@@ -334,25 +346,29 @@ public class LuminImmediateRenderer {
                 }
 
                 GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
-                        RenderSystem.getModelViewMatrix(),
+                        RenderSystem.getModelViewMatrixCopy(),
                         new Vector4f(1, 1, 1, 1),
                         new Vector3f(0, 0, 0),
-                        TextureTransform.DEFAULT_TEXTURING.getMatrix()
+                        TextureTransform.DEFAULT_TEXTURING.createMatrix()
                 );
 
                 try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                         () -> "Lumin Immediate Draw",
-                        colorView, OptionalInt.empty(),
+                        colorView, Optional.empty(),
                         depthView, OptionalDouble.empty())
                 ) {
                     pass.setPipeline(this.pipeline);
                     RenderSystem.bindDefaultUniforms(pass);
                     pass.setUniform("DynamicTransforms", dynamicUniforms);
-                    pass.setVertexBuffer(0, this.ringBuffer.getGpuBuffer());
+                    pass.setVertexBuffer(0, this.ringBuffer.getGpuBuffer().slice());
 
                     if (this.texture != null) {
                         AbstractTexture textureObject = mc.getTextureManager().getTexture(this.texture);
                         pass.bindTexture("Sampler0", textureObject.getTextureView(), textureObject.getSampler());
+                    }
+
+                    if (this.passConfigurer != null) {
+                        this.passConfigurer.accept(pass);
                     }
 
                     switch (this.mode) {
@@ -362,12 +378,12 @@ public class LuminImmediateRenderer {
                                 RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(this.mode);
                                 GpuBuffer ibo = autoIndices.getBuffer(indexCount);
                                 pass.setIndexBuffer(ibo, autoIndices.type());
-                                pass.drawIndexed(Math.toIntExact(this.batchStartOffset / this.stride), 0, indexCount, 1);
+                                pass.drawIndexed(indexCount, 1, 0, Math.toIntExact(this.batchStartOffset / this.stride), 0);
                                 submittedDraw = true;
                             }
                         }
                         default -> {
-                            pass.draw(Math.toIntExact(this.batchStartOffset / this.stride), this.vertexCount);
+                            pass.draw(this.vertexCount, 1, Math.toIntExact(this.batchStartOffset / this.stride), 0);
                             submittedDraw = true;
                         }
                     }
@@ -389,6 +405,7 @@ public class LuminImmediateRenderer {
                 this.vertexBaseAddr = 0L;
                 this.pipeline = null;
                 this.texture = null;
+                this.passConfigurer = null;
             }
         }
 

@@ -1,20 +1,17 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -35,12 +32,6 @@ public class CaptureMarkESP {
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withCull(false)
             .build();
-
-    private static final RenderType TARGET_ICON_LAYER = RenderType.create("epsilon_target_icon", RenderSetup.builder(TARGET_ICON_PIPELINE)
-            .withTexture("Sampler0", CAPTUREMARK_TEX)
-            .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-            .setOutputTarget(OutputTarget.MAIN_TARGET)
-            .createRenderSetup());
 
     /**
      * 为目标渲染旋转波形捕获标记。
@@ -68,12 +59,12 @@ public class CaptureMarkESP {
         poseStack.pushPose();
         poseStack.translate(ex, ey + target.getBbHeight() * 0.5, ez);
 
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
         poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
         poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(rotation));
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, CAPTUREMARK_TEX);
 
         Matrix4f matrix = poseStack.last().pose();
 
@@ -82,12 +73,11 @@ public class CaptureMarkESP {
         Color c3 = getColorForProgress(0.5f, waveSpeed, color1, color2, timeSeconds);
         Color c4 = getColorForProgress(0.75f, waveSpeed, color1, color2, timeSeconds);
 
-        buffer.addVertex(matrix, -size, -size, 0).setUv(0, 0).setColor(c1.getRGB());
-        buffer.addVertex(matrix, -size, size, 0).setUv(0, 1).setColor(c2.getRGB());
-        buffer.addVertex(matrix, size, size, 0).setUv(1, 1).setColor(c3.getRGB());
-        buffer.addVertex(matrix, size, -size, 0).setUv(1, 0).setColor(c4.getRGB());
-
-        TARGET_ICON_LAYER.draw(buffer.buildOrThrow());
+        renderer.vertex(matrix, -size, -size, 0, 0, 0, c1.getRGB());
+        renderer.vertex(matrix, -size, size, 0, 0, 1, c2.getRGB());
+        renderer.vertex(matrix, size, size, 0, 1, 1, c3.getRGB());
+        renderer.vertex(matrix, size, -size, 0, 1, 0, c4.getRGB());
+        renderer.end();
 
         poseStack.popPose();
     }

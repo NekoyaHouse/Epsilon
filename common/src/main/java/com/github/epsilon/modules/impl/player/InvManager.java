@@ -194,11 +194,11 @@ public class InvManager extends Module {
         if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
 
         boolean allowMove = mode.is(Mode.Silent);
-        if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.screen instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
+        if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.gui.screen() instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
             this.clickOffHand = false;
             return;
         }
-        if (mc.screen instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
+        if (mc.gui.screen() instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
             return;
         int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
 

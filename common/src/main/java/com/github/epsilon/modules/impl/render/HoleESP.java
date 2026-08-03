@@ -267,7 +267,7 @@ public class HoleESP extends Module {
             BlockPos side = pos.relative(direction);
             if (!hasCollision(side.below()) || hasCollision(side) || hasCollision(side.above())) continue;
 
-            double distanceSquared = eyePosition.distanceToSqr(side.getCenter());
+            double distanceSquared = eyePosition.distanceToSqr(Vec3.atCenterOf(side));
             if (distanceSquared < closestDistanceSquared) {
                 closestDistanceSquared = distanceSquared;
                 closestSide = direction;
@@ -316,7 +316,7 @@ public class HoleESP extends Module {
                     pos.getX(), pos.getY(), pos.getZ(),
                     pos.getX() + 1.0, pos.getY() + boxHeight, pos.getZ() + 1.0
             );
-            drawBox(bounds, pos.getCenter(), fill, fillColor, fade, fadeColor, box, boxColor);
+            drawBox(bounds, Vec3.atCenterOf(pos), fill, fillColor, fade, fadeColor, box, boxColor);
         }
     }
 

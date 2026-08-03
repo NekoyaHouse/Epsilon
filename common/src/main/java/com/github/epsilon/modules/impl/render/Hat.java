@@ -7,12 +7,12 @@ import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
@@ -50,14 +50,15 @@ public class Hat extends Module {
 
     private static final RenderPipeline HAT_CONE_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_cone"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
-            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_FAN)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_FAN)
             .build();
 
     private static final RenderPipeline HAT_OUTLINE_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_outline"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
             .build();
 
@@ -72,8 +73,6 @@ public class Hat extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (nullCheck()) return;
-
         if (this.lastSize != this.size.getValue() || this.lastPoints != this.points.getValue()) {
             this.lastSize = this.size.getValue();
             this.lastPoints = this.points.getValue();
@@ -99,7 +98,7 @@ public class Hat extends Module {
             colors[i] = this.fadeBetween(colorMode, this.offset.getValue(), (double) i * ((double) this.offset.getValue() / this.points.getValue()));
         }
 
-        Vec3 camera = mc.gameRenderer.getMainCamera().position();
+        Vec3 camera = mc.gameRenderer.mainCamera().position();
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         double x = Mth.lerp(tickDelta, player.xOld, player.getX()) - camera.x;
         double y = Mth.lerp(tickDelta, player.yOld, player.getY()) - camera.y;

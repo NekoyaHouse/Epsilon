@@ -40,7 +40,7 @@ public class KeyPearl extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
 
         if (hasActivated) {
             if (switchBack.getValue()) {

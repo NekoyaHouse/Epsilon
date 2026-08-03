@@ -28,7 +28,7 @@ public class AutoSprint extends Module {
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         boolean invSuppressed = InvManager.INSTANCE.isEnabled() && InvManager.INSTANCE.isSprintSuppressed();
-        boolean shouldSprint = mc.screen == null && !invSuppressed;
+        boolean shouldSprint = mc.gui.screen() == null && !invSuppressed;
         mc.options.keySprint.setDown(shouldSprint);
     }
 

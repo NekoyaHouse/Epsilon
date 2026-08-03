@@ -210,7 +210,7 @@ public class FeetTrap extends Module {
     }
 
     private Vec3 hitVec(BlockPos pos, Direction side) {
-        return pos.getCenter().relative(side, 0.5);
+        return Vec3.atCenterOf(pos).relative(side, 0.5);
     }
 
     private BlockPos getHelperPos(BlockPos pos) {

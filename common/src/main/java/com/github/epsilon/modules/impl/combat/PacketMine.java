@@ -240,7 +240,7 @@ public class PacketMine extends Module {
         renderFadeBoxes(event.getPoseStack());
 
         if (secondPos != null && doubleBreak.getValue()) {
-            if (farCancel.getValue() && Math.sqrt(mc.player.getEyePosition().distanceToSqr(secondPos.getCenter())) > range.getValue()) {
+            if (farCancel.getValue() && Math.sqrt(mc.player.getEyePosition().distanceToSqr(Vec3.atCenterOf(secondPos))) > range.getValue()) {
                 secondPos = null;
                 return;
             }
@@ -283,7 +283,7 @@ public class PacketMine extends Module {
             }
         }
         if (targetPos != null) {
-            if (farCancel.getValue() && Math.sqrt(mc.player.getEyePosition().distanceToSqr(targetPos.getCenter())) > range.getValue()) {
+            if (farCancel.getValue() && Math.sqrt(mc.player.getEyePosition().distanceToSqr(Vec3.atCenterOf(targetPos))) > range.getValue()) {
                 targetPos = null;
                 return;
             }

@@ -209,7 +209,7 @@ public class AutoMLG extends Module {
                         return;
                     }
 
-                    double dist = mc.player.getEyePosition().distanceTo(bestPos.getCenter().add(0, 0.5, 0));
+                    double dist = mc.player.getEyePosition().distanceTo(Vec3.atCenterOf(bestPos).add(0, 0.5, 0));
 
                     if (dist < 10) {
                         Vec3 targetVec = new Vec3(bestPos.getX() + 0.5, bestPos.getY() + 1.0, bestPos.getZ() + 0.5);

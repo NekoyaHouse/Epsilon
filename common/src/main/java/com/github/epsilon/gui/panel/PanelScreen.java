@@ -248,7 +248,7 @@ public class PanelScreen extends Screen {
 
         PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), categoryRailPanel.getAnimatedWidth());
         if (!layout.panel().contains(mouseX, mouseY)) {
-            if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.setScreen(null);
+            if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.gui.setScreen(null);
             return true;
         }
         if (!state.isClientSettingMode()) {

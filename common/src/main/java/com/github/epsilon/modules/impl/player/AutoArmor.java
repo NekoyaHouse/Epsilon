@@ -75,12 +75,12 @@ public class AutoArmor extends Module {
         if (nullCheck()) return;
 
         if (
-                mc.screen != null
+                mc.gui.screen() != null
                         && pauseInventory.getValue()
-                        && !(mc.screen instanceof ChatScreen)
-                        && !(mc.screen instanceof PanelScreen)
-                        && !(mc.screen instanceof DropdownScreen)
-                        && !(mc.screen instanceof HudEditorScreen)
+                        && !(mc.gui.screen() instanceof ChatScreen)
+                        && !(mc.gui.screen() instanceof PanelScreen)
+                        && !(mc.gui.screen() instanceof DropdownScreen)
+                        && !(mc.gui.screen() instanceof HudEditorScreen)
         ) {
             return;
         }

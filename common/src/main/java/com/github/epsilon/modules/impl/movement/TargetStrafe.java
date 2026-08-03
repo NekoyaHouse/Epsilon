@@ -63,7 +63,7 @@ public class TargetStrafe extends Module {
             return;
         }
 
-        if (requireJump.getValue() && (mc.screen != null || !mc.options.keyJump.isDown())) {
+        if (requireJump.getValue() && (mc.gui.screen() != null || !mc.options.keyJump.isDown())) {
             resetTarget();
             return;
         }

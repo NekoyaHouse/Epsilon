@@ -169,7 +169,7 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onMousePress(MousePressEvent event) {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_RIGHT && event.getAction() == GLFW.GLFW_PRESS && getActiveMode().shouldCancelRightClick()) {
             event.cancel();
         }

@@ -173,14 +173,14 @@ public class ModuleHolder {
 
     @EventHandler
     private void onKeyPress(KeyPressEvent event) {
-        if (mc.level == null || mc.screen != null || event.getKey() == GLFW.GLFW_KEY_UNKNOWN) return;
+        if (mc.level == null || mc.gui.screen() != null || event.getKey() == GLFW.GLFW_KEY_UNKNOWN) return;
 
         int keyCode = event.getKey();
         int action = event.getAction();
 
         ClientSetting cs = ClientSetting.INSTANCE;
         if (keyCode == cs.guiKeybind.getValue() && action == InputConstants.PRESS) {
-            mc.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
+            mc.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
                 case Panel -> PanelScreen.INSTANCE;
                 case Dropdown -> DropdownScreen.INSTANCE;
             });
@@ -191,7 +191,7 @@ public class ModuleHolder {
 
     @EventHandler
     private void onMousePress(MousePressEvent event) {
-        if (mc.level != null && mc.screen == null) {
+        if (mc.level != null && mc.gui.screen() == null) {
             dispatchKeyBind(KeybindUtils.encodeMouseButton(event.getButton()), event.getAction());
         }
     }

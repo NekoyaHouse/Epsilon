@@ -97,13 +97,13 @@ public class ScaffoldBlock extends HudModule {
     }
 
     private boolean shouldShowHud(int liveBlockCount) {
-        boolean preview = mc.screen instanceof HudEditorScreen;
+        boolean preview = mc.gui.screen() instanceof HudEditorScreen;
         return preview || (Scaffold.INSTANCE.isEnabled() && liveBlockCount > 0);
     }
 
     private int getDisplayBlockCount() {
         int liveBlockCount = Math.max(0, Scaffold.INSTANCE.getBlockCount());
-        if (mc.screen instanceof HudEditorScreen) {
+        if (mc.gui.screen() instanceof HudEditorScreen) {
             return Math.max(64, liveBlockCount);
         }
         return liveBlockCount;

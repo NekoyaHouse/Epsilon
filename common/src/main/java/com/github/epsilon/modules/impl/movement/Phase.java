@@ -28,6 +28,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 public class Phase extends Module {
 
@@ -203,7 +204,7 @@ public class Phase extends Module {
                     return;
                 }
 
-                Rot2f angle = RotationUtils.calculate(block.getCenter());
+                Rot2f angle = RotationUtils.calculate(Vec3.atCenterOf(block));
                 FindItemResult result = swapMode.is(SwapMode.Silent) ? InvUtils.findInHotbar(Items.ENDER_PEARL) : InvUtils.find(Items.ENDER_PEARL);
                 if (result.found()) {
                     float prevYaw = mc.player.getYRot();

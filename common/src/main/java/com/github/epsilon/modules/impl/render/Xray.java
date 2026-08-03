@@ -41,7 +41,7 @@ public class Xray extends Module {
     }
 
     private final EnumSetting<Plugin> plugin = enumSetting("Plugin", Plugin.New);
-    public final BoolSetting wallHack = boolSetting("WallHack", false, _ -> mc.levelRenderer.allChanged());
+    public final BoolSetting wallHack = boolSetting("WallHack", false, _ -> mc.levelExtractor.allChanged());
     private final BoolSetting brutForce = boolSetting("Ore Deobf", false);
     private final BoolSetting fast = boolSetting("Fast", false, brutForce::getValue);
     private final IntSetting delay = intSetting("Delay", 25, 1, 100, 1, brutForce::getValue);
@@ -77,13 +77,13 @@ public class Xray extends Module {
         all = toCheck.size();
         done = 0;
         mc.smartCull = false;
-        mc.levelRenderer.allChanged();
+        mc.levelExtractor.allChanged();
         area = getArea();
     }
 
     @Override
     public void onDisable() {
-        mc.levelRenderer.allChanged();
+        mc.levelExtractor.allChanged();
         mc.smartCull = true;
     }
 
@@ -178,7 +178,7 @@ public class Xray extends Module {
 
         if (toCheck.isEmpty() || !brutForce.getValue()) return;
 
-        if (mc.isSingleplayer()) {
+        if (mc.isLocalServer()) {
             log("单人游戏你反你老冯呢");
             toggle();
             return;

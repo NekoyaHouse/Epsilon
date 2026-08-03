@@ -144,7 +144,7 @@ public class ScissorUtils {
             return activeTarget.width();
         }
 
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+        WindowRenderState windowState = mc.gameRenderer.gameRenderState().windowRenderState;
         return windowState.width;
     }
 
@@ -154,7 +154,7 @@ public class ScissorUtils {
             return activeTarget.height();
         }
 
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+        WindowRenderState windowState = mc.gameRenderer.gameRenderState().windowRenderState;
         return windowState.height;
     }
 

@@ -63,7 +63,7 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
     @Override
     public void epsilon$addClientSystemMessage(Component message, int hash) {
         GuiMessage guiMessage = new GuiMessage(
-                this.minecraft.gui.getGuiTicks(),
+                this.minecraft.gui.hud.getGuiTicks(),
                 message,
                 null,
                 GuiMessageSource.SYSTEM_CLIENT,
@@ -93,7 +93,7 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
 
     @Unique
     private void epsilon$addHashedMessage(Component contents, MessageSignature signature, GuiMessageSource source, GuiMessageTag tag, int hash) {
-        GuiMessage message = new GuiMessage(this.minecraft.gui.getGuiTicks(), contents, signature, source, tag);
+        GuiMessage message = new GuiMessage(this.minecraft.gui.hud.getGuiTicks(), contents, signature, source, tag);
         if (this.visibleMessageFilter.test(message)) {
             this.logChatMessage(message);
             this.addMessageToDisplayQueue(message);

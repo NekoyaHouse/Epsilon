@@ -169,7 +169,7 @@ public class HudEditorScreen extends Screen {
      * 在世界画面提交后执行 HUD 预览，确保背景模糊能读取到主渲染目标的有效内容。
      */
     public void renderPendingHudElements() {
-        if (!shouldRenderElements || minecraft.screen != this || renderTarget == null) {
+        if (!shouldRenderElements || minecraft.gui.screen() != this || renderTarget == null) {
             return;
         }
 
@@ -596,7 +596,7 @@ public class HudEditorScreen extends Screen {
         IMEFocusHelper.forceDeactivate();
         super.onClose();
 
-        minecraft.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
+        minecraft.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
             case Panel -> PanelScreen.INSTANCE;
             case Dropdown -> DropdownScreen.INSTANCE;
         });

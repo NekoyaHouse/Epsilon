@@ -443,7 +443,7 @@ public class SafeAnchor extends Module {
                     if (isLookingAtPlayerSide(hit)) {
                         targetRotation = null;
                     } else {
-                        Vec3 sideVec = currentAnchorPos.getCenter().add(
+                        Vec3 sideVec = Vec3.atCenterOf(currentAnchorPos).add(
                                 targetPlaceSide.getStepX() * 0.45,
                                 targetPlaceSide.getStepY() * 0.45,
                                 targetPlaceSide.getStepZ() * 0.45
@@ -451,7 +451,7 @@ public class SafeAnchor extends Module {
                         targetRotation = getTargetRotation(sideVec);
                     }
                 } else {
-                    targetRotation = getTargetRotation(placePos.getCenter());
+                    targetRotation = getTargetRotation(Vec3.atCenterOf(placePos));
                 }
 
                 stage = Stage.RotToPlace;
@@ -519,7 +519,7 @@ public class SafeAnchor extends Module {
         }
 
         Vec3 playerPos = mc.player.position();
-        Vec3 anchorPos = currentAnchorPos.getCenter();
+        Vec3 anchorPos = Vec3.atCenterOf(currentAnchorPos);
         for (double i = 0.3; i <= 0.7; i += 0.1) {
             BlockPos pos = BlockPos.containing(playerPos.lerp(anchorPos, i));
             if (isValidPlacePos(pos)) {
@@ -538,9 +538,9 @@ public class SafeAnchor extends Module {
     }
 
     private boolean isSideShielding(Direction side) {
-        Vec3 anchor = currentAnchorPos.getCenter();
+        Vec3 anchor = Vec3.atCenterOf(currentAnchorPos);
         Vec3 player = mc.player.position();
-        Vec3 block = currentAnchorPos.relative(side).getCenter();
+        Vec3 block = Vec3.atCenterOf(currentAnchorPos.relative(side));
         double vx = player.x - anchor.x;
         double vz = player.z - anchor.z;
         double wx = block.x - anchor.x;
@@ -564,7 +564,7 @@ public class SafeAnchor extends Module {
 
     private boolean isExplosionSafe() {
         if (currentAnchorPos == null) return false;
-        Vec3 explosionCenter = currentAnchorPos.getCenter();
+        Vec3 explosionCenter = Vec3.atCenterOf(currentAnchorPos);
         float health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         float threshold = minHealth.getValue().floatValue();
 
@@ -629,7 +629,7 @@ public class SafeAnchor extends Module {
 
         targetActionPos = currentAnchorPos;
         currentRotationSpeed = explodeRotationSpeed.getValue();
-        targetRotation = explodeNoRotate ? null : getTargetRotation(currentAnchorPos.getCenter());
+        targetRotation = explodeNoRotate ? null : getTargetRotation(Vec3.atCenterOf(currentAnchorPos));
         stage = Stage.RotToExplode;
     }
 

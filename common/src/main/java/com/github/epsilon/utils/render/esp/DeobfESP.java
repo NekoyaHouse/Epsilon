@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.pipeline.BlendFunction;
@@ -8,17 +9,13 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -27,7 +24,6 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -64,13 +60,6 @@ public class DeobfESP {
             .withCull(false)
             .build();
 
-    private static final Function<Identifier, RenderType> LAYER = Util.memoize(texture -> RenderType.create("epsilon_deobf_esp", RenderSetup.builder(PIPELINE)
-            .withTexture("Sampler0", texture)
-            .sortOnUpload()
-            .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-            .setOutputTarget(OutputTarget.MAIN_TARGET)
-            .createRenderSetup()));
-
     private static final Map<Integer, Effect> effects = new LinkedHashMap<>();
 
     private DeobfESP() {
@@ -79,15 +68,15 @@ public class DeobfESP {
     /**
      * 为目标记录一次命中特效。
      *
-     * @param target 目标实体
+     * @param entity 目标实体
      */
-    public static void markHit(LivingEntity target) {
-        if (target == null || target.isDeadOrDying()) return;
-
-        long now = System.currentTimeMillis();
-        Effect effect = effects.get(target.getId());
-        if (effect == null || effect.target != target || effect.killedAtMs >= 0L) {
-            effects.put(target.getId(), new Effect(target, now));
+    public static void markHit(Entity entity) {
+        if (entity instanceof LivingEntity target && !target.isDeadOrDying()) {
+            long now = System.currentTimeMillis();
+            Effect effect = effects.get(target.getId());
+            if (effect == null || effect.target != target || effect.killedAtMs >= 0L) {
+                effects.put(target.getId(), new Effect(target, now));
+            }
         }
     }
 
@@ -146,8 +135,9 @@ public class DeobfESP {
 
         long now = System.currentTimeMillis();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        Camera camera = mc.gameRenderer.getMainCamera();
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Camera camera = mc.gameRenderer.mainCamera();
+        Identifier texture = KillAura.INSTANCE.deobfMode.getValue().getTexture();
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture);
         Iterator<Effect> iterator = effects.values().iterator();
 
         while (iterator.hasNext()) {
@@ -171,17 +161,14 @@ public class DeobfESP {
                 continue;
             }
 
-            renderEffect(poseStack, buffer, camera, effect, now, partialTick, size, spins, wobble, flyHeight);
+            renderEffect(poseStack, renderer, camera, effect, now, partialTick, size, spins, wobble, flyHeight);
         }
 
-        MeshData mesh = buffer.build();
-        if (mesh != null) {
-            LAYER.apply(KillAura.INSTANCE.deobfMode.getValue().getTexture()).draw(mesh);
-        }
+        renderer.end();
     }
 
     private static void renderEffect(
-            PoseStack poseStack, BufferBuilder buffer, Camera camera, Effect effect,
+            PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Camera camera, Effect effect,
             long now, float partialTick, float size, float spins, float wobble, float flyHeight
     ) {
         float baseWidth = Math.max(0.01f, size);
@@ -240,10 +227,10 @@ public class DeobfESP {
         float halfHeight = drawHeight / 2.0f;
         int argb = tint.getRGB();
 
-        buffer.addVertex(matrix, -halfWidth, halfHeight, 0.0f).setUv(0.0f, 1.0f).setColor(argb);
-        buffer.addVertex(matrix, halfWidth, halfHeight, 0.0f).setUv(1.0f, 1.0f).setColor(argb);
-        buffer.addVertex(matrix, halfWidth, -halfHeight, 0.0f).setUv(1.0f, 0.0f).setColor(argb);
-        buffer.addVertex(matrix, -halfWidth, -halfHeight, 0.0f).setUv(0.0f, 0.0f).setColor(argb);
+        renderer.vertex(matrix, -halfWidth, halfHeight, 0.0f, 0.0f, 1.0f, argb);
+        renderer.vertex(matrix, halfWidth, halfHeight, 0.0f, 1.0f, 1.0f, argb);
+        renderer.vertex(matrix, halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f, argb);
+        renderer.vertex(matrix, -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f, argb);
 
         poseStack.popPose();
     }

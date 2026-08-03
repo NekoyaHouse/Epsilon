@@ -224,7 +224,7 @@ public class Notifications extends HudModule {
     }
 
     private Notification createPreviewNotification() {
-        if (mc.screen instanceof HudEditorScreen) {
+        if (mc.gui.screen() instanceof HudEditorScreen) {
             return new Notification("Preview", "Notification", NotificationMode.Success, false);
         }
         return null;

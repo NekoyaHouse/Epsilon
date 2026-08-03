@@ -5,7 +5,6 @@ import com.github.epsilon.modules.impl.render.TotemAnimation;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -24,22 +23,22 @@ public class MixinScreenEffectRenderer {
     @Shadow
     private ItemStack itemActivationItem;
 
-    @Inject(method = "renderTex", at = @At("HEAD"), cancellable = true)
-    private static void onRenderFluid(TextureAtlasSprite texture, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
+    @Inject(method = "submitBlockSprite", at = @At("HEAD"), cancellable = true)
+    private static void onRenderBlockOverlay(TextureAtlasSprite texture, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int color, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.blockOverlay.getValue()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderWater", at = @At("HEAD"), cancellable = true)
-    private static void onRenderWater(CallbackInfo ci) {
+    @Inject(method = "submitWater", at = @At("HEAD"), cancellable = true)
+    private static void onRenderWater(net.minecraft.client.Minecraft minecraft, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.liquidOverlay.getValue()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderFire", at = @At("HEAD"), cancellable = true)
-    private static void onRenderFire(PoseStack poseStack, MultiBufferSource bufferSource, TextureAtlasSprite texture, CallbackInfo ci) {
+    @Inject(method = "submitFire", at = @At("HEAD"), cancellable = true)
+    private static void onRenderFire(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, TextureAtlasSprite texture, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.fireOverlay.getValue()) {
             ci.cancel();
         }
@@ -54,7 +53,7 @@ public class MixinScreenEffectRenderer {
         }
     }
 
-    @WrapOperation(method = "renderScreenEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ScreenEffectRenderer;renderItemActivationAnimation(Lcom/mojang/blaze3d/vertex/PoseStack;FLnet/minecraft/client/renderer/SubmitNodeCollector;)V"))
+    @WrapOperation(method = "submit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ScreenEffectRenderer;renderItemActivationAnimation(Lcom/mojang/blaze3d/vertex/PoseStack;FLnet/minecraft/client/renderer/SubmitNodeCollector;)V"))
     private void renderTotemAnimation(ScreenEffectRenderer renderer, PoseStack poseStack, float partialTick, SubmitNodeCollector submitNodeCollector, Operation<Void> original) {
         TotemAnimation totemAnimation = TotemAnimation.INSTANCE;
         if (totemAnimation.isEnabled()) {
@@ -65,7 +64,7 @@ public class MixinScreenEffectRenderer {
     }
 
     @Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true)
-    private void onRenderItemActivationAnimation(CallbackInfo ci) {
+    private void onRenderItemActivationAnimation(PoseStack poseStack, float partialTicks, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.totemAnimation.getValue() && itemActivationItem != null && itemActivationItem.is(Items.TOTEM_OF_UNDYING)) {
             ci.cancel();
         }

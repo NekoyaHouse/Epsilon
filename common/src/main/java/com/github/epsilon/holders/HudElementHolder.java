@@ -55,7 +55,7 @@ public class HudElementHolder {
 
     @EventHandler
     private void onRender2D(Render2DEvent.HUD event) {
-        if (ClientUtils.isLoading() || mc.level == null || mc.screen instanceof HudEditorScreen) return;
+        if (ClientUtils.isLoading() || mc.level == null || mc.gui.screen() instanceof HudEditorScreen) return;
 
         scene.beginFrame();
         for (HudModule element : elements) {

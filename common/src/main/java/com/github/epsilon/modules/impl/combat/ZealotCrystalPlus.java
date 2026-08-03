@@ -41,7 +41,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -283,7 +283,7 @@ public class ZealotCrystalPlus extends Module {
         if (nullCheck() || !isEnabled()) return;
 
         Packet<?> packet = event.getPacket();
-        if (packet instanceof ClientboundAddEntityPacket addPacket && addPacket.getType() == EntityType.END_CRYSTAL) {
+        if (packet instanceof ClientboundAddEntityPacket addPacket && addPacket.getType() == EntityTypes.END_CRYSTAL) {
             handleSpawnPacket(addPacket);
         } else if (packet instanceof ClientboundSoundPacket soundPacket) {
             handleExplosionPacket(soundPacket);

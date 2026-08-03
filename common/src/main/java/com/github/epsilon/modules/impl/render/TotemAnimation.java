@@ -119,7 +119,7 @@ public class TotemAnimation extends Module {
             }
         }
 
-        mc.gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
+        mc.gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_3D);
         ItemStackRenderState itemState = new ItemStackRenderState();
         mc.getItemModelResolver().updateForTopItem(itemState, floatingItem, ItemDisplayContext.FIXED, mc.level, null, 0);
         itemState.submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);

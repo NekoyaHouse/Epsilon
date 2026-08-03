@@ -6,6 +6,7 @@ import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.impl.movement.KeepSprint;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -36,7 +37,7 @@ public class MixinPlayer {
     }
 
     @Inject(method = "causeExtraKnockback", at = @At("HEAD"), cancellable = true)
-    private void onCauseExtraKnockback(Entity entity, float knockbackAmount, Vec3 oldMovement, CallbackInfo ci) {
+    private void onCauseExtraKnockback(Entity entity, float knockbackAmount, Vec3 oldMovement, DamageSource damageSource, float damage, boolean comesFromEffect, CallbackInfo ci) {
         AttackSlowDownEvent event = EventBus.INSTANCE.post(new AttackSlowDownEvent(entity, knockbackAmount));
         if (event.isCancelled()) {
             ci.cancel();

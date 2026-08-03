@@ -4,6 +4,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -13,18 +14,13 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
@@ -35,7 +31,6 @@ import org.joml.Matrix4f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public class HitParticles extends Module {
 
@@ -84,16 +79,6 @@ public class HitParticles extends Module {
             .withCull(false)
             .build();
 
-    private static final Function<Identifier, RenderType> HIT_PARTICLE_LAYER = Util.memoize(texture -> RenderType.create(
-            "epsilon_hit_particles",
-            RenderSetup.builder(HIT_PARTICLE_PIPELINE)
-                    .withTexture("Sampler0", texture)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputTarget(OutputTarget.MAIN_TARGET)
-                    .createRenderSetup()
-    ));
-
     @Override
     protected void onDisable() {
         particles.clear();
@@ -126,21 +111,16 @@ public class HitParticles extends Module {
     private void onRender3D(Render3DEvent event) {
         if (particles.isEmpty()) return;
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Identifier texture = switch (mode.getValue()) {
+            case Stars -> STAR_TEXTURE;
+            case Hearts -> HEART_TEXTURE;
+            case Bloom -> BLOOM_TEXTURE;
+        };
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, texture);
         for (Particle particle : particles) {
-            particle.renderTexture(event.getPoseStack(), buffer);
+            particle.renderTexture(event.getPoseStack(), renderer);
         }
-
-        MeshData mesh = buffer.build();
-        if (mesh != null) {
-            HIT_PARTICLE_LAYER.apply(
-                    switch (mode.getValue()) {
-                        case Stars -> STAR_TEXTURE;
-                        case Hearts -> HEART_TEXTURE;
-                        case Bloom -> BLOOM_TEXTURE;
-                    }
-            ).draw(mesh);
-        }
+        renderer.end();
     }
 
     private Color resolveColor(int offset) {
@@ -224,7 +204,7 @@ public class HitParticles extends Module {
             return System.currentTimeMillis() - spawnTime > lifeTime.getValue() * 1000L;
         }
 
-        private void renderTexture(PoseStack poseStack, BufferBuilder buffer) {
+        private void renderTexture(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             float particleScale = 0.07f;
             float size = scale.getValue().floatValue();
@@ -241,16 +221,16 @@ public class HitParticles extends Module {
             Matrix4f matrix = poseStack.last().pose();
             int argb = particleColor.getRGB();
 
-            buffer.addVertex(matrix, 0.0f, size, 0.0f).setUv(0.0f, 1.0f).setColor(argb);
-            buffer.addVertex(matrix, size, size, 0.0f).setUv(1.0f, 1.0f).setColor(argb);
-            buffer.addVertex(matrix, size, 0.0f, 0.0f).setUv(1.0f, 0.0f).setColor(argb);
-            buffer.addVertex(matrix, 0.0f, 0.0f, 0.0f).setUv(0.0f, 0.0f).setColor(argb);
+            renderer.vertex(matrix, 0.0f, size, 0.0f, 0.0f, 1.0f, argb);
+            renderer.vertex(matrix, size, size, 0.0f, 1.0f, 1.0f, argb);
+            renderer.vertex(matrix, size, 0.0f, 0.0f, 1.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
 
             poseStack.popPose();
         }
 
         private Vec3 interpolatedCameraRelativePosition(float partialTick) {
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
             double renderX = Mth.lerp(partialTick, prevX, x) - camera.position().x;
             double renderY = Mth.lerp(partialTick, prevY, y) - camera.position().y;
             double renderZ = Mth.lerp(partialTick, prevZ, z) - camera.position().z;
@@ -258,7 +238,7 @@ public class HitParticles extends Module {
         }
 
         private void applyCameraRotation(PoseStack poseStack) {
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
             poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
             poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         }

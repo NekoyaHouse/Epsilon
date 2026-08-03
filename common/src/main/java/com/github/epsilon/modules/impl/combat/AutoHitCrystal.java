@@ -97,9 +97,7 @@ public class AutoHitCrystal extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (mc.screen != null) {
-            return;
-        }
+        if (mc.gui.screen() != null) return;
 
         if (this.switchClock > 0) --this.switchClock;
         if (this.placeClock > 0) --this.placeClock;

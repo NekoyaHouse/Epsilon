@@ -17,8 +17,8 @@ import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 public class TriangleRenderer implements IRenderer {
 
@@ -127,15 +127,15 @@ public class TriangleRenderer implements IRenderer {
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
-                RenderSystem.getModelViewMatrix(),
+                RenderSystem.getModelViewMatrixCopy(),
                 new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0),
-                TextureTransform.DEFAULT_TEXTURING.getMatrix()
+                TextureTransform.DEFAULT_TEXTURING.createMatrix()
         );
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Triangle Draw",
-                colorView, OptionalInt.empty(),
+                colorView, Optional.empty(),
                 depthView, OptionalDouble.empty())
         ) {
             pass.setPipeline(LuminRenderPipelines.TRIANGLE);
@@ -179,8 +179,8 @@ public class TriangleRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer());
-        pass.draw(0, vertexCount);
+        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice());
+        pass.draw(vertexCount, 1, 0, 0);
     }
 
     @Override

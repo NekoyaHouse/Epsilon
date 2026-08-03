@@ -20,8 +20,6 @@ public class NoRender extends Module {
     public final BoolSetting portalOverlay = boolSetting("Portal Overlay", false);
     public final BoolSetting spyglassOverlay = boolSetting("Spyglass Overlay", false);
     public final BoolSetting nausea = boolSetting("Nausea", false);
-    public final BoolSetting pumpkinOverlay = boolSetting("Pumpkin Overlay", false);
-    public final BoolSetting powderedSnowOverlay = boolSetting("Powdered Snow Overlay", false);
     public final BoolSetting fireOverlay = boolSetting("Fire Overlay", false);
     public final BoolSetting liquidOverlay = boolSetting("Liquid Overlay", false);
     public final BoolSetting blockOverlay = boolSetting("Block Overlay", true);
@@ -50,13 +48,13 @@ public class NoRender extends Module {
     public final BoolSetting blockBreakOverlay = boolSetting("Block Break Overlay", false);
     public final BoolSetting beaconBeams = boolSetting("Beacon Beams", false);
     public final BoolSetting fallingBlocks = boolSetting("Falling Blocks", false);
-    public final BoolSetting caveCulling = boolSetting("Cave Culling", false, _ -> mc.levelRenderer.allChanged());
+    public final BoolSetting caveCulling = boolSetting("Cave Culling", false, _ -> mc.levelExtractor.allChanged());
     public final BoolSetting mapMarkers = boolSetting("Map Markers", false);
     public final BoolSetting mapContents = boolSetting("Map Contents", false);
     public final BoolSetting bannerRender = boolSetting("Banners", false);
     public final BoolSetting fireworkExplosions = boolSetting("Firework Explosions", false);
     public final BoolSetting barrierInvis = boolSetting("Barrier Invisibility", false);
-    public final BoolSetting textureRotations = boolSetting("Texture Rotations", false, _ -> mc.levelRenderer.allChanged());
+    public final BoolSetting textureRotations = boolSetting("Texture Rotations", false, _ -> mc.levelExtractor.allChanged());
 
     // Entity
     public final RegistryListSetting<EntityType<?>> entities = entityTypeListSetting("Entities", List.of());
@@ -68,12 +66,12 @@ public class NoRender extends Module {
 
     @Override
     protected void onEnable() {
-        if (caveCulling.getValue() || textureRotations.getValue()) mc.levelRenderer.allChanged();
+        if (caveCulling.getValue() || textureRotations.getValue()) mc.levelExtractor.allChanged();
     }
 
     @Override
     protected void onDisable() {
-        if (caveCulling.getValue() || textureRotations.getValue()) mc.levelRenderer.allChanged();
+        if (caveCulling.getValue() || textureRotations.getValue()) mc.levelExtractor.allChanged();
     }
 
     public boolean noEntity(EntityType<?> entityType) {

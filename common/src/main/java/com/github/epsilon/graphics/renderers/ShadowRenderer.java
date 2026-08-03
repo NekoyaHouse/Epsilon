@@ -184,7 +184,7 @@ public class ShadowRenderer implements IRenderer {
 
         try {
             try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> "Lumin Shadow Draw", sharedInfo.colorView(), OptionalInt.empty(),
+                    () -> "Lumin Shadow Draw", sharedInfo.colorView(), Optional.empty(),
                     sharedInfo.depthView(), OptionalDouble.empty())
             ) {
                 RenderSystem.bindDefaultUniforms(pass);
@@ -252,13 +252,13 @@ public class ShadowRenderer implements IRenderer {
             if (draw.segmented()) {
                 PreparedSegmentedShadow shadow = preparedSegmentedShadows.get(draw.segmentedShadowIndex());
                 pass.setPipeline(LuminRenderPipelines.SEGMENTED_SHADOW);
-                pass.setVertexBuffer(0, segmentedBuffer.getGpuBuffer());
+                pass.setVertexBuffer(0, segmentedBuffer.getGpuBuffer().slice());
                 pass.setUniform("SegmentedShadowUniforms", shadow.uniforms());
-                pass.drawIndexed(0, draw.firstIndex(), draw.indexCount(), 1);
+                pass.drawIndexed(draw.indexCount(), 1, draw.firstIndex(), 0, 0);
             } else {
                 pass.setPipeline(LuminRenderPipelines.SHADOW);
-                pass.setVertexBuffer(0, buffer.getGpuBuffer());
-                pass.drawIndexed(0, draw.firstIndex(), draw.indexCount(), 1);
+                pass.setVertexBuffer(0, buffer.getGpuBuffer().slice());
+                pass.drawIndexed(draw.indexCount(), 1, draw.firstIndex(), 0, 0);
             }
         }
     }

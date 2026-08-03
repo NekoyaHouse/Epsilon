@@ -8,7 +8,7 @@ import org.joml.Vector3f;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class WorldToScreen {
+public class WorldToScreen {
 
     private static final float REFERENCE_PIXELS_PER_WORLD_UNIT = 20.0f;
 
@@ -22,7 +22,7 @@ public final class WorldToScreen {
      * @return 未执行深度剔除的屏幕坐标
      */
     public static Vector3f calcWorld2ScreenRaw(Vec3 pos) {
-        CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+        CameraRenderState cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         Vector3f cameraRelativePos = pos.subtract(cameraState.pos).toVector3f();
         Vector3f viewPos = cameraState.viewRotationMatrix.transformPosition(cameraRelativePos, new Vector3f());
         Vector3f projected = cameraState.projectionMatrix.transformProject(viewPos, new Vector3f());
@@ -54,7 +54,7 @@ public final class WorldToScreen {
      * @return 透视 UI 缩放；无效深度返回 0
      */
     public static float calcScale(Vec3 pos) {
-        CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+        CameraRenderState cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         Vector3f cameraRelativePos = pos.subtract(cameraState.pos).toVector3f();
         float depth = -cameraState.viewRotationMatrix.transformPosition(cameraRelativePos, new Vector3f()).z;
         if (depth < Camera.PROJECTION_Z_NEAR) return 0.0f;

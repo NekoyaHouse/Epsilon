@@ -51,7 +51,7 @@ public class MultiAura extends Module {
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck()) return;
-        if (pauseOnContainers.getValue() && mc.screen != null) return;
+        if (pauseOnContainers.getValue() && mc.gui.screen() != null) return;
         if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
 
         attacks += MathUtils.getRandom(minCPS.getValue().doubleValue(), maxCPS.getValue().doubleValue()) / 20.0;

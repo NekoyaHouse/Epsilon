@@ -23,7 +23,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
-import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -79,7 +79,7 @@ public class CrystalAura extends Module {
 
     @EventHandler
     public void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck() || mc.screen != null) return;
+        if (nullCheck() || mc.gui.screen() != null) return;
 
         boolean dontPlace = placeClock != 0;
         boolean dontBreak = breakClock != 0;

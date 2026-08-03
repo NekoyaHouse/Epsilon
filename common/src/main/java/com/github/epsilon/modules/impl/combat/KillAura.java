@@ -27,6 +27,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import love.slmpc.ClInitNative;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
@@ -237,12 +238,16 @@ public class KillAura extends Module {
             attacks--;
             if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlow.INSTANCE.isWorking()) return;
             if (hitResult instanceof EntityHitResult entityHitResult) {
-                mc.gameMode.attack(mc.player, entityHitResult.getEntity());
-            }
-            if (swingHand.getValue()) {
-                mc.player.swing(InteractionHand.MAIN_HAND);
-            } else {
-                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                Entity entity = entityHitResult.getEntity();
+                mc.gameMode.attack(mc.player, entity);
+
+                if (espMode.is(ESPMode.Deobf)) DeobfESP.markHit(entity);
+
+                if (swingHand.getValue()) {
+                    mc.player.swing(InteractionHand.MAIN_HAND);
+                } else {
+                    mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                }
             }
         }
     }

@@ -69,7 +69,7 @@ public class Eagle extends Module {
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onMoveInput(KeyboardInputEvent event) {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
 
         boolean physicallySneaking = KeybindUtils.isPressed(mc.options.keyShift);
         if (sneakingOnly.getValue() && physicallySneaking && shouldSneak()) {

@@ -1,15 +1,16 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.modules.impl.render.CustomSky;
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,12 +23,9 @@ import net.minecraft.util.Util;
 import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.EnumMap;
-import java.util.OptionalInt;
+import java.util.Optional;
 
-/**
- * 将已绘制的天空复制到独立目标后执行全屏后处理，避免同一纹理同时作为输入和输出。
- */
-public final class CustomSkyShader {
+public class CustomSkyShader {
 
     public static final CustomSkyShader INSTANCE = new CustomSkyShader();
 
@@ -79,7 +77,7 @@ public final class CustomSkyShader {
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "Epsilon Custom Sky",
                 target.getColorTextureView(),
-                OptionalInt.empty()
+                Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
@@ -87,7 +85,7 @@ public final class CustomSkyShader {
             if (mode == CustomSky.ShaderMode.Local) {
                 renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
             }
-            renderPass.draw(0, 3);
+            renderPass.draw(3, 1, 0, 0);
         }
     }
 
@@ -97,10 +95,10 @@ public final class CustomSkyShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/custom_sky_" + shaderMode.name().toLowerCase()))
                     .withVertexShader(VERTEX_SHADER)
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("custom_sky_" + shaderMode.name().toLowerCase()))
-                    .withUniform("CustomSky", UniformType.UNIFORM_BUFFER)
+                    .withBindGroupLayout(LuminBindGroupLayouts.CUSTOM_SKY)
                     .withCull(false);
             if (shaderMode == CustomSky.ShaderMode.Local) {
-                builder.withSampler("InputSampler");
+                builder.withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER);
             }
             return builder.build();
         });
@@ -108,7 +106,7 @@ public final class CustomSkyShader {
 
     private void ensureInput(RenderTarget target) {
         if (input == null) {
-            input = new TextureTarget("Epsilon Custom Sky Input", target.width, target.height, false);
+            input = new TextureTarget("Epsilon Custom Sky Input", target.width, target.height, false, GpuFormat.RGBA8_UNORM);
         } else if (input.width != target.width || input.height != target.height) {
             input.resize(target.width, target.height);
         }

@@ -4,6 +4,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -13,25 +14,19 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public class Particles extends Module {
 
@@ -82,19 +77,9 @@ public class Particles extends Module {
     private static final RenderPipeline PARTICLE_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
             .withLocation("pipeline/epsilon_particles")
             .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
             .build();
-
-    private static final Function<Identifier, RenderType> PARTICLE_LAYER = Util.memoize(texture -> RenderType.create(
-            "epsilon_particles",
-            RenderSetup.builder(PARTICLE_PIPELINE)
-                    .withTexture("Sampler0", texture)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputTarget(OutputTarget.MAIN_TARGET)
-                    .createRenderSetup()
-    ));
 
     @Override
     protected void onDisable() {
@@ -147,15 +132,11 @@ public class Particles extends Module {
     }
 
     private void renderParticleList(PoseStack poseStack, List<ParticleBase> list, Identifier texture) {
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(PARTICLE_PIPELINE, texture);
         for (ParticleBase particle : list) {
-            particle.render(poseStack, buffer);
+            particle.render(poseStack, renderer);
         }
-
-        MeshData mesh = buffer.build();
-        if (mesh != null) {
-            PARTICLE_LAYER.apply(texture).draw(mesh);
-        }
+        renderer.end();
     }
 
     private Identifier textureForMode(Mode mode) {
@@ -228,7 +209,7 @@ public class Particles extends Module {
         }
 
         @Override
-        public void render(PoseStack poseStack, BufferBuilder buffer) {
+        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             if (trails.isEmpty()) return;
 
             float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
@@ -237,7 +218,7 @@ public class Particles extends Module {
             for (Trail trail : trails) {
                 Vec3 position = trail.interpolate(tickDelta);
                 int alpha = (int) (255.0f * ((float) age / (float) maxAge) * trail.animation(tickDelta));
-                drawBillboard(poseStack, buffer, position, particleSize, withAlpha(trail.color(), alpha));
+                drawBillboard(poseStack, renderer, position, particleSize, withAlpha(trail.color(), alpha));
             }
         }
     }
@@ -298,22 +279,22 @@ public class Particles extends Module {
             return false;
         }
 
-        public void render(PoseStack poseStack, BufferBuilder buffer) {
+        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             Color particleColor = withAlpha(resolveColor(age * 2), (int) (255.0f * ((float) age / (float) maxAge)));
-            drawBillboard(poseStack, buffer, interpolatePos(), size.getValue().floatValue(), particleColor);
+            drawBillboard(poseStack, renderer, interpolatePos(), size.getValue().floatValue(), particleColor);
         }
 
         protected Vec3 interpolatePos() {
             float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-            Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
+            Vec3 cameraPos = mc.gameRenderer.mainCamera().position();
             double x = Mth.lerp(tickDelta, prevPosX, posX) - cameraPos.x;
             double y = Mth.lerp(tickDelta, prevPosY, posY) - cameraPos.y;
             double z = Mth.lerp(tickDelta, prevPosZ, posZ) - cameraPos.z;
             return new Vec3(x, y, z);
         }
 
-        protected void drawBillboard(PoseStack poseStack, BufferBuilder buffer, Vec3 position, float particleSize, Color particleColor) {
-            Camera camera = mc.gameRenderer.getMainCamera();
+        protected void drawBillboard(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Vec3 position, float particleSize, Color particleColor) {
+            Camera camera = mc.gameRenderer.mainCamera();
 
             poseStack.pushPose();
             poseStack.translate(position.x, position.y, position.z);
@@ -323,10 +304,10 @@ public class Particles extends Module {
             Matrix4f matrix = poseStack.last().pose();
             int argb = particleColor.getRGB();
 
-            buffer.addVertex(matrix, 0.0f, -particleSize, 0.0f).setUv(0.0f, 1.0f).setColor(argb);
-            buffer.addVertex(matrix, -particleSize, -particleSize, 0.0f).setUv(1.0f, 1.0f).setColor(argb);
-            buffer.addVertex(matrix, -particleSize, 0.0f, 0.0f).setUv(1.0f, 0.0f).setColor(argb);
-            buffer.addVertex(matrix, 0.0f, 0.0f, 0.0f).setUv(0.0f, 0.0f).setColor(argb);
+            renderer.vertex(matrix, 0.0f, -particleSize, 0.0f, 0.0f, 1.0f, argb);
+            renderer.vertex(matrix, -particleSize, -particleSize, 0.0f, 1.0f, 1.0f, argb);
+            renderer.vertex(matrix, -particleSize, 0.0f, 0.0f, 1.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
 
             poseStack.popPose();
         }
@@ -346,7 +327,7 @@ public class Particles extends Module {
         }
 
         public Vec3 interpolate(float tickDelta) {
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
             double x = Mth.lerp(tickDelta, from.x, to.x) - camera.position().x;
             double y = Mth.lerp(tickDelta, from.y, to.y) - camera.position().y;
             double z = Mth.lerp(tickDelta, from.z, to.z) - camera.position().z;

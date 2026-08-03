@@ -75,7 +75,7 @@ public class FreeCamera extends Module {
         perspective = mc.options.getCameraType();
         speedValue = speed.getValue();
 
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
+        Vec3 cameraPos = mc.gameRenderer.mainCamera().position();
         pos.set(cameraPos.x, cameraPos.y, cameraPos.z);
         prevPos.set(pos);
 
@@ -99,14 +99,14 @@ public class FreeCamera extends Module {
         unpress();
 
         if (reloadChunks.getValue()) {
-            mc.levelRenderer.allChanged();
+            mc.levelExtractor.allChanged();
         }
     }
 
     @Override
     protected void onDisable() {
         if (reloadChunks.getValue()) {
-            mc.execute(mc.levelRenderer::allChanged);
+            mc.execute(mc.levelExtractor::allChanged);
         }
 
         mc.options.setCameraType(perspective);
@@ -260,7 +260,7 @@ public class FreeCamera extends Module {
 
     @EventHandler
     private void onMouseScroll(MouseScrollEvent event) {
-        if (speedScrollSensitivity.getValue() > 0 && mc.screen == null) {
+        if (speedScrollSensitivity.getValue() > 0 && mc.gui.screen() == null) {
             speedValue += event.getValue() * 0.25 * (speedScrollSensitivity.getValue() * speedValue);
             if (speedValue < 0.1) speedValue = 0.1;
             event.cancel();

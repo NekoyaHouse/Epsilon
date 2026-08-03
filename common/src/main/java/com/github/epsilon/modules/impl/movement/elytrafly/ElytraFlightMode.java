@@ -58,7 +58,7 @@ public abstract class ElytraFlightMode {
 
     public void handleUnbreaking() {
         if (!elytraFly.unbreaking.getValue()) return;
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
         if (!mc.player.isFallFlying() || mc.player.onGround()) return;
         if (!unbreakingTimer.passedMillise(elytraFly.unbreakingDelay.getValue())) return;
 

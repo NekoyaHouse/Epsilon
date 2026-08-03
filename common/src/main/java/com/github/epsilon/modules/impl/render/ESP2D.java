@@ -64,8 +64,6 @@ public class ESP2D extends Module {
 
     @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
-        if (nullCheck() || mc.options.hideGui) return;
-
         RectRenderer rectRenderer = rectRendererSupplier.get();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float screenWidth = LuminRenderSystem.getScaledWidth();

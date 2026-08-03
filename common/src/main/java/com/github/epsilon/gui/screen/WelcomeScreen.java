@@ -150,9 +150,9 @@ public class WelcomeScreen extends Screen {
 
     private void continueToNextScreen() {
         if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
-            minecraft.setScreen(MainMenuScreen.INSTANCE);
+            minecraft.gui.setScreen(MainMenuScreen.INSTANCE);
         } else {
-            minecraft.setScreen(new TitleScreen());
+            minecraft.gui.setScreen(new TitleScreen());
         }
     }
 

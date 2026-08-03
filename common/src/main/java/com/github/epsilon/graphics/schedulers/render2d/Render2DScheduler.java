@@ -184,7 +184,7 @@ public class Render2DScheduler implements AutoCloseable {
         GpuTextureView depthView = pipeline == LuminRenderPipelines.TEXTURE ? null : LuminRenderSystem.resolveDepthView();
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Lumin 2D Pipeline Run",
-                colorView, OptionalInt.empty(),
+                colorView, Optional.empty(),
                 depthView, OptionalDouble.empty())
         ) {
             pass.setPipeline(pipeline);
