@@ -3,6 +3,7 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.*;
@@ -24,8 +25,9 @@ public class Watermark extends HudModule {
     }
 
     private enum Mode {
-        Traditional,
-        Sakura
+        Tradition,
+        Sakura,
+        Glitch
     }
 
     private enum ColorMode {
@@ -33,9 +35,9 @@ public class Watermark extends HudModule {
         Double
     }
 
-    private final EnumSetting<Mode> mode = enumSetting("Style", Mode.Traditional);
+    private final EnumSetting<Mode> mode = enumSetting("Style", Mode.Tradition);
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
-    private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235), () -> mode.is(Mode.Traditional));
+    private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235), () -> mode.is(Mode.Tradition));
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single, () -> mode.is(Mode.Sakura));
     private final ColorSetting singleColor = colorSetting("Color", Color.WHITE, false, () -> mode.is(Mode.Sakura) && colorMode.is(ColorMode.Single));
     private final ColorSetting doubleColor1 = colorSetting("Color 1", Color.WHITE, false, () -> mode.is(Mode.Sakura) && colorMode.is(ColorMode.Double));
@@ -43,27 +45,56 @@ public class Watermark extends HudModule {
     private final BoolSetting glow = boolSetting("Glow", true, () -> mode.is(Mode.Sakura));
     private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, () -> mode.is(Mode.Sakura) && glow.getValue());
     private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, () -> mode.is(Mode.Sakura) && glow.getValue());
+    private final ColorSetting glitchColor = colorSetting("Glitch Color", Color.WHITE, false, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting chromaticX = doubleSetting("Chromatic X", 1.5, 0.0, 6.0, 0.1, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting chromaticY = doubleSetting("Chromatic Y", 0.0, 0.0, 6.0, 0.1, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting glitchGlowRadius = doubleSetting("Glitch Glow Radius", 2.5, 0.0, 10.0, 0.1, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting glitchGlowIntensity = doubleSetting("Glitch Glow Intensity", 1.6, 0.0, 3.0, 0.1, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting sliceHeight = doubleSetting("Slice Height", 4.0, 1.0, 32.0, 0.5, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting sliceAmount = doubleSetting("Slice Amount", 2.5, 0.0, 10.0, 0.1, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting glitchStrength = doubleSetting("Glitch Strength", 0.65, 0.0, 1.0, 0.05, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting scanlineStrength = doubleSetting("Scanline Strength", 0.45, 0.0, 1.0, 0.05, () -> mode.is(Mode.Glitch));
+    private final DoubleSetting noiseStrength = doubleSetting("Noise Strength", 0.25, 0.0, 1.0, 0.05, () -> mode.is(Mode.Glitch));
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
-
         float scaledScale = scale.getValue().floatValue() * 2f; // 这个命名给我自己整笑了
-
-        if (mode.is(Mode.Sakura)) {
-            renderSakura(textRenderer, scaledScale);
-            return;
+        switch (mode.getValue()) {
+            case Tradition -> renderTradition(textRenderer, scaledScale);
+            case Glitch -> renderGlitch(textRenderer, scaledScale);
+            case Sakura -> renderSakura(textRenderer, scaledScale);
         }
+    }
 
+    private void renderTradition(TextRenderer textRenderer, float scale) {
         String traditionText = "EPSILON";
-        renderScope().text(traditionText, this.x, this.y, scaledScale, textColor.getValue(), StaticFontLoader.OSAKA_CHIPS);
-
-        float totalWidth = textRenderer.getWidth(traditionText, scaledScale, StaticFontLoader.OSAKA_CHIPS);
-        float totalHeight = textRenderer.getHeight(scaledScale, StaticFontLoader.OSAKA_CHIPS);
-
+        renderScope().text(traditionText, this.x, this.y, scale, textColor.getValue(), StaticFontLoader.OSAKA_CHIPS);
+        float totalWidth = textRenderer.getWidth(traditionText, scale, StaticFontLoader.OSAKA_CHIPS);
+        float totalHeight = textRenderer.getHeight(scale, StaticFontLoader.OSAKA_CHIPS);
         setBounds(totalWidth, totalHeight);
+    }
+
+    private void renderGlitch(TextRenderer textRenderer, float scale) {
+        String text = "EPSILON";
+        TtfFontLoader font = StaticFontLoader.OSAKA_CHIPS;
+        TextGlitchEffect effect = new TextGlitchEffect(
+                chromaticX.getValue().floatValue(),
+                chromaticY.getValue().floatValue(),
+                glitchGlowRadius.getValue().floatValue(),
+                glitchGlowIntensity.getValue().floatValue(),
+                sliceHeight.getValue().floatValue(),
+                sliceAmount.getValue().floatValue(),
+                glitchStrength.getValue().floatValue(),
+                scanlineStrength.getValue().floatValue(),
+                glitchColor.getValue(),
+                noiseStrength.getValue().floatValue()
+        );
+
+        renderScope().glitchText(text, this.x, this.y, scale, Color.WHITE, effect, font);
+        setBounds(textRenderer.getWidth(text, scale, font), textRenderer.getHeight(scale, font));
     }
 
     private void renderSakura(TextRenderer textRenderer, float scale) {
@@ -87,8 +118,7 @@ public class Watermark extends HudModule {
             );
             scope.text(character, textX + 1.0f, this.y + 1.0f, scale, shadowColor, font);
             if (glow.getValue()) {
-                scope.blurredText(character, textX, this.y, scale,
-                        glowRadius.getValue().floatValue() * scale, glowIntensity.getValue(), color);
+                scope.blurredText(character, textX, this.y, scale, glowRadius.getValue().floatValue() * scale, glowIntensity.getValue(), color);
             }
             scope.text(character, textX, this.y, scale, color, font);
             textX += characterWidth;
@@ -100,10 +130,10 @@ public class Watermark extends HudModule {
     private Color resolveSakuraColor(float x, float width, int index) {
         if (colorMode.is(ColorMode.Single)) {
             return singleColor.getValue();
+        } else {
+            long offset = width <= 0.0f ? index * 100L : (long) (x / width * 1600.0f);
+            return animateColor(doubleColor1.getValue(), doubleColor2.getValue(), offset);
         }
-
-        long offset = width <= 0.0f ? index * 100L : (long) (x / width * 1600.0f);
-        return animateColor(doubleColor1.getValue(), doubleColor2.getValue(), offset);
     }
 
     private Color animateColor(Color start, Color end, long offset) {

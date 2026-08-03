@@ -344,7 +344,7 @@ public class PlayerInfo extends HudModule {
 
     private void text(UiTree.Scope scope, String text, float x, float y, float scale, Color color) {
         if (textGlow.getValue()) {
-            scope.blurredText(text, x, y, scale, glowRadius.getValue().floatValue(), glowIntensity.getValue(), color);
+            scope.blurredText(text, x, y, scale, glowRadius.getValue().floatValue() * scale, glowIntensity.getValue(), color);
         }
         scope.text(text, x, y, scale, color);
     }

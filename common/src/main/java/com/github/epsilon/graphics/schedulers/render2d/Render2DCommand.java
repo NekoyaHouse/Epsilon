@@ -1,12 +1,13 @@
 package com.github.epsilon.graphics.schedulers.render2d;
 
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 
 import java.awt.*;
 
 sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand.SegmentedShadow, Render2DCommand.RoundRect,
         Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle,
-        Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.Text {
+        Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.GlitchText, Render2DCommand.Text {
 
     int layer();
 
@@ -122,6 +123,15 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.BLUR_TEXT;
+        }
+    }
+
+    record GlitchText(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                      String text, float x, float y, float scale, Color color,
+                      TextGlitchEffect effect, TtfFontLoader fontLoader) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.GLITCH_TEXT;
         }
     }
 

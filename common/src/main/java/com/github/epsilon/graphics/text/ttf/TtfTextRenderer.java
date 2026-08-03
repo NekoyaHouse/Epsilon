@@ -7,11 +7,13 @@ import com.github.epsilon.graphics.buffer.BufferUtils;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.ITextRenderer;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -37,7 +39,14 @@ public class TtfTextRenderer implements ITextRenderer {
     private static final int WIDTH_CACHE_LIMIT = 256;
     private static final float SPACE_WIDTH = 3.0f;
     private final long bufferSize;
-    private final boolean fontBlur;
+
+    public enum Mode {
+        STANDARD,
+        FONT_BLUR,
+        GLITCH
+    }
+
+    private final Mode mode;
     private final int stride;
     private final long glyphBytes;
 
@@ -63,13 +72,17 @@ public class TtfTextRenderer implements ITextRenderer {
     private int sharedMaxIndexCount;
 
     public TtfTextRenderer(long bufferSize) {
-        this(bufferSize, false);
+        this(bufferSize, Mode.STANDARD);
     }
 
     public TtfTextRenderer(long bufferSize, boolean fontBlur) {
+        this(bufferSize, fontBlur ? Mode.FONT_BLUR : Mode.STANDARD);
+    }
+
+    public TtfTextRenderer(long bufferSize, Mode mode) {
         this.bufferSize = bufferSize;
-        this.fontBlur = fontBlur;
-        this.stride = fontBlur ? FONT_BLUR_STRIDE : STANDARD_STRIDE;
+        this.mode = Objects.requireNonNull(mode, "mode");
+        this.stride = mode == Mode.STANDARD ? STANDARD_STRIDE : FONT_BLUR_STRIDE;
         this.glyphBytes = stride * 4L;
     }
 
@@ -88,7 +101,7 @@ public class TtfTextRenderer implements ITextRenderer {
     @Override
     public void addBlurredText(String text, float x, float y, float scale, Color color,
                                float blurRadius, TtfFontLoader fontLoader) {
-        if (!fontBlur) {
+        if (mode != Mode.FONT_BLUR) {
             throw new IllegalStateException("Font blur text requires TextRenderer.createFontBlur().");
         }
         if (text.isEmpty() || color.getAlpha() == 0 || !Float.isFinite(blurRadius) || blurRadius <= 0.0f) return;
@@ -96,6 +109,18 @@ public class TtfTextRenderer implements ITextRenderer {
         fontLoader.prepareChars(text);
         float clampedBlur = Math.clamp(blurRadius, 0.0f, MAX_FONT_BLUR_RADIUS);
         emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), clampedBlur);
+    }
+
+    @Override
+    public void addGlitchText(String text, float x, float y, float scale, Color color,
+                              TextGlitchEffect effect, TtfFontLoader fontLoader) {
+        if (mode != Mode.GLITCH) {
+            throw new IllegalStateException("Glitch text requires TextRenderer.createGlitch().");
+        }
+        if (text.isEmpty() || color.getAlpha() == 0 || effect == null) return;
+
+        fontLoader.prepareChars(text);
+        emitGlitchLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), effect);
     }
 
     @Override
@@ -197,11 +222,26 @@ public class TtfTextRenderer implements ITextRenderer {
             long p = batch.beginWrite(run.glyphCount);
             float[] data = run.data;
             for (int i = 0; i < run.glyphCount; i++) {
-                if (fontBlur) {
+                if (mode == Mode.FONT_BLUR) {
                     writeFontBlurGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, blurRadius);
                 } else {
                     writeGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb);
                 }
+                p += glyphBytes;
+            }
+        }
+    }
+
+    private void emitGlitchLayout(TextLayout layout, float x, float y, float scale, int argb, TextGlitchEffect effect) {
+        if (layout.glyphCount == 0) return;
+
+        float padding = effect.requiredPadding();
+        for (LayoutRun run : layout.runs) {
+            Batch batch = batchFor(run.atlas, 0.0f, effect);
+            long p = batch.beginWrite(run.glyphCount);
+            float[] data = run.data;
+            for (int i = 0; i < run.glyphCount; i++) {
+                writeEffectGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, padding);
                 p += glyphBytes;
             }
         }
@@ -243,9 +283,13 @@ public class TtfTextRenderer implements ITextRenderer {
     }
 
     private Batch batchFor(TtfGlyphAtlas atlas, float blurRadius) {
-        BatchKey key = new BatchKey(atlas, blurRadius);
+        return batchFor(atlas, blurRadius, null);
+    }
+
+    private Batch batchFor(TtfGlyphAtlas atlas, float blurRadius, TextGlitchEffect glitchEffect) {
+        BatchKey key = new BatchKey(atlas, blurRadius, glitchEffect);
         return batches.computeIfAbsent(key, k -> new Batch(
-                new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX), atlas, blurRadius
+                new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX), atlas, blurRadius, glitchEffect
         ));
     }
 
@@ -267,6 +311,11 @@ public class TtfTextRenderer implements ITextRenderer {
 
     private static void writeFontBlurGlyph(long p, float x, float y, float scale, float[] data, int base,
                                            int argb, float blurRadius) {
+        writeEffectGlyph(p, x, y, scale, data, base, argb, blurRadius + FONT_BLUR_EXTRA_PADDING);
+    }
+
+    private static void writeEffectGlyph(long p, float x, float y, float scale, float[] data, int base,
+                                         int argb, float padding) {
         float x1 = x + data[base] * scale;
         float y1 = y + data[base + 1] * scale;
         float x2 = x + data[base + 2] * scale;
@@ -275,7 +324,6 @@ public class TtfTextRenderer implements ITextRenderer {
         float v0 = data[base + 5];
         float u1 = data[base + 6];
         float v1 = data[base + 7];
-        float padding = blurRadius + FONT_BLUR_EXTRA_PADDING;
         float uPadding = padding * (u1 - u0) / Math.max(x2 - x1, 0.0001f);
         float vPadding = padding * (v1 - v0) / Math.max(y2 - y1, 0.0001f);
 
@@ -382,11 +430,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 colorView, OptionalInt.empty(),
                 depthView, OptionalDouble.empty())
         ) {
-            pass.setPipeline(fontBlur
-                    ? LuminRenderPipelines.TTF_FONT_BLUR
-                    : ClientSetting.INSTANCE.fontAntiAliasing.getValue()
-                    ? LuminRenderPipelines.TTF_FONT_AA
-                    : LuminRenderPipelines.TTF_FONT_NO_AA);
+            pass.setPipeline(pipeline());
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             }
@@ -435,13 +479,21 @@ public class TtfTextRenderer implements ITextRenderer {
 
             int vertexCount = (int) (batch.offsetInAtlas / stride);
             maxIndexCount = Math.max(maxIndexCount, (vertexCount / 4) * 6);
-            if (fontBlur) {
+            if (mode == Mode.FONT_BLUR) {
                 batch.blurUniforms = LuminRenderSystem.writeDynamicUniform(
                         "font_blur_uniforms",
                         "Lumin Font Blur UBO",
                         FONT_BLUR_UNIFORM_SIZE,
                         16,
                         new FontBlurUniforms(batch.blurRadius)
+                );
+            } else if (mode == Mode.GLITCH) {
+                batch.glitchUniforms = LuminRenderSystem.writeDynamicUniform(
+                        "font_glitch_uniforms",
+                        "Lumin Font Glitch UBO",
+                        64,
+                        16,
+                        new GlitchUniforms(batch.glitchEffect, glitchTime())
                 );
             }
         }
@@ -467,10 +519,12 @@ public class TtfTextRenderer implements ITextRenderer {
             int indexCount = (vertexCount / 4) * 6;
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
-            LuminTexture fontTexture = fontBlur ? atlas.getAlphaTexture() : atlas.getTexture();
+            LuminTexture fontTexture = mode == Mode.STANDARD ? atlas.getTexture() : atlas.getAlphaTexture();
             pass.bindTexture("Sampler0", fontTexture.getTextureView(), fontTexture.getSampler());
-            if (fontBlur) {
+            if (mode == Mode.FONT_BLUR) {
                 pass.setUniform("FontBlurUniforms", batch.blurUniforms);
+            } else if (mode == Mode.GLITCH) {
+                pass.setUniform("GlitchData", batch.glitchUniforms);
             }
 
             pass.drawIndexed(0, 0, indexCount, 1);
@@ -489,6 +543,7 @@ public class TtfTextRenderer implements ITextRenderer {
             }
             batch.offsetInAtlas = 0;
             batch.blurUniforms = null;
+            batch.glitchUniforms = null;
         }
         sharedDynamicUniforms = null;
         sharedMaxIndexCount = 0;
@@ -535,14 +590,17 @@ public class TtfTextRenderer implements ITextRenderer {
         final LuminRingBuffer buffer;
         final TtfGlyphAtlas atlas;
         final float blurRadius;
+        final TextGlitchEffect glitchEffect;
         long offsetInAtlas = 0;
         long mappedAddress = 0L;
         GpuBufferSlice blurUniforms;
+        GpuBufferSlice glitchUniforms;
 
-        private Batch(LuminRingBuffer buffer, TtfGlyphAtlas atlas, float blurRadius) {
+        private Batch(LuminRingBuffer buffer, TtfGlyphAtlas atlas, float blurRadius, TextGlitchEffect glitchEffect) {
             this.buffer = buffer;
             this.atlas = atlas;
             this.blurRadius = blurRadius;
+            this.glitchEffect = glitchEffect;
         }
 
         private long beginWrite(int glyphCount) {
@@ -562,7 +620,7 @@ public class TtfTextRenderer implements ITextRenderer {
         }
     }
 
-    private record BatchKey(TtfGlyphAtlas atlas, float blurRadius) {
+    private record BatchKey(TtfGlyphAtlas atlas, float blurRadius, TextGlitchEffect glitchEffect) {
     }
 
     private record FontBlurUniforms(float blurRadius) implements DynamicUniformStorage.DynamicUniform {
@@ -570,6 +628,32 @@ public class TtfTextRenderer implements ITextRenderer {
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer).putVec4(blurRadius, 0.0f, 0.0f, 0.0f);
         }
+    }
+
+    private record GlitchUniforms(TextGlitchEffect effect, float time) implements DynamicUniformStorage.DynamicUniform {
+        @Override
+        public void write(ByteBuffer buffer) {
+            Color color = effect.neonColor();
+            Std140Builder.intoBuffer(buffer)
+                    .putVec4(effect.chromaticX(), effect.chromaticY(), effect.glowRadius(), effect.glowIntensity())
+                    .putVec4(effect.sliceHeight(), effect.sliceAmount(), effect.glitchStrength(), effect.scanlineStrength())
+                    .putVec4(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, effect.noiseStrength())
+                    .putVec4(time, 0.0f, 0.0f, 0.0f);
+        }
+    }
+
+    private RenderPipeline pipeline() {
+        if (mode == Mode.FONT_BLUR) {
+            return LuminRenderPipelines.TTF_FONT_BLUR;
+        } else if (mode == Mode.GLITCH) {
+            return LuminRenderPipelines.TTF_FONT_GLITCH;
+        } else {
+            return ClientSetting.INSTANCE.fontAntiAliasing.getValue() ? LuminRenderPipelines.TTF_FONT_AA : LuminRenderPipelines.TTF_FONT_NO_AA;
+        }
+    }
+
+    private static float glitchTime() {
+        return (System.nanoTime() % 1_024_000_000_000L) / 1_000_000_000.0f;
     }
 
     private record LayoutKey(TtfFontLoader fontLoader, String text, float renderScale) {

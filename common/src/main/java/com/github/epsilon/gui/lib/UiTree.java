@@ -2,6 +2,7 @@ package com.github.epsilon.gui.lib;
 
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.render.LuminUiRenderer;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
@@ -466,6 +467,14 @@ public class UiTree {
 
         public void blurredText(int layer, String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
             addNode(layer, new BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader));
+        }
+
+        public void glitchText(String text, float x, float y, float scale, Color color, TextGlitchEffect effect) {
+            nodes.add(new GlitchTextNode(text, resolveX(x), resolveY(y), scale, color, effect, null));
+        }
+
+        public void glitchText(String text, float x, float y, float scale, Color color, TextGlitchEffect effect, TtfFontLoader fontLoader) {
+            nodes.add(new GlitchTextNode(text, resolveX(x), resolveY(y), scale, color, effect, fontLoader));
         }
 
         public void rotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
@@ -1036,14 +1045,14 @@ public class UiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, GlitchTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
      * 按钮节点的语义描述。
      */
-    public record ButtonElement(UiRect bounds, float radius, Color background,
-                                String label, float labelScale, Color labelColor) {
+    public record ButtonElement(UiRect bounds, float radius, Color background, String label, float labelScale,
+                                Color labelColor) {
     }
 
     /**
@@ -1063,13 +1072,15 @@ public class UiTree {
      * <p>
      * 用于承载文本、焦点、选区、光标与尾部提示等输入态信息。
      */
-    public record InputElement(UiRect bounds, boolean focused, float hoverProgress,
-                               float focusRingProgress, Color focusRingColor, float focusRingInset,
-                               float textInset, String text, float textScale, Color textColor,
-                               SelectionRange selection, Color selectionColor,
-                               Integer caretIndex, Color caretColor,
-                               String trailingHint, float trailingHintScale,
-                               Color trailingHintColor) {
+    public record InputElement(
+            UiRect bounds, boolean focused, float hoverProgress,
+            float focusRingProgress, Color focusRingColor, float focusRingInset,
+            float textInset, String text, float textScale, Color textColor,
+            SelectionRange selection, Color selectionColor,
+            Integer caretIndex, Color caretColor,
+            String trailingHint, float trailingHintScale,
+            Color trailingHintColor
+    ) {
     }
 
     /**
@@ -1087,79 +1098,98 @@ public class UiTree {
     public record ScissorNode(UiRect clip, List<UiNode> children) implements UiNode {
     }
 
-    public record ShadowNode(float x, float y, float width, float height,
-                             float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
-                             float blurRadius, Color color) implements UiNode {
+    public record ShadowNode(
+            float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+            float blurRadius, Color color
+    ) implements UiNode {
     }
 
-    public record SegmentedShadowNode(float x, float y, float width, float height,
-                                      float radiusTopLeft, float radiusTopRight,
-                                      float radiusBottomRight, float radiusBottomLeft,
-                                      float blurRadius, Color color,
-                                      float[] segmentRects, float[] segmentRadii, int segmentCount) implements UiNode {
+    public record SegmentedShadowNode(
+            float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight,
+            float radiusBottomRight, float radiusBottomLeft,
+            float blurRadius, Color color,
+            float[] segmentRects, float[] segmentRadii, int segmentCount
+    ) implements UiNode {
     }
 
-    public record RoundRectNode(float x, float y, float width, float height,
-                                float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
-                                float radiusBottomLeft,
-                                Color color) implements UiNode {
+    public record RoundRectNode(
+            float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
+            float radiusBottomLeft,
+            Color color
+    ) implements UiNode {
     }
 
-    public record RoundRectGradientNode(float x, float y, float width, float height,
-                                        float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
-                                        float radiusBottomLeft,
-                                        Color topLeft, Color bottomLeft, Color bottomRight,
-                                        Color topRight) implements UiNode {
+    public record RoundRectGradientNode(
+            float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
+            float radiusBottomLeft,
+            Color topLeft, Color bottomLeft, Color bottomRight,
+            Color topRight
+    ) implements UiNode {
     }
 
     public record RectNode(float x, float y, float width, float height, Color color) implements UiNode {
     }
 
-    public record RectGradientNode(float x, float y, float width, float height,
-                                   Color topLeft, Color bottomLeft, Color bottomRight,
-                                   Color topRight) implements UiNode {
+    public record RectGradientNode(
+            float x, float y, float width, float height,
+            Color topLeft, Color bottomLeft, Color bottomRight,
+            Color topRight
+    ) implements UiNode {
     }
 
     public record RectOutlineNode(float x, float y, float width, float height, float outlineWidth,
                                   Color color) implements UiNode {
     }
 
-    public record OutlineNode(float x, float y, float width, float height,
-                              float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
-                              float radiusBottomLeft,
-                              float outlineWidth, Color color) implements UiNode {
+    public record OutlineNode(
+            float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
+            float radiusBottomLeft,
+            float outlineWidth, Color color
+    ) implements UiNode {
     }
 
     public record TextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader) implements UiNode {
     }
 
-    public record BlurTextNode(String text, float x, float y, float scale, Color color,
-                               float blurRadius, int intensity, TtfFontLoader fontLoader) implements UiNode {
+    public record BlurTextNode(String text, float x, float y, float scale, Color color, float blurRadius, int intensity,
+                               TtfFontLoader fontLoader) implements UiNode {
     }
 
-    public record RotatedTextNode(String text, float x, float y, float scale, Color color,
-                                  TtfFontLoader fontLoader, float originX, float originY,
-                                  float rotationDegrees) implements UiNode {
+    public record GlitchTextNode(String text, float x, float y, float scale, Color color, TextGlitchEffect effect,
+                                 TtfFontLoader fontLoader) implements UiNode {
     }
 
-    public record MarqueeTextNode(String text, float x, float y, float scale, Color color,
-                                  TtfFontLoader fontLoader, UiRect clip) implements UiNode {
+    public record RotatedTextNode(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader,
+                                  float originX, float originY, float rotationDegrees) implements UiNode {
     }
 
-    public record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
-                              float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
-                              float radiusBottomLeft,
-                              float u0, float v0, float u1, float v1, Color color) implements UiNode {
+    public record MarqueeTextNode(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader,
+                                  UiRect clip) implements UiNode {
     }
 
-    public record RotatedTextureNode(Render2DTexture texture, float x, float y, float width, float height,
-                                     float u0, float v0, float u1, float v1, Color color,
-                                     float originX, float originY, float rotationDegrees) implements UiNode {
+    public record TextureNode(
+            Render2DTexture texture, float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
+            float radiusBottomLeft,
+            float u0, float v0, float u1, float v1, Color color
+    ) implements UiNode {
     }
 
-    public record ButtonNode(float x, float y, float width, float height, float radius, Color background,
-                             String label, float labelScale, Color labelColor) implements UiNode {
+    public record RotatedTextureNode(
+            Render2DTexture texture, float x, float y, float width, float height,
+            float u0, float v0, float u1, float v1, Color color,
+            float originX, float originY, float rotationDegrees
+    ) implements UiNode {
+    }
+
+    public record ButtonNode(float x, float y, float width, float height, float radius, Color background, String label,
+                             float labelScale, Color labelColor) implements UiNode {
     }
 
     public record SwitchNode(UiRect bounds, float toggleProgress, float hoverProgress) implements UiNode {
@@ -1171,13 +1201,14 @@ public class UiTree {
     public record InputNode(InputElement element) implements UiNode {
     }
 
-    public record AssistChipNode(UiRect bounds, String label, float textScale, Color background, Color foreground,
-                                 String trailingIcon, float trailingIconScale,
-                                 TtfFontLoader trailingIconFont) implements UiNode {
+    public record AssistChipNode(
+            UiRect bounds, String label, float textScale, Color background, Color foreground,
+            String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont
+    ) implements UiNode {
     }
 
-    public record SegmentedControlNode(UiRect bounds, String leadingLabel, String trailingLabel,
-                                       float progress, float hoverProgress) implements UiNode {
+    public record SegmentedControlNode(UiRect bounds, String leadingLabel, String trailingLabel, float progress,
+                                       float hoverProgress) implements UiNode {
     }
 
     public record IconButtonNode(UiRect bounds, String label, float scale, Color tone,
@@ -1188,19 +1219,22 @@ public class UiTree {
                                 Color surfaceColor) implements UiNode {
     }
 
-    public record SliderNode(UiRect bounds, float progress, float trackRadius, Color trackColor,
-                             float activeEndInset, float activeMinWidth, Color activeColor,
-                             float handleWidth, float handleHeight, float handleRadius,
-                             Color handleColor) implements UiNode {
+    public record SliderNode(
+            UiRect bounds, float progress, float trackRadius, Color trackColor,
+            float activeEndInset, float activeMinWidth, Color activeColor,
+            float handleWidth, float handleHeight, float handleRadius, Color handleColor
+    ) implements UiNode {
     }
 
     public record TriangleNode(float centerX, float centerY, float size, float progress,
                                Color color) implements UiNode {
     }
 
-    public record ViewportNode(UiContentBuffer buffer, UiRect viewport,
-                               float scroll, float maxScroll, float contentHeight,
-                               int mouseX, int mouseY, List<UiNode> children) implements UiNode {
+    public record ViewportNode(
+            UiContentBuffer buffer, UiRect viewport,
+            float scroll, float maxScroll, float contentHeight,
+            int mouseX, int mouseY, List<UiNode> children
+    ) implements UiNode {
     }
 
 }

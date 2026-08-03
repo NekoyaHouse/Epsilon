@@ -3,6 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfTextRenderer;
 import com.github.epsilon.holders.RendererHolder;
@@ -27,6 +28,10 @@ public class TextRenderer implements IRenderer {
         textRenderer = new TtfTextRenderer();
     }
 
+    private TextRenderer(long bufferSize, TtfTextRenderer.Mode mode) {
+        textRenderer = new TtfTextRenderer(bufferSize, mode);
+    }
+
     public static TextRenderer create(long bufferSize) {
         return RendererHolder.INSTANCE.register(new TextRenderer(bufferSize));
     }
@@ -37,6 +42,10 @@ public class TextRenderer implements IRenderer {
 
     public static TextRenderer createFontBlur() {
         return RendererHolder.INSTANCE.register(new TextRenderer(64 * 1024L, true));
+    }
+
+    public static TextRenderer createGlitch() {
+        return RendererHolder.INSTANCE.register(new TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH));
     }
 
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
@@ -53,6 +62,16 @@ public class TextRenderer implements IRenderer {
 
     public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {
         addBlurredText(text, x, y, scale, color, blurRadius, intensity, StaticFontLoader.defaultFont());
+    }
+
+    public void addGlitchText(String text, float x, float y, float scale, Color color,
+                              TextGlitchEffect effect, TtfFontLoader fontLoader) {
+        ensureRegistered();
+        textRenderer.addGlitchText(text, x, y, scale, color, effect, fontLoader);
+    }
+
+    public void addGlitchText(String text, float x, float y, float scale, Color color, TextGlitchEffect effect) {
+        addGlitchText(text, x, y, scale, color, effect, StaticFontLoader.defaultFont());
     }
 
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {

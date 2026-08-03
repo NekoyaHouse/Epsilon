@@ -8,5 +8,6 @@ public enum Render2DCommandKind {
     TRIANGLE,
     TEXTURE,
     BLUR_TEXT,
+    GLITCH_TEXT,
     TEXT
 }

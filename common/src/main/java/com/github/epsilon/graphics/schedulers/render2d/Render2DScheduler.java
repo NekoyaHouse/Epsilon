@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -38,6 +39,7 @@ public class Render2DScheduler implements AutoCloseable {
             Render2DCommandKind.TRIANGLE,
             Render2DCommandKind.TEXTURE,
             Render2DCommandKind.BLUR_TEXT,
+            Render2DCommandKind.GLITCH_TEXT,
             Render2DCommandKind.TEXT
     );
 
@@ -202,6 +204,7 @@ public class Render2DScheduler implements AutoCloseable {
             case TRIANGLE -> LuminRenderPipelines.TRIANGLE;
             case TEXTURE -> LuminRenderPipelines.TEXTURE;
             case BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR;
+            case GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH;
             case TEXT -> ClientSetting.INSTANCE.fontAntiAliasing.getValue()
                     ? LuminRenderPipelines.TTF_FONT_AA
                     : LuminRenderPipelines.TTF_FONT_NO_AA;
@@ -289,6 +292,15 @@ public class Render2DScheduler implements AutoCloseable {
                     renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity(), text.fontLoader());
                 } else {
                     renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity());
+                }
+            }
+            case Render2DCommand.GlitchText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addGlitchText(text.text(), text.x(), text.y(), text.scale(),
+                            text.color(), text.effect(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addGlitchText(text.text(), text.x(), text.y(), text.scale(),
+                            text.color(), text.effect());
                 }
             }
         }
@@ -463,6 +475,26 @@ public class Render2DScheduler implements AutoCloseable {
             scheduler.add(new Render2DCommand.BlurText(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x - padding, y - padding, width + padding * 2.0f, height + padding * 2.0f),
                     scissor, text, x, y, scale, color, clampedBlur, intensity, fontLoader));
+        }
+
+        public void addGlitchText(String text, float x, float y, float scale, Color color,
+                                  TextGlitchEffect effect) {
+            addGlitchText(text, x, y, scale, color, effect, null);
+        }
+
+        public void addGlitchText(String text, float x, float y, float scale, Color color,
+                                  TextGlitchEffect effect, TtfFontLoader fontLoader) {
+            if (text.isEmpty() || color.getAlpha() == 0 || effect == null) {
+                return;
+            }
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            float padding = effect.requiredPadding();
+            scheduler.add(new Render2DCommand.GlitchText(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x - padding, y - padding,
+                            width + padding * 2.0f, height + padding * 2.0f),
+                    scissor, text, x, y, scale, color, effect, fontLoader));
         }
 
         public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
@@ -947,6 +979,7 @@ public class Render2DScheduler implements AutoCloseable {
                 case TRIANGLE -> new RendererBundle(kind, TriangleRenderer.create());
                 case TEXTURE -> new RendererBundle(kind, TextureRenderer.create());
                 case BLUR_TEXT -> new RendererBundle(kind, TextRenderer.createFontBlur());
+                case GLITCH_TEXT -> new RendererBundle(kind, TextRenderer.createGlitch());
                 case TEXT -> new RendererBundle(kind, TextRenderer.create());
             };
         }

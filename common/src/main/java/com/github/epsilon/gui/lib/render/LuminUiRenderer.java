@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTheme;
@@ -147,6 +148,13 @@ public class LuminUiRenderer {
                 TtfFontLoader fontLoader
         )) {
             layer.addBlurredText(text, x, y, scale, color, blurRadius, intensity, fontLoader);
+            return;
+        }
+        if (node instanceof UiTree.GlitchTextNode(
+                String text, float x, float y, float scale, Color color, TextGlitchEffect effect,
+                TtfFontLoader fontLoader
+        )) {
+            layer.addGlitchText(text, x, y, scale, color, effect, fontLoader);
             return;
         }
         if (node instanceof UiTree.RotatedTextNode(

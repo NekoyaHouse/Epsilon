@@ -41,16 +41,16 @@ public abstract class MixinItemInHandRenderer {
     private Minecraft minecraft;
 
     @Shadow
-    public float mainHandHeight;
+    private float mainHandHeight;
 
     @Shadow
-    public float offHandHeight;
+    private float offHandHeight;
 
     @Shadow
-    public ItemStack mainHandItem;
+    private ItemStack mainHandItem;
 
     @Shadow
-    public ItemStack offHandItem;
+    private ItemStack offHandItem;
 
     @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
     private void beginShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
