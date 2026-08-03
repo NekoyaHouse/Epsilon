@@ -1,5 +1,6 @@
 package com.github.epsilon.elements.impl;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -26,8 +27,13 @@ public class Watermark extends HudModule {
 
     private enum Mode {
         Tradition,
-        Sakura,
-        Glitch
+        Glitch,
+        Sakura
+    }
+
+    private enum FontMode {
+        Default,
+        OsakaChips
     }
 
     private enum ColorMode {
@@ -35,7 +41,9 @@ public class Watermark extends HudModule {
         Double
     }
 
+    private final StringSetting text = stringSetting("Text", Constants.NAME);
     private final EnumSetting<Mode> mode = enumSetting("Style", Mode.Tradition);
+    private final EnumSetting<FontMode> fontMode = enumSetting("Font Mode", FontMode.OsakaChips);
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
     private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235), () -> mode.is(Mode.Tradition));
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single, () -> mode.is(Mode.Sakura));
@@ -70,16 +78,17 @@ public class Watermark extends HudModule {
     }
 
     private void renderTradition(TextRenderer textRenderer, float scale) {
-        String traditionText = "EPSILON";
-        renderScope().text(traditionText, this.x, this.y, scale, textColor.getValue(), StaticFontLoader.OSAKA_CHIPS);
-        float totalWidth = textRenderer.getWidth(traditionText, scale, StaticFontLoader.OSAKA_CHIPS);
-        float totalHeight = textRenderer.getHeight(scale, StaticFontLoader.OSAKA_CHIPS);
+        String text = this.text.getValue();
+        TtfFontLoader font = font();
+        renderScope().text(text, this.x, this.y, scale, textColor.getValue(), font);
+        float totalWidth = textRenderer.getWidth(text, scale, font);
+        float totalHeight = textRenderer.getHeight(scale, font);
         setBounds(totalWidth, totalHeight);
     }
 
     private void renderGlitch(TextRenderer textRenderer, float scale) {
-        String text = "EPSILON";
-        TtfFontLoader font = StaticFontLoader.OSAKA_CHIPS;
+        String text = this.text.getValue();
+        TtfFontLoader font = font();
         TextGlitchEffect effect = new TextGlitchEffect(
                 chromaticX.getValue().floatValue(),
                 chromaticY.getValue().floatValue(),
@@ -98,8 +107,8 @@ public class Watermark extends HudModule {
     }
 
     private void renderSakura(TextRenderer textRenderer, float scale) {
-        String text = "Epsilon";
-        TtfFontLoader font = StaticFontLoader.defaultFont();
+        String text = this.text.getValue();
+        TtfFontLoader font = font();
         float totalWidth = textRenderer.getWidth(text, scale, font);
         float totalHeight = textRenderer.getHeight(scale, font);
         float textX = this.x;
@@ -108,7 +117,14 @@ public class Watermark extends HudModule {
         for (int index = 0; index < text.length(); index++) {
             String character = String.valueOf(text.charAt(index));
             float characterWidth = textRenderer.getWidth(character, scale, font);
-            Color color = resolveSakuraColor(textX - this.x, totalWidth, index);
+
+            Color color = colorMode.is(ColorMode.Single) ?
+                    singleColor.getValue() :
+                    animateColor(
+                            doubleColor1.getValue(),
+                            doubleColor2.getValue(),
+                            width <= 0.0f ? index * 100L : (long) ((textX - this.x) / totalWidth * 1600.0f)
+                    );
 
             Color shadowColor = new Color(
                     (int) (color.getRed() * 0.7f),
@@ -116,24 +132,17 @@ public class Watermark extends HudModule {
                     (int) (color.getBlue() * 0.7f),
                     160
             );
-            scope.text(character, textX + 1.0f, this.y + 1.0f, scale, shadowColor, font);
+
+            scope.text(character, textX + 1.0f, this.y + 1.0f, scale, shadowColor, font); // shadow
             if (glow.getValue()) {
                 scope.blurredText(character, textX, this.y, scale, glowRadius.getValue().floatValue() * scale, glowIntensity.getValue(), color);
             }
             scope.text(character, textX, this.y, scale, color, font);
+
             textX += characterWidth;
         }
 
         setBounds(totalWidth, totalHeight);
-    }
-
-    private Color resolveSakuraColor(float x, float width, int index) {
-        if (colorMode.is(ColorMode.Single)) {
-            return singleColor.getValue();
-        } else {
-            long offset = width <= 0.0f ? index * 100L : (long) (x / width * 1600.0f);
-            return animateColor(doubleColor1.getValue(), doubleColor2.getValue(), offset);
-        }
     }
 
     private Color animateColor(Color start, Color end, long offset) {
@@ -142,6 +151,13 @@ public class Watermark extends HudModule {
             progress = 1.0 - progress % 1.0;
         }
         return ColorUtils.interpolateColor(start, end, (float) progress);
+    }
+
+    private TtfFontLoader font() {
+        return switch (fontMode.getValue()) {
+            case Default -> StaticFontLoader.defaultFont();
+            case OsakaChips -> StaticFontLoader.OSAKA_CHIPS;
+        };
     }
 
 }

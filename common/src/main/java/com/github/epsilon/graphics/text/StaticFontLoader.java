@@ -22,7 +22,7 @@ public class StaticFontLoader {
     private static TtfFontLoader builtinDefault = new TtfFontLoader(DEFAULT_FONT_ID);
     private static final float DEFAULT_VISUAL_HEIGHT = builtinDefault.fontFile.getVisualHeight(SIZE_REFERENCE_SAMPLE);
 
-    public static volatile TtfFontLoader DEFAULT = builtinDefault;
+    private static volatile TtfFontLoader DEFAULT = builtinDefault;
 
     public static final TtfFontLoader ICONS = new TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/icons.ttf"));
 
@@ -38,16 +38,11 @@ public class StaticFontLoader {
     private static volatile Map<String, Path> systemFontLookup;
 
     public static TtfFontLoader defaultFont() {
-        if (destroyed) {
-            return DEFAULT;
-        }
-
+        if (destroyed) return DEFAULT;
         ClientSetting settings = ClientSetting.INSTANCE;
         ClientSetting.FontMode mode = settings.font.getValue();
         String fontPath = settings.customFont.getValue();
-        if (isApplied(mode, fontPath)) {
-            return DEFAULT;
-        }
+        if (isApplied(mode, fontPath)) return DEFAULT;
         return applyDefaultFont(mode, fontPath);
     }
 

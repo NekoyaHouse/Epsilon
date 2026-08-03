@@ -15,6 +15,7 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.HudElementHolder;
@@ -22,10 +23,12 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
 import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.PreeditEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -46,6 +49,7 @@ public class HudEditorScreen extends Screen {
 
     private CategoryPanel hudPanel;
     private LuminRenderSystem.LuminRenderTarget renderTarget;
+    private IMEPreeditOverlay preeditOverlay;
     private int renderFrameId;
     private int panelElementCount = -1;
     private HudModule selectedElement;
@@ -94,6 +98,10 @@ public class HudEditorScreen extends Screen {
         shouldRenderElements = true;
 
         LuminRenderSystem.setActiveTarget(null);
+        if (preeditOverlay != null) {
+            preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
+            graphics.setPreeditOverlay(preeditOverlay);
+        }
         graphics.blit(
                 RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
                 renderTarget.getIdentifier(),
@@ -378,6 +386,12 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
+    public boolean preeditUpdated(PreeditEvent event) {
+        preeditOverlay = event == null ? null : new IMEPreeditOverlay(event, font, 10);
+        return true;
+    }
+
+    @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
@@ -579,6 +593,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void onClose() {
+        IMEFocusHelper.forceDeactivate();
         super.onClose();
 
         minecraft.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
@@ -594,6 +609,8 @@ public class HudEditorScreen extends Screen {
         scene.clear();
         draggingElement = null;
         currentSnap = SnapInfo.none();
+        IMEFocusHelper.forceDeactivate();
+        preeditOverlay = null;
     }
 
     @Override
