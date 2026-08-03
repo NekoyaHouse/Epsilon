@@ -3,6 +3,7 @@ package com.github.epsilon.holders;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.modules.impl.render.Shaders;
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
@@ -21,6 +22,8 @@ import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -77,9 +80,12 @@ public class ShaderHolder {
     private RenderTarget handTarget;
     private RenderTarget chestTarget;
     private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
-    public boolean renderingHands;
-    public boolean irisHandOutlinePending;
+    private boolean renderingHands;
     private boolean capturedHands;
+    private boolean deferredHandOutline;
+    private GpuBufferSlice deferredHandProjection;
+    private ProjectionType deferredHandProjectionType;
+    private Matrix4f deferredHandModelView;
     private boolean renderingChests;
     private boolean capturedChests;
     private boolean preparedChests;
@@ -121,6 +127,45 @@ public class ShaderHolder {
             renderingHands = true;
             capturedHands = true;
         }
+    }
+
+    public void endHandOutlineCapture(Runnable outlineDrainer) {
+        if (renderingHands) {
+            outlineDrainer.run();
+            renderingHands = false;
+        }
+    }
+
+    public void deferHandOutlineCapture() {
+        if (renderingHands) {
+            renderingHands = false;
+            deferredHandProjection = RenderSystem.getProjectionMatrixBuffer();
+            deferredHandProjectionType = RenderSystem.getProjectionType();
+            deferredHandModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
+            deferredHandOutline = true;
+        }
+    }
+
+    public void drainDeferredHandOutline(Runnable outlineDrainer) {
+        if (!deferredHandOutline || deferredHandProjection == null || deferredHandProjectionType == null || deferredHandModelView == null) {
+            return;
+        }
+
+        GpuBufferSlice previousProjection = RenderSystem.getProjectionMatrixBuffer();
+        ProjectionType previousProjectionType = RenderSystem.getProjectionType();
+        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
+        RenderSystem.setProjectionMatrix(deferredHandProjection, deferredHandProjectionType);
+        modelViewStack.set(deferredHandModelView);
+        renderingHands = true;
+        outlineDrainer.run();
+        renderingHands = false;
+        modelViewStack.popMatrix();
+        if (previousProjection != null) RenderSystem.setProjectionMatrix(previousProjection, previousProjectionType);
+        deferredHandOutline = false;
+        deferredHandProjection = null;
+        deferredHandProjectionType = null;
+        deferredHandModelView = null;
     }
 
     public RenderTarget getHandOutlineTarget() {

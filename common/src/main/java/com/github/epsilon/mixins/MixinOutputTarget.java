@@ -12,17 +12,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinOutputTarget {
 
     @Inject(method = "getRenderTarget", at = @At("HEAD"), cancellable = true)
-    private void redirectHandOutlineTarget(CallbackInfoReturnable<RenderTarget> cir) {
+    private void redirectOutlineTarget(CallbackInfoReturnable<RenderTarget> cir) {
         if ((OutputTarget) (Object) this == OutputTarget.OUTLINE_TARGET) {
             RenderTarget chestTarget = ShaderHolder.INSTANCE.getChestOutlineTarget();
             if (chestTarget != null) {
                 cir.setReturnValue(chestTarget);
-                return;
-            }
-
-            RenderTarget handTarget = ShaderHolder.INSTANCE.getHandOutlineTarget();
-            if (handTarget != null) {
-                cir.setReturnValue(handTarget);
+            } else {
+                RenderTarget handTarget = ShaderHolder.INSTANCE.getHandOutlineTarget();
+                if (handTarget != null) {
+                    cir.setReturnValue(handTarget);
+                }
             }
         }
     }

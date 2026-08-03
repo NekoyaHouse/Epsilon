@@ -62,14 +62,12 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
     private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-        if (ShaderHolder.INSTANCE.renderingHands) {
-            if (!IrisCompat.isHandActive()) {
-                minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
-            } else {
-                ShaderHolder.INSTANCE.irisHandOutlinePending = true;
-            }
+        if (!IrisCompat.isHandActive()) {
+            ShaderHolder.INSTANCE.endHandOutlineCapture(() -> minecraft.renderBuffers().outlineBufferSource().endOutlineBatch());
+        } else {
+            // 保留 Iris 手部 pass 的矩阵，待世界描边提交后再单独排空，避免两者共用错误矩阵。
+            ShaderHolder.INSTANCE.deferHandOutlineCapture();
         }
-        ShaderHolder.INSTANCE.renderingHands = false;
     }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"))

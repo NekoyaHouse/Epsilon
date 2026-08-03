@@ -16,8 +16,6 @@ import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
@@ -30,10 +28,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.joml.Quaternionf;
 
 import java.awt.*;
-import java.util.Locale;
 
 public class BedNuker extends Module {
 
@@ -215,7 +211,7 @@ public class BedNuker extends Module {
     }
 
     private TargetData getTrackedBedTarget() {
-        if (trackedBedPos == null || trackedBedFace == null || mc.level == null || mc.player == null) {
+        if (trackedBedPos == null || trackedBedFace == null) {
             return null;
         }
 
@@ -342,10 +338,6 @@ public class BedNuker extends Module {
         );
     }
 
-    private boolean isBedBlock(BlockPos pos) {
-        return mc.level.getBlockState(pos).getBlock() instanceof BedBlock;
-    }
-
     private Direction getClosestFace(BlockPos pos, Vec3 eyes) {
         Vec3 center = Vec3.atCenterOf(pos);
         Direction bestFace = Direction.UP;
@@ -370,6 +362,10 @@ public class BedNuker extends Module {
     private boolean isBedHit(Rot2f rotation, double rayRange) {
         HitResult result = RaytraceUtils.raytrace(rotation, rayRange);
         return result instanceof BlockHitResult blockHitResult && isBedBlock(blockHitResult.getBlockPos());
+    }
+
+    private boolean isBedBlock(BlockPos pos) {
+        return mc.level.getBlockState(pos).getBlock() instanceof BedBlock;
     }
 
     private record TargetData(
