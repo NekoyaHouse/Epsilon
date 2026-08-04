@@ -173,6 +173,8 @@ public class ClientSetting extends Module {
 
     public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting().group(sgAppearance);
 
+    public final BoolSetting screenBackground = boolSetting("Screen Background", true).group(sgAppearance);
+
     // 宇泽玲纱
     public final BoolSetting showReisaInDropdown = boolSetting("Show Reisa In Dropdown", true).group(sgReisa);
 

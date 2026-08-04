@@ -391,8 +391,6 @@ public class AccountsScreen extends Screen {
         }
     }
 
-    // ---------- 输入 ----------
-
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         MouseButtonEvent e = LuminRenderSystem.toEpsilonMouseEvent(event);
@@ -582,8 +580,6 @@ public class AccountsScreen extends Screen {
 
         Managers.EXECUTOR.execute(() -> {
             if (!account.fetchInfo()) return;
-
-            // 与 Meteor 一致：fetchInfo/login 在后台线程执行，账号列表使用 CopyOnWriteArrayList 保证并发安全
             AccountHolder.INSTANCE.add(account);
             if (account.login()) {
                 if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
@@ -609,8 +605,6 @@ public class AccountsScreen extends Screen {
         minecraft.gui.setScreen(MainMenuScreen.INSTANCE);
     }
 
-    // ---------- 绘制工具 ----------
-
     private void drawCenteredText(UiTree.Scope scope, String text, UiRect area, Color color, float scale) {
         float textWidth = textRenderer.getWidth(text, scale);
         float textHeight = textRenderer.getHeight(scale);
@@ -626,10 +620,8 @@ public class AccountsScreen extends Screen {
         scope.text(glyph, rect.x() + (rect.width() - glyphWidth) / 2.0f, rect.y() + (rect.height() - glyphHeight) / 2.0f, scale, color, StaticFontLoader.ICONS);
     }
 
-    // ---------- 账号行 ----------
-
     private static final class AccountRow {
-        private final Account<?> account;
+        private Account<?> account;
         private UiRect bounds;
         private UiRect loginBounds;
         private UiRect deleteBounds;
