@@ -13,6 +13,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 
 public class Managers {
 
+    public static ExecutorManager EXECUTOR;
     public static RotationManager ROTATION;
     public static ExtrapolationManager EXTRAPOLATION;
     public static TargetManager TARGET;
@@ -22,9 +23,11 @@ public class Managers {
     public static FriendManager FRIEND;
     public static SoundManager SOUND;
     public static NotificationManager NOTIFICATION;
+    public static SkinManager SKIN;
     public static TimerManager TIMER;
 
     public static void initManagers() {
+        EXECUTOR = new ExecutorManager();
         switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
         EXTRAPOLATION = new ExtrapolationManager();
         TARGET = new TargetManager();
@@ -34,6 +37,7 @@ public class Managers {
         FRIEND = new FriendManager();
         SOUND = new SoundManager();
         NOTIFICATION = new NotificationManager();
+        SKIN = new SkinManager();
         TIMER = new TimerManager();
     }
 

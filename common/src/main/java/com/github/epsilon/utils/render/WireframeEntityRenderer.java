@@ -22,7 +22,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
 
@@ -191,7 +190,7 @@ public class WireframeEntityRenderer {
 
     private static final class WireframeSubmitNodeStorage extends SubmitNodeStorage {
         @Override
-        public <S> void submitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @Nullable TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay) {
+        public <S> void submitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
             model.setupAnim(state);
             model.renderToBuffer(poseStack, vertexConsumer, lightCoords, overlayCoords, tintedColor);
         }

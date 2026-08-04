@@ -32,8 +32,26 @@
         "multiplayer": "多人游戏",
         "options": "选项",
         "quit": "退出游戏",
+        "accounts": "账号",
         "reisa_greeting": "嗨，老师！玲纱前来报到！",
         "reisa_farewell": "再见，老师！玲纱先行告退！"
+      },
+      "accounts": {
+        "title": "账号管理",
+        "empty": "还没有账号，请在下方添加。",
+        "current": "当前",
+        "login": "登录",
+        "delete.confirm": "确认删除？",
+        "cancel": "取消",
+        "add": "添加",
+        "add.cracked": "离线",
+        "add.altening": "Altening",
+        "add.session": "会话",
+        "add.microsoft": "微软",
+        "name.placeholder": "玩家名称",
+        "token.placeholder": "令牌",
+        "waiting.microsoft": "正在等待浏览器中的微软登录...",
+        "microsoft.error": "微软登录失败，请重试。"
       },
       "tab": {
         "general": "常规",

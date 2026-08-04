@@ -1,6 +1,7 @@
 package com.github.epsilon.holders;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.accounts.Account;
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.config.LegacyConfigMigrator;
 import com.github.epsilon.elements.HudModule;
@@ -37,6 +38,7 @@ public class ConfigHolder {
     private static final String ADDON_SETTINGS_FILE_NAME = "addon-settings.json";
     private static final String ACTIVE_CONFIG_FILE_NAME = "active-config.txt";
     private static final String ROOT_SETTINGS_FILE_NAME = "client-settings.json";
+    private static final String ACCOUNTS_FILE_NAME = "accounts.json";
     private static final String EXPORT_METADATA_FILE_NAME = "config-info.json";
     private static final Pattern INVALID_CONFIG_NAME_PATTERN = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
 
@@ -46,6 +48,7 @@ public class ConfigHolder {
     private static final Path exportsDir = configDir.resolve(EXPORTS_FOLDER);
     private static final Path activeConfigFile = configDir.resolve(ACTIVE_CONFIG_FILE_NAME);
     private static final Path rootSettingsFile = configDir.resolve(ROOT_SETTINGS_FILE_NAME);
+    private static final Path accountsFile = configDir.resolve(ACCOUNTS_FILE_NAME);
     private static final Path legacyFriendFile = configDir.resolve(FRIENDS_FILE_NAME);
 
     public static final ConfigHolder INSTANCE = new ConfigHolder();
@@ -509,6 +512,52 @@ public class ConfigHolder {
         }
     }
 
+    /**
+     * 把账号列表持久化到全局 accounts.json（账号不随配置快照切换）。
+     * <p>
+     * 账号以 type 字段做运行时多态分发，见 {@link Account#fromJson}。
+     */
+    public synchronized void saveAccounts() {
+        try {
+            ensureRootDirectories();
+            JsonArray array = new JsonArray();
+            for (Account<?> account : AccountHolder.INSTANCE.getAccounts()) {
+                JsonObject obj = new JsonObject();
+                account.write(obj);
+                array.add(obj);
+            }
+            Files.writeString(accountsFile, gson.toJson(array), StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            Constants.LOGGER.error("写入账号配置失败: {}", accountsFile, e);
+        }
+    }
+
+    public synchronized void loadAccounts() {
+        List<Account<?>> loaded = new ArrayList<>();
+        if (Files.exists(accountsFile)) {
+            try {
+                String json = Files.readString(accountsFile, StandardCharsets.UTF_8);
+                JsonElement parsed = JsonParser.parseString(json);
+                if (parsed != null && parsed.isJsonArray()) {
+                    for (JsonElement element : parsed.getAsJsonArray()) {
+                        if (element == null || !element.isJsonObject()) continue;
+                        try {
+                            loaded.add(Account.fromJson(element.getAsJsonObject()));
+                        } catch (Exception e) {
+                            Constants.LOGGER.error("读取单个账号失败", e);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOGGER.error("读取账号配置失败: {}", accountsFile, e);
+            }
+        }
+        AccountHolder.INSTANCE.replaceAll(loaded);
+    }
+
     private static JsonElement serializeSetting(Setting<?> setting) {
         if (setting instanceof KeybindSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof BoolSetting s) return new JsonPrimitive(s.getValue());
@@ -687,6 +736,7 @@ public class ConfigHolder {
         applyToAddons(addons);
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
+        loadAccounts();
         ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
     }
 
@@ -704,6 +754,7 @@ public class ConfigHolder {
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
         saveFriends(configStorageDir);
         saveRootClientSettings();
+        saveAccounts();
     }
 
     private void loadRootClientSettings() {

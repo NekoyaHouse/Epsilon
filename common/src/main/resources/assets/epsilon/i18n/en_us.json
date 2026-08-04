@@ -32,8 +32,26 @@
         "multiplayer": "Multiplayer",
         "options": "Options",
         "quit": "Quit",
+        "accounts": "Accounts",
         "reisa_greeting": "Hi, Sensei! Reisa reporting in!",
         "reisa_farewell": "Goodbye, Sensei! Reisa signing off!"
+      },
+      "accounts": {
+        "title": "Accounts",
+        "empty": "No accounts yet. Add one below.",
+        "current": "Current",
+        "login": "Login",
+        "delete.confirm": "Sure?",
+        "cancel": "Cancel",
+        "add": "Add",
+        "add.cracked": "Cracked",
+        "add.altening": "Altening",
+        "add.session": "Session",
+        "add.microsoft": "Microsoft",
+        "name.placeholder": "Player name",
+        "token.placeholder": "Token",
+        "waiting.microsoft": "Waiting for Microsoft login in your browser...",
+        "microsoft.error": "Microsoft login failed. Please try again."
       },
       "tab": {
         "general": "General",

@@ -4,10 +4,10 @@
   "plugin": "com.github.epsilon.neoforge.mixins.NeoForgeMixinPlugin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "iris.MixinIrisHandRenderer",
     "MixinCamera",
     "MixinLevelRenderer",
     "MixinMinecraft",
-    "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext"
   ],
   "injectors": {
