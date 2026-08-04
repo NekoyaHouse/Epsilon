@@ -529,8 +529,44 @@ public class UiTree {
         public void rotatedTexture(LuminTexture texture, float x, float y, float width, float height,
                                    float u0, float v0, float u1, float v1, Color color,
                                    float originX, float originY, float rotationDegrees) {
-            nodes.add(new RotatedTextureNode(new Render2DTexture.LuminRef(texture),
-                    resolveX(x), resolveY(y), width, height, u0, v0, u1, v1, color,
+            rotatedRoundedTexture(texture, x, y, width, height, 0.0f, u0, v0, u1, v1, color,
+                    originX, originY, rotationDegrees);
+        }
+
+        public void rotatedRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                          float radius, float u0, float v0, float u1, float v1, Color color,
+                                          float originX, float originY, float rotationDegrees) {
+            rotatedRoundedTexture(texture, x, y, width, height, radius, radius, radius, radius,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        }
+
+        public void rotatedRoundedTexture(Identifier texture, float x, float y, float width, float height,
+                                          float radius, float u0, float v0, float u1, float v1, Color color,
+                                          float originX, float originY, float rotationDegrees) {
+            rotatedRoundedTexture(texture, x, y, width, height, radius, u0, v0, u1, v1, color,
+                    originX, originY, rotationDegrees, false);
+        }
+
+        public void rotatedRoundedTexture(Identifier texture, float x, float y, float width, float height,
+                                          float radius, float u0, float v0, float u1, float v1, Color color,
+                                          float originX, float originY, float rotationDegrees, boolean linearFilter) {
+            rotatedRoundedTexture(new Render2DTexture.IdentifierRef(texture, linearFilter),
+                    x, y, width, height, radius, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        }
+
+        public void rotatedRoundedTexture(LuminTexture texture, float x, float y, float width, float height,
+                                          float radius, float u0, float v0, float u1, float v1, Color color,
+                                          float originX, float originY, float rotationDegrees) {
+            rotatedRoundedTexture(new Render2DTexture.LuminRef(texture),
+                    x, y, width, height, radius, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        }
+
+        public void rotatedRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                          float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                          float u0, float v0, float u1, float v1, Color color,
+                                          float originX, float originY, float rotationDegrees) {
+            nodes.add(new RotatedTextureNode(texture, resolveX(x), resolveY(y), width, height,
+                    topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color,
                     resolveX(originX), resolveY(originY), rotationDegrees));
         }
 
@@ -1183,6 +1219,8 @@ public class UiTree {
 
     public record RotatedTextureNode(
             Render2DTexture texture, float x, float y, float width, float height,
+            float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
+            float radiusBottomLeft,
             float u0, float v0, float u1, float v1, Color color,
             float originX, float originY, float rotationDegrees
     ) implements UiNode {

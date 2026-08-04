@@ -251,8 +251,9 @@ public class Render2DScheduler implements AutoCloseable {
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), linearFilter);
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(identifier,
+                        renderers.textureRenderer().addRotatedRoundedTexture(identifier,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
                                 texture.originX(), texture.originY(), texture.rotationDegrees(), linearFilter);
                     }
@@ -265,8 +266,9 @@ public class Render2DScheduler implements AutoCloseable {
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(luminTexture,
+                        renderers.textureRenderer().addRotatedRoundedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
                                 texture.originX(), texture.originY(), texture.rotationDegrees());
                     }
@@ -445,9 +447,18 @@ public class Render2DScheduler implements AutoCloseable {
         public void addRotatedTexture(Render2DTexture texture, float x, float y, float width, float height,
                                       float u0, float v0, float u1, float v1, Color color,
                                       float originX, float originY, float rotationDegrees) {
+            addRotatedRoundedTexture(texture, x, y, width, height, 0.0f, 0.0f, 0.0f, 0.0f,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        }
+
+        public void addRotatedRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                             float radiusTopLeft, float radiusTopRight,
+                                             float radiusBottomRight, float radiusBottomLeft,
+                                             float u0, float v0, float u1, float v1, Color color,
+                                             float originX, float originY, float rotationDegrees) {
             scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor, texture,
-                    0.0f, 0.0f, 0.0f, 0.0f,
+                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     u0, v0, u1, v1, color, originX, originY, rotationDegrees));
         }
 

@@ -185,10 +185,13 @@ public class LuminUiRenderer {
         }
         if (node instanceof UiTree.RotatedTextureNode(
                 var texture, float x, float y, float width, float height,
+                float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                 float u0, float v0, float u1, float v1, Color color,
                 float originX, float originY, float rotationDegrees
         )) {
-            layer.addRotatedTexture(texture, x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+            layer.addRotatedRoundedTexture(texture, x, y, width, height,
+                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees);
             return;
         }
         if (node instanceof UiTree.ButtonNode(

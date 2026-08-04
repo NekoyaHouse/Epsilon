@@ -18,10 +18,10 @@ out vec4 f_Radius;
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
-    f_Position = Position.xy;
+    f_Position = InnerRect.xy;
     f_Color = Color;
     f_TexCoord = UV0;
 
-    f_InnerRect = InnerRect;
+    f_InnerRect = vec4(0.0, 0.0, InnerRect.zw);
     f_Radius = Radius;
 }

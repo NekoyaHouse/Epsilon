@@ -114,8 +114,6 @@ public class AccountsScreen extends Screen {
         }
     }
 
-    // ---------- 渲染 ----------
-
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         final var window = minecraft.getWindow();
