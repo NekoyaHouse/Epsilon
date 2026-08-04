@@ -12,6 +12,7 @@ import net.minecraft.client.User;
 import java.util.Optional;
 
 public class SessionAccount extends Account<SessionAccount> implements TokenAccount {
+
     private String accessToken;
 
     public SessionAccount(String label) {

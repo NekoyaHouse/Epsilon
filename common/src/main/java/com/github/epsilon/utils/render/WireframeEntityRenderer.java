@@ -21,7 +21,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
@@ -208,7 +207,7 @@ public class WireframeEntityRenderer {
         private int index;
 
         @Override
-        public @NonNull VertexConsumer addVertex(float x, float y, float z) {
+        public VertexConsumer addVertex(float x, float y, float z) {
             xs[index] = x;
             ys[index] = y;
             zs[index] = z;
@@ -228,37 +227,37 @@ public class WireframeEntityRenderer {
         }
 
         @Override
-        public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
+        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setColor(int color) {
+        public VertexConsumer setColor(int color) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv(float u, float v) {
+        public VertexConsumer setUv(float u, float v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv1(int u, int v) {
+        public VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv2(int u, int v) {
+        public VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setNormal(float x, float y, float z) {
+        public VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setLineWidth(float width) {
+        public VertexConsumer setLineWidth(float width) {
             return this;
         }
 

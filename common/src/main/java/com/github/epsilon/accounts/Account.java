@@ -84,9 +84,6 @@ public abstract class Account<T extends Account<?>> {
         mc.skinManager = new SkinManager(skinCachePath, mc.services(), new SkinTextureDownloader(mc.getProxy(), mc.getTextureManager(), mc), mc);
     }
 
-    /**
-     * 将账号写入 JSON。ConfigHolder 通过 {@link #fromJson} 反序列化时按 type 分发。
-     */
     public void write(JsonObject obj) {
         obj.addProperty("type", type.name());
         obj.addProperty("name", name);

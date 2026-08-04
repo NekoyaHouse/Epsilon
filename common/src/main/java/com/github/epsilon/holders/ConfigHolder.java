@@ -512,11 +512,6 @@ public class ConfigHolder {
         }
     }
 
-    /**
-     * 把账号列表持久化到全局 accounts.json（账号不随配置快照切换）。
-     * <p>
-     * 账号以 type 字段做运行时多态分发，见 {@link Account#fromJson}。
-     */
     public synchronized void saveAccounts() {
         try {
             ensureRootDirectories();

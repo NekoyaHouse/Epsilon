@@ -9,7 +9,6 @@ public class AccountHolder {
 
     public static final AccountHolder INSTANCE = new AccountHolder();
 
-    // CopyOnWriteArrayList：登录/添加账号在 Executor 线程执行，避免与渲染线程迭代冲突。
     private final List<Account<?>> accounts = new CopyOnWriteArrayList<>();
 
     public void add(Account<?> account) {
