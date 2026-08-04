@@ -1415,7 +1415,8 @@
         "mode": {
           "_value": "Mode",
           "cancel": "Cancel",
-          "reduce": "Reduce"
+          "reduce": "Reduce",
+          "delay": "Delay"
         },
         "server motion": "Server Motion",
         "explosion": "Explosion",
@@ -1425,7 +1426,9 @@
         "no block push": "No Block Push",
         "attack counts": "Attack Counts",
         "sprintticks": "Sprint Ticks",
-        "max delay": "Max Delay"
+        "max delay": "Max Delay",
+        "delay ticks": "Delay Ticks",
+        "jump reset": "Jump Reset"
       },
       "anti alias": "Anti Alias",
       "aspect ratio": {

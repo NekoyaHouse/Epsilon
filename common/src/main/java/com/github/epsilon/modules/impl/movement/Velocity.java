@@ -19,6 +19,7 @@ import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
@@ -41,11 +42,13 @@ public class Velocity extends Module {
 
     private enum Mode {
         Cancel,
-        Reduce
+        Reduce,
+        Delay
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Cancel, newMode -> {
         if (newMode != Mode.Reduce) resetReduceState();
+        if (newMode != Mode.Delay) resetDelayState();
     });
     private final BoolSetting serverMotion = boolSetting("Server Motion", true, () -> mode.is(Mode.Cancel));
     private final BoolSetting explosion = boolSetting("Explosion", true, () -> mode.is(Mode.Cancel));
@@ -57,22 +60,28 @@ public class Velocity extends Module {
     private final IntSetting attackCounts = intSetting("Attack Counts", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
+    private final IntSetting delayTicks = intSetting("Delay Ticks", 3, 1, 5, 1, () -> mode.is(Mode.Delay));
+    private final BoolSetting jumpReset = boolSetting("Jump Reset", false, () -> mode.is(Mode.Delay));
 
     private long lag;
+    private long delayLag;
     private long startDelay;
     public int attackQueue;
     private int sprintQueue;
     public float yaw;
     public boolean delay;
     private boolean jump;
+    private int delayTicksRemaining;
 
     private final Queue<Packet<? super ClientPacketListener>> packets = new ConcurrentLinkedQueue<>();
+    private final Queue<Packet<? super ClientPacketListener>> delayPackets = new ConcurrentLinkedQueue<>();
 
     @Override
     public String getInfo() {
         return switch (mode.getValue()) {
             case Cancel -> "Cancel";
             case Reduce -> "Reduce " + (delay ? System.currentTimeMillis() - startDelay + "ms" : "");
+            case Delay -> "Delay " + delayTicksRemaining + "t";
         };
     }
 
@@ -82,6 +91,7 @@ public class Velocity extends Module {
         packets.clear();
         attackQueue = 0;
         jump = false;
+        resetDelayState();
     }
 
     @EventHandler
@@ -91,6 +101,7 @@ public class Velocity extends Module {
         switch (mode.getValue()) {
             case Cancel -> cancelPacket(event);
             case Reduce -> reducePacket(event);
+            case Delay -> delayPacket(event);
         }
     }
 
@@ -147,6 +158,34 @@ public class Velocity extends Module {
         }
     }
 
+    private void delayPacket(PacketEvent.Receive event) {
+        Packet<?> packet = event.getPacket();
+
+        if (packet instanceof ClientboundDisconnectPacket) {
+            resetDelayState();
+            return;
+        }
+
+        if (packet instanceof ClientboundPlayerPositionPacket || packet instanceof ClientboundExplodePacket) {
+            delayLag = System.currentTimeMillis();
+        }
+
+        if (delayTicksRemaining > 0) {
+            event.cancel();
+            delayPackets.add((Packet<? super ClientPacketListener>) packet);
+            return;
+        }
+
+        if (packet instanceof ClientboundSetEntityMotionPacket(
+                int id, Vec3 movement
+        ) && id == mc.player.getId() && System.currentTimeMillis() - delayLag >= 100L) {
+            boolean knockback = movement.y > 0.0 && (movement.x != 0.0 || movement.z != 0.0);
+            if (knockback) {
+                delayTicksRemaining = delayTicks.getValue();
+            }
+        }
+    }
+
     @EventHandler
     private void onReduceTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.Reduce)) return;
@@ -166,6 +205,14 @@ public class Velocity extends Module {
     }
 
     @EventHandler(priority = EventPriority.LOW)
+    private void onDelayTick(PlayerTickEvent.Pre event) {
+        if (!mode.is(Mode.Delay) || delayTicksRemaining <= 0) return;
+        if (--delayTicksRemaining == 0) {
+            flushDelay();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
     private void onAttackTick(PlayerTickEvent.Pre event) {
         if (!mode.is(Mode.Reduce)) return;
 
@@ -180,6 +227,10 @@ public class Velocity extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onKeyboardInput(KeyboardInputEvent event) {
+        if (mode.is(Mode.Delay) && jumpReset.getValue() && mc.player.onGround() && mc.player.hurtTime == 9) {
+            event.setJump(true);
+        }
+
         if (!mode.is(Mode.Reduce)) return;
 
         if (delay && mc.player.fallDistance == 0 && Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
@@ -216,6 +267,13 @@ public class Velocity extends Module {
         jump = true;
     }
 
+    private void flushDelay() {
+        Packet<? super ClientPacketListener> packet;
+        while ((packet = delayPackets.poll()) != null) {
+            packet.handle(mc.getConnection());
+        }
+    }
+
     private void resetReduceState() {
         delay = false;
         packets.clear();
@@ -225,6 +283,12 @@ public class Velocity extends Module {
         sprintQueue = 0;
         jump = false;
         yaw = 0.0f;
+    }
+
+    private void resetDelayState() {
+        delayTicksRemaining = 0;
+        delayPackets.clear();
+        delayLag = 0L;
     }
 
 }

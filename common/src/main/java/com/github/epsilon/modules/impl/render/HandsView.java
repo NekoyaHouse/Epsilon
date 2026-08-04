@@ -42,8 +42,8 @@ public class HandsView extends Module {
     public final BoolSetting disableSwapMain = boolSetting("Disable Swap Main", true);
     public final BoolSetting disableSwapOff = boolSetting("Disable Swap Off", true);
 
-    public final BoolSetting blockingAnimation = boolSetting("Blocking Animation", true);
-    public final EnumSetting<BlockMode> blockingMode = enumSetting("Blocking Mode", BlockMode.Pushdown, blockingAnimation::getValue);
+    private final BoolSetting blockingAnimation = boolSetting("Blocking Animation", true);
+    private final EnumSetting<BlockMode> blockingMode = enumSetting("Blocking Mode", BlockMode.V1_7, blockingAnimation::getValue);
 
     public final EnumSetting<SwingMode> swingMode = enumSetting("Swing Mode", SwingMode.Vanilla);
     public final BoolSetting onlyWeapon = boolSetting("Only Weapon", true, () -> swingMode.is(SwingMode.Flux));

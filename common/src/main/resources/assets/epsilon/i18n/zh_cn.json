@@ -1415,7 +1415,8 @@
         "mode": {
           "_value": "模式",
           "cancel": "取消",
-          "reduce": "减少"
+          "reduce": "减少",
+          "delay": "延迟"
         },
         "server motion": "服务端移动",
         "explosion": "爆炸",
@@ -1425,7 +1426,9 @@
         "no block push": "无方块推动",
         "attack counts": "攻击次数",
         "sprintticks": "冲刺刻数",
-        "max delay": "最大延迟"
+        "max delay": "最大延迟",
+        "delay ticks": "延迟刻数",
+        "jump reset": "跳跃重置"
       },
       "anti alias": "抗锯齿",
       "aspect ratio": {
