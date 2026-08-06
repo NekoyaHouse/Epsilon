@@ -15,7 +15,6 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
@@ -29,6 +28,8 @@ import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static com.github.epsilon.Constants.mc;
 
 public class ShaderHolder {
 
@@ -145,7 +146,7 @@ public class ShaderHolder {
 
     public RenderType prepareChestOutline(Identifier texture) {
         if (!preparedChests) {
-            RenderTarget mainTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+            RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
             prepareChestOutlineTarget(mainTarget);
             preparedChests = true;
         }
@@ -299,8 +300,8 @@ public class ShaderHolder {
                 new GlowParams(
                         targetWidth,
                         targetHeight,
-                        Minecraft.getInstance().getWindow().getGuiScaledWidth(),
-                        Minecraft.getInstance().getWindow().getGuiScaledHeight(),
+                        mc.getWindow().getGuiScaledWidth(),
+                        mc.getWindow().getGuiScaledHeight(),
                         color,
                         settings.glowColor1.getValue(),
                         settings.glowColor2.getValue(),
@@ -318,8 +319,8 @@ public class ShaderHolder {
     private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight, Shaders.ShaderSettings settings, boolean writeColors) {
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
-        float scaledWidth = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledWidth());
-        float scaledHeight = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledHeight());
+        float scaledWidth = Math.max(1.0f, mc.getWindow().getGuiScaledWidth());
+        float scaledHeight = Math.max(1.0f, mc.getWindow().getGuiScaledHeight());
         Color outline = settings.outlineColor.getValue();
         Color smokeOutline1 = settings.smokeOutlineColor1.getValue();
         Color smokeOutline2 = settings.smokeOutlineColor2.getValue();

@@ -3,7 +3,6 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.Constants;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -16,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+
+import static com.github.epsilon.Constants.mc;
 
 @Mixin(ClientLevel.class)
 public abstract class MixinClientLevel {
@@ -34,7 +35,7 @@ public abstract class MixinClientLevel {
 
     @Redirect(method = "tickNonPassenger", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;tick()V"))
     public void hookTickNonPassenger(Entity instance) {
-        if (Constants.skipTicks > 0 && instance == Minecraft.getInstance().player) {
+        if (Constants.skipTicks > 0 && instance == mc.player) {
             Constants.skipTicks--;
         } else {
             instance.tick();

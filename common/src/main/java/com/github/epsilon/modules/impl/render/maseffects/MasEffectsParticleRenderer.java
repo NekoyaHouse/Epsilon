@@ -9,7 +9,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
@@ -32,6 +31,8 @@ import org.joml.Vector3f;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static com.github.epsilon.Constants.mc;
 
 public class MasEffectsParticleRenderer {
 
@@ -69,7 +70,6 @@ public class MasEffectsParticleRenderer {
             .withCull(false)
             .build();
 
-    private final Minecraft mc = Minecraft.getInstance();
     private final MasEffects module;
     private final RandomSource random = RandomSource.create();
     private final List<EffectParticle> particles = new ArrayList<>();

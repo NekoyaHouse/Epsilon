@@ -18,7 +18,7 @@ public class GUIMove extends Module {
         super("GUI Move", Category.MOVEMENT);
     }
 
-    private BoolSetting sneakValue = boolSetting("Sneak", false);
+    private final BoolSetting sneakValue = boolSetting("Sneak", false);
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onKeyboardInput(KeyboardInputEvent event) {

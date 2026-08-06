@@ -21,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
@@ -125,7 +124,7 @@ public class HoleSnap extends Module {
                 event.setZ(0.0);
                 event.cancel();
                 toggle();
-            } else if (hasBlockCollision(mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
+            } else if (!mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
                 toggle();
             } else {
                 event.setX(0.0);
@@ -144,7 +143,7 @@ public class HoleSnap extends Module {
         double motionZ = getSpeed() * pitch;
         double distanceZ = hole.middle.z - mc.player.getZ();
 
-        if (hasBlockCollision(mc.player.getBoundingBox().move(motionX, 0.0, motionZ))) {
+        if (!mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(motionX, 0.0, motionZ))) {
             collisions++;
             if (collisionLimit.getValue() > 0 && collisions >= collisionLimit.getValue()) {
                 toggle();
@@ -156,7 +155,7 @@ public class HoleSnap extends Module {
 
         if (jumpTicks > 0) {
             jumpTicks--;
-        } else if (jump.getValue() && hasBlockCollision(mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
+        } else if (jump.getValue() && !mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
             jumpTicks = jumpCooldown.getValue();
             event.setY(0.42);
         }
@@ -246,10 +245,6 @@ public class HoleSnap extends Module {
             if (playerPos.equals(pos)) return true;
         }
         return false;
-    }
-
-    private boolean hasBlockCollision(AABB box) {
-        return !mc.level.noBlockCollision(mc.player, box);
     }
 
     private float getAngle(Vec3 pos) {
