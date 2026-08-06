@@ -13,8 +13,8 @@ import com.github.epsilon.modules.impl.ClientSetting;
 
 public class Managers {
 
-    public static ExecutorManager EXECUTOR;
     public static RotationManager ROTATION;
+    public static ExecutorManager EXECUTOR;
     public static ExtrapolationManager EXTRAPOLATION;
     public static TargetManager TARGET;
     public static HealthManager HEALTH;
@@ -27,8 +27,8 @@ public class Managers {
     public static TimerManager TIMER;
 
     public static void initManagers() {
-        EXECUTOR = new ExecutorManager();
         switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
+        EXECUTOR = new ExecutorManager();
         EXTRAPOLATION = new ExtrapolationManager();
         TARGET = new TargetManager();
         HEALTH = new HealthManager();

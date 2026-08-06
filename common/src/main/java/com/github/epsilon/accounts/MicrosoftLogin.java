@@ -2,6 +2,7 @@ package com.github.epsilon.accounts;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.utils.network.Http;
+import com.google.gson.annotations.SerializedName;
 import com.mojang.datafixers.util.Pair;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -240,31 +241,42 @@ public class MicrosoftLogin {
     }
 
     private static class AuthTokenResponse {
+        @SerializedName("access_token")
         public String access_token;
+
+        @SerializedName("refresh_token")
         public String refresh_token;
     }
 
     private static class XblXstsResponse {
+        @SerializedName("Token")
         public String Token;
+
+        @SerializedName("DisplayClaims")
         public DisplayClaims DisplayClaims;
 
         private static class DisplayClaims {
+            @SerializedName("xui")
             private Claim[] xui;
 
             private static class Claim {
+                @SerializedName("uhs")
                 private String uhs;
             }
         }
     }
 
     private static class McResponse {
+        @SerializedName("access_token")
         public String access_token;
     }
 
     private static class GameOwnershipResponse {
+        @SerializedName("items")
         private Item[] items;
 
         private static class Item {
+            @SerializedName("name")
             private String name;
         }
 
@@ -273,8 +285,8 @@ public class MicrosoftLogin {
             boolean hasGame = false;
 
             for (Item item : items) {
-                if (item.name.equals("product_minecraft")) hasProduct = true;
-                else if (item.name.equals("game_minecraft")) hasGame = true;
+                if ("product_minecraft".equals(item.name)) hasProduct = true;
+                else if ("game_minecraft".equals(item.name)) hasGame = true;
             }
 
             return hasProduct && hasGame;
@@ -282,7 +294,10 @@ public class MicrosoftLogin {
     }
 
     private static class ProfileResponse {
+        @SerializedName("id")
         public String id;
+
+        @SerializedName("name")
         public String name;
     }
 

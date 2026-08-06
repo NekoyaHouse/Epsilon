@@ -28,10 +28,7 @@ public class AccountCache {
             return;
         }
 
-        if (loadingHead || Managers.EXECUTOR == null) {
-            if (callback != null) mc.execute(callback);
-            return;
-        }
+        if (loadingHead) return;
 
         loadingHead = true;
 
@@ -45,12 +42,12 @@ public class AccountCache {
         });
     }
 
-    void write(JsonObject obj) {
+    public void write(JsonObject obj) {
         obj.addProperty("username", username);
         obj.addProperty("uuid", uuid);
     }
 
-    void read(JsonObject obj) {
+    public void read(JsonObject obj) {
         username = obj.get("username").getAsString();
         uuid = obj.get("uuid").getAsString();
         loadHead();

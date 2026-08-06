@@ -18,7 +18,7 @@ public class NetworkUtils {
      */
     public static void sendPacketNoEvent(Packet<?> packet) {
         bypassedPackets.add(packet);
-        mc.getConnection().send(packet);
+        if (mc.getConnection() != null) mc.getConnection().send(packet);
     }
 
 }

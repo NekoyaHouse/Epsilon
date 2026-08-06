@@ -6,6 +6,7 @@ import com.github.epsilon.accounts.AccountType;
 import com.github.epsilon.accounts.TokenAccount;
 import com.github.epsilon.utils.network.Http;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 import com.mojang.authlib.Environment;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.util.UndashedUuid;
@@ -87,17 +88,28 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
         return this;
     }
 
-    private record AuthRequest(String agent, String username, String password, String clientToken,
-                               boolean requestUser) {
+    private record AuthRequest(
+            @SerializedName("agent") String agent,
+            @SerializedName("username") String username,
+            @SerializedName("password") String password,
+            @SerializedName("clientToken") String clientToken,
+            @SerializedName("requestUser") boolean requestUser
+    ) {
     }
 
     private static class AuthResponse {
+        @SerializedName("accessToken")
         public String accessToken;
+
+        @SerializedName("selectedProfile")
         public AuthProfile selectedProfile;
     }
 
     private static class AuthProfile {
+        @SerializedName("id")
         public String id;
+
+        @SerializedName("name")
         public String name;
     }
 

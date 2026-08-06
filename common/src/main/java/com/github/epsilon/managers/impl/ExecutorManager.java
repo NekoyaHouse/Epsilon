@@ -10,11 +10,10 @@ public class ExecutorManager {
 
     public ExecutorManager() {
         AtomicInteger threadNumber = new AtomicInteger(1);
-
         executor = Executors.newCachedThreadPool(task -> {
             Thread thread = new Thread(task);
             thread.setDaemon(true);
-            thread.setName("Meteor-Executor-" + threadNumber.getAndIncrement());
+            thread.setName("Epsilon-Executor-" + threadNumber.getAndIncrement());
             return thread;
         });
     }

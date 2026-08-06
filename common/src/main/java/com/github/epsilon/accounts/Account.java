@@ -44,7 +44,6 @@ public abstract class Account<T extends Account<?>> {
     public boolean login() {
         YggdrasilAuthenticationService authenticationService = new YggdrasilAuthenticationService(mc.getProxy());
         applyLoginEnvironment(authenticationService);
-
         return true;
     }
 

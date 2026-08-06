@@ -11,6 +11,7 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -26,6 +27,7 @@ public class KeyPearl extends Module {
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", GLFW.GLFW_KEY_UNKNOWN);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final IntSetting delay = intSetting("Delay", 0, 0, 20, 1);
     private final BoolSetting switchBack = boolSetting("Switch Back", true);
     private final IntSetting switchDelay = intSetting("Switch Delay", 0, 0, 20, 1);
@@ -63,7 +65,11 @@ public class KeyPearl extends Module {
                 return;
             }
 
-            NoSlow.INSTANCE.stopIfWorking(); // 丢珍珠还吃你妈逼东西
+            if (pauseOnEat.getValue() && (PlayerUtils.isEating() || NoSlow.INSTANCE.isWorking())) {
+                return;
+            } else {
+                NoSlow.INSTANCE.stopIfWorking();
+            }
 
             InvUtils.swap(pearl.slot(), switchBack.getValue());
 

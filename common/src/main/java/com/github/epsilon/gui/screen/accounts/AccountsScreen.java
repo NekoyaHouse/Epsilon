@@ -658,8 +658,9 @@ public class AccountsScreen extends Screen {
 
         Managers.EXECUTOR.execute(() -> {
             try {
-                if (account.fetchInfo() && account.login()
-                        && account.getType() != AccountType.Cracked) account.getCache().loadHead();
+                if (account.fetchInfo() && account.login() && account.getType() != AccountType.Cracked) {
+                    account.getCache().loadHead();
+                }
             } finally {
                 authenticating.set(null);
             }

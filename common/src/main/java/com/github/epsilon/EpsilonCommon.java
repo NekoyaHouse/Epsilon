@@ -27,11 +27,13 @@ public class EpsilonCommon {
         ModuleHolder.INSTANCE.initModules();
         HudElementHolder.INSTANCE.initElements();
         AddonHolder.INSTANCE.setupAddons();
-        ConfigHolder.INSTANCE.initConfig();
-        EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
 
         // 初始化 Managers
         Managers.initManagers();
+
+        // 恢复配置
+        ConfigHolder.INSTANCE.initConfig();
+        EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
 
         // 初始化 Render3DScheduler 里的 RenderPipeline
         Render3DScheduler.init();

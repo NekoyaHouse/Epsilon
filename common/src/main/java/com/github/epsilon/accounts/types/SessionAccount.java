@@ -6,6 +6,7 @@ import com.github.epsilon.accounts.AccountType;
 import com.github.epsilon.accounts.TokenAccount;
 import com.github.epsilon.utils.network.Http;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 import com.mojang.util.UndashedUuid;
 import net.minecraft.client.User;
 
@@ -77,7 +78,10 @@ public class SessionAccount extends Account<SessionAccount> implements TokenAcco
     }
 
     private static class ProfileResponse {
+        @SerializedName("id")
         public String id;
+
+        @SerializedName("name")
         public String name;
     }
 
