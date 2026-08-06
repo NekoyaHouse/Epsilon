@@ -1,7 +1,10 @@
 package com.github.epsilon.gui.screen;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.accounts.Account;
 import com.github.epsilon.accounts.AccountType;
+import com.github.epsilon.accounts.AuthError;
+import com.github.epsilon.accounts.AuthResult;
 import com.github.epsilon.accounts.MicrosoftLogin;
 import com.github.epsilon.accounts.types.CrackedAccount;
 import com.github.epsilon.accounts.types.MicrosoftAccount;
@@ -9,24 +12,24 @@ import com.github.epsilon.accounts.types.SessionAccount;
 import com.github.epsilon.accounts.types.TheAlteningAccount;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.epsilon.gui.lib.control.UiTextField;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.screen.accounts.AccountRow;
+import com.github.epsilon.gui.screen.accounts.AccountSortButton;
+import com.github.epsilon.gui.screen.accounts.AccountSortMode;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.AccountHolder;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.utils.render.animation.Animation;
-import com.github.epsilon.utils.render.animation.Easing;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -41,6 +44,7 @@ import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -52,23 +56,24 @@ public class AccountsScreen extends Screen {
 
     private static final float PAD = 12.0f;
     private static final float HEADER_HEIGHT = 48.0f;
+    private static final float TOOLBAR_HEIGHT = 30.0f;
     private static final float ADD_BAR_HEIGHT = 34.0f;
-    private static final float ROW_HEIGHT = 44.0f;
-    private static final float ROW_GAP = 6.0f;
-    private static final float AVATAR_SIZE = 28.0f;
     private static final float BACK_BUTTON_SIZE = 32.0f;
 
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
     private final TextRenderer textRenderer = TextRenderer.create();
     private final UiContentBuffer listBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+
     private final List<AccountRow> rows = new ArrayList<>();
+    private final List<AccountRow> visible = new ArrayList<>();
 
     private LuminRenderSystem.LuminRenderTarget renderTarget;
     private IMEPreeditOverlay preeditOverlay;
 
-    // Layout（每帧由 layout() 刷新，供渲染与命中测试共用）
     private float panelX, panelY, panelW, panelH;
     private UiRect headerBackBtn;
+    private UiRect searchBounds;
+    private UiRect sortBounds;
     private UiRect listViewport;
     private float addBarY;
     private float rowWidth;
@@ -79,16 +84,22 @@ public class AccountsScreen extends Screen {
     private UiRect formCancelBtn;
     private float formButtonY;
 
-    // 列表滚动
     private float scroll;
     private float maxScroll;
     private float scrollVelocity;
 
-    // 添加流程状态
+    private final UiTextField searchField = new UiTextField(32).leadingIcon(IconChars.SEARCH, 0.5f);
+    private final AccountSortButton sortButton = new AccountSortButton();
+    private AccountSortMode sortMode = AccountSortMode.ADDED;
+    private int focusedIndex = -1;
+
     private AddMode addMode = AddMode.NONE;
-    private final AccountField field = new AccountField(512);
+    private final UiTextField field = new UiTextField(512);
     private boolean microsoftWaiting;
     private boolean microsoftError;
+    private int microsoftSession;
+
+    private final AtomicReference<Account<?>> authenticating = new AtomicReference<>();
 
     private AccountsScreen() {
         super(Component.literal("Accounts"));
@@ -113,7 +124,6 @@ public class AccountsScreen extends Screen {
             account.getCache().loadHead();
         }
     }
-
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         final var window = minecraft.getWindow();
@@ -147,6 +157,7 @@ public class AccountsScreen extends Screen {
                 if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) {
                     drawAddForm(content, ex, ey);
                 } else {
+                    drawToolbar(content, ex, ey);
                     drawAccountList(content, ex, ey);
                 }
             });
@@ -165,7 +176,6 @@ public class AccountsScreen extends Screen {
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
     }
-
     private void layout(int w, int h) {
         panelW = Math.min(460, w - 24);
         panelH = Math.min(560, h - 24);
@@ -178,27 +188,75 @@ public class AccountsScreen extends Screen {
         float contentBottom = panelY + panelH - PAD;
 
         addBarY = contentBottom - ADD_BAR_HEIGHT;
-        listViewport = new UiRect(panelX + PAD, contentTop + 8, panelW - PAD * 2, Math.max(0.0f, addBarY - (contentTop + 8) - 10));
+
+        float sortWidth = sortButton.measureWidth(textRenderer, sortMode);
+        float toolbarY = contentTop + 4;
+        sortBounds = new UiRect(panelX + panelW - PAD - sortWidth, toolbarY, sortWidth, TOOLBAR_HEIGHT);
+        searchBounds = new UiRect(panelX + PAD, toolbarY, panelW - PAD * 2 - sortWidth - 6, TOOLBAR_HEIGHT);
+
+        float listTop = toolbarY + TOOLBAR_HEIGHT + 8;
+        listViewport = new UiRect(panelX + PAD, listTop, panelW - PAD * 2, Math.max(0.0f, addBarY - listTop - 10));
 
         formTitleY = contentTop + 12;
         formFieldBounds = new UiRect(panelX + PAD, contentTop + 52, panelW - PAD * 2, 40);
         formButtonY = contentBottom - 30;
 
         syncRows();
-        float contentHeight = rows.size() * (ROW_HEIGHT + ROW_GAP);
+        rebuildVisible();
+
+        float contentHeight = visible.size() * (AccountRow.HEIGHT + AccountRow.GAP);
         maxScroll = Math.max(0, contentHeight - listViewport.height());
         rowWidth = maxScroll > 0 ? listViewport.width() - UiScrollBar.TOTAL_WIDTH : listViewport.width();
     }
 
     private void syncRows() {
-        rows.removeIf(row -> !AccountHolder.INSTANCE.exists(row.account));
+        rows.removeIf(row -> !AccountHolder.INSTANCE.exists(row.getAccount()));
         for (Account<?> account : AccountHolder.INSTANCE.getAccounts()) {
-            if (rows.stream().noneMatch(row -> row.account == account)) {
+            if (rows.stream().noneMatch(row -> row.getAccount() == account)) {
                 rows.add(new AccountRow(account));
             }
         }
     }
 
+    private void rebuildVisible() {
+        Account<?> previouslyFocused = focusedAccount();
+
+        visible.clear();
+        String query = searchField.getText().trim().toLowerCase();
+        for (AccountRow row : rows) {
+            if (query.isEmpty() || matches(row.getAccount(), query)) {
+                visible.add(row);
+            }
+        }
+
+        var comparator = sortMode.getComparator();
+        if (comparator != null) {
+            visible.sort((a, b) -> comparator.compare(a.getAccount(), b.getAccount()));
+        }
+
+        if (previouslyFocused == null) {
+            focusedIndex = visible.isEmpty() ? -1 : Math.min(focusedIndex, visible.size() - 1);
+            return;
+        }
+
+        focusedIndex = -1;
+        for (int i = 0; i < visible.size(); i++) {
+            if (visible.get(i).getAccount() == previouslyFocused) {
+                focusedIndex = i;
+                break;
+            }
+        }
+    }
+
+    private static boolean matches(Account<?> account, String query) {
+        return account.getUsername().toLowerCase().contains(query)
+                || account.getType().name().toLowerCase().contains(query);
+    }
+
+    private Account<?> focusedAccount() {
+        if (focusedIndex < 0 || focusedIndex >= visible.size()) return null;
+        return visible.get(focusedIndex).getAccount();
+    }
     private void drawHeader(UiTree.Scope scope, int mouseX, int mouseY) {
         boolean backHovered = headerBackBtn.contains(mouseX, mouseY);
         drawIconGlyph(scope, headerBackBtn, IconChars.ARROW_BACK, 0.55f, MD3Theme.TEXT_PRIMARY, backHovered ? 0.9f : 0.0f);
@@ -208,7 +266,6 @@ public class AccountsScreen extends Screen {
         float titleHeight = textRenderer.getHeight(titleScale, StaticFontLoader.JURA_LIGHT);
         scope.text(title, panelX + 50, panelY + (HEADER_HEIGHT - titleHeight) / 2.0f, titleScale, MD3Theme.TEXT_PRIMARY, StaticFontLoader.JURA_LIGHT);
 
-        // 右上角显示当前会话用户名
         String currentName = mc.getUser().getName();
         if (!currentName.isBlank()) {
             float scale = 0.6f;
@@ -218,99 +275,72 @@ public class AccountsScreen extends Screen {
         }
     }
 
+    private void drawToolbar(UiTree.Scope scope, int mouseX, int mouseY) {
+        searchField.buildUi(scope, searchBounds, mouseX, mouseY, textRenderer,
+                EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 0.6f);
+        sortButton.draw(scope, sortBounds, mouseX, mouseY, textRenderer, sortMode);
+    }
+
     private void drawAccountList(UiTree.Scope scope, int mouseX, int mouseY) {
-        if (rows.isEmpty()) {
-            String msg = EpsilonTranslations.Gui.ACCOUNTS_EMPTY.getTranslatedName();
-            drawCenteredText(scope, msg, listViewport, MD3Theme.TEXT_MUTED, 0.62f);
+        if (visible.isEmpty()) {
+            drawEmptyState(scope);
             drawAddBar(scope, mouseX, mouseY);
             return;
         }
 
-        float contentHeight = rows.size() * (ROW_HEIGHT + ROW_GAP);
+        float contentHeight = visible.size() * (AccountRow.HEIGHT + AccountRow.GAP);
         scope.viewport(listBuffer, listViewport, scroll, maxScroll, contentHeight, mouseX, mouseY, content -> {
             float y = listViewport.y() - scroll;
-            for (AccountRow row : rows) {
-                row.bounds = new UiRect(listViewport.x(), y, rowWidth, ROW_HEIGHT);
-                drawAccountRow(content, row, mouseX, mouseY);
-                y += ROW_HEIGHT + ROW_GAP;
+            for (int i = 0; i < visible.size(); i++) {
+                AccountRow row = visible.get(i);
+                Account<?> account = row.getAccount();
+                UiRect bounds = new UiRect(listViewport.x(), y, rowWidth, AccountRow.HEIGHT);
+                AccountRow.State state = new AccountRow.State(
+                        isCurrent(account),
+                        authenticating.get() == account,
+                        authenticating.get() != null,
+                        i == focusedIndex,
+                        mouseX, mouseY);
+                row.draw(content, bounds, mouseX, mouseY, textRenderer, state);
+                y += AccountRow.HEIGHT + AccountRow.GAP;
             }
         });
 
         drawAddBar(scope, mouseX, mouseY);
     }
 
-    private void drawAccountRow(UiTree.Scope scope, AccountRow row, int mouseX, int mouseY) {
-        UiRect bounds = row.bounds;
-        Account<?> account = row.account;
-        boolean hovered = bounds.contains(mouseX, mouseY);
-        row.hoverProgress = Mth.lerp(hovered ? 0.28f : 0.2f, row.hoverProgress, hovered ? 1.0f : 0.0f);
-        boolean current = isCurrent(account);
+    private void drawEmptyState(UiTree.Scope scope) {
+        boolean filtered = !rows.isEmpty();
+        String glyph = filtered ? IconChars.SEARCH_OFF : IconChars.NO_ACCOUNTS;
+        String message = filtered
+                ? EpsilonTranslations.Gui.ACCOUNTS_SEARCH_EMPTY.getTranslatedName()
+                : EpsilonTranslations.Gui.ACCOUNTS_EMPTY.getTranslatedName();
 
-        scope.pushAbsolute(bounds, s -> {
-            s.roundRect(0, 0, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(row.hoverProgress));
-            if (current) {
-                s.roundRect(0, 0, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, 0.18f, 40));
-                s.roundRect(0, 3, 3, bounds.height() - 6, 1.5f, MD3Theme.PRIMARY);
-            }
+        float glyphScale = 1.6f;
+        float glyphWidth = textRenderer.getWidth(glyph, glyphScale, StaticFontLoader.ICONS);
+        float glyphHeight = textRenderer.getHeight(glyphScale, StaticFontLoader.ICONS);
 
-            LuminTexture head = account.getCache().getHeadTexture();
-            s.roundedTexture(head, 10, (bounds.height() - AVATAR_SIZE) / 2.0f, AVATAR_SIZE, AVATAR_SIZE, AVATAR_SIZE * 0.3f, 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE);
+        float msgScale = 0.68f;
+        float msgWidth = textRenderer.getWidth(message, msgScale);
+        float msgHeight = textRenderer.getHeight(msgScale);
 
-            // 用户名
-            String username = account.getUsername();
-            float nameScale = 0.78f;
-            float nameHeight = textRenderer.getHeight(nameScale);
-            float nameX = 10 + AVATAR_SIZE + 10;
-            s.text(username, nameX, (bounds.height() - nameHeight) / 2.0f, nameScale, current ? MD3Theme.PRIMARY : MD3Theme.TEXT_PRIMARY);
+        String hint = filtered ? null : EpsilonTranslations.Gui.ACCOUNTS_EMPTY_HINT.getTranslatedName();
+        float hintScale = 0.55f;
+        float hintHeight = hint == null ? 0.0f : textRenderer.getHeight(hintScale);
+        float hintGap = hint == null ? 0.0f : 6.0f;
 
-            // 尾部控件：类型 chip + 登录按钮 + 删除按钮
-            float deleteSize = 26.0f;
-            float gap = 4.0f;
-            float loginW = 58.0f;
-            float loginH = 26.0f;
-            float rightInset = 6.0f;
-            float deleteX = bounds.width() - rightInset - deleteSize;
-            float loginX = deleteX - gap - loginW;
-            float loginY = (bounds.height() - loginH) / 2.0f;
-            row.loginBounds = new UiRect(bounds.x() + loginX, bounds.y() + loginY, loginW, loginH);
-            row.deleteBounds = new UiRect(bounds.x() + deleteX, bounds.y() + (bounds.height() - deleteSize) / 2.0f, deleteSize, deleteSize);
+        float blockHeight = glyphHeight + 12.0f + msgHeight + hintGap + hintHeight;
+        float top = listViewport.y() + (listViewport.height() - blockHeight) / 2.0f;
 
-            String typeName = current ? EpsilonTranslations.Gui.ACCOUNTS_CURRENT.getTranslatedName() : account.getType().name();
-            float chipScale = 0.5f;
-            float chipTextWidth = textRenderer.getWidth(typeName, chipScale);
-            float chipWidth = chipTextWidth + 14.0f;
-            float chipHeight = 20.0f;
-            float chipX = loginX - gap - 8.0f - chipWidth;
-            float chipY = (bounds.height() - chipHeight) / 2.0f;
-            Color chipBg = current ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SECONDARY_CONTAINER;
-            Color chipFg = current ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.ON_SECONDARY_CONTAINER;
-            s.roundRect(chipX, chipY, chipWidth, chipHeight, MD3Theme.CHIP_RADIUS, chipBg);
-            s.text(typeName, chipX + (chipWidth - chipTextWidth) / 2.0f, chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f, chipScale, chipFg);
+        scope.text(glyph, listViewport.x() + (listViewport.width() - glyphWidth) / 2.0f, top,
+                glyphScale, MD3Theme.withAlpha(MD3Theme.TEXT_MUTED, 130), StaticFontLoader.ICONS);
+        scope.text(message, listViewport.x() + (listViewport.width() - msgWidth) / 2.0f,
+                top + glyphHeight + 12.0f, msgScale, MD3Theme.TEXT_SECONDARY);
 
-            String loginLabel = EpsilonTranslations.Gui.ACCOUNTS_LOGIN.getTranslatedName();
-            s.button(loginX, loginY, loginW, loginH, 8.0f, MD3Theme.PRIMARY, loginLabel, 0.6f, MD3Theme.ON_PRIMARY);
-
-            UiRect deleteLocal = row.deleteBounds.relativeTo(bounds);
-            drawDeleteButton(s, deleteLocal, row, mouseX, mouseY);
-        });
-    }
-
-    private void drawDeleteButton(UiTree.Scope scope, UiRect local, AccountRow row, int mouseX, int mouseY) {
-        boolean hovered = row.deleteBounds.contains(mouseX, mouseY);
-        float scale = 0.52f;
-        float glyphWidth = textRenderer.getWidth(IconChars.DELETE, scale, StaticFontLoader.ICONS);
-        float glyphHeight = textRenderer.getHeight(scale, StaticFontLoader.ICONS);
-        float glyphX = local.x() + (local.width() - glyphWidth) / 2.0f;
-        float glyphY = local.y() + (local.height() - glyphHeight) / 2.0f;
-
-        if (row.confirmingDelete) {
-            scope.roundRect(local.x(), local.y(), local.width(), local.height(), local.height() / 2.0f, MD3Theme.ERROR);
-            scope.text(IconChars.DELETE, glyphX, glyphY, scale, new Color(255, 255, 255), StaticFontLoader.ICONS);
-        } else {
-            if (hovered) {
-                scope.roundRect(local.x(), local.y(), local.width(), local.height(), local.height() / 2.0f, MD3Theme.stateLayer(MD3Theme.ERROR, 0.9f, 28));
-            }
-            scope.text(IconChars.DELETE, glyphX, glyphY, scale, MD3Theme.ERROR, StaticFontLoader.ICONS);
+        if (hint != null) {
+            float hintWidth = textRenderer.getWidth(hint, hintScale);
+            scope.text(hint, listViewport.x() + (listViewport.width() - hintWidth) / 2.0f,
+                    top + glyphHeight + 12.0f + msgHeight + hintGap, hintScale, MD3Theme.TEXT_MUTED);
         }
     }
 
@@ -356,8 +386,7 @@ public class AccountsScreen extends Screen {
             default -> "";
         };
         String formTitle = EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName() + " " + modeLabel;
-        float titleScale = 0.95f;
-        scope.text(formTitle, panelX + PAD, formTitleY, titleScale, MD3Theme.TEXT_PRIMARY);
+        scope.text(formTitle, panelX + PAD, formTitleY, 0.95f, MD3Theme.TEXT_PRIMARY);
 
         String placeholder = switch (addMode) {
             case CRACKED -> EpsilonTranslations.Gui.ACCOUNTS_NAME_PLACEHOLDER.getTranslatedName();
@@ -388,7 +417,6 @@ public class AccountsScreen extends Screen {
                     EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName(), 0.6f, fg);
         }
     }
-
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         MouseButtonEvent e = LuminRenderSystem.toEpsilonMouseEvent(event);
@@ -419,24 +447,36 @@ public class AccountsScreen extends Screen {
                 return true;
             }
 
-            // 只在可视 viewport 内命中行，避免滚动出去的行的矩形误触发
+            if (sortBounds != null && sortBounds.contains(mx, my)) {
+                sortMode = sortMode.next();
+                scroll = 0.0f;
+                scrollVelocity = 0.0f;
+                return true;
+            }
+
+            if (searchField.focusIfContains(searchBounds, mx, my)) {
+                return true;
+            }
+            searchField.blur();
+
             if (listViewport != null && listViewport.contains(mx, my)) {
-                for (AccountRow row : rows) {
-                    if (row.deleteBounds != null && row.deleteBounds.contains(mx, my)) {
-                        if (row.confirmingDelete) {
-                            row.confirmingDelete = false;
-                            AccountHolder.INSTANCE.remove(row.account);
+                for (int i = 0; i < visible.size(); i++) {
+                    AccountRow row = visible.get(i);
+                    if (row.getDeleteBounds() != null && row.getDeleteBounds().contains(mx, my)) {
+                        focusedIndex = i;
+                        if (authenticating.get() == row.getAccount()) return true;
+
+                        if (row.isConfirmingDelete()) {
+                            row.setConfirmingDelete(false);
+                            AccountHolder.INSTANCE.remove(row.getAccount());
                         } else {
-                            row.confirmingDelete = true;
+                            row.setConfirmingDelete(true);
                         }
                         return true;
                     }
-                    if (row.loginBounds != null && row.loginBounds.contains(mx, my)) {
-                        login(row.account);
-                        return true;
-                    }
-                    if (row.bounds != null && row.bounds.contains(mx, my)) {
-                        login(row.account);
+                    if (row.getBounds() != null && row.getBounds().contains(mx, my)) {
+                        focusedIndex = i;
+                        login(row.getAccount());
                         return true;
                     }
                 }
@@ -454,7 +494,7 @@ public class AccountsScreen extends Screen {
                 }
             }
 
-            for (AccountRow row : rows) row.confirmingDelete = false;
+            clearDeleteConfirmations();
         }
         return super.mouseClicked(e, doubleClick);
     }
@@ -477,7 +517,7 @@ public class AccountsScreen extends Screen {
                 exitAddMode();
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
+            if (isEnter(event)) {
                 submitAdd();
                 return true;
             }
@@ -487,7 +527,50 @@ public class AccountsScreen extends Screen {
             return true;
         }
 
+        switch (event.key()) {
+            case GLFW.GLFW_KEY_DOWN -> {
+                moveFocus(1);
+                return true;
+            }
+            case GLFW.GLFW_KEY_UP -> {
+                moveFocus(-1);
+                return true;
+            }
+            default -> {
+            }
+        }
+
+        Account<?> focused = focusedAccount();
+        if (focused != null) {
+            if (isEnter(event)) {
+                login(focused);
+                return true;
+            }
+            if (event.key() == GLFW.GLFW_KEY_DELETE && !searchField.isFocused()) {
+                AccountRow row = visible.get(focusedIndex);
+                if (authenticating.get() == focused) return true;
+                if (row.isConfirmingDelete()) {
+                    row.setConfirmingDelete(false);
+                    AccountHolder.INSTANCE.remove(focused);
+                } else {
+                    row.setConfirmingDelete(true);
+                }
+                return true;
+            }
+        }
+
+        if (searchField.keyPressed(event)) {
+            return true;
+        }
+
         if (event.isEscape()) {
+            if (!searchField.isEmpty()) {
+                searchField.clear();
+                scroll = 0.0f;
+                scrollVelocity = 0.0f;
+                return true;
+            }
+            searchField.blur();
             close();
             return true;
         }
@@ -500,7 +583,52 @@ public class AccountsScreen extends Screen {
             field.charTyped(event);
             return true;
         }
+        if (!searchField.isFocused()) {
+            searchField.focus();
+        }
+        if (searchField.charTyped(event)) {
+            scroll = 0.0f;
+            scrollVelocity = 0.0f;
+            return true;
+        }
         return super.charTyped(event);
+    }
+
+    private static boolean isEnter(KeyEvent event) {
+        return event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER;
+    }
+
+    private void moveFocus(int delta) {
+        if (visible.isEmpty()) {
+            focusedIndex = -1;
+            return;
+        }
+        clearDeleteConfirmations();
+        if (focusedIndex < 0) {
+            focusedIndex = delta > 0 ? 0 : visible.size() - 1;
+        } else {
+            focusedIndex = Math.floorMod(focusedIndex + delta, visible.size());
+        }
+        scrollIntoView();
+    }
+
+    private void scrollIntoView() {
+        if (focusedIndex < 0 || listViewport == null) return;
+        float step = AccountRow.HEIGHT + AccountRow.GAP;
+        float top = focusedIndex * step;
+        float bottom = top + AccountRow.HEIGHT;
+
+        if (top < scroll) {
+            scroll = top;
+        } else if (bottom > scroll + listViewport.height()) {
+            scroll = bottom - listViewport.height();
+        }
+        scroll = Mth.clamp(scroll, 0.0f, maxScroll);
+        scrollVelocity = 0.0f;
+    }
+
+    private void clearDeleteConfirmations() {
+        for (AccountRow row : rows) row.setConfirmingDelete(false);
     }
 
     @Override
@@ -519,6 +647,7 @@ public class AccountsScreen extends Screen {
     public void removed() {
         super.removed();
         exitAddMode();
+        searchField.blur();
         IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
         if (renderTarget != null) {
@@ -526,16 +655,67 @@ public class AccountsScreen extends Screen {
             renderTarget = null;
         }
     }
-
     private void login(Account<?> account) {
+        if (!authenticating.compareAndSet(null, account)) return;
+
         Managers.EXECUTOR.execute(() -> {
-            if (account.fetchInfo() && account.login()) {
+            try {
+                AuthResult fetch = account.fetchInfo();
+                if (!fetch.success()) {
+                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), fetch);
+                    return;
+                }
+
+                if (account.getType() == AccountType.Microsoft) AccountHolder.INSTANCE.save();
+
+                AuthResult login = account.login();
+                if (!login.success()) {
+                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), login);
+                    return;
+                }
+
                 if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
+                Managers.NOTIFICATION.success(
+                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_SUCCESS.getTranslatedName(),
+                        account.getUsername()
+                );
+            } catch (Throwable t) {
+                Constants.LOGGER.error("账号登录时发生未预期异常", t);
+                Managers.NOTIFICATION.error(
+                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(),
+                        AuthError.UNKNOWN.getMessage()
+                );
+            } finally {
+                authenticating.set(null);
             }
         });
     }
 
+    private Account<?> resolveTarget(Account<?> account) {
+        Account<?> existing = AccountHolder.INSTANCE.find(account);
+
+        if (existing == null) {
+            return AccountHolder.INSTANCE.add(account) ? account : null;
+        }
+
+        if (existing instanceof MicrosoftAccount stored && account instanceof MicrosoftAccount fresh) {
+            stored.adoptCredentials(fresh);
+            AccountHolder.INSTANCE.save();
+            return stored;
+        }
+
+        return null;
+    }
+
+    private void notifyFailure(String title, AuthResult result) {
+        Managers.NOTIFICATION.error(title, result.getMessage());
+        if (result.detail() != null) {
+            Constants.LOGGER.error("账号认证失败 [{}]: {}", result.error(), result.detail());
+        }
+    }
+
     private void startAdd(AddMode mode) {
+        searchField.blur();
         addMode = mode;
         field.clear();
         field.setMaxLength(mode == AddMode.CRACKED ? 16 : 512);
@@ -543,23 +723,42 @@ public class AccountsScreen extends Screen {
     }
 
     private void startAddMicrosoft() {
+        searchField.blur();
         microsoftWaiting = true;
         microsoftError = false;
-        MicrosoftLogin.getRefreshToken(token -> mc.execute(() -> {
+        final int session = ++microsoftSession;
+        String url = MicrosoftLogin.getRefreshToken(token -> mc.execute(() -> {
+            if (session != microsoftSession) return;
+
+            microsoftWaiting = false;
             if (token == null) {
                 microsoftError = true;
-                microsoftWaiting = false;
             } else {
-                microsoftWaiting = false;
+                microsoftError = false;
                 addAccount(new MicrosoftAccount(token));
             }
         }));
+
+        if (url == null) {
+            Managers.NOTIFICATION.error(
+                    EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName(),
+                    AuthError.SERVER_START_FAILED.getMessage()
+            );
+        }
     }
 
     private void submitAdd() {
         if (addMode == AddMode.NONE) return;
         String input = field.getText().trim();
         if (input.isBlank()) return;
+
+        if (addMode == AddMode.CRACKED && !CrackedAccount.isValidName(input)) {
+            Managers.NOTIFICATION.error(
+                    EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName(),
+                    AuthError.INVALID_NAME.getMessage()
+            );
+            return;
+        }
 
         Account<?> account = switch (addMode) {
             case CRACKED -> new CrackedAccount(input);
@@ -574,19 +773,57 @@ public class AccountsScreen extends Screen {
     }
 
     private void addAccount(Account<?> account) {
-        if (AccountHolder.INSTANCE.exists(account)) return;
+        String addFailed = EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName();
+
+        if (AccountHolder.INSTANCE.exists(account)) {
+            Managers.NOTIFICATION.error(addFailed, AuthError.DUPLICATE.getMessage());
+            return;
+        }
+
+        if (!authenticating.compareAndSet(null, account)) {
+            Managers.NOTIFICATION.error(addFailed, AuthError.BUSY.getMessage());
+            return;
+        }
 
         Managers.EXECUTOR.execute(() -> {
-            if (!account.fetchInfo()) return;
-            AccountHolder.INSTANCE.add(account);
-            if (account.login()) {
-                if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
+            try {
+                AuthResult fetch = account.fetchInfo();
+                if (!fetch.success()) {
+                    notifyFailure(addFailed, fetch);
+                    return;
+                }
+
+                Account<?> target = resolveTarget(account);
+                if (target == null) {
+                    Managers.NOTIFICATION.error(addFailed, AuthError.DUPLICATE.getMessage());
+                    return;
+                }
+
+                AuthResult login = target.login();
+                if (!login.success()) {
+                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), login);
+                    return;
+                }
+
+                if (target.getType() != AccountType.Cracked) target.getCache().loadHead();
+                Managers.NOTIFICATION.success(
+                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_SUCCESS.getTranslatedName(),
+                        target.getUsername()
+                );
+            } catch (Throwable t) {
+                Constants.LOGGER.error("添加账号时发生未预期异常", t);
+                Managers.NOTIFICATION.error(addFailed, AuthError.UNKNOWN.getMessage());
+            } finally {
+                authenticating.set(null);
             }
         });
     }
 
     private void exitAddMode() {
-        if (microsoftWaiting) MicrosoftLogin.stopServer();
+        if (microsoftWaiting) {
+            microsoftSession++;
+            MicrosoftLogin.stopServer();
+        }
         addMode = AddMode.NONE;
         microsoftWaiting = false;
         microsoftError = false;
@@ -596,6 +833,11 @@ public class AccountsScreen extends Screen {
     }
 
     private boolean isCurrent(Account<?> account) {
+        String cachedUuid = account.getCache().uuid;
+        if (cachedUuid != null && !cachedUuid.isBlank()) {
+            String currentUuid = mc.getUser().getProfileId().toString().replace("-", "");
+            return currentUuid.equalsIgnoreCase(cachedUuid.replace("-", ""));
+        }
         return mc.getUser().getName().equalsIgnoreCase(account.getUsername());
     }
 
@@ -616,207 +858,6 @@ public class AccountsScreen extends Screen {
         float glyphWidth = textRenderer.getWidth(glyph, scale, StaticFontLoader.ICONS);
         float glyphHeight = textRenderer.getHeight(scale, StaticFontLoader.ICONS);
         scope.text(glyph, rect.x() + (rect.width() - glyphWidth) / 2.0f, rect.y() + (rect.height() - glyphHeight) / 2.0f, scale, color, StaticFontLoader.ICONS);
-    }
-
-    private static final class AccountRow {
-        private Account<?> account;
-        private UiRect bounds;
-        private UiRect loginBounds;
-        private UiRect deleteBounds;
-        private float hoverProgress;
-        private boolean confirmingDelete;
-
-        private AccountRow(Account<?> account) {
-            this.account = account;
-        }
-    }
-
-    /**
-     * MD3 Filled Text Field 的轻量实现，参考 {@code ClientSettingTextField}。
-     */
-    private static final class AccountField {
-        private static final long ANIM_DURATION = 120L;
-
-        private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, ANIM_DURATION);
-        private final Animation focusAnimation = new Animation(Easing.EASE_OUT_CUBIC, ANIM_DURATION);
-
-        private int maxLength;
-        private boolean focused;
-        private String text = "";
-        private int cursor;
-
-        private AccountField(int maxLength) {
-            this.maxLength = maxLength;
-            hoverAnimation.setStartValue(0.0f);
-            focusAnimation.setStartValue(0.0f);
-        }
-
-        public void buildUi(UiTree.Scope scope, UiRect bounds, int mouseX, int mouseY,
-                            TextRenderer textRenderer, String placeholder, float textScale) {
-            boolean hovered = bounds.contains(mouseX, mouseY);
-            float hoverProgress = scope.animate(hoverAnimation, hovered);
-            float focusProgress = scope.animate(focusAnimation, focused);
-            float textInset = 10.0f;
-            float textHeight = textRenderer.getHeight(textScale);
-            float textX = bounds.x() + textInset;
-            float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
-
-            boolean showPlaceholder = text.isEmpty() && !focused;
-            String display = showPlaceholder ? placeholder : text;
-            Color textColor = showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY;
-            scope.input(bounds, focused, hoverProgress,
-                    focusProgress, MD3Theme.PRIMARY, 1.0f,
-                    textInset, display, textScale, textColor,
-                    null, null,
-                    focused ? Math.min(cursor, text.length()) : null, focused ? MD3Theme.TEXT_PRIMARY : null,
-                    null, 0.0f, null);
-
-            if (focused) {
-                int safeCursor = Math.min(cursor, text.length());
-                float caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor), textScale);
-                IMEFocusHelper.updateCursorPos(caretX, textY);
-            }
-        }
-
-        public boolean focusIfContains(UiRect bounds, double mouseX, double mouseY) {
-            if (!bounds.contains(mouseX, mouseY)) {
-                return false;
-            }
-            focus();
-            return true;
-        }
-
-        public void focus() {
-            focused = true;
-            cursor = text.length();
-            IMEFocusHelper.activate();
-        }
-
-        public void blur() {
-            if (focused) {
-                focused = false;
-                IMEFocusHelper.deactivate();
-            }
-        }
-
-        public boolean keyPressed(KeyEvent event) {
-            if (!focused) {
-                return false;
-            }
-            if (isControlDown()) {
-                return handleControlShortcut(event.key());
-            }
-            return switch (event.key()) {
-                case GLFW.GLFW_KEY_BACKSPACE -> {
-                    if (cursor > 0 && !text.isEmpty()) {
-                        text = text.substring(0, cursor - 1) + text.substring(cursor);
-                        cursor--;
-                    }
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_DELETE -> {
-                    if (cursor < text.length()) {
-                        text = text.substring(0, cursor) + text.substring(cursor + 1);
-                    }
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_LEFT -> {
-                    cursor = Math.max(0, cursor - 1);
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_RIGHT -> {
-                    cursor = Math.min(text.length(), cursor + 1);
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_HOME -> {
-                    cursor = 0;
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_END -> {
-                    cursor = text.length();
-                    yield true;
-                }
-                default -> false;
-            };
-        }
-
-        public boolean charTyped(CharacterEvent event) {
-            if (!focused) {
-                return false;
-            }
-            String typed = event.codepointAsString();
-            if (typed.isEmpty()) {
-                return true;
-            }
-            insertText(typed);
-            return true;
-        }
-
-        public boolean hasActiveAnimations() {
-            return !hoverAnimation.isFinished() || !focusAnimation.isFinished();
-        }
-
-        public boolean isFocused() {
-            return focused;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public void setMaxLength(int maxLength) {
-            this.maxLength = maxLength;
-            if (text.length() > maxLength) {
-                text = text.substring(0, maxLength);
-            }
-            cursor = Math.min(cursor, text.length());
-        }
-
-        public void clear() {
-            text = "";
-            cursor = 0;
-        }
-
-        private boolean handleControlShortcut(int key) {
-            return switch (key) {
-                case GLFW.GLFW_KEY_A -> {
-                    cursor = text.length();
-                    yield true;
-                }
-                case GLFW.GLFW_KEY_V -> {
-                    String clipboard = mc.keyboardHandler.getClipboard();
-                    if (!clipboard.isEmpty()) {
-                        String sanitized = clipboard.codePoints()
-                                .filter(cp -> cp >= 32 && cp != 127)
-                                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                                .toString();
-                        if (!sanitized.isEmpty()) {
-                            insertText(sanitized);
-                        }
-                    }
-                    yield true;
-                }
-                default -> false;
-            };
-        }
-
-        private void insertText(String inserted) {
-            if (inserted == null || inserted.isEmpty()) {
-                return;
-            }
-            int available = maxLength - text.length();
-            if (available <= 0) {
-                return;
-            }
-            String safeInsert = inserted.length() > available ? inserted.substring(0, available) : inserted;
-            text = text.substring(0, cursor) + safeInsert + text.substring(cursor);
-            cursor += safeInsert.length();
-        }
-
-        private boolean isControlDown() {
-            var window = mc.getWindow();
-            return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_CONTROL);
-        }
     }
 
 }

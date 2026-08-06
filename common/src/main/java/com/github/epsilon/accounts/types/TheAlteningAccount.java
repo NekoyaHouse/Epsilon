@@ -3,6 +3,8 @@ package com.github.epsilon.accounts.types;
 import com.github.epsilon.Constants;
 import com.github.epsilon.accounts.Account;
 import com.github.epsilon.accounts.AccountType;
+import com.github.epsilon.accounts.AuthError;
+import com.github.epsilon.accounts.AuthResult;
 import com.github.epsilon.accounts.TokenAccount;
 import com.github.epsilon.utils.network.Http;
 import com.google.gson.JsonObject;
@@ -29,12 +31,19 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
     }
 
     @Override
-    public boolean fetchInfo() {
+    public AuthResult fetchInfo() {
+        if (token == null || token.isBlank()) return AuthResult.failure(AuthError.INVALID_TOKEN);
+
         try {
             AuthResponse res = authenticate();
-            if (res == null || res.accessToken == null || res.selectedProfile == null) {
+            if (res == null) {
                 Constants.LOGGER.error("Invalid TheAltening credentials.");
-                return false;
+                return AuthResult.failure(AuthError.INVALID_TOKEN);
+            }
+            if (res.accessToken == null || res.selectedProfile == null
+                    || res.selectedProfile.id == null || res.selectedProfile.name == null) {
+                Constants.LOGGER.error("Invalid TheAltening credentials.");
+                return AuthResult.failure(AuthError.NO_PROFILE);
             }
 
             accessToken = res.accessToken;
@@ -42,24 +51,26 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
             cache.uuid = res.selectedProfile.id;
             cache.loadHead();
 
-            return true;
-        } catch (Exception _) {
-            Constants.LOGGER.error("Failed to fetch info for TheAltening account!");
-            return false;
+            return AuthResult.ok();
+        } catch (Exception e) {
+            Constants.LOGGER.error("Failed to fetch info for TheAltening account!", e);
+            return AuthResult.failure(AuthError.NETWORK, e.getMessage());
         }
     }
 
     @Override
-    public boolean login() {
-        if (accessToken == null || cache.username.isEmpty() || cache.uuid.isEmpty()) return false;
+    public AuthResult login() {
+        if (accessToken == null || cache.username.isEmpty() || cache.uuid.isEmpty()) {
+            return AuthResult.failure(AuthError.NOT_FETCHED);
+        }
         applyLoginEnvironment(SERVICE);
 
         try {
             setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), accessToken, Optional.empty(), Optional.empty()));
-            return true;
-        } catch (Exception _) {
-            Constants.LOGGER.error("Failed to login with TheAltening.");
-            return false;
+            return AuthResult.ok();
+        } catch (Exception e) {
+            Constants.LOGGER.error("Failed to login with TheAltening.", e);
+            return AuthResult.failure(AuthError.SESSION_FAILED, e.getMessage());
         }
     }
 
@@ -83,8 +94,13 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
     @Override
     public TheAlteningAccount read(JsonObject obj) {
         super.read(obj);
-        token = obj.get("token").getAsString();
+        token = readString(obj, "token", "");
         return this;
+    }
+
+    @Override
+    protected String identity() {
+        return token == null ? "" : token;
     }
 
     private record AuthRequest(String agent, String username, String password, String clientToken,

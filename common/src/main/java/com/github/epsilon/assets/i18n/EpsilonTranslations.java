@@ -46,6 +46,27 @@ public class EpsilonTranslations {
             Gui.ACCOUNTS_TOKEN_PLACEHOLDER,
             Gui.ACCOUNTS_WAITING_MICROSOFT,
             Gui.ACCOUNTS_MICROSOFT_ERROR,
+            Gui.ACCOUNTS_LOGIN_SUCCESS,
+            Gui.ACCOUNTS_LOGIN_FAILED,
+            Gui.ACCOUNTS_ADD_FAILED,
+            Gui.ACCOUNTS_ERROR_NETWORK,
+            Gui.ACCOUNTS_ERROR_INVALID_TOKEN,
+            Gui.ACCOUNTS_ERROR_NO_GAME_OWNERSHIP,
+            Gui.ACCOUNTS_ERROR_NO_PROFILE,
+            Gui.ACCOUNTS_ERROR_MICROSOFT_FAILED,
+            Gui.ACCOUNTS_ERROR_SERVER_START,
+            Gui.ACCOUNTS_ERROR_INVALID_NAME,
+            Gui.ACCOUNTS_ERROR_DUPLICATE,
+            Gui.ACCOUNTS_ERROR_NOT_FETCHED,
+            Gui.ACCOUNTS_ERROR_BUSY,
+            Gui.ACCOUNTS_SEARCH_PLACEHOLDER,
+            Gui.ACCOUNTS_SEARCH_EMPTY,
+            Gui.ACCOUNTS_SORT_ADDED,
+            Gui.ACCOUNTS_SORT_NAME,
+            Gui.ACCOUNTS_SORT_TYPE,
+            Gui.ACCOUNTS_EMPTY_HINT,
+            Gui.ACCOUNTS_ERROR_SESSION_FAILED,
+            Gui.ACCOUNTS_ERROR_UNKNOWN,
             Gui.TAB_GENERAL,
             Gui.TAB_FRIEND,
             Gui.TAB_CONFIG,
@@ -187,6 +208,27 @@ public class EpsilonTranslations {
         public static final TranslateComponent ACCOUNTS_TOKEN_PLACEHOLDER = create("gui", "accounts.token.placeholder");
         public static final TranslateComponent ACCOUNTS_WAITING_MICROSOFT = create("gui", "accounts.waiting.microsoft");
         public static final TranslateComponent ACCOUNTS_MICROSOFT_ERROR = create("gui", "accounts.microsoft.error");
+        public static final TranslateComponent ACCOUNTS_LOGIN_SUCCESS = create("gui", "accounts.login.success");
+        public static final TranslateComponent ACCOUNTS_LOGIN_FAILED = create("gui", "accounts.login.failed");
+        public static final TranslateComponent ACCOUNTS_ADD_FAILED = create("gui", "accounts.add.failed");
+        public static final TranslateComponent ACCOUNTS_ERROR_NETWORK = create("gui", "accounts.error.network");
+        public static final TranslateComponent ACCOUNTS_ERROR_INVALID_TOKEN = create("gui", "accounts.error.invalid_token");
+        public static final TranslateComponent ACCOUNTS_ERROR_NO_GAME_OWNERSHIP = create("gui", "accounts.error.no_game_ownership");
+        public static final TranslateComponent ACCOUNTS_ERROR_NO_PROFILE = create("gui", "accounts.error.no_profile");
+        public static final TranslateComponent ACCOUNTS_ERROR_MICROSOFT_FAILED = create("gui", "accounts.error.microsoft_failed");
+        public static final TranslateComponent ACCOUNTS_ERROR_SERVER_START = create("gui", "accounts.error.server_start");
+        public static final TranslateComponent ACCOUNTS_ERROR_INVALID_NAME = create("gui", "accounts.error.invalid_name");
+        public static final TranslateComponent ACCOUNTS_ERROR_DUPLICATE = create("gui", "accounts.error.duplicate");
+        public static final TranslateComponent ACCOUNTS_ERROR_NOT_FETCHED = create("gui", "accounts.error.not_fetched");
+        public static final TranslateComponent ACCOUNTS_ERROR_BUSY = create("gui", "accounts.error.busy");
+        public static final TranslateComponent ACCOUNTS_SEARCH_PLACEHOLDER = create("gui", "accounts.search.placeholder");
+        public static final TranslateComponent ACCOUNTS_SEARCH_EMPTY = create("gui", "accounts.search.empty");
+        public static final TranslateComponent ACCOUNTS_SORT_ADDED = create("gui", "accounts.sort.added");
+        public static final TranslateComponent ACCOUNTS_SORT_NAME = create("gui", "accounts.sort.name");
+        public static final TranslateComponent ACCOUNTS_SORT_TYPE = create("gui", "accounts.sort.type");
+        public static final TranslateComponent ACCOUNTS_EMPTY_HINT = create("gui", "accounts.empty.hint");
+        public static final TranslateComponent ACCOUNTS_ERROR_SESSION_FAILED = create("gui", "accounts.error.session_failed");
+        public static final TranslateComponent ACCOUNTS_ERROR_UNKNOWN = create("gui", "accounts.error.unknown");
 
         public static final TranslateComponent TAB_GENERAL = create("gui", "tab.general");
         public static final TranslateComponent TAB_FRIEND = create("gui", "tab.friend");
