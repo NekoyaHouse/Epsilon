@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 
 import java.awt.*;
 
-public final class AccountRow {
+public class AccountRow {
 
     public static final float HEIGHT = 52.0f;
     public static final float GAP = 6.0f;
@@ -95,12 +95,12 @@ public final class AccountRow {
             float available = loginX - textX - 8.0f;
 
             String username = account.getUsername();
-            float nameScale = 0.76f;
+            float nameScale = 1.0f;
             float nameHeight = textRenderer.getHeight(nameScale);
             String clippedName = clip(textRenderer, username, nameScale, available);
 
             String secondary = account.getType().name();
-            float subScale = 0.5f;
+            float subScale = 0.76f;
             float subHeight = textRenderer.getHeight(subScale);
 
             float lineGap = 3.0f;
@@ -135,7 +135,7 @@ public final class AccountRow {
 
         if (state.busy()) {
             scope.roundRect(x, y, ACTION_SIZE, ACTION_SIZE, ACTION_SIZE / 2.0f, MD3Theme.PRIMARY);
-            drawGlyph(scope, textRenderer, IconChars.HOURGLASS_EMPTY, x, y, 0.5f, MD3Theme.ON_PRIMARY);
+            drawGlyph(scope, textRenderer, IconChars.HOURGLASS_EMPTY, x, y, 1.0f, MD3Theme.ON_PRIMARY);
             return;
         }
 
@@ -146,7 +146,7 @@ public final class AccountRow {
         Color fg = dimmed ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY, 110) : MD3Theme.ON_PRIMARY;
 
         scope.roundRect(x, y, ACTION_SIZE, ACTION_SIZE, ACTION_SIZE / 2.0f, bg);
-        drawGlyph(scope, textRenderer, IconChars.LOGIN, x, y, 0.5f, fg);
+        drawGlyph(scope, textRenderer, IconChars.LOGIN, x, y, 1.0f, fg);
     }
 
     private void drawDeleteAction(UiTree.Scope scope, TextRenderer textRenderer, float x, float y, double mouseX, double mouseY, State state) {
@@ -154,13 +154,12 @@ public final class AccountRow {
 
         if (confirmingDelete) {
             scope.roundRect(x, y, ACTION_SIZE, ACTION_SIZE, ACTION_SIZE / 2.0f, MD3Theme.ERROR);
-            drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 0.5f, new Color(40, 20, 20));
+            drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 1.0f, new Color(40, 20, 20));
             return;
         }
 
         if (state.busy()) {
-            drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 0.5f,
-                    MD3Theme.withAlpha(MD3Theme.ERROR, 70));
+            drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 1.0f, MD3Theme.withAlpha(MD3Theme.ERROR, 70));
             return;
         }
 
@@ -168,16 +167,13 @@ public final class AccountRow {
             scope.roundRect(x, y, ACTION_SIZE, ACTION_SIZE, ACTION_SIZE / 2.0f,
                     MD3Theme.stateLayer(MD3Theme.ERROR, 0.9f, 30));
         }
-        drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 0.5f,
-                MD3Theme.withAlpha(MD3Theme.ERROR, hovered ? 255 : 190));
+        drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 1.0f, MD3Theme.withAlpha(MD3Theme.ERROR, hovered ? 255 : 190));
     }
 
-    private static void drawGlyph(UiTree.Scope scope, TextRenderer textRenderer, String glyph,
-                                  float x, float y, float scale, Color color) {
+    private static void drawGlyph(UiTree.Scope scope, TextRenderer textRenderer, String glyph, float x, float y, float scale, Color color) {
         float glyphWidth = textRenderer.getWidth(glyph, scale, StaticFontLoader.ICONS);
         float glyphHeight = textRenderer.getHeight(scale, StaticFontLoader.ICONS);
-        scope.text(glyph, x + (ACTION_SIZE - glyphWidth) / 2.0f, y + (ACTION_SIZE - glyphHeight) / 2.0f,
-                scale, color, StaticFontLoader.ICONS);
+        scope.text(glyph, x + (ACTION_SIZE - glyphWidth) / 2.0f, y + (ACTION_SIZE - glyphHeight) / 2.0f, scale, color, StaticFontLoader.ICONS);
     }
 
     private static String clip(TextRenderer textRenderer, String text, float scale, float available) {

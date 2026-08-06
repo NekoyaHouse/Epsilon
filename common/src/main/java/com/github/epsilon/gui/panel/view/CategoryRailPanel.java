@@ -265,7 +265,7 @@ public class CategoryRailPanel {
         float iconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
         float labelHeight = textRenderer.getHeight(itemLabelScale);
         float countHeight = textRenderer.getHeight(itemCountScale);
-        float iconY = (itemRect.height() - iconHeight) / 2.0f - 2.0f;
+        float iconY = (itemRect.height() - iconHeight) / 2.0f;
         float labelY = (itemRect.height() - labelHeight) / 2.0f;
         float countY = (itemRect.height() - countHeight) / 2.0f;
 
@@ -297,7 +297,7 @@ public class CategoryRailPanel {
             float settingsIconWidth = textRenderer.getWidth(SETTINGS_ICON, itemIconScale, StaticFontLoader.ICONS);
             float settingsIconX = getRailIconCenterX(menuButton) - settingsRect.x() - settingsIconWidth / 2.0f;
             float settingsIconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
-            float settingsIconY = (settingsRect.height() - settingsIconHeight) / 2.0f - 2.0f;
+            float settingsIconY = (settingsRect.height() - settingsIconHeight) / 2.0f;
             settings.text(SETTINGS_ICON, settingsIconX, settingsIconY, itemIconScale, settingsIconColor, StaticFontLoader.ICONS);
             if (contentProgress > 0.02f) {
                 float textOffset = (1.0f - contentProgress) * 5.0f;

@@ -32,7 +32,7 @@ public class UiTextField {
     private int cursor;
 
     private String leadingIcon;
-    private float leadingIconScale = 0.5f;
+    private float leadingIconScale = 1.0f;
 
     public UiTextField(int maxLength) {
         this.maxLength = maxLength;
@@ -46,8 +46,7 @@ public class UiTextField {
         return this;
     }
 
-    public void buildUi(UiTree.Scope scope, UiRect bounds, double mouseX, double mouseY,
-                        TextRenderer textRenderer, String placeholder, float textScale) {
+    public void buildUi(UiTree.Scope scope, UiRect bounds, double mouseX, double mouseY, TextRenderer textRenderer, String placeholder, float textScale) {
         boolean hovered = bounds.contains(mouseX, mouseY);
         float hoverProgress = scope.animate(hoverAnimation, hovered);
         float focusProgress = scope.animate(focusAnimation, focused);
@@ -69,20 +68,17 @@ public class UiTextField {
                 focusProgress, MD3Theme.PRIMARY, 1.0f,
                 textInset, display, textScale, textColor,
                 null, null,
-                focused ? Math.min(cursor, text.length()) : null, focused ? MD3Theme.TEXT_PRIMARY : null,
+                focused ? safeCursor() : null, focused ? MD3Theme.TEXT_PRIMARY : null,
                 null, 0.0f, null);
 
         if (leadingIcon != null) {
             float glyphHeight = textRenderer.getHeight(leadingIconScale, StaticFontLoader.ICONS);
             Color iconColor = focused ? MD3Theme.PRIMARY : MD3Theme.TEXT_MUTED;
-            scope.text(leadingIcon, bounds.x() + DEFAULT_TEXT_INSET,
-                    bounds.y() + (bounds.height() - glyphHeight) / 2.0f,
-                    leadingIconScale, iconColor, StaticFontLoader.ICONS);
+            scope.text(leadingIcon, bounds.x() + DEFAULT_TEXT_INSET, bounds.y() + (bounds.height() - glyphHeight) / 2.0f, leadingIconScale, iconColor, StaticFontLoader.ICONS);
         }
 
         if (focused) {
-            int safeCursor = Math.min(cursor, text.length());
-            float caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor), textScale);
+            float caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor()), textScale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
     }
@@ -190,6 +186,10 @@ public class UiTextField {
         cursor = 0;
     }
 
+    private int safeCursor() {
+        return Math.clamp(cursor, 0, text.length());
+    }
+
     private boolean handleControlShortcut(int key) {
         return switch (key) {
             case GLFW.GLFW_KEY_A -> {
@@ -228,8 +228,7 @@ public class UiTextField {
 
     private static boolean isControlDown() {
         var window = mc.getWindow();
-        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_CONTROL)
-                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_CONTROL);
+        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_CONTROL);
     }
 
 }

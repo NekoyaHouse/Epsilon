@@ -110,4 +110,5 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
     private float centeredTextY(UiTextMetrics textMetrics, float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textMetrics.textHeight(scale)) * 0.5f;
     }
+
 }

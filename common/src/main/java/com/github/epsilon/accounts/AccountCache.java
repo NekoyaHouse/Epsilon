@@ -1,9 +1,7 @@
 package com.github.epsilon.accounts;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.PlayerHeadTexture;
 import com.github.epsilon.managers.Managers;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.util.UndashedUuid;
 
@@ -15,21 +13,9 @@ public class AccountCache {
     public String uuid = "";
     private PlayerHeadTexture headTexture;
     private volatile boolean loadingHead;
-    private volatile boolean released;
 
     public PlayerHeadTexture getHeadTexture() {
         return headTexture != null ? headTexture : Managers.SKIN.STEVE_HEAD;
-    }
-
-    public void releaseHead() {
-        released = true;
-
-        mc.execute(() -> {
-            if (headTexture != null) {
-                headTexture.close();
-                headTexture = null;
-            }
-        });
     }
 
     public void loadHead() {
@@ -37,7 +23,7 @@ public class AccountCache {
     }
 
     public void loadHead(Runnable callback) {
-        if (released || headTexture != null || uuid == null || uuid.isBlank()) {
+        if (headTexture != null || uuid == null || uuid.isBlank()) {
             if (callback != null) mc.execute(callback);
             return;
         }
@@ -50,17 +36,9 @@ public class AccountCache {
         loadingHead = true;
 
         Managers.EXECUTOR.execute(() -> {
-            byte[] head;
-            try {
-                head = Managers.SKIN.fetchHead(UndashedUuid.fromStringLenient(uuid));
-            } catch (IllegalArgumentException e) {
-                Constants.LOGGER.warn("Invalid UUID in account cache: {}", uuid);
-                head = null;
-            }
-
-            byte[] result = head;
+            byte[] head = Managers.SKIN.fetchHead(UndashedUuid.fromStringLenient(uuid));
             mc.execute(() -> {
-                if (result != null && !released) headTexture = new PlayerHeadTexture(result);
+                if (head != null) headTexture = new PlayerHeadTexture(head);
                 loadingHead = false;
                 if (callback != null) callback.run();
             });
@@ -73,16 +51,9 @@ public class AccountCache {
     }
 
     void read(JsonObject obj) {
-        username = readString(obj, "username");
-        uuid = readString(obj, "uuid");
+        username = obj.get("username").getAsString();
+        uuid = obj.get("uuid").getAsString();
         loadHead();
-    }
-
-    private static String readString(JsonObject obj, String key) {
-        if (obj == null || !obj.has(key)) return "";
-        JsonElement element = obj.get(key);
-        if (element == null || !element.isJsonPrimitive()) return "";
-        return element.getAsString();
     }
 
 }

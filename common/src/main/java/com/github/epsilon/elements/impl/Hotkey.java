@@ -152,15 +152,10 @@ public class Hotkey extends HudModule {
             float iconHeight = textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS);
             float iconWidth = textRenderer.getWidth(entry.icon(), ICON_SCALE, StaticFontLoader.ICONS);
             Color textColor = withAlpha(rowColor, animation);
-            scope.text(entry.icon(), rowX + (ICON_SIZE - iconWidth) * 0.5f,
-                    rowY + (animatedHeight - iconHeight) * 0.5f - 1.0f, ICON_SCALE, textColor, StaticFontLoader.ICONS);
-            scope.text(entry.name(), textBackgroundX + TEXT_PADDING,
-                    rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f,
-                    TEXT_SCALE, textColor);
+            scope.text(entry.icon(), rowX + (ICON_SIZE - iconWidth) * 0.5f, rowY + (animatedHeight - iconHeight) * 0.5f, ICON_SCALE, textColor, StaticFontLoader.ICONS);
+            scope.text(entry.name(), textBackgroundX + TEXT_PADDING, rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f, TEXT_SCALE, textColor);
             if (!entry.info().isEmpty()) {
-                scope.text(" " + entry.info(), textBackgroundX + TEXT_PADDING + entry.nameWidth(),
-                        rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f,
-                        TEXT_SCALE, withAlpha(SUFFIX_COLOR, animation));
+                scope.text(" " + entry.info(), textBackgroundX + TEXT_PADDING + entry.nameWidth(), rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f, TEXT_SCALE, withAlpha(SUFFIX_COLOR, animation));
             }
             rowY += (ROW_HEIGHT + ROW_GAP) * animation;
         }

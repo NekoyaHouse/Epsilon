@@ -9,11 +9,8 @@ import java.util.Comparator;
 public enum AccountSortMode {
 
     ADDED(EpsilonTranslations.Gui.ACCOUNTS_SORT_ADDED, null),
-    NAME(EpsilonTranslations.Gui.ACCOUNTS_SORT_NAME,
-            Comparator.<Account<?>, String>comparing(a -> a.getUsername().toLowerCase())),
-    TYPE(EpsilonTranslations.Gui.ACCOUNTS_SORT_TYPE,
-            Comparator.<Account<?>, String>comparing(a -> a.getType().name())
-                    .thenComparing(a -> a.getUsername().toLowerCase()));
+    NAME(EpsilonTranslations.Gui.ACCOUNTS_SORT_NAME, Comparator.comparing(a -> a.getUsername().toLowerCase())),
+    TYPE(EpsilonTranslations.Gui.ACCOUNTS_SORT_TYPE, Comparator.<Account<?>, String>comparing(a -> a.getType().name()).thenComparing(a -> a.getUsername().toLowerCase()));
 
     private final TranslateComponent label;
     private final Comparator<Account<?>> comparator;

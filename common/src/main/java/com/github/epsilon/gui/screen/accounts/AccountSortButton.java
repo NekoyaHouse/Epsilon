@@ -11,10 +11,9 @@ import com.github.epsilon.utils.render.animation.Easing;
 
 import java.awt.*;
 
-public final class AccountSortButton {
+public class AccountSortButton {
 
-    private static final float ICON_SCALE = 0.46f;
-    private static final float LABEL_SCALE = 0.5f;
+    private static final float LABEL_SCALE = 0.75f;
     private static final float INSET = 8.0f;
     private static final float GAP = 5.0f;
 
@@ -25,33 +24,28 @@ public final class AccountSortButton {
     }
 
     public float measureWidth(TextRenderer textRenderer, AccountSortMode mode) {
-        float iconWidth = textRenderer.getWidth(IconChars.SWAP_VERT, ICON_SCALE, StaticFontLoader.ICONS);
+        float iconWidth = textRenderer.getWidth(IconChars.SWAP_VERT, 1.0f, StaticFontLoader.ICONS);
         float labelWidth = textRenderer.getWidth(mode.getLabel(), LABEL_SCALE);
         return INSET + iconWidth + GAP + labelWidth + INSET;
     }
 
-    public void draw(UiTree.Scope scope, UiRect bounds, double mouseX, double mouseY,
-                     TextRenderer textRenderer, AccountSortMode mode) {
+    public void draw(UiTree.Scope scope, UiRect bounds, double mouseX, double mouseY, TextRenderer textRenderer, AccountSortMode mode) {
         boolean hovered = bounds.contains(mouseX, mouseY);
         float hoverProgress = scope.animate(hoverAnimation, hovered);
 
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                MD3Theme.CONTROL_RADIUS, MD3Theme.SECONDARY_CONTAINER);
+        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CONTROL_RADIUS, MD3Theme.SECONDARY_CONTAINER);
         if (hoverProgress > 0.01f) {
-            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                    MD3Theme.CONTROL_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, hoverProgress, 34));
+            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CONTROL_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, hoverProgress, 34));
         }
 
         Color fg = MD3Theme.ON_SECONDARY_CONTAINER;
-        float iconWidth = textRenderer.getWidth(IconChars.SWAP_VERT, ICON_SCALE, StaticFontLoader.ICONS);
-        float iconHeight = textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS);
-        scope.text(IconChars.SWAP_VERT, bounds.x() + INSET,
-                bounds.y() + (bounds.height() - iconHeight) / 2.0f, ICON_SCALE, fg, StaticFontLoader.ICONS);
+        float iconWidth = textRenderer.getWidth(IconChars.SWAP_VERT, 1.0f, StaticFontLoader.ICONS);
+        float iconHeight = textRenderer.getHeight(1.0f, StaticFontLoader.ICONS);
+        scope.text(IconChars.SWAP_VERT, bounds.x() + INSET, bounds.y() + (bounds.height() - iconHeight) / 2.0f, 1.0f, fg, StaticFontLoader.ICONS);
 
         String label = mode.getLabel();
         float labelHeight = textRenderer.getHeight(LABEL_SCALE);
-        scope.text(label, bounds.x() + INSET + iconWidth + GAP,
-                bounds.y() + (bounds.height() - labelHeight) / 2.0f, LABEL_SCALE, fg);
+        scope.text(label, bounds.x() + INSET + iconWidth + GAP, bounds.y() + (bounds.height() - labelHeight) / 2.0f, LABEL_SCALE, fg);
     }
 
     public boolean hasActiveAnimations() {

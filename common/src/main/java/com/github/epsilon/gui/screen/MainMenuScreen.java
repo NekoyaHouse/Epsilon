@@ -11,6 +11,7 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.screen.accounts.AccountsScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;

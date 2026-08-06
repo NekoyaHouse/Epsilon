@@ -3,8 +3,6 @@ package com.github.epsilon.accounts.types;
 import com.github.epsilon.Constants;
 import com.github.epsilon.accounts.Account;
 import com.github.epsilon.accounts.AccountType;
-import com.github.epsilon.accounts.AuthError;
-import com.github.epsilon.accounts.AuthResult;
 import com.github.epsilon.accounts.TokenAccount;
 import com.github.epsilon.utils.network.Http;
 import com.google.gson.JsonObject;
@@ -25,7 +23,7 @@ public class SessionAccount extends Account<SessionAccount> implements TokenAcco
     @Override
     public SessionAccount read(JsonObject obj) {
         super.read(obj);
-        accessToken = readString(obj, "token", "");
+        accessToken = obj.get("token").getAsString();
         return this;
     }
 
@@ -36,8 +34,8 @@ public class SessionAccount extends Account<SessionAccount> implements TokenAcco
     }
 
     @Override
-    public AuthResult fetchInfo() {
-        if (accessToken == null || accessToken.isBlank()) return AuthResult.failure(AuthError.INVALID_TOKEN);
+    public boolean fetchInfo() {
+        if (accessToken == null || accessToken.isBlank()) return false;
 
         ProfileResponse profile;
         try {
@@ -46,32 +44,25 @@ public class SessionAccount extends Account<SessionAccount> implements TokenAcco
                     .sendJson(ProfileResponse.class);
         } catch (IllegalArgumentException e) {
             Constants.LOGGER.error("Invalid session account token", e);
-            return AuthResult.failure(AuthError.INVALID_TOKEN, e.getMessage());
+            return false;
         }
 
-        if (profile == null) return AuthResult.failure(AuthError.INVALID_TOKEN);
-        if (profile.id == null || profile.name == null) return AuthResult.failure(AuthError.NO_PROFILE);
+        if (profile == null || profile.id == null || profile.name == null) return false;
 
         cache.username = profile.name;
         cache.uuid = profile.id;
 
-        return AuthResult.ok();
+        return true;
     }
 
     @Override
-    public AuthResult login() {
-        if (accessToken == null || accessToken.isBlank()) return AuthResult.failure(AuthError.INVALID_TOKEN);
-        if (cache.uuid == null || cache.uuid.isBlank()) return AuthResult.failure(AuthError.NOT_FETCHED);
+    public boolean login() {
+        if (accessToken == null || accessToken.isBlank()) return false;
 
         super.login();
 
-        try {
-            setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), accessToken, Optional.empty(), Optional.empty()));
-        } catch (IllegalArgumentException e) {
-            return AuthResult.failure(AuthError.SESSION_FAILED, cache.uuid);
-        }
-
-        return AuthResult.ok();
+        setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), accessToken, Optional.empty(), Optional.empty()));
+        return true;
     }
 
     @Override
@@ -80,9 +71,9 @@ public class SessionAccount extends Account<SessionAccount> implements TokenAcco
     }
 
     @Override
-    protected String identity() {
-        if (cache.uuid != null && !cache.uuid.isBlank()) return cache.uuid;
-        return accessToken == null ? "" : accessToken;
+    public boolean equals(Object o) {
+        if (!(o instanceof SessionAccount account2)) return false;
+        return account2.name.equals(this.name);
     }
 
     private static class ProfileResponse {

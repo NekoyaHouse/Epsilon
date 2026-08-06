@@ -1,10 +1,7 @@
-package com.github.epsilon.gui.screen;
+package com.github.epsilon.gui.screen.accounts;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.accounts.Account;
 import com.github.epsilon.accounts.AccountType;
-import com.github.epsilon.accounts.AuthError;
-import com.github.epsilon.accounts.AuthResult;
 import com.github.epsilon.accounts.MicrosoftLogin;
 import com.github.epsilon.accounts.types.CrackedAccount;
 import com.github.epsilon.accounts.types.MicrosoftAccount;
@@ -23,9 +20,7 @@ import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.screen.accounts.AccountRow;
-import com.github.epsilon.gui.screen.accounts.AccountSortButton;
-import com.github.epsilon.gui.screen.accounts.AccountSortMode;
+import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.AccountHolder;
@@ -88,7 +83,7 @@ public class AccountsScreen extends Screen {
     private float maxScroll;
     private float scrollVelocity;
 
-    private final UiTextField searchField = new UiTextField(32).leadingIcon(IconChars.SEARCH, 0.5f);
+    private final UiTextField searchField = new UiTextField(32).leadingIcon(IconChars.SEARCH, 1.0f);
     private final AccountSortButton sortButton = new AccountSortButton();
     private AccountSortMode sortMode = AccountSortMode.ADDED;
     private int focusedIndex = -1;
@@ -124,6 +119,7 @@ public class AccountsScreen extends Screen {
             account.getCache().loadHead();
         }
     }
+
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         final var window = minecraft.getWindow();
@@ -176,6 +172,7 @@ public class AccountsScreen extends Screen {
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
     }
+
     private void layout(int w, int h) {
         panelW = Math.min(460, w - 24);
         panelH = Math.min(560, h - 24);
@@ -257,12 +254,13 @@ public class AccountsScreen extends Screen {
         if (focusedIndex < 0 || focusedIndex >= visible.size()) return null;
         return visible.get(focusedIndex).getAccount();
     }
+
     private void drawHeader(UiTree.Scope scope, int mouseX, int mouseY) {
         boolean backHovered = headerBackBtn.contains(mouseX, mouseY);
-        drawIconGlyph(scope, headerBackBtn, IconChars.ARROW_BACK, 0.55f, MD3Theme.TEXT_PRIMARY, backHovered ? 0.9f : 0.0f);
+        drawIconGlyph(scope, headerBackBtn, IconChars.ARROW_BACK, 1.0f, MD3Theme.TEXT_PRIMARY, backHovered ? 0.9f : 0.0f);
 
         String title = EpsilonTranslations.Gui.ACCOUNTS_TITLE.getTranslatedName();
-        float titleScale = 1.15f;
+        float titleScale = 1.2f;
         float titleHeight = textRenderer.getHeight(titleScale, StaticFontLoader.JURA_LIGHT);
         scope.text(title, panelX + 50, panelY + (HEADER_HEIGHT - titleHeight) / 2.0f, titleScale, MD3Theme.TEXT_PRIMARY, StaticFontLoader.JURA_LIGHT);
 
@@ -276,8 +274,7 @@ public class AccountsScreen extends Screen {
     }
 
     private void drawToolbar(UiTree.Scope scope, int mouseX, int mouseY) {
-        searchField.buildUi(scope, searchBounds, mouseX, mouseY, textRenderer,
-                EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 0.6f);
+        searchField.buildUi(scope, searchBounds, mouseX, mouseY, textRenderer, EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 1.0f);
         sortButton.draw(scope, sortBounds, mouseX, mouseY, textRenderer, sortMode);
     }
 
@@ -311,7 +308,9 @@ public class AccountsScreen extends Screen {
 
     private void drawEmptyState(UiTree.Scope scope) {
         boolean filtered = !rows.isEmpty();
-        String glyph = filtered ? IconChars.SEARCH_OFF : IconChars.NO_ACCOUNTS;
+        String glyph = filtered
+                ? IconChars.SEARCH_OFF
+                : IconChars.NO_ACCOUNTS;
         String message = filtered
                 ? EpsilonTranslations.Gui.ACCOUNTS_SEARCH_EMPTY.getTranslatedName()
                 : EpsilonTranslations.Gui.ACCOUNTS_EMPTY.getTranslatedName();
@@ -332,15 +331,12 @@ public class AccountsScreen extends Screen {
         float blockHeight = glyphHeight + 12.0f + msgHeight + hintGap + hintHeight;
         float top = listViewport.y() + (listViewport.height() - blockHeight) / 2.0f;
 
-        scope.text(glyph, listViewport.x() + (listViewport.width() - glyphWidth) / 2.0f, top,
-                glyphScale, MD3Theme.withAlpha(MD3Theme.TEXT_MUTED, 130), StaticFontLoader.ICONS);
-        scope.text(message, listViewport.x() + (listViewport.width() - msgWidth) / 2.0f,
-                top + glyphHeight + 12.0f, msgScale, MD3Theme.TEXT_SECONDARY);
+        scope.text(glyph, listViewport.x() + (listViewport.width() - glyphWidth) / 2.0f, top, glyphScale, MD3Theme.withAlpha(MD3Theme.TEXT_MUTED, 130), StaticFontLoader.ICONS);
+        scope.text(message, listViewport.x() + (listViewport.width() - msgWidth) / 2.0f, top + glyphHeight + 12.0f, msgScale, MD3Theme.TEXT_SECONDARY);
 
         if (hint != null) {
             float hintWidth = textRenderer.getWidth(hint, hintScale);
-            scope.text(hint, listViewport.x() + (listViewport.width() - hintWidth) / 2.0f,
-                    top + glyphHeight + 12.0f + msgHeight + hintGap, hintScale, MD3Theme.TEXT_MUTED);
+            scope.text(hint, listViewport.x() + (listViewport.width() - hintWidth) / 2.0f, top + glyphHeight + 12.0f + msgHeight + hintGap, hintScale, MD3Theme.TEXT_MUTED);
         }
     }
 
@@ -360,7 +356,7 @@ public class AccountsScreen extends Screen {
             UiRect rect = new UiRect(x, addBarY, buttonWidth, buttonHeight);
             addButtons[i] = rect;
             boolean hovered = rect.contains(mouseX, mouseY);
-            scope.button(x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS, MD3Theme.SECONDARY_CONTAINER, labels[i], 0.6f, MD3Theme.ON_SECONDARY_CONTAINER);
+            scope.button(x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS, MD3Theme.SECONDARY_CONTAINER, labels[i], 0.8f, MD3Theme.ON_SECONDARY_CONTAINER);
             if (hovered) {
                 scope.roundRect(x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, 0.16f, 36));
             }
@@ -417,6 +413,7 @@ public class AccountsScreen extends Screen {
                     EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName(), 0.6f, fg);
         }
     }
+
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         MouseButtonEvent e = LuminRenderSystem.toEpsilonMouseEvent(event);
@@ -655,63 +652,18 @@ public class AccountsScreen extends Screen {
             renderTarget = null;
         }
     }
+
     private void login(Account<?> account) {
         if (!authenticating.compareAndSet(null, account)) return;
 
         Managers.EXECUTOR.execute(() -> {
             try {
-                AuthResult fetch = account.fetchInfo();
-                if (!fetch.success()) {
-                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), fetch);
-                    return;
-                }
-
-                if (account.getType() == AccountType.Microsoft) AccountHolder.INSTANCE.save();
-
-                AuthResult login = account.login();
-                if (!login.success()) {
-                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), login);
-                    return;
-                }
-
-                if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
-                Managers.NOTIFICATION.success(
-                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_SUCCESS.getTranslatedName(),
-                        account.getUsername()
-                );
-            } catch (Throwable t) {
-                Constants.LOGGER.error("账号登录时发生未预期异常", t);
-                Managers.NOTIFICATION.error(
-                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(),
-                        AuthError.UNKNOWN.getMessage()
-                );
+                if (account.fetchInfo() && account.login()
+                        && account.getType() != AccountType.Cracked) account.getCache().loadHead();
             } finally {
                 authenticating.set(null);
             }
         });
-    }
-
-    private Account<?> resolveTarget(Account<?> account) {
-        Account<?> existing = AccountHolder.INSTANCE.find(account);
-
-        if (existing == null) {
-            return AccountHolder.INSTANCE.add(account) ? account : null;
-        }
-
-        if (existing instanceof MicrosoftAccount stored && account instanceof MicrosoftAccount fresh) {
-            stored.adoptCredentials(fresh);
-            AccountHolder.INSTANCE.save();
-            return stored;
-        }
-
-        return null;
-    }
-
-    private void notifyFailure(String title, AuthResult result) {
-        Managers.NOTIFICATION.error(title, result.getMessage());
-        if (result.detail() != null) {
-            Constants.LOGGER.error("账号认证失败 [{}]: {}", result.error(), result.detail());
-        }
     }
 
     private void startAdd(AddMode mode) {
@@ -727,7 +679,7 @@ public class AccountsScreen extends Screen {
         microsoftWaiting = true;
         microsoftError = false;
         final int session = ++microsoftSession;
-        String url = MicrosoftLogin.getRefreshToken(token -> mc.execute(() -> {
+        MicrosoftLogin.getRefreshToken(token -> mc.execute(() -> {
             if (session != microsoftSession) return;
 
             microsoftWaiting = false;
@@ -738,27 +690,12 @@ public class AccountsScreen extends Screen {
                 addAccount(new MicrosoftAccount(token));
             }
         }));
-
-        if (url == null) {
-            Managers.NOTIFICATION.error(
-                    EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName(),
-                    AuthError.SERVER_START_FAILED.getMessage()
-            );
-        }
     }
 
     private void submitAdd() {
         if (addMode == AddMode.NONE) return;
         String input = field.getText().trim();
         if (input.isBlank()) return;
-
-        if (addMode == AddMode.CRACKED && !CrackedAccount.isValidName(input)) {
-            Managers.NOTIFICATION.error(
-                    EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName(),
-                    AuthError.INVALID_NAME.getMessage()
-            );
-            return;
-        }
 
         Account<?> account = switch (addMode) {
             case CRACKED -> new CrackedAccount(input);
@@ -773,46 +710,13 @@ public class AccountsScreen extends Screen {
     }
 
     private void addAccount(Account<?> account) {
-        String addFailed = EpsilonTranslations.Gui.ACCOUNTS_ADD_FAILED.getTranslatedName();
-
-        if (AccountHolder.INSTANCE.exists(account)) {
-            Managers.NOTIFICATION.error(addFailed, AuthError.DUPLICATE.getMessage());
-            return;
-        }
-
-        if (!authenticating.compareAndSet(null, account)) {
-            Managers.NOTIFICATION.error(addFailed, AuthError.BUSY.getMessage());
-            return;
-        }
+        if (AccountHolder.INSTANCE.exists(account) || !authenticating.compareAndSet(null, account)) return;
 
         Managers.EXECUTOR.execute(() -> {
             try {
-                AuthResult fetch = account.fetchInfo();
-                if (!fetch.success()) {
-                    notifyFailure(addFailed, fetch);
-                    return;
-                }
-
-                Account<?> target = resolveTarget(account);
-                if (target == null) {
-                    Managers.NOTIFICATION.error(addFailed, AuthError.DUPLICATE.getMessage());
-                    return;
-                }
-
-                AuthResult login = target.login();
-                if (!login.success()) {
-                    notifyFailure(EpsilonTranslations.Gui.ACCOUNTS_LOGIN_FAILED.getTranslatedName(), login);
-                    return;
-                }
-
-                if (target.getType() != AccountType.Cracked) target.getCache().loadHead();
-                Managers.NOTIFICATION.success(
-                        EpsilonTranslations.Gui.ACCOUNTS_LOGIN_SUCCESS.getTranslatedName(),
-                        target.getUsername()
-                );
-            } catch (Throwable t) {
-                Constants.LOGGER.error("添加账号时发生未预期异常", t);
-                Managers.NOTIFICATION.error(addFailed, AuthError.UNKNOWN.getMessage());
+                if (!account.fetchInfo()) return;
+                AccountHolder.INSTANCE.add(account);
+                if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
             } finally {
                 authenticating.set(null);
             }

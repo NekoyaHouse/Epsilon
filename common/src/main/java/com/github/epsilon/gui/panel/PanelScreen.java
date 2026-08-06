@@ -79,7 +79,6 @@ public class PanelScreen extends Screen {
      */
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-
         final var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight());

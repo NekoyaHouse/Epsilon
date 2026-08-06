@@ -4,7 +4,6 @@ import com.github.epsilon.accounts.types.CrackedAccount;
 import com.github.epsilon.accounts.types.MicrosoftAccount;
 import com.github.epsilon.accounts.types.SessionAccount;
 import com.github.epsilon.accounts.types.TheAlteningAccount;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.yggdrasil.FriendsService;
@@ -23,7 +22,6 @@ import net.minecraft.util.SignatureValidator;
 import net.minecraft.util.Util;
 
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import static com.github.epsilon.Constants.mc;
@@ -41,22 +39,18 @@ public abstract class Account<T extends Account<?>> {
         this.cache = new AccountCache();
     }
 
-    public abstract AuthResult fetchInfo();
+    public abstract boolean fetchInfo();
 
-    public AuthResult login() {
+    public boolean login() {
         YggdrasilAuthenticationService authenticationService = new YggdrasilAuthenticationService(mc.getProxy());
         applyLoginEnvironment(authenticationService);
 
-        return AuthResult.ok();
+        return true;
     }
 
     public String getUsername() {
         if (cache.username.isEmpty()) return name;
         return cache.username;
-    }
-
-    protected String identity() {
-        return name == null ? "" : name;
     }
 
     public AccountType getType() {
@@ -101,31 +95,14 @@ public abstract class Account<T extends Account<?>> {
     @SuppressWarnings("unchecked")
     public T read(JsonObject obj) {
         if (obj == null) throw new RuntimeException("Invalid account JSON.");
-        name = readString(obj, "name", "");
-        JsonObject cacheObj = obj.has("cache") && obj.get("cache").isJsonObject() ? obj.getAsJsonObject("cache") : null;
+        name = obj.get("name").getAsString();
+        JsonObject cacheObj = obj.getAsJsonObject("cache");
         if (cacheObj != null) cache.read(cacheObj);
         return (T) this;
     }
 
-    protected static String readString(JsonObject obj, String key, String fallback) {
-        if (obj == null || !obj.has(key)) return fallback;
-        JsonElement element = obj.get(key);
-        if (element == null || !element.isJsonPrimitive()) return fallback;
-        return element.getAsString();
-    }
-
     public static Account<?> fromJson(JsonObject obj) {
-        if (obj == null) throw new RuntimeException("Invalid account JSON.");
-
-        String rawType = readString(obj, "type", null);
-        if (rawType == null) throw new RuntimeException("Account JSON missing type.");
-
-        AccountType type;
-        try {
-            type = AccountType.valueOf(rawType);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Unknown account type: " + rawType, e);
-        }
+        AccountType type = AccountType.valueOf(obj.get("type").getAsString());
 
         return switch (type) {
             case Cracked -> new CrackedAccount("").read(obj);
@@ -133,18 +110,6 @@ public abstract class Account<T extends Account<?>> {
             case TheAltening -> new TheAlteningAccount("").read(obj);
             case Session -> new SessionAccount("").read(obj);
         };
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        return identity().equalsIgnoreCase(((Account<?>) o).identity());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getClass(), identity().toLowerCase());
     }
 
 }

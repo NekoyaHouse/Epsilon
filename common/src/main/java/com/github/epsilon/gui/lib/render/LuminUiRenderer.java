@@ -418,22 +418,24 @@ public class LuminUiRenderer {
         }
 
         String text = element.text();
-        if (text != null && !text.isEmpty()) {
+        if (text != null) {
             float textX = bounds.x() + element.textInset();
             float textY = bounds.y() + (bounds.height() - metrics.getHeight(element.textScale())) / 2.0f;
 
-            UiTree.SelectionRange selection = element.selection();
-            if (selection != null && element.selectionColor() != null) {
-                int start = Math.clamp(selection.start(), 0, text.length());
-                int end = Math.clamp(selection.end(), start, text.length());
-                if (end > start) {
-                    float selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale());
-                    float selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale());
-                    layer.addRect(selectionX, bounds.y() + 3.0f, selectionWidth, bounds.height() - 6.0f, element.selectionColor());
+            if (!text.isEmpty()) {
+                UiTree.SelectionRange selection = element.selection();
+                if (selection != null && element.selectionColor() != null) {
+                    int start = Math.clamp(selection.start(), 0, text.length());
+                    int end = Math.clamp(selection.end(), start, text.length());
+                    if (end > start) {
+                        float selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale());
+                        float selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale());
+                        layer.addRect(selectionX, bounds.y() + 3.0f, selectionWidth, bounds.height() - 6.0f, element.selectionColor());
+                    }
                 }
-            }
 
-            layer.addText(text, textX, textY, element.textScale(), element.textColor());
+                layer.addText(text, textX, textY, element.textScale(), element.textColor());
+            }
 
             if (element.caretIndex() != null && element.caretColor() != null) {
                 int caretIndex = Math.clamp(element.caretIndex(), 0, text.length());
