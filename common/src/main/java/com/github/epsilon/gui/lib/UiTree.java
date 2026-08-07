@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.lib;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.graphics.text.TextGlitchEffect;
@@ -524,6 +525,29 @@ public class UiTree {
         public void texture(LuminTexture texture, float x, float y, float width, float height,
                             float u0, float v0, float u1, float v1, Color color) {
             texture(new Render2DTexture.LuminRef(texture), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
+        public void svg(Identifier svg, float x, float y, float width, float height, Color color) {
+            texture(svgTexture(svg, width, height), x, y, width, height, 0.0f, 0.0f, 1.0f, 1.0f, color);
+        }
+
+        public void svg(Identifier svg, float x, float y, float width, float height) {
+            svg(svg, x, y, width, height, Color.WHITE);
+        }
+
+        public void roundedSvg(Identifier svg, float x, float y, float width, float height, float radius, Color color) {
+            roundedTexture(svgTexture(svg, width, height), x, y, width, height, radius, 0.0f, 0.0f, 1.0f, 1.0f, color);
+        }
+
+        public void rotatedSvg(Identifier svg, float x, float y, float width, float height, Color color, float originX, float originY, float rotationDegrees) {
+            rotatedRoundedTexture(svgTexture(svg, width, height), x, y, width, height, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, color, originX, originY, rotationDegrees);
+        }
+
+        private Render2DTexture.SvgRef svgTexture(Identifier svg, float width, float height) {
+            double guiScale = LuminRenderSystem.getGuiScale();
+            int pixelWidth = Math.max(1, (int) Math.ceil(width * guiScale));
+            int pixelHeight = Math.max(1, (int) Math.ceil(height * guiScale));
+            return new Render2DTexture.SvgRef(svg, pixelWidth, pixelHeight);
         }
 
         public void rotatedTexture(LuminTexture texture, float x, float y, float width, float height,

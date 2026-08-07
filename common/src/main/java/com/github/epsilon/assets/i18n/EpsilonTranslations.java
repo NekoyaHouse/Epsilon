@@ -133,7 +133,9 @@ public class EpsilonTranslations {
             PlayerInfo.HEALTH,
             PlayerInfo.POPS,
             PlayerInfo.DIRECTION,
-            PlayerInfo.EMPTY
+            PlayerInfo.EMPTY,
+            Notifications.PREVIEW_TITLE,
+            Notifications.PREVIEW_MESSAGE
     );
 
     private EpsilonTranslations() {
@@ -308,6 +310,14 @@ public class EpsilonTranslations {
         public static final TranslateComponent EMPTY = create("elements.player info", "empty");
 
         private PlayerInfo() {
+        }
+    }
+
+    public static final class Notifications {
+        public static final TranslateComponent PREVIEW_TITLE = create("elements.notifications", "preview.title");
+        public static final TranslateComponent PREVIEW_MESSAGE = create("elements.notifications", "preview.message");
+
+        private Notifications() {
         }
     }
 
