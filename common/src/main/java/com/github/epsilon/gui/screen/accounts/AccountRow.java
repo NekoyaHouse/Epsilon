@@ -85,9 +85,7 @@ public class AccountRow {
                 s.roundRect(0, 0, w, h, MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, 0.18f, 40));
             }
             if (focusProgress > 0.01f) {
-                float outlineWidth = Math.max(0.0f, w - OUTLINE_INSET * 2.0f);
-                float outlineHeight = Math.max(0.0f, h - OUTLINE_INSET * 2.0f);
-                s.outline(OUTLINE_INSET, OUTLINE_INSET, outlineWidth, outlineHeight, MD3Theme.CARD_RADIUS, 1.0f, MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) (200 * focusProgress)));
+                s.outline(OUTLINE_INSET, OUTLINE_INSET, w - OUTLINE_INSET * 2.0f, h - OUTLINE_INSET * 2.0f, MD3Theme.CARD_RADIUS, 1.0f, MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) (200 * focusProgress)));
             }
 
             LuminTexture head = account.getCache().getHeadTexture();
