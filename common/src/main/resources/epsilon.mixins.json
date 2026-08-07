@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "MixinAbstractSignRenderer",
+    "MixinAddressCheck",
     "MixinAvatar",
     "MixinAvatarRenderer",
     "MixinBannerRenderer",
@@ -86,8 +87,5 @@
   },
   "overwrites": {
     "requireAnnotations": true
-  },
-  "mixins": [
-    "MixinAddressCheck"
-  ]
+  }
 }

@@ -42,9 +42,9 @@ public class Island extends HudModule {
     public final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0, backgroundBlur::getValue);
     public final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
     public final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), drawShadow::getValue);
-    public final BoolSetting outline = boolSetting("Outline", true);
+    public final BoolSetting outline = boolSetting("Outline", false);
     public final DoubleSetting outlineWidth = doubleSetting("Outline Width", 1.0, 0.1, 3.0, 0.1, outline::getValue);
-    public final ColorSetting outlineColor = colorSetting("Outline Color", new Color(6, 11, 18, 125));
+    public final ColorSetting outlineColor = colorSetting("Outline Color", new Color(0, 0, 0, 125));
     public final BoolSetting textGlitch = boolSetting("Text Glitch", false);
     public final ColorSetting glitchColor = colorSetting("Glitch Color", Color.WHITE, false, textGlitch::getValue);
     public final DoubleSetting chromaticX = doubleSetting("Chromatic X", 0.8, 0.0, 6.0, 0.1, textGlitch::getValue);

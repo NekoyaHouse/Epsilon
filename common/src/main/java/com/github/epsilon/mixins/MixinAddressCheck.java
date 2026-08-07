@@ -14,7 +14,6 @@ public interface MixinAddressCheck {
     @Inject(method = "createFromService", at = @At("HEAD"), cancellable = true)
     private static void onCreateFromService(CallbackInfoReturnable<AddressCheck> cir) {
         cir.setReturnValue(new AddressCheck() {
-
             @Override
             public boolean isAllowed(ResolvedServerAddress address) {
                 return true;
@@ -26,4 +25,5 @@ public interface MixinAddressCheck {
             }
         });
     }
+
 }

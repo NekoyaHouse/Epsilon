@@ -17,7 +17,7 @@
       "hidden": "隐藏",
       "from": "来自:",
       "state": {
-        "prefix": "已",
+        "prefix": "",
         "enabled": "开启",
         "disabled": "关闭"
       }
