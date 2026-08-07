@@ -1,7 +1,6 @@
 package com.github.epsilon.holders;
 
 import com.github.epsilon.graphics.LuminTexture;
-import com.github.epsilon.graphics.svg.SvgTextureCache;
 import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
@@ -21,7 +20,6 @@ public class TextureCacheHolder {
             texture.close();
         }
         textureCache.clear();
-        SvgTextureCache.INSTANCE.clear();
     }
 
 }

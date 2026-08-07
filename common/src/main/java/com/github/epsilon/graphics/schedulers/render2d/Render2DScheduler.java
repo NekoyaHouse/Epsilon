@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
-import com.github.epsilon.graphics.svg.SvgTextureCache;
 import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -268,25 +267,6 @@ public class Render2DScheduler implements AutoCloseable {
                 } else if (texture.texture() instanceof Render2DTexture.LuminRef(
                         LuminTexture luminTexture
                 )) {
-                    if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(luminTexture,
-                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
-                    } else {
-                        renderers.textureRenderer().addRotatedRoundedTexture(luminTexture,
-                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
-                                texture.originX(), texture.originY(), texture.rotationDegrees());
-                    }
-                } else if (texture.texture() instanceof Render2DTexture.SvgRef(
-                        Identifier identifier, int pixelWidth, int pixelHeight
-                )) {
-                    LuminTexture luminTexture = SvgTextureCache.INSTANCE.get(identifier, pixelWidth, pixelHeight);
-                    if (luminTexture == null) {
-                        break;
-                    }
                     if (texture.rotationDegrees() == 0.0f) {
                         renderers.textureRenderer().addRoundedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
