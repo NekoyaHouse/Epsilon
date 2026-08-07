@@ -1488,6 +1488,17 @@
         "_value": "Aspect Ratio",
         "ratio": "Ratio"
       },
+      "better chat": {
+        "_value": "Better Chat",
+        "background color": "Background Color",
+        "input background color": "Input Background Color",
+        "chat radius": "Chat Radius",
+        "input radius": "Input Radius",
+        "blur strength": "Blur Strength",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color"
+      },
       "block esp": {
         "_value": "Block ESP",
         "block list": "Block List",

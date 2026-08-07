@@ -6,4 +6,9 @@ public interface ChatComponentAccessor {
 
     void epsilon$addClientSystemMessage(Component message, int hash);
 
+    ChatVisibility epsilon$getVisibility(int currentTick, boolean focused);
+
+    record ChatVisibility(int lineCount, float opacity, float heightFactor) {
+    }
+
 }

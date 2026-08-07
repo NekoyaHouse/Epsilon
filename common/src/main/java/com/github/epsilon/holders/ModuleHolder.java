@@ -124,6 +124,7 @@ public class ModuleHolder {
         // Render
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
+        addModule(BetterChat.INSTANCE);
         addModule(BlockESP.INSTANCE);
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);

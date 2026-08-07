@@ -1488,6 +1488,17 @@
         "_value": "画面比例",
         "ratio": "比例"
       },
+      "better chat": {
+        "_value": "聊天栏美化",
+        "background color": "聊天背景颜色",
+        "input background color": "输入框背景颜色",
+        "chat radius": "聊天圆角半径",
+        "input radius": "输入框圆角半径",
+        "blur strength": "模糊强度",
+        "drop shadow": "投影",
+        "shadow blur": "投影模糊",
+        "shadow color": "投影颜色"
+      },
       "block esp": {
         "_value": "方块透视",
         "block list": "方块列表",

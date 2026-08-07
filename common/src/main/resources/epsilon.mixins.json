@@ -18,6 +18,7 @@
     "MixinCapeLayer",
     "MixinChatComponent",
     "MixinChatComponentHash",
+    "MixinChatScreen",
     "MixinChestRenderer",
     "MixinChunkBorderRenderer",
     "MixinClientBrandRetriever",
