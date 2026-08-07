@@ -38,26 +38,44 @@
       },
       "accounts": {
         "title": "Accounts",
-        "empty": "No accounts yet",
+        "empty": {
+          "_value": "No accounts yet",
+          "hint": "Pick a method below to add one"
+        },
         "current": "Current",
         "login": "Login",
-        "delete.confirm": "Sure?",
+        "delete": {
+          "confirm": "Sure?"
+        },
         "cancel": "Cancel",
-        "add": "Add",
-        "add.cracked": "Cracked",
-        "add.altening": "Altening",
-        "add.session": "Session",
-        "add.microsoft": "Microsoft",
-        "name.placeholder": "Player name",
-        "token.placeholder": "Token",
-        "waiting.microsoft": "Waiting for Microsoft login in your browser...",
-        "microsoft.error": "Microsoft login failed. Please try again.",
-        "search.placeholder": "Search accounts",
-        "search.empty": "No matching accounts",
-        "sort.added": "Added",
-        "sort.name": "Name",
-        "sort.type": "Type",
-        "empty.hint": "Pick a method below to add one"
+        "add": {
+          "_value": "Add",
+          "cracked": "Cracked",
+          "altening": "Altening",
+          "session": "Session",
+          "microsoft": "Microsoft"
+        },
+        "name": {
+          "placeholder": "Player name"
+        },
+        "token": {
+          "placeholder": "Token"
+        },
+        "waiting": {
+          "microsoft": "Waiting for Microsoft login in your browser..."
+        },
+        "microsoft": {
+          "error": "Microsoft login failed. Please try again."
+        },
+        "search": {
+          "placeholder": "Search accounts",
+          "empty": "No matching accounts"
+        },
+        "sort": {
+          "added": "Added",
+          "name": "Name",
+          "type": "Type"
+        }
       },
       "tab": {
         "general": "General",
@@ -348,6 +366,7 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "Show Welcome Screen",
+        "screen background": "Screen Background",
         "show reisa in dropdown": "Show Reisa In Dropdown",
         "show reisa on startup": "Show Reisa On Startup",
         "show reisa on shutdown": "Show Reisa On Shutdown",
@@ -815,6 +834,7 @@
       "key pearl": {
         "_value": "Key Pearl",
         "activate key": "Activate Key",
+        "pause on eat": "Pause On Eat",
         "delay": "Delay",
         "switch back": "Switch Back",
         "switch delay": "Switch Delay",
@@ -1155,14 +1175,23 @@
       "stealer": {
         "_value": "Stealer",
         "min delay": "Min Delay",
-        "delay": "Delay",
+        "max delay": "Max Delay",
         "close delay": "Close Delay",
         "close delay value": "Close Delay Value",
         "ender chest": "Ender Chest"
       },
       "timer": {
         "_value": "Timer",
-        "multiplier": "Multiplier"
+        "mode": {
+          "_value": "Mode",
+          "always": "Always",
+          "balance": "Balance",
+          "slowbalance": "Slow Balance"
+        },
+        "activate key": "Activate Key",
+        "multiplier": "Multiplier",
+        "max balance": "Max Balance",
+        "ticks": "Ticks"
       },
       "use cooldown": {
         "_value": "Use Cooldown",
@@ -1761,8 +1790,6 @@
         "portal overlay": "Portal Overlay",
         "spyglass overlay": "Spyglass Overlay",
         "nausea": "Nausea",
-        "pumpkin overlay": "Pumpkin Overlay",
-        "powdered snow overlay": "Powdered Snow Overlay",
         "fire overlay": "Fire Overlay",
         "liquid overlay": "Liquid Overlay",
         "block overlay": "Block Overlay",
@@ -2098,35 +2125,46 @@
       },
       "notifications": {
         "_value": "Notifications",
+        "preview": {
+          "title": "Resident Mode",
+          "message": "Drag to adjust position"
+        },
+        "style": {
+          "_value": "Style",
+          "nvidia": "NVIDIA",
+          "quantum": "Quantum"
+        },
         "scale": "Scale",
         "font scale": "Font Scale",
         "subtitle y offset": "Subtitle Y Offset",
         "width": "Width",
         "height": "Height",
         "background alpha": "Background Alpha",
-        "display time": "Display Time"
-      },
-      "bps hud": {
-        "_value": "BPS HUD",
-        "scale": "Scale",
-        "corner radius": "Corner Radius",
+        "display time": "Display Time",
         "background color": "Background Color",
-        "accent color": "Accent Color",
-        "text color": "Text Color",
-        "text secondary": "Text Secondary",
-        "text muted": "Text Muted",
-        "graph height": "Graph Height",
-        "graph background": "Graph Background",
-        "graph midline": "Graph Midline",
-        "graph line color": "Graph Line Color",
-        "graph glow color": "Graph Glow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength",
-        "smooth number": "Smooth Number",
-        "number delay": "Number Delay"
+        "quantum display time": "Quantum Display Time"
+      },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "Color Mode",
+          "single": "Single",
+          "double": "Double"
+        },
+        "color": "Color",
+        "color 1": "Color 1",
+        "color 2": "Color 2",
+        "shadow color": {
+          "_value": "Shadow Color",
+          "black": "Black",
+          "follow": "Follow"
+        },
+        "show suffix": "Show Suffix"
       },
       "inventory hud": {
         "_value": "Inventory HUD",
@@ -2140,6 +2178,33 @@
         "background blur": "Background Blur",
         "blur strength": "Blur Strength",
         "show count": "Show Count"
+      },
+      "island": {
+        "_value": "Island",
+        "target": "Target",
+        "scaffold blocks": "Scaffold Blocks",
+        "timer balance": "Timer Balance",
+        "tab list": "Tab List",
+        "background color": "Background Color",
+        "drop shadow": "Drop Shadow",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "outline": "Outline",
+        "outline width": "Outline Width",
+        "outline color": "Outline Color",
+        "text glitch": "Text Glitch",
+        "glitch color": "Glitch Color",
+        "chromatic x": "Chromatic X",
+        "chromatic y": "Chromatic Y",
+        "glitch glow radius": "Glitch Glow Radius",
+        "glitch glow intensity": "Glitch Glow Intensity",
+        "slice height": "Slice Height",
+        "slice amount": "Slice Amount",
+        "glitch strength": "Glitch Strength",
+        "scanline strength": "Scanline Strength",
+        "noise strength": "Noise Strength"
       },
       "module list": {
         "_value": "Module List",
@@ -2175,46 +2240,11 @@
         "theme color 1": "Theme Color 1",
         "theme color 2": "Theme Color 2"
       },
-      "hotkey": {
-        "_value": "Hotkey",
-        "color mode": {
-          "_value": "Color Mode",
-          "single": "Single",
-          "double": "Double"
-        },
-        "color": "Color",
-        "color 1": "Color 1",
-        "color 2": "Color 2",
-        "shadow color": {
-          "_value": "Shadow Color",
-          "black": "Black",
-          "follow": "Follow"
-        },
-        "show suffix": "Show Suffix"
-      },
       "mtf": {
         "_value": "MTF",
         "size": "Size",
         "speed": "Speed",
         "color": "Color"
-      },
-      "potions": {
-        "_value": "Potions",
-        "scale": "Scale",
-        "name text scale": "Name Text Scale",
-        "duration text scale": "Duration Text Scale",
-        "corner radius": "Corner Radius",
-        "animation speed": "Animation Speed",
-        "background color": "Background Color",
-        "show icon": "Show Icon",
-        "show progress bar": "Show Progress Bar",
-        "tint name with effect color": "Tint Name With Effect Color",
-        "hide ambient": "Hide Ambient",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength"
       },
       "scaffold block": {
         "_value": "Scaffold Block",
@@ -2259,11 +2289,17 @@
       },
       "watermark": {
         "_value": "Watermark",
+        "text": "Text",
         "style": {
           "_value": "Style",
           "tradition": "Tradition",
-          "sakura": "Sakura",
-          "glitch": "Glitch"
+          "glitch": "Glitch",
+          "sakura": "Sakura"
+        },
+        "font mode": {
+          "_value": "Font Mode",
+          "default": "Default",
+          "osakachips": "Osaka Chips"
         },
         "scale": "Scale",
         "text color": "Text Color",

@@ -17,7 +17,7 @@
       "hidden": "隐藏",
       "from": "来自:",
       "state": {
-        "prefix": "",
+        "prefix": "已",
         "enabled": "开启",
         "disabled": "关闭"
       }
@@ -38,26 +38,44 @@
       },
       "accounts": {
         "title": "账号管理",
-        "empty": "还没有账号",
+        "empty": {
+          "_value": "还没有账号",
+          "hint": "从下方选择一种方式添加账号"
+        },
         "current": "当前",
         "login": "登录",
-        "delete.confirm": "确认删除？",
+        "delete": {
+          "confirm": "确认删除？"
+        },
         "cancel": "取消",
-        "add": "添加",
-        "add.cracked": "离线",
-        "add.altening": "Altening",
-        "add.session": "会话",
-        "add.microsoft": "微软",
-        "name.placeholder": "玩家名称",
-        "token.placeholder": "令牌",
-        "waiting.microsoft": "正在等待浏览器中的微软登录...",
-        "microsoft.error": "微软登录失败，请重试。",
-        "search.placeholder": "搜索账号",
-        "search.empty": "没有匹配的账号",
-        "sort.added": "添加顺序",
-        "sort.name": "名称",
-        "sort.type": "类型",
-        "empty.hint": "从下方选择一种方式添加账号"
+        "add": {
+          "_value": "添加",
+          "cracked": "离线",
+          "altening": "Altening",
+          "session": "会话",
+          "microsoft": "微软"
+        },
+        "name": {
+          "placeholder": "玩家名称"
+        },
+        "token": {
+          "placeholder": "令牌"
+        },
+        "waiting": {
+          "microsoft": "正在等待浏览器中的微软登录..."
+        },
+        "microsoft": {
+          "error": "微软登录失败，请重试。"
+        },
+        "search": {
+          "placeholder": "搜索账号",
+          "empty": "没有匹配的账号"
+        },
+        "sort": {
+          "added": "添加顺序",
+          "name": "名称",
+          "type": "类型"
+        }
       },
       "tab": {
         "general": "常规",
@@ -348,6 +366,7 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "启动时显示欢迎页",
+        "screen background": "屏幕背景",
         "show reisa in dropdown": "在瀑布式界面显示玲纱",
         "show reisa on startup": "启动游戏时显示玲纱",
         "show reisa on shutdown": "关闭游戏时显示玲纱",
@@ -815,6 +834,7 @@
       "key pearl": {
         "_value": "按键珍珠",
         "activate key": "激活按键",
+        "pause on eat": "进食时暂停",
         "delay": "延迟",
         "switch back": "切换回来",
         "switch delay": "切换延迟",
@@ -1155,14 +1175,23 @@
       "stealer": {
         "_value": "小偷",
         "min delay": "最小延迟",
-        "delay": "延迟",
+        "max delay": "最大延迟",
         "close delay": "关闭延迟",
         "close delay value": "关闭延迟值",
         "ender chest": "末影箱"
       },
       "timer": {
         "_value": "变速",
-        "multiplier": "倍率"
+        "mode": {
+          "_value": "模式",
+          "always": "始终",
+          "balance": "平衡",
+          "slowbalance": "慢速平衡"
+        },
+        "activate key": "激活按键",
+        "multiplier": "倍率",
+        "max balance": "最大平衡值",
+        "ticks": "刻数"
       },
       "use cooldown": {
         "_value": "自定义使用冷却",
@@ -1761,8 +1790,6 @@
         "portal overlay": "传送门遮罩",
         "spyglass overlay": "望远镜遮罩",
         "nausea": "反胃",
-        "pumpkin overlay": "南瓜遮罩",
-        "powdered snow overlay": "细雪遮罩",
         "fire overlay": "火焰遮罩",
         "liquid overlay": "液体遮罩",
         "block overlay": "方块遮罩",
@@ -2098,35 +2125,46 @@
       },
       "notifications": {
         "_value": "通知",
+        "preview": {
+          "title": "常驻模式",
+          "message": "拖动调整位置"
+        },
+        "style": {
+          "_value": "样式",
+          "nvidia": "英伟达",
+          "quantum": "量子通知"
+        },
         "scale": "缩放",
         "font scale": "字体缩放",
         "subtitle y offset": "副标题纵向偏移",
         "width": "长度",
         "height": "高度",
         "background alpha": "背景透明度",
-        "display time": "显示时间"
-      },
-      "bps hud": {
-        "_value": "BPS HUD",
-        "scale": "缩放",
-        "corner radius": "圆角半径",
+        "display time": "显示时间",
         "background color": "背景颜色",
-        "accent color": "强调颜色",
-        "text color": "文本颜色",
-        "text secondary": "次要文本颜色",
-        "text muted": "弱化文本颜色",
-        "graph height": "图表高度",
-        "graph background": "图表背景颜色",
-        "graph midline": "图表中线颜色",
-        "graph line color": "图表线条颜色",
-        "graph glow color": "图表发光颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
         "drop shadow": "投影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度",
-        "smooth number": "平滑数字",
-        "number delay": "数字延迟"
+        "quantum display time": "量子显示时间"
+      },
+      "hotkey": {
+        "_value": "Hotkey",
+        "color mode": {
+          "_value": "颜色模式",
+          "single": "单色",
+          "double": "双色"
+        },
+        "color": "颜色",
+        "color 1": "颜色 1",
+        "color 2": "颜色 2",
+        "shadow color": {
+          "_value": "阴影颜色",
+          "black": "黑色",
+          "follow": "跟随"
+        },
+        "show suffix": "显示后缀"
       },
       "inventory hud": {
         "_value": "背包 HUD",
@@ -2140,6 +2178,33 @@
         "background blur": "背景模糊",
         "blur strength": "模糊强度",
         "show count": "显示数量"
+      },
+      "island": {
+        "_value": "灵动岛",
+        "target": "目标",
+        "scaffold blocks": "脚手架方块",
+        "timer balance": "计时器余额",
+        "tab list": "玩家列表",
+        "background color": "背景颜色",
+        "drop shadow": "投影",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "outline": "轮廓",
+        "outline width": "轮廓宽度",
+        "outline color": "轮廓颜色",
+        "text glitch": "文本故障",
+        "glitch color": "故障颜色",
+        "chromatic x": "色差 X",
+        "chromatic y": "色差 Y",
+        "glitch glow radius": "故障辉光半径",
+        "glitch glow intensity": "故障辉光强度",
+        "slice height": "切片高度",
+        "slice amount": "切片数量",
+        "glitch strength": "故障强度",
+        "scanline strength": "扫描线强度",
+        "noise strength": "噪声强度"
       },
       "module list": {
         "_value": "模块列表",
@@ -2175,46 +2240,11 @@
         "theme color 1": "主题颜色 1",
         "theme color 2": "主题颜色 2"
       },
-      "hotkey": {
-        "_value": "Hotkey",
-        "color mode": {
-          "_value": "颜色模式",
-          "single": "单色",
-          "double": "双色"
-        },
-        "color": "颜色",
-        "color 1": "颜色 1",
-        "color 2": "颜色 2",
-        "shadow color": {
-          "_value": "阴影颜色",
-          "black": "黑色",
-          "follow": "跟随"
-        },
-        "show suffix": "显示后缀"
-      },
       "mtf": {
         "_value": "补佳乐",
         "size": "大小",
         "speed": "速度",
         "color": "颜色"
-      },
-      "potions": {
-        "_value": "药水效果",
-        "scale": "缩放",
-        "name text scale": "名称文本缩放",
-        "duration text scale": "持续时间文本缩放",
-        "corner radius": "圆角半径",
-        "animation speed": "动画速度",
-        "background color": "背景颜色",
-        "show icon": "显示图标",
-        "show progress bar": "显示进度条",
-        "tint name with effect color": "名称着色",
-        "hide ambient": "隐藏环境效果",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度"
       },
       "scaffold block": {
         "_value": "搭路方块",
@@ -2259,11 +2289,17 @@
       },
       "watermark": {
         "_value": "水印",
+        "text": "文本",
         "style": {
           "_value": "风格",
           "tradition": "传统",
-          "sakura": "桜",
-          "glitch": "故障霓虹"
+          "glitch": "故障霓虹",
+          "sakura": "桜"
+        },
+        "font mode": {
+          "_value": "字体模式",
+          "default": "默认",
+          "osakachips": "Osaka Chips"
         },
         "scale": "缩放",
         "text color": "文本颜色",
