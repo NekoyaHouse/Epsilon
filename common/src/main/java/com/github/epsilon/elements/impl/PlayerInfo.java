@@ -48,12 +48,12 @@ public class PlayerInfo extends HudModule {
     private final BoolSetting showSelf = boolSetting("Show Self", false);
     private final BoolSetting showHeads = boolSetting("Show Heads", true);
     private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 6.0, 0.0, 20.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(18, 24, 21, 170));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(18, 24, 21, 150));
     private final ColorSetting headerColor = colorSetting("Header Color", new Color(255, 255, 255, 240));
     private final ColorSetting textColor = colorSetting("Text Color", new Color(240, 243, 241, 230));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), drawShadow::getValue);
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
     private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1, backgroundBlur::getValue);
 

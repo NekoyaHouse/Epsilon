@@ -1016,7 +1016,7 @@ public class InvHelper {
      * @return 判断结果
      */
     public static boolean isValidStack(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BlockItem) || stack.getCount() <= 1) {
+        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
             return false;
         }
 

@@ -20,14 +20,14 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
 
     private static final float FIELD_HEIGHT = 14.0f;
     private static final float FIELD_RADIUS = 5.0f;
-    private static final float FIELD_TEXT_SCALE = 0.50f;
+    private static final float FIELD_TEXT_SCALE = 0.6f;
     private static final float FIELD_TEXT_PADDING_X = 6.0f;
     private static final float FIELD_ARROW_SIZE = 3.0f;
     private static final float LIST_GAP_Y = 3.0f;
     private static final float LIST_PADDING_Y = 2.0f;
     private static final float OPTION_HEIGHT = 12.0f;
     private static final float OPTION_GAP = 1.0f;
-    private static final float OPTION_TEXT_SCALE = 0.48f;
+    private static final float OPTION_TEXT_SCALE = 0.55f;
 
     private final Animation expandAnim = new Animation(Easing.DECELERATE, DropdownTheme.ANIM_EXPAND);
     private final Animation hoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);

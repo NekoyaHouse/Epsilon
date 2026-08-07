@@ -315,16 +315,16 @@ public class AccountsScreen extends Screen {
                 ? EpsilonTranslations.Gui.ACCOUNTS_SEARCH_EMPTY.getTranslatedName()
                 : EpsilonTranslations.Gui.ACCOUNTS_EMPTY.getTranslatedName();
 
-        float glyphScale = 1.6f;
+        float glyphScale = 5.0f;
         float glyphWidth = textRenderer.getWidth(glyph, glyphScale, StaticFontLoader.ICONS);
         float glyphHeight = textRenderer.getHeight(glyphScale, StaticFontLoader.ICONS);
 
-        float msgScale = 0.68f;
+        float msgScale = 1.25f;
         float msgWidth = textRenderer.getWidth(message, msgScale);
         float msgHeight = textRenderer.getHeight(msgScale);
 
         String hint = filtered ? null : EpsilonTranslations.Gui.ACCOUNTS_EMPTY_HINT.getTranslatedName();
-        float hintScale = 0.55f;
+        float hintScale = 1.0f;
         float hintHeight = hint == null ? 0.0f : textRenderer.getHeight(hintScale);
         float hintGap = hint == null ? 0.0f : 6.0f;
 
@@ -332,11 +332,11 @@ public class AccountsScreen extends Screen {
         float top = listViewport.y() + (listViewport.height() - blockHeight) / 2.0f;
 
         scope.text(glyph, listViewport.x() + (listViewport.width() - glyphWidth) / 2.0f, top, glyphScale, MD3Theme.withAlpha(MD3Theme.TEXT_MUTED, 130), StaticFontLoader.ICONS);
-        scope.text(message, listViewport.x() + (listViewport.width() - msgWidth) / 2.0f, top + glyphHeight + 12.0f, msgScale, MD3Theme.TEXT_SECONDARY);
+        scope.text(message, listViewport.x() + (listViewport.width() - msgWidth) / 2.0f, top + glyphHeight, msgScale, MD3Theme.TEXT_SECONDARY);
 
         if (hint != null) {
             float hintWidth = textRenderer.getWidth(hint, hintScale);
-            scope.text(hint, listViewport.x() + (listViewport.width() - hintWidth) / 2.0f, top + glyphHeight + 12.0f + msgHeight + hintGap, hintScale, MD3Theme.TEXT_MUTED);
+            scope.text(hint, listViewport.x() + (listViewport.width() - hintWidth) / 2.0f, top + glyphHeight + msgHeight + hintGap, hintScale, MD3Theme.TEXT_MUTED);
         }
     }
 

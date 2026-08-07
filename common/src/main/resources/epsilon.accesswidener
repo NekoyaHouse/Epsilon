@@ -14,6 +14,8 @@ accessible field net/minecraft/client/Minecraft services Lnet/minecraft/server/S
 accessible field net/minecraft/client/Minecraft skinManager Lnet/minecraft/client/resources/SkinManager;
 accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
 accessible field net/minecraft/client/Minecraft userApiService Lcom/mojang/authlib/minecraft/UserApiService;
+accessible field net/minecraft/client/gui/components/PlayerTabOverlay footer Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/components/PlayerTabOverlay header Lnet/minecraft/network/chat/Component;
 accessible field net/minecraft/client/ResourceLoadStateTracker reloadState Lnet/minecraft/client/ResourceLoadStateTracker$ReloadState;
 accessible field net/minecraft/client/ResourceLoadStateTracker$ReloadState finished Z
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen hoveredSlot Lnet/minecraft/world/inventory/Slot;

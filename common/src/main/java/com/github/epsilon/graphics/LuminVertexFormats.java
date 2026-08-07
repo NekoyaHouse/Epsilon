@@ -20,6 +20,15 @@ public class LuminVertexFormats {
             .addAttribute("OutlineWidth", GpuFormat.R32_FLOAT)
             .build();
 
+    public static final VertexFormat ARC = VertexFormat.builder(0)
+            .addAttribute("Position", GpuFormat.RGB32_FLOAT)
+            .addAttribute("StartColor", GpuFormat.RGBA8_UNORM)
+            .addAttribute("MiddleColor", GpuFormat.RGBA8_UNORM)
+            .addAttribute("EndColor", GpuFormat.RGBA8_UNORM)
+            .addAttribute("Circle", GpuFormat.RGBA32_FLOAT)
+            .addAttribute("Sweep", GpuFormat.RGBA32_FLOAT)
+            .build();
+
     public static final VertexFormat TEXTURE = VertexFormat.builder(0)
             .addAttribute("Position", GpuFormat.RGB32_FLOAT)
             .addAttribute("Color", GpuFormat.RGBA8_UNORM)

@@ -24,14 +24,13 @@ public class DropdownTheme {
 
     public static final float MODULE_HEIGHT = 19.0f;
     public static final float MODULE_PADDING_X = 7.0f;
-    public static final float MODULE_TEXT_SCALE = 0.62f;
-    public static final float MODULE_ADDON_GAP = 4.0f;
+    public static final float MODULE_TEXT_SCALE = 0.7f;
     public static final float MODULE_ADDON_INFO_HEIGHT = 15.0f;
     public static final float MODULE_ADDON_INFO_TEXT_SCALE = 0.50f;
 
     public static final float SETTING_PADDING_X = 6.0f;
     public static final float SETTING_HEIGHT = 16.0f;
-    public static final float SETTING_TEXT_SCALE = 0.54f;
+    public static final float SETTING_TEXT_SCALE = 0.65f;
     public static final float SETTING_GAP = 3.0f;
     public static final float SETTING_INDENT = 5.0f;
 
@@ -40,10 +39,6 @@ public class DropdownTheme {
     public static final float SLIDER_KNOB_RADIUS = 3.5f;
 
     public static final float COLOR_PREVIEW_SIZE = 12.0f;
-    public static final float COLOR_PICKER_HEIGHT = 60.0f;
-    public static final float COLOR_HUE_HEIGHT = 7.0f;
-    public static final float COLOR_ALPHA_HEIGHT = 7.0f;
-    public static final float COLOR_RADIUS = 5.0f;
 
     public static final float KEYBIND_WIDTH = 34.0f;
     public static final float KEYBIND_HEIGHT = 14.0f;
@@ -125,22 +120,6 @@ public class DropdownTheme {
 
     public static Color sliderKnob() {
         return MD3Theme.PRIMARY;
-    }
-
-    public static Color chipSelected() {
-        return MD3Theme.SECONDARY_CONTAINER;
-    }
-
-    public static Color chipSelectedText() {
-        return MD3Theme.ON_SECONDARY_CONTAINER;
-    }
-
-    public static Color chipUnselected() {
-        return MD3Theme.SURFACE_CONTAINER_HIGH;
-    }
-
-    public static Color chipUnselectedText() {
-        return MD3Theme.TEXT_SECONDARY;
     }
 
     public static Color keybindSurface(boolean listening) {

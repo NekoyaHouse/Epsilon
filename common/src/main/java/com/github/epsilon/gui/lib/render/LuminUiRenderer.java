@@ -273,6 +273,15 @@ public class LuminUiRenderer {
             layer.addChevronTriangle(centerX, centerY, size, progress, color);
             return;
         }
+        if (node instanceof UiTree.ArcNode(
+                float centerX, float centerY, float radius, float strokeWidth,
+                float startDegrees, float sweepDegrees, boolean roundCap, float gradientRotationDegrees,
+                Color startColor, Color middleColor, Color endColor
+        )) {
+            layer.addGradientArc(centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    gradientRotationDegrees, startColor, middleColor, endColor);
+            return;
+        }
         if (node instanceof UiTree.ViewportNode(
                 UiContentBuffer buffer, UiRect viewport, float scroll, float maxScroll,
                 float contentHeight, int mouseX, int mouseY, List<UiTree.UiNode> children

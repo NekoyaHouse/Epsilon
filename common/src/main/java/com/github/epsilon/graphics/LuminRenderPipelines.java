@@ -50,6 +50,7 @@ public class LuminRenderPipelines {
     public static final RenderPipeline ROUND_RECT = shapePipeline("pipelines/round_rectangle", "round_rectangle", LuminVertexFormats.ROUND_RECT);
     public static final RenderPipeline ROUND_RECT_OUTLINE = shapePipeline("pipelines/round_rectangle_outline", "round_rectangle_outline", LuminVertexFormats.ROUND_RECT_OUTLINE);
     public static final RenderPipeline SHADOW = shapePipeline("pipelines/shadow", "shadow", LuminVertexFormats.ROUND_RECT);
+    public static final RenderPipeline ARC = shapePipeline("pipelines/arc", "arc", LuminVertexFormats.ARC);
 
     public static final RenderPipeline SEGMENTED_SHADOW = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipelines/segmented_shadow"))

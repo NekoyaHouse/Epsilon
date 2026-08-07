@@ -21,19 +21,17 @@ public class Notifications extends HudModule {
     public static final Notifications INSTANCE = new Notifications();
 
     private Notifications() {
-        super("Notifications", 3.2f, 3.2f, DEFAULT_BOX_WIDTH, DEFAULT_BOX_HEIGHT);
+        super("Notifications", 3.2f, 3.2f, 120.0f, 30.0f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05);
-    private final DoubleSetting fontScale = doubleSetting("Font Scale", 0.80, 0.5, 2.0, 0.05);
+    private final DoubleSetting fontScale = doubleSetting("Font Scale", 0.8, 0.5, 2.0, 0.05);
     private final DoubleSetting subtitleYOffset = doubleSetting("Subtitle Y Offset", 0.4, -10.0, 20.0, 0.1);
-    private final IntSetting boxWidth = intSetting("Width", DEFAULT_BOX_WIDTH, 80, 300, 1);
-    private final IntSetting boxHeight = intSetting("Height", DEFAULT_BOX_HEIGHT, 24, 80, 1);
+    private final IntSetting boxWidth = intSetting("Width", 120, 80, 300, 1);
+    private final IntSetting boxHeight = intSetting("Height", 30, 24, 80, 1);
     private final IntSetting backgroundAlpha = intSetting("Background Alpha", 145, 0, 255, 1);
     public final IntSetting displayTime = intSetting("Display Time", 2000, 500, 5000, 100);
 
-    private static final int DEFAULT_BOX_WIDTH = 120;
-    private static final int DEFAULT_BOX_HEIGHT = 30;
     private static final float ACCENT_BAR_WIDTH = 2.4f;
     private static final float TEXT_PADDING = 6.0f;
     private static final float ENTRY_GAP = 3.0f;

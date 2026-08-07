@@ -22,11 +22,11 @@ public class Inventory extends HudModule {
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
     private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 3.0, 0.0, 14.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 135));
-    private final ColorSetting slotColor = colorSetting("Slot Color", new Color(0, 0, 0, 70));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 90));
+    private final ColorSetting slotColor = colorSetting("Slot Color", new Color(0, 0, 0, 0));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 110), drawShadow::getValue);
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
     private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 

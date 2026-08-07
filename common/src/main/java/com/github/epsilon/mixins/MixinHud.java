@@ -1,5 +1,6 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.elements.impl.island.Island;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
@@ -76,6 +77,11 @@ public class MixinHud {
     @Inject(method = "extractConfusionOverlay", at = @At("HEAD"), cancellable = true)
     private void onExtractConfusionOverlay(GuiGraphicsExtractor graphics, float strength, CallbackInfo ci) {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.nausea.getValue()) ci.cancel();
+    }
+
+    @Inject(method = "extractTabList", at = @At("HEAD"), cancellable = true)
+    private void onExtractTabList(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        if (Island.INSTANCE.isEnabled()) ci.cancel();
     }
 
 }

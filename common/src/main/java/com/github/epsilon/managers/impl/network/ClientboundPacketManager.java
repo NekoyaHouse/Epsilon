@@ -28,7 +28,6 @@ public class ClientboundPacketManager {
         tracking = false;
     }
 
-    @SuppressWarnings("unchecked")
     public void flush() {
         while (!packets.isEmpty()) {
             try {

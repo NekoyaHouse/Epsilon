@@ -43,8 +43,8 @@ public class TargetHUD extends HudModule {
     private final DoubleSetting height = doubleSetting("Height", 52.0, 30.0, 100.0, 1.0);
     private final DoubleSetting radius = doubleSetting("Radius", 5.0, 0.0, 20.0, 1.0);
     private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0);
-    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 3.0, 2.0, 20.0, 1.0);
-    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 1.2, 0.0, 15.0, 1.0);
+    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 5.0, 2.0, 20.0, 1.0);
+    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 2.0, 0.0, 15.0, 1.0);
     private final DoubleSetting nameSize = doubleSetting("Name Size", 10.5, 8.0, 18.0, 0.5);
     private final BoolSetting delayBar = boolSetting("Delay Bar", true);
     private final BoolSetting delayWait = boolSetting("Delay Wait", true, delayBar::getValue);
@@ -52,7 +52,7 @@ public class TargetHUD extends HudModule {
     private final DoubleSetting delaySpeed = doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, delayBar::getValue);
     private final BoolSetting barOutline = boolSetting("Bar Outline", true);
     private final DoubleSetting barOutlineWidth = doubleSetting("Bar Outline Width", 1.0, 0.5, 5.0, 0.5, barOutline::getValue);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 50));
     private final ColorSetting barBackgroundColor = colorSetting("Bar Background Color", new Color(255, 255, 255, 55));
     private final ColorSetting barFillColor = colorSetting("Bar Fill Color", new Color(255, 236, 248, 235));
     private final ColorSetting delayBarColor = colorSetting("Delay Bar Color", new Color(190, 190, 190, 100), delayBar::getValue);
@@ -60,7 +60,7 @@ public class TargetHUD extends HudModule {
     private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 110), drawShadow::getValue);
 
     private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
     private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;
@@ -94,7 +94,7 @@ public class TargetHUD extends HudModule {
         UiTree.Scope scope = renderScope();
 
         LivingEntity liveTarget = resolveTarget();
-        float maxHealth = lastKnownMaxHealth;
+        float maxHealth;
         float healthPercent;
         if (liveTarget == target) {
             float health = Managers.HEALTH.getHealth(target);

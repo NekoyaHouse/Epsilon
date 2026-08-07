@@ -3,6 +3,7 @@ package com.github.epsilon.holders;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.*;
+import com.github.epsilon.elements.impl.island.Island;
 import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
@@ -30,14 +31,13 @@ public class HudElementHolder {
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
 
     public void initElements() {
-        addElement(Notifications.INSTANCE);
-        addElement(BPS.INSTANCE);
-        addElement(Inventory.INSTANCE);
-        addElement(ModuleList.INSTANCE);
         addElement(Hotkey.INSTANCE);
+        addElement(Inventory.INSTANCE);
+        addElement(Island.INSTANCE);
+        addElement(ModuleList.INSTANCE);
         addElement(MTF.INSTANCE);
+        addElement(Notifications.INSTANCE);
         addElement(PlayerInfo.INSTANCE);
-        addElement(Potions.INSTANCE);
         addElement(ScaffoldBlock.INSTANCE);
         addElement(TargetHUD.INSTANCE);
         addElement(Watermark.INSTANCE);

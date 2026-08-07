@@ -42,21 +42,21 @@ public class ModuleList extends HudModule {
     }
 
     private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
-    private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 4.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
-    private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 3.5, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
-    private final DoubleSetting lineWidth = doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting lineWidth = doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
-    private final DoubleSetting fontSize = doubleSetting("Font Size", 16.0, 8.0, 32.0, 1.0);
+    private final DoubleSetting fontSize = doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0);
     private final BoolSetting textGlow = boolSetting("Text Glow", true);
     private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
     private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
     private final DoubleSetting doubleGradientLength = doubleSetting("Double Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting sliderSpeed = doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01);
-    private final BoolSetting background = boolSetting("Background", false, () -> mode.is(DisplayMode.Normal));
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(0, 0, 0, 128), () -> mode.is(DisplayMode.Normal) && background.getValue());
+    private final BoolSetting background = boolSetting("Background", true, () -> mode.is(DisplayMode.Normal));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(0, 0, 0, 50), () -> mode.is(DisplayMode.Normal) && background.getValue());
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true, () -> mode.is(DisplayMode.Normal));
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 110), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
 
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single);
     private final BoolSetting blur = boolSetting("Blur", true, () -> mode.is(DisplayMode.Normal));
@@ -64,9 +64,9 @@ public class ModuleList extends HudModule {
     private final ColorSetting themeColor1 = colorSetting("Theme Color 1", Color.WHITE, false, () -> !colorMode.is(ColorMode.Rainbow));
     private final ColorSetting themeColor2 = colorSetting("Theme Color 2", Color.RED, false, () -> colorMode.is(ColorMode.Double));
 
-    private static final int MODULE_ANIMATION_DURATION_MS = 200;
     private static final int MAX_SEGMENTS = 64;
     private static final float MIN_BOUNDS = 20.0f;
+    private static final int MODULE_ANIMATION_DURATION_MS = 200;
 
     private final Map<Module, ToggleAnimation> moduleAnimations = new HashMap<>();
     private final Map<Module, Float> moduleYPositions = new HashMap<>();

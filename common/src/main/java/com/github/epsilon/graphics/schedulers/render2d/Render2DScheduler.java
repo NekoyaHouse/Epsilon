@@ -37,6 +37,7 @@ public class Render2DScheduler implements AutoCloseable {
             Render2DCommandKind.ROUND_RECT_OUTLINE,
             Render2DCommandKind.RECT,
             Render2DCommandKind.TRIANGLE,
+            Render2DCommandKind.ARC,
             Render2DCommandKind.TEXTURE,
             Render2DCommandKind.BLUR_TEXT,
             Render2DCommandKind.GLITCH_TEXT,
@@ -202,6 +203,7 @@ public class Render2DScheduler implements AutoCloseable {
             case ROUND_RECT_OUTLINE -> LuminRenderPipelines.ROUND_RECT_OUTLINE;
             case RECT -> LuminRenderPipelines.RECTANGLE;
             case TRIANGLE -> LuminRenderPipelines.TRIANGLE;
+            case ARC -> LuminRenderPipelines.ARC;
             case TEXTURE -> LuminRenderPipelines.TEXTURE;
             case BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR;
             case GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH;
@@ -240,6 +242,11 @@ public class Render2DScheduler implements AutoCloseable {
             );
             case Render2DCommand.Triangle triangle -> renderers.triangleRenderer().addChevronTriangle(
                     triangle.centerX(), triangle.centerY(), triangle.size(), triangle.progress(), triangle.color()
+            );
+            case Render2DCommand.Arc arc -> renderers.arcRenderer().addGradientArc(
+                    arc.centerX(), arc.centerY(), arc.radius(), arc.strokeWidth(),
+                    arc.startDegrees(), arc.sweepDegrees(), arc.roundCap(), arc.gradientRotationDegrees(),
+                    arc.startColor(), arc.middleColor(), arc.endColor()
             );
             case Render2DCommand.Texture texture -> {
                 if (texture.texture() instanceof Render2DTexture.IdentifierRef(
@@ -422,6 +429,23 @@ public class Render2DScheduler implements AutoCloseable {
             scheduler.add(new Render2DCommand.Triangle(layer, scheduler.nextSequence(),
                     Render2DBounds.of(centerX - size, centerY - size, size * 2.0f, size * 2.0f), scissor,
                     centerX, centerY, size, progress, color));
+        }
+
+        public void addArc(float centerX, float centerY, float radius, float strokeWidth,
+                           float startDegrees, float sweepDegrees, boolean roundCap, Color color) {
+            addGradientArc(centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    0.0f, color, color, color);
+        }
+
+        public void addGradientArc(float centerX, float centerY, float radius, float strokeWidth,
+                                   float startDegrees, float sweepDegrees, boolean roundCap,
+                                   float gradientRotationDegrees,
+                                   Color startColor, Color middleColor, Color endColor) {
+            float extent = radius + strokeWidth * 0.5f + 1.0f;
+            scheduler.add(new Render2DCommand.Arc(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(centerX - extent, centerY - extent, extent * 2.0f, extent * 2.0f), scissor,
+                    centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    gradientRotationDegrees, startColor, middleColor, endColor));
         }
 
         public void addTexture(Render2DTexture texture, float x, float y, float width, float height,
@@ -988,6 +1012,7 @@ public class Render2DScheduler implements AutoCloseable {
                 case ROUND_RECT_OUTLINE -> new RendererBundle(kind, RoundRectOutlineRenderer.create());
                 case RECT -> new RendererBundle(kind, RectRenderer.create());
                 case TRIANGLE -> new RendererBundle(kind, TriangleRenderer.create());
+                case ARC -> new RendererBundle(kind, ArcRenderer.create());
                 case TEXTURE -> new RendererBundle(kind, TextureRenderer.create());
                 case BLUR_TEXT -> new RendererBundle(kind, TextRenderer.createFontBlur());
                 case GLITCH_TEXT -> new RendererBundle(kind, TextRenderer.createGlitch());
@@ -1023,6 +1048,10 @@ public class Render2DScheduler implements AutoCloseable {
             return (TriangleRenderer) renderer;
         }
 
+        private ArcRenderer arcRenderer() {
+            return (ArcRenderer) renderer;
+        }
+
         private TextureRenderer textureRenderer() {
             return (TextureRenderer) renderer;
         }
@@ -1047,6 +1076,7 @@ public class Render2DScheduler implements AutoCloseable {
                 case RectRenderer rect -> rect.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TriangleRenderer triangle ->
                         triangle.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case ArcRenderer arc -> arc.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TextureRenderer texture ->
                         texture.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TextRenderer text -> text.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
@@ -1062,6 +1092,7 @@ public class Render2DScheduler implements AutoCloseable {
                 case RoundRectOutlineRenderer outline -> outline.clearScissor();
                 case RectRenderer rect -> rect.clearScissor();
                 case TriangleRenderer triangle -> triangle.clearScissor();
+                case ArcRenderer arc -> arc.clearScissor();
                 case TextureRenderer texture -> texture.clearScissor();
                 case TextRenderer text -> text.clearScissor();
                 default -> {

@@ -330,6 +330,18 @@ public class Scaffold extends Module {
         return total;
     }
 
+    public ItemStack getBlockStack() {
+        ItemStack offhand = mc.player.getOffhandItem();
+        if (isValidStack(offhand)) return offhand;
+
+        if (blockResult != null && blockResult.found()) {
+            ItemStack stack = blockResult.isOffhand() ? mc.player.getOffhandItem() : mc.player.getInventory().getItem(blockResult.slot());
+            if (isValidStack(stack)) return stack;
+        }
+
+        return ItemStack.EMPTY;
+    }
+
     private void handleTelly() {
         if (mc.player.onGround() && (strafeInput != 0 || forwardInput != 0)) {
             Managers.ROTATION.setRotations(new Rot2f(rawInputYaw, rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotationBackSpeed.getValue());

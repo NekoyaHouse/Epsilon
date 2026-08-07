@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import java.awt.*;
 
 sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand.SegmentedShadow, Render2DCommand.RoundRect,
-        Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle,
+        Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle, Render2DCommand.Arc,
         Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.GlitchText, Render2DCommand.Text {
 
     int layer();
@@ -94,6 +94,16 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.TRIANGLE;
+        }
+    }
+
+    record Arc(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+               float centerX, float centerY, float radius, float strokeWidth,
+               float startDegrees, float sweepDegrees, boolean roundCap, float gradientRotationDegrees,
+               Color startColor, Color middleColor, Color endColor) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.ARC;
         }
     }
 

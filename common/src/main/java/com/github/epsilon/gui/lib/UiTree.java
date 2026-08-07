@@ -819,6 +819,54 @@ public class UiTree {
         }
 
         /**
+         * 添加一个描边圆环节点。
+         */
+        public void circle(float centerX, float centerY, float radius, float strokeWidth, Color color) {
+            arc(centerX, centerY, radius, strokeWidth, 0.0f, 360.0f, false, color);
+        }
+
+        /**
+         * 添加一个描边圆弧节点。
+         *
+         * @param centerX      圆心 X
+         * @param centerY      圆心 Y
+         * @param radius       描边中线半径
+         * @param strokeWidth  描边宽度
+         * @param startDegrees 起始角度，0 指向右侧，顺时针增大
+         * @param sweepDegrees 扫过角度
+         * @param roundCap     是否使用圆形端帽
+         * @param color        颜色
+         */
+        public void arc(float centerX, float centerY, float radius, float strokeWidth, float startDegrees, float sweepDegrees, boolean roundCap, Color color) {
+            nodes.add(new ArcNode(resolveX(centerX), resolveY(centerY), radius, strokeWidth,
+                    startDegrees, sweepDegrees, roundCap, 0.0f, color, color, color));
+        }
+
+        public void arc(int layer, float centerX, float centerY, float radius, float strokeWidth, float startDegrees, float sweepDegrees, boolean roundCap, Color color) {
+            addNode(layer, new ArcNode(resolveX(centerX), resolveY(centerY), radius, strokeWidth,
+                    startDegrees, sweepDegrees, roundCap, 0.0f, color, color, color));
+        }
+
+        /**
+         * 添加一条带三色循环扫描渐变的描边圆弧。
+         */
+        public void gradientArc(float centerX, float centerY, float radius, float strokeWidth,
+                                float startDegrees, float sweepDegrees, boolean roundCap,
+                                float gradientRotationDegrees, Color startColor, Color middleColor, Color endColor) {
+            nodes.add(new ArcNode(resolveX(centerX), resolveY(centerY), radius, strokeWidth,
+                    startDegrees, sweepDegrees, roundCap, gradientRotationDegrees,
+                    startColor, middleColor, endColor));
+        }
+
+        public void gradientArc(int layer, float centerX, float centerY, float radius, float strokeWidth,
+                                float startDegrees, float sweepDegrees, boolean roundCap,
+                                float gradientRotationDegrees, Color startColor, Color middleColor, Color endColor) {
+            addNode(layer, new ArcNode(resolveX(centerX), resolveY(centerY), radius, strokeWidth,
+                    startDegrees, sweepDegrees, roundCap, gradientRotationDegrees,
+                    startColor, middleColor, endColor));
+        }
+
+        /**
          * 在独立视口缓冲中构建一个可裁剪子树。
          * <p>
          * 子树会先被编译进 {@link UiContentBuffer}，稍后在统一 flush 阶段按视口裁剪后输出。
@@ -1081,7 +1129,7 @@ public class UiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, GlitchTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, GlitchTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ArcNode, ViewportNode {
     }
 
     /**
@@ -1266,6 +1314,12 @@ public class UiTree {
 
     public record TriangleNode(float centerX, float centerY, float size, float progress,
                                Color color) implements UiNode {
+    }
+
+    public record ArcNode(float centerX, float centerY, float radius, float strokeWidth,
+                          float startDegrees, float sweepDegrees, boolean roundCap,
+                          float gradientRotationDegrees,
+                          Color startColor, Color middleColor, Color endColor) implements UiNode {
     }
 
     public record ViewportNode(
