@@ -111,43 +111,6 @@ public class Scaffold extends Module {
         InvSwitch
     }
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
-    private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
-    private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
-    private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
-    private final BoolSetting degrees45 = boolSetting("45 Degrees", false);
-    private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Static);
-    private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 127, 10, 180, 10, () -> !rotationMode.is(RotationMode.Hypixel));
-    private final IntSetting rotationSpeed2 = intSetting("Rotation Speed 2", 36, 10, 180, 10, () -> rotationMode.is(RotationMode.Heypixel));
-    private final IntSetting rotationBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
-    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
-
-    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
-    private final BoolSetting render = boolSetting("Render", true);
-    private final BoolSetting fade = boolSetting("Fade", true, render::getValue);
-    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
-    private final BoolSetting shrink = boolSetting("Shrink", false, render::getValue);
-    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
-    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
-
-    private int airTicks;
-    private int yLevel;
-    private BlockPos blockPos;
-    private Direction direction;
-    private Rot2f rotation;
-    private int rotateCount = 0;
-    private float forwardInput, strafeInput;
-    private float inputYaw;
-    private float rawInputYaw;
-    private double lengthSqr = 4.5D * 4.5D;
-
-    private FindItemResult blockResult;
-    private boolean shouldSwapBack;
-    private boolean emergencyPlacementActive;
-
-    private final List<RenderInfo> renderBoxes = new ArrayList<>();
-
     private final RegistryListSetting<Block> blacklistedBlocks = blockListSetting("Blacklisted Blocks", List.of(
             Blocks.AIR,
             Blocks.WATER,
@@ -195,8 +158,45 @@ public class Scaffold extends Module {
             Blocks.COBBLESTONE_WALL,
             Blocks.OAK_FENCE,
             Blocks.REDSTONE_TORCH,
-            Blocks.FLOWER_POT
+            Blocks.FLOWER_POT,
+            Blocks.SCAFFOLDING
     ));
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
+    private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
+    private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
+    private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
+    private final BoolSetting degrees45 = boolSetting("45 Degrees", false);
+    private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Static);
+    private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 127, 10, 180, 10, () -> !rotationMode.is(RotationMode.Hypixel));
+    private final IntSetting rotationSpeed2 = intSetting("Rotation Speed 2", 36, 10, 180, 10, () -> rotationMode.is(RotationMode.Heypixel));
+    private final IntSetting rotationBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
+    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
+
+    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
+    private final BoolSetting render = boolSetting("Render", true);
+    private final BoolSetting fade = boolSetting("Fade", true, render::getValue);
+    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
+    private final BoolSetting shrink = boolSetting("Shrink", false, render::getValue);
+    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
+    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
+
+    private int airTicks;
+    private int yLevel;
+    private BlockPos blockPos;
+    private Direction direction;
+    private Rot2f rotation;
+    private int rotateCount = 0;
+    private float forwardInput, strafeInput;
+    private float inputYaw;
+    private float rawInputYaw;
+    private double lengthSqr = 4.5 * 4.5;
+
+    private FindItemResult blockResult;
+    private boolean shouldSwapBack;
+    private boolean emergencyPlacementActive;
+
+    private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
