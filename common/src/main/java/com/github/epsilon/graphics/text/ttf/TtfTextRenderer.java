@@ -196,8 +196,7 @@ public class TtfTextRenderer implements ITextRenderer {
             float y2 = y1 + glyph.height() * scaledFont;
             float advance = glyph.advance() * scaledFont + SPACING;
 
-            runBuilders.computeIfAbsent(glyph.atlas(), LayoutRunBuilder::new)
-                    .add(x1, y1, x2, y2, glyph.uv(), xOffset, xOffset + glyph.advance() * scaledFont);
+            runBuilders.computeIfAbsent(glyph.atlas(), LayoutRunBuilder::new).add(x1, y1, x2, y2, glyph.uv(), xOffset, xOffset + glyph.advance() * scaledFont);
 
             xOffset += advance;
             glyphCount++;

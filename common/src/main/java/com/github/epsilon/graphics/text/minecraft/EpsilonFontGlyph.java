@@ -29,13 +29,11 @@ public class EpsilonFontGlyph implements BakedGlyph {
     private static final Map<TtfGlyphAtlas, RenderType> AA_RENDER_TYPES = new IdentityHashMap<>();
     private static final Map<TtfGlyphAtlas, RenderType> NO_AA_RENDER_TYPES = new IdentityHashMap<>();
 
-    private final int codepoint;
     private final TtfFontLoader font;
     private final GlyphDescriptor descriptor;
     private final GlyphInfo info;
 
     private EpsilonFontGlyph(int codepoint, TtfFontLoader font, GlyphDescriptor descriptor) {
-        this.codepoint = codepoint;
         this.font = font;
         this.descriptor = descriptor;
         this.info = new EpsilonGlyphInfo(EpsilonFontMetrics.advance(codepoint, Style.EMPTY, font));

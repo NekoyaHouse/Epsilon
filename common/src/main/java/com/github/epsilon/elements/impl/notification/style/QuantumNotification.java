@@ -76,9 +76,7 @@ public class QuantumNotification {
         return animationProgress(notification) > 0.001f;
     }
 
-    public void render(UiTree.Scope scope, TextRenderer metrics, List<Notification> entries, float boundsX,
-                       float boundsY, float scale, float fontScale, HudModule.HorizontalAnchor horizontalAnchor,
-                       HudModule.VerticalAnchor verticalAnchor) {
+    public void render(UiTree.Scope scope, TextRenderer metrics, List<Notification> entries, float boundsX, float boundsY, float scale, float fontScale, HudModule.HorizontalAnchor horizontalAnchor, HudModule.VerticalAnchor verticalAnchor) {
         states.keySet().removeIf(existing -> entries.stream().noneMatch(entry -> entry == existing));
 
         float toastWidth = width(scale);
@@ -94,8 +92,7 @@ public class QuantumNotification {
 
             SpringState state = states.computeIfAbsent(notification, ignored -> new SpringState());
             float renderY = state.update(targetY);
-            renderToast(scope, metrics, notification, boundsX, renderY, toastWidth, toastHeight, scale,
-                    fontScale, horizontalAnchor, progress);
+            renderToast(scope, metrics, notification, boundsX, renderY, toastWidth, toastHeight, scale, fontScale, horizontalAnchor, progress);
             targetY += stackUp ? -(toastHeight + gap) : toastHeight + gap;
         }
     }
