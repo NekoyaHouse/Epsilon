@@ -467,19 +467,11 @@
       },
       "auto throw": {
         "_value": "Auto Throw",
-        "pause on eat": "Pause On Eat",
-        "min distance": "Min Distance",
-        "max distance": "Max Distance",
+        "min range": "Min Range",
+        "max range": "Max Range",
         "fov": "FOV",
         "delay": "Delay",
-        "prediction": "Prediction",
-        "swing hand": "Swing Hand",
-        "target extrapolation": "Target Extrapolation",
-        "target extrapolation smoothening": "Target Extrapolation Smoothening",
-        "self extrapolation": "Self Extrapolation",
-        "self extrapolation smoothening": "Self Extrapolation Smoothening",
-        "render extrapolation": "Render Extrapolation",
-        "render self extrapolation": "Render Self Extrapolation"
+        "rotation speed": "Rotation Speed"
       },
       "auto totem": {
         "_value": "Auto Totem",
@@ -1158,6 +1150,15 @@
         "cooldown": "Cooldown"
       },
       "multi task": "Multi Task",
+      "no fall": {
+        "_value": "No Fall",
+        "mode": {
+          "_value": "Mode",
+          "groundspoof": "Ground Spoof",
+          "grimjump": "Grim Jump"
+        },
+        "fall distance": "Fall Distance"
+      },
       "no rotate": "No Rotate",
       "packet eat": "Packet Eat",
       "sound fx": {
@@ -1315,9 +1316,9 @@
           "_value": "Mode",
           "vanilla": "Vanilla",
           "jump": "Jump",
-          "grimblink": "Grim Blink",
           "grim1_2": "Grim 1/2",
           "grim1_3": "Grim 1/3",
+          "grimblink": "Grim Blink",
           "grimfull": "Grim Full"
         },
         "food": "Food",
@@ -1369,6 +1370,7 @@
       },
       "scaffold": {
         "_value": "Scaffold",
+        "blacklisted blocks": "Blacklisted Blocks",
         "mode": {
           "_value": "Mode",
           "tellybridge": "Telly Bridge",
@@ -1405,8 +1407,7 @@
         "fade time": "Fade Time",
         "shrink": "Shrink",
         "side color": "Side Color",
-        "line color": "Line Color",
-        "blacklisted blocks": "Blacklisted Blocks"
+        "line color": "Line Color"
       },
       "speed": {
         "_value": "Speed",
@@ -1978,6 +1979,7 @@
         "fill": "Fill",
         "smoke fill": "Smoke Fill",
         "smoke fill 2": "Smoke Fill 2",
+        "friends color": "Friends Color",
         "hands mode": {
           "_value": "Hands Mode",
           "default": "Default",
@@ -2079,8 +2081,7 @@
           "insert": "Insert",
           "fall": "Fall",
           "rocket": "Rocket",
-          "roll": "Roll",
-          "off": "Off"
+          "roll": "Roll"
         },
         "speed": "Speed"
       },

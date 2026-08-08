@@ -48,6 +48,7 @@ public class ShaderHolder {
             .putFloat()
             .putFloat()
             .putVec2()
+            .putFloat()
             .get();
 
     private static final int COLOR_UNIFORMS_SIZE = new Std140SizeCalculator()
@@ -112,9 +113,8 @@ public class ShaderHolder {
 
         ensureSwap(target.width, target.height);
         Shader shader = settings.mode.getValue();
-        ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height, settings, usesColors(shader));
-
-        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderUniforms, usesColors(shader));
+        ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height, settings, true, settings == Shaders.INSTANCE.entityShader);
+        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderUniforms, true);
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null, false);
     }
 
@@ -288,8 +288,7 @@ public class ShaderHolder {
         }
     }
 
-    private GpuBufferSlice writeGlowUniforms(Shaders.ShaderSettings settings, int targetWidth, int targetHeight,
-                                             float directionX, float directionY) {
+    private GpuBufferSlice writeGlowUniforms(Shaders.ShaderSettings settings, int targetWidth, int targetHeight, float directionX, float directionY) {
         boolean gradient = settings.glowColorMode.is(Shaders.GlowColorMode.Gradient);
         Color color = gradient ? settings.glowColor1.getValue() : settings.glowColor.getValue();
         return LuminRenderSystem.writeDynamicUniform(
@@ -311,12 +310,13 @@ public class ShaderHolder {
                         gradient ? 1.0f : 0.0f,
                         (Util.getMillis() % 100_000L) / 1000.0f,
                         directionX,
-                        directionY
+                        directionY,
+                        settings == Shaders.INSTANCE.entityShader ? 1.0f : 0.0f
                 )
         );
     }
 
-    private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight, Shaders.ShaderSettings settings, boolean writeColors) {
+    private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight, Shaders.ShaderSettings settings, boolean writeColors, boolean useTargetColors) {
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
         float scaledWidth = Math.max(1.0f, mc.getWindow().getGuiScaledWidth());
@@ -347,7 +347,8 @@ public class ShaderHolder {
                                 settings.gradient.getValue().floatValue(),
                                 settings.octaves.getValue(),
                                 scaledWidth,
-                                scaledHeight
+                                scaledHeight,
+                                useTargetColors ? 1.0f : 0.0f
                         )
                 ),
                 writeColors ? LuminRenderSystem.writeDynamicUniform(
@@ -364,7 +365,7 @@ public class ShaderHolder {
         if (defaultPipeline == null) {
             defaultPipeline = pipeline("outline", true);
             smokePipeline = pipeline("smoke", true);
-            gradientPipeline = pipeline("gradient", false);
+            gradientPipeline = pipeline("gradient", true);
             snowPipeline = pipeline("snow", true);
             fadePipeline = pipeline("fade", true);
             glowPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
@@ -461,10 +462,6 @@ public class ShaderHolder {
         };
     }
 
-    private boolean usesColors(Shader shader) {
-        return shader != Shader.Gradient;
-    }
-
     private static float red(Color color) {
         return color.getRed() / 255.0f;
     }
@@ -508,7 +505,8 @@ public class ShaderHolder {
             float gradientScale,
             float octaves,
             float resolutionWidth,
-            float resolutionHeight
+            float resolutionHeight,
+            float useTargetColors
     ) implements DynamicUniformStorage.DynamicUniform {
         @Override
         public void write(ByteBuffer buffer) {
@@ -524,7 +522,8 @@ public class ShaderHolder {
                     .putFloat(gradientFactor)
                     .putFloat(gradientScale)
                     .putFloat(octaves)
-                    .putVec2(resolutionWidth, resolutionHeight);
+                    .putVec2(resolutionWidth, resolutionHeight)
+                    .putFloat(useTargetColors);
         }
     }
 
@@ -562,7 +561,8 @@ public class ShaderHolder {
             float gradient,
             float time,
             float directionX,
-            float directionY
+            float directionY,
+            float useTargetColors
     ) implements DynamicUniformStorage.DynamicUniform {
         @Override
         public void write(ByteBuffer buffer) {
@@ -573,7 +573,7 @@ public class ShaderHolder {
                     .putVec4(red(color1), green(color1), blue(color1), alpha(color1))
                     .putVec4(red(color2), green(color2), blue(color2), alpha(color2))
                     .putVec4(radius, exposure, gradientSpeed, gradient)
-                    .putVec4(time, directionX, directionY, 0.0f);
+                    .putVec4(time, directionX, directionY, useTargetColors);
         }
     }
 
