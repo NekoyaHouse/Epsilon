@@ -85,6 +85,7 @@ public class ModuleHolder {
         addModule(InvManager.INSTANCE);
         addModule(JumpCooldown.INSTANCE);
         addModule(MultiTask.INSTANCE);
+        addModule(NoFall.INSTANCE);
         addModule(NoRotate.INSTANCE);
         addModule(PacketEat.INSTANCE);
         addModule(PlayerAlarms.INSTANCE);
