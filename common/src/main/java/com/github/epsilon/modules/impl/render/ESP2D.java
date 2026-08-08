@@ -172,7 +172,7 @@ public class ESP2D extends Module {
 
         if (entity instanceof Player player) {
             if (entity == mc.player) return false;
-            if (Managers.FRIEND.isFriend(player) || Managers.TARGET.isSameTeam(player)) return friends.getValue();
+            if (Managers.FRIEND.isFriend(player)) return friends.getValue();
             return players.getValue();
         }
 

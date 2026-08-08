@@ -467,11 +467,19 @@
       },
       "auto throw": {
         "_value": "自动投掷",
-        "min range": "最小范围",
-        "max range": "最大范围",
+        "pause on eat": "进食时暂停",
+        "min distance": "最小距离",
+        "max distance": "最大距离",
         "fov": "视野角度",
         "delay": "延迟",
-        "rotation speed": "旋转速度"
+        "prediction": "预测倍率",
+        "swing hand": "挥手",
+        "target extrapolation": "目标外推",
+        "target extrapolation smoothening": "目标外推平滑",
+        "self extrapolation": "自身外推",
+        "self extrapolation smoothening": "自身外推平滑",
+        "render extrapolation": "渲染目标外推",
+        "render self extrapolation": "渲染自身外推"
       },
       "auto totem": {
         "_value": "自动图腾",
@@ -921,31 +929,54 @@
       },
       "safe anchor": {
         "_value": "安全重生锚",
+        "trigger key": "触发按键",
+        "mode": {
+          "_value": "模式",
+          "assist": "辅助",
+          "auto": "自动"
+        },
         "place mode": {
           "_value": "放置模式",
           "adaptive": "自适应",
           "cover": "覆盖"
         },
-        "place rotation speed": "放置旋转速度",
-        "explode rotation speed": "引爆旋转速度",
-        "place cps": "放置CPS",
-        "silent rotation": "静默旋转",
-        "dynamicspeed": "动态速度",
-        "farboost": "远距加速",
-        "farboostthreshold": "远距加速阈值",
-        "nearreduction": "近距减速",
-        "nearreductionthreshold": "近距减速阈值",
-        "autocharge": "自动充能",
-        "autoplace": "自动放置",
-        "autoexplode": "自动引爆",
-        "ownanchoronly": "仅自身锚",
-        "gaze lock": "视线锁定",
-        "switch back": "切换回来",
+        "order": {
+          "_value": "顺序",
+          "shieldfirst": "护盾优先",
+          "chargefirst": "充能优先"
+        },
+        "rotate": "旋转",
+        "rotation speed min": "旋转速度最小值",
+        "rotation speed max": "旋转速度最大值",
+        "strict": "严格",
+        "break crystal": "破坏水晶",
+        "swapback": "切回原物品",
+        "anchor place min delay": "锚放置最小延迟",
+        "anchor place max delay": "锚放置最大延迟",
+        "shield": "护盾",
+        "shield place min delay": "护盾放置最小延迟",
+        "shield place max delay": "护盾放置最大延迟",
+        "multi shield": "多重护盾",
+        "multi shield chance": "多重护盾概率",
+        "max extra shields": "最大额外护盾",
+        "shield distance min": "护盾最小距离",
+        "shield distance max": "护盾最大距离",
+        "charge min delay": "充能最小延迟",
+        "charge max delay": "充能最大延迟",
+        "detonate min delay": "引爆最小延迟",
+        "detonate max delay": "引爆最大延迟",
+        "detonate slot": "引爆槽位",
         "min health": "最小生命值",
-        "render": "渲染",
-        "fade time": "淡出时间",
-        "glowstone side": "萤石面",
-        "glowstone line": "萤石线"
+        "prediction": "预测",
+        "prediction strength": "预测强度",
+        "multi charge": "多重充能",
+        "multi charge chance": "多重充能概率",
+        "min extra charges": "最小额外充能",
+        "max extra charges": "最大额外充能",
+        "line color": "线条颜色",
+        "side color": "侧面颜色",
+        "line width": "线宽",
+        "render": "渲染"
       },
       "safe crystal": {
         "_value": "安全水晶",
@@ -1150,15 +1181,6 @@
         "cooldown": "冷却时间"
       },
       "multi task": "多任务",
-      "no fall": {
-        "_value": "防摔落",
-        "mode": {
-          "_value": "模式",
-          "groundspoof": "地面欺骗",
-          "grimjump": "Grim 跳跃"
-        },
-        "fall distance": "摔落距离"
-      },
       "no rotate": "禁止旋转",
       "packet eat": "发包进食",
       "sound fx": {
@@ -1316,9 +1338,9 @@
           "_value": "模式",
           "vanilla": "原版",
           "jump": "跳跃",
+          "grimblink": "Grim Blink",
           "grim1_2": "Grim 1/2",
           "grim1_3": "Grim 1/3",
-          "grimblink": "Grim Blink",
           "grimfull": "Grim Full"
         },
         "food": "食物",
@@ -1370,7 +1392,6 @@
       },
       "scaffold": {
         "_value": "自动搭路",
-        "blacklisted blocks": "黑名单方块",
         "mode": {
           "_value": "模式",
           "tellybridge": "Telly桥",
@@ -1407,7 +1428,8 @@
         "fade time": "淡出时间",
         "shrink": "收缩",
         "side color": "侧面颜色",
-        "line color": "线条颜色"
+        "line color": "线条颜色",
+        "blacklisted blocks": "黑名单方块"
       },
       "speed": {
         "_value": "速度",
@@ -1979,7 +2001,6 @@
         "fill": "填充",
         "smoke fill": "烟雾填充",
         "smoke fill 2": "烟雾填充 2",
-        "friends color": "好友颜色",
         "hands mode": {
           "_value": "手部模式",
           "default": "默认",
@@ -2081,7 +2102,8 @@
           "insert": "插入",
           "fall": "下落",
           "rocket": "火箭",
-          "roll": "翻滚"
+          "roll": "翻滚",
+          "off": "关闭"
         },
         "speed": "速度"
       },

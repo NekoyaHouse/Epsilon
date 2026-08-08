@@ -8,6 +8,7 @@
     "MixinAvatar",
     "MixinAvatarRenderer",
     "MixinBannerRenderer",
+    "MixinBaseEntityRenderer",
     "MixinBeaconRenderer",
     "MixinBlock",
     "MixinBlockCollisions",

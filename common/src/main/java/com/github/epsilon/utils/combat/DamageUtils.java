@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.combat;
 
 import com.github.epsilon.utils.player.EnchantmentUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffects;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -326,10 +328,55 @@ public class DamageUtils {
     private DamageUtils() {
     }
 
+    public static boolean breakCrosshairCrystal() {
+        if (mc.level == null || mc.player == null || mc.getCameraEntity() == null) return false;
+
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 look = mc.player.getLookAngle();
+        Vec3 end = eye.add(look.scale(4.0));
+
+        BlockPos placePos = null;
+        for (double d = 0.1; d <= 4.0; d += 0.1) {
+            Vec3 point = eye.add(look.scale(d));
+            BlockPos pos = BlockPos.containing(point);
+            BlockState state = mc.level.getBlockState(pos);
+            if (state.isAir() || state.canBeReplaced()) {
+                placePos = pos;
+                break;
+            }
+        }
+
+        if (placePos == null) return false;
+
+        net.minecraft.world.entity.boss.enderdragon.EndCrystal target = null;
+        double bestDistSq = Double.MAX_VALUE;
+        AABB searchBox = new AABB(eye, end).inflate(0.5);
+        for (net.minecraft.world.entity.boss.enderdragon.EndCrystal crystal : mc.level.getEntitiesOfClass(net.minecraft.world.entity.boss.enderdragon.EndCrystal.class, searchBox)) {
+            if (!crystal.isAlive()) continue;
+            Vec3 toCrystal = crystal.position().subtract(eye);
+            double projection = toCrystal.dot(look);
+            if (projection < 0 || projection > 4.0) continue;
+            Vec3 closest = eye.add(look.scale(projection));
+            if (closest.distanceToSqr(crystal.position()) > 1.5 * 1.5) continue;
+            double distSq = eye.distanceToSqr(crystal.position());
+            if (distSq < bestDistSq) {
+                bestDistSq = distSq;
+                target = crystal;
+            }
+        }
+
+        if (target != null) {
+            mc.gameMode.attack(mc.player, target);
+            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            return true;
+        }
+        return false;
+    }
+
     public enum ArmorEnchantmentMode {
         None,
-        PPPP,   // Protection 4 x4
-        PPBP,   // Protection 4 x2 + Blast Protection 4 x1 + Protection 4 x1
+        PPPP,
+        PPBP,
     }
 }
 
