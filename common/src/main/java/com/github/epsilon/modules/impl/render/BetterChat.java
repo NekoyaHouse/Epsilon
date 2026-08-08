@@ -156,22 +156,18 @@ public class BetterChat extends Module {
         if (dropShadow.getValue()) {
             float shadowRadius = shadowBlur.getValue().floatValue() * coordinateScale;
             if (renderChatPanel) {
-                layer.addShadow(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius,
-                        shadowRadius, withOpacity(shadowColor.getValue(), animatedPanelOpacity));
+                layer.addShadow(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius, shadowRadius, withOpacity(shadowColor.getValue(), animatedPanelOpacity));
             }
             if (renderInputPanel) {
-                layer.addShadow(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius,
-                        shadowRadius, withOpacity(shadowColor.getValue(), inputProgress));
+                layer.addShadow(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius, shadowRadius, withOpacity(shadowColor.getValue(), inputProgress));
             }
         }
 
         if (renderChatPanel) {
-            layer.addRoundRect(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius,
-                    withOpacity(backgroundColor.getValue(), animatedPanelOpacity));
+            layer.addRoundRect(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius, withOpacity(backgroundColor.getValue(), animatedPanelOpacity));
         }
         if (renderInputPanel) {
-            layer.addRoundRect(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius,
-                    withOpacity(inputBackgroundColor.getValue(), inputProgress));
+            layer.addRoundRect(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius, withOpacity(inputBackgroundColor.getValue(), inputProgress));
         }
         renderScheduler.flushAndClear();
     }

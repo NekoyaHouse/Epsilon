@@ -282,6 +282,21 @@ public class RotationUtils {
         return calculate(new Vec3(x, y, z));
     }
 
+    public static Rot2f calculate(Vec3 vec, boolean predict) {
+        Vec3 eyesPos = mc.player.getEyePosition();
+
+        if (predict) eyesPos = eyesPos.add(mc.player.getDeltaMovement());
+
+        double diffX = vec.x - eyesPos.x;
+        double diffY = vec.y - eyesPos.y;
+        double diffZ = vec.z - eyesPos.z;
+
+        float yaw = Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90f);
+        float pitch = Mth.wrapDegrees(-(float) Math.toDegrees(Math.atan2(diffY, Math.sqrt(diffX * diffX + diffZ * diffZ))));
+
+        return new Rot2f(yaw, pitch);
+    }
+
     /**
      * 按鼠标灵敏度步长量化目标旋转。
      *
