@@ -15,6 +15,7 @@ layout(std140) uniform ShaderParams {
     float GradientScale;
     float Octaves;
     vec2 Resolution;
+    float UseTargetColors;
 };
 
 layout(std140) uniform ShaderColors {

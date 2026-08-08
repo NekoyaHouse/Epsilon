@@ -51,6 +51,7 @@ public class Shaders extends Module {
     public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> hasEntityTargets() || chests.getValue()).group(sgTargets);
 
     public final ShaderSettings entityShader = new ShaderSettings("", sgEntityShader, this::hasEntityTargets);
+    public final ColorSetting friendsColor = colorSetting("Friends Color", new Color(0x30FF00), false, friends::getValue).group(sgEntityShader);
     public final ShaderSettings handsShader = new ShaderSettings("Hands ", sgHandsShader, hands::getValue);
     public final ShaderSettings chestShader = new ShaderSettings("Chest ", sgChestShader, chests::getValue);
 
@@ -74,7 +75,7 @@ public class Shaders extends Module {
             if (player == mc.player && !self.getValue()) {
                 return false;
             }
-            if (Managers.FRIEND.isFriend(player)) {
+            if (isFriendOrSameTeam(player)) {
                 return friends.getValue();
             }
             return players.getValue();
@@ -94,12 +95,21 @@ public class Shaders extends Module {
 
     public int getOutlineColor(ShaderSettings settings) {
         if (settings.outlineMode.is(OutlineMode.Glow)) {
-            Color glowColor = settings.glowColorMode.is(GlowColorMode.Gradient)
-                    ? settings.glowColor1.getValue()
-                    : settings.glowColor.getValue();
+            Color glowColor = settings.glowColorMode.is(GlowColorMode.Gradient) ? settings.glowColor1.getValue() : settings.glowColor.getValue();
             return glowColor.getRGB();
         }
         return settings.outlineColor.getValue().getRGB();
+    }
+
+    public int getOutlineColor(Entity entity, ShaderSettings settings) {
+        if (settings == entityShader && isFriendOrSameTeam(entity)) {
+            return friendsColor.getValue().getRGB();
+        }
+        return getOutlineColor(settings);
+    }
+
+    private boolean isFriendOrSameTeam(Entity entity) {
+        return entity != mc.player && entity instanceof Player player && (Managers.FRIEND.isFriend(player) || Managers.TARGET.isSameTeam(player));
     }
 
     private boolean hasEntityTargets() {
