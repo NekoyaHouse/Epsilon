@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.noslow.NoSlow;
@@ -12,6 +13,8 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -70,6 +73,8 @@ public class KeyPearl extends Module {
             } else {
                 NoSlow.INSTANCE.stopIfWorking();
             }
+
+            Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), mc.player.getXRot()), 180.0f, Priority.Highest);
 
             InvUtils.swap(pearl.slot(), switchBack.getValue());
 
