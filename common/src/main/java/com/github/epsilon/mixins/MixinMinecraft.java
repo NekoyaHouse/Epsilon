@@ -118,12 +118,12 @@ public abstract class MixinMinecraft {
 
     @WrapOperation(method = "continueAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean attackMultiTask(LocalPlayer instance, Operation<Boolean> original) {
-        return original.call(instance) && !MultiTask.INSTANCE.isEnabled();
+        return !MultiTask.INSTANCE.isEnabled() && original.call(instance);
     }
 
     @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isDestroying()Z"))
     private boolean useMultiTask(MultiPlayerGameMode instance, Operation<Boolean> original) {
-        return original.call(instance) && !MultiTask.INSTANCE.isEnabled();
+        return !MultiTask.INSTANCE.isEnabled() && original.call(instance);
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;keyUse:Lnet/minecraft/client/KeyMapping;", ordinal = 0, opcode = Opcodes.GETFIELD))

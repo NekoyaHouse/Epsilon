@@ -74,6 +74,7 @@ public class KeyPearl extends Module {
                 NoSlow.INSTANCE.stopIfWorking();
             }
 
+            // 强制给你的转头归位
             Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), mc.player.getXRot()), 180.0f, Priority.Highest);
 
             InvUtils.swap(pearl.slot(), switchBack.getValue());

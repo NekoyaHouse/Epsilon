@@ -24,10 +24,7 @@ public class HealthManager {
         if (entity instanceof LivingEntity livingEntity) {
             String name = livingEntity.getName().getString();
             Integer scoreHealth = scoreboardHealth.get(name);
-            if (scoreHealth != null && scoreHealth > 0) {
-                return scoreHealth;
-            }
-            return livingEntity.getHealth() + livingEntity.getAbsorptionAmount();
+            return scoreHealth == null ? livingEntity.getHealth() + livingEntity.getAbsorptionAmount() : scoreHealth;
         }
         return 0f;
     }

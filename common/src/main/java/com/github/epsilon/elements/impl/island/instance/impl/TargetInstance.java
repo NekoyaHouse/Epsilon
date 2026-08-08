@@ -8,6 +8,7 @@ import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.Identifier;
@@ -65,7 +66,7 @@ public class TargetInstance extends LandInstance {
         float screenMaxWidth = LuminRenderSystem.getScaledWidthInt() - 50f;
         targetWidth = Mth.clamp(desired, MIN_WIDTH, Math.max(MIN_WIDTH, screenMaxWidth));
         float maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
-        float health = Mth.clamp(target.getHealth(), 0f, maxHealth);
+        float health = Managers.HEALTH.getHealth(target);
         float healthRowHeight = Math.max(BAR_HEIGHT, textRenderer.getHeight(HEALTH_SCALE));
         targetHeight = PADDING * 2f + HEAD_SIZE + HEALTH_ROW_GAP + healthRowHeight;
 
@@ -110,7 +111,7 @@ public class TargetInstance extends LandInstance {
         drawTargetIcon(scope, iconX + ICON_SIZE * 0.5f, headY + ICON_TOP_OFFSET + ICON_SIZE * 0.5f);
 
         float maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
-        float health = Mth.clamp(target.getHealth(), 0f, maxHealth);
+        float health = Managers.HEALTH.getHealth(target);
 
         String healthText = formatHealth(health);
         String maxHealthText = formatHealth(maxHealth);
