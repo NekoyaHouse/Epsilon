@@ -4,7 +4,6 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
-import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
@@ -112,11 +111,6 @@ public class BlurShader {
             return;
         }
 
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
-        if (!ScissorUtils.isVisible(scissor)) {
-            return;
-        }
-
         float scale = (float) LuminRenderSystem.getGuiScale();
         float pxX = x * scale;
         float pxY = targetHeight - (y + height) * scale;
@@ -158,7 +152,6 @@ public class BlurShader {
                 Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
-            ScissorUtils.enableScissor(renderPass, scissor);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("BlurUniforms", blurUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
