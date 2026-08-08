@@ -1499,6 +1499,18 @@
         "shadow blur": "投影模糊",
         "shadow color": "投影颜色"
       },
+      "better scoreboard": {
+        "_value": "计分板美化",
+        "background color": "背景颜色",
+        "radius": "圆角半径",
+        "x offset": "X 偏移",
+        "y offset": "Y 偏移",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "draw shadow": "绘制阴影",
+        "shadow blur": "投影模糊",
+        "shadow color": "投影颜色"
+      },
       "block esp": {
         "_value": "方块透视",
         "block list": "方块列表",

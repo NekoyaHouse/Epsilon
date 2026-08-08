@@ -92,7 +92,7 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 - `defaultRequire` 为 1。不得用 `require = 0` 掩盖未核验的注入点。
 - Sodium 兼容 Mixin 必须沿用两个平台的 `IMixinConfigPlugin` 条件门控。
 - Mixin 发布可修改事件时，必须在注入点处理取消状态或修改后的值。
-- `Render2DEvent` 当前携带 `GuiGraphicsExtractor`，不是旧版 `GuiGraphics`；修改 2D 渲染前必须核验 26.1.2 的提取/提交流程。
+- `Render2DEvent` 当前携带 `GuiGraphicsExtractor`，不是旧版 `GuiGraphics`；修改 2D 渲染前必须核验 26.2 的提取/提交流程。
 
 ## 配置与运行时状态约束
 
@@ -116,7 +116,7 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 - 2D 世界覆盖层优先使用 `WorldToScreen.calcWorld2Screen`，不得再次除以 GUI scale，也不得自行用归一化深度判断摄像机后方。
 - 2D AABB 边界必须投影 8 个顶点后取屏幕空间最小/最大坐标。
 - 文本测量与绘制必须使用相同的 scale 和 font loader。
-- 调用后处理前必须核验 render target、采样器和当前 26.1.2 RenderPipeline 状态。
+- 调用后处理前必须核验 render target、采样器和当前 26.2 RenderPipeline 状态。
 
 ## i18n 约束
 

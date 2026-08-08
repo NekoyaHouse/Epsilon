@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.interfaces.ChatComponentAccessor;
@@ -128,13 +129,24 @@ public class BetterChat extends Module {
         float chatRadius = Math.min(this.chatRadius.getValue().floatValue(), animatedChatHeight * 0.5f);
         float inputRadius = this.inputRadius.getValue().floatValue();
         float blur = blurStrength.getValue().floatValue();
+        float coordinateScale = (float) (mc.getWindow().getGuiScale() / LuminRenderSystem.getGuiScale());
+        float renderChatX = chatX * coordinateScale;
+        float renderChatY = chatY * coordinateScale;
+        float renderChatWidth = chatWidth * coordinateScale;
+        float renderChatHeight = animatedChatHeight * coordinateScale;
+        float renderChatRadius = chatRadius * coordinateScale;
+        float renderInputX = INPUT_X * coordinateScale;
+        float renderInputY = inputY * coordinateScale;
+        float renderInputWidth = inputWidth * coordinateScale;
+        float renderInputHeight = INPUT_HEIGHT * coordinateScale;
+        float renderInputRadius = inputRadius * coordinateScale;
 
         // 模糊必须先读取尚未叠加聊天面板的主渲染目标。
         if (renderChatPanel) {
-            BlurShader.INSTANCE.render(chatX, chatY, chatWidth, animatedChatHeight, chatRadius, blur * animatedPanelOpacity);
+            BlurShader.INSTANCE.render(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius, blur * animatedPanelOpacity);
         }
         if (renderInputPanel) {
-            BlurShader.INSTANCE.render(INPUT_X, inputY, inputWidth, INPUT_HEIGHT, inputRadius, blur * inputProgress);
+            BlurShader.INSTANCE.render(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius, blur * inputProgress);
         }
 
         Render2DScheduler renderScheduler = scheduler.get();
@@ -142,20 +154,24 @@ public class BetterChat extends Module {
         Render2DScheduler.LayerHandle layer = renderScheduler.layer(0);
 
         if (dropShadow.getValue()) {
-            float shadowRadius = shadowBlur.getValue().floatValue();
+            float shadowRadius = shadowBlur.getValue().floatValue() * coordinateScale;
             if (renderChatPanel) {
-                layer.addShadow(chatX, chatY, chatWidth, animatedChatHeight, chatRadius, shadowRadius, withOpacity(shadowColor.getValue(), animatedPanelOpacity));
+                layer.addShadow(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius,
+                        shadowRadius, withOpacity(shadowColor.getValue(), animatedPanelOpacity));
             }
             if (renderInputPanel) {
-                layer.addShadow(INPUT_X, inputY, inputWidth, INPUT_HEIGHT, inputRadius, shadowRadius, withOpacity(shadowColor.getValue(), inputProgress));
+                layer.addShadow(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius,
+                        shadowRadius, withOpacity(shadowColor.getValue(), inputProgress));
             }
         }
 
         if (renderChatPanel) {
-            layer.addRoundRect(chatX, chatY, chatWidth, animatedChatHeight, chatRadius, withOpacity(backgroundColor.getValue(), animatedPanelOpacity));
+            layer.addRoundRect(renderChatX, renderChatY, renderChatWidth, renderChatHeight, renderChatRadius,
+                    withOpacity(backgroundColor.getValue(), animatedPanelOpacity));
         }
         if (renderInputPanel) {
-            layer.addRoundRect(INPUT_X, inputY, inputWidth, INPUT_HEIGHT, inputRadius, withOpacity(inputBackgroundColor.getValue(), inputProgress));
+            layer.addRoundRect(renderInputX, renderInputY, renderInputWidth, renderInputHeight, renderInputRadius,
+                    withOpacity(inputBackgroundColor.getValue(), inputProgress));
         }
         renderScheduler.flushAndClear();
     }

@@ -125,6 +125,7 @@ public class ModuleHolder {
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
         addModule(BetterChat.INSTANCE);
+        addModule(BetterScoreboard.INSTANCE);
         addModule(BlockESP.INSTANCE);
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);

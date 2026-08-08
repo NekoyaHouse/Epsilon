@@ -1499,6 +1499,18 @@
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color"
       },
+      "better scoreboard": {
+        "_value": "Better Scoreboard",
+        "background color": "Background Color",
+        "radius": "Radius",
+        "x offset": "X Offset",
+        "y offset": "Y Offset",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "draw shadow": "Draw Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color"
+      },
       "block esp": {
         "_value": "Block ESP",
         "block list": "Block List",

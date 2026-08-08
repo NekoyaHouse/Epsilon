@@ -1,13 +1,18 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.elements.impl.island.Island;
+import com.github.epsilon.modules.impl.render.BetterScoreboard;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.Objective;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,7 +56,26 @@ public class MixinHud {
 
     @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"), cancellable = true)
     private void onExtractScoreboardSidebar(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        if (BetterScoreboard.INSTANCE.isEnabled()) BetterScoreboard.INSTANCE.beginScoreboardExtraction();
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.scoreboard.getValue()) ci.cancel();
+    }
+
+    @WrapOperation(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))
+    private void replaceScoreboardBackground(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int col, Operation<Void> original) {
+        if (BetterScoreboard.INSTANCE.isEnabled()) {
+            BetterScoreboard.INSTANCE.captureVanillaBackground(x0, y0, x1, y1);
+        } else {
+            original.call(graphics, x0, y0, x1, y1, col);
+        }
+    }
+
+    @WrapOperation(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;text(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
+    private void offsetScoreboardText(GuiGraphicsExtractor graphics, Font font, Component text, int x, int y, int color, boolean dropShadow, Operation<Void> original) {
+        if (BetterScoreboard.INSTANCE.isEnabled()) {
+            x += BetterScoreboard.INSTANCE.getRoundedXOffset();
+            y += BetterScoreboard.INSTANCE.getRoundedYOffset();
+        }
+        original.call(graphics, font, text, x, y, color, dropShadow);
     }
 
     @Inject(method = "extractSpyglassOverlay", at = @At("HEAD"), cancellable = true)
