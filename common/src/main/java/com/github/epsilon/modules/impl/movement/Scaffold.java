@@ -252,7 +252,7 @@ public class Scaffold extends Module {
         }
         double strength = mc.player.getDeltaMovement().horizontal().length();
         if (strength >= 1.5) {
-            Managers.NOTIFICATION.error("你也是要飞了", String.valueOf(strength));
+            Managers.NOTIFICATION.warning(this.getTranslatedName(), "你也是要飞了");
         }
         if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
             emergencyPlacementActive = true;

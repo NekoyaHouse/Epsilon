@@ -17,8 +17,10 @@ public class NetworkUtils {
      * @param packet 待发送或过滤的网络包
      */
     public static void sendPacketNoEvent(Packet<?> packet) {
-        bypassedPackets.add(packet);
-        if (mc.getConnection() != null) mc.getConnection().send(packet);
+        if (mc.getConnection() != null) {
+            bypassedPackets.add(packet);
+            mc.getConnection().send(packet);
+        }
     }
 
 }
