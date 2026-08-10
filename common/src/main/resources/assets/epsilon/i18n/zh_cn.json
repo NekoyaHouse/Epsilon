@@ -1070,6 +1070,15 @@
         "delay": "延迟",
         "custom path": "自定义路径"
       },
+      "auto ban": {
+        "_value": "自动封禁",
+        "order": {
+          "_value": "发送顺序",
+          "sequential": "依次",
+          "random": "随机"
+        },
+        "delay": "发送延迟"
+      },
       "auto mlg": {
         "_value": "自动 MLG",
         "interact delay": "交互延迟",

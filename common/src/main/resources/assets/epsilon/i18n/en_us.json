@@ -1070,6 +1070,15 @@
         "delay": "Delay",
         "custom path": "Custom Path"
       },
+      "auto ban": {
+        "_value": "Auto Ban",
+        "order": {
+          "_value": "Order",
+          "sequential": "Sequential",
+          "random": "Random"
+        },
+        "delay": "Delay"
+      },
       "auto mlg": {
         "_value": "Auto MLG",
         "interact delay": "Interact Delay",

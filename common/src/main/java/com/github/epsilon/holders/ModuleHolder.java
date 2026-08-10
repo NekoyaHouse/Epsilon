@@ -75,6 +75,7 @@ public class ModuleHolder {
         addModule(AutoArmor.INSTANCE);
         addModule(AutoFirework.INSTANCE);
         addModule(AutoKouZi.INSTANCE);
+        addModule(AutoBan.INSTANCE);
         addModule(AutoMLG.INSTANCE);
         addModule(AutoTool.INSTANCE);
         addModule(BedNuker.INSTANCE);
