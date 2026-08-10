@@ -5,17 +5,15 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Priority;
-import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -48,9 +46,12 @@ public class SafeAnchor extends Module {
         super("Safe Anchor", Category.COMBAT);
     }
 
-    private enum Mode { Assist, Auto }
-    private enum PlaceMode { Adaptive, Cover }
-    private enum Order { ShieldFirst, ChargeFirst }
+    private enum Mode {Assist, Auto}
+
+    private enum PlaceMode {Adaptive, Cover}
+
+    private enum Order {ShieldFirst, ChargeFirst}
+
     private enum Stage {
         IDLE, PLACE_ANCHOR, PLACE_SHIELD, CHARGE, DETONATE, WAIT_SHIELD, WAIT_ANCHOR
     }
@@ -211,7 +212,9 @@ public class SafeAnchor extends Module {
                     doWaitAnchor();
                     if (stage == Stage.WAIT_ANCHOR) return;
                 }
-                default -> { return; }
+                default -> {
+                    return;
+                }
             }
         }
     }
@@ -337,9 +340,9 @@ public class SafeAnchor extends Module {
             if (targetRotation == null) {
                 Vec3 lookTarget = shieldSidePlacement && shieldSide != null
                         ? Vec3.atCenterOf(currentAnchorPos).add(
-                                shieldSide.getStepX() * 0.5,
-                                shieldSide.getStepY() * 0.5,
-                                shieldSide.getStepZ() * 0.5)
+                        shieldSide.getStepX() * 0.5,
+                        shieldSide.getStepY() * 0.5,
+                        shieldSide.getStepZ() * 0.5)
                         : Vec3.atCenterOf(shieldPos.below());
                 targetRotation = getTargetRotation(lookTarget);
                 targetBlockPos = shieldSidePlacement && shieldSide != null ? currentAnchorPos : shieldPos.below();
@@ -971,7 +974,8 @@ public class SafeAnchor extends Module {
 
     private boolean tryAssistShieldPlace(BlockPos pos, BlockPos interactPos, Direction interactSide) {
         if (pos.equals(currentAnchorPos) || placedShields.contains(pos)) return false;
-        if (!BlockUtils.canBeReplacedWith(mc.level.getBlockState(pos), Items.GLOWSTONE.getDefaultInstance())) return false;
+        if (!BlockUtils.canBeReplacedWith(mc.level.getBlockState(pos), Items.GLOWSTONE.getDefaultInstance()))
+            return false;
         if (BlockUtils.hasBlockingEntity(new AABB(pos))) return false;
 
         FindItemResult glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);

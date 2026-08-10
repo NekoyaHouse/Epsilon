@@ -73,12 +73,18 @@ public class BetterScoreboard extends Module {
         float width = bounds.width() * coordinateScale;
         float height = bounds.height() * coordinateScale;
 
-        BlurShader.INSTANCE.render(x, y, width, height, radius, blurStrength.getValue().floatValue());
+        if (backgroundBlur.getValue()) {
+            BlurShader.INSTANCE.render(x, y, width, height, radius, blurStrength.getValue().floatValue());
+        }
 
         Render2DScheduler renderScheduler = scheduler.get();
         renderScheduler.clear();
         Render2DScheduler.LayerHandle layer = renderScheduler.layer(0);
-        layer.addShadow(x, y, width, height, radius, shadowBlur.getValue().floatValue() * coordinateScale, shadowColor.getValue());
+
+        if (drawShadow.getValue()) {
+            layer.addShadow(x, y, width, height, radius, shadowBlur.getValue().floatValue() * coordinateScale, shadowColor.getValue());
+        }
+
         layer.addRoundRect(x, y, width, height, radius, backgroundColor.getValue());
         renderScheduler.flushAndClear();
     }
