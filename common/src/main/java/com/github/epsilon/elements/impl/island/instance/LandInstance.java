@@ -51,6 +51,12 @@ public abstract class LandInstance {
      */
     public abstract void draw(UiTree.Scope scope, float translateX, float translateY, float width, float height);
 
+    /**
+     * 实例离开控制器时释放自身持有的临时资源。
+     */
+    public void onRemoved() {
+    }
+
     public void setContentAlpha(float contentAlpha) {
         this.contentAlpha = Mth.clamp(contentAlpha, 0.0f, 1.0f);
     }
@@ -83,7 +89,6 @@ public abstract class LandInstance {
             case DelayPattern delay -> timer.passedMillise(delay.getDelay());
             default -> false;
         };
-
     }
 
     public Priority getPriority() {

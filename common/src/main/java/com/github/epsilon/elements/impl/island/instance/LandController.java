@@ -2,6 +2,7 @@ package com.github.epsilon.elements.impl.island.instance;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,7 +27,14 @@ public class LandController {
      * @return 当前应展示的实例，没有实例时返回 {@code null}
      */
     public LandInstance update() {
-        instances.removeIf(LandInstance::isClosed);
+        Iterator<LandInstance> iterator = instances.iterator();
+        while (iterator.hasNext()) {
+            LandInstance instance = iterator.next();
+            if (instance.isClosed()) {
+                iterator.remove();
+                instance.onRemoved();
+            }
+        }
         if (instances.isEmpty()) return null;
 
         Comparator<LandInstance> comparator = Comparator
@@ -46,7 +54,14 @@ public class LandController {
 
     public void removeInstances(Class<? extends LandInstance> type) {
         if (type == null) return;
-        instances.removeIf(type::isInstance);
+        Iterator<LandInstance> iterator = instances.iterator();
+        while (iterator.hasNext()) {
+            LandInstance instance = iterator.next();
+            if (type.isInstance(instance)) {
+                iterator.remove();
+                instance.onRemoved();
+            }
+        }
     }
 
     public <T extends LandInstance> T getInstance(Class<T> type) {

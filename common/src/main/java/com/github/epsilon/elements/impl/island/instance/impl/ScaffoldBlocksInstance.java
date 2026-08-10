@@ -26,7 +26,7 @@ import static com.github.epsilon.Constants.mc;
 public class ScaffoldBlocksInstance extends LandInstance {
 
     private static final float PADDING = 6f;
-    private static final float ICON_SIZE = 25f;
+    private static final float ICON_SIZE = 26f;
     private static final float ICON_RADIUS = ICON_SIZE * 0.4f;
     private static final float GAP = 6f;
     private static final float RING_SIZE = 26f;
@@ -46,7 +46,6 @@ public class ScaffoldBlocksInstance extends LandInstance {
     private final TimerUtils iconRefreshTimer = new TimerUtils();
     private TextureAtlasSprite iconSprite;
     private Color iconTint = Color.WHITE;
-    private boolean iconInitialized;
 
     private long lastUpdateNs = System.nanoTime();
     private float spinAngleDeg;
@@ -89,8 +88,7 @@ public class ScaffoldBlocksInstance extends LandInstance {
         lastUpdateNs = nowNs;
         spinAngleDeg = (spinAngleDeg + SPIN_DEGREES_PER_SECOND * deltaSeconds) % 360f;
 
-        if (!iconInitialized || iconRefreshTimer.every(350L)) {
-            iconInitialized = true;
+        if (iconSprite == null || iconRefreshTimer.every(350L)) {
             updateIconTexture(iconSupplier.get());
         }
     }
@@ -125,10 +123,7 @@ public class ScaffoldBlocksInstance extends LandInstance {
         if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem blockItem)) return;
 
         BlockState state = blockItem.getBlock().defaultBlockState();
-        iconSprite = mc.getModelManager()
-                .getBlockStateModelSet()
-                .getParticleMaterial(state)
-                .sprite();
+        iconSprite = mc.getModelManager().getBlockStateModelSet().getParticleMaterial(state).sprite();
 
         BlockTintSource tintSource = mc.getBlockColors().getTintSource(state, 0);
         if (tintSource == null) return;

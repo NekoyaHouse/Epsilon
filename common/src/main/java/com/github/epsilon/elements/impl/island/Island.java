@@ -2,10 +2,7 @@ package com.github.epsilon.elements.impl.island;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.island.instance.LandController;
-import com.github.epsilon.elements.impl.island.instance.impl.BalanceInstance;
-import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInstance;
-import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance;
-import com.github.epsilon.elements.impl.island.instance.impl.TargetInstance;
+import com.github.epsilon.elements.impl.island.instance.impl.*;
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -16,6 +13,8 @@ import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.InvHelper;
 import com.google.common.base.Suppliers;
+import love.slmpc.smtc.SmtcService;
+import love.slmpc.smtc.SmtcSnapshot;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,6 +35,7 @@ public class Island extends HudModule {
     private final BoolSetting scaffoldBlocks = boolSetting("Scaffold Blocks", true);
     private final BoolSetting timerBalance = boolSetting("Timer Balance", true);
     private final BoolSetting tabList = boolSetting("Tab List", true);
+    private final BoolSetting music = boolSetting("Music", true);
     public final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 50));
     public final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
     public final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
@@ -63,11 +63,18 @@ public class Island extends HudModule {
     private LivingEntity target;
 
     @Override
+    protected void onEnable() {
+        if (music.getValue()) SmtcService.INSTANCE.start();
+    }
+
+    @Override
     protected void onDisable() {
         LandController.INSTANCE.removeInstances(TargetInstance.class);
         LandController.INSTANCE.removeInstances(ScaffoldBlocksInstance.class);
         LandController.INSTANCE.removeInstances(BalanceInstance.class);
         LandController.INSTANCE.removeInstances(TabListInstance.class);
+        LandController.INSTANCE.removeInstances(MusicInstance.class);
+        SmtcService.INSTANCE.stop();
         target = null;
     }
 
@@ -82,6 +89,7 @@ public class Island extends HudModule {
         updateBlockInstance();
         updateBalanceInstance();
         updateTabListInstance();
+        updateMusicInstance();
 
         setBounds(landRenderer.getWidth(), landRenderer.getHeight());
 
@@ -114,7 +122,7 @@ public class Island extends HudModule {
     }
 
     private void updateBlockInstance() {
-        if (!scaffoldBlocks.getValue()) {
+        if (!scaffoldBlocks.getValue() || !Scaffold.INSTANCE.isEnabled()) {
             LandController.INSTANCE.removeInstances(ScaffoldBlocksInstance.class);
             return;
         }
@@ -158,6 +166,31 @@ public class Island extends HudModule {
             LandController.INSTANCE.post(new TabListInstance(textRendererSupplier,
                     new CheckPattern(() -> !tabList.getValue() || nullCheck() || mc.gui.screen() != null || !mc.options.keyPlayerList.isDown()))
             );
+        }
+    }
+
+    private void updateMusicInstance() {
+        if (music.getValue()) {
+            SmtcService.INSTANCE.start();
+            SmtcSnapshot snapshot = SmtcService.INSTANCE.snapshot();
+            if (!snapshot.available() || !snapshot.isPlaying()) {
+                LandController.INSTANCE.removeInstances(MusicInstance.class);
+                return;
+            }
+
+            if (LandController.INSTANCE.getInstance(MusicInstance.class) == null) {
+                LandController.INSTANCE.post(new MusicInstance(
+                        SmtcService.INSTANCE,
+                        textRendererSupplier,
+                        new CheckPattern(() -> {
+                            SmtcSnapshot current = SmtcService.INSTANCE.snapshot();
+                            return !music.getValue() || !current.available() || !current.isPlaying();
+                        })
+                ));
+            }
+        } else {
+            LandController.INSTANCE.removeInstances(MusicInstance.class);
+            SmtcService.INSTANCE.stop();
         }
     }
 

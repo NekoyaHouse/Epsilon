@@ -35,6 +35,26 @@ CI 使用 Java 25 执行：
 
 构建产物包括 Fabric 与 NeoForge Jar，并由 CI 上传。
 
+## Windows SMTC 原生桥接
+
+Island 的 Music 实例通过 `native/smtc/` 中的 C++/WinRT JNI 桥接读取 Windows System Media Transport Controls。桥接仅支持 Windows x64，其他平台不会加载原生库，也不会创建 Music 实例。
+
+本机需要 Visual Studio C++ 工具链、Windows SDK、CMake 和 Java 25 JDK。DLL 会直接输出到 `common/src/main/resources/natives/windows-x86_64/epsilon_smtc.dll`，并随 Fabric/NeoForge Jar 打包：
+
+```powershell
+$env:JAVA_HOME = "C:/Program Files/Java/jdk-25.0.4"
+cmake -S native/smtc -B native/smtc/build -A x64 -DJAVA_HOME="$env:JAVA_HOME"
+cmake --build native/smtc/build --config Release --parallel
+```
+
+独立探针用于在不启动 Minecraft 的情况下核验本机 SMTC 和封面读取：
+
+```powershell
+.\native\smtc\build\Release\epsilon_smtc_probe.exe
+```
+
+原生源码或 JNI 数据结构变化后必须重新构建 DLL，并同时检查 probe、`:common:test` 和两个加载器构建。Java 侧按 DLL 内容哈希解压到系统临时目录，避免覆盖已被 JVM 加载的文件。
+
 ## 测试
 
 仓库当前没有 Java 测试文件。新增可脱离游戏运行的配置、解析、排序或数学逻辑时，优先在 `common/src/test/java` 添加 JUnit 5 测试。构建验证范围必须遵循 [`AGENTS.md`](../../AGENTS.md) 的提交前检查。
