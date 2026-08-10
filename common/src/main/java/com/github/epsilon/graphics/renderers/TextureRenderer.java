@@ -5,26 +5,20 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.holders.RendererHolder;
-import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.utils.render.ScissorUtils;
-import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -141,11 +135,8 @@ public class TextureRenderer implements IRenderer {
     }
 
     private void addRoundedTexture(Object textureKey, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float u0, float v0, float u1, float v1, Color color, boolean useLinearFilter) {
-        Batch batch = batches.computeIfAbsent(textureKey, k -> {
-            Batch b = new Batch(new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX));
-            b.useLinearFilter = useLinearFilter;
-            return b;
-        });
+        Batch batch = batches.computeIfAbsent(new TextureKey(textureKey, useLinearFilter),
+                key -> new Batch(new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)));
 
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES);
         batch.buffer.tryMap();
@@ -173,11 +164,8 @@ public class TextureRenderer implements IRenderer {
             float u0, float v0, float u1, float v1, Color color,
             float originX, float originY, float rotationDegrees, boolean useLinearFilter
     ) {
-        Batch batch = batches.computeIfAbsent(textureKey, k -> {
-            Batch b = new Batch(new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX));
-            b.useLinearFilter = useLinearFilter;
-            return b;
-        });
+        Batch batch = batches.computeIfAbsent(new TextureKey(textureKey, useLinearFilter),
+                key -> new Batch(new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)));
 
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES);
         batch.buffer.tryMap();
@@ -309,21 +297,23 @@ public class TextureRenderer implements IRenderer {
                 batch.buffer.unmap();
             }
 
-            batch.preparedTexture = resolveTexture(entry.getKey(), batch.useLinearFilter);
+            batch.preparedTexture = resolveTexture((TextureKey) entry.getKey());
             if (batch.preparedTexture == null) continue;
             maxIndexCount = Math.max(maxIndexCount, (batch.vertexCount / 4) * 6);
         }
         return maxIndexCount;
     }
 
-    private LuminTexture resolveTexture(Object textureKey, boolean useLinearFilter) {
-        if (textureKey instanceof Identifier id) {
-            return TextureCacheHolder.INSTANCE.textureCache.computeIfAbsent(
-                    id, key -> loadTexture(key, useLinearFilter)
-            );
+    private PreparedTexture resolveTexture(TextureKey key) {
+        if (key.texture() instanceof Identifier identifier) {
+            AbstractTexture texture = mc.getTextureManager().getTexture(identifier);
+            GpuSampler sampler = key.linearFilter()
+                    ? RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+                    : texture.getSampler();
+            return new PreparedTexture(texture.getTextureView(), sampler);
         }
-        if (textureKey instanceof LuminTexture tex) {
-            return tex;
+        if (key.texture() instanceof LuminTexture texture) {
+            return new PreparedTexture(texture.getTextureView(), texture.getSampler());
         }
         return null;
     }
@@ -342,46 +332,12 @@ public class TextureRenderer implements IRenderer {
             if (batch.vertexCount == 0 || batch.preparedTexture == null) continue;
 
             int indexCount = (batch.vertexCount / 4) * 6;
-            LuminTexture texture = batch.preparedTexture;
+            PreparedTexture texture = batch.preparedTexture;
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice());
-            pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
+            pass.bindTexture("Sampler0", texture.view(), texture.sampler());
             pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
-    }
-
-    private LuminTexture loadTexture(Identifier identifier, boolean useLinearFilter) {
-        AbstractTexture abstractTexture = mc.getTextureManager().getTexture(identifier);
-        try {
-            GpuTexture texture = abstractTexture.getTexture();
-            GpuTextureView view = abstractTexture.getTextureView();
-            GpuSampler sampler = abstractTexture.getSampler();
-            return new LuminTexture(texture, view, sampler, false, false);
-        } catch (Exception ignored) {
-        }
-
-        NativeImage image;
-        try {
-            var manager = mc.getResourceManager();
-            var resource = manager.getResourceOrThrow(identifier);
-            try (var stream = resource.open()) {
-                image = NativeImage.read(stream);
-            }
-        } catch (IOException e) {
-            image = MissingTextureAtlasSprite.generateMissingImage();
-        }
-
-        var device = RenderSystem.getDevice();
-        GpuTexture texture = device.createTexture(identifier.toString(), GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, image.getWidth(), image.getHeight(), 1, 1);
-
-        device.createCommandEncoder().writeToTexture(texture, image);
-
-        GpuTextureView view = device.createTextureView(texture);
-        GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(useLinearFilter ? FilterMode.LINEAR : FilterMode.NEAREST);
-
-        image.close();
-
-        return new LuminTexture(texture, view, sampler, true, false);
     }
 
     @Override
@@ -408,16 +364,20 @@ public class TextureRenderer implements IRenderer {
             batch.buffer.close();
         }
         batches.clear();
-        TextureCacheHolder.INSTANCE.clearCache();
         RendererHolder.INSTANCE.unregister(this);
+    }
+
+    private record TextureKey(Object texture, boolean linearFilter) {
+    }
+
+    private record PreparedTexture(GpuTextureView view, GpuSampler sampler) {
     }
 
     private static final class Batch {
         final LuminRingBuffer buffer;
         long currentOffset = 0;
         int vertexCount = 0;
-        boolean useLinearFilter;
-        LuminTexture preparedTexture;
+        PreparedTexture preparedTexture;
 
         private Batch(LuminRingBuffer buffer) {
             this.buffer = buffer;

@@ -9,8 +9,6 @@ dependencies {
     minecraft(libs.minecraft)
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
-    implementation(libs.jsvg)
-    include(libs.jsvg)
     compileOnly(libs.sodium.fabric)
     compileOnly(libs.iris.fabric)
     compileOnly(libs.jsr305)

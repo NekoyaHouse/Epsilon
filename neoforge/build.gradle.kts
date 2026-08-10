@@ -28,8 +28,6 @@ val extractedSodiumNeoForgeModJar = files(
 ).builtBy(extractSodiumNeoForgeModJar)
 
 dependencies {
-    implementation(libs.jsvg)
-    jarJar(libs.jsvg)
     compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)

@@ -27,7 +27,6 @@ neoForge {
 }
 
 dependencies {
-    api(libs.jsvg)
     compileOnly(libs.mixin)
     compileOnly(libs.mixinextras.common)
     annotationProcessor(libs.mixinextras.common)

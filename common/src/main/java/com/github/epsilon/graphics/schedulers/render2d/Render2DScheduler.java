@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
-import com.github.epsilon.graphics.svg.SvgTextureCache;
 import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -280,25 +279,6 @@ public class Render2DScheduler implements AutoCloseable {
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
                                 texture.originX(), texture.originY(), texture.rotationDegrees());
                     }
-                } else if (texture.texture() instanceof Render2DTexture.SvgRef(
-                        Identifier identifier, int pixelWidth, int pixelHeight
-                )) {
-                    LuminTexture luminTexture = SvgTextureCache.INSTANCE.get(identifier, pixelWidth, pixelHeight);
-                    if (luminTexture == null) {
-                        break;
-                    }
-                    if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(luminTexture,
-                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
-                    } else {
-                        renderers.textureRenderer().addRotatedRoundedTexture(luminTexture,
-                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
-                                texture.originX(), texture.originY(), texture.rotationDegrees());
-                    }
                 }
             }
             case Render2DCommand.Text text -> {
@@ -481,7 +461,7 @@ public class Render2DScheduler implements AutoCloseable {
         public void addRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
                                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                                       float u0, float v0, float u1, float v1, Color color) {
-            // Texture command 只保存轻量资源引用；真正的纹理缓存和 GPU 提交由 TextureRenderer 在 flush 时处理。
+            // Texture command 只保存轻量资源引用；纹理解析和 GPU 提交由 TextureRenderer 在 flush 时处理。
             scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor, texture,
                     radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,

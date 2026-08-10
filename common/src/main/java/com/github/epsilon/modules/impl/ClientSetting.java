@@ -8,7 +8,6 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
@@ -119,7 +118,6 @@ public class ClientSetting extends Module {
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
     }).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);

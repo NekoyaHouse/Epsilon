@@ -49,12 +49,14 @@ public class MusicInstance extends LandInstance {
     private static final float MARQUEE_SPEED = 22f;
     private static final float MARQUEE_START_HOLD_SECONDS = 1.25f;
     private static final float MARQUEE_GAP = 28f;
+    private static final int COVER_TEXTURE_SIZE = 256;
 
     private final SmtcService service;
     private final Supplier<TextRenderer> textRendererSupplier;
 
     private SmtcSnapshot snapshot = SmtcSnapshot.UNAVAILABLE;
     private long coverRevision = Long.MIN_VALUE;
+    private DynamicTexture coverTexture;
     private boolean coverAvailable;
     private String marqueeTitle = "";
     private long marqueeStartedAtNs = System.nanoTime();
@@ -182,23 +184,30 @@ public class MusicInstance extends LandInstance {
     private void updateCoverTexture(SmtcSnapshot next) {
         if (next.thumbnailRevision() == coverRevision) return;
 
-        releaseCoverTexture();
         coverRevision = next.thumbnailRevision();
+        coverAvailable = false;
         byte[] thumbnail = next.thumbnail();
         if (thumbnail == null || thumbnail.length == 0) return;
 
         NativeImage image = null;
-        DynamicTexture texture = null;
+        DynamicTexture newTexture = null;
         try {
             image = decodeThumbnail(thumbnail);
-            texture = new DynamicTexture(() -> "Epsilon SMTC album art", image);
-            image = null;
-            mc.getTextureManager().register(COVER_TEXTURE, texture);
-            texture = null;
+            if (coverTexture == null) {
+                newTexture = new DynamicTexture(() -> "Epsilon SMTC album art", image);
+                image = null;
+                mc.getTextureManager().register(COVER_TEXTURE, newTexture);
+                coverTexture = newTexture;
+                newTexture = null;
+            } else {
+                coverTexture.setPixels(image);
+                image = null;
+                coverTexture.upload();
+            }
             coverAvailable = true;
         } catch (IOException | RuntimeException e) {
-            if (texture != null) {
-                texture.close();
+            if (newTexture != null) {
+                newTexture.close();
             } else if (image != null) {
                 image.close();
             }
@@ -219,19 +228,17 @@ public class MusicInstance extends LandInstance {
         int cropSize = Math.min(source.getWidth(), source.getHeight());
         int cropX = (source.getWidth() - cropSize) / 2;
         int cropY = (source.getHeight() - cropSize) / 2;
-        int textureSize = Math.min(cropSize, 256);
-
-        BufferedImage normalized = new BufferedImage(textureSize, textureSize, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage normalized = new BufferedImage(COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = normalized.createGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        graphics.drawImage(source, 0, 0, textureSize, textureSize, cropX, cropY, cropX + cropSize, cropY + cropSize, null);
+        graphics.drawImage(source, 0, 0, COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, cropX, cropY, cropX + cropSize, cropY + cropSize, null);
         graphics.dispose();
 
-        NativeImage result = new NativeImage(textureSize, textureSize, false);
+        NativeImage result = new NativeImage(COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, false);
         try {
-            for (int y = 0; y < textureSize; y++) {
-                for (int x = 0; x < textureSize; x++) {
+            for (int y = 0; y < COVER_TEXTURE_SIZE; y++) {
+                for (int x = 0; x < COVER_TEXTURE_SIZE; x++) {
                     result.setPixel(x, y, normalized.getRGB(x, y));
                 }
             }
@@ -243,10 +250,11 @@ public class MusicInstance extends LandInstance {
     }
 
     private void releaseCoverTexture() {
-        if (coverAvailable) {
+        if (coverTexture != null) {
             mc.getTextureManager().release(COVER_TEXTURE);
-            coverAvailable = false;
+            coverTexture = null;
         }
+        coverAvailable = false;
     }
 
     private static String title(SmtcSnapshot snapshot) {

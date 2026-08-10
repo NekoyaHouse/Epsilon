@@ -36,7 +36,6 @@ Minecraft.<init> TAIL
 | `RendererHolder` | 跟踪并销毁 `IRenderer` GPU 资源 |
 | `RenderTargetHolder` | 跟踪并销毁 Lumin render target |
 | `ShaderHolder` | 手部/箱子 outline 和屏幕后处理状态 |
-| `TextureCacheHolder` | `Identifier -> LuminTexture` 缓存与释放 |
 
 ## Managers
 

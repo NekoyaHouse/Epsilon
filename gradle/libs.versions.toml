@@ -22,7 +22,6 @@ iris-fabric = "1.11.2+26.2-fabric"
 iris-neoforge = "1.11.2+26.2-neoforge"
 junit = "5.13.4"
 junit-platform = "1.13.4"
-jsvg = "1.7.0"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
@@ -39,7 +38,6 @@ iris-fabric = { module = "maven.modrinth:iris", version.ref = "iris-fabric" }
 iris-neoforge = { module = "maven.modrinth:iris", version.ref = "iris-neoforge" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
-jsvg = { module = "com.github.weisj:jsvg", version.ref = "jsvg" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

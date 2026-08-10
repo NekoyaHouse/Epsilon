@@ -1,7 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
@@ -112,7 +111,6 @@ public class EpsilonLanguageManager {
 
     private void refreshUi() {
         TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
     }
 
     private String resolveSelectedLanguageCode() {

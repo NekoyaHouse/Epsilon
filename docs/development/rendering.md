@@ -52,15 +52,7 @@ renderer.get().drawAndClear();
 
 一次最多提交 64 段，所有段按并集生成一份阴影。
 
-## SVG 纹理
-
-资源包中的 SVG 通过 `UiTree.Scope.svg(...)`、`roundedSvg(...)` 或 `rotatedSvg(...)` 提交。调用方传入 SVG 的 `Identifier` 和 GUI 坐标尺寸；调度器在 flush 阶段按当前 Lumin GUI scale 计算像素尺寸，使用 JSVG 栅格化并上传为 `LuminTexture`。
-
-SVG 纹理以“资源 ID + 像素宽高”为 key 缓存，不得在业务 HUD 中自行逐帧解析或上传。资源重载、字体/语言切换与 Lumin 全局销毁会经 `TextureCacheHolder` 关闭这些 GPU 纹理。
-
-```java
-scope.svg(Identifier.fromNamespaceAndPath("epsilon", "image/icon.svg"), x, y, 16.0f, 16.0f);
-```
+Minecraft `Identifier` 纹理在每次 flush 时通过 `TextureManager` 解析当前 GPU view，不得跨帧缓存该 view；原版资源重载和动态纹理替换都会关闭并重建底层 GPU 资源。需要自有 GPU 纹理时直接传入 `LuminTexture`，并由创建它的资源持有者负责释放。
 
 ## 3D Scheduler
 
