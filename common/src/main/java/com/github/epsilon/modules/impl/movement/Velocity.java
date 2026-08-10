@@ -60,6 +60,7 @@ public class Velocity extends Module {
     private final IntSetting attackCounts = intSetting("Attack Counts", 1, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting sprintTicks = intSetting("SprintTicks", 3, 1, 5, 1, () -> mode.is(Mode.Reduce));
     private final IntSetting maxDelay = intSetting("Max Delay", 1000, 0, 1000, 50, () -> mode.is(Mode.Reduce));
+    private final BoolSetting swingHand = boolSetting("Swing Hand", false, () -> mode.is(Mode.Reduce));
     private final IntSetting delayTicks = intSetting("Delay Ticks", 3, 1, 5, 1, () -> mode.is(Mode.Delay));
     private final BoolSetting jumpReset = boolSetting("Jump Reset", false, () -> mode.is(Mode.Delay));
 
@@ -219,7 +220,11 @@ public class Velocity extends Module {
         if (attackQueue >= 1) {
             if (Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
                 mc.gameMode.attack(mc.player, pl);
-                mc.player.swing(InteractionHand.MAIN_HAND);
+                if (swingHand.getValue()) {
+                    mc.player.swing(InteractionHand.MAIN_HAND);
+                } else {
+                    mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                }
             }
             attackQueue--;
         }

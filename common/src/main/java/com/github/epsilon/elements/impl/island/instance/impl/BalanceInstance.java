@@ -3,8 +3,6 @@ package com.github.epsilon.elements.impl.island.instance.impl;
 import com.github.epsilon.elements.impl.island.IslandPalette;
 import com.github.epsilon.elements.impl.island.instance.LandInstance;
 import com.github.epsilon.elements.impl.island.pattern.LCPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
-import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -27,7 +25,7 @@ public class BalanceInstance extends LandInstance {
     private final Animation progressAnim = new Animation(Easing.DECELERATE, 200);
 
     public BalanceInstance(Supplier<Long> balanceSupplier, Supplier<Long> maxBalanceSupplier, Supplier<TextRenderer> textRendererSupplier, LCPattern pattern) {
-        super(pattern, new Priority(PriorityType.Low, 1));
+        super(pattern, 2);
         this.balanceSupplier = balanceSupplier;
         this.maxBalanceSupplier = maxBalanceSupplier;
         this.textRendererSupplier = textRendererSupplier;

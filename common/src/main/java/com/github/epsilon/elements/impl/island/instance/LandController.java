@@ -35,11 +35,10 @@ public class LandController {
                 instance.onRemoved();
             }
         }
+
         if (instances.isEmpty()) return null;
 
-        Comparator<LandInstance> comparator = Comparator
-                .comparingInt((LandInstance o) -> o.getPriority().type().index)
-                .thenComparingInt(o -> o.getPriority().value());
+        Comparator<LandInstance> comparator = Comparator.comparingInt(LandInstance::getPriority);
 
         LandInstance best = null;
         for (int i = instances.size() - 1; i >= 0; i--) {

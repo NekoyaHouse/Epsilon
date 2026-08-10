@@ -1,6 +1,7 @@
 #include "smtc_core.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <mutex>
 #include <string_view>
@@ -29,8 +30,17 @@ struct State {
     std::chrono::steady_clock::time_point thumbnail_refresh{};
 };
 
-std::mutex state_mutex;
-State state;
+struct Context {
+    std::mutex mutex;
+    std::atomic_bool reset_requested{false};
+    State state;
+};
+
+Context& process_context() {
+    // WinRT handles and an in-use mutex must not be destroyed under the Windows loader lock.
+    static Context* const instance = new Context();
+    return *instance;
+}
 
 void ensure_apartment() {
     static thread_local bool initialized = false;
@@ -108,9 +118,15 @@ Snapshot unavailable(std::wstring error = {}) {
 } // namespace
 
 Snapshot poll() {
-    std::scoped_lock lock(state_mutex);
+    Context& context = process_context();
+    std::scoped_lock lock(context.mutex);
+    State& state = context.state;
 
     try {
+        if (context.reset_requested.exchange(false, std::memory_order_acq_rel)) {
+            state = State{};
+        }
+
         ensure_apartment();
         if (!state.manager) {
             state.manager = GlobalSystemMediaTransportControlsSessionManager::RequestAsync().get();
@@ -168,8 +184,7 @@ Snapshot poll() {
 }
 
 void reset() {
-    std::scoped_lock lock(state_mutex);
-    state = State{};
+    process_context().reset_requested.store(true, std::memory_order_release);
 }
 
 } // namespace epsilon::smtc

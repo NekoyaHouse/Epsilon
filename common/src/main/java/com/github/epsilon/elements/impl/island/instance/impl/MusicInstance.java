@@ -4,8 +4,6 @@ import com.github.epsilon.Constants;
 import com.github.epsilon.elements.impl.island.IslandPalette;
 import com.github.epsilon.elements.impl.island.instance.LandInstance;
 import com.github.epsilon.elements.impl.island.pattern.LCPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
-import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
@@ -62,7 +60,7 @@ public class MusicInstance extends LandInstance {
     private long marqueeStartedAtNs = System.nanoTime();
 
     public MusicInstance(SmtcService service, Supplier<TextRenderer> textRendererSupplier, LCPattern pattern) {
-        super(pattern, new Priority(PriorityType.Low, 1));
+        super(pattern, 1);
         this.service = service;
         this.textRendererSupplier = textRendererSupplier;
     }

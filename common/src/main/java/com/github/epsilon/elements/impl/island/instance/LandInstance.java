@@ -4,7 +4,6 @@ import com.github.epsilon.elements.impl.island.LandRenderer;
 import com.github.epsilon.elements.impl.island.pattern.LCPattern;
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern;
 import com.github.epsilon.elements.impl.island.pattern.impl.DelayPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.util.Mth;
@@ -20,11 +19,11 @@ import java.awt.*;
 public abstract class LandInstance {
 
     protected final LCPattern pattern;
-    private final Priority priority;
+    private final int priority;
 
     private final TimerUtils timer = new TimerUtils();
 
-    protected LandInstance(LCPattern pattern, Priority priority) {
+    protected LandInstance(LCPattern pattern, int priority) {
         this.pattern = pattern;
         this.priority = priority;
     }
@@ -91,7 +90,7 @@ public abstract class LandInstance {
         };
     }
 
-    public Priority getPriority() {
+    public int getPriority() {
         return priority;
     }
 

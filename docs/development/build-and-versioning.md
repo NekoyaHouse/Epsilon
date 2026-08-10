@@ -39,6 +39,8 @@ CI 使用 Java 25 执行：
 
 Island 的 Music 实例通过 `native/smtc/` 中的 C++/WinRT JNI 桥接读取 Windows System Media Transport Controls。桥接仅支持 Windows x64，其他平台不会加载原生库，也不会创建 Music 实例。
 
+SMTC 查询只在 daemon 工作线程执行。客户端关闭时只取消轮询并使旧结果失效，不得在 Minecraft 关闭线程同步等待 WinRT 查询或原生状态锁；原生 reset 请求由后续工作线程消费。持有 WinRT handle 和轮询锁的 native context 按进程生命周期保留，由操作系统回收，不得在 DLL 卸载锁内析构。
+
 本机需要 Visual Studio C++ 工具链、Windows SDK、CMake 和 Java 25 JDK。DLL 会直接输出到 `common/src/main/resources/natives/windows-x86_64/epsilon_smtc.dll`，并随 Fabric/NeoForge Jar 打包：
 
 ```powershell

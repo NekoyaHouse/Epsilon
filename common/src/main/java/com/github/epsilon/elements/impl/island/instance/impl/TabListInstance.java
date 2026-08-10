@@ -3,8 +3,6 @@ package com.github.epsilon.elements.impl.island.instance.impl;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.elements.impl.island.instance.LandInstance;
 import com.github.epsilon.elements.impl.island.pattern.LCPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
-import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
@@ -91,7 +89,7 @@ public class TabListInstance extends LandInstance {
     private float blockRadius;
 
     public TabListInstance(Supplier<TextRenderer> textRendererSupplier, LCPattern pattern) {
-        super(pattern, new Priority(PriorityType.High, 0));
+        super(pattern, 5);
         this.textRendererSupplier = textRendererSupplier;
     }
 

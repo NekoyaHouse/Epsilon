@@ -3,8 +3,6 @@ package com.github.epsilon.elements.impl.island.instance.impl;
 import com.github.epsilon.elements.impl.island.IslandPalette;
 import com.github.epsilon.elements.impl.island.instance.LandInstance;
 import com.github.epsilon.elements.impl.island.pattern.LCPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
-import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiTree;
@@ -47,7 +45,7 @@ public class TargetInstance extends LandInstance {
     private boolean healthInitialized;
 
     public TargetInstance(LivingEntity target, Supplier<TextRenderer> textRendererSupplier, LCPattern pattern) {
-        super(pattern, new Priority(PriorityType.Low, 0));
+        super(pattern, 3);
         this.target = target;
         this.textRendererSupplier = textRendererSupplier;
     }

@@ -3,8 +3,6 @@ package com.github.epsilon.elements.impl.island.instance.impl;
 import com.github.epsilon.elements.impl.island.IslandPalette;
 import com.github.epsilon.elements.impl.island.instance.LandInstance;
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern;
-import com.github.epsilon.elements.impl.island.priority.Priority;
-import com.github.epsilon.elements.impl.island.priority.PriorityType;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
@@ -53,7 +51,7 @@ public class ScaffoldBlocksInstance extends LandInstance {
     private int targetCount;
 
     public ScaffoldBlocksInstance(Supplier<Integer> count, Supplier<ItemStack> iconSupplier, Supplier<TextRenderer> textRendererSupplier, CheckPattern pattern) {
-        super(pattern, new Priority(PriorityType.Med, 2));
+        super(pattern, 4);
         this.max = Math.max(1, count.get());
         this.countSupplier = count;
         this.iconSupplier = iconSupplier;

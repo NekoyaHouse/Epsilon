@@ -1,6 +1,7 @@
 package love.slmpc.smtc;
 
 public enum SmtcPlaybackStatus {
+
     Closed,
     Opened,
     Changing,
@@ -14,4 +15,5 @@ public enum SmtcPlaybackStatus {
         if (value < 0 || value >= Unknown.ordinal()) return Unknown;
         return values[value];
     }
+
 }
