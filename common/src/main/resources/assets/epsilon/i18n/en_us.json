@@ -1127,6 +1127,7 @@
           "inventory": "Inventory",
           "silent": "Silent"
         },
+        "spoof sprint": "Spoof Sprint",
         "pause on eat": "Pause On Eat",
         "pause on killaura": "Pause On KillAura",
         "pause on scaffold": "Pause On Scaffold",

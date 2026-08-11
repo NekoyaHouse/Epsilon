@@ -59,6 +59,7 @@ public class InvManager extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
+    private final BoolSetting spoofSprint = boolSetting("Spoof Sprint", false, () -> mode.is(Mode.Silent));
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
@@ -122,7 +123,7 @@ public class InvManager extends Module {
         sprintSuppressTicks = 0;
         inventoryActionDelayTicks = 0;
         if (closeSilentInventory) {
-            mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+            sendSilentInventoryClose();
         }
     }
 
@@ -172,7 +173,7 @@ public class InvManager extends Module {
                             || event.getPacket() instanceof ServerboundPlayerActionPacket
             ) {
                 this.inventoryOpen = false;
-                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+                sendSilentInventoryClose();
             }
         }
     }
@@ -530,6 +531,12 @@ public class InvManager extends Module {
     }
 
     public boolean prepareInventoryAction() {
+        if (spoofSprint.getValue() && mode.is(Mode.Silent)) {
+            sprintSuppressTicks = 0;
+            inventoryActionDelayTicks = 0;
+            return true;
+        }
+
         if (sprintSuppressTicks > 0) {
             return inventoryActionDelayTicks <= 0;
         }
@@ -552,35 +559,77 @@ public class InvManager extends Module {
         timer.reset();
         this.inventoryOpen = true;
         int delayTicks = (maxDelay.getValue() + 49) / 50;
-        suppressSprintForTicks(Math.max(10, delayTicks + 2));
+        if (!spoofSprint.getValue() || !mode.is(Mode.Silent)) {
+            suppressSprintForTicks(Math.max(10, delayTicks + 2));
+        }
     }
 
     private boolean click(int slot) {
         if (!prepareInventoryAction()) return false;
-        ClickSlotUtils.click(slot);
+        performWithSpoofedSprint(() -> ClickSlotUtils.click(slot));
         completeInventoryAction();
         return true;
     }
 
     private boolean swap(int slot, int hotbarSlot) {
         if (!prepareInventoryAction()) return false;
-        ClickSlotUtils.swap(slot, hotbarSlot);
+        performWithSpoofedSprint(() -> ClickSlotUtils.swap(slot, hotbarSlot));
         completeInventoryAction();
         return true;
     }
 
     private boolean shiftClick(int slot) {
         if (!prepareInventoryAction()) return false;
-        ClickSlotUtils.shiftClick(slot);
+        performWithSpoofedSprint(() -> ClickSlotUtils.shiftClick(slot));
         completeInventoryAction();
         return true;
     }
 
     private boolean dropAll(int slot) {
         if (!prepareInventoryAction()) return false;
-        ClickSlotUtils.dropAll(slot);
+        performWithSpoofedSprint(() -> ClickSlotUtils.dropAll(slot));
         completeInventoryAction();
         return true;
+    }
+
+    private boolean shouldSpoofSprintPackets() {
+        return spoofSprint.getValue()
+                && mode.is(Mode.Silent)
+                && mc.player != null
+                && mc.getConnection() != null
+                && mc.player.isSprinting();
+    }
+
+    private void sendSprintPacket(ServerboundPlayerCommandPacket.Action action) {
+        mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, action));
+    }
+
+    private void performWithSpoofedSprint(Runnable action) {
+        boolean spoof = shouldSpoofSprintPackets();
+        if (spoof) {
+            sendSprintPacket(ServerboundPlayerCommandPacket.Action.STOP_SPRINTING);
+        }
+
+        try {
+            action.run();
+        } finally {
+            if (spoof) {
+                sendSprintPacket(ServerboundPlayerCommandPacket.Action.START_SPRINTING);
+            }
+        }
+    }
+
+    private void sendSilentInventoryClose() {
+        boolean spoof = shouldSpoofSprintPackets();
+        if (spoof) {
+            sendSprintPacket(ServerboundPlayerCommandPacket.Action.STOP_SPRINTING);
+        }
+
+        mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+
+        if (spoof) {
+            sendSprintPacket(ServerboundPlayerCommandPacket.Action.START_SPRINTING);
+        }
     }
 
 }

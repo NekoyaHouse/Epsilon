@@ -45,19 +45,6 @@ public class TextureRenderer implements IRenderer {
         return RendererHolder.INSTANCE.register(new TextureRenderer());
     }
 
-    public void setScissor(int x, int y, int width, int height) {
-        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
-        scissorEnabled = true;
-        scissorX = scissor.x();
-        scissorY = scissor.y();
-        scissorW = scissor.width();
-        scissorH = scissor.height();
-    }
-
-    public void clearScissor() {
-        scissorEnabled = false;
-    }
-
     public void addQuadTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color) {
         addRoundedTexture(texture, x, y, width, height, 0f, u0, v0, u1, v1, color);
     }
@@ -96,8 +83,7 @@ public class TextureRenderer implements IRenderer {
     }
 
     public void addRotatedTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color, float originX, float originY, float rotationDegrees) {
-        addRotatedRoundedTexture(texture, x, y, width, height, 0.0f, 0.0f, 0.0f, 0.0f,
-                u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        addRotatedRoundedTexture(texture, x, y, width, height, 0.0f, 0.0f, 0.0f, 0.0f, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
     }
 
     public void addRotatedRoundedTexture(
@@ -122,16 +108,6 @@ public class TextureRenderer implements IRenderer {
         addRotatedRoundedTexture(texture, x, y, width, height,
                 radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                 u0, v0, u1, v1, color, originX, originY, rotationDegrees, true);
-    }
-
-    public void addPlayerHead(LuminTexture texture, float x, float y, float size, float radius, Color color) {
-        addRoundedTexture(texture, x, y, size, size, radius, 8f / 64f, 8f / 64f, 16f / 64f, 16f / 64f, color);
-        addRoundedTexture(texture, x, y, size, size, radius, 40f / 64f, 8f / 64f, 48f / 64f, 16f / 64f, color);
-    }
-
-    public void addPlayerHead(Identifier texture, float x, float y, float size, float radius, Color color) {
-        addRoundedTexture(texture, x, y, size, size, radius, 8f / 64f, 8f / 64f, 16f / 64f, 16f / 64f, color);
-        addRoundedTexture(texture, x, y, size, size, radius, 40f / 64f, 8f / 64f, 48f / 64f, 16f / 64f, color);
     }
 
     private void addRoundedTexture(Object textureKey, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float u0, float v0, float u1, float v1, Color color, boolean useLinearFilter) {
@@ -209,9 +185,7 @@ public class TextureRenderer implements IRenderer {
         return originY + dx * sin + dy * cos;
     }
 
-    private void writeVertex(long addr, float x, float y, float u, float v, int color,
-                             float localX, float localY, float localWidth, float localHeight,
-                             float r1, float r2, float r3, float r4) {
+    private void writeVertex(long addr, float x, float y, float u, float v, int color, float localX, float localY, float localWidth, float localHeight, float r1, float r2, float r3, float r4) {
         MemoryUtil.memPutFloat(addr, x);
         MemoryUtil.memPutFloat(addr + 4, y);
         MemoryUtil.memPutFloat(addr + 8, 0.0f); // z
@@ -227,6 +201,19 @@ public class TextureRenderer implements IRenderer {
         MemoryUtil.memPutFloat(addr + 44, r2);
         MemoryUtil.memPutFloat(addr + 48, r3);
         MemoryUtil.memPutFloat(addr + 52, r4);
+    }
+
+    public void setScissor(int x, int y, int width, int height) {
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
+        scissorEnabled = true;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
+    }
+
+    public void clearScissor() {
+        scissorEnabled = false;
     }
 
     @Override
