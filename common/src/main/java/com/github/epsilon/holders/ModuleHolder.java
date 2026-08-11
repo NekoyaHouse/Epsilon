@@ -16,7 +16,6 @@ import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.movement.follower.Follower;
-import com.github.epsilon.modules.impl.movement.noslow.NoSlow;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
 import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
