@@ -27,11 +27,11 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @ClInitNative
-public class NoSlow extends Module {
+public class NoSlowdown extends Module {
 
-    public static final NoSlow INSTANCE = new NoSlow();
+    public static final NoSlowdown INSTANCE = new NoSlowdown();
 
-    private NoSlow() {
+    private NoSlowdown() {
         super("No Slow", Category.MOVEMENT);
     }
 

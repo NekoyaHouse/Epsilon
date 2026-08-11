@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
-import com.github.epsilon.modules.impl.movement.NoSlow;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -202,7 +202,7 @@ public class InvManager extends Module {
             cancelPendingAction();
             return;
         }
-        if (NoSlow.INSTANCE.isWorking()) {
+        if (NoSlowdown.INSTANCE.isWorking()) {
             cancelPendingAction();
             return;
         }

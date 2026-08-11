@@ -88,7 +88,7 @@ public class EpsilonFontGlyph implements BakedGlyph {
     }
 
     private float baselineY(float y) {
-        return y + this.font.fontFile.pixelAscent * scale();
+        return y + EpsilonFontMetrics.MINECRAFT_BASELINE;
     }
 
     private float scale() {

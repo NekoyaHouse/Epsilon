@@ -10,7 +10,7 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.NoSlow;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.settings.impl.*;
@@ -236,7 +236,7 @@ public class KillAura extends Module {
         HitResult hitResult = Managers.ROTATION.getHitResult();
         while (attacks > 0) {
             attacks--;
-            if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlow.INSTANCE.isWorking()) return;
+            if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking()) return;
             if (hitResult instanceof EntityHitResult entityHitResult) {
                 Entity entity = entityHitResult.getEntity();
                 mc.gameMode.attack(mc.player, entity);

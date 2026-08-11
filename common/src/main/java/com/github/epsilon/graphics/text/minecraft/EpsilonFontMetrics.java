@@ -10,7 +10,9 @@ import net.minecraft.util.StringDecomposer;
 
 public class EpsilonFontMetrics {
 
-    private static final float VANILLA_LINE_HEIGHT = 9.0f;
+    private static final float REPLACEMENT_LINE_HEIGHT = 10.0f;
+    // 26.2 GlyphBitmap.getTop() 使用 y + 7 - bearingTop，替换字形沿用同一基线。
+    static final float MINECRAFT_BASELINE = 7.0f;
     private static final Identifier FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
 
     public static final float LETTER_SPACING = 0f;
@@ -35,7 +37,7 @@ public class EpsilonFontMetrics {
     }
 
     public static float minecraftScale(TtfFontLoader font) {
-        return VANILLA_LINE_HEIGHT / font.fontFile.fontHeight;
+        return REPLACEMENT_LINE_HEIGHT / font.fontFile.fontHeight;
     }
 
     public static float advance(int codepoint, Style style, TtfFontLoader font) {

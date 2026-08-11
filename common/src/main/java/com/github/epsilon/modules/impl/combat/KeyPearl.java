@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.NoSlow;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
@@ -68,10 +68,10 @@ public class KeyPearl extends Module {
                 return;
             }
 
-            if (pauseOnEat.getValue() && (PlayerUtils.isEating() || NoSlow.INSTANCE.isWorking())) {
+            if (pauseOnEat.getValue() && (PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking())) {
                 return;
             } else {
-                NoSlow.INSTANCE.stopIfWorking();
+                NoSlowdown.INSTANCE.stopIfWorking();
             }
 
             // 强制给你的转头归位

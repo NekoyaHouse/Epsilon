@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.NoSlow;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.network.NetworkUtils;
@@ -69,7 +69,7 @@ public class NoFall extends Module {
         }
 
         if (jump) {
-            NoSlow.INSTANCE.stopIfWorking();
+            NoSlowdown.INSTANCE.stopIfWorking();
             event.setJump(true);
             jump = false;
         }
