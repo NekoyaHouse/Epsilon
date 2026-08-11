@@ -29,7 +29,7 @@ public class MixinLivingEntity {
     @Inject(method = "setSprinting", at = @At("HEAD"), cancellable = true)
     private void preventSprintDuringInventorySorting(boolean sprinting, CallbackInfo ci) {
         InvManager invManager = InvManager.INSTANCE;
-        if (sprinting && (LivingEntity) (Object) this == mc.player && invManager.isEnabled() && invManager.isSprintSuppressed()) {
+        if (sprinting && (LivingEntity) (Object) this == mc.player && invManager.isEnabled() && invManager.isSprintTransitionPending()) {
             ci.cancel();
         }
     }

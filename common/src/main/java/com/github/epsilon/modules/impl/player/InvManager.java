@@ -18,7 +18,6 @@ import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import love.slmpc.ClInitNative;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.*;
@@ -58,8 +57,14 @@ public class InvManager extends Module {
         PunchBow
     }
 
+    private enum ActionState {
+        IDLE,
+        WAITING_FOR_SPRINT_STOP,
+        READY_TO_EXECUTE,
+        WAITING_FOR_INVENTORY_CLOSE
+    }
+
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
-    private final BoolSetting spoofSprint = boolSetting("Spoof Sprint", false, () -> mode.is(Mode.Silent));
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
@@ -102,8 +107,9 @@ public class InvManager extends Module {
     private boolean clickOffHand = false;
     private boolean inventoryOpen = false;
 
-    private int sprintSuppressTicks;
-    private int inventoryActionDelayTicks;
+    private ActionState actionState = ActionState.IDLE;
+    private boolean actionConsumed;
+    private int delayMs;
 
     private final TimerUtils timer = new TimerUtils();
 
@@ -111,8 +117,10 @@ public class InvManager extends Module {
     protected void onEnable() {
         clickOffHand = false;
         inventoryOpen = false;
-        sprintSuppressTicks = 0;
-        inventoryActionDelayTicks = 0;
+        actionState = ActionState.IDLE;
+        actionConsumed = false;
+        delayMs = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
+        timer.reset();
     }
 
     @Override
@@ -120,10 +128,11 @@ public class InvManager extends Module {
         boolean closeSilentInventory = inventoryOpen && mode.is(Mode.Silent) && mc.getConnection() != null && mc.player != null;
         clickOffHand = false;
         inventoryOpen = false;
-        sprintSuppressTicks = 0;
-        inventoryActionDelayTicks = 0;
+        actionState = ActionState.IDLE;
+        actionConsumed = false;
+        delayMs = 0;
         if (closeSilentInventory) {
-            sendSilentInventoryClose();
+            mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
         }
     }
 
@@ -162,7 +171,12 @@ public class InvManager extends Module {
 
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
-        if (event.getPacket() instanceof ServerboundContainerClosePacket) this.inventoryOpen = false;
+        if (event.getPacket() instanceof ServerboundContainerClosePacket) {
+            this.inventoryOpen = false;
+            if (actionState == ActionState.WAITING_FOR_INVENTORY_CLOSE) {
+                actionState = ActionState.IDLE;
+            }
+        }
         if (this.inventoryOpen && mode.is(Mode.Silent)) {
             if (
                     event.getPacket() instanceof ServerboundMovePlayerPacket
@@ -173,7 +187,7 @@ public class InvManager extends Module {
                             || event.getPacket() instanceof ServerboundPlayerActionPacket
             ) {
                 this.inventoryOpen = false;
-                sendSilentInventoryClose();
+                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
             }
         }
     }
@@ -181,8 +195,17 @@ public class InvManager extends Module {
     @EventHandler
     private void onTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
-        if (InvHelper.shouldDisableFeatures()) return;
-        if (NoSlow.INSTANCE.isWorking()) return;
+
+        actionConsumed = false;
+
+        if (InvHelper.shouldDisableFeatures()) {
+            cancelPendingAction();
+            return;
+        }
+        if (NoSlow.INSTANCE.isWorking()) {
+            cancelPendingAction();
+            return;
+        }
 
         if (mc.player.isMoving()) {
             this.noMoveTicks = 0;
@@ -190,25 +213,36 @@ public class InvManager extends Module {
             this.noMoveTicks++;
         }
 
-        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
-        if (pauseOnKillAura.getValue() && KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) return;
-        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) return;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) {
+            cancelPendingAction();
+            return;
+        }
+        if (pauseOnKillAura.getValue() && KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) {
+            cancelPendingAction();
+            return;
+        }
+        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) {
+            cancelPendingAction();
+            return;
+        }
 
         boolean allowMove = mode.is(Mode.Silent);
         if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.gui.screen() instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
             this.clickOffHand = false;
+            cancelPendingAction();
             return;
         }
-        if (mc.gui.screen() instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
+        if (mc.gui.screen() instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId) {
+            cancelPendingAction();
             return;
-        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
+        }
 
         if (this.autoArmor.getValue()) {
             EquipmentSlot[] armorSlots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
             for (int i = 0; i < armorSlots.length; i++) {
                 ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);
                 if (InvHelper.isArmor(stack)) {
-                    if (!stack.isEmpty() && timer.passedMillise(nextDelay) && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
+                    if (!stack.isEmpty() && canExecuteInventoryAction() && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
                         dropAll(4 + (4 - i));
                     }
                 }
@@ -219,7 +253,7 @@ public class InvManager extends Module {
                     float currentItemScore = InvHelper.getProtection(stack);
                     boolean isBestItem = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)) == currentItemScore;
                     boolean isBetterItem = InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) < currentItemScore;
-                    if (isBestItem && isBetterItem && timer.passedMillise(nextDelay)) {
+                    if (isBestItem && isBetterItem && canExecuteInventoryAction()) {
                         if (ix < 9) {
                             shiftClick(ix + 36);
                         } else {
@@ -230,7 +264,7 @@ public class InvManager extends Module {
             }
         }
 
-        if (this.clickOffHand && timer.passedMillise(nextDelay)) {
+        if (this.clickOffHand && canExecuteInventoryAction()) {
             if (click(45)) {
                 this.clickOffHand = false;
             }
@@ -245,7 +279,7 @@ public class InvManager extends Module {
 
             if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                 if (offHand.getCount() < offHand.getMaxStackSize() && egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         boolean clicked;
                         if (egapSlot < 9) {
                             clicked = click(egapSlot + 36);
@@ -259,11 +293,11 @@ public class InvManager extends Module {
                 }
             } else if (offHandItem == Items.GOLDEN_APPLE) {
                 if (egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
                     }
                 } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         int targetSlot = gapSlot;
                         boolean clicked;
                         if (targetSlot < 9) {
@@ -278,11 +312,11 @@ public class InvManager extends Module {
                 }
             } else {
                 if (egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
                     }
                 } else if (gapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(gapSlot);
                     }
                 }
@@ -293,12 +327,12 @@ public class InvManager extends Module {
             if (bestProjectile != null) {
                 int slot = InvHelper.getItemStackSlot(bestProjectile);
                 boolean shouldSwap = offHand.getItem() != Items.EGG && offHand.getItem() != Items.SNOWBALL || offHand.getCount() < bestProjectile.getCount();
-                if (shouldSwap && slot != -1 && timer.passedMillise(nextDelay)) this.swapOffHand(slot);
+                if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this.swapOffHand(slot);
             }
         } else if (this.offhandItem.is(OffhandItemMode.FishingRod)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             int slotx = InvHelper.getItemSlot(Items.FISHING_ROD);
-            if (slotx != -1 && timer.passedMillise(nextDelay) && offHand.getItem() != Items.FISHING_ROD)
+            if (slotx != -1 && canExecuteInventoryAction() && offHand.getItem() != Items.FISHING_ROD)
                 this.swapOffHand(slotx);
         } else if (this.offhandItem.is(OffhandItemMode.Block)) {
             ItemStack offHand = InvHelper.getOffhandStack();
@@ -306,7 +340,7 @@ public class InvManager extends Module {
             if (bestBlock != null) {
                 int slotx = InvHelper.getItemStackSlot(bestBlock);
                 boolean shouldSwapx = !InvHelper.isValidStack(offHand) || offHand.getCount() < bestBlock.getCount();
-                if (shouldSwapx && slotx != -1 && timer.passedMillise(nextDelay)) this.swapOffHand(slotx);
+                if (shouldSwapx && slotx != -1 && canExecuteInventoryAction()) this.swapOffHand(slotx);
             }
         }
 
@@ -433,32 +467,27 @@ public class InvManager extends Module {
             Collections.shuffle(slots);
             for (Integer slotIdx : slots) {
                 ItemStack stack = InvHelper.getInventoryStack(slotIdx);
-                if (!stack.isEmpty() && !this.isItemUseful(stack) && timer.passedMillise(nextDelay)) {
-                    this.throwItem(stack);
-                    timer.reset();
-                    return;
+                if (!stack.isEmpty() && !this.isItemUseful(stack) && canExecuteInventoryAction()) {
+                    if (this.throwItem(stack)) {
+                        return;
+                    }
                 }
             }
+        }
+
+        if (actionState == ActionState.READY_TO_EXECUTE && !actionConsumed) {
+            actionState = ActionState.IDLE;
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSprintTick(ClientTickEvent.Pre event) {
-        if (nullCheck()) return;
-
-        if (sprintSuppressTicks > 0) {
+        if (!nullCheck() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
             mc.player.setSprinting(false);
-            KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
+            if (!mc.player.wasSprinting) {
+                actionState = ActionState.READY_TO_EXECUTE;
+            }
         }
-
-        if (inventoryActionDelayTicks > 0) {
-            inventoryActionDelayTicks--;
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    private void onPostTick(ClientTickEvent.Post event) {
-        if (sprintSuppressTicks > 0) sprintSuppressTicks--;
     }
 
     private void swapOffHand(int slot) {
@@ -469,24 +498,23 @@ public class InvManager extends Module {
         }
     }
 
-    private void throwItem(ItemStack item) {
-        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
-        if (InvHelper.isItemValid(item) && timer.passedMillise(nextDelay)) {
+    private boolean throwItem(ItemStack item) {
+        if (InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
                 if (itemSlot < 9) {
-                    dropAll(itemSlot + 36);
+                    return dropAll(itemSlot + 36);
                 } else {
-                    dropAll(itemSlot);
+                    return dropAll(itemSlot);
                 }
             }
         }
+        return false;
     }
 
     private void swapItem(int targetSlot, ItemStack bestItem) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
-        if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && timer.passedMillise(nextDelay)) {
+        if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && canExecuteInventoryAction()) {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
@@ -500,8 +528,7 @@ public class InvManager extends Module {
 
     private void swapItem(int targetSlot, Item item) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
-        if (InvHelper.isItemValid(currentSlot) && timer.passedMillise(nextDelay)) {
+        if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
             int bestItemSlot = InvHelper.getItemSlot(item);
             if (bestItemSlot != -1) {
                 ItemStack bestItemStack = InvHelper.getInventoryStack(bestItemSlot);
@@ -516,120 +543,74 @@ public class InvManager extends Module {
         }
     }
 
-    public boolean isSprintSuppressed() {
-        return sprintSuppressTicks > 0;
-    }
-
-    public void suppressSprintForTicks(int ticks) {
-        if (ticks > sprintSuppressTicks) {
-            sprintSuppressTicks = ticks;
-        }
-        if (mc.player != null) {
-            mc.player.setSprinting(false);
-            KeyMapping.set(mc.options.keySprint.getDefaultKey(), false);
-        }
+    public boolean isSprintTransitionPending() {
+        return mode.is(Mode.Silent) && actionState != ActionState.IDLE;
     }
 
     public boolean prepareInventoryAction() {
-        if (spoofSprint.getValue() && mode.is(Mode.Silent)) {
-            sprintSuppressTicks = 0;
-            inventoryActionDelayTicks = 0;
+        if (!mode.is(Mode.Silent)) {
+            return true;
+        }
+        if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+            return false;
+        }
+        if (actionState == ActionState.READY_TO_EXECUTE) {
             return true;
         }
 
-        if (sprintSuppressTicks > 0) {
-            return inventoryActionDelayTicks <= 0;
-        }
-        boolean wasSprinting = mc.player.isSprinting();
-        boolean keyPressed = mc.options.keySprint.isDown();
-        if (wasSprinting) {
-            suppressSprintForTicks(6);
-            if (inventoryActionDelayTicks < 1) {
-                inventoryActionDelayTicks = 1;
-            }
+        if (mc.player.isSprinting() || mc.player.wasSprinting) {
+            actionState = ActionState.WAITING_FOR_SPRINT_STOP;
+            mc.player.setSprinting(false);
             return false;
         }
-        if (keyPressed) {
-            suppressSprintForTicks(2);
-        }
-        return inventoryActionDelayTicks <= 0;
+
+        return true;
     }
 
     private void completeInventoryAction() {
         timer.reset();
+        delayMs = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
         this.inventoryOpen = true;
-        int delayTicks = (maxDelay.getValue() + 49) / 50;
-        if (!spoofSprint.getValue() || !mode.is(Mode.Silent)) {
-            suppressSprintForTicks(Math.max(10, delayTicks + 2));
+        actionConsumed = true;
+        actionState = mode.is(Mode.Silent) ? ActionState.WAITING_FOR_INVENTORY_CLOSE : ActionState.IDLE;
+    }
+
+    private boolean canExecuteInventoryAction() {
+        return !actionConsumed && timer.passedMillise(delayMs);
+    }
+
+    private void cancelPendingAction() {
+        if (actionState != ActionState.IDLE && actionState != ActionState.WAITING_FOR_INVENTORY_CLOSE) {
+            actionState = ActionState.IDLE;
         }
     }
 
     private boolean click(int slot) {
         if (!prepareInventoryAction()) return false;
-        performWithSpoofedSprint(() -> ClickSlotUtils.click(slot));
+        ClickSlotUtils.click(slot);
         completeInventoryAction();
         return true;
     }
 
     private boolean swap(int slot, int hotbarSlot) {
         if (!prepareInventoryAction()) return false;
-        performWithSpoofedSprint(() -> ClickSlotUtils.swap(slot, hotbarSlot));
+        ClickSlotUtils.swap(slot, hotbarSlot);
         completeInventoryAction();
         return true;
     }
 
     private boolean shiftClick(int slot) {
         if (!prepareInventoryAction()) return false;
-        performWithSpoofedSprint(() -> ClickSlotUtils.shiftClick(slot));
+        ClickSlotUtils.shiftClick(slot);
         completeInventoryAction();
         return true;
     }
 
     private boolean dropAll(int slot) {
         if (!prepareInventoryAction()) return false;
-        performWithSpoofedSprint(() -> ClickSlotUtils.dropAll(slot));
+        ClickSlotUtils.dropAll(slot);
         completeInventoryAction();
         return true;
-    }
-
-    private boolean shouldSpoofSprintPackets() {
-        return spoofSprint.getValue()
-                && mode.is(Mode.Silent)
-                && mc.player != null
-                && mc.getConnection() != null
-                && mc.player.isSprinting();
-    }
-
-    private void sendSprintPacket(ServerboundPlayerCommandPacket.Action action) {
-        mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, action));
-    }
-
-    private void performWithSpoofedSprint(Runnable action) {
-        boolean spoof = shouldSpoofSprintPackets();
-        if (spoof) {
-            sendSprintPacket(ServerboundPlayerCommandPacket.Action.STOP_SPRINTING);
-        }
-
-        try {
-            action.run();
-        } finally {
-            if (spoof) {
-                sendSprintPacket(ServerboundPlayerCommandPacket.Action.START_SPRINTING);
-            }
-        }
-    }
-
-    private void sendSilentInventoryClose() {
-        boolean spoof = shouldSpoofSprintPackets();
-        if (spoof) {
-            sendSprintPacket(ServerboundPlayerCommandPacket.Action.STOP_SPRINTING);
-        }
-
-        mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
-
-        if (spoof) {
-            sendSprintPacket(ServerboundPlayerCommandPacket.Action.START_SPRINTING);
-        }
     }
 
 }

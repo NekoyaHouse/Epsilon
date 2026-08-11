@@ -37,7 +37,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @Inject(method = "canStartSprinting", at = @At("HEAD"), cancellable = true)
     private void preventSprintDuringInventorySorting(CallbackInfoReturnable<Boolean> cir) {
         InvManager invManager = InvManager.INSTANCE;
-        if (invManager.isEnabled() && invManager.isSprintSuppressed()) {
+        if (invManager.isEnabled() && invManager.isSprintTransitionPending()) {
             this.sprintTriggerTime = 0;
             cir.setReturnValue(false);
         }
