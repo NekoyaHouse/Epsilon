@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
@@ -201,8 +201,8 @@ public class AutoMap extends Module {
         }
 
         float yaw = yawTo(target);
-        float pitch = Managers.ROTATION.isActive() ? Managers.ROTATION.getPitch() : mc.player.getXRot();
-        Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed.getValue(), Priority.Highest);
+        float pitch = RotationManager.INSTANCE.isActive() ? RotationManager.INSTANCE.getPitch() : mc.player.getXRot();
+        RotationManager.INSTANCE.setRotations(new Rot2f(yaw, pitch), rotationSpeed.getValue(), Priority.Highest);
     }
 
     private Vec3 currentTarget() {

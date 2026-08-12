@@ -2,8 +2,8 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -57,7 +57,7 @@ public class MultiAura extends Module {
         attacks += MathUtils.getRandom(minCPS.getValue().doubleValue(), maxCPS.getValue().doubleValue()) / 20.0;
         if (attacks < 1.0) return;
 
-        List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
+        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
                 range.getValue(),
                 fov.getValue().floatValue(),
                 targetPlayer.getValue(),

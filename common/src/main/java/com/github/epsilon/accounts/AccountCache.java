@@ -1,7 +1,8 @@
 package com.github.epsilon.accounts;
 
 import com.github.epsilon.graphics.PlayerHeadTexture;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.ExecutorManager;
+import com.github.epsilon.managers.SkinManager;
 import com.google.gson.JsonObject;
 import com.mojang.util.UndashedUuid;
 
@@ -15,7 +16,7 @@ public class AccountCache {
     private volatile boolean loadingHead;
 
     public PlayerHeadTexture getHeadTexture() {
-        return headTexture != null ? headTexture : Managers.SKIN.STEVE_HEAD;
+        return headTexture != null ? headTexture : SkinManager.INSTANCE.STEVE_HEAD;
     }
 
     public void loadHead() {
@@ -32,8 +33,8 @@ public class AccountCache {
 
         loadingHead = true;
 
-        Managers.EXECUTOR.execute(() -> {
-            byte[] head = Managers.SKIN.fetchHead(UndashedUuid.fromStringLenient(uuid));
+        ExecutorManager.INSTANCE.execute(() -> {
+            byte[] head = SkinManager.INSTANCE.fetchHead(UndashedUuid.fromStringLenient(uuid));
             mc.execute(() -> {
                 if (head != null) headTexture = new PlayerHeadTexture(head);
                 loadingHead = false;

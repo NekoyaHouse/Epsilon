@@ -2,8 +2,8 @@ package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.holders.RenderTargetHolder;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RenderTargetManager;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.GpuFormat;
@@ -46,8 +46,8 @@ public class LuminRenderSystem {
     public static void destroyAll() {
         guiProjectionMatrixBuffer.close();
         ShaderUniforms.closeAll();
-        RenderTargetHolder.INSTANCE.destroyAll();
-        RendererHolder.INSTANCE.destroyAll();
+        RenderTargetManager.INSTANCE.destroyAll();
+        RendererManager.INSTANCE.destroyAll();
         StaticFontLoader.destroyDefault();
     }
 
@@ -283,11 +283,11 @@ public class LuminRenderSystem {
         }
 
         public static LuminRenderTarget create(String name, int width, int height) {
-            return RenderTargetHolder.INSTANCE.register(new LuminRenderTarget(name, width, height, false));
+            return RenderTargetManager.INSTANCE.register(new LuminRenderTarget(name, width, height, false));
         }
 
         public static LuminRenderTarget createWithDepth(String name, int width, int height) {
-            return RenderTargetHolder.INSTANCE.register(new LuminRenderTarget(name, width, height, true));
+            return RenderTargetManager.INSTANCE.register(new LuminRenderTarget(name, width, height, true));
         }
 
         private void createTextures() {
@@ -388,7 +388,7 @@ public class LuminRenderSystem {
         @Override
         public void close() {
             destroyTextures();
-            RenderTargetHolder.INSTANCE.unregister(this);
+            RenderTargetManager.INSTANCE.unregister(this);
         }
     }
 

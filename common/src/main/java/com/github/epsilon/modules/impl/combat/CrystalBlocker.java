@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -130,11 +130,11 @@ public class CrystalBlocker extends Module {
             mc.player.setYRot(rot.getYaw());
             mc.player.setXRot(Mth.clamp(rot.getPitch(), -90.0f, 90.0f));
         } else if (rotate.is(RotateMode.Silent)) {
-            Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), Priority.Highest);
+            RotationManager.INSTANCE.setRotations(rot, rotationSpeed.getValue(), Priority.Highest);
 
-            if (Managers.ROTATION.rotations != null) {
-                double yawDiff = Math.abs(Mth.wrapDegrees(Managers.ROTATION.getYaw() - rot.getYaw()));
-                double pitchDiff = Math.abs(Managers.ROTATION.getPitch() - rot.getPitch());
+            if (RotationManager.INSTANCE.rotations != null) {
+                double yawDiff = Math.abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.getYaw()));
+                double pitchDiff = Math.abs(RotationManager.INSTANCE.getPitch() - rot.getPitch());
                 if (yawDiff > 15 || pitchDiff > 15) {
                     readyToPlace = false;
                 }

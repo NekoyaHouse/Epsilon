@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.ColorUtils;
@@ -78,7 +78,7 @@ public class ModuleList extends HudModule {
     public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
 
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<Module> modules = ModuleManager.INSTANCE.getModules();
         Set<Module> liveModules = new HashSet<>(modules);
         moduleAnimations.keySet().removeIf(module -> !liveModules.contains(module));
         moduleYPositions.keySet().removeIf(module -> !liveModules.contains(module));

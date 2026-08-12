@@ -15,9 +15,9 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.TranslationManager;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -211,7 +211,7 @@ public class ModuleListPanel implements AutoCloseable {
             }
             if (row.getToggleBounds().contains(event.x(), event.y())) {
                 row.getModule().module().toggle();
-                Managers.SOUND.playInUi(row.getModule().module().isEnabled() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+                SoundManager.INSTANCE.playInUi(row.getModule().module().isEnabled() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             } else {
                 state.setSelectedModule(row.getModule().module());
             }
@@ -362,7 +362,7 @@ public class ModuleListPanel implements AutoCloseable {
 
     private long buildContentSignature(List<Module> modules) {
         long signature = 17L;
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + state.getSelectedCategory().name().hashCode();
         signature = signature * 31L + state.getSearchQuery().hashCode();
         signature = signature * 31L + (searchFocused ? 1 : 0);

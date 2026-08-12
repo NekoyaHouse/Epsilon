@@ -1,9 +1,11 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
@@ -49,12 +51,22 @@ public class NoFall extends Module {
             }
             case GrimJump -> {
                 double oldFallDistance = mc.player.fallDistance;
-                if (lastFallDistance >= fallDistance.getValue() && event.isOnGround()) {
-                    event.setOnGround(false);
-                    NetworkUtils.sendPacketNoEvent(new ServerboundMovePlayerPacket.StatusOnly(true, mc.player.horizontalCollision));
-                    Constants.skipTicks++;
-                    jump = true;
+
+                if (lastFallDistance >= fallDistance.getValue()) {
+                    NoSlowdown noSlowdown = NoSlowdown.INSTANCE;
+                    if (noSlowdown.isWorking()) {
+                        NotificationManager.INSTANCE.warning(noSlowdown.getTranslatedName(), EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_FALLING.getTranslatedName());
+                        noSlowdown.stop();
+                    }
+
+                    if (event.isOnGround()) {
+                        event.setOnGround(false);
+                        NetworkUtils.sendPacketNoEvent(new ServerboundMovePlayerPacket.StatusOnly(true, mc.player.horizontalCollision));
+                        Constants.skipTicks++;
+                        jump = true;
+                    }
                 }
+
                 lastFallDistance = oldFallDistance;
             }
         }
@@ -69,7 +81,6 @@ public class NoFall extends Module {
         }
 
         if (jump) {
-            NoSlowdown.INSTANCE.stopIfWorking();
             event.setJump(true);
             jump = false;
         }

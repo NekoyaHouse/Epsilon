@@ -19,7 +19,7 @@ public class MixinWebBlock {
 
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
     private void onEntityCollision(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
-        if (entity == mc.player && FastWeb.INSTANCE.cobweb()) {
+        if (entity == mc.player && FastWeb.INSTANCE.isVanillaMode()) {
             ci.cancel();
         }
     }

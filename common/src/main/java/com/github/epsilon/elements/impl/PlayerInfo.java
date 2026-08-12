@@ -9,7 +9,8 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.HealthManager;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -188,8 +189,8 @@ public class PlayerInfo extends HudModule {
         List<PlayerRow> rows = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             AbstractClientPlayer player = players.get(i);
-            float health = Managers.HEALTH != null
-                    ? Managers.HEALTH.getHealth(player)
+            float health = HealthManager.INSTANCE != null
+                    ? HealthManager.INSTANCE.getHealth(player)
                     : player.getHealth() + player.getAbsorptionAmount();
             float maxHealth = Math.max(1.0f, player.getMaxHealth() + Math.max(0.0f, player.getAbsorptionAmount()));
             int distance = Math.round(mc.player.distanceTo(player));
@@ -312,7 +313,7 @@ public class PlayerInfo extends HudModule {
     }
 
     private Color resolveNameColor(AbstractClientPlayer player) {
-        return Managers.FRIEND != null && Managers.FRIEND.isFriend(player) ? FRIEND_COLOR : textColor.getValue();
+        return FriendManager.INSTANCE != null && FriendManager.INSTANCE.isFriend(player) ? FRIEND_COLOR : textColor.getValue();
     }
 
     private Color resolveHealthColor(float ratio) {

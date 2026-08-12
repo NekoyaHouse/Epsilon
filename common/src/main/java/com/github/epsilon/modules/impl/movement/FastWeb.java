@@ -19,13 +19,11 @@ public class FastWeb extends Module {
 
     private enum Mode {
         Vanilla,
-        Grim
+        GrimMotion
     }
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Grim);
-
-    private final BoolSetting onlyOnGround = boolSetting("Only On Ground", false, () -> mode.is(Mode.Grim));
-    private final BoolSetting motionY = boolSetting("Motion Y", false, () -> mode.is(Mode.Grim));
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.GrimMotion);
+    private final BoolSetting onlyOnGround = boolSetting("Only On Ground", false, () -> mode.is(Mode.GrimMotion));
 
     @EventHandler
     private void onSendPosition(SendPositionEvent event) {
@@ -40,16 +38,12 @@ public class FastWeb extends Module {
         }
 
         if (mc.player.onGround() || !onlyOnGround.getValue()) {
-            double[] forward = MoveUtils.forward(0.63);
+            double[] forward = MoveUtils.forward(0.6);
             mc.player.setDeltaMovement(forward[0], mc.player.getDeltaMovement().y, forward[1]);
-        }
-
-        if (motionY.getValue()) {
-            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, 0.1, mc.player.getDeltaMovement().z);
         }
     }
 
-    public boolean cobweb() {
+    public boolean isVanillaMode() {
         return isEnabled() && mode.is(Mode.Vanilla);
     }
 

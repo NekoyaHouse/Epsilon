@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -36,7 +36,7 @@ public class MixinGameRenderer {
                 frame.executeTranslucentAfterTerrain();
                 frame.executeAlwaysOnTop();
             } finally {
-                ShaderHolder.INSTANCE.endHandOutlineCapture();
+                ShaderManager.INSTANCE.endHandOutlineCapture();
             }
         } else {
             original.call(dispatcher, storage);
@@ -47,9 +47,9 @@ public class MixinGameRenderer {
     private void processShadersOutline(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
-            ShaderHolder.INSTANCE.processOutlineTarget(minecraft.levelRenderer.entityOutlineTarget, shaders.entityShader);
-            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
-            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
+            ShaderManager.INSTANCE.processOutlineTarget(minecraft.levelRenderer.entityOutlineTarget, shaders.entityShader);
+            ShaderManager.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
+            ShaderManager.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
         }
     }
 

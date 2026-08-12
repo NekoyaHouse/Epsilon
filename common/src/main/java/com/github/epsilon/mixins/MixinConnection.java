@@ -2,7 +2,8 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.network.ClientboundPacketManager;
+import com.github.epsilon.managers.network.ServerboundPacketManager;
 import com.github.epsilon.utils.network.ClientIdentityHider;
 import com.github.epsilon.utils.network.NetworkUtils;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -19,7 +20,7 @@ public class MixinConnection {
 
     @WrapOperation(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;genericsFtw(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;)V"))
     private void onReceivePacket(Packet<?> packet, PacketListener listener, Operation<Void> original) {
-        if (Managers.S2CPACKET.onPacketReceive(packet)) {
+        if (ClientboundPacketManager.INSTANCE.onPacketReceive(packet)) {
             return;
         }
         PacketEvent.Receive event = EventBus.INSTANCE.post(new PacketEvent.Receive(packet));
@@ -30,7 +31,7 @@ public class MixinConnection {
 
     @WrapOperation(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;sendPacket(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V"))
     private void onSendPacket(Connection instance, Packet<?> packet, ChannelFutureListener listener, boolean flush, Operation<Void> original) {
-        if (Managers.C2SPACKET.onPacketSend(packet)) {
+        if (ServerboundPacketManager.INSTANCE.onPacketSend(packet)) {
             return;
         }
         if (NetworkUtils.bypassedPackets.contains(packet)) {

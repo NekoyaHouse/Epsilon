@@ -9,8 +9,9 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -516,7 +517,7 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private SelfSnapshot captureSelfSnapshot(Player player, DamageUtils.ArmorEnchantmentMode armorMode) {
-        Rot2f currentRotation = Managers.ROTATION.getRotation();
+        Rot2f currentRotation = RotationManager.INSTANCE.getRotation();
         return new SelfSnapshot(
                 player,
                 player.position(),
@@ -537,7 +538,7 @@ public class ZealotCrystalPlus extends Module {
         if (mc.player == null || mc.level == null) return List.of();
 
         int ticks = motionPredict.getValue() ? predictTicks.getValue() : 0;
-        List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
+        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
                 targetRange.getValue(),
                 360.0f,
                 players.getValue(),
@@ -993,7 +994,7 @@ public class ZealotCrystalPlus extends Module {
         InteractionHand finalHand = hand;
         BlockHitResult hitResult = new BlockHitResult(placeInfo.hitVec(), placeInfo.side(), placeInfo.blockPos(), false);
 
-        Managers.ROTATION.setRotations(placeInfo.rotation(), getRotationSpeed(), null, Priority.High);
+        RotationManager.INSTANCE.setRotations(placeInfo.rotation(), getRotationSpeed(), null, Priority.High);
 
         InteractionResult result = mc.gameMode.useItemOn(mc.player, finalHand, hitResult);
         if (result.consumesAction()) {
@@ -1034,7 +1035,7 @@ public class ZealotCrystalPlus extends Module {
             }
         }
 
-        Managers.ROTATION.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), null, Priority.High);
+        RotationManager.INSTANCE.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), null, Priority.High);
 
         Entity current = mc.level.getEntity(breakPlan.entityId());
         if (!(current instanceof EndCrystal currentCrystal) || !currentCrystal.isAlive()) {
@@ -1402,7 +1403,7 @@ public class ZealotCrystalPlus extends Module {
 
     private boolean checkPlaceRotation(BlockPos pos) {
         if (placeRotationRange.getValue() <= 0.0) return true;
-        return checkPlaceRotation(pos, Managers.ROTATION.getRotation());
+        return checkPlaceRotation(pos, RotationManager.INSTANCE.getRotation());
     }
 
     private boolean checkPlaceRotation(BlockPos pos, Rot2f currentRotation) {
@@ -1412,7 +1413,7 @@ public class ZealotCrystalPlus extends Module {
 
     private boolean checkCrystalRotation(Vec3 crystalPos, double range) {
         if (range <= 0.0) return true;
-        return checkCrystalRotation(crystalPos, range, Managers.ROTATION.getRotation());
+        return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.getRotation());
     }
 
     private boolean checkCrystalRotation(Vec3 crystalPos, double range, Rot2f currentRotation) {

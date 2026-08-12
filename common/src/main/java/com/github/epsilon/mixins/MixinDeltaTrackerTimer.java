@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.TimerManager;
 import net.minecraft.client.DeltaTracker;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ public class MixinDeltaTrackerTimer {
 
     @Inject(method = "advanceGameTime(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/DeltaTracker$Timer;lastMs:J", opcode = Opcodes.PUTFIELD))
     public void onBeginRenderTick(long currentMs, CallbackInfoReturnable<Integer> cir) {
-        deltaTicks *= Managers.TIMER.get();
+        deltaTicks *= TimerManager.INSTANCE.get();
     }
 
 }

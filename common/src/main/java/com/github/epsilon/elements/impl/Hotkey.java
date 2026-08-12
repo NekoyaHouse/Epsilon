@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -69,7 +69,7 @@ public class Hotkey extends HudModule {
     @Override
     public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<Module> modules = ModuleManager.INSTANCE.getModules();
         Set<Module> liveModules = new HashSet<>(modules);
         moduleAnimations.keySet().removeIf(module -> !liveModules.contains(module));
 

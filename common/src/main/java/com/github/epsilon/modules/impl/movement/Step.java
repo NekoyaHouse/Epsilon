@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.TimerManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.FeetTrap;
@@ -47,7 +47,7 @@ public class Step extends Module {
 
     @Override
     protected void onDisable() {
-        Managers.TIMER.reset();
+        TimerManager.INSTANCE.reset();
         timer = false;
         packets = 0;
         if (!nullCheck()) setStepHeight(0.6f);
@@ -70,7 +70,7 @@ public class Step extends Module {
         if (nullCheck()) return;
 
         if (timer && packets <= 0) {
-            Managers.TIMER.reset();
+            TimerManager.INSTANCE.reset();
             timer = false;
         }
         boolean strict = mode.getValue() == Mode.NCP;
@@ -83,7 +83,7 @@ public class Step extends Module {
             double[] offsets = getOffset(stepHeight);
             if (offsets != null && offsets.length > 1) {
                 if (useTimer.getValue()) {
-                    Managers.TIMER.set((float) getTimer(stepHeight));
+                    TimerManager.INSTANCE.set((float) getTimer(stepHeight));
                     timer = true;
                     packets = 2;
                 }

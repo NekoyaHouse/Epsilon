@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player;
 
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import net.minecraft.world.phys.Vec2;
 
 import static com.github.epsilon.Constants.mc;
@@ -14,7 +14,7 @@ public class MoveUtils {
      * @return 操作结果
      */
     public static double[] forwardWithoutStrafe(double speed) {
-        float yaw = Managers.ROTATION.getYaw();
+        float yaw = RotationManager.INSTANCE.getYaw();
 
         double rad = Math.toRadians(yaw + 90.0f);
 
@@ -31,7 +31,7 @@ public class MoveUtils {
      * @return 操作结果
      */
     public static double[] forward(double speed) {
-        float yaw = Managers.ROTATION.getYaw();
+        float yaw = RotationManager.INSTANCE.getYaw();
         Vec2 moveVector = mc.player.input.getMoveVector();
         float forward = moveVector.y;
         float left = moveVector.x;

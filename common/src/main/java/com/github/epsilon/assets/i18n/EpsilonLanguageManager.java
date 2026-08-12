@@ -1,7 +1,7 @@
 package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -110,7 +110,7 @@ public class EpsilonLanguageManager {
     }
 
     private void refreshUi() {
-        TranslateHolder.INSTANCE.refresh();
+        TranslationManager.INSTANCE.refresh();
     }
 
     private String resolveSelectedLanguageCode() {

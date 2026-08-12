@@ -4,7 +4,8 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.ExtrapolationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -889,13 +890,13 @@ public class SafeAnchor extends Module {
         int minSpeed = Math.min(rotationSpeedMin.getValue(), rotationSpeedMax.getValue());
         int maxSpeed = Math.max(rotationSpeedMin.getValue(), rotationSpeedMax.getValue());
         int speedValue = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-        Managers.ROTATION.setRotations(patchedTarget, speedValue, Priority.High);
+        RotationManager.INSTANCE.setRotations(patchedTarget, speedValue, Priority.High);
     }
 
     private boolean rotationAimed() {
         if (targetRotation == null || !rotate.getValue()) return true;
-        Rot2f currentRot = Managers.ROTATION.isActive()
-                ? Managers.ROTATION.getRotation()
+        Rot2f currentRot = RotationManager.INSTANCE.isActive()
+                ? RotationManager.INSTANCE.getRotation()
                 : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         float yawDiff = Math.abs(Mth.wrapDegrees(targetRotation.getYaw() - currentRot.getYaw()));
         float pitchDiff = Math.abs(targetRotation.getPitch() - currentRot.getPitch());
@@ -1103,7 +1104,7 @@ public class SafeAnchor extends Module {
 
     private Vec3 getShieldPlayerPos() {
         if (prediction.getValue()) {
-            AABB extrapolatedBox = Managers.EXTRAPOLATION.extrapolate(
+            AABB extrapolatedBox = ExtrapolationManager.INSTANCE.extrapolate(
                     mc.player,
                     (int) Math.ceil(predictionStrength.getValue()),
                     2

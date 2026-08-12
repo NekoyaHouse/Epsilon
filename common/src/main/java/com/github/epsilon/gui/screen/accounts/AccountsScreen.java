@@ -23,8 +23,8 @@ import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.AccountHolder;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.AccountManager;
+import com.github.epsilon.managers.ExecutorManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -115,7 +115,7 @@ public class AccountsScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        for (Account<?> account : AccountHolder.INSTANCE.getAccounts()) {
+        for (Account<?> account : AccountManager.INSTANCE.getAccounts()) {
             account.getCache().loadHead();
         }
     }
@@ -207,8 +207,8 @@ public class AccountsScreen extends Screen {
     }
 
     private void syncRows() {
-        rows.removeIf(row -> !AccountHolder.INSTANCE.exists(row.getAccount()));
-        for (Account<?> account : AccountHolder.INSTANCE.getAccounts()) {
+        rows.removeIf(row -> !AccountManager.INSTANCE.exists(row.getAccount()));
+        for (Account<?> account : AccountManager.INSTANCE.getAccounts()) {
             if (rows.stream().noneMatch(row -> row.getAccount() == account)) {
                 rows.add(new AccountRow(account));
             }
@@ -465,7 +465,7 @@ public class AccountsScreen extends Screen {
 
                         if (row.isConfirmingDelete()) {
                             row.setConfirmingDelete(false);
-                            AccountHolder.INSTANCE.remove(row.getAccount());
+                            AccountManager.INSTANCE.remove(row.getAccount());
                         } else {
                             row.setConfirmingDelete(true);
                         }
@@ -548,7 +548,7 @@ public class AccountsScreen extends Screen {
                 if (authenticating.get() == focused) return true;
                 if (row.isConfirmingDelete()) {
                     row.setConfirmingDelete(false);
-                    AccountHolder.INSTANCE.remove(focused);
+                    AccountManager.INSTANCE.remove(focused);
                 } else {
                     row.setConfirmingDelete(true);
                 }
@@ -656,7 +656,7 @@ public class AccountsScreen extends Screen {
     private void login(Account<?> account) {
         if (!authenticating.compareAndSet(null, account)) return;
 
-        Managers.EXECUTOR.execute(() -> {
+        ExecutorManager.INSTANCE.execute(() -> {
             try {
                 if (account.fetchInfo() && account.login() && account.getType() != AccountType.Cracked) {
                     account.getCache().loadHead();
@@ -711,12 +711,12 @@ public class AccountsScreen extends Screen {
     }
 
     private void addAccount(Account<?> account) {
-        if (AccountHolder.INSTANCE.exists(account) || !authenticating.compareAndSet(null, account)) return;
+        if (AccountManager.INSTANCE.exists(account) || !authenticating.compareAndSet(null, account)) return;
 
-        Managers.EXECUTOR.execute(() -> {
+        ExecutorManager.INSTANCE.execute(() -> {
             try {
                 if (!account.fetchInfo()) return;
-                AccountHolder.INSTANCE.add(account);
+                AccountManager.INSTANCE.add(account);
                 if (account.getType() != AccountType.Cracked) account.getCache().loadHead();
             } finally {
                 authenticating.set(null);

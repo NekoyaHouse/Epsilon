@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -40,7 +40,7 @@ public class ArcRenderer implements IRenderer {
     }
 
     public static ArcRenderer create() {
-        return RendererHolder.INSTANCE.register(new ArcRenderer());
+        return RendererManager.INSTANCE.register(new ArcRenderer());
     }
 
     public void addCircle(float centerX, float centerY, float radius, float strokeWidth, Color color) {
@@ -216,7 +216,7 @@ public class ArcRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
 }

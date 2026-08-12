@@ -134,6 +134,14 @@ public class EpsilonTranslations {
             PlayerInfo.POPS,
             PlayerInfo.DIRECTION,
             PlayerInfo.EMPTY,
+            Notifications.NO_SLOWDOWN_DISABLED_WATER,
+            Notifications.NO_SLOWDOWN_DISABLED_FALLING,
+            Notifications.NO_SLOWDOWN_DISABLED_PEARL,
+            Notifications.TRANSACTION_COUNT_TOO_HIGH,
+            Notifications.SCAFFOLD_FLYING_WARNING,
+            Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT,
+            Notifications.SERVERBOUND_PACKET_FLUSH_FAILED,
+            Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
             Notifications.PREVIEW_TITLE,
             Notifications.PREVIEW_MESSAGE
     );
@@ -316,6 +324,14 @@ public class EpsilonTranslations {
     public static final class Notifications {
         public static final TranslateComponent PREVIEW_TITLE = create("elements.notifications", "preview.title");
         public static final TranslateComponent PREVIEW_MESSAGE = create("elements.notifications", "preview.message");
+        public static final TranslateComponent NO_SLOWDOWN_DISABLED_WATER = create("notification", "no_slowdown_disabled_water");
+        public static final TranslateComponent NO_SLOWDOWN_DISABLED_FALLING = create("notification", "no_slowdown_disabled_falling");
+        public static final TranslateComponent NO_SLOWDOWN_DISABLED_PEARL = create("notification", "no_slowdown_disabled_pearl");
+        public static final TranslateComponent TRANSACTION_COUNT_TOO_HIGH = create("notification", "transaction_count_too_high");
+        public static final TranslateComponent SCAFFOLD_FLYING_WARNING = create("notification", "scaffold_flying_warning");
+        public static final TranslateComponent SCAFFOLD_TOGGLE_ON_TELEPORT = create("notification", "scaffold_toggle_on_teleport");
+        public static final TranslateComponent SERVERBOUND_PACKET_FLUSH_FAILED = create("notification", "serverbound_packet_flush_failed");
+        public static final TranslateComponent CLIENTBOUND_PACKET_FLUSH_FAILED = create("notification", "clientbound_packet_flush_failed");
 
         private Notifications() {
         }

@@ -4,7 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -89,9 +89,9 @@ public class BedNuker extends Module {
         if (rotate.getValue()) {
             Rot2f rot = RotationUtils.calculate(currentAimPoint(bedTargetNow));
             if (bedTargetNow) {
-                Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), candidate -> isBedHit(candidate, maxRange), Priority.Low);
+                RotationManager.INSTANCE.setRotations(rot, rotationSpeed.getValue(), candidate -> isBedHit(candidate, maxRange), Priority.Low);
             } else {
-                Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), Priority.Low);
+                RotationManager.INSTANCE.setRotations(rot, rotationSpeed.getValue(), Priority.Low);
             }
         }
 

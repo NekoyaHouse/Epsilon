@@ -16,8 +16,8 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.AddonManager;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.KeybindSetting;
@@ -91,7 +91,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
         }
 
-        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
         EpsilonAddon selectedAddon = resolveSelectedAddon(addons);
         List<Setting<?>> selectedSettings = selectedAddon == null
                 ? List.of()
@@ -241,7 +241,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         }
 
         UiRect listViewport = getListViewport(getListPanelBounds(bounds));
-        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
 
         if (listScrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getAddonListScroll(), state.getMaxAddonListScroll())) {
             float newScroll = listScrollBarDrag.mouseDragged(event.y(), listViewport, state.getMaxAddonListScroll());
@@ -310,7 +310,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             return true;
         }
         if (detailScrollBarDrag.isDragging()) {
-            UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+            UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
             float newScroll = detailScrollBarDrag.mouseDragged(event.y(), settingsViewport, state.getMaxAddonDetailScroll());
             if (newScroll >= 0.0f) {
                 state.setAddonDetailScroll(newScroll);
@@ -336,7 +336,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
             return true;
         }
-        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
         if (settingsViewport.contains(mouseX, mouseY)) {
             detailScrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
@@ -388,7 +388,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
     @Override
     public void onActivated() {
-        resolveSelectedAddon(AddonHolder.INSTANCE.getAddons());
+        resolveSelectedAddon(AddonManager.INSTANCE.getAddons());
         markDirty();
     }
 
@@ -587,7 +587,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
     private long buildContentSignature(List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings, String settingOwnerKey) {
         long signature = 17L;
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + Float.floatToIntBits(state.getAddonListScroll());
         signature = signature * 31L + Float.floatToIntBits(state.getAddonDetailScroll());
         signature = signature * 31L + state.getSelectedAddonId().hashCode();

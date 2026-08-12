@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -33,7 +33,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     }
 
     public static RoundRectOutlineRenderer create() {
-        return RendererHolder.INSTANCE.register(new RoundRectOutlineRenderer());
+        return RendererManager.INSTANCE.register(new RoundRectOutlineRenderer());
     }
 
     public void addOutline(float x, float y, float width, float height, float radius, float outlineWidth, Color color) {
@@ -188,7 +188,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
 }

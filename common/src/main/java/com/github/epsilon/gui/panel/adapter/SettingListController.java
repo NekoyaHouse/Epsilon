@@ -7,8 +7,8 @@ import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.component.setting.*;
 import com.github.epsilon.gui.panel.popup.*;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -177,7 +177,7 @@ public class SettingListController implements AutoCloseable {
             if (entry.bounds().contains(event.x(), event.y())) {
                 entry.section().toggleCollapsed();
                 draggingSliderEntry = null;
-                Managers.SOUND.playInUi(entry.section().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                SoundManager.INSTANCE.playInUi(entry.section().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                 return true;
             }
         }

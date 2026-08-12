@@ -2,7 +2,7 @@ package com.github.epsilon.gui.dropdown;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.gui.dropdown.component.DropdownPanel;
-import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.managers.ConfigManager;
 import com.google.gson.*;
 
 import java.io.IOException;
@@ -72,7 +72,7 @@ public class DropdownLayoutState {
     }
 
     private static Path getFile() {
-        return ConfigHolder.INSTANCE.getConfigDir().resolve(FILE_NAME);
+        return ConfigManager.INSTANCE.getConfigDir().resolve(FILE_NAME);
     }
 
     private static float readFloat(JsonObject object, String key, float fallback) {

@@ -8,9 +8,8 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.rotations.RotationManager;
+import com.github.epsilon.managers.TranslationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -117,7 +116,7 @@ public class ClientSetting extends Module {
             .applyWhenRelease();
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
-        TranslateHolder.INSTANCE.refresh();
+        TranslationManager.INSTANCE.refresh();
     }).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
@@ -140,12 +139,7 @@ public class ClientSetting extends Module {
     public final EnumSetting<Teams> teams = enumSetting("Teams", Teams.None).group(sgTeams);
 
     // Anti Cheat
-    public final EnumSetting<RotationManager.RotationMode> rotationMode =
-            enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, mode -> {
-                if (Managers.ROTATION != null) {
-                    Managers.switchRotationManager(mode);
-                }
-            }).group(sgAntiCheat);
+    public final EnumSetting<RotationManager.RotationMode> rotationMode = enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, RotationManager::switchRotationManager).group(sgAntiCheat);
 
     public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
 

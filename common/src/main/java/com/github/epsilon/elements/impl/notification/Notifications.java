@@ -7,7 +7,7 @@ import com.github.epsilon.elements.impl.notification.style.QuantumNotification;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.google.common.base.Suppliers;
@@ -42,7 +42,7 @@ public class Notifications extends HudModule {
 
     @Override
     public void render(DeltaTracker deltaTracker) {
-        Managers.NOTIFICATION.update();
+        NotificationManager.INSTANCE.update();
 
         Notification preview = null;
         if (mc.gui.screen() instanceof HudEditorScreen) {
@@ -53,13 +53,13 @@ public class Notifications extends HudModule {
             );
         }
 
-        if (Managers.NOTIFICATION.isEmpty() && preview == null) return;
+        if (NotificationManager.INSTANCE.isEmpty() && preview == null) return;
 
         TextRenderer metrics = textRendererSupplier.get();
         UiTree.Scope scope = renderScope();
         if (isStyle(Style.Quantum)) {
             float scale = getScale();
-            List<Notification> entries = new ArrayList<>(Managers.NOTIFICATION.getNotifications());
+            List<Notification> entries = new ArrayList<>(NotificationManager.INSTANCE.getNotifications());
             entries.removeIf(notification -> !quantum.isVisible(notification));
             Collections.reverse(entries);
             if (entries.isEmpty() && preview != null) entries.add(preview);

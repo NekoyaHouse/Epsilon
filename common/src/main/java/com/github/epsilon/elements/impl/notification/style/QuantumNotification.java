@@ -6,6 +6,8 @@ import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.graphics.text.IconChars;
+import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -113,7 +115,7 @@ public class QuantumNotification {
 
         float iconX = actualX + PADDING_H * scale;
         float iconY = y + (height - ICON_SIZE * scale) * 0.5f;
-        drawIcon(scope, notification.getMode(), iconX, iconY, scale, alpha);
+        drawIcon(scope, metrics, notification.getMode(), iconX, iconY, scale, alpha);
 
         float contentX = iconX + ICON_SIZE * scale + CONTENT_GAP * scale;
         float contentRight = actualX + width - PADDING_H * scale;
@@ -138,7 +140,7 @@ public class QuantumNotification {
         }
     }
 
-    private void drawIcon(UiTree.Scope scope, NotificationMode mode, float x, float y, float scale, int alpha) {
+    private void drawIcon(UiTree.Scope scope, TextRenderer metrics, NotificationMode mode, float x, float y, float scale, int alpha) {
         float iconScale = ICON_SIZE * scale / 48.0f;
         float centerX = x + ICON_SIZE * scale * 0.5f;
         float centerY = y + ICON_SIZE * scale * 0.5f;
@@ -148,7 +150,7 @@ public class QuantumNotification {
         switch (mode) {
             case Success -> drawSuccess(scope, centerX, centerY, iconScale, time, color, alpha);
             case Info -> drawInfo(scope, centerX, centerY, iconScale, time, color, alpha);
-            case Warning -> drawWarning(scope, centerX, centerY, iconScale, time, color, alpha);
+            case Warning -> drawWarning(scope, metrics, centerX, centerY, iconScale, time, color, alpha);
             case Error -> drawError(scope, centerX, centerY, iconScale, time, color, alpha);
         }
     }
@@ -190,23 +192,22 @@ public class QuantumNotification {
         dot(scope, cx, cy, 1.5f * s, color);
     }
 
-    private void drawWarning(UiTree.Scope scope, float cx, float cy, float s, float time, Color color, int alpha) {
-        float rotation = -positiveModulo(time, 2.0f) / 2.0f * 360.0f;
-        drawDashedCircle(scope, cx, cy, 21.0f * s, 1.0f * s, 70.0f, 290.0f, rotation, withAlpha(color, Math.round(alpha * 0.3f)));
+    private void drawWarning(UiTree.Scope scope, TextRenderer metrics, float cx, float cy, float s, float time, Color color, int alpha) {
+        float renderScale = s * 48.0f / ICON_SIZE;
+        scope.arc(cx, cy, 10.2f * renderScale, 0.45f * renderScale, 0.0f, 360.0f, false, withAlpha(color, Math.round(alpha * 0.16f)));
+        scope.arc(cx, cy, 8.0f * renderScale, 0.35f * renderScale, 0.0f, 360.0f, false, withAlpha(color, Math.round(alpha * 0.09f)));
 
-        float vibration = positiveModulo(time, 0.15f) / 0.15f * (float) (Math.PI * 2.0);
-        float vx = (float) Math.sin(vibration) * 0.5f * s;
-        float vy = (float) Math.cos(vibration) * 0.2f * s;
-        float center = cx + vx;
-        float triangleY = cy + vy;
-        scope.triangle(center, triangleY + 1.0f * s, 17.0f * s, 1.0f, color);
-        scope.triangle(center, triangleY + 2.0f * s, 13.5f * s, 1.0f, new Color(0, 0, 0, Math.round(alpha * 0.82f)));
+        float sweep = 58.0f + 10.0f * (0.5f + 0.5f * (float) Math.sin(time * 1.4f));
+        float angle = positiveModulo(time * 38.0f, 360.0f);
+        scope.gradientArc(cx, cy, 11.0f * renderScale, 1.15f * renderScale, angle, sweep, true, angle - 90.0f, withAlpha(color, 0), withAlpha(color, Math.round(alpha * 0.12f)), withAlpha(color, Math.round(alpha * 0.32f)));
 
-        float flashPhase = positiveModulo(time, 0.8f) / 0.8f;
-        float flash = flashPhase < 0.5f ? 0.4f + flashPhase * 1.2f : 1.0f - (flashPhase - 0.5f) * 1.2f;
-        Color punctuation = withAlpha(color, Math.round(alpha * flash));
-        scope.roundRect(center - 1.5f * s, triangleY - 5.0f * s, 3.0f * s, 9.0f * s, 1.5f * s, punctuation);
-        dot(scope, center, triangleY + 8.0f * s, 2.0f * s, punctuation);
+        float pulse = positiveModulo(time, 2.8f) / 2.8f;
+        float pulseWave = pulse < 0.5f ? pulse * 2.0f : (1.0f - pulse) * 2.0f;
+        scope.arc(cx, cy, (11.4f + pulseWave * 1.1f) * renderScale, 0.3f * renderScale, 0.0f, 360.0f, false, withAlpha(color, Math.round(alpha * (0.04f + pulseWave * 0.05f))));
+
+        float iconWidth = metrics.getWidth(IconChars.WARNING_AMBER, renderScale, StaticFontLoader.ICONS);
+        float iconHeight = metrics.getHeight(renderScale, StaticFontLoader.ICONS);
+        scope.text(IconChars.WARNING_AMBER, cx - iconWidth * 0.5f, cy - iconHeight * 0.5f, renderScale, color, StaticFontLoader.ICONS);
     }
 
     private void drawError(UiTree.Scope scope, float cx, float cy, float s, float time, Color color, int alpha) {

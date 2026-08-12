@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.client;
 
-import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.managers.ConfigManager;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class ConfigFolderOpener {
      * @throws IOException 无法创建或打开配置目录时
      */
     public static Path openConfigFolder() throws IOException {
-        Path configDir = ConfigHolder.INSTANCE.getConfigDir();
+        Path configDir = ConfigManager.INSTANCE.getConfigDir();
         Files.createDirectories(configDir);
         Util.getPlatform().openPath(configDir);
         return configDir;

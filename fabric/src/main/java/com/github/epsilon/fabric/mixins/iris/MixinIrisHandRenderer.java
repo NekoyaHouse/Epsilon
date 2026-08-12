@@ -1,6 +1,6 @@
 package com.github.epsilon.fabric.mixins.iris;
 
-import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -23,7 +23,7 @@ public abstract class MixinIrisHandRenderer {
                 frame.executeTranslucentAfterTerrain();
                 frame.executeAlwaysOnTop();
             } finally {
-                ShaderHolder.INSTANCE.endHandOutlineCapture();
+                ShaderManager.INSTANCE.endHandOutlineCapture();
             }
         } else {
             original.call(dispatcher, submitNodeStorage);

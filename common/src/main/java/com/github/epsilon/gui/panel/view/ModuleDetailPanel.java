@@ -16,7 +16,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
@@ -550,7 +550,7 @@ public class ModuleDetailPanel implements AutoCloseable {
 
     private long buildContentSignature(Module module, List<Setting<?>> settings, String settingOwnerKey) {
         long signature = 17L;
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + module.getName().hashCode();
         signature = signature * 31L + module.getBindMode().ordinal();
         signature = signature * 31L + module.getKeyBind();

@@ -1,10 +1,8 @@
 package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.holders.HudElementHolder;
-import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.HudElementManager;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
@@ -44,21 +42,21 @@ public class I18NFileGenerator {
             matched = true;
         }
 
-        for (EpsilonAddon addon : AddonHolder.INSTANCE.getAddons()) {
-            if (matchesOwner(addon.getAddonId(), selectedOwner)) {
-                addAddonKeys(root, addon);
-                matched = true;
-            }
-        }
+//        for (EpsilonAddon addon : AddonManager.INSTANCE.getAddons()) {
+//            if (matchesOwner(addon.getAddonId(), selectedOwner)) {
+//                addAddonKeys(root, addon);
+//                matched = true;
+//            }
+//        }
 
-        for (Module module : ModuleHolder.INSTANCE.getModules()) {
+        for (Module module : ModuleManager.INSTANCE.getModules()) {
             if (matchesOwner(module.getAddonId(), selectedOwner)) {
                 addModuleKeys(root, module);
                 matched = true;
             }
         }
 
-        for (Module module : HudElementHolder.INSTANCE.getElements()) {
+        for (Module module : HudElementManager.INSTANCE.getElements()) {
             if (matchesOwner(module.getAddonId(), selectedOwner)) {
                 addModuleKeys(root, module);
                 matched = true;
@@ -98,15 +96,15 @@ public class I18NFileGenerator {
         }
     }
 
-    private static void addAddonKeys(JsonObject root, EpsilonAddon addon) {
-        I18NJson.addTranslation(root, addon.getAddonId(), "");
-        for (SettingGroup group : addon.getSettingGroups()) {
-            addSettingGroupKey(root, group);
-        }
-        for (Setting<?> setting : addon.getSettings()) {
-            addSettingKey(root, setting);
-        }
-    }
+//    private static void addAddonKeys(JsonObject root, EpsilonAddon addon) {
+//        I18NJson.addTranslation(root, addon.getAddonId(), "");
+//        for (SettingGroup group : addon.getSettingGroups()) {
+//            addSettingGroupKey(root, group);
+//        }
+//        for (Setting<?> setting : addon.getSettings()) {
+//            addSettingKey(root, setting);
+//        }
+//    }
 
     private static void addModuleKeys(JsonObject root, Module module) {
         if (module.translateComponent == null) return;

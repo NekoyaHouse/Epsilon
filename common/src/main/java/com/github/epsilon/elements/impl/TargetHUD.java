@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.HealthManager;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -97,7 +97,7 @@ public class TargetHUD extends HudModule {
         float maxHealth;
         float healthPercent;
         if (liveTarget == target) {
-            float health = Managers.HEALTH.getHealth(target);
+            float health = HealthManager.INSTANCE.getHealth(target);
             maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
             lastKnownMaxHealth = maxHealth;
             healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime);

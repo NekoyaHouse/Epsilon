@@ -3,8 +3,9 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
@@ -83,7 +84,7 @@ public class AutoThrow extends Module {
                 double maxRange = this.maxRange.getValue();
                 double maxRangeSq = maxRange * maxRange;
 
-                List<LivingEntity> candidates = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
+                List<LivingEntity> candidates = new ArrayList<>(TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
                         maxRange,
                         fov.getValue().floatValue(),
                         true,
@@ -119,7 +120,7 @@ public class AutoThrow extends Module {
 
                 Rot2f rotation = RotationUtils.calculate(getAimVec(currentTarget), false);
 
-                Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
+                RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
 
                 HitResult hit = RaytraceUtils.raytrace(rotation, maxRange);
                 if (hit.getType() != HitResult.Type.ENTITY) return;

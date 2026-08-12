@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.Chams;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -35,7 +35,7 @@ public class MixinChestRenderer {
                     model,
                     modelState,
                     poseStack,
-                    ShaderHolder.INSTANCE.prepareChestOutline(sprite.atlasLocation()),
+                    ShaderManager.INSTANCE.prepareChestOutline(sprite.atlasLocation()),
                     lightCoords,
                     overlayCoords,
                     shaders.getOutlineColor(shaders.chestShader),

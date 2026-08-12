@@ -3,8 +3,9 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SwingHandEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -53,9 +54,9 @@ public class SilentAim extends Module {
         }
 
         Rot2f rotations = RotationUtils.calculate(target.getEyePosition());
-        Managers.ROTATION.setRotations(rotations, 180, Priority.High);
+        RotationManager.INSTANCE.setRotations(rotations, 180, Priority.High);
 
-        HitResult hitResult = Managers.ROTATION.getHitResult();
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
             mc.gameMode.attack(mc.player, target);
             mc.player.swing(InteractionHand.MAIN_HAND);
@@ -76,7 +77,7 @@ public class SilentAim extends Module {
             return;
         }
 
-        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
+        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 fov.getValue(),
                 player.getValue(),

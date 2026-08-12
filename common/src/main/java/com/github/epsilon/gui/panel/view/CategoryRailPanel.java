@@ -10,9 +10,9 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -188,7 +188,7 @@ public class CategoryRailPanel {
         }
         if (getMenuButtonBounds().contains(event.x(), event.y())) {
             state.toggleSidebarExpanded();
-            Managers.SOUND.playInUi(state.isSidebarExpanded() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(state.isSidebarExpanded() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             return true;
         }
 
@@ -314,7 +314,7 @@ public class CategoryRailPanel {
     }
 
     private int getCategoryCount(Category category) {
-        return (int) ModuleHolder.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).count();
+        return (int) ModuleManager.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).count();
     }
 
 }

@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -49,7 +49,7 @@ public class ShadowRenderer implements IRenderer {
     }
 
     public static ShadowRenderer create() {
-        return RendererHolder.INSTANCE.register(new ShadowRenderer());
+        return RendererManager.INSTANCE.register(new ShadowRenderer());
     }
 
     public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {
@@ -289,7 +289,7 @@ public class ShadowRenderer implements IRenderer {
         clear();
         buffer.close();
         segmentedBuffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
     private static int clampSegmentCount(float[] segmentRects, int segmentCount) {

@@ -4,7 +4,7 @@ import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkRotationEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.impl.movement.follower.Follower;
 import com.github.epsilon.modules.impl.movement.follower.FollowerInput;
 import com.github.epsilon.utils.player.FindItemResult;
@@ -114,7 +114,7 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private void redirectRotation() {
-        Managers.ROTATION.setRotations(new Rot2f(calcYaw(), calcPitch()), 360, Priority.Highest);
+        RotationManager.INSTANCE.setRotations(new Rot2f(calcYaw(), calcPitch()), 360, Priority.Highest);
     }
 
     private float calcYaw() {

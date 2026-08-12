@@ -2,7 +2,7 @@ package com.github.epsilon.modules;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.SettingHost;
@@ -92,13 +92,13 @@ public class Module implements SettingHost {
             if (enabled) {
                 EventBus.INSTANCE.subscribe(this);
                 if (!nullCheck()) {
-                    Managers.NOTIFICATION.moduleState(this.getTranslatedName(), getNotificationHash(), true);
+                    NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), true);
                 }
                 onEnable();
             } else {
                 EventBus.INSTANCE.unsubscribe(this);
                 if (!nullCheck()) {
-                    Managers.NOTIFICATION.moduleState(this.getTranslatedName(), getNotificationHash(), false);
+                    NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), false);
                 }
                 onDisable();
             }

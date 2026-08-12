@@ -5,8 +5,8 @@ import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.control.UiScrollBar;
-import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -31,7 +31,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
     public CategoryPanel(Category category, int panelIndex) {
         super("category:" + category, category::getName, category.icon, panelIndex);
         this.category = category;
-        List<Module> modules = ModuleHolder.INSTANCE.getModules().stream()
+        List<Module> modules = ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m.getCategory() == category)
                 .toList();
         initModuleButtons(modules);
@@ -189,7 +189,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
     private long buildSortSignature(ClientSetting.ModuleSort sortMode) {
         long signature = 17L;
         signature = signature * 31L + sortMode.ordinal();
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + moduleButtons.size();
         for (ModuleButton button : moduleButtons) {
             Module module = button.getModule();
@@ -231,7 +231,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
     }
 
     private void refreshSearchTextCache() {
-        long revision = TranslateHolder.INSTANCE.getRevision();
+        long revision = TranslationManager.INSTANCE.getRevision();
         if (cachedSearchTextRevision == revision && !searchTextCache.isEmpty()) {
             return;
         }

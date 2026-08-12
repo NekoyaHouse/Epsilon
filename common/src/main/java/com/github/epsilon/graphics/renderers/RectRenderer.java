@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -34,7 +34,7 @@ public class RectRenderer implements IRenderer {
     }
 
     public static RectRenderer create() {
-        return RendererHolder.INSTANCE.register(new RectRenderer());
+        return RendererManager.INSTANCE.register(new RectRenderer());
     }
 
     public void addRect(float x, float y, float width, float height, Color color) {
@@ -183,7 +183,7 @@ public class RectRenderer implements IRenderer {
     public void close() {
         clear();
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
 }

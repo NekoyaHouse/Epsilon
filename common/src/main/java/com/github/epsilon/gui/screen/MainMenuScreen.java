@@ -14,8 +14,8 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.accounts.AccountsScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -140,7 +140,7 @@ public class MainMenuScreen extends Screen {
         reisaGreetingQueued = false;
         reisaGreetingStartMs = Util.getMillis();
         reisaExitStartMs = -1L;
-        reisaWelcomeSound = Managers.SOUND.playTracked(
+        reisaWelcomeSound = SoundManager.INSTANCE.playTracked(
                 SoundKey.REISA_WELCOME,
                 ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
         ).orElse(null);
@@ -158,7 +158,7 @@ public class MainMenuScreen extends Screen {
         minecraft.getSoundManager().stop();
         reisaShutdownStartMs = Util.getMillis();
         reisaShutdownExitStartMs = -1L;
-        reisaShutdownSound = Managers.SOUND.playTracked(
+        reisaShutdownSound = SoundManager.INSTANCE.playTracked(
                 SoundKey.REISA_BYE,
                 ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
         ).orElse(null);

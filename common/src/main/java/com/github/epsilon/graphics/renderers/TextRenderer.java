@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfTextRenderer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.mojang.blaze3d.systems.RenderPass;
 
 import java.awt.*;
@@ -33,19 +33,19 @@ public class TextRenderer implements IRenderer {
     }
 
     public static TextRenderer create(long bufferSize) {
-        return RendererHolder.INSTANCE.register(new TextRenderer(bufferSize));
+        return RendererManager.INSTANCE.register(new TextRenderer(bufferSize));
     }
 
     public static TextRenderer create() {
-        return RendererHolder.INSTANCE.register(new TextRenderer());
+        return RendererManager.INSTANCE.register(new TextRenderer());
     }
 
     public static TextRenderer createFontBlur() {
-        return RendererHolder.INSTANCE.register(new TextRenderer(64 * 1024L, true));
+        return RendererManager.INSTANCE.register(new TextRenderer(64 * 1024L, true));
     }
 
     public static TextRenderer createGlitch() {
-        return RendererHolder.INSTANCE.register(new TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH));
+        return RendererManager.INSTANCE.register(new TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH));
     }
 
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
@@ -153,14 +153,14 @@ public class TextRenderer implements IRenderer {
     public void close() {
         textRenderer.close();
         if (registered) {
-            RendererHolder.INSTANCE.unregister(this);
+            RendererManager.INSTANCE.unregister(this);
             registered = false;
         }
     }
 
     private void ensureRegistered() {
         if (!registered) {
-            RendererHolder.INSTANCE.register(this);
+            RendererManager.INSTANCE.register(this);
             registered = true;
         }
     }

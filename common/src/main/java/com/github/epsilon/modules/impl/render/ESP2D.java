@@ -4,7 +4,9 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.HealthManager;
+import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -172,7 +174,8 @@ public class ESP2D extends Module {
 
         if (entity instanceof Player player) {
             if (entity == mc.player) return false;
-            if (Managers.FRIEND.isFriend(player) || Managers.TARGET.isSameTeam(player)) return friends.getValue();
+            if (FriendManager.INSTANCE.isFriend(player) || TargetManager.INSTANCE.isSameTeam(player))
+                return friends.getValue();
             return players.getValue();
         }
 
@@ -187,7 +190,7 @@ public class ESP2D extends Module {
 
     private Color getEntityColor(LivingEntity entity) {
         if (entity instanceof Player player) {
-            if (Managers.FRIEND.isFriend(player)) return friendsColor.getValue();
+            if (FriendManager.INSTANCE.isFriend(player)) return friendsColor.getValue();
             return playersColor.getValue();
         }
 
@@ -211,7 +214,7 @@ public class ESP2D extends Module {
         float height = endY - y;
         if (height <= 0.0f) return;
 
-        float health = Managers.HEALTH.getHealth(entity);
+        float health = HealthManager.INSTANCE.getHealth(entity);
         float maxHealth = Math.max(1.0f, entity.getMaxHealth() + Math.max(0.0f, entity.getAbsorptionAmount()));
         float healthRatio = Mth.clamp(health / maxHealth, 0.0f, 1.0f);
         float fillY = endY - height * healthRatio;

@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.impl.render.BetterChat;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -20,7 +20,7 @@ public class MixinChatComponent {
 
     @ModifyVariable(method = "handleMessage", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private FormattedCharSequence onHandleMessage(FormattedCharSequence message) {
-        return Managers.NOTIFICATION.applyAnimatedPrefix(message);
+        return NotificationManager.INSTANCE.applyAnimatedPrefix(message);
     }
 
     @ModifyVariable(method = "handleMessage", at = @At("HEAD"), argsOnly = true, ordinal = 0)

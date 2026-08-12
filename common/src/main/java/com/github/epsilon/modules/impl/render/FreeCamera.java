@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -163,7 +163,7 @@ public class FreeCamera extends Module {
             }
 
             if (rotation != null) {
-                Managers.ROTATION.setRotations(rotation, 180, Priority.Highest);
+                RotationManager.INSTANCE.setRotations(rotation, 180, Priority.Highest);
             }
         }
 

@@ -6,8 +6,8 @@ import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -82,7 +82,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (expanded && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             expanded = false;
-            Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
             DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
@@ -137,7 +137,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if ((button == GLFW.GLFW_MOUSE_BUTTON_RIGHT || button == GLFW.GLFW_MOUSE_BUTTON_LEFT)
                 && getHiddenModeCount() > 0) {
             expanded = !expanded;
-            Managers.SOUND.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             DropdownScreen.INSTANCE.react(expanded
                     ? ReisaDropdownCompanion.Action.PANEL_OPEN
                     : ReisaDropdownCompanion.Action.PANEL_CLOSE);
@@ -151,12 +151,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if (mode != null) {
             setting.setMode(mode.name());
             expanded = false;
-            Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
             DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         expanded = false;
-        Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+        SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
         return false;
     }
 

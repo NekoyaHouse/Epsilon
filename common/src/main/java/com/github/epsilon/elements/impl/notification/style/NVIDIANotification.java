@@ -5,7 +5,7 @@ import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -63,7 +63,7 @@ public class NVIDIANotification {
 
         List<RenderEntry> entries = new ArrayList<>();
         float totalHeight = 0.0f;
-        for (Notification notification : Managers.NOTIFICATION.getNotifications()) {
+        for (Notification notification : NotificationManager.INSTANCE.getNotifications()) {
             RenderFrame frame = getRenderFrame(notification, spacing);
             if (frame.stage == RenderStage.HIDDEN) continue;
             totalHeight += frame.occupiedHeight;

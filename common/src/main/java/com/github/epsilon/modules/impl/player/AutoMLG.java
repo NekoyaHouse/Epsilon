@@ -1,8 +1,10 @@
 package com.github.epsilon.modules.impl.player;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
@@ -86,36 +88,6 @@ public class AutoMLG extends Module {
         resetPending();
     }
 
-    private void resetPending() {
-        shouldInteract = false;
-        pendingSlot = -1;
-        lockedRotation = null;
-        waitingForRotation = false;
-    }
-
-    private boolean isFacing(Rot2f target, float yawTolerance, float pitchTolerance) {
-        Rot2f current = Managers.ROTATION.getRotation();
-        float yawDiff = Math.abs(Mth.wrapDegrees(current.getYaw() - target.getYaw()));
-        float pitchDiff = Math.abs(Mth.wrapDegrees(current.getPitch() - target.getPitch()));
-        return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance;
-    }
-
-    private boolean useItemWithManagedRotation() {
-        Rot2f rotation = Managers.ROTATION.getRotation();
-        float playerYaw = mc.player.getYRot();
-        float playerPitch = mc.player.getXRot();
-
-        mc.player.setYRot(rotation.getYaw());
-        mc.player.setXRot(rotation.getPitch());
-        try {
-            InteractionResult result = mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
-            return result.consumesAction();
-        } finally {
-            mc.player.setYRot(playerYaw);
-            mc.player.setXRot(playerPitch);
-        }
-    }
-
     @EventHandler
     public void onTick(ClientTickEvent.Pre event) {
         if (nullCheck() || Scaffold.INSTANCE.isEmergencyPlacementActive()) return;
@@ -134,11 +106,11 @@ public class AutoMLG extends Module {
             if (quickCollectDelayTicks > 0) {
                 quickCollectDelayTicks--;
             } else if (grimWaitingCollectRotation && grimCollectRotation != null) {
-                Managers.ROTATION.setRotations(grimCollectRotation, 180.0f, Priority.High);
+                RotationManager.INSTANCE.setRotations(grimCollectRotation, 180.0f, Priority.High);
 
                 if (isFacing(grimCollectRotation, 2.0f, 2.5f)) {
                     InvUtils.swap(grimCollectSlot, true);
-                    if (useItemWithManagedRotation()) {
+                    if (useItem()) {
                         mc.player.swing(InteractionHand.MAIN_HAND);
                         pendingSwapBack = true;
                         swapTimer.reset();
@@ -165,7 +137,7 @@ public class AutoMLG extends Module {
                         double hitZ = Mth.clamp(eyesPos.z, waterPos.getZ(), waterPos.getZ() + 1.0);
                         Vec3 hitVec = new Vec3(hitX, waterPos.getY() + 0.875, hitZ);
                         Rot2f rotation = RotationUtils.calculate(hitVec);
-                        Managers.ROTATION.setRotations(rotation, 180.0f, Priority.High);
+                        RotationManager.INSTANCE.setRotations(rotation, 180.0f, Priority.High);
                         grimCollectRotation = rotation;
                         grimCollectSlot = bucket.slot();
                         grimWaitingCollectRotation = true;
@@ -176,7 +148,7 @@ public class AutoMLG extends Module {
         }
 
         if (waitingForRotation && lockedRotation != null) {
-            Managers.ROTATION.setRotations(lockedRotation, 180.0f, Priority.High);
+            RotationManager.INSTANCE.setRotations(lockedRotation, 180.0f, Priority.High);
 
             if (!isFacing(lockedRotation, 1.6f, 2.0f)) {
                 return;
@@ -184,7 +156,7 @@ public class AutoMLG extends Module {
 
             if (shouldInteract && pendingSlot != -1) {
                 InvUtils.swap(pendingSlot, true);
-                if (interactTimer.passedMillise(interactDelay.getValue()) && useItemWithManagedRotation()) {
+                if (interactTimer.passedMillise(interactDelay.getValue()) && useItem()) {
                     mc.player.swing(InteractionHand.MAIN_HAND);
                     interactTimer.reset();
                     quickCollectDelayTicks = collectDelayTicks.getValue();
@@ -215,7 +187,7 @@ public class AutoMLG extends Module {
                         Vec3 targetVec = new Vec3(bestPos.getX() + 0.5, bestPos.getY() + 1.0, bestPos.getZ() + 0.5);
                         Rot2f rotation = RotationUtils.calculate(targetVec);
 
-                        Managers.ROTATION.setRotations(rotation, 180.0f, Priority.High);
+                        RotationManager.INSTANCE.setRotations(rotation, 180.0f, Priority.High);
 
                         if (rotation.getPitch() > 45) {
                             Vec3 eyesPos = mc.player.getEyePosition();
@@ -230,9 +202,14 @@ public class AutoMLG extends Module {
                             }
 
                             Rot2f preciseRotation = RotationUtils.calculate(hitVec);
-                            Managers.ROTATION.setRotations(preciseRotation, 180.0f, Priority.High);
+                            RotationManager.INSTANCE.setRotations(preciseRotation, 180.0f, Priority.High);
 
-                            NoSlowdown.INSTANCE.stopIfWorking();
+                            NoSlowdown noSlowdown = NoSlowdown.INSTANCE;
+                            if (noSlowdown.isWorking()) {
+                                NotificationManager.INSTANCE.warning(noSlowdown.getTranslatedName(), EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_WATER.getTranslatedName());
+                                noSlowdown.stop();
+                            }
+
                             pendingSlot = waterBucket.slot();
                             shouldInteract = true;
 
@@ -357,6 +334,25 @@ public class AutoMLG extends Module {
         boolean falling = mc.player.fallDistance > 3.0 && !mc.player.onGround();
         if (mc.player.getDeltaMovement().y > 0) return false;
         return falling;
+    }
+
+    private boolean isFacing(Rot2f target, float yawTolerance, float pitchTolerance) {
+        Rot2f current = RotationManager.INSTANCE.getRotation();
+        float yawDiff = Math.abs(Mth.wrapDegrees(current.getYaw() - target.getYaw()));
+        float pitchDiff = Math.abs(Mth.wrapDegrees(current.getPitch() - target.getPitch()));
+        return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance;
+    }
+
+    private boolean useItem() {
+        InteractionResult result = mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+        return result.consumesAction();
+    }
+
+    private void resetPending() {
+        shouldInteract = false;
+        pendingSlot = -1;
+        lockedRotation = null;
+        waitingForRotation = false;
     }
 
 }

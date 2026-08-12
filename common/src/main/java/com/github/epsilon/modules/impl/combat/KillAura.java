@@ -6,8 +6,9 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
@@ -159,7 +160,7 @@ public class KillAura extends Module {
             return;
         }
 
-        targets = new ArrayList<>(Managers.TARGET.acquireTargets(TargetRequest.of(
+        targets = new ArrayList<>(TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
                 searchRange.getValue(),
                 fov.getValue().floatValue(),
                 players.getValue(),
@@ -207,10 +208,10 @@ public class KillAura extends Module {
 
         Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
         if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
-        Managers.ROTATION.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target);
+        RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target);
 
-        HitResult hitResult = Managers.ROTATION.getHitResult();
-        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !Managers.TARGET.isSameTeam(player) && velocity.attackQueue <= 0) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
             if (player.hurtTime <= 1 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
@@ -233,7 +234,7 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
-        HitResult hitResult = Managers.ROTATION.getHitResult();
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         while (attacks > 0) {
             attacks--;
             if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking()) return;
@@ -255,7 +256,7 @@ public class KillAura extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (target != null && Velocity.INSTANCE.attackQueue <= 0) {
-            HitResult hitResult = Managers.ROTATION.getHitResult();
+            HitResult hitResult = RotationManager.INSTANCE.getHitResult();
             if (!onlyCrosshair.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {

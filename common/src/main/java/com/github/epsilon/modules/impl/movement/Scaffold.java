@@ -1,15 +1,14 @@
 package com.github.epsilon.modules.impl.movement;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
-import com.github.epsilon.events.impl.MousePressEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -24,6 +23,7 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import love.slmpc.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.util.Mth;
@@ -161,6 +161,7 @@ public class Scaffold extends Module {
             Blocks.FLOWER_POT,
             Blocks.SCAFFOLDING
     ));
+    private final BoolSetting toggleOnTeleport = boolSetting("Toggle On Teleport", true);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
@@ -252,7 +253,7 @@ public class Scaffold extends Module {
         }
         double strength = mc.player.getDeltaMovement().horizontal().length();
         if (strength >= 1.5) {
-            Managers.NOTIFICATION.warning(this.getTranslatedName(), "你也是要飞了");
+            NotificationManager.INSTANCE.warning(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName());
         }
         if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
             emergencyPlacementActive = true;
@@ -261,8 +262,8 @@ public class Scaffold extends Module {
             rotateCount++;
             if (blockPos == null) return;
             Rot2f rotation = getRotation(blockPos, direction);
-            Managers.ROTATION.rotations = rotation;
-            Managers.ROTATION.setActive(true);
+            RotationManager.INSTANCE.rotations = rotation;
+            RotationManager.INSTANCE.setActive(true);
             mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
 
             swap();
@@ -310,6 +311,14 @@ public class Scaffold extends Module {
         }
     }
 
+    @EventHandler
+    private void onPacketReceive(PacketEvent.Receive event) {
+        if (!nullCheck() && toggleOnTeleport.getValue() && event.getPacket() instanceof ClientboundPlayerPositionPacket) {
+            NotificationManager.INSTANCE.error(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT.getTranslatedName());
+            setEnabled(false);
+        }
+    }
+
     public int getBlockCount() {
         if (nullCheck()) return 91;
 
@@ -344,7 +353,7 @@ public class Scaffold extends Module {
 
     private void handleTelly() {
         if (mc.player.onGround() && (strafeInput != 0 || forwardInput != 0)) {
-            Managers.ROTATION.setRotations(new Rot2f(rawInputYaw, rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotationBackSpeed.getValue());
+            RotationManager.INSTANCE.setRotations(new Rot2f(rawInputYaw, rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotationBackSpeed.getValue());
             return;
         }
 
@@ -357,7 +366,7 @@ public class Scaffold extends Module {
             speed = airTicks <= 1 ? rotationSpeed.getValue() : rotationSpeed2.getValue();
         }
 
-        Managers.ROTATION.setRotations(rotation, speed);
+        RotationManager.INSTANCE.setRotations(rotation, speed);
 
         if (airTicks > tellyTicks.getValue()) {
             place();
@@ -367,7 +376,7 @@ public class Scaffold extends Module {
     private void handleNormal() {
         if (Eagle.INSTANCE.isOverEdge() || !snap.getValue() | !mc.player.onGround()) {
             rotation = getRotation(blockPos, direction);
-            Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue());
+            RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue());
         }
         place();
     }
@@ -378,8 +387,8 @@ public class Scaffold extends Module {
         }
 
         if (switch (raytrace.getValue()) {
-            case Normal -> !RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), blockPos);
-            case Strict -> !RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), blockPos, direction);
+            case Normal -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos);
+            case Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos, direction);
         }) {
             return;
         }

@@ -11,8 +11,8 @@ import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
@@ -444,7 +444,7 @@ public class ModuleButton extends Component {
                         if (section.isCollapsed()) {
                             blurInputs(section);
                         }
-                        Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        SoundManager.INSTANCE.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                         DropdownScreen.INSTANCE.react(section.isCollapsed()
                                 ? ReisaDropdownCompanion.Action.PANEL_CLOSE
                                 : ReisaDropdownCompanion.Action.PANEL_OPEN);

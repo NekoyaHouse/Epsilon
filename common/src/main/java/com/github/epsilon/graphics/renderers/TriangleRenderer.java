@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -39,7 +39,7 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public static TriangleRenderer create() {
-        return RendererHolder.INSTANCE.register(new TriangleRenderer());
+        return RendererManager.INSTANCE.register(new TriangleRenderer());
     }
 
     public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
@@ -201,7 +201,7 @@ public class TriangleRenderer implements IRenderer {
     public void close() {
         clear();
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
 }

@@ -4,7 +4,7 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -42,7 +42,7 @@ public class TextureRenderer implements IRenderer {
     }
 
     public static TextureRenderer create() {
-        return RendererHolder.INSTANCE.register(new TextureRenderer());
+        return RendererManager.INSTANCE.register(new TextureRenderer());
     }
 
     public void addQuadTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color) {
@@ -351,7 +351,7 @@ public class TextureRenderer implements IRenderer {
             batch.buffer.close();
         }
         batches.clear();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
     private record TextureKey(Object texture, boolean linearFilter) {

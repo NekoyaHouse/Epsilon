@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
-import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.managers.ConfigManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -76,7 +76,7 @@ public class WelcomeScreen extends Screen {
                 .withValues(EpsilonLanguage.values())
                 .create(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT, Component.literal(LANGUAGE), (button, language) -> {
                     ClientSetting.INSTANCE.language.setValue(language);
-                    ConfigHolder.INSTANCE.saveNow();
+                    ConfigManager.INSTANCE.saveNow();
                 }));
         this.addRenderableWidget(Button.builder(Component.literal(DONT_SHOW_AGAIN), button -> confirmDoNotShowAgain())
                 .bounds(buttonX, buttonY + BUTTON_HEIGHT + BUTTON_GAP, buttonWidth, BUTTON_HEIGHT)
@@ -144,7 +144,7 @@ public class WelcomeScreen extends Screen {
 
     private void confirmDoNotShowAgain() {
         ClientSetting.INSTANCE.showWelcomeScreen.setValue(false);
-        ConfigHolder.INSTANCE.saveNow();
+        ConfigManager.INSTANCE.saveNow();
         continueToNextScreen();
     }
 

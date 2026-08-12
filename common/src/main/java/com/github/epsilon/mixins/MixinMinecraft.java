@@ -5,8 +5,8 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.screen.MainMenuScreen;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
@@ -57,7 +57,7 @@ public abstract class MixinMinecraft {
         if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
             MainMenuScreen.INSTANCE.queueReisaGreeting();
         } else {
-            Managers.SOUND.playSound(
+            SoundManager.INSTANCE.playSound(
                     SoundKey.REISA_WELCOME,
                     ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
             );

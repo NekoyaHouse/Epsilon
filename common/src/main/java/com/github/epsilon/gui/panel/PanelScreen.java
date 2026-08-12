@@ -15,7 +15,7 @@ import com.github.epsilon.gui.panel.view.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.view.ModuleListPanel;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -95,7 +95,7 @@ public class PanelScreen extends Screen {
         ClientSetting.ModuleSort currentModuleSort = ClientSetting.INSTANCE.moduleSort.getValue();
         boolean sidebarExpanded = state.isSidebarExpanded();
         boolean clientSettingMode = state.isClientSettingMode();
-        long currentI18nRevision = TranslateHolder.INSTANCE.getRevision();
+        long currentI18nRevision = TranslationManager.INSTANCE.getRevision();
         if (!lastSelectedCategory.equals(currentCategory)
                 || !lastSelectedModule.equals(currentModule)
                 || !lastSearchQuery.equals(currentQuery)

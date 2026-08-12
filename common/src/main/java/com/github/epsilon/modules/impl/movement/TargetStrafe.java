@@ -6,7 +6,8 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -104,7 +105,7 @@ public class TargetStrafe extends Module {
 
         targetYaw = Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90.0f);
 
-        Managers.ROTATION.setRotations(new Rot2f(targetYaw, Managers.ROTATION.getPitch()), 180.0f, Priority.Low);
+        RotationManager.INSTANCE.setRotations(new Rot2f(targetYaw, RotationManager.INSTANCE.getPitch()), 180.0f, Priority.Low);
     }
 
     @EventHandler
@@ -192,7 +193,7 @@ public class TargetStrafe extends Module {
 
     private Color getTargetColor(LivingEntity entity) {
         if (entity instanceof Player player) {
-            if (Managers.FRIEND.isFriend(player)) {
+            if (FriendManager.INSTANCE.isFriend(player)) {
                 return new Color(85, 255, 85);
             } else {
                 new Color(entity.getTeamColor());

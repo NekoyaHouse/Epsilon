@@ -6,7 +6,7 @@ import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
 
     @Override
     protected float computeContentHeight() {
-        int friendCount = Managers.FRIEND.getFriends().size();
+        int friendCount = FriendManager.INSTANCE.getFriends().size();
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + Math.max(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP));
     }
 
@@ -42,7 +42,7 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
                 isHovered(mouseX, mouseY, addX, fieldY, 20.0f, FIELD_HEIGHT) ? MD3Theme.PRIMARY : MD3Theme.PRIMARY_CONTAINER);
         scope.text("+", addX + 7.0f, fieldY + 2.0f, 0.62f, MD3Theme.ON_PRIMARY_CONTAINER);
 
-        List<String> friends = Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        List<String> friends = FriendManager.INSTANCE.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
         float rowY = fieldY + FIELD_HEIGHT + GAP;
         if (friends.isEmpty()) {
             scope.text(EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName(), x + PADDING, rowY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
@@ -78,10 +78,10 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
         inputField.blur();
 
         float rowY = fieldY + FIELD_HEIGHT + GAP;
-        for (String name : Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
+        for (String name : FriendManager.INSTANCE.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
             float removeX = x + width - PADDING - 18.0f;
             if (isHovered(mouseX, mouseY, removeX, rowY + 1.0f, 16.0f, 16.0f)) {
-                Managers.FRIEND.removeFriend(name);
+                FriendManager.INSTANCE.removeFriend(name);
                 return true;
             }
             rowY += ROW_HEIGHT + GAP;
@@ -115,8 +115,8 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
 
     private void addFriend() {
         String name = inputField.getText().trim();
-        if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
-            Managers.FRIEND.addFriend(name);
+        if (!name.isEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
+            FriendManager.INSTANCE.addFriend(name);
         }
         inputField.clear();
     }

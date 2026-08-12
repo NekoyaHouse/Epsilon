@@ -2,8 +2,9 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -72,7 +73,7 @@ public class MaceAura extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
+        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 360.0f,
                 players.getValue(),
@@ -91,7 +92,7 @@ public class MaceAura extends Module {
             return;
         }
 
-        Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), 180, Priority.Medium);
+        RotationManager.INSTANCE.setRotations(RotationUtils.getRotationsToEntity(target), 180, Priority.Medium);
 
         if (!isReadyToAttack()) return;
 
@@ -99,7 +100,7 @@ public class MaceAura extends Module {
     }
 
     private boolean isReadyToAttack() {
-        HitResult hitResult = Managers.ROTATION.getHitResult();
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
             return false;
         }

@@ -921,6 +921,7 @@
       },
       "safe anchor": {
         "_value": "安全重生锚",
+        "shield": "护盾",
         "trigger key": "触发按键",
         "mode": {
           "_value": "模式",
@@ -945,7 +946,6 @@
         "swapback": "切回原物品",
         "anchor place min delay": "锚放置最小延迟",
         "anchor place max delay": "锚放置最大延迟",
-        "shield": "护盾",
         "shield place min delay": "护盾放置最小延迟",
         "shield place max delay": "护盾放置最大延迟",
         "multi shield": "多重护盾",
@@ -965,10 +965,10 @@
         "multi charge chance": "多重充能概率",
         "min extra charges": "最小额外充能",
         "max extra charges": "最大额外充能",
+        "render": "渲染",
         "line color": "线条颜色",
         "side color": "侧面颜色",
-        "line width": "线宽",
-        "render": "渲染"
+        "line width": "线宽"
       },
       "safe crystal": {
         "_value": "安全水晶",
@@ -1293,10 +1293,9 @@
         "mode": {
           "_value": "模式",
           "vanilla": "原版",
-          "grim": "Grim"
+          "grimmotion": "Grim 移动"
         },
-        "only on ground": "仅在地面",
-        "motion y": "Y轴速度"
+        "only on ground": "仅在地面"
       },
       "flight": {
         "_value": "飞行",
@@ -1347,16 +1346,13 @@
         "mode": {
           "_value": "模式",
           "vanilla": "原版",
-          "jump": "跳跃",
-          "grim1_2": "Grim 1/2",
-          "grim1_3": "Grim 1/3",
           "grimblink": "Grim Blink",
-          "grimfull": "Grim Full"
+          "grim1_2": "Grim 1/2",
+          "grim1_3": "Grim 1/3"
         },
         "food": "食物",
         "bow": "弓",
-        "crossbow": "弩",
-        "release ticks": "释放刻数"
+        "crossbow": "弩"
       },
       "phase": {
         "_value": "穿墙",
@@ -1403,6 +1399,7 @@
       "scaffold": {
         "_value": "自动搭路",
         "blacklisted blocks": "黑名单方块",
+        "toggle on teleport": "传送时切换",
         "mode": {
           "_value": "模式",
           "tellybridge": "Telly桥",
@@ -1515,6 +1512,7 @@
         "attack counts": "攻击次数",
         "sprintticks": "冲刺刻数",
         "max delay": "最大延迟",
+        "swing hand": "挥手",
         "delay ticks": "延迟刻数",
         "jump reset": "跳跃重置"
       },
@@ -2384,6 +2382,16 @@
         "scanline strength": "扫描线强度",
         "noise strength": "噪声强度"
       }
+    },
+    "notification": {
+      "no_slowdown_disabled_water": "落水时已停用",
+      "no_slowdown_disabled_falling": "下落时已停用",
+      "no_slowdown_disabled_pearl": "丢末影珍珠时已停用",
+      "transaction_count_too_high": "缓存包过多，提前释放",
+      "scaffold_flying_warning": "你也是要飞了",
+      "scaffold_toggle_on_teleport": "传送时已关闭",
+      "serverbound_packet_flush_failed": "客户端数据包队列释放失败",
+      "clientbound_packet_flush_failed": "服务端数据包队列释放失败"
     }
   }
 }

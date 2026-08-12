@@ -4,11 +4,10 @@ import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.assets.i18n.I18NFileGenerator;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.holders.ConfigHolder;
-import com.github.epsilon.holders.HudElementHolder;
-import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.*;
+import com.github.epsilon.managers.network.ClientboundPacketManager;
+import com.github.epsilon.managers.network.ServerboundPacketManager;
+import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.Minecraft;
 
@@ -24,15 +23,21 @@ public class EpsilonCommon {
         EventBus.INSTANCE.registerLambdaFactory(EpsilonCommon.class.getPackageName(), (lookupInMethod, klass) -> (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup()));
 
         // 初始化客户端系统
-        ModuleHolder.INSTANCE.initModules();
-        HudElementHolder.INSTANCE.initElements();
-        AddonHolder.INSTANCE.setupAddons();
+        ModuleManager.INSTANCE.initModules();
+        HudElementManager.INSTANCE.initElements();
+        AddonManager.INSTANCE.setupAddons();
 
         // 初始化 Managers
-        Managers.initManagers();
+        ExecutorManager.INSTANCE.getClass();
+        ClientboundPacketManager.INSTANCE.getClass();
+        ServerboundPacketManager.INSTANCE.getClass();
+        TargetManager.INSTANCE.getClass();
+        ExtrapolationManager.INSTANCE.getClass();
+        HealthManager.INSTANCE.getClass();
+        SkinManager.INSTANCE.getClass();
 
         // 恢复配置
-        ConfigHolder.INSTANCE.initConfig();
+        ConfigManager.INSTANCE.initConfig();
         EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
 
         // 初始化 Render3DScheduler 里的 RenderPipeline
@@ -43,7 +48,7 @@ public class EpsilonCommon {
 
         // 添加一个退出游戏时候的钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ConfigHolder.INSTANCE.saveNow();
+            ConfigManager.INSTANCE.saveNow();
             Constants.LOGGER.info(Constants.NAME + " saved config on shutdown.");
         }));
 

@@ -18,8 +18,8 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.HudElementHolder;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.HudElementManager;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import love.slmpc.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -72,7 +72,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        Managers.NOTIFICATION.clearAll();
+        NotificationManager.INSTANCE.clearAll();
         ensureHudPanel();
         hudPanel.setVisible(true);
         hudPanel.setOpened(true);
@@ -122,7 +122,7 @@ public class HudEditorScreen extends Screen {
     private void drawEditor(int mouseX, int mouseY) {
         ensureHudPanel();
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
             element.updateLayout();
         }
 
@@ -149,7 +149,7 @@ public class HudEditorScreen extends Screen {
         flushEditorLayer();
 
         beginEditorLayer(100);
-        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        List<HudModule> elements = HudElementManager.INSTANCE.getElements();
         HudModule hovered = findElementAt(mouseX, mouseY, true);
         for (HudModule element : elements) {
             if (!element.isEnabled()) continue;
@@ -176,7 +176,7 @@ public class HudEditorScreen extends Screen {
         LuminRenderSystem.LuminRenderTarget previousTarget = LuminRenderSystem.getActiveTarget();
         LuminRenderSystem.setActiveTarget(renderTarget);
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
             if (element.isEnabled()) {
                 element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
             }
@@ -198,7 +198,7 @@ public class HudEditorScreen extends Screen {
         float overlayScale = (float) (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale());
         graphics.pose().pushMatrix();
         graphics.pose().scale(overlayScale, overlayScale);
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
             element.renderOverlay(graphics, minecraft.getDeltaTracker());
         }
@@ -559,7 +559,7 @@ public class HudEditorScreen extends Screen {
         if (!includePanelArea && isOverPanel(mouseX, mouseY)) {
             return null;
         }
-        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        List<HudModule> elements = HudElementManager.INSTANCE.getElements();
         for (int i = elements.size() - 1; i >= 0; i--) {
             HudModule element = elements.get(i);
             if (!element.isEnabled()) continue;
@@ -625,12 +625,12 @@ public class HudEditorScreen extends Screen {
     }
 
     private void ensureHudPanel() {
-        int elementCount = HudElementHolder.INSTANCE.getElements().size();
+        int elementCount = HudElementManager.INSTANCE.getElements().size();
         if (hudPanel != null && panelElementCount == elementCount) return;
 
         float x = hudPanel == null ? DropdownTheme.PANEL_MARGIN_X : hudPanel.getX();
         float y = hudPanel == null ? DropdownTheme.PANEL_MARGIN_Y : hudPanel.getY();
-        hudPanel = new CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementHolder.INSTANCE.getElements());
+        hudPanel = new CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementManager.INSTANCE.getElements());
         hudPanel.setVisible(true);
         hudPanel.setOpened(true);
         hudPanel.setPosition(x, y);

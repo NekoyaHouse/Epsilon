@@ -1,8 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
@@ -71,11 +73,15 @@ public class KeyPearl extends Module {
             if (pauseOnEat.getValue() && (PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking())) {
                 return;
             } else {
-                NoSlowdown.INSTANCE.stopIfWorking();
+                NoSlowdown noSlowdown = NoSlowdown.INSTANCE;
+                if (noSlowdown.isWorking()) {
+                    NotificationManager.INSTANCE.warning(noSlowdown.getTranslatedName(), EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_PEARL.getTranslatedName());
+                    noSlowdown.stop();
+                }
             }
 
             // 强制给你的转头归位
-            Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), mc.player.getXRot()), 180.0f, Priority.Highest);
+            RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), mc.player.getXRot()), 180.0f, Priority.Highest);
 
             InvUtils.swap(pearl.slot(), switchBack.getValue());
 

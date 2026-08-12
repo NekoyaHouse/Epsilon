@@ -1,10 +1,12 @@
 package com.github.epsilon.modules.impl.movement;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -57,11 +59,9 @@ public class NoSlowdown extends Module {
         return isEnabled() && mode.is(Mode.GrimBlink) && eating;
     }
 
-    public void stopIfWorking() {
-        if (isWorking()) {
-            mc.options.keyUse.setDown(false);
-            mc.gameMode.releaseUsingItem(mc.player);
-        }
+    public void stop() {
+        mc.options.keyUse.setDown(false);
+        mc.gameMode.releaseUsingItem(mc.player);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class NoSlowdown extends Module {
         if (eating) {
             ticks++;
             if (Math.toIntExact(packets.stream().filter(packet -> packet instanceof ClientboundPingPacket).count()) > 150 && ticks > 1) {
-                Managers.NOTIFICATION.error(this.getTranslatedName(), "Transaction count too high!");
+                NotificationManager.INSTANCE.error(this.getTranslatedName(), EpsilonTranslations.Notifications.TRANSACTION_COUNT_TOO_HIGH.getTranslatedName());
                 mc.options.keyUse.setDown(false);
                 onDisable();
             }
@@ -102,7 +102,7 @@ public class NoSlowdown extends Module {
             }
             if (ticks == 2) {
                 InteractionHand hand = mc.player.getUsedItemHand() == InteractionHand.OFF_HAND ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-                mc.getConnection().send(new ServerboundUseItemPacket(hand, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence(), Managers.ROTATION.getYaw(), Managers.ROTATION.getPitch()));
+                mc.getConnection().send(new ServerboundUseItemPacket(hand, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence(), RotationManager.INSTANCE.getYaw(), RotationManager.INSTANCE.getPitch()));
             }
             if (ticks > useDuration + 3) {
                 mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));

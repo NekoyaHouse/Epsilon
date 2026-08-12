@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.TimerManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -86,7 +86,7 @@ public class HoleSnap extends Module {
             Step.INSTANCE.setEnabled(false);
         }
 
-        Managers.TIMER.reset();
+        TimerManager.INSTANCE.reset();
         singleHole = null;
         targetHole = null;
     }
@@ -113,7 +113,7 @@ public class HoleSnap extends Module {
             return;
         }
 
-        Managers.TIMER.set(timer.getValue().floatValue());
+        TimerManager.INSTANCE.set(timer.getValue().floatValue());
 
         double yaw = Math.cos(Math.toRadians(getAngle(hole.middle) + 90.0f));
         double pitch = Math.sin(Math.toRadians(getAngle(hole.middle) + 90.0f));

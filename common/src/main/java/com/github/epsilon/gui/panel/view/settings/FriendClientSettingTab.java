@@ -13,8 +13,8 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -68,7 +68,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         UiRect inputBounds = getInputBounds(bounds);
         UiRect listViewport = getListViewport(bounds);
-        List<String> friends = Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        List<String> friends = FriendManager.INSTANCE.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
         float contentHeight = friends.size() * (FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP);
         state.setMaxFriendScroll(contentHeight - listViewport.height());
         float maxScroll = Math.max(0.0f, contentHeight - listViewport.height());
@@ -172,7 +172,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         for (FriendRowEntry entry : rowEntries) {
             if (entry.removeBounds().contains(event.x(), event.y())) {
-                Managers.FRIEND.removeFriend(entry.name());
+                FriendManager.INSTANCE.removeFriend(entry.name());
                 markDirty();
                 return true;
             }
@@ -263,8 +263,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
     private void addFriendFromInput() {
         String name = inputField.getText().trim();
-        if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
-            Managers.FRIEND.addFriend(name);
+        if (!name.isEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
+            FriendManager.INSTANCE.addFriend(name);
         }
         inputField.clear();
         markDirty();
@@ -345,7 +345,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
     private long buildContentSignature(List<String> friends) {
         long signature = 17L;
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + Float.floatToIntBits(state.getFriendScroll());
         for (String friend : friends) {
             signature = signature * 31L + friend.hashCode();

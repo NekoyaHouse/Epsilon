@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel;
 
-import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -116,7 +116,7 @@ public class PanelState {
 
     public List<Module> getVisibleModules() {
         String loweredSearch = searchQuery.toLowerCase();
-        List<Module> modules = new ArrayList<>(ModuleHolder.INSTANCE.getModules().stream()
+        List<Module> modules = new ArrayList<>(ModuleManager.INSTANCE.getModules().stream()
                 .filter(module -> module.getCategory() == selectedCategory)
                 .filter(module -> loweredSearch.isBlank() || matchesSearch(module, loweredSearch))
                 .sorted(getComparator())
@@ -173,7 +173,7 @@ public class PanelState {
 
     private void ensureValidSelection() {
         String loweredSearch = searchQuery.toLowerCase();
-        List<Module> modules = ModuleHolder.INSTANCE.getModules().stream()
+        List<Module> modules = ModuleManager.INSTANCE.getModules().stream()
                 .filter(module -> module.getCategory() == selectedCategory)
                 .filter(module -> loweredSearch.isBlank() || matchesSearch(module, loweredSearch))
                 .sorted(getComparator())

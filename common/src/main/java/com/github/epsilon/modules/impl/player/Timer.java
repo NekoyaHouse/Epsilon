@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.*;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.TimerManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -77,7 +77,7 @@ public class Timer extends Module {
         lagging = false;
         releasing = false;
         shouldRelease = false;
-        Managers.TIMER.reset();
+        TimerManager.INSTANCE.reset();
         releaseAll();
     }
 
@@ -86,26 +86,26 @@ public class Timer extends Module {
         if (nullCheck()) return;
 
         // 先收回其他模块留下的临时倍率，再应用当前 Timer 模式。
-        Managers.TIMER.tryReset();
+        TimerManager.INSTANCE.tryReset();
 
         switch (mode.getValue()) {
-            case Always -> Managers.TIMER.set(multiplier.getValue().floatValue());
+            case Always -> TimerManager.INSTANCE.set(multiplier.getValue().floatValue());
             case SlowBalance -> {
                 boolean moving = mc.player.isMoving();
                 if (shouldRelease && balance > 0.1F) {
                     float speed = multiplier.getValue().floatValue();
                     if (balance >= speed - 1.0F) {
-                        Managers.TIMER.set(speed);
+                        TimerManager.INSTANCE.set(speed);
                         balance -= speed - 1.0F;
                     } else {
-                        Managers.TIMER.set(1.0F);
+                        TimerManager.INSTANCE.set(1.0F);
                     }
                 } else if (KillAura.INSTANCE.target == null && balance < ticks.getValue()) {
                     float speed = !moving && mc.player.onGround() ? 0.8F : 0.96F;
-                    Managers.TIMER.set(speed);
+                    TimerManager.INSTANCE.set(speed);
                     balance += 1.0F - speed;
                 } else {
-                    Managers.TIMER.set(1.0F);
+                    TimerManager.INSTANCE.set(1.0F);
                 }
                 balance = Mth.clamp(balance, 0.0F, ticks.getValue());
             }
@@ -264,7 +264,7 @@ public class Timer extends Module {
     private void updateTimerSpeed() {
         boolean shouldSpeedUp = shouldRelease && balanceTime > 10L;
         releasing = shouldSpeedUp;
-        Managers.TIMER.set(shouldSpeedUp ? multiplier.getValue().floatValue() : 1.0F);
+        TimerManager.INSTANCE.set(shouldSpeedUp ? multiplier.getValue().floatValue() : 1.0F);
     }
 
     private void releaseAll() {

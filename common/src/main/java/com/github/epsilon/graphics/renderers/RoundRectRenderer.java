@@ -3,7 +3,7 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -32,7 +32,7 @@ public class RoundRectRenderer implements IRenderer {
     }
 
     public static RoundRectRenderer create() {
-        return RendererHolder.INSTANCE.register(new RoundRectRenderer());
+        return RendererManager.INSTANCE.register(new RoundRectRenderer());
     }
 
     public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {
@@ -163,7 +163,7 @@ public class RoundRectRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
     public void setScissor(int x, int y, int width, int height) {

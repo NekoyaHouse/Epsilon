@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.AntiBot;
@@ -201,7 +201,7 @@ public class Velocity extends Module {
 
         KillAura killAura = KillAura.INSTANCE;
         if (sprintQueue >= 1 && killAura.target == null && !Scaffold.INSTANCE.isEnabled()) {
-            Managers.ROTATION.setRotations(new Rot2f(yaw, Managers.ROTATION.getRotation().getPitch()), 180f, Priority.Highest);
+            RotationManager.INSTANCE.setRotations(new Rot2f(yaw, RotationManager.INSTANCE.getRotation().getPitch()), 180f, Priority.Highest);
         }
     }
 
@@ -218,7 +218,7 @@ public class Velocity extends Module {
         if (!mode.is(Mode.Reduce)) return;
 
         if (attackQueue >= 1) {
-            if (Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+            if (RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
                 mc.gameMode.attack(mc.player, pl);
                 if (swingHand.getValue()) {
                     mc.player.swing(InteractionHand.MAIN_HAND);
@@ -238,7 +238,7 @@ public class Velocity extends Module {
 
         if (!mode.is(Mode.Reduce)) return;
 
-        if (delay && mc.player.fallDistance == 0 && Managers.ROTATION.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+        if (delay && mc.player.fallDistance == 0 && RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
             if (System.currentTimeMillis() - lag >= 100) {
                 event.setForward(1.0f);
                 event.setStrafe(0.0f);
