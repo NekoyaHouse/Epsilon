@@ -12,6 +12,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
@@ -22,12 +23,18 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.*;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @ClInitNative
 public class InvManager extends Module {
@@ -51,6 +58,12 @@ public class InvManager extends Module {
         Block
     }
 
+    private enum ItemListMode {
+        None,
+        Blacklist,
+        Whitelist
+    }
+
     private enum BowPriorityMode {
         Crossbow,
         PowerBow,
@@ -65,6 +78,8 @@ public class InvManager extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
+    private final EnumSetting<ItemListMode> itemListMode = enumSetting("Item List Mode", ItemListMode.Blacklist);
+    private final RegistryListSetting<Item> itemList = itemListSetting("Item List", List.of(), () -> !itemListMode.is(ItemListMode.None));
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
@@ -125,7 +140,7 @@ public class InvManager extends Module {
 
     @Override
     protected void onDisable() {
-        boolean closeSilentInventory = inventoryOpen && mode.is(Mode.Silent) && mc.getConnection() != null && mc.player != null;
+        boolean closeSilentInventory = inventoryOpen && mode.is(Mode.Silent) && mc.player != null;
         clickOffHand = false;
         inventoryOpen = false;
         actionState = ActionState.IDLE;
@@ -134,39 +149,6 @@ public class InvManager extends Module {
         if (closeSilentInventory) {
             mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
         }
-    }
-
-    private boolean isItemUseful(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        if (InvHelper.isGodItem(stack)) return true;
-        if (stack.getDisplayName().getString().contains("点击使用")) return true;
-        if (InvHelper.isArmor(stack)) {
-            float protection = InvHelper.getProtection(stack);
-            if (InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) >= protection) return false;
-            float bestArmor = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack));
-            return !(protection < bestArmor);
-        }
-        if (InvHelper.isSword(stack)) return InvHelper.getBestSword() == stack;
-        if (InvHelper.isPickaxe(stack)) return InvHelper.getBestPickaxe() == stack;
-        if (stack.getItem() instanceof AxeItem && !InvHelper.isSharpnessAxe(stack))
-            return InvHelper.getBestAxe() == stack;
-        if (stack.getItem() instanceof ShovelItem) return InvHelper.getBestShovel() == stack;
-        if (stack.getItem() instanceof CrossbowItem) return InvHelper.getBestCrossbow() == stack;
-        if (stack.getItem() instanceof BowItem && InvHelper.isPunchBow(stack))
-            return InvHelper.getBestPunchBow() == stack;
-        if (stack.getItem() instanceof BowItem && InvHelper.isPowerBow(stack))
-            return InvHelper.getBestPowerBow() == stack;
-        if (stack.getItem() instanceof BowItem && InvHelper.getItemCount(Items.BOW) > 1) return false;
-        if (stack.getItem() == Items.WATER_BUCKET && InvHelper.getItemCount(Items.WATER_BUCKET) > waterBucketCount.getValue())
-            return false;
-        if (stack.getItem() == Items.LAVA_BUCKET && InvHelper.getItemCount(Items.LAVA_BUCKET) > lavaBucketCount.getValue())
-            return false;
-        if (stack.getItem() instanceof FishingRodItem && InvHelper.getItemCount(Items.FISHING_ROD) > 1)
-            return false;
-        if ((stack.getItem() == Items.SNOWBALL || stack.getItem() == Items.EGG) && !keepProjectile.getValue())
-            return false;
-        if (stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE) return true;
-        return !(stack.getItem() instanceof StandingAndWallBlockItem) && InvHelper.isCommonItemUseful(stack);
     }
 
     @EventHandler
@@ -239,33 +221,32 @@ public class InvManager extends Module {
 
         if (this.autoArmor.getValue()) {
             EquipmentSlot[] armorSlots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
-            for (int i = 0; i < armorSlots.length; i++) {
-                ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);
-                if (InvHelper.isArmor(stack)) {
-                    if (!stack.isEmpty() && canExecuteInventoryAction() && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
-                        dropAll(4 + (4 - i));
+            for (EquipmentSlot armorSlot : armorSlots) {
+                ItemStack stack = InvHelper.getArmorStack(armorSlot);
+                ItemStack bestArmor = getBestArmor(armorSlot);
+                if (InvHelper.isArmor(stack) && canReplace(stack) && bestArmor != null) {
+                    if (canExecuteInventoryAction() && InvHelper.getProtection(bestArmor) > InvHelper.getProtection(stack)) {
+                        dropAll(InventoryMenu.ARMOR_SLOT_END - 1 - armorSlot.getIndex());
                     }
                 }
             }
             for (int ix = 0; ix < mc.player.getInventory().getNonEquipmentItems().size(); ix++) {
                 ItemStack stack = InvHelper.getInventoryStack(ix);
-                if (!stack.isEmpty() && InvHelper.isArmor(stack)) {
+                if (isManagedItem(stack) && InvHelper.isArmor(stack)) {
                     float currentItemScore = InvHelper.getProtection(stack);
-                    boolean isBestItem = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)) == currentItemScore;
-                    boolean isBetterItem = InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) < currentItemScore;
+                    ItemStack bestArmor = getBestArmor(InvHelper.getArmorSlot(stack));
+                    boolean isBestItem = bestArmor == stack;
+                    ItemStack equippedArmor = InvHelper.getArmorStack(InvHelper.getArmorSlot(stack));
+                    boolean isBetterItem = canReplace(equippedArmor) && InvHelper.getProtection(equippedArmor) < currentItemScore;
                     if (isBestItem && isBetterItem && canExecuteInventoryAction()) {
-                        if (ix < 9) {
-                            shiftClick(ix + 36);
-                        } else {
-                            shiftClick(ix);
-                        }
+                        shiftClick(toInventoryMenuSlot(ix));
                     }
                 }
             }
         }
 
         if (this.clickOffHand && canExecuteInventoryAction()) {
-            if (click(45)) {
+            if (click(InventoryMenu.SHIELD_SLOT)) {
                 this.clickOffHand = false;
             }
         }
@@ -274,48 +255,38 @@ public class InvManager extends Module {
             ItemStack offHand = InvHelper.getOffhandStack();
             Item offHandItem = offHand.getItem();
 
-            int egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE);
-            int gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE);
+            int egapSlot = InvHelper.getItemStackSlot(findLargestStack(Items.ENCHANTED_GOLDEN_APPLE));
+            int gapSlot = InvHelper.getItemStackSlot(findLargestStack(Items.GOLDEN_APPLE));
 
             if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                 if (offHand.getCount() < offHand.getMaxStackSize() && egapSlot != -1) {
                     if (canExecuteInventoryAction()) {
                         boolean clicked;
-                        if (egapSlot < 9) {
-                            clicked = click(egapSlot + 36);
-                        } else {
-                            clicked = click(egapSlot);
-                        }
+                        clicked = click(toInventoryMenuSlot(egapSlot));
                         if (clicked) {
                             this.clickOffHand = true;
                         }
                     }
                 }
             } else if (offHandItem == Items.GOLDEN_APPLE) {
-                if (egapSlot != -1) {
+                if (egapSlot != -1 && canReplace(offHand)) {
                     if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
                     }
-                } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1) {
+                } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1 && canReplace(offHand)) {
                     if (canExecuteInventoryAction()) {
-                        int targetSlot = gapSlot;
-                        boolean clicked;
-                        if (targetSlot < 9) {
-                            clicked = click(targetSlot + 36);
-                        } else {
-                            clicked = click(targetSlot);
-                        }
+                        boolean clicked = click(toInventoryMenuSlot(gapSlot));
                         if (clicked) {
                             this.clickOffHand = true;
                         }
                     }
                 }
             } else {
-                if (egapSlot != -1) {
+                if (egapSlot != -1 && canReplace(offHand)) {
                     if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
                     }
-                } else if (gapSlot != -1) {
+                } else if (gapSlot != -1 && canReplace(offHand)) {
                     if (canExecuteInventoryAction()) {
                         this.swapOffHand(gapSlot);
                     }
@@ -323,35 +294,37 @@ public class InvManager extends Module {
             }
         } else if (this.offhandItem.is(OffhandItemMode.Projectile)) {
             ItemStack offHand = InvHelper.getOffhandStack();
-            ItemStack bestProjectile = InvHelper.getBestProjectile();
+            ItemStack bestProjectile = getBestProjectile();
             if (bestProjectile != null) {
                 int slot = InvHelper.getItemStackSlot(bestProjectile);
                 boolean shouldSwap = offHand.getItem() != Items.EGG && offHand.getItem() != Items.SNOWBALL || offHand.getCount() < bestProjectile.getCount();
-                if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this.swapOffHand(slot);
+                if (shouldSwap && slot != -1 && canReplace(offHand) && canExecuteInventoryAction())
+                    this.swapOffHand(slot);
             }
         } else if (this.offhandItem.is(OffhandItemMode.FishingRod)) {
             ItemStack offHand = InvHelper.getOffhandStack();
-            int slotx = InvHelper.getItemSlot(Items.FISHING_ROD);
-            if (slotx != -1 && canExecuteInventoryAction() && offHand.getItem() != Items.FISHING_ROD)
+            ItemStack bestRod = getBestFishingRod();
+            int slotx = InvHelper.getItemStackSlot(bestRod);
+            if (slotx != -1 && canReplace(offHand) && canExecuteInventoryAction() && offHand.getItem() != Items.FISHING_ROD)
                 this.swapOffHand(slotx);
         } else if (this.offhandItem.is(OffhandItemMode.Block)) {
             ItemStack offHand = InvHelper.getOffhandStack();
-            ItemStack bestBlock = InvHelper.getBestBlock();
+            ItemStack bestBlock = getBestBlock();
             if (bestBlock != null) {
                 int slotx = InvHelper.getItemStackSlot(bestBlock);
                 boolean shouldSwapx = !InvHelper.isValidStack(offHand) || offHand.getCount() < bestBlock.getCount();
-                if (shouldSwapx && slotx != -1 && canExecuteInventoryAction()) this.swapOffHand(slotx);
+                if (shouldSwapx && slotx != -1 && canReplace(offHand) && canExecuteInventoryAction())
+                    this.swapOffHand(slotx);
             }
         }
 
         if (this.switchGoldenApple.getValue() && !this.offhandItem.is(OffhandItemMode.GoldenApple)) {
             int targetSlotIdx = this.goldenAppleSlot.getValue() - 1;
-            int egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE);
-            int gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE);
-            int bestGapSlot = (egapSlot != -1) ? egapSlot : gapSlot;
-            if (bestGapSlot != -1) {
+            ItemStack bestEgap = findLargestStack(Items.ENCHANTED_GOLDEN_APPLE);
+            ItemStack bestGap = findLargestStack(Items.GOLDEN_APPLE);
+            ItemStack bestGapItem = bestEgap != null ? bestEgap : bestGap;
+            if (bestGapItem != null) {
                 ItemStack currentInSlot = InvHelper.getInventoryStack(targetSlotIdx);
-                ItemStack bestGapItem = InvHelper.getInventoryStack(bestGapSlot);
                 if (currentInSlot.getItem() != bestGapItem.getItem() || (currentInSlot.getCount() < bestGapItem.getCount() && currentInSlot.getItem() == bestGapItem.getItem())) {
                     this.swapItem(targetSlotIdx, bestGapItem);
                 }
@@ -361,20 +334,20 @@ public class InvManager extends Module {
         if (this.switchBlock.getValue()) {
             int blockSlotIndex = this.blockSlot.getValue() - 1;
             ItemStack currentBlock = InvHelper.getInventoryStack(blockSlotIndex);
-            ItemStack bestBlock = InvHelper.getBestBlock();
+            ItemStack bestBlock = getBestBlock();
             if (bestBlock != null && (bestBlock.getCount() > currentBlock.getCount() || !InvHelper.isValidStack(currentBlock)) && !this.offhandItem.is(OffhandItemMode.Block)) {
                 this.swapItem(blockSlotIndex, bestBlock);
             }
-            if ((float) InvHelper.getBlockCountInInventory() > this.maxBlockSize.getValue()) {
-                this.throwItem(InvHelper.getWorstBlock());
+            if (getManagedItemCount(InvHelper::isValidStack) > this.maxBlockSize.getValue()) {
+                this.throwItem(getWorstBlock());
             }
         }
 
         if (this.switchSword.getValue()) {
             int slotIndex = this.swordSlot.getValue() - 1;
             ItemStack currentSword = InvHelper.getInventoryStack(slotIndex);
-            ItemStack bestSword = InvHelper.getBestSword();
-            ItemStack bestShapeAxe = InvHelper.getBestShapeAxe();
+            ItemStack bestSword = getBestSword();
+            ItemStack bestShapeAxe = getBestSharpnessAxe();
             if (InvHelper.getAxeDamage(bestShapeAxe) > InvHelper.getSwordDamage(bestSword))
                 bestSword = bestShapeAxe;
             if (bestSword != null) {
@@ -386,7 +359,7 @@ public class InvManager extends Module {
 
         if (this.switchPickaxe.getValue()) {
             int slotIndex = this.pickaxeSlot.getValue() - 1;
-            ItemStack bestPickaxe = InvHelper.getBestPickaxe();
+            ItemStack bestPickaxe = getBestPickaxe();
             ItemStack currentPickaxe = InvHelper.getInventoryStack(slotIndex);
             if (InvHelper.isPickaxe(bestPickaxe) && (InvHelper.getToolScore(bestPickaxe) > InvHelper.getToolScore(currentPickaxe) || !InvHelper.isPickaxe(currentPickaxe)))
                 this.swapItem(slotIndex, bestPickaxe);
@@ -394,7 +367,7 @@ public class InvManager extends Module {
 
         if (this.switchAxe.getValue()) {
             int slotIndex = this.axeSlot.getValue() - 1;
-            ItemStack bestAxe = InvHelper.getBestAxe();
+            ItemStack bestAxe = getBestAxe();
             ItemStack currentAxe = InvHelper.getInventoryStack(slotIndex);
             if (bestAxe != null && bestAxe.getItem() instanceof AxeItem && (InvHelper.getToolScore(bestAxe) > InvHelper.getToolScore(currentAxe) || !(currentAxe.getItem() instanceof AxeItem)))
                 this.swapItem(slotIndex, bestAxe);
@@ -402,7 +375,7 @@ public class InvManager extends Module {
 
         if (this.switchRod.getValue() && !this.offhandItem.is(OffhandItemMode.FishingRod)) {
             int slotIndex = this.rodSlot.getValue() - 1;
-            ItemStack bestRod = InvHelper.getFishingRod();
+            ItemStack bestRod = getBestFishingRod();
             ItemStack currentRod = InvHelper.getInventoryStack(slotIndex);
             if (!(currentRod.getItem() instanceof FishingRodItem)) this.swapItem(slotIndex, bestRod);
         }
@@ -413,52 +386,57 @@ public class InvManager extends Module {
             ItemStack bestBow;
             float bestScore, currentScore;
             if (this.preferBow.is(BowPriorityMode.Crossbow)) {
-                bestBow = InvHelper.getBestCrossbow();
+                bestBow = getBestCrossbow();
                 bestScore = InvHelper.getCrossbowScore(bestBow);
                 currentScore = InvHelper.getCrossbowScore(currentBow);
             } else if (this.preferBow.is(BowPriorityMode.PowerBow)) {
-                bestBow = InvHelper.getBestPowerBow();
+                bestBow = getBestPowerBow();
                 bestScore = InvHelper.getPowerBowScore(bestBow);
                 currentScore = InvHelper.getPowerBowScore(currentBow);
             } else {
-                bestBow = InvHelper.getBestPunchBow();
+                bestBow = getBestPunchBow();
                 bestScore = InvHelper.getPunchBowScore(bestBow);
                 currentScore = InvHelper.getPunchBowScore(currentBow);
             }
             if (bestBow == null) {
-                bestBow = InvHelper.getBestCrossbow();
+                bestBow = getBestCrossbow();
                 bestScore = InvHelper.getCrossbowScore(bestBow);
                 currentScore = InvHelper.getCrossbowScore(currentBow);
             }
             if (bestBow == null) {
-                bestBow = InvHelper.getBestPowerBow();
+                bestBow = getBestPowerBow();
                 bestScore = InvHelper.getPowerBowScore(bestBow);
                 currentScore = InvHelper.getPowerBowScore(currentBow);
             }
             if (bestBow == null) {
-                bestBow = InvHelper.getBestPunchBow();
+                bestBow = getBestPunchBow();
                 bestScore = InvHelper.getPunchBowScore(bestBow);
                 currentScore = InvHelper.getPunchBowScore(currentBow);
             }
             if (bestBow != null && bestScore > currentScore) this.swapItem(slotIndex, bestBow);
-            if ((float) InvHelper.getItemCount(Items.ARROW) > this.maxArrowSize.getValue())
-                this.throwItem(InvHelper.getWorstArrow());
+            if (getManagedItemCount(stack -> stack.getItem() instanceof ArrowItem) > this.maxArrowSize.getValue())
+                this.throwItem(getWorstArrow());
         }
 
-        if (this.switchEnderPearl.getValue())
+        if (this.switchEnderPearl.getValue()) {
             this.swapItem(this.enderPearlSlot.getValue() - 1, Items.ENDER_PEARL);
-        if (this.switchWaterBucket.getValue())
+        }
+
+        if (this.switchWaterBucket.getValue()) {
             this.swapItem(this.waterBucketSlot.getValue() - 1, Items.WATER_BUCKET);
-        if (this.switchFireball.getValue())
+        }
+
+        if (this.switchFireball.getValue()) {
             this.swapItem(this.fireballSlot.getValue() - 1, Items.FIRE_CHARGE);
+        }
 
         if (this.keepProjectile.getValue()) {
-            if ((float) (InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)) > this.maxProjectileSize.getValue())
-                this.throwItem(InvHelper.getWorstProjectile());
+            if (getManagedItemCount(this::isProjectile) > this.maxProjectileSize.getValue())
+                this.throwItem(getWorstProjectile());
             if (this.switchProjectile.getValue() && !this.offhandItem.is(OffhandItemMode.Projectile)) {
                 int pSlot = this.projectileSlot.getValue() - 1;
-                if (InvHelper.getItemCount(Items.EGG) > 0) this.swapItem(pSlot, Items.EGG);
-                else if (InvHelper.getItemCount(Items.SNOWBALL) > 0) this.swapItem(pSlot, Items.SNOWBALL);
+                if (getManagedItemCount(Items.EGG) > 0) this.swapItem(pSlot, Items.EGG);
+                else if (getManagedItemCount(Items.SNOWBALL) > 0) this.swapItem(pSlot, Items.SNOWBALL);
             }
         }
 
@@ -490,23 +468,170 @@ public class InvManager extends Module {
         }
     }
 
-    private void swapOffHand(int slot) {
-        if (slot < 9) {
-            swap(slot + 36, 40);
-        } else {
-            swap(slot, 40);
+    private boolean isItemUseful(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (!isManagedItem(stack)) return false;
+        if (InvHelper.isGodItem(stack)) return true;
+        if (stack.getDisplayName().getString().contains("点击使用")) return true;
+        if (InvHelper.isArmor(stack)) {
+            float protection = InvHelper.getProtection(stack);
+            if (InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) >= protection) return false;
+            ItemStack bestArmorStack = getBestArmor(InvHelper.getArmorSlot(stack));
+            float bestArmor = InvHelper.getProtection(bestArmorStack);
+            return !(protection < bestArmor);
         }
+        if (InvHelper.isSword(stack)) return getBestSword() == stack;
+        if (InvHelper.isPickaxe(stack)) return getBestPickaxe() == stack;
+        if (stack.getItem() instanceof AxeItem && !InvHelper.isSharpnessAxe(stack))
+            return getBestAxe() == stack;
+        if (stack.getItem() instanceof ShovelItem) return getBestShovel() == stack;
+        if (stack.getItem() instanceof CrossbowItem) return getBestCrossbow() == stack;
+        if (stack.getItem() instanceof BowItem && InvHelper.isPunchBow(stack))
+            return getBestPunchBow() == stack;
+        if (stack.getItem() instanceof BowItem && InvHelper.isPowerBow(stack))
+            return getBestPowerBow() == stack;
+        if (stack.getItem() instanceof BowItem && getManagedItemCount(Items.BOW) > 1) return false;
+        if (stack.getItem() == Items.WATER_BUCKET && getManagedItemCount(Items.WATER_BUCKET) > waterBucketCount.getValue())
+            return false;
+        if (stack.getItem() == Items.LAVA_BUCKET && getManagedItemCount(Items.LAVA_BUCKET) > lavaBucketCount.getValue())
+            return false;
+        if (stack.getItem() instanceof FishingRodItem && getManagedItemCount(Items.FISHING_ROD) > 1)
+            return false;
+        if ((stack.getItem() == Items.SNOWBALL || stack.getItem() == Items.EGG) && !keepProjectile.getValue())
+            return false;
+        if (stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE) return true;
+        return !(stack.getItem() instanceof StandingAndWallBlockItem) && InvHelper.isCommonItemUseful(stack);
+    }
+
+    private boolean isManagedItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        if (itemListMode.is(ItemListMode.None)) return true;
+        boolean listed = itemList.contains(stack.getItem());
+        return itemListMode.is(ItemListMode.Blacklist) != listed;
+    }
+
+    private boolean canReplace(ItemStack stack) {
+        return stack == null || stack.isEmpty() || isManagedItem(stack);
+    }
+
+    private Stream<ItemStack> managedInventoryItems() {
+        if (mc.player == null) return Stream.empty();
+        return mc.player.getInventory().getNonEquipmentItems().stream()
+                .filter(this::isManagedItem)
+                .filter(InvHelper::isItemValid);
+    }
+
+    private ItemStack findBest(Predicate<ItemStack> predicate, ToDoubleFunction<ItemStack> score) {
+        return managedInventoryItems()
+                .filter(predicate)
+                .max(Comparator.comparingDouble(score))
+                .orElse(null);
+    }
+
+    private ItemStack findWorst(Predicate<ItemStack> predicate, ToDoubleFunction<ItemStack> score) {
+        return managedInventoryItems()
+                .filter(predicate)
+                .min(Comparator.comparingDouble(score))
+                .orElse(null);
+    }
+
+    private ItemStack findLargestStack(Item item) {
+        return findBest(stack -> stack.getItem() == item, ItemStack::getCount);
+    }
+
+    private int getManagedItemCount(Item item) {
+        return managedInventoryItems()
+                .filter(stack -> stack.getItem() == item)
+                .mapToInt(ItemStack::getCount)
+                .sum();
+    }
+
+    private int getManagedItemCount(Predicate<ItemStack> predicate) {
+        return managedInventoryItems()
+                .filter(predicate)
+                .mapToInt(ItemStack::getCount)
+                .sum();
+    }
+
+    private ItemStack getBestArmor(EquipmentSlot slot) {
+        return findBest(stack -> InvHelper.getArmorSlot(stack) == slot, InvHelper::getProtection);
+    }
+
+    private ItemStack getBestSword() {
+        return findBest(InvHelper::isSword, InvHelper::getSwordDamage);
+    }
+
+    private ItemStack getBestSharpnessAxe() {
+        return findBest(stack -> stack.getItem() instanceof AxeItem && InvHelper.isSharpnessAxe(stack) && !InvHelper.isGodAxe(stack), InvHelper::getAxeDamage);
+    }
+
+    private ItemStack getBestPickaxe() {
+        return findBest(InvHelper::isPickaxe, InvHelper::getToolScore);
+    }
+
+    private ItemStack getBestAxe() {
+        return findBest(stack -> stack.getItem() instanceof AxeItem && !InvHelper.isSharpnessAxe(stack), InvHelper::getToolScore);
+    }
+
+    private ItemStack getBestShovel() {
+        return findBest(stack -> stack.getItem() instanceof ShovelItem, InvHelper::getToolScore);
+    }
+
+    private ItemStack getBestFishingRod() {
+        return findBest(stack -> stack.getItem() instanceof FishingRodItem, stack -> 0.0D);
+    }
+
+    private ItemStack getBestCrossbow() {
+        return findBest(stack -> stack.getItem() instanceof CrossbowItem, InvHelper::getCrossbowScore);
+    }
+
+    private ItemStack getBestPowerBow() {
+        return findBest(stack -> stack.getItem() instanceof BowItem, InvHelper::getPowerBowScore);
+    }
+
+    private ItemStack getBestPunchBow() {
+        return findBest(stack -> stack.getItem() instanceof BowItem, InvHelper::getPunchBowScore);
+    }
+
+    private ItemStack getBestBlock() {
+        return findBest(InvHelper::isValidStack, ItemStack::getCount);
+    }
+
+    private ItemStack getWorstBlock() {
+        return findWorst(InvHelper::isValidStack, ItemStack::getCount);
+    }
+
+    private ItemStack getBestProjectile() {
+        return findBest(this::isProjectile, ItemStack::getCount);
+    }
+
+    private ItemStack getWorstProjectile() {
+        return findWorst(this::isProjectile, ItemStack::getCount);
+    }
+
+    private ItemStack getWorstArrow() {
+        return findWorst(stack -> stack.getItem() instanceof ArrowItem, ItemStack::getCount);
+    }
+
+    private boolean isProjectile(ItemStack stack) {
+        return stack.getItem() == Items.EGG || stack.getItem() == Items.SNOWBALL;
+    }
+
+    private void swapOffHand(int slot) {
+        swap(toInventoryMenuSlot(slot), Inventory.SLOT_OFFHAND);
+    }
+
+    private int toInventoryMenuSlot(int inventorySlot) {
+        return Inventory.isHotbarSlot(inventorySlot)
+                ? InventoryMenu.USE_ROW_SLOT_START + inventorySlot
+                : inventorySlot;
     }
 
     private boolean throwItem(ItemStack item) {
         if (InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
-                if (itemSlot < 9) {
-                    return dropAll(itemSlot + 36);
-                } else {
-                    return dropAll(itemSlot);
-                }
+                return dropAll(toInventoryMenuSlot(itemSlot));
             }
         }
         return false;
@@ -514,30 +639,22 @@ public class InvManager extends Module {
 
     private void swapItem(int targetSlot, ItemStack bestItem) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && canExecuteInventoryAction()) {
+        if (isManagedItem(bestItem) && canReplace(currentSlot) && InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && canExecuteInventoryAction()) {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
-                if (bestItemSlot < 9) {
-                    swap(bestItemSlot + 36, targetSlot);
-                } else {
-                    swap(bestItemSlot, targetSlot);
-                }
+                swap(toInventoryMenuSlot(bestItemSlot), targetSlot);
             }
         }
     }
 
     private void swapItem(int targetSlot, Item item) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
-            int bestItemSlot = InvHelper.getItemSlot(item);
+        if (canReplace(currentSlot) && InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
+            ItemStack bestItemStack = findLargestStack(item);
+            int bestItemSlot = InvHelper.getItemStackSlot(bestItemStack);
             if (bestItemSlot != -1) {
-                ItemStack bestItemStack = InvHelper.getInventoryStack(bestItemSlot);
                 if (currentSlot.getItem() != item || currentSlot.getItem() == item && currentSlot.getCount() < bestItemStack.getCount()) {
-                    if (bestItemSlot < 9) {
-                        swap(bestItemSlot + 36, targetSlot);
-                    } else {
-                        swap(bestItemSlot, targetSlot);
-                    }
+                    swap(toInventoryMenuSlot(bestItemSlot), targetSlot);
                 }
             }
         }

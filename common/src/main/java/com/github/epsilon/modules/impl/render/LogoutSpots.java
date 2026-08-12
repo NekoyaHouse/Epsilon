@@ -12,7 +12,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.player.FakePlayer;
+import com.github.epsilon.modules.impl.combat.AntiBot;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -34,7 +34,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class LogoutSpots extends Module {
                 for (Entry entry : packet.entries()) {
                     Player player = logoutCache.get(entry.profileId());
                     if (player == null) continue;
-                    if (ignoreBots.getValue() && isABot(player)) continue;
+                    if (ignoreBots.getValue() && AntiBot.INSTANCE.isBot(player)) continue;
                     if (notifications.getValue()) {
                         ChatUtils.addChatMessage(player.getName().getString() + " logged back at  X: " + (int) player.getX() + " Y: " + (int) player.getY() + " Z: " + (int) player.getZ());
                     }
@@ -93,7 +92,7 @@ public class LogoutSpots extends Module {
             for (UUID uuid : profileIds) {
                 Player player = playerCache.get(uuid);
                 if (player == null) continue;
-                if (ignoreBots.getValue() && isABot(player)) continue;
+                if (ignoreBots.getValue() && AntiBot.INSTANCE.isBot(player)) continue;
                 if (notifications.getValue()) {
                     ChatUtils.addChatMessage(player.getName().getString() + " logged out at  X: " + (int) player.getX() + " Y: " + (int) player.getY() + " Z: " + (int) player.getZ());
                 }
@@ -144,15 +143,13 @@ public class LogoutSpots extends Module {
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
         for (LogoutPlayer player : logoutCache.values()) {
-            Vec3 anchor = player.getPosition(partialTick)
-                    .add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0);
+            Vec3 anchor = player.getPosition(partialTick).add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0);
             Vector3f projectedAnchor = WorldToScreen.calcWorld2Screen(anchor);
             if (projectedAnchor == null) continue;
 
             float textScale = WorldToScreen.calcScale(anchor) * 0.4f;
             float padding = 2.0f * textScale;
-            String text = player.getName().getString() + " " + String.format(Locale.ROOT, "%.1f", player.getHealth() + player.getAbsorptionAmount())
-                    + " X: " + (int) player.getX() + " Z: " + (int) player.getZ();
+            String text = player.getName().getString() + " " + String.format(Locale.ROOT, "%.1f", player.getHealth() + player.getAbsorptionAmount()) + " X: " + (int) player.getX() + " Z: " + (int) player.getZ();
 
             float textWidth = textRenderer.getWidth(text, textScale);
             float textHeight = textRenderer.getHeight(textScale);
@@ -176,12 +173,6 @@ public class LogoutSpots extends Module {
 
         rectRenderer.drawAndClear();
         textRenderer.drawAndClear();
-    }
-
-    private boolean isABot(Player ent) {
-        return !ent.getUUID().equals(UUID.nameUUIDFromBytes(("OfflinePlayer:" + ent.getName().getString()).getBytes(StandardCharsets.UTF_8))) && ent instanceof RemotePlayer
-                && (FakePlayer.fakePlayer == null || ent.getId() != FakePlayer.fakePlayer.getId())
-                && !ent.getName().getString().contains("-");
     }
 
     private final class LogoutPlayer extends RemotePlayer {
