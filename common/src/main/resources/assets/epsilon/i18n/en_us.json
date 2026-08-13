@@ -1127,13 +1127,6 @@
           "inventory": "Inventory",
           "silent": "Silent"
         },
-        "item list mode": {
-          "_value": "Item List Mode",
-          "none": "None",
-          "blacklist": "Blacklist",
-          "whitelist": "Whitelist"
-        },
-        "item list": "Item List",
         "pause on eat": "Pause On Eat",
         "pause on killaura": "Pause On KillAura",
         "pause on scaffold": "Pause On Scaffold",

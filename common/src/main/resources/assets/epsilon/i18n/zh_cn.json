@@ -1127,13 +1127,6 @@
           "inventory": "背包",
           "silent": "静默"
         },
-        "item list mode": {
-          "_value": "物品列表模式",
-          "none": "无",
-          "blacklist": "黑名单",
-          "whitelist": "白名单"
-        },
-        "item list": "物品列表",
         "pause on eat": "进食时暂停",
         "pause on killaura": "KillAura 运行时暂停",
         "pause on scaffold": "搭路时暂停",
