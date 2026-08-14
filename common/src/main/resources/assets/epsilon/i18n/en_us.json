@@ -1341,8 +1341,8 @@
         "reach only": "Reach Only"
       },
       "movement fix": "Movement Fix",
-      "no slow": {
-        "_value": "No Slow",
+      "no slowdown": {
+        "_value": "No Slowdown",
         "mode": {
           "_value": "Mode",
           "vanilla": "Vanilla",

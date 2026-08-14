@@ -34,7 +34,7 @@ public class NoSlowdown extends Module {
     public static final NoSlowdown INSTANCE = new NoSlowdown();
 
     private NoSlowdown() {
-        super("No Slow", Category.MOVEMENT);
+        super("No Slowdown", Category.MOVEMENT);
     }
 
     private enum Mode {
@@ -87,8 +87,7 @@ public class NoSlowdown extends Module {
             }
         }
 
-        ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
-        if (mc.player.isUsingItem() && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) && !eating) {
+        if (mc.player.isUsingItem() && !(isFoodOrDrink(mc.player.getMainHandItem()) && isFoodOrDrink(mc.player.getOffhandItem())) && isFoodOrDrink(mc.player.getUseItem()) && !eating) {
             eating = true;
             ticks = 0;
             ItemStack useItem = mc.player.getUseItem();
@@ -153,8 +152,6 @@ public class NoSlowdown extends Module {
 
     @EventHandler
     private void onSlowdown(SlowdownEvent event) {
-        if (!mc.player.isUsingItem()) return;
-
         if (!food.getValue() && mc.player.getUseItem().has(DataComponents.FOOD)) return;
         if ((!bow.getValue() || mode.is(Mode.GrimBlink)) && mc.player.getUseItem().is(Items.BOW)) return;
         if ((!crossbow.getValue() || mode.is(Mode.GrimBlink)) && mc.player.getUseItem().is(Items.CROSSBOW)) return;
@@ -172,8 +169,7 @@ public class NoSlowdown extends Module {
     }
 
     private void grimBlink(SlowdownEvent event) {
-        ItemUseAnimation anim = mc.player.getUseItem().getUseAnimation();
-        if (mc.player.isUsingItem() && mc.player.getUseItemRemainingTicks() < 30 && (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK)) {
+        if (mc.player.isUsingItem() && mc.player.getUseItemRemainingTicks() < 30 && !(isFoodOrDrink(mc.player.getMainHandItem()) && isFoodOrDrink(mc.player.getOffhandItem())) && isFoodOrDrink(mc.player.getUseItem())) {
             event.setSlowdown(false);
             mc.player.setSprinting(true);
         }
@@ -189,6 +185,11 @@ public class NoSlowdown extends Module {
         if (mc.player.getUseItemRemainingTicks() % 3 == 0 && mc.player.getUseItemRemainingTicks() <= 30) {
             event.setSlowdown(false);
         }
+    }
+
+    private boolean isFoodOrDrink(ItemStack stack) {
+        ItemUseAnimation anim = stack.getUseAnimation();
+        return anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK;
     }
 
     private void flush() {

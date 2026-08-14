@@ -1341,7 +1341,7 @@
         "reach only": "仅攻击范围"
       },
       "movement fix": "移动修复",
-      "no slow": {
+      "no slowdown": {
         "_value": "无减速",
         "mode": {
           "_value": "模式",

@@ -41,7 +41,7 @@ public class EpsilonCommon {
         EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
 
         // 初始化 Render3DScheduler 里的 RenderPipeline
-        Render3DScheduler.init();
+        Render3DScheduler.INSTANCE.getClass();
 
         // 生成空的 i18n 文件
         I18NFileGenerator.generate("epsilon-empty-i18n.json");

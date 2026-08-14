@@ -51,9 +51,6 @@ public class Render3DScheduler {
         EventBus.INSTANCE.subscribe(this);
     }
 
-    public static void init() {
-    }
-
     public boolean isEmpty() {
         return blurredBoxes.isEmpty()
                 && filledBoxes.isEmpty()
