@@ -87,7 +87,7 @@ public class NoSlowdown extends Module {
             }
         }
 
-        if (mc.player.isUsingItem() && !(isFoodOrDrink(mc.player.getMainHandItem()) && isFoodOrDrink(mc.player.getOffhandItem())) && isFoodOrDrink(mc.player.getUseItem()) && !eating) {
+        if (mc.player.isUsingItem() && isFoodOrDrink(mc.player.getUseItem()) && !eating) {
             eating = true;
             ticks = 0;
             ItemStack useItem = mc.player.getUseItem();
