@@ -336,6 +336,11 @@ public class ModuleList extends HudModule {
         };
     }
 
+    /** Shared animated theme colors for HUD styles that use the module-list accent. */
+    public Color getThemeColor(int index, long offsetStep) {
+        return resolveColor(index, offsetStep);
+    }
+
     private Color rainbowColor(int index) {
         int hueDegrees = (int) ((System.currentTimeMillis() / 10L + index * 8L) % 360L);
         return new Color(Color.HSBtoRGB(hueDegrees / 360.0f, 0.5f, 1.0f));

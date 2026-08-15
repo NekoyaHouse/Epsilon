@@ -3,6 +3,7 @@ package com.github.epsilon.elements.impl.notification;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.notification.style.NVIDIANotification;
+import com.github.epsilon.elements.impl.notification.style.AkarinNotification;
 import com.github.epsilon.elements.impl.notification.style.QuantumNotification;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
@@ -24,7 +25,8 @@ public class Notifications extends HudModule {
 
     public enum Style {
         NVIDIA,
-        Quantum
+        Quantum,
+        Akarin
     }
 
     private final EnumSetting<Style> style = enumSetting("Style", Style.Quantum, ignored -> clearQuantum());
@@ -33,6 +35,7 @@ public class Notifications extends HudModule {
 
     private final NVIDIANotification nvidia = new NVIDIANotification(this);
     private final QuantumNotification quantum = new QuantumNotification(this);
+    private final AkarinNotification akarin = new AkarinNotification(this);
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
@@ -66,13 +69,25 @@ public class Notifications extends HudModule {
             if (entries.isEmpty()) return;
             setNotificationBounds(quantum.width(scale), quantum.totalHeight(entries.size(), scale));
             quantum.render(scope, metrics, entries, x, y, scale, getFontScale(), getHorizontalAnchor(), getVerticalAnchor());
+        } else if (isStyle(Style.Akarin)) {
+            float scale = getScale();
+            List<Notification> entries = new ArrayList<>(NotificationManager.INSTANCE.getNotifications());
+            entries.removeIf(notification -> !akarin.isVisible(notification));
+            Collections.reverse(entries);
+            if (entries.isEmpty() && preview != null) entries.add(preview);
+            if (entries.isEmpty()) return;
+            float boundsWidth = akarin.width(metrics, entries, scale, getFontScale());
+            setNotificationBounds(boundsWidth, akarin.totalHeight(entries.size(), scale));
+            akarin.render(scope, metrics, entries, x, y, boundsWidth, scale, getFontScale(),
+                    getHorizontalAnchor(), getVerticalAnchor());
         } else {
             nvidia.render(scope, metrics, preview);
         }
     }
 
     public int getDisplayTime() {
-        return isStyle(Style.Quantum) ? quantum.getDisplayTime() : nvidia.getDisplayTime();
+        return isStyle(Style.Quantum) ? quantum.getDisplayTime()
+                : isStyle(Style.Akarin) ? akarin.getDisplayTime() : nvidia.getDisplayTime();
     }
 
     public float getScale() {
