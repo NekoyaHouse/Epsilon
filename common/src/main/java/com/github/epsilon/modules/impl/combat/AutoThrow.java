@@ -9,7 +9,9 @@ import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
+import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
@@ -39,6 +41,7 @@ public class AutoThrow extends Module {
     private final IntSetting fov = intSetting("Fov", 90, 1, 360, 1);
     private final IntSetting delay = intSetting("Delay", 500, 0, 2000, 10);
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 1, 180, 10);
+    private final EnumSetting<Priority> rotationPriority = enumSetting("Rotation Priority", Priority.Lowest);
 
     private final TimerUtils timer = new TimerUtils();
     private boolean shouldThrow;
@@ -120,7 +123,7 @@ public class AutoThrow extends Module {
 
                 Rot2f rotation = RotationUtils.calculate(getAimVec(currentTarget), false);
 
-                RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.Lowest);
+                RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), rotationPriority.getValue());
 
                 HitResult hit = RaytraceUtils.raytrace(rotation, maxRange);
                 if (hit.getType() != HitResult.Type.ENTITY) return;
