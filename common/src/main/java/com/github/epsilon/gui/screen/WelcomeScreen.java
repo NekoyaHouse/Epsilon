@@ -22,8 +22,8 @@ public class WelcomeScreen extends Screen {
     private static final String NOTICE = "本客户端为付费项目，请通过官方渠道购买。/ This client is a paid product. Please purchase it through official channels.";
     private static final String WEBSITE_PREFIX_ZH = "官网: ";
     private static final String WEBSITE_PREFIX_EN = "Official website: ";
-    private static final String WEBSITE_LABEL = "http://101.43.59.126:8080/";
-    private static final String WEBSITE_URL = "http://101.43.59.126:8080/";
+    private static final String WEBSITE_LABEL = "https://sofurry.me/";
+    private static final String WEBSITE_URL = "https://sofurry.me/";
     private static final String CONTINUE = "继续 / Continue";
     private static final String DONT_SHOW_AGAIN = "下次不再显示 / Do not show again";
     private static final String OPEN_WEBSITE = "打开官网 / Open Website";

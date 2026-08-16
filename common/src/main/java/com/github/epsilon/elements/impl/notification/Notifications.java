@@ -2,8 +2,8 @@ package com.github.epsilon.elements.impl.notification;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.elements.impl.notification.style.NVIDIANotification;
 import com.github.epsilon.elements.impl.notification.style.AkarinNotification;
+import com.github.epsilon.elements.impl.notification.style.NVIDIANotification;
 import com.github.epsilon.elements.impl.notification.style.QuantumNotification;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;

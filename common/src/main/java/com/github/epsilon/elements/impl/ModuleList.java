@@ -336,7 +336,9 @@ public class ModuleList extends HudModule {
         };
     }
 
-    /** Shared animated theme colors for HUD styles that use the module-list accent. */
+    /**
+     * Shared animated theme colors for HUD styles that use the module-list accent.
+     */
     public Color getThemeColor(int index, long offsetStep) {
         return resolveColor(index, offsetStep);
     }

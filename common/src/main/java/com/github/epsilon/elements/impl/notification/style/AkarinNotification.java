@@ -3,7 +3,6 @@ package com.github.epsilon.elements.impl.notification.style;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.ModuleList;
 import com.github.epsilon.elements.impl.notification.Notification;
-import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
@@ -17,7 +16,9 @@ import com.github.epsilon.utils.render.animation.Easing;
 import java.awt.*;
 import java.util.List;
 
-/** The compact translucent notification style from Kiwi's Akarin HUD. */
+/**
+ * The compact translucent notification style from Kiwi's Akarin HUD.
+ */
 public class AkarinNotification {
 
     private static final float MIN_WIDTH = 110.0f;

@@ -120,7 +120,7 @@ public class AutoThrow extends Module {
 
                 Rot2f rotation = RotationUtils.calculate(getAimVec(currentTarget), false);
 
-                RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
+                RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.Lowest);
 
                 HitResult hit = RaytraceUtils.raytrace(rotation, maxRange);
                 if (hit.getType() != HitResult.Type.ENTITY) return;

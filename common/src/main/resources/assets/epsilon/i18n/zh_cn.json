@@ -1684,6 +1684,9 @@
         "visual swing on use": "使用时视觉挥手",
         "only on block": "仅方块"
       },
+      "health": {
+        "_value": "血量显示"
+      },
       "hat": {
         "_value": "帽子",
         "mode": {
@@ -1723,6 +1726,13 @@
         "life time": "生命周期",
         "speed": "速度",
         "scale": "缩放"
+      },
+      "kill effect": {
+        "_value": "击杀特效",
+        "lightning": "闪电",
+        "explosion": "爆炸",
+        "squid": "鱿鱼",
+        "blood": "血液"
       },
       "hole esp": {
         "_value": "坑洞透视",
