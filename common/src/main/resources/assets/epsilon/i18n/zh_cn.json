@@ -1838,13 +1838,30 @@
       },
       "name tags": {
         "_value": "名字标签",
+        "mode": {
+          "_value": "模式",
+          "old": "旧版",
+          "new": "新版"
+        },
         "range": "范围",
+        "show self": "显示自己",
         "scale": "缩放",
         "height offset": "高度偏移",
         "background color": "背景颜色",
         "show equipment": "显示装备",
         "show hands": "显示手部",
-        "show self": "显示自己"
+        "tag scale": "标签缩放",
+        "tag offset y": "标签纵向偏移",
+        "show rank": "显示身份",
+        "show health": "显示血量",
+        "tag background color": "标签背景颜色",
+        "accent bar": "强调竖条",
+        "accent color": "强调颜色",
+        "tag blur": "标签模糊",
+        "tag blur strength": "标签模糊强度",
+        "tag glow": "标签辉光",
+        "tag glow radius": "辉光半径",
+        "tag glow color": "辉光颜色"
       },
       "no ghost blocks": {
         "_value": "无幽灵方块",
