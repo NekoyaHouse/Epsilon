@@ -38,7 +38,7 @@ public class FastWeb extends Module {
         }
 
         if (mc.player.onGround() || !onlyOnGround.getValue()) {
-            double[] forward = MoveUtils.forward(0.6);
+            double[] forward = MoveUtils.forward(0.63);
             mc.player.setDeltaMovement(forward[0], mc.player.getDeltaMovement().y, forward[1]);
         }
     }

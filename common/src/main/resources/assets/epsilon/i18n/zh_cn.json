@@ -1691,7 +1691,8 @@
       },
       "game animation": {
         "_value": "游戏动画",
-        "hotbar": "快捷栏"
+        "hotbar": "快捷栏",
+        "inventory": "物品栏"
       },
       "hands view": {
         "_value": "手部视图",

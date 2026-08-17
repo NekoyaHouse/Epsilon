@@ -21,6 +21,7 @@ public class CameraClip extends Module {
     public final BoolSetting action = boolSetting("Action", true, _ -> resetCameraPos());
     public final DoubleSetting actionSmoothness = doubleSetting("Action Smoothness", 0.3, 0.1, 0.95, 0.01, action::getValue);
     public final DoubleSetting actionMaxDistance = doubleSetting("Action Max Distance", 20.0, 1.0, 50.0, 0.5, action::getValue);
+    public final BoolSetting betterBobView = boolSetting("Better Bob View", true, () -> mc.options.bobView().get());
 
     private Vec3 cameraPos;
 

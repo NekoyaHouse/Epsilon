@@ -1691,7 +1691,8 @@
       },
       "game animation": {
         "_value": "Game Animation",
-        "hotbar": "Hotbar"
+        "hotbar": "Hotbar",
+        "inventory": "Inventory"
       },
       "hands view": {
         "_value": "Hands View",

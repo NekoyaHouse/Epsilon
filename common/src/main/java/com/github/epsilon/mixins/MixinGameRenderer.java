@@ -1,10 +1,12 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -58,6 +60,12 @@ public class MixinGameRenderer {
         if (!FreeCamera.INSTANCE.renderHands()) {
             ci.cancel();
         }
+    }
+
+    @WrapOperation(method = "bobView", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
+    private void hookBobView(PoseStack instance, float xo, float yo, float zo, Operation<Void> original) {
+        CameraClip cameraClip = CameraClip.INSTANCE;
+        if (!cameraClip.isEnabled() || !cameraClip.betterBobView.getValue()) original.call(instance, xo, yo, zo);
     }
 
 }
