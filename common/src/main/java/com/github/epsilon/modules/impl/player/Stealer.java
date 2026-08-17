@@ -18,7 +18,6 @@ import net.minecraft.world.item.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -32,14 +31,13 @@ public class Stealer extends Module {
 
     private final IntSetting minDelay = intSetting("Min Delay", 110, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 140, 0, 1000, 50);
-    private final BoolSetting closeDelay = boolSetting("Close Delay", true);
-    private final IntSetting cDelay = intSetting("Close Delay Value", 150, 0, 1000, 1, closeDelay::getValue);
+    private final BoolSetting autoClose = boolSetting("Auto Close", true);
+    private final IntSetting closeDelay = intSetting("Close Delay", 150, 0, 1000, 1, autoClose::getValue);
     private final BoolSetting pickEnderChest = boolSetting("Ender Chest", false);
 
     private Screen lastTickScreen;
 
     private static final TimerUtils timer = new TimerUtils();
-    private static final Random random = new Random();
 
     public boolean isWorking() {
         return !timer.hasDelayed(3);
@@ -151,18 +149,14 @@ public class Stealer extends Module {
                 String chest = Component.translatable("container.chest").getString();
                 String largeChest = Component.translatable("container.chestDouble").getString();
                 String enderChest = Component.translatable("container.enderchest").getString();
-                if (chestTitle.equals(chest)
-                        || chestTitle.equals(largeChest)
-                        || chestTitle.equals("Chest")
-                        || this.pickEnderChest.getValue() && chestTitle.equals(enderChest)
+                if (chestTitle.equals(chest) || chestTitle.equals(largeChest) || chestTitle.equals("Chest") || this.pickEnderChest.getValue() && chestTitle.equals(enderChest)
                 ) {
                     int nextDelay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
                     if (this.isChestEmpty(menu) && timer.passedMillise(nextDelay)) {
-                        if (mc.player != null && closeDelay.getValue() && timer.passedMillise(cDelay.getValue())) {
+                        if (autoClose.getValue() && timer.passedMillise(closeDelay.getValue())) {
                             mc.player.closeContainer();
                             timer.reset();
                         }
-
                     } else {
                         List<Integer> slots = IntStream.range(0, menu.getRowCount() * 9).boxed().collect(Collectors.toList());
                         Collections.shuffle(slots);
@@ -172,7 +166,9 @@ public class Stealer extends Module {
                             if (isItemUseful(stack) && isBestItemInChest(menu, stack) && timer.passedMillise(nextDelay)) {
                                 ClickSlotUtils.shiftClick(menu.containerId, pSlotId);
                                 timer.reset();
-                                break;
+                                if (nextDelay > 0) {
+                                    break;
+                                }
                             }
                         }
                     }

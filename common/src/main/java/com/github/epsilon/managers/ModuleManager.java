@@ -80,6 +80,7 @@ public class ModuleManager {
         addModule(AutoTool.INSTANCE);
         addModule(BedNuker.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
+        addModule(ChestAura.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
         addModule(FakePlayer.INSTANCE);
         addModule(GhostHand.INSTANCE);
