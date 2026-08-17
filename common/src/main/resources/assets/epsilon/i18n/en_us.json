@@ -471,7 +471,15 @@
         "max range": "Max Range",
         "fov": "FOV",
         "delay": "Delay",
-        "rotation speed": "Rotation Speed"
+        "rotation speed": "Rotation Speed",
+        "rotation priority": {
+          "_value": "Rotation Priority",
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        }
       },
       "auto totem": {
         "_value": "Auto Totem",
@@ -768,6 +776,14 @@
         "aim range": "Aim Range",
         "fov": "FOV",
         "rotation speed": "Rotation Speed",
+        "rotation priority": {
+          "_value": "Rotation Priority",
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        },
         "cps": "CPS",
         "players": "Players",
         "mobs": "Mobs",
@@ -1119,6 +1135,22 @@
         "playback": "Playback"
       },
       "ghost hand": "Ghost Hand",
+      "helper": {
+        "_value": "Helper",
+        "self extinguish": "Self Extinguish",
+        "extinguish fire": "Extinguish Fire",
+        "block lava": "Block Lava",
+        "block water": "Block Water",
+        "speed": "Speed",
+        "rotation priority": {
+          "_value": "Rotation Priority",
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        }
+      },
       "input disabler": "Input Disabler",
       "inv manager": {
         "_value": "Inv Manager",
@@ -1684,9 +1716,6 @@
         "visual swing on use": "Visual Swing On Use",
         "only on block": "Only On Block"
       },
-      "health": {
-        "_value": "Health"
-      },
       "hat": {
         "_value": "Hat",
         "mode": {
@@ -1702,6 +1731,7 @@
         "second color": "Second Color",
         "only third person": "Only Third Person"
       },
+      "health": "Health",
       "hit particles": {
         "_value": "Hit Particles",
         "mode": {
@@ -2208,7 +2238,8 @@
         "style": {
           "_value": "Style",
           "nvidia": "NVIDIA",
-          "quantum": "Quantum"
+          "quantum": "Quantum",
+          "akarin": "Akarin"
         },
         "scale": "Scale",
         "font scale": "Font Scale",
@@ -2223,7 +2254,12 @@
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color",
-        "quantum display time": "Quantum Display Time"
+        "quantum display time": "Quantum Display Time",
+        "akarin background blur": "Akarin Background Blur",
+        "akarin blur strength": "Akarin Blur Strength",
+        "akarin background alpha": "Akarin Background Alpha",
+        "akarin radius": "Akarin Radius",
+        "akarin display time": "Akarin Display Time"
       },
       "hotkey": {
         "_value": "Hotkey",
@@ -2340,6 +2376,11 @@
       },
       "target hud": {
         "_value": "Target HUD",
+        "style": {
+          "_value": "Style",
+          "modern": "Modern",
+          "akrien": "Akrien"
+        },
         "scale": "Scale",
         "width": "Width",
         "height": "Height",

@@ -471,7 +471,15 @@
         "max range": "最大范围",
         "fov": "视野角度",
         "delay": "延迟",
-        "rotation speed": "旋转速度"
+        "rotation speed": "旋转速度",
+        "rotation priority": {
+          "_value": "旋转优先级",
+          "lowest": "最低",
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "highest": "最高"
+        }
       },
       "auto totem": {
         "_value": "自动图腾",
@@ -768,6 +776,14 @@
         "aim range": "瞄准范围",
         "fov": "视野角度",
         "rotation speed": "旋转速度",
+        "rotation priority": {
+          "_value": "旋转优先级",
+          "lowest": "最低",
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "highest": "最高"
+        },
         "cps": "每秒点击数",
         "players": "玩家",
         "mobs": "怪物",
@@ -1119,6 +1135,22 @@
         "playback": "回放"
       },
       "ghost hand": "幽灵手",
+      "helper": {
+        "_value": "辅助",
+        "self extinguish": "自动灭火",
+        "extinguish fire": "扑灭火焰",
+        "block lava": "阻挡岩浆",
+        "block water": "阻挡水流",
+        "speed": "速度",
+        "rotation priority": {
+          "_value": "旋转优先级",
+          "lowest": "最低",
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "highest": "最高"
+        }
+      },
       "input disabler": "输入禁用器",
       "inv manager": {
         "_value": "背包管理",
@@ -1684,9 +1716,6 @@
         "visual swing on use": "使用时视觉挥手",
         "only on block": "仅方块"
       },
-      "health": {
-        "_value": "血量显示"
-      },
       "hat": {
         "_value": "帽子",
         "mode": {
@@ -1702,6 +1731,7 @@
         "second color": "第二颜色",
         "only third person": "仅第三人称"
       },
+      "health": "血量显示",
       "hit particles": {
         "_value": "受击粒子",
         "mode": {
@@ -2208,7 +2238,8 @@
         "style": {
           "_value": "样式",
           "nvidia": "英伟达",
-          "quantum": "量子通知"
+          "quantum": "量子通知",
+          "akarin": "Akarin"
         },
         "scale": "缩放",
         "font scale": "字体缩放",
@@ -2223,7 +2254,12 @@
         "drop shadow": "投影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
-        "quantum display time": "量子显示时间"
+        "quantum display time": "量子显示时间",
+        "akarin background blur": "Akarin 背景模糊",
+        "akarin blur strength": "Akarin 模糊强度",
+        "akarin background alpha": "Akarin 背景透明度",
+        "akarin radius": "Akarin 圆角半径",
+        "akarin display time": "Akarin 显示时间"
       },
       "hotkey": {
         "_value": "Hotkey",
@@ -2340,6 +2376,11 @@
       },
       "target hud": {
         "_value": "目标 HUD",
+        "style": {
+          "_value": "样式",
+          "modern": "现代",
+          "akrien": "Akrien"
+        },
         "scale": "缩放",
         "width": "宽度",
         "height": "高度",
