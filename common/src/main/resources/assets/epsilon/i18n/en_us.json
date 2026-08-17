@@ -1861,30 +1861,13 @@
       },
       "name tags": {
         "_value": "Name Tags",
-        "mode": {
-          "_value": "Mode",
-          "old": "Old",
-          "new": "New"
-        },
         "range": "Range",
-        "show self": "Show Self",
         "scale": "Scale",
         "height offset": "Height Offset",
         "background color": "Background Color",
         "show equipment": "Show Equipment",
         "show hands": "Show Hands",
-        "tag scale": "Tag Scale",
-        "tag offset y": "Tag Offset Y",
-        "show rank": "Show Rank",
-        "show health": "Show Health",
-        "tag background color": "Tag Background Color",
-        "accent bar": "Accent Bar",
-        "accent color": "Accent Color",
-        "tag blur": "Tag Blur",
-        "tag blur strength": "Tag Blur Strength",
-        "tag glow": "Tag Glow",
-        "tag glow radius": "Tag Glow Radius",
-        "tag glow color": "Tag Glow Color"
+        "show self": "Show Self"
       },
       "no ghost blocks": {
         "_value": "No Ghost Blocks",
