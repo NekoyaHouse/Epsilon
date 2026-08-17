@@ -1684,6 +1684,9 @@
         "visual swing on use": "Visual Swing On Use",
         "only on block": "Only On Block"
       },
+      "health": {
+        "_value": "Health"
+      },
       "hat": {
         "_value": "Hat",
         "mode": {
