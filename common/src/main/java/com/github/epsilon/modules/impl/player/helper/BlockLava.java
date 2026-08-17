@@ -10,7 +10,6 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Items;
@@ -31,6 +30,7 @@ public class BlockLava extends HelperBase {
 
     private static final int SEARCH_RADIUS = 5;
     private static final double SEARCH_RANGE_SQUARED = 4.5 * 4.5;
+    private static final double[] FACE_SAMPLE_OFFSETS = {0.0, -0.3, 0.3, -0.45, 0.45};
 
     private enum State {
         NONE,
@@ -66,7 +66,7 @@ public class BlockLava extends HelperBase {
         }
 
         if (pendingPlacement != null) {
-            if (!BlockUtils.canPlaceAt(pendingPlacement.blockPos().relative(pendingPlacement.direction()))) {
+            if (!BlockUtils.canPlaceAt(pendingPlacement.placementPos())) {
                 targetPos = null;
                 pendingPlacement = null;
                 targetRotation = null;
@@ -93,7 +93,7 @@ public class BlockLava extends HelperBase {
                     reset();
                     return;
                 }
-                if (mc.level.getBlockState(targetPos.below()).isAir() || !tryFindPlacement()) {
+                if (!tryFindPlacement()) {
                     state = State.LAVA_SUPPORT;
                 }
             }
@@ -102,13 +102,12 @@ public class BlockLava extends HelperBase {
                     reset();
                     return;
                 }
-                BlockPos supportPos = targetPos.below();
-                if (mc.level.getBlockState(supportPos).isSolid()) {
+                if (tryFindPlacement()) {
                     state = State.LAVA;
-                    tryFindPlacement();
                     return;
                 }
-                findSuitableFace(supportPos).ifPresentOrElse(data -> {
+                if (pendingPlacement != null) return;
+                findSupportPlacement(targetPos).ifPresentOrElse(data -> {
                     targetRotation = RotationUtils.calculate(data.hitVec());
                     pendingPlacement = data;
                 }, this::reset);
@@ -126,6 +125,15 @@ public class BlockLava extends HelperBase {
         pendingPlacement = placement.get();
         targetRotation = RotationUtils.calculate(pendingPlacement.hitVec());
         return true;
+    }
+
+    private Optional<PlacementData> findSupportPlacement(BlockPos lavaPos) {
+        for (Direction direction : Direction.values()) {
+            BlockPos supportPos = lavaPos.relative(direction);
+            Optional<PlacementData> placement = findSuitableFace(supportPos);
+            if (placement.isPresent()) return placement;
+        }
+        return Optional.empty();
     }
 
     private void placeBlock() {
@@ -161,20 +169,24 @@ public class BlockLava extends HelperBase {
             for (int dy = -SEARCH_RADIUS; dy <= SEARCH_RADIUS; dy++) {
                 for (int dz = -SEARCH_RADIUS; dz <= SEARCH_RADIUS; dz++) {
                     BlockPos candidate = playerPos.offset(dx, dy, dz);
-                    if (Helper.hasLavaPlacement(candidate) || !mc.level.getBlockState(candidate).is(Blocks.LAVA) || !mc.level.getFluidState(candidate).isSource())
+                    if (Helper.hasLavaPlacement(candidate) || !mc.level.getBlockState(candidate).is(Blocks.LAVA) || !mc.level.getFluidState(candidate).isSource()) {
                         continue;
+                    }
                     Vec3 candidateCenter = Vec3.atCenterOf(candidate);
                     double distance = candidateCenter.distanceToSqr(eyePos);
-                    if (distance > SEARCH_RANGE_SQUARED) continue;
-                    if (!BlockUtils.canPlaceAt(candidate) || !RaytraceUtils.canSeePointFrom(eyePos, candidateCenter))
+                    if (distance >= closest || distance > SEARCH_RANGE_SQUARED || !BlockUtils.canPlaceAt(candidate))
                         continue;
-                    if (distance < closest) {
-                        closest = distance;
-                        targetPos = candidate;
-                    }
+                    if (!hasPlacementFace(candidate)) continue;
+
+                    closest = distance;
+                    targetPos = candidate;
                 }
             }
         }
+    }
+
+    private boolean hasPlacementFace(BlockPos lavaPos) {
+        return findSuitableFace(lavaPos).isPresent() || findSupportPlacement(lavaPos).isPresent();
     }
 
     private FindItemResult findBlock() {
@@ -183,38 +195,74 @@ public class BlockLava extends HelperBase {
         return InvUtils.findInHotbar(stack -> {
             if (!(stack.getItem() instanceof BlockItem blockItem)) return false;
             Block block = blockItem.getBlock();
-            return block.defaultBlockState().isSolid()
-                    && block.defaultBlockState().getSoundType().getPlaceSound() != SoundEvents.WOOD_PLACE;
+            return block.defaultBlockState().isSolid();
         });
     }
 
     private Optional<PlacementData> findSuitableFace(BlockPos blockPos) {
+        if (!BlockUtils.canPlaceAt(blockPos)) return Optional.empty();
+
+        Vec3 eyePos = mc.player.getEyePosition();
+        PlacementData best = null;
+        double closest = Double.MAX_VALUE;
+
         for (Direction direction : Direction.values()) {
             BlockPos neighbor = blockPos.relative(direction);
-            if (mc.level.getBlockState(neighbor).isSolid() && !mc.level.getBlockState(neighbor).is(Blocks.LAVA)) {
-                Vec3 hitVec = Vec3.atCenterOf(neighbor).add(direction.getOpposite().getStepX() * 0.5, direction.getOpposite().getStepY() * 0.5, direction.getOpposite().getStepZ() * 0.5);
-                if (BlockUtils.canPlaceAt(blockPos) && mc.player.getEyePosition().distanceToSqr(hitVec) <= SEARCH_RANGE_SQUARED && canSeeBlockFace(neighbor, direction.getOpposite())) {
-                    return Optional.of(new PlacementData(neighbor, direction.getOpposite(), hitVec));
-                }
-            }
-            if (direction != Direction.DOWN) continue;
-            BlockPos below = neighbor;
-            for (int i = 0; i < 3 && mc.level.getBlockState(below).is(Blocks.LAVA); i++) {
-                below = below.below();
-            }
-            if (!mc.level.getBlockState(below).isSolid() || mc.level.getBlockState(below).is(Blocks.LAVA)) continue;
-            Vec3 hitVec = Vec3.atCenterOf(below).add(0.0, 0.5, 0.0);
-            if (BlockUtils.canPlaceAt(below.above()) && mc.player.getEyePosition().distanceToSqr(hitVec) <= SEARCH_RANGE_SQUARED && canSeeBlockFace(below, Direction.UP)) {
-                return Optional.of(new PlacementData(below, Direction.UP, hitVec));
+            if (!isSolidSupport(neighbor)) continue;
+
+            PlacementData placement = createPlacement(neighbor, direction.getOpposite(), eyePos);
+            if (placement == null) continue;
+
+            double distance = eyePos.distanceToSqr(placement.hitVec());
+            if (distance <= SEARCH_RANGE_SQUARED && distance < closest) {
+                closest = distance;
+                best = placement;
             }
         }
-        return Optional.empty();
+        return Optional.ofNullable(best);
     }
 
-    private boolean canSeeBlockFace(BlockPos blockPos, Direction direction) {
-        Vec3 target = Vec3.atCenterOf(blockPos).add(direction.getStepX() * 0.49, direction.getStepY() * 0.49, direction.getStepZ() * 0.49);
-        BlockHitResult hit = mc.level.clip(new ClipContext(mc.player.getEyePosition(), target, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
-        return hit.getType() == HitResult.Type.BLOCK && hit.getBlockPos().equals(blockPos) && hit.getLocation().distanceToSqr(target) < 0.25;
+    private boolean isSolidSupport(BlockPos pos) {
+        return mc.level.getBlockState(pos).isSolid() && !mc.level.getBlockState(pos).is(Blocks.LAVA);
+    }
+
+    private PlacementData createPlacement(BlockPos support, Direction face, Vec3 eyePos) {
+        Vec3 hitVec = findFaceHitVec(support, face, eyePos);
+        return hitVec == null ? null : new PlacementData(support, face, hitVec);
+    }
+
+    private Vec3 findFaceHitVec(BlockPos support, Direction face, Vec3 eyePos) {
+        Vec3 center = Vec3.atCenterOf(support).add(
+                face.getStepX() * 0.5,
+                face.getStepY() * 0.5,
+                face.getStepZ() * 0.5
+        );
+
+        for (double first : FACE_SAMPLE_OFFSETS) {
+            for (double second : FACE_SAMPLE_OFFSETS) {
+                Vec3 sample = switch (face.getAxis()) {
+                    case X -> center.add(0.0, first, second);
+                    case Y -> center.add(first, 0.0, second);
+                    case Z -> center.add(first, second, 0.0);
+                };
+                Vec3 clipEnd = sample.subtract(
+                        face.getStepX() * 0.01,
+                        face.getStepY() * 0.01,
+                        face.getStepZ() * 0.01
+                );
+                BlockHitResult hit = mc.level.clip(new ClipContext(
+                        eyePos,
+                        clipEnd,
+                        ClipContext.Block.OUTLINE,
+                        ClipContext.Fluid.NONE,
+                        mc.player
+                ));
+                if (hit.getType() == HitResult.Type.BLOCK && hit.getBlockPos().equals(support) && hit.getDirection() == face) {
+                    return hit.getLocation();
+                }
+            }
+        }
+        return null;
     }
 
     private boolean isTargetLava() {
@@ -243,6 +291,9 @@ public class BlockLava extends HelperBase {
     }
 
     private record PlacementData(BlockPos blockPos, Direction direction, Vec3 hitVec) {
+        private BlockPos placementPos() {
+            return blockPos.relative(direction);
+        }
     }
 
 }
