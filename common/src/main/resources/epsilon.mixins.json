@@ -55,6 +55,7 @@
     "MixinItemFeatureRenderer",
     "MixinItemInHandLayer",
     "MixinItemInHandRenderer",
+    "MixinItemEntityRenderer",
     "MixinItemStackLayerRenderState",
     "MixinKeyboardHandler",
     "MixinKeyboardInput",

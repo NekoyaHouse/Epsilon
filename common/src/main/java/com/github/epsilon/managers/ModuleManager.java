@@ -124,6 +124,7 @@ public class ModuleManager {
         addModule(Velocity.INSTANCE);
 
         // Render
+        addModule(KillEffect.INSTANCE);
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
         addModule(BetterChat.INSTANCE);
@@ -144,6 +145,7 @@ public class ModuleManager {
         addModule(Health.INSTANCE);
         addModule(HitParticles.INSTANCE);
         addModule(HoleESP.INSTANCE);
+        addModule(ItemPhysics.INSTANCE);
         addModule(JumpCircle.INSTANCE);
         addModule(LogoutSpots.INSTANCE);
         addModule(MasEffects.INSTANCE);
