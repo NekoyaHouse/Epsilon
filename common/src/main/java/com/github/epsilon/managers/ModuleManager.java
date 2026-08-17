@@ -141,9 +141,7 @@ public class ModuleManager {
         addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);
         addModule(Hat.INSTANCE);
-        addModule(Health.INSTANCE);
         addModule(HitParticles.INSTANCE);
-        addModule(KillEffect.INSTANCE);
         addModule(HoleESP.INSTANCE);
         addModule(JumpCircle.INSTANCE);
         addModule(LogoutSpots.INSTANCE);

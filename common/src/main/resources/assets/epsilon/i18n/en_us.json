@@ -1684,9 +1684,6 @@
         "visual swing on use": "Visual Swing On Use",
         "only on block": "Only On Block"
       },
-      "health": {
-        "_value": "Health"
-      },
       "hat": {
         "_value": "Hat",
         "mode": {
@@ -1726,13 +1723,6 @@
         "life time": "Life Time",
         "speed": "Speed",
         "scale": "Scale"
-      },
-      "kill effect": {
-        "_value": "Kill Effect",
-        "lightning": "Lightning",
-        "explosion": "Explosion",
-        "squid": "Squid",
-        "blood": "Blood"
       },
       "hole esp": {
         "_value": "Hole ESP",
