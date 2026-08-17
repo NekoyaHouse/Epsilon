@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.player.helper;
 
 import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.managers.rotation.RotationManager;
-import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
@@ -13,7 +12,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 import static com.github.epsilon.Constants.mc;
 

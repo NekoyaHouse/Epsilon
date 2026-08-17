@@ -50,12 +50,15 @@ public class MusicInstance extends LandInstance {
     private static final float MARQUEE_START_HOLD_SECONDS = 1.25f;
     private static final float MARQUEE_GAP = 28f;
     private static final int COVER_TEXTURE_SIZE = 256;
+    private static final long COVER_RETRY_DELAY_NS = 2_000_000_000L;
 
     private final SmtcService service;
     private final Supplier<TextRenderer> textRendererSupplier;
 
     private SmtcSnapshot snapshot = SmtcSnapshot.UNAVAILABLE;
     private long coverRevision = Long.MIN_VALUE;
+    private long failedCoverRevision = Long.MIN_VALUE;
+    private long coverRetryAtNs;
     private DynamicTexture coverTexture;
     private boolean coverAvailable;
     private String marqueeTitle = "";
@@ -182,12 +185,21 @@ public class MusicInstance extends LandInstance {
     }
 
     private void updateCoverTexture(SmtcSnapshot next) {
-        if (next.thumbnailRevision() == coverRevision) return;
-
-        coverRevision = next.thumbnailRevision();
-        coverAvailable = false;
+        long nextRevision = next.thumbnailRevision();
         byte[] thumbnail = next.thumbnail();
-        if (thumbnail == null || thumbnail.length == 0) return;
+        boolean hasThumbnail = thumbnail != null && thumbnail.length > 0;
+        if (nextRevision == coverRevision && (coverAvailable || !hasThumbnail)) return;
+
+        long now = System.nanoTime();
+        if (nextRevision == failedCoverRevision && now < coverRetryAtNs) return;
+
+        coverAvailable = false;
+        if (!hasThumbnail) {
+            coverRevision = nextRevision;
+            failedCoverRevision = Long.MIN_VALUE;
+            coverRetryAtNs = 0L;
+            return;
+        }
 
         NativeImage image = null;
         DynamicTexture newTexture = null;
@@ -205,18 +217,23 @@ public class MusicInstance extends LandInstance {
                 coverTexture.upload();
             }
             coverAvailable = true;
+            coverRevision = nextRevision;
+            failedCoverRevision = Long.MIN_VALUE;
+            coverRetryAtNs = 0L;
         } catch (IOException | RuntimeException e) {
             if (newTexture != null) {
                 newTexture.close();
             } else if (image != null) {
                 image.close();
             }
-            Constants.LOGGER.warn("Failed to decode SMTC album art revision {}", coverRevision, e);
+            failedCoverRevision = nextRevision;
+            coverRetryAtNs = now + COVER_RETRY_DELAY_NS;
+            Constants.LOGGER.warn("Failed to decode or upload SMTC album art revision {}", nextRevision, e);
         }
     }
 
     /**
-     * SMTC 封面可能是 JPEG；Minecraft 26.2 的 NativeImage.read 会先强制校验 PNG。
+     * SMTC 封面可能是 JPEG； NativeImage.read 会先强制校验 PNG。
      * 这里先通过 ImageIO 解码并裁成方形，再显式写入 NativeImage。
      */
     private static NativeImage decodeThumbnail(byte[] thumbnail) throws IOException {
@@ -255,6 +272,9 @@ public class MusicInstance extends LandInstance {
             coverTexture = null;
         }
         coverAvailable = false;
+        coverRevision = Long.MIN_VALUE;
+        failedCoverRevision = Long.MIN_VALUE;
+        coverRetryAtNs = 0L;
     }
 
     private static String title(SmtcSnapshot snapshot) {

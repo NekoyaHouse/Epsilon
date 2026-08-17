@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.player.helper;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AfterSendPositionEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
@@ -13,14 +12,11 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 
 import java.util.*;
 
