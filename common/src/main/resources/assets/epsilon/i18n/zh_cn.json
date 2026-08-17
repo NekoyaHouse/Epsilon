@@ -534,10 +534,12 @@
         "packet mode": {
           "_value": "封包模式",
           "pure": "纯粹",
-          "legit": "合法"
+          "legit": "合法",
+          "new": "New"
         },
         "groundo nly": "仅地面",
-        "show crit particles": "显示暴击粒子"
+        "show crit particles": "显示暴击粒子",
+        "debug damage": "调试伤害"
       },
       "zealot crystal+": {
         "_value": "狂暴水晶+",

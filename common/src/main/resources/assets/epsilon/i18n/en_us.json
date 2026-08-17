@@ -534,10 +534,12 @@
         "packet mode": {
           "_value": "Packet Mode",
           "pure": "Pure",
-          "legit": "Legit"
+          "legit": "Legit",
+          "new": "New"
         },
         "groundo nly": "Ground Only",
-        "show crit particles": "Show Crit Particles"
+        "show crit particles": "Show Crit Particles",
+        "debug damage": "Debug Damage"
       },
       "zealot crystal+": {
         "_value": "Zealot Crystal+",
