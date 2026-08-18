@@ -18,10 +18,7 @@ public record SmtcSnapshot(
     static SmtcSnapshot merge(SmtcSnapshot previous, SmtcNativeResult result) {
         if (!result.available()) return UNAVAILABLE;
 
-        byte[] nextThumbnail = result.thumbnail();
-        if (nextThumbnail == null && previous.available() && previous.thumbnailRevision() == result.thumbnailRevision()) {
-            nextThumbnail = previous.thumbnail();
-        }
+        byte[] nextThumbnail = result.thumbnail() == null ? previous.thumbnail() : result.thumbnail();
         return new SmtcSnapshot(
                 true,
                 safe(result.title()),

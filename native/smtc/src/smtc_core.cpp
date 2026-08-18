@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <mutex>
 #include <string_view>
-#include <utility>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Media.Control.h>
@@ -13,6 +13,7 @@
 namespace epsilon::smtc {
 namespace {
 
+using namespace std::chrono_literals;
 using winrt::Windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
 using winrt::Windows::Storage::Streams::DataReader;
 
@@ -26,6 +27,7 @@ struct State {
     std::vector<std::uint8_t> thumbnail;
     std::uint64_t thumbnail_revision = 0;
     std::uint64_t delivered_revision = 0;
+    std::chrono::steady_clock::time_point thumbnail_refresh{};
 };
 
 struct Context {
@@ -154,12 +156,15 @@ Snapshot poll() {
         snapshot.playback_status = static_cast<int>(playback.PlaybackStatus());
 
         const std::wstring track_key = build_track_key(snapshot);
+        const auto now = std::chrono::steady_clock::now();
         const bool changed_track = track_key != state.track_key;
+        const bool retry_missing_thumbnail = state.thumbnail.empty()
+                && now - state.thumbnail_refresh >= 2s;
 
-        if (changed_track) {
-            std::vector<std::uint8_t> refreshed_thumbnail = read_thumbnail(properties.Thumbnail());
+        if (changed_track || retry_missing_thumbnail) {
             state.track_key = track_key;
-            state.thumbnail = std::move(refreshed_thumbnail);
+            state.thumbnail_refresh = now;
+            state.thumbnail = read_thumbnail(properties.Thumbnail());
             state.thumbnail_revision = thumbnail_revision(track_key, state.thumbnail);
         }
 
@@ -170,13 +175,10 @@ Snapshot poll() {
         }
         return snapshot;
     } catch (const winrt::hresult_error& error) {
-        state.delivered_revision = 0;
         return unavailable(std::wstring(error.message().c_str()));
     } catch (const std::exception& error) {
-        state.delivered_revision = 0;
         return unavailable(std::wstring(winrt::to_hstring(error.what()).c_str()));
     } catch (...) {
-        state.delivered_revision = 0;
         return unavailable(L"Unknown native SMTC failure");
     }
 }
