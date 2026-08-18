@@ -188,6 +188,7 @@ public class ChestAura extends Module {
         return BlockPos.betweenClosedStream(origin.offset(-radius, -radius, -radius), origin.offset(radius, radius, radius))
                 .map(BlockPos::immutable)
                 .filter(pos -> isSelectedContainer(mc.level.getBlockEntity(pos)))
+                .filter(pos -> !isBlockedChest(pos))
                 .filter(pos -> !wasAlreadyOpened(pos))
                 .map(pos -> createTarget(pos, eyes))
                 .filter(Objects::nonNull)
@@ -251,6 +252,11 @@ public class ChestAura extends Module {
         if (blockEntity instanceof SmokerBlockEntity) return smokers.getValue();
         if (blockEntity instanceof FurnaceBlockEntity) return furnaces.getValue();
         return blockEntity instanceof BrewingStandBlockEntity && brewingStands.getValue();
+    }
+
+    private boolean isBlockedChest(BlockPos pos) {
+        BlockPos above = pos.above();
+        return mc.level.getBlockEntity(pos) instanceof ChestBlockEntity && mc.level.getBlockState(above).isRedstoneConductor(mc.level, above);
     }
 
     private boolean wasAlreadyOpened(BlockPos pos) {
