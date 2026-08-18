@@ -4,11 +4,12 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 
 
-public final class ItemPhysics extends Module {
+public class ItemPhysics extends Module {
 
     public static final ItemPhysics INSTANCE = new ItemPhysics();
 
     private ItemPhysics() {
         super("Item Physics", Category.RENDER);
     }
+
 }

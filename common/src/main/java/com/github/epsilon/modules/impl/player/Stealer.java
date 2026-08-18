@@ -186,7 +186,6 @@ public class Stealer extends Module {
                 return false;
             }
         }
-
         return true;
     }
 
