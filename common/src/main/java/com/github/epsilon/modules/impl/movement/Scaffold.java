@@ -253,7 +253,7 @@ public class Scaffold extends Module {
         }
         double strength = mc.player.getDeltaMovement().horizontal().length();
         if (strength >= 1.5) {
-            NotificationManager.INSTANCE.warning(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName());
+            NotificationManager.INSTANCE.warning(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName(), this.hashCode());
         }
         if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
             emergencyPlacementActive = true;
