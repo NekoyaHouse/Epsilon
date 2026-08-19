@@ -119,7 +119,7 @@ public abstract class MixinMinecraft {
 
     @WrapOperation(method = "continueAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean attackMultiTask(LocalPlayer instance, Operation<Boolean> original) {
-        return !MultiTask.INSTANCE.isEnabled() && original.call(instance);
+        return instance == null || (!MultiTask.INSTANCE.isEnabled() && original.call(instance));
     }
 
     @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isDestroying()Z"))
