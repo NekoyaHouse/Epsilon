@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.world.entity.Entity;
 
 @ClInitNative

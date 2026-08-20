@@ -14,14 +14,10 @@ foojay-resolver-convention = "1.0.0"
 mixin = "0.8.5"
 mixinextras = "0.5.4"
 asm = "9.8"
-jsr305 = "3.0.2"
-gson = "2.13.2"
 sodium-fabric = "mc26.2-0.9.1-fabric"
 sodium-neoforge = "mc26.2-0.9.1-neoforge"
 iris-fabric = "1.11.2+26.2-fabric"
 iris-neoforge = "1.11.2+26.2-neoforge"
-junit = "5.13.4"
-junit-platform = "1.13.4"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
@@ -30,14 +26,10 @@ fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "pro
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 mixinextras-common = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixinextras" }
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
-jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 sodium-fabric = { module = "maven.modrinth:sodium", version.ref = "sodium-fabric" }
 sodium-neoforge = { module = "maven.modrinth:sodium", version.ref = "sodium-neoforge" }
 iris-fabric = { module = "maven.modrinth:iris", version.ref = "iris-fabric" }
 iris-neoforge = { module = "maven.modrinth:iris", version.ref = "iris-neoforge" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

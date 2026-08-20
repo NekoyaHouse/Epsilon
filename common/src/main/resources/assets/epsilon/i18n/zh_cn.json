@@ -280,6 +280,10 @@
         "appearance": "外观",
         "uzawa reisa": "宇泽玲纱",
         "notification": "通知",
+        "via general": "Via 通用",
+        "via bedrock": "Via Bedrock",
+        "via debug": "Via 调试",
+        "via visual": "Via 视觉",
         "open hud editor": "打开 HUD 编辑器",
         "gui keybind": "GUI 按键绑定",
         "gui mode": {
@@ -376,7 +380,253 @@
         "animated chat prefix": "聊天前缀动画",
         "chat prefix color start": "聊天前缀起始颜色",
         "chat prefix color end": "聊天前缀结束颜色",
-        "chat prefix gradient speed": "聊天前缀渐变速度"
+        "chat prefix gradient speed": "聊天前缀渐变速度",
+        "multiplayer screen button orientation": {
+          "_value": "多人游戏屏幕按钮位置",
+          "none": "无",
+          "lefttop": "左上角",
+          "righttop": "右上角",
+          "leftbottom": "左下角",
+          "rightbottom": "右下角"
+        },
+        "add server screen button orientation": {
+          "_value": "添加服务器屏幕按钮位置",
+          "none": "无",
+          "lefttop": "左上角",
+          "righttop": "右上角",
+          "leftbottom": "左下角",
+          "rightbottom": "右下角"
+        },
+        "direct connect screen button orientation": {
+          "_value": "直接连接屏幕按钮位置",
+          "none": "无",
+          "lefttop": "左上角",
+          "righttop": "右上角",
+          "leftbottom": "左下角",
+          "rightbottom": "右下角"
+        },
+        "remove unavailable items from creative tab": {
+          "_value": "过滤创造模式标签页",
+          "vanillaandmodded": "原版和模组",
+          "vanillaonly": "仅原版",
+          "off": "关"
+        },
+        "save selected protocol version": "保存所选协议版本",
+        "show classic loading progress in connect screen": "经典加载进度条",
+        "show advertised server version": "显示连接所用版本和服务器版本",
+        "packet translation error action": {
+          "_value": "数据包错误处理",
+          "kick": "踢出",
+          "cancelandnotify": "取消并通知",
+          "cancel": "取消"
+        },
+        "load skins and skulls in legacy versions": "加载旧版本皮肤和头颅",
+        "emulate inventory actions in alpha versions": "模拟 Alpha 版本物品栏操作",
+        "save scroll position in slot screens": "在槽位屏幕中保存滚动位置",
+        "experimental block connections": "实验性方块连接",
+        "replace bedrock default port": "替换 Bedrock 默认端口",
+        "bedrock experimental features": "Bedrock 实验性功能",
+        "verify session for online mode servers": "验证在线模式服务器的会话",
+        "queue config packets": "排列配置数据包",
+        "print networking errors to logs": "将网络错误打印到日志中",
+        "ignore fabric sync errors": "忽略 Fabric 同步错误",
+        "hide modern jigsaw screen features": "隐藏新式拼图方块屏幕功能",
+        "filter non existing glyphs": "过滤不存在的字形",
+        "remove server description sanitize": {
+          "_value": "移除服务器描述清理",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "do not create packet error crash reports": {
+          "_value": "不创建数据包错误崩溃报告",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "disable sequencing": {
+          "_value": "禁用排序",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "always tick client player": {
+          "_value": "始终执行客户端玩家刻",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "execute inputs synchronously": {
+          "_value": "同步执行输入",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "legacy tab completions": {
+          "_value": "旧版 Tab 补全",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "legacy pane outlines": {
+          "_value": "旧版玻璃板轮廓",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "emulate armor hud": {
+          "_value": "模拟护甲 HUD",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "hide modern command block screen features": {
+          "_value": "隐藏新式命令方块屏幕功能",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "legacy crop outlines": {
+          "_value": "旧版农作物轮廓",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "serverside block and item place sounds": {
+          "_value": "服务端放置音效",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "disable server pinging": {
+          "_value": "禁用服务器 Ping",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "remove bubble pop sound": "去除气泡爆裂声",
+        "hide empty bubble icons": "隐藏空气泡图标",
+        "hide villager profession": "隐藏村民职业",
+        "hide download terrain screen transition effects": {
+          "_value": "隐藏下载地形屏幕过渡效果",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "lock blocking arm rotation": {
+          "_value": "格挡时锁定第三人称手臂旋转",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "change body rotation interpolation": {
+          "_value": "更改身体旋转插值",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "potion enchantment glint": {
+          "_value": "在药水上显示附魔光效",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "disable secure chat warning": {
+          "_value": "禁用安全聊天警告",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "hide signature indicator": {
+          "_value": "隐藏签名指示器",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "replace petrified oak slab": {
+          "_value": "替换石化橡木台阶纹理",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "hide furnace recipe book": {
+          "_value": "隐藏熔炉配方书",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "force unicode font for non ascii languages": {
+          "_value": "强制为非 ASCII 语言使用 Unicode 字体",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "sneak instantly": {
+          "_value": "瞬间潜行",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "sideways backwards walking": {
+          "_value": "侧身后退行走",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "hide crafting recipe book": {
+          "_value": "隐藏合成配方书",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "always render crosshair": {
+          "_value": "始终渲染十字准星",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "swing hand on item use": {
+          "_value": "使用物品时挥动手",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "tilt item positions": {
+          "_value": "倾斜物品位置",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "enable legacy tablist": {
+          "_value": "启用旧版 Tab 列表",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "replace hurt sound with oof sound": {
+          "_value": "将受伤音效替换为 OOF 音效",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "hide modern hud elements": {
+          "_value": "隐藏新式 HUD 元素",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "replace creative inventory": {
+          "_value": "替换创造模式物品栏",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        },
+        "old walking animation": {
+          "_value": "旧版行走动画",
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        }
       },
       "aim bot": {
         "_value": "瞄准辅助",
@@ -537,7 +787,7 @@
           "legit": "合法",
           "new": "New"
         },
-        "groundo nly": "仅地面",
+        "groundonly": "仅地面",
         "show crit particles": "显示暴击粒子",
         "debug damage": "调试伤害"
       },
@@ -1120,6 +1370,24 @@
         "_value": "自定义挖掘冷却",
         "cooldown": "冷却时间"
       },
+      "chest aura": {
+        "_value": "箱子光环",
+        "chests": "箱子",
+        "furnaces": "熔炉",
+        "blast furnaces": "高炉",
+        "smokers": "烟熏炉",
+        "brewing stands": "酿造台",
+        "swing": "挥手",
+        "pause on eat": "进食时暂停",
+        "require stealer": "需要小偷模块",
+        "ignore other opened": "忽略其他玩家已打开的容器",
+        "range": "范围",
+        "through wall range": "穿墙范围",
+        "cancel range": "取消范围",
+        "delay": "延迟",
+        "turn speed": "转头速度",
+        "disable in hypixel lobby": "在 Hypixel 大厅中禁用"
+      },
       "elytra swap": {
         "_value": "鞘翅切换",
         "activate key": "激活按键",
@@ -1243,8 +1511,8 @@
         "_value": "小偷",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
+        "auto close": "自动关闭",
         "close delay": "关闭延迟",
-        "close delay value": "关闭延迟值",
         "ender chest": "末影箱"
       },
       "timer": {
@@ -1550,6 +1818,13 @@
         "delay ticks": "延迟刻数",
         "jump reset": "跳跃重置"
       },
+      "kill effect": {
+        "_value": "击杀特效",
+        "lightning": "闪电",
+        "explosion": "爆炸",
+        "squid": "鱿鱼",
+        "blood": "血液"
+      },
       "anti alias": "抗锯齿",
       "aspect ratio": {
         "_value": "画面比例",
@@ -1610,7 +1885,8 @@
         "distance": "距离",
         "action": "动作",
         "action smoothness": "动作平滑度",
-        "action max distance": "动作最大距离"
+        "action max distance": "动作最大距离",
+        "better bob view": "优化视角摇晃"
       },
       "chams": {
         "_value": "透视模型",
@@ -1807,6 +2083,7 @@
         "wall side box": "墙侧开口边框",
         "wall side box color": "墙侧开口边框颜色"
       },
+      "item physics": "物品物理",
       "jump circle": {
         "_value": "跳跃圆环",
         "mode": {
@@ -2439,6 +2716,31 @@
       "scaffold_toggle_on_teleport": "传送时已关闭",
       "serverbound_packet_flush_failed": "客户端数据包队列释放失败",
       "clientbound_packet_flush_failed": "服务端数据包队列释放失败"
+    },
+    "via": {
+      "base": {
+        "cancel": "取消",
+        "refresh": "刷新",
+        "something_went_wrong": "出错了！请稍后重试",
+        "set_version": "设置版本",
+        "cancel_and_reset": "取消并重置",
+        "detecting_server_version": "检测服务器中…",
+        "target_version": "目标版本：%s",
+        "server_version": "服务器版本：%s",
+        "this_will_require_a_restart": "更改此设置需要重启游戏！"
+      },
+      "screen": {
+        "force_version": "强制使用版本"
+      },
+      "force_version": {
+        "title": "请选择要Ping/连接服务器的版本"
+      },
+      "java": {
+        "failed_to_verify_session": "ViaVersion无法验证 Java 会话"
+      },
+      "translation": {
+        "packet_error": "转译数据包时发生错误！请在日志中查看更多详细信息！"
+      }
     }
   }
 }

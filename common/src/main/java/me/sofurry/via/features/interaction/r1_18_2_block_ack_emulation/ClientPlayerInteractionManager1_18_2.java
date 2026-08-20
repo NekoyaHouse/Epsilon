@@ -1,0 +1,63 @@
+package me.sofurry.via.features.interaction.r1_18_2_block_ack_emulation;
+
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import me.sofurry.via.ViaVersionImpl;
+import me.sofurry.via.protocoltranslator.ProtocolTranslator;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
+import org.apache.commons.lang3.tuple.Pair;
+
+public final class ClientPlayerInteractionManager1_18_2 {
+
+    private final Object2ObjectLinkedOpenHashMap<Pair<BlockPos, ServerboundPlayerActionPacket.Action>, Pair<Vec3, Vec2>> unAckedActions = new Object2ObjectLinkedOpenHashMap<>();
+
+    public void trackPlayerAction(final ServerboundPlayerActionPacket.Action action, final BlockPos blockPos) {
+        final LocalPlayer player = Minecraft.getInstance().player;
+
+        final Vec2 rotation;
+        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_16_1)) {
+            rotation = null;
+        } else {
+            rotation = new Vec2(player.getYRot(), player.getXRot());
+        }
+        unAckedActions.put(Pair.of(blockPos, action), Pair.of(player.position(), rotation));
+    }
+
+    public void handleBlockBreakAck(final BlockPos blockPos, final BlockState expectedState, final ServerboundPlayerActionPacket.Action action, final boolean allGood) {
+        final LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) {
+            return;
+        }
+
+        final ClientLevel world = Minecraft.getInstance().getConnection().getLevel();
+
+        final Pair<Vec3, Vec2> oldPlayerState = unAckedActions.remove(Pair.of(blockPos, action));
+        final BlockState actualState = world.getBlockState(blockPos);
+
+        if ((oldPlayerState == null || !allGood || action != ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK && actualState != expectedState) && (actualState != expectedState || ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_15_2))) {
+            world.setBlock(blockPos, expectedState, Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
+            if (oldPlayerState != null && (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_16_1) || (world == player.level() && player.isColliding(blockPos, expectedState)))) {
+                final Vec3 oldPlayerPosition = oldPlayerState.getKey();
+                if (oldPlayerState.getValue() != null) {
+                    player.absSnapTo(oldPlayerPosition.x, oldPlayerPosition.y, oldPlayerPosition.z, oldPlayerState.getValue().x, oldPlayerState.getValue().y);
+                } else {
+                    player.absSnapTo(oldPlayerPosition.x, oldPlayerPosition.y, oldPlayerPosition.z);
+                }
+            }
+        }
+
+        while (unAckedActions.size() >= 50) {
+            ViaVersionImpl.INSTANCE.getLogger().warn("Too many unacked block actions, dropping {}", unAckedActions.firstKey());
+            unAckedActions.removeFirst();
+        }
+    }
+
+}

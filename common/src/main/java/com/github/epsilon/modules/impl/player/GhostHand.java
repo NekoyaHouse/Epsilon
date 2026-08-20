@@ -6,7 +6,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;

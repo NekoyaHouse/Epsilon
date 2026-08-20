@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
 

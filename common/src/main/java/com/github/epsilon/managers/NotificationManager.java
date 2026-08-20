@@ -5,7 +5,7 @@ import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;

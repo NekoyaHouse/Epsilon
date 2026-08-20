@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.math;
 
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 
 import java.util.concurrent.ThreadLocalRandom;
 

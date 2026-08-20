@@ -79,10 +79,10 @@ public class Velocity extends Module {
 
     @Override
     public String getInfo() {
-        return switch (mode.getValue()) {
-            case Cancel -> "Cancel";
-            case Reduce -> "Reduce " + (delay ? System.currentTimeMillis() - startDelay + "ms" : "");
-            case Delay -> "Delay " + delayTicksRemaining + "t";
+        return mode.getTranslatedValue() + switch (mode.getValue()) {
+            case Cancel -> "";
+            case Reduce -> " " + (delay ? System.currentTimeMillis() - startDelay + "ms" : "");
+            case Delay -> " " + delayTicksRemaining + "t";
         };
     }
 

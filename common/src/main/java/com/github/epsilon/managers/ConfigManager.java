@@ -10,6 +10,8 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.*;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 
 import java.awt.*;
 import java.io.IOException;
@@ -60,6 +62,7 @@ public class ConfigManager {
     private List<String> cachedConfigNames = List.of();
     private long configListCacheExpiresAt;
     private boolean configListCacheDirty = true;
+    private boolean viaVersionReady;
 
     private ConfigManager() {
     }
@@ -98,6 +101,11 @@ public class ConfigManager {
 
     public synchronized String getActiveConfigName() {
         return activeConfigName;
+    }
+
+    public synchronized void onViaVersionReady() {
+        viaVersionReady = true;
+        applySelectedProtocolVersion();
     }
 
     public synchronized List<String> listConfigs() {
@@ -732,6 +740,7 @@ public class ConfigManager {
         loadRootClientSettings();
         loadAccounts();
         ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
+        applySelectedProtocolVersion();
     }
 
     private void saveActiveConfigSnapshot() throws IOException {
@@ -739,6 +748,7 @@ public class ConfigManager {
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
+        captureSelectedProtocolVersion();
         List<Module> modules = getConfigurableModules();
         for (Module module : modules) {
             if (module != null) {
@@ -749,6 +759,32 @@ public class ConfigManager {
         saveFriends(configStorageDir);
         saveRootClientSettings();
         saveAccounts();
+    }
+
+    private void captureSelectedProtocolVersion() {
+        if (viaVersionReady) {
+            ProtocolVersion selectedVersion = ProtocolTranslator.getConfiguredTargetVersion();
+            ClientSetting.INSTANCE.setSelectedProtocolVersionName(selectedVersion.getName());
+        }
+    }
+
+    private void applySelectedProtocolVersion() {
+        if (viaVersionReady) {
+            ProtocolVersion selectedVersion = ProtocolTranslator.NATIVE_VERSION;
+            String selectedVersionName = ClientSetting.INSTANCE.getSelectedProtocolVersionName();
+            if (ClientSetting.INSTANCE.saveSelectedProtocolVersion.getValue()
+                    && selectedVersionName != null
+                    && !selectedVersionName.isBlank()) {
+                ProtocolVersion resolvedVersion = ProtocolTranslator.protocolVersionByName(selectedVersionName);
+                if (resolvedVersion != null) {
+                    selectedVersion = resolvedVersion;
+                } else {
+                    Constants.LOGGER.warn("无法恢复 ViaVersion 协议版本：{}", selectedVersionName);
+                }
+            }
+
+            ProtocolTranslator.setConfiguredTargetVersion(selectedVersion);
+        }
     }
 
     private void loadRootClientSettings() {

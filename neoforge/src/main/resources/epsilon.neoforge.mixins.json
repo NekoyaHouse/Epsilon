@@ -6,6 +6,7 @@
   "client": [
     "iris.MixinIrisHandRenderer",
     "MixinCamera",
+    "MixinGameData",
     "MixinLevelRenderer",
     "MixinMinecraft",
     "sodium.MixinSodiumAbstractBlockRenderContext"

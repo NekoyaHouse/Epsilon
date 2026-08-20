@@ -25,9 +25,9 @@ jbyteArray to_java_bytes(JNIEnv* env, const std::optional<std::vector<std::uint8
 } // namespace
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_love_slmpc_smtc_SmtcNativeBridge_pollNative(JNIEnv* env, jclass) {
+Java_me_sofurry_smtc_SmtcNativeBridge_pollNative(JNIEnv* env, jclass) {
     const epsilon::smtc::Snapshot snapshot = epsilon::smtc::poll();
-    jclass result_class = env->FindClass("love/slmpc/smtc/SmtcNativeResult");
+    jclass result_class = env->FindClass("me/sofurry/smtc/SmtcNativeResult");
     if (result_class == nullptr) {
         return nullptr;
     }
@@ -69,7 +69,7 @@ Java_love_slmpc_smtc_SmtcNativeBridge_pollNative(JNIEnv* env, jclass) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_love_slmpc_smtc_SmtcNativeBridge_resetNative(JNIEnv*, jclass) {
+Java_me_sofurry_smtc_SmtcNativeBridge_resetNative(JNIEnv*, jclass) {
     epsilon::smtc::reset();
 }
 

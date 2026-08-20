@@ -10,9 +10,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.GlobalSettingsUniform;
+import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +31,24 @@ public class MixinGameRenderer {
     @Final
     @Shadow
     private Minecraft minecraft;
+
+    @Final
+    @Shadow
+    private GlobalSettingsUniform globalSettingsUniform;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void initializeGlobalSettingsUniform(Minecraft minecraft, ItemInHandRenderer itemInHandRenderer, ModelManager modelManager, CallbackInfo ci) {
+        this.globalSettingsUniform.update(
+                minecraft.getWindow().getWidth(),
+                minecraft.getWindow().getHeight(),
+                0.0,
+                0L,
+                DeltaTracker.ZERO,
+                0,
+                Vec3.ZERO,
+                false
+        );
+    }
 
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;renderAllFeatures(Lnet/minecraft/client/renderer/SubmitNodeStorage;)V"))
     private void renderHandFeaturesWithOutline(FeatureRenderDispatcher dispatcher, SubmitNodeStorage storage, Operation<Void> original) {

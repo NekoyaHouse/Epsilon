@@ -29,7 +29,7 @@ public class MixinOptions {
             case 70 -> Options.genericValueLabel(caption, Component.translatable("options.fov.min"));
             case 150 -> Options.genericValueLabel(caption, Component.translatable("options.fov.max"));
             default -> Options.genericValueLabel(caption, value);
-        }, new OptionInstance.IntRange(30, 150), Codec.DOUBLE.xmap(value -> (int) (value * (double) 40.0F + (double) 70.0F), value -> ((double) value - (double) 70.0F) / (double) 40.0F), 70, OptionInstance.NO_ACTION);
+        }, new OptionInstance.IntRange(30, 150), Codec.DOUBLE.xmap(value -> (int) (value * (double) 40.0F + (double) 70.0F), value -> ((double) value - (double) 70.0F) / (double) 40.0F), 110, OptionInstance.NO_ACTION);
         options.load();
     }
 

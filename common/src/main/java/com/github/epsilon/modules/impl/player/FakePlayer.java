@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.StringSetting;
 import com.mojang.authlib.GameProfile;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.world.entity.Entity;
 

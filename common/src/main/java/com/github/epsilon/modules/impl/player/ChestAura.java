@@ -11,6 +11,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -51,6 +52,7 @@ public class ChestAura extends Module {
     private final BoolSetting smokers = boolSetting("Smokers", false);
     private final BoolSetting brewingStands = boolSetting("Brewing Stands", false);
     private final BoolSetting swing = boolSetting("Swing", true);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting requireStealer = boolSetting("Require Stealer", true);
     private final BoolSetting ignoreOtherOpened = boolSetting("Ignore Other Opened", false);
     private final DoubleSetting range = doubleSetting("Range", 4.5, 0.0, 7.0, 0.1);
@@ -84,8 +86,6 @@ public class ChestAura extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        if (nullCheck() || mc.gameMode == null || mc.getConnection() == null) return;
-
         updateTrackedLevel();
 
         if (opening) {
@@ -129,6 +129,8 @@ public class ChestAura extends Module {
         openingStartedAt = System.currentTimeMillis();
         if (swing.getValue()) {
             mc.player.swing(InteractionHand.MAIN_HAND);
+        } else {
+            mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
         }
     }
 
@@ -163,6 +165,7 @@ public class ChestAura extends Module {
     private boolean shouldPause() {
         if (Scaffold.INSTANCE.isEnabled()) return true;
         if (KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) return true;
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return true;
         if (requireStealer.getValue() && !Stealer.INSTANCE.isEnabled()) return true;
         return disableInHypixelLobby.getValue() && isInLobby();
     }

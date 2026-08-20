@@ -1,0 +1,73 @@
+package me.sofurry.via.injection.mixin.features.large_container;
+
+import com.llamalad7.mixinextras.sugar.Local;
+import com.viaversion.viaversion.api.minecraft.item.Item;
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
+import com.viaversion.viaversion.api.type.Type;
+import com.viaversion.viaversion.api.type.Types;
+import com.viaversion.viaversion.libs.gson.JsonElement;
+import com.viaversion.viaversion.protocols.v1_12_2to1_13.packet.ClientboundPackets1_13;
+import com.viaversion.viaversion.protocols.v1_12_2to1_13.packet.ServerboundPackets1_13;
+import com.viaversion.viaversion.protocols.v1_13_2to1_14.Protocol1_13_2To1_14;
+import com.viaversion.viaversion.protocols.v1_13_2to1_14.packet.ClientboundPackets1_14;
+import com.viaversion.viaversion.protocols.v1_13_2to1_14.packet.ServerboundPackets1_14;
+import com.viaversion.viaversion.protocols.v1_13_2to1_14.rewriter.ItemPacketRewriter1_14;
+import com.viaversion.viaversion.rewriter.ItemRewriter;
+import me.sofurry.via.protocoltranslator.translator.TextComponentTranslator;
+import me.sofurry.via.util.network.SyncTasks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.util.Mth;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.inventory.ChestMenu;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(value = ItemPacketRewriter1_14.class, remap = false)
+public abstract class MixinItemPacketRewriter1_14 extends ItemRewriter<ClientboundPackets1_13, ServerboundPackets1_14, Protocol1_13_2To1_14> {
+
+    public MixinItemPacketRewriter1_14(Protocol1_13_2To1_14 protocol, Type<Item> itemType, Type<Item[]> itemArrayType) {
+        super(protocol, itemType, itemArrayType);
+    }
+
+    @Inject(method = "registerPackets", at = @At("RETURN"))
+    private void dontResyncInventory(CallbackInfo ci) {
+        this.protocol.registerServerbound(ServerboundPackets1_14.SELECT_TRADE, ServerboundPackets1_13.SELECT_TRADE, null, true);
+    }
+
+    @Inject(method = "lambda$registerPackets$0", at = @At(value = "INVOKE", target = "Lcom/viaversion/viaversion/util/ProtocolLogger;warning(Ljava/lang/String;)V", remap = false), cancellable = true)
+    private void supportLargeContainers(PacketWrapper wrapper, CallbackInfo ci, @Local(ordinal = 0) Short windowId, @Local String type, @Local JsonElement title, @Local(ordinal = 1) Short slots) {
+        if ((type.equals("minecraft:container") || type.equals("minecraft:chest")) && (slots > 54 || slots <= 0)) {
+            ci.cancel();
+
+            final String uuid = SyncTasks.executeSyncTask(data -> {
+                final Minecraft mc = Minecraft.getInstance();
+
+                try {
+                    final int syncId = data.readUnsignedByte();
+                    final int size = data.readUnsignedByte();
+                    final Component mcTitle = ComponentSerialization.TRUSTED_STREAM_CODEC.decode(data);
+
+                    final ChestMenu screenHandler = new ChestMenu(null, syncId, mc.player.getInventory(), new SimpleContainer(size), Mth.ceil(size / 9F));
+                    mc.player.containerMenu = screenHandler;
+                    mc.gui.setScreen(new ContainerScreen(screenHandler, mc.player.getInventory(), mcTitle));
+                } catch (Throwable t) {
+                    throw new RuntimeException("Failed to handle OpenWindow packet data", t);
+                }
+            });
+
+            wrapper.clearPacket();
+            wrapper.setPacketType(ClientboundPackets1_14.CUSTOM_PAYLOAD);
+            wrapper.write(Types.STRING, SyncTasks.PACKET_SYNC_IDENTIFIER); // sync task header
+            wrapper.write(Types.STRING, uuid); // sync task id
+            wrapper.write(Types.UNSIGNED_BYTE, windowId);
+            wrapper.write(Types.UNSIGNED_BYTE, slots);
+            wrapper.write(Types.TAG, TextComponentTranslator.via1_14toViaLatest(title));
+        }
+    }
+
+}

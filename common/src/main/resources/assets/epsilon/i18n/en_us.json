@@ -280,6 +280,10 @@
         "appearance": "Appearance",
         "uzawa reisa": "Uzawa Reisa",
         "notification": "Notification",
+        "via general": "Via General",
+        "via bedrock": "Via Bedrock",
+        "via debug": "Via Debug",
+        "via visual": "Via Visual",
         "open hud editor": "Open HUD Editor",
         "gui keybind": "Gui Keybind",
         "gui mode": {
@@ -376,7 +380,253 @@
         "animated chat prefix": "Animated Chat Prefix",
         "chat prefix color start": "Chat Prefix Color Start",
         "chat prefix color end": "Chat Prefix Color End",
-        "chat prefix gradient speed": "Chat Prefix Gradient Speed"
+        "chat prefix gradient speed": "Chat Prefix Gradient Speed",
+        "multiplayer screen button orientation": {
+          "_value": "Multiplayer Screen Button Orientation",
+          "none": "None",
+          "lefttop": "Left Top",
+          "righttop": "Right Top",
+          "leftbottom": "Left Bottom",
+          "rightbottom": "Right Bottom"
+        },
+        "add server screen button orientation": {
+          "_value": "Add Server Screen Button Orientation",
+          "none": "None",
+          "lefttop": "Left Top",
+          "righttop": "Right Top",
+          "leftbottom": "Left Bottom",
+          "rightbottom": "Right Bottom"
+        },
+        "direct connect screen button orientation": {
+          "_value": "Direct Connect Screen Button Orientation",
+          "none": "None",
+          "lefttop": "Left Top",
+          "righttop": "Right Top",
+          "leftbottom": "Left Bottom",
+          "rightbottom": "Right Bottom"
+        },
+        "remove unavailable items from creative tab": {
+          "_value": "Filter Creative Tabs",
+          "vanillaandmodded": "Vanilla And Modded",
+          "vanillaonly": "Vanilla Only",
+          "off": "Off"
+        },
+        "save selected protocol version": "Save Selected Protocol Version",
+        "show classic loading progress in connect screen": "Classic Loading Progress",
+        "show advertised server version": "Show Advertised Server Version",
+        "packet translation error action": {
+          "_value": "Packet Error Handling",
+          "kick": "Kick",
+          "cancelandnotify": "Cancel And Notify",
+          "cancel": "Cancel"
+        },
+        "load skins and skulls in legacy versions": "Load Skins And Skulls In Legacy Versions",
+        "emulate inventory actions in alpha versions": "Emulate Inventory Actions In Alpha Versions",
+        "save scroll position in slot screens": "Save Scroll Position In Slot Screens",
+        "experimental block connections": "Experimental Block Connections",
+        "replace bedrock default port": "Replace Bedrock Default Port",
+        "bedrock experimental features": "Bedrock Experimental Features",
+        "verify session for online mode servers": "Verify Session For Online Mode Servers",
+        "queue config packets": "Queue Config Packets",
+        "print networking errors to logs": "Print Networking Errors To Logs",
+        "ignore fabric sync errors": "Ignore Fabric Sync Errors",
+        "hide modern jigsaw screen features": "Hide Modern Jigsaw Screen Features",
+        "filter non existing glyphs": "Filter Non Existing Glyphs",
+        "remove server description sanitize": {
+          "_value": "Remove Server Description Sanitize",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "do not create packet error crash reports": {
+          "_value": "Do Not Create Packet Error Crash Reports",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "disable sequencing": {
+          "_value": "Disable Sequencing",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "always tick client player": {
+          "_value": "Always Tick Client Player",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "execute inputs synchronously": {
+          "_value": "Execute Inputs Synchronously",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "legacy tab completions": {
+          "_value": "Legacy Tab Completions",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "legacy pane outlines": {
+          "_value": "Legacy Pane Outlines",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "emulate armor hud": {
+          "_value": "Emulate Armor HUD",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "hide modern command block screen features": {
+          "_value": "Hide Modern Command Block Screen Features",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "legacy crop outlines": {
+          "_value": "Legacy Crop Outlines",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "serverside block and item place sounds": {
+          "_value": "Server-Side Place Sounds",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "disable server pinging": {
+          "_value": "Disable Server Pinging",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "remove bubble pop sound": "Remove Bubble Pop Sound",
+        "hide empty bubble icons": "Hide Empty Bubble Icons",
+        "hide villager profession": "Hide Villager Profession",
+        "hide download terrain screen transition effects": {
+          "_value": "Hide Download Terrain Screen Transition Effects",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "lock blocking arm rotation": {
+          "_value": "Lock Blocking Arm Rotation",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "change body rotation interpolation": {
+          "_value": "Change Body Rotation Interpolation",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "potion enchantment glint": {
+          "_value": "Potion Enchantment Glint",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "disable secure chat warning": {
+          "_value": "Disable Secure Chat Warning",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "hide signature indicator": {
+          "_value": "Hide Signature Indicator",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "replace petrified oak slab": {
+          "_value": "Replace Petrified Oak Slab",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "hide furnace recipe book": {
+          "_value": "Hide Furnace Recipe Book",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "force unicode font for non ascii languages": {
+          "_value": "Force Unicode Font For Non ASCII Languages",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "sneak instantly": {
+          "_value": "Sneak Instantly",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "sideways backwards walking": {
+          "_value": "Sideways Backwards Walking",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "hide crafting recipe book": {
+          "_value": "Hide Crafting Recipe Book",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "always render crosshair": {
+          "_value": "Always Render Crosshair",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "swing hand on item use": {
+          "_value": "Swing Hand On Item Use",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "tilt item positions": {
+          "_value": "Tilt Item Positions",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "enable legacy tablist": {
+          "_value": "Enable Legacy Tablist",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "replace hurt sound with oof sound": {
+          "_value": "Replace Hurt Sound With OOF Sound",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "hide modern hud elements": {
+          "_value": "Hide Modern HUD Elements",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "replace creative inventory": {
+          "_value": "Replace Creative Inventory",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "old walking animation": {
+          "_value": "Old Walking Animation",
+          "auto": "Auto",
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        }
       },
       "aim bot": {
         "_value": "Aim Bot",
@@ -537,7 +787,7 @@
           "legit": "Legit",
           "new": "New"
         },
-        "groundo nly": "Ground Only",
+        "groundonly": "Ground Only",
         "show crit particles": "Show Crit Particles",
         "debug damage": "Debug Damage"
       },
@@ -1120,6 +1370,24 @@
         "_value": "Break Cooldown",
         "cooldown": "Cooldown"
       },
+      "chest aura": {
+        "_value": "Chest Aura",
+        "chests": "Chests",
+        "furnaces": "Furnaces",
+        "blast furnaces": "Blast Furnaces",
+        "smokers": "Smokers",
+        "brewing stands": "Brewing Stands",
+        "swing": "Swing",
+        "pause on eat": "Pause On Eat",
+        "require stealer": "Require Stealer",
+        "ignore other opened": "Ignore Other Opened",
+        "range": "Range",
+        "through wall range": "Through Wall Range",
+        "cancel range": "Cancel Range",
+        "delay": "Delay",
+        "turn speed": "Turn Speed",
+        "disable in hypixel lobby": "Disable In Hypixel Lobby"
+      },
       "elytra swap": {
         "_value": "Elytra Swap",
         "activate key": "Activate Key",
@@ -1243,8 +1511,8 @@
         "_value": "Stealer",
         "min delay": "Min Delay",
         "max delay": "Max Delay",
+        "auto close": "Auto Close",
         "close delay": "Close Delay",
-        "close delay value": "Close Delay Value",
         "ender chest": "Ender Chest"
       },
       "timer": {
@@ -1550,6 +1818,13 @@
         "delay ticks": "Delay Ticks",
         "jump reset": "Jump Reset"
       },
+      "kill effect": {
+        "_value": "Kill Effect",
+        "lightning": "Lightning",
+        "explosion": "Explosion",
+        "squid": "Squid",
+        "blood": "Blood"
+      },
       "anti alias": "Anti Alias",
       "aspect ratio": {
         "_value": "Aspect Ratio",
@@ -1610,7 +1885,8 @@
         "distance": "Distance",
         "action": "Action",
         "action smoothness": "Action Smoothness",
-        "action max distance": "Action Max Distance"
+        "action max distance": "Action Max Distance",
+        "better bob view": "Better Bob View"
       },
       "chams": {
         "_value": "Chams",
@@ -1807,6 +2083,7 @@
         "wall side box": "Wall Side Box",
         "wall side box color": "Wall Side Box Color"
       },
+      "item physics": "Item Physics",
       "jump circle": {
         "_value": "Jump Circle",
         "mode": {
@@ -2439,6 +2716,31 @@
       "scaffold_toggle_on_teleport": "Toggled off on teleport",
       "serverbound_packet_flush_failed": "Failed to flush serverbound packets",
       "clientbound_packet_flush_failed": "Failed to flush clientbound packets"
+    },
+    "via": {
+      "base": {
+        "cancel": "Cancel",
+        "refresh": "Refresh",
+        "something_went_wrong": "Something went wrong! Please try again later",
+        "set_version": "Set version",
+        "cancel_and_reset": "Cancel and reset",
+        "detecting_server_version": "Detecting server version...",
+        "target_version": "Target version: %s",
+        "server_version": "Server version: %s",
+        "this_will_require_a_restart": "Changing this setting will require a restart!"
+      },
+      "screen": {
+        "force_version": "Force Version"
+      },
+      "force_version": {
+        "title": "Please select the version with which the server should be pinged/connected"
+      },
+      "java": {
+        "failed_to_verify_session": "ViaVersion couldn't verify the Java session"
+      },
+      "translation": {
+        "packet_error": "An error occurred while translating a packet! See more details in the logs!"
+      }
     }
   }
 }

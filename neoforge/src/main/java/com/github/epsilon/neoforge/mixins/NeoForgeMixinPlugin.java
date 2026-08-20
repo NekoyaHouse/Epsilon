@@ -1,5 +1,6 @@
 package com.github.epsilon.neoforge.mixins;
 
+import com.github.epsilon.neoforge.ViaVersionNeoForgePlatform;
 import net.neoforged.fml.loading.FMLLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -18,6 +19,7 @@ public class NeoForgeMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        ViaVersionNeoForgePlatform.install();
     }
 
     @Override

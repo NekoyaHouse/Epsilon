@@ -10,7 +10,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.network.NetworkUtils;
 import com.mojang.authlib.GameProfile;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.network.protocol.Packet;

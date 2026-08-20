@@ -25,6 +25,10 @@ public class MixinTitleScreen {
             if (ClientSetting.INSTANCE.showWelcomeScreen.getValue()) {
                 ci.cancel();
                 mc.gui.setScreen(WelcomeScreen.INSTANCE);
+                mc.options.screenEffectScale().set(0.0);
+                mc.options.fovEffectScale().set(0.0);
+                mc.options.darknessEffectScale().set(0.0);
+                mc.options.damageTiltStrength().set(0.0);
                 return;
             }
         }

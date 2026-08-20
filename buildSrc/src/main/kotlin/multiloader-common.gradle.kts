@@ -57,6 +57,13 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://repo.viaversion.com")
+    maven("https://maven.lenni0451.net/everything")
+    maven("https://jitpack.io") {
+        content {
+            includeGroup("com.github.oryxel1")
+        }
+    }
     exclusiveContent {
         forRepository {
             maven {

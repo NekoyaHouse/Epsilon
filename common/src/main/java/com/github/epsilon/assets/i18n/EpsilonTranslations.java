@@ -1,6 +1,10 @@
 package com.github.epsilon.assets.i18n;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Epsilon 内置界面文案的集中注册表。
@@ -143,7 +147,20 @@ public class EpsilonTranslations {
             Notifications.SERVERBOUND_PACKET_FLUSH_FAILED,
             Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
             Notifications.PREVIEW_TITLE,
-            Notifications.PREVIEW_MESSAGE
+            Notifications.PREVIEW_MESSAGE,
+            Via.BASE_CANCEL,
+            Via.BASE_REFRESH,
+            Via.BASE_SOMETHING_WENT_WRONG,
+            Via.BASE_SET_VERSION,
+            Via.BASE_CANCEL_AND_RESET,
+            Via.BASE_DETECTING_SERVER_VERSION,
+            Via.BASE_TARGET_VERSION,
+            Via.BASE_SERVER_VERSION,
+            Via.BASE_THIS_WILL_REQUIRE_A_RESTART,
+            Via.SCREEN_FORCE_VERSION,
+            Via.FORCE_VERSION_TITLE,
+            Via.JAVA_FAILED_TO_VERIFY_SESSION,
+            Via.PACKET_ERROR
     );
 
     private EpsilonTranslations() {
@@ -335,6 +352,35 @@ public class EpsilonTranslations {
 
         private Notifications() {
         }
+    }
+
+    public static final class Via {
+        public static final TranslateComponent BASE_CANCEL = create("via", "base.cancel");
+        public static final TranslateComponent BASE_REFRESH = create("via", "base.refresh");
+        public static final TranslateComponent BASE_SOMETHING_WENT_WRONG = create("via", "base.something_went_wrong");
+        public static final TranslateComponent BASE_SET_VERSION = create("via", "base.set_version");
+        public static final TranslateComponent BASE_CANCEL_AND_RESET = create("via", "base.cancel_and_reset");
+        public static final TranslateComponent BASE_DETECTING_SERVER_VERSION = create("via", "base.detecting_server_version");
+        public static final TranslateComponent BASE_TARGET_VERSION = create("via", "base.target_version");
+        public static final TranslateComponent BASE_SERVER_VERSION = create("via", "base.server_version");
+        public static final TranslateComponent BASE_THIS_WILL_REQUIRE_A_RESTART = create("via", "base.this_will_require_a_restart");
+
+        public static final TranslateComponent SCREEN_FORCE_VERSION = create("via", "screen.force_version");
+        public static final TranslateComponent FORCE_VERSION_TITLE = create("via", "force_version.title");
+        public static final TranslateComponent JAVA_FAILED_TO_VERIFY_SESSION = create("via", "java.failed_to_verify_session");
+
+        public static final TranslateComponent PACKET_ERROR = create("via", "translation.packet_error");
+
+        private Via() {
+        }
+    }
+
+    public static MutableComponent component(TranslateComponent translation, Object... args) {
+        String text = translation.getTranslatedName();
+        if (args.length > 0) {
+            text = String.format(Locale.ROOT, text, args);
+        }
+        return Component.literal(text);
     }
 
     private static TranslateComponent create(String prefix, String suffix) {

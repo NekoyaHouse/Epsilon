@@ -21,7 +21,7 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.HudElementManager;
 import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;

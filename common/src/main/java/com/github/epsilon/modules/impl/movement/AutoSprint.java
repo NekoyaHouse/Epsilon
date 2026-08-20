@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.player.InvManager;
-import love.slmpc.ClInitNative;
+import me.sofurry.ClInitNative;
 
 @ClInitNative
 public class AutoSprint extends Module {
