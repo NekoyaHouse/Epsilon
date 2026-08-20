@@ -1348,9 +1348,9 @@
         "delay": "发送延迟"
       },
       "auto mlg": {
-        "_value": "自动 MLG",
+        "_value": "自动落地水",
         "interact delay": "交互延迟",
-        "collect delay ticks": "收集延迟刻数"
+        "collect delay ticks": "收水延迟刻数"
       },
       "auto tool": {
         "_value": "自动工具",
