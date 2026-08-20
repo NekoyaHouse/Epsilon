@@ -6,7 +6,6 @@ import me.sofurry.via.screen.impl.ProtocolSelectionScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Wrapper class for {@link ObjectSelectionList} including the following features:
@@ -39,7 +38,7 @@ public class ViaVersionList extends ObjectSelectionList<ViaVersionListEntry> {
     }
 
     @Override
-    protected void extractSelection(final @NonNull GuiGraphicsExtractor graphics, final @NonNull ViaVersionListEntry entry, final int outlineColor) {
+    protected void extractSelection(final GuiGraphicsExtractor graphics, final ViaVersionListEntry entry, final int outlineColor) {
         // Remove selection box
     }
 

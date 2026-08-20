@@ -1,7 +1,7 @@
 package me.sofurry.via.screen;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import me.sofurry.via.ViaVersionImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.joml.Matrix3x2fStack;
-import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
@@ -121,7 +120,7 @@ public class ViaVersionScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(final @NonNull GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float a) {
+    public void extractRenderState(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float a) {
         super.extractRenderState(graphics, mouseX, mouseY, a);
 
         this.renderTitle(graphics);
@@ -189,7 +188,7 @@ public class ViaVersionScreen extends Screen {
      * @param next      The screen that should be opened after the error screen is closed
      */
     public static void showErrorScreen(final Component title, final Throwable throwable, final Screen next) {
-        ViaVersionImpl.INSTANCE.getLogger().error("Something went wrong!", throwable);
+        Constants.LOGGER.error("Something went wrong!", throwable);
 
         final Minecraft client = Minecraft.getInstance();
         client.execute(() -> client.gui.setScreen(new AlertScreen(() -> client.gui.setScreen(next), title, EpsilonTranslations.component(EpsilonTranslations.Via.BASE_SOMETHING_WENT_WRONG).append("\n" + throwable.getMessage()), EpsilonTranslations.component(EpsilonTranslations.Via.BASE_CANCEL), false)));

@@ -1,5 +1,6 @@
 package me.sofurry.via.features.networking.armor_hud;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
@@ -7,7 +8,6 @@ import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_8to1_9.Protocol1_8To1_9;
 import com.viaversion.viaversion.protocols.v1_8to1_9.data.ArmorTypes1_8;
 import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ClientboundPackets1_9;
-import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import me.sofurry.via.util.ViaVersionClientEvents;
 import net.minecraft.client.Minecraft;
@@ -36,7 +36,7 @@ public final class ArmorHudEmulation1_8 {
                     try {
                         sendArmorUpdate(connection);
                     } catch (Throwable t) {
-                        ViaVersionImpl.INSTANCE.getLogger().error("Error sending armor update", t);
+                        Constants.LOGGER.error("Error sending armor update", t);
                     }
                 }
             } else {

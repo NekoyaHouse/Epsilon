@@ -1,5 +1,6 @@
 package me.sofurry.via.protocoltranslator.translator;
 
+import com.github.epsilon.Constants;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.minecraft.BlockPosition;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
@@ -8,7 +9,6 @@ import com.viaversion.viaversion.api.protocol.packet.State;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_17_1to1_18.packet.ClientboundPackets1_18;
-import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -39,7 +39,7 @@ public final class BlockStateTranslator {
             levelEvent.read(Types.BLOCK_POSITION1_14); // position
             return Block.stateById(levelEvent.read(Types.INT)); // data
         } catch (Throwable t) {
-            ViaVersionImpl.INSTANCE.getLogger().error("Error converting ViaVersion 1.18.2 block state to native block state", t);
+            Constants.LOGGER.error("Error converting ViaVersion 1.18.2 block state to native block state", t);
             return Blocks.AIR.defaultBlockState();
         }
     }

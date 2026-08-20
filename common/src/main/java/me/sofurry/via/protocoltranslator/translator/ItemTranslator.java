@@ -1,5 +1,6 @@
 package me.sofurry.via.protocoltranslator.translator;
 
+import com.github.epsilon.Constants;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.minecraft.item.Item;
 import com.viaversion.viaversion.api.protocol.Protocol;
@@ -10,7 +11,6 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_12to1_12_1.packet.ClientboundPackets1_12_1;
 import io.netty.buffer.Unpooled;
-import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import me.sofurry.via.protocoltranslator.protocol.ViaVersionProtocol;
 import net.minecraft.client.Minecraft;
@@ -33,7 +33,7 @@ public final class ItemTranslator {
             setCreativeModeSlot.read(Types.SHORT); // slot
             return setCreativeModeSlot.read(ViaVersionProtocol.INSTANCE.getServerboundItemType(targetVersion)); // item
         } catch (Throwable t) {
-            ViaVersionImpl.INSTANCE.getLogger().error("Error converting native item stack to ViaVersion {} item stack", targetVersion, t);
+            Constants.LOGGER.error("Error converting native item stack to ViaVersion {} item stack", targetVersion, t);
             return null;
         }
     }
@@ -63,7 +63,7 @@ public final class ItemTranslator {
             buf.readShort(); // slot
             return ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
         } catch (Throwable t) {
-            ViaVersionImpl.INSTANCE.getLogger().error("Error converting ViaVersion {} item to native item stack", sourceVersion, t);
+            Constants.LOGGER.error("Error converting ViaVersion {} item to native item stack", sourceVersion, t);
             return ItemStack.EMPTY;
         }
     }

@@ -1,5 +1,6 @@
 package me.sofurry.via.protocoltranslator.translator;
 
+import com.github.epsilon.Constants;
 import com.viaversion.nbt.tag.Tag;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
@@ -9,7 +10,6 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.libs.gson.JsonElement;
 import com.viaversion.viaversion.protocols.v1_13_2to1_14.packet.ClientboundPackets1_14;
-import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 
 public final class TextComponentTranslator {
@@ -36,7 +36,7 @@ public final class TextComponentTranslator {
             openScreen.read(Types.VAR_INT); // type id
             return openScreen.read(Types.TAG); // title
         } catch (Throwable t) {
-            ViaVersionImpl.INSTANCE.getLogger().error("Error converting ViaVersion 1.14 text component to native text component", t);
+            Constants.LOGGER.error("Error converting ViaVersion 1.14 text component to native text component", t);
             return null;
         }
     }

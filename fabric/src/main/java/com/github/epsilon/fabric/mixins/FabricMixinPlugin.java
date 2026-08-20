@@ -1,7 +1,8 @@
 package com.github.epsilon.fabric.mixins;
 
 import com.github.epsilon.fabric.ViaVersionFabricPlatform;
-import net.fabricmc.loader.api.FabricLoader;
+import me.sofurry.via.features.movement.constants.LithiumWorkaround;
+import me.sofurry.via.features.movement.elytra.FabricAPIWorkaround;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -11,15 +12,11 @@ import java.util.Set;
 
 public class FabricMixinPlugin implements IMixinConfigPlugin {
 
-    private static final String SODIUM_MIXIN_PACKAGE = "com.github.epsilon.fabric.mixins.sodium.";
-    private static final String IRIS_MIXIN_PACKAGE = "com.github.epsilon.fabric.mixins.iris.";
-
-    private final boolean sodiumLoaded = FabricLoader.getInstance().isModLoaded("sodium");
-    private final boolean irisLoaded = FabricLoader.getInstance().isModLoaded("iris");
-
     @Override
     public void onLoad(String mixinPackage) {
         ViaVersionFabricPlatform.install();
+        FabricAPIWorkaround.init();
+        LithiumWorkaround.init();
     }
 
     @Override
@@ -29,12 +26,6 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.startsWith(SODIUM_MIXIN_PACKAGE)) {
-            return this.sodiumLoaded;
-        }
-        if (mixinClassName.startsWith(IRIS_MIXIN_PACKAGE)) {
-            return this.irisLoaded;
-        }
         return true;
     }
 

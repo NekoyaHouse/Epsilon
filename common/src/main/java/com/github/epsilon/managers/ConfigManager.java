@@ -10,10 +10,16 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.*;
+import com.viaversion.viabackwards.api.ViaBackwardsConfig;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import com.viaversion.viaversion.configuration.AbstractViaConfig;
+import com.viaversion.viaversion.util.ConfigSection;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
+import net.raphimc.viabedrock.platform.ViaBedrockConfig;
+import net.raphimc.vialegacy.platform.ViaLegacyConfig;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -21,7 +27,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -40,6 +48,8 @@ public class ConfigManager {
     private static final String ACTIVE_CONFIG_FILE_NAME = "active-config.txt";
     private static final String ROOT_SETTINGS_FILE_NAME = "client-settings.json";
     private static final String ACCOUNTS_FILE_NAME = "accounts.json";
+    private static final String VIA_SETTINGS_FILE_NAME = "settings.json";
+    private static final String SELECTED_PROTOCOL_VERSION_KEY = "selectedProtocolVersion";
     private static final String EXPORT_METADATA_FILE_NAME = "config-info.json";
     private static final Pattern INVALID_CONFIG_NAME_PATTERN = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
 
@@ -47,6 +57,8 @@ public class ConfigManager {
     private static final Path configsDir = configDir.resolve(CONFIGS_FOLDER);
     private static final Path importsDir = configDir.resolve(IMPORTS_FOLDER);
     private static final Path exportsDir = configDir.resolve(EXPORTS_FOLDER);
+    private static final Path viaDataDir = configDir.resolve("via");
+    private static final Path viaSettingsFile = viaDataDir.resolve(VIA_SETTINGS_FILE_NAME);
     private static final Path activeConfigFile = configDir.resolve(ACTIVE_CONFIG_FILE_NAME);
     private static final Path rootSettingsFile = configDir.resolve(ROOT_SETTINGS_FILE_NAME);
     private static final Path accountsFile = configDir.resolve(ACCOUNTS_FILE_NAME);
@@ -63,6 +75,7 @@ public class ConfigManager {
     private long configListCacheExpiresAt;
     private boolean configListCacheDirty = true;
     private boolean viaVersionReady;
+    private String selectedProtocolVersionName;
 
     private ConfigManager() {
     }
@@ -93,6 +106,30 @@ public class ConfigManager {
 
     public synchronized Path getExportDir() {
         return exportsDir;
+    }
+
+    public synchronized Path getViaDataDir() {
+        return viaDataDir;
+    }
+
+    public AbstractViaConfig createViaVersionRuntimeConfig(Logger logger) {
+        return new ManagedViaVersionConfig(runtimeConfigPlaceholder("viaversion"), logger);
+    }
+
+    public ViaBackwardsConfig createViaBackwardsRuntimeConfig(Logger logger) {
+        return new ManagedViaBackwardsConfig(runtimeConfigPlaceholder("viabackwards"), logger);
+    }
+
+    public ViaLegacyConfig createViaLegacyRuntimeConfig(Logger logger) {
+        return new ManagedViaLegacyConfig(runtimeConfigPlaceholder("vialegacy"), logger);
+    }
+
+    public ViaBedrockConfig createViaBedrockRuntimeConfig(Logger logger) {
+        return new ManagedViaBedrockConfig(runtimeConfigPlaceholder("viabedrock"), logger);
+    }
+
+    private static File runtimeConfigPlaceholder(String name) {
+        return configDir.resolve(".runtime-" + name).toFile();
     }
 
     public synchronized Path getActiveConfigStorageDir() {
@@ -739,6 +776,7 @@ public class ConfigManager {
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
         loadAccounts();
+        loadViaSettings();
         ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
         applySelectedProtocolVersion();
     }
@@ -749,6 +787,7 @@ public class ConfigManager {
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
         captureSelectedProtocolVersion();
+        saveViaSettings();
         List<Module> modules = getConfigurableModules();
         for (Module module : modules) {
             if (module != null) {
@@ -764,27 +803,54 @@ public class ConfigManager {
     private void captureSelectedProtocolVersion() {
         if (viaVersionReady) {
             ProtocolVersion selectedVersion = ProtocolTranslator.getConfiguredTargetVersion();
-            ClientSetting.INSTANCE.setSelectedProtocolVersionName(selectedVersion.getName());
+            selectedProtocolVersionName = selectedVersion.getName();
         }
     }
 
     private void applySelectedProtocolVersion() {
         if (viaVersionReady) {
             ProtocolVersion selectedVersion = ProtocolTranslator.NATIVE_VERSION;
-            String selectedVersionName = ClientSetting.INSTANCE.getSelectedProtocolVersionName();
             if (ClientSetting.INSTANCE.saveSelectedProtocolVersion.getValue()
-                    && selectedVersionName != null
-                    && !selectedVersionName.isBlank()) {
-                ProtocolVersion resolvedVersion = ProtocolTranslator.protocolVersionByName(selectedVersionName);
+                    && selectedProtocolVersionName != null
+                    && !selectedProtocolVersionName.isBlank()) {
+                ProtocolVersion resolvedVersion = ProtocolTranslator.protocolVersionByName(selectedProtocolVersionName);
                 if (resolvedVersion != null) {
                     selectedVersion = resolvedVersion;
                 } else {
-                    Constants.LOGGER.warn("无法恢复 ViaVersion 协议版本：{}", selectedVersionName);
+                    Constants.LOGGER.warn("无法恢复 ViaVersion 协议版本：{}", selectedProtocolVersionName);
                 }
             }
 
             ProtocolTranslator.setConfiguredTargetVersion(selectedVersion);
         }
+    }
+
+    private void loadViaSettings() {
+        selectedProtocolVersionName = null;
+        if (!Files.exists(viaSettingsFile)) {
+            return;
+        }
+
+        try {
+            JsonElement parsed = JsonParser.parseString(Files.readString(viaSettingsFile, StandardCharsets.UTF_8));
+            if (parsed != null && parsed.isJsonObject()) {
+                JsonElement value = parsed.getAsJsonObject().get(SELECTED_PROTOCOL_VERSION_KEY);
+                if (value != null && value.isJsonPrimitive()) {
+                    selectedProtocolVersionName = value.getAsString();
+                }
+            }
+        } catch (Exception e) {
+            Constants.LOGGER.error("读取 ViaVersion 设置失败: {}", viaSettingsFile, e);
+        }
+    }
+
+    private void saveViaSettings() throws IOException {
+        Files.createDirectories(viaDataDir);
+        JsonObject root = new JsonObject();
+        if (selectedProtocolVersionName != null && !selectedProtocolVersionName.isBlank()) {
+            root.addProperty(SELECTED_PROTOCOL_VERSION_KEY, selectedProtocolVersionName);
+        }
+        Files.writeString(viaSettingsFile, gson.toJson(root), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
     private void loadRootClientSettings() {
@@ -1092,7 +1158,7 @@ public class ConfigManager {
         });
     }
 
-    private Path getAvailableBackupPath(Path originalFile) throws IOException {
+    private Path getAvailableBackupPath(Path originalFile) {
         Path parent = originalFile.getParent();
         String baseName = originalFile.getFileName().toString() + ".bak";
         Path backupFile = parent.resolve(baseName);
@@ -1108,6 +1174,133 @@ public class ConfigManager {
         } while (Files.exists(candidate));
 
         return candidate;
+    }
+
+    private static final class ManagedViaVersionConfig extends AbstractViaConfig {
+        private ManagedViaVersionConfig(File placeholder, Logger logger) {
+            super(placeholder, logger);
+        }
+
+        @Override
+        protected boolean updateConfig() {
+            boolean modified = false;
+            ConfigSection existingConfig = originalRootSection();
+            if (existingConfig == null) {
+                set("fix-infested-block-breaking", false);
+                set("shield-blocking", false);
+                set("no-delay-shield-blocking", true);
+                set("handle-invalid-item-count", true);
+                set("chunk-border-fix", true);
+                modified = true;
+            }
+            if (modified || !existingConfig.contains("send-player-details")) {
+                set("send-player-details", false);
+                modified = true;
+            }
+            return super.updateConfig() || modified;
+        }
+
+        @Override
+        public List<String> getUnsupportedOptions() {
+            List<String> unsupported = super.getUnsupportedOptions();
+            unsupported.add("simulate-pt");
+            unsupported.add("fix-1_21-placement-rotation");
+            unsupported.add("team-colour-fix");
+            unsupported.add("cancel-swing-in-inventory");
+            unsupported.add("use-1_8-hitbox-margin");
+            return unsupported;
+        }
+
+        @Override
+        public boolean isCheckForUpdates() {
+            return false;
+        }
+
+        @Override
+        public boolean isSimulatePlayerTick() {
+            return false;
+        }
+
+        @Override
+        public boolean isServersideBlockConnections() {
+            return !ClientSetting.INSTANCE.experimentalBlockConnections.getValue()
+                    && super.isServersideBlockConnections();
+        }
+
+        @Override
+        public boolean fix1_21PlacementRotation() {
+            return false;
+        }
+
+        @Override
+        public boolean is1_13TeamColourFix() {
+            return false;
+        }
+
+        @Override
+        public boolean cancelSwingInInventory() {
+            return false;
+        }
+
+        @Override
+        public boolean cancelBlockSounds() {
+            return !ClientSetting.INSTANCE.serversidePlaceSounds.isEnabled()
+                    && super.cancelBlockSounds();
+        }
+
+        @Override
+        public boolean use1_8HitboxMargin() {
+            return false;
+        }
+
+        @Override
+        public synchronized void save(File location, Map<String, Object> config) {
+        }
+    }
+
+    private static final class ManagedViaBackwardsConfig extends com.viaversion.viabackwards.ViaBackwardsConfig {
+        private ManagedViaBackwardsConfig(File placeholder, Logger logger) {
+            super(placeholder, logger);
+        }
+
+        @Override
+        public synchronized void save(File location, Map<String, Object> config) {
+        }
+    }
+
+    private static final class ManagedViaLegacyConfig extends net.raphimc.vialegacy.ViaLegacyConfig {
+        private ManagedViaLegacyConfig(File placeholder, Logger logger) {
+            super(placeholder, logger);
+        }
+
+        @Override
+        public boolean isLegacySkullLoading() {
+            return ClientSetting.INSTANCE.loadSkinsAndSkullsInLegacyVersions.getValue();
+        }
+
+        @Override
+        public boolean isLegacySkinLoading() {
+            return ClientSetting.INSTANCE.loadSkinsAndSkullsInLegacyVersions.getValue();
+        }
+
+        @Override
+        public synchronized void save(File location, Map<String, Object> config) {
+        }
+    }
+
+    private static final class ManagedViaBedrockConfig extends net.raphimc.viabedrock.ViaBedrockConfig {
+        private ManagedViaBedrockConfig(File placeholder, Logger logger) {
+            super(placeholder, logger);
+        }
+
+        @Override
+        public boolean shouldEnableExperimentalFeatures() {
+            return ClientSetting.INSTANCE.experimentalFeatures.getValue();
+        }
+
+        @Override
+        public synchronized void save(File location, Map<String, Object> config) {
+        }
     }
 
 }

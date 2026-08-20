@@ -1,5 +1,6 @@
 package me.sofurry.via;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.managers.ConfigManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.viaversion.viaversion.api.connection.UserConnection;
@@ -32,8 +33,6 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.entity.BannerPattern;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +55,6 @@ public final class ViaVersionImpl implements ViaVersionBase {
 
     public static final ViaVersionImpl INSTANCE = new ViaVersionImpl();
 
-    private final Logger logger = LogManager.getLogger("ViaVersion");
     private Path path;
 
     private String version;
@@ -73,7 +71,7 @@ public final class ViaVersionImpl implements ViaVersionBase {
         final ViaVersionPlatform.Provider platform = ViaVersionPlatform.get();
         ViaVersion.init(INSTANCE);
 
-        path = platform.getConfigDirectory().resolve("viafabricplus");
+        path = ConfigManager.INSTANCE.getViaDataDir();
         version = platform.getVersion();
         implVersion = platform.getImplVersion();
 
@@ -83,10 +81,10 @@ public final class ViaVersionImpl implements ViaVersionBase {
         try {
             Files.createDirectories(path);
         } catch (final IOException e) {
-            logger.error("Failed to create ViaVersion directory", e);
+            Constants.LOGGER.error("Failed to create ViaVersion directory", e);
         }
 
-        ClassLoaderPriorityUtil.loadOverridingJars(path, logger);
+        ClassLoaderPriorityUtil.loadOverridingJars(path, Constants.LOGGER);
         SyncTasks.init();
         platform.registerSyncPayload();
         FeaturesLoading.init();
@@ -225,10 +223,6 @@ public final class ViaVersionImpl implements ViaVersionBase {
     @Override
     public int getStackCount(ItemStack stack) {
         return NegativeItemUtil.getCount(stack);
-    }
-
-    public Logger getLogger() {
-        return this.logger;
     }
 
 }

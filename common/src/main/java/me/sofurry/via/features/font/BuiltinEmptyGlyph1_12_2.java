@@ -5,7 +5,6 @@ import com.mojang.blaze3d.font.GlyphInfo;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.gui.font.GlyphStitcher;
 import net.minecraft.client.gui.font.glyphs.BakedSheetGlyph;
-import org.jspecify.annotations.NonNull;
 
 public enum BuiltinEmptyGlyph1_12_2 implements GlyphInfo {
     INSTANCE;
@@ -32,7 +31,7 @@ public enum BuiltinEmptyGlyph1_12_2 implements GlyphInfo {
             }
 
             @Override
-            public void upload(final int x, final int y, final @NonNull GpuTexture texture) {
+            public void upload(final int x, final int y, final GpuTexture texture) {
             }
 
             @Override

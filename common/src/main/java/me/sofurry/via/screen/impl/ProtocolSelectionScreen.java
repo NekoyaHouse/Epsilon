@@ -12,7 +12,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
@@ -75,7 +74,7 @@ public final class ProtocolSelectionScreen extends ViaVersionScreen {
         }
 
         @Override
-        public void extractContent(final @NonNull GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final boolean hovered, final float deltaTicks) {
+        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final boolean hovered, final float deltaTicks) {
             final boolean isSelected = ProtocolTranslator.getTargetVersion().equals(protocolVersion);
 
             Color color = isSelected ? Color.GREEN : Color.RED;

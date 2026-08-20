@@ -4,11 +4,9 @@ import me.sofurry.via.platform.ViaVersionPlatform;
 import me.sofurry.via.platform.ViaVersionPlatform.ModInfo;
 import me.sofurry.via.protocoltranslator.impl.command.ViaVersionCommandHandler;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public final class ViaVersionNeoForgePlatform implements ViaVersionPlatform.Provider {
@@ -20,11 +18,6 @@ public final class ViaVersionNeoForgePlatform implements ViaVersionPlatform.Prov
 
     public static void install() {
         ViaVersionPlatform.install(INSTANCE);
-    }
-
-    @Override
-    public Path getConfigDirectory() {
-        return FMLPaths.CONFIGDIR.get();
     }
 
     @Override

@@ -1,10 +1,10 @@
 package me.sofurry.via.features.networking.legacy_chat_signature;
 
+import com.github.epsilon.Constants;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService;
 import com.mojang.authlib.yggdrasil.response.KeyPairResponse;
-import me.sofurry.via.ViaVersionImpl;
 
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -51,11 +51,11 @@ public final class LegacyKeyPairResponse {
                 signatureCopy.get(signatureBytes);
                 LEGACY_SIGNATURES.put(keyPairResponse, signatureBytes);
             } else {
-                ViaVersionImpl.INSTANCE.getLogger().error("Could not get legacy public key signature. Minecraft 1.19.0 servers with secure profiles enabled will not work!");
+                Constants.LOGGER.error("Could not get legacy public key signature. Minecraft 1.19.0 servers with secure profiles enabled will not work!");
             }
             return keyPairResponse;
         } catch (final ReflectiveOperationException | RuntimeException exception) {
-            ViaVersionImpl.INSTANCE.getLogger().error("Could not access Authlib's legacy key-pair endpoint; falling back to the modern response", exception);
+            Constants.LOGGER.error("Could not access Authlib's legacy key-pair endpoint; falling back to the modern response", exception);
             return userApiService.getKeyPair();
         }
     }

@@ -13,7 +13,6 @@ import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.IconSet;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersionRange;
@@ -32,10 +31,6 @@ import java.util.Objects;
 public class ClientSetting extends Module {
 
     public static final ClientSetting INSTANCE = new ClientSetting();
-
-    private static final String SELECTED_PROTOCOL_VERSION_KEY = "selectedProtocolVersion";
-
-    private String selectedProtocolVersionName;
 
     private ClientSetting() {
         super("Client Setting", null);
@@ -384,43 +379,6 @@ public class ClientSetting extends Module {
 
     public void syncFontGlyphUploadBudget() {
         applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
-    }
-
-    public String getSelectedProtocolVersionName() {
-        return selectedProtocolVersionName;
-    }
-
-    public void setSelectedProtocolVersionName(String selectedProtocolVersionName) {
-        this.selectedProtocolVersionName = selectedProtocolVersionName;
-    }
-
-    @Override
-    protected void resetCustomState() {
-        selectedProtocolVersionName = null;
-    }
-
-    @Override
-    public JsonObject saveCustomState() {
-        if (selectedProtocolVersionName == null) {
-            return null;
-        }
-
-        JsonObject state = new JsonObject();
-        state.addProperty(SELECTED_PROTOCOL_VERSION_KEY, selectedProtocolVersionName);
-        return state;
-    }
-
-    @Override
-    public void loadCustomState(JsonObject state) {
-        selectedProtocolVersionName = null;
-        if (state == null || !state.has(SELECTED_PROTOCOL_VERSION_KEY)) {
-            return;
-        }
-
-        try {
-            selectedProtocolVersionName = state.get(SELECTED_PROTOCOL_VERSION_KEY).getAsString();
-        } catch (Exception ignored) {
-        }
     }
 
     private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {

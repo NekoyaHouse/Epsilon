@@ -27,14 +27,17 @@ Epsilon-specific mixins, and configuration ownership are local changes.
 
 The Java symbols were renamed to ViaVersion. The Java package namespace is
 `me.sofurry.via`; the upstream package `com.viaversion.viafabricplus` is not used in
-the embedded source. The resource namespace `viafabricplus`, config directory
-`config/viafabricplus`, translation keys, and upstream URL are intentionally retained.
-The local Mixin configuration files use the `viaversion*.mixins.json` names. The
-resource and config identifiers remain useful when comparing the embedded source with
-upstream. The config directory is retained only for protocol-engine-owned runtime files
-(including YAML files) and optional overriding jars. ViaFabricPlus's save/settings
-subsystem is removed: user settings live in Epsilon's `ClientSetting` module, and the
-selected protocol version is stored by Epsilon's `ConfigManager` as module custom state.
+the embedded source. The resource namespace `viafabricplus`, translation keys, and
+upstream URL are intentionally retained. The local Mixin configuration files use the
+`viaversion*.mixins.json` names.
+
+ViaFabricPlus's save/settings subsystem and protocol-library YAML files are removed.
+User settings are owned by Epsilon's `ConfigManager`; the settings themselves live in
+the `ClientSetting` module. The selected protocol version is stored globally in
+`~/.epsilon/via/settings.json`. Protocol libraries receive read-only runtime
+configurations from `ConfigManager`. Runtime data such as ViaBedrock caches and optional
+overriding jars also lives under `~/.epsilon/via`, never under the game directory's
+`config` folder.
 
 ## Synchronizing an upstream update
 
@@ -106,7 +109,6 @@ planned:
 
 ```text
 viafabricplus
-config/viafabricplus
 viaversion*.mixins.json
 viafabricplus*.accesswidener
 ```
@@ -129,6 +131,9 @@ upstream GitHub URL in license headers and provenance comments.
   change makes them obsolete.
 - Do not restore ViaFabricPlus's `save`, `settings`, or `api.settings` packages. New
   persistent user state must be integrated with Epsilon's `ConfigManager`.
+- Do not restore `getConfigDir`, `FMLPaths.CONFIGDIR`, or protocol-library YAML
+  configuration. Preserve the `ConfigManager` runtime configuration adapters and the
+  `~/.epsilon/via` runtime-data root.
 
 ### 6. Update this record
 
@@ -150,5 +155,6 @@ git diff --check
 
 Then launch the loader manually and test joining representative protocol versions,
 opening the ViaVersion settings screens, changing the per-server version, and loading a
-NeoForge client. Treat Mixin application errors, missing resources, and access errors as
-sync blockers rather than working around them with reflection.
+NeoForge client. Confirm that no Via YAML files or `config/viafabricplus` directory are
+created. Treat Mixin application errors, missing resources, and access errors as sync
+blockers rather than working around them with reflection.

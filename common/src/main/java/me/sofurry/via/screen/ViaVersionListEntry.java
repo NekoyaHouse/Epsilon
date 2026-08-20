@@ -11,7 +11,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import org.joml.Matrix3x2fStack;
-import org.jspecify.annotations.NonNull;
 
 /**
  * This class is a wrapper for the {@link net.minecraft.client.gui.components.ObjectSelectionList.Entry} class.
@@ -101,7 +100,7 @@ public abstract class ViaVersionListEntry extends ObjectSelectionList.Entry<ViaV
      * Automatically draws a background for the slot with the slot's dimension and calls the {@link #mappedRender(GuiGraphicsExtractor, int, int, int, int, int, int, boolean, float)} method
      */
     @Override
-    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final boolean hovered, final float deltaTicks) {
+    public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final boolean hovered, final float deltaTicks) {
         this.context = graphics; // Allows cross-sharing between util methods
 
         final Matrix3x2fStack matrices = context.pose();

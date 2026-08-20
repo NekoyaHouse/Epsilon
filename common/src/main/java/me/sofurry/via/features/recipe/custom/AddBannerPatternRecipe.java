@@ -15,14 +15,13 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
-import org.jspecify.annotations.NonNull;
 
 public final class AddBannerPatternRecipe extends CustomRecipe {
 
     public static final RecipeSerializer<AddBannerPatternRecipe> SERIALIZER = new RecipeSerializer<>(MapCodec.unit(new AddBannerPatternRecipe()), StreamCodec.unit(new AddBannerPatternRecipe()));
 
     @Override
-    public boolean matches(CraftingInput input, @NonNull Level world) {
+    public boolean matches(CraftingInput input, Level world) {
         boolean foundBanner = false;
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
@@ -38,7 +37,7 @@ public final class AddBannerPatternRecipe extends CustomRecipe {
     }
 
     @Override
-    public @NonNull ItemStack assemble(CraftingInput input) {
+    public ItemStack assemble(CraftingInput input) {
         ItemStack result = ItemStack.EMPTY;
 
         for (int i = 0; i < input.size(); i++) {
@@ -73,7 +72,7 @@ public final class AddBannerPatternRecipe extends CustomRecipe {
     }
 
     @Override
-    public @NonNull RecipeSerializer<AddBannerPatternRecipe> getSerializer() {
+    public RecipeSerializer<AddBannerPatternRecipe> getSerializer() {
         return SERIALIZER;
     }
 

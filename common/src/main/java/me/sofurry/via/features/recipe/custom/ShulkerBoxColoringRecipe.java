@@ -11,13 +11,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
-import org.jspecify.annotations.NonNull;
 
 public final class ShulkerBoxColoringRecipe extends CustomRecipe {
 
     public static final RecipeSerializer<ShulkerBoxColoringRecipe> SERIALIZER = new RecipeSerializer<>(MapCodec.unit(new ShulkerBoxColoringRecipe()), StreamCodec.unit(new ShulkerBoxColoringRecipe()));
 
-    public boolean matches(CraftingInput input, @NonNull Level world) {
+    public boolean matches(CraftingInput input, Level world) {
         int i = 0;
         int j = 0;
 
@@ -43,7 +42,7 @@ public final class ShulkerBoxColoringRecipe extends CustomRecipe {
         return i == 1 && j == 1;
     }
 
-    public @NonNull ItemStack assemble(CraftingInput input) {
+    public ItemStack assemble(CraftingInput input) {
         ItemStack result = ItemStack.EMPTY;
         ItemStack dyeStack = Items.DYE.white().getDefaultInstance();
 
@@ -64,7 +63,7 @@ public final class ShulkerBoxColoringRecipe extends CustomRecipe {
     }
 
     @Override
-    public @NonNull RecipeSerializer<ShulkerBoxColoringRecipe> getSerializer() {
+    public RecipeSerializer<ShulkerBoxColoringRecipe> getSerializer() {
         return SERIALIZER;
     }
 

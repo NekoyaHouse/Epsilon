@@ -21,6 +21,8 @@
 
 package me.sofurry.via.protocoltranslator.impl.platform;
 
+import com.github.epsilon.Constants;
+import com.github.epsilon.managers.ConfigManager;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.type.Types;
@@ -31,16 +33,16 @@ import com.viaversion.viaversion.platform.UserConnectionViaVersionPlatform;
 import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.platform.ViaVersionPlatform;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
-import me.sofurry.via.protocoltranslator.impl.viaversion.ViaVersionConfig;
 import me.sofurry.via.protocoltranslator.protocol.ViaVersionProtocol;
-import me.sofurry.via.protocoltranslator.util.JLoggerToSLF4J;
 import me.sofurry.via.util.ClassLoaderPriorityUtil;
 import net.minecraft.client.Minecraft;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public final class ViaVersionPlatformImpl extends UserConnectionViaVersionPlatform {
@@ -51,7 +53,56 @@ public final class ViaVersionPlatformImpl extends UserConnectionViaVersionPlatfo
 
     @Override
     public Logger createLogger(final String name) {
-        return new JLoggerToSLF4J(LoggerFactory.getLogger(name));
+        final Logger logger = Logger.getAnonymousLogger();
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
+        logger.addHandler(new Handler() {
+            {
+                setLevel(Level.ALL);
+            }
+
+            @Override
+            public void publish(final LogRecord record) {
+                if (!isLoggable(record)) {
+                    return;
+                }
+
+                final String message = record.getMessage();
+                final Throwable throwable = record.getThrown();
+                if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
+                    if (throwable == null) {
+                        Constants.LOGGER.error(message);
+                    } else {
+                        Constants.LOGGER.error(message, throwable);
+                    }
+                } else if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
+                    if (throwable == null) {
+                        Constants.LOGGER.warn(message);
+                    } else {
+                        Constants.LOGGER.warn(message, throwable);
+                    }
+                } else if (record.getLevel().intValue() >= Level.INFO.intValue()) {
+                    if (throwable == null) {
+                        Constants.LOGGER.info(message);
+                    } else {
+                        Constants.LOGGER.info(message, throwable);
+                    }
+                } else if (throwable == null) {
+                    Constants.LOGGER.debug(message);
+                } else {
+                    Constants.LOGGER.debug(message, throwable);
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        });
+        return logger;
     }
 
     @Override
@@ -66,7 +117,7 @@ public final class ViaVersionPlatformImpl extends UserConnectionViaVersionPlatfo
 
     @Override
     protected AbstractViaConfig createConfig() {
-        return new ViaVersionConfig(new File(getDataFolder(), "viaversion.yml"), this.getLogger());
+        return ConfigManager.INSTANCE.createViaVersionRuntimeConfig(this.getLogger());
     }
 
     @Override

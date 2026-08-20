@@ -1,8 +1,8 @@
 package me.sofurry.via.features.interaction.r1_18_2_block_ack_emulation;
 
+import com.github.epsilon.Constants;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import me.sofurry.via.ViaVersionImpl;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -55,7 +55,7 @@ public final class ClientPlayerInteractionManager1_18_2 {
         }
 
         while (unAckedActions.size() >= 50) {
-            ViaVersionImpl.INSTANCE.getLogger().warn("Too many unacked block actions, dropping {}", unAckedActions.firstKey());
+            Constants.LOGGER.warn("Too many unacked block actions, dropping {}", unAckedActions.firstKey());
             unAckedActions.removeFirst();
         }
     }

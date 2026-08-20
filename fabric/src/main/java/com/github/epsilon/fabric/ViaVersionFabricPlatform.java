@@ -13,7 +13,6 @@ import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.api.metadata.Person;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,11 +25,6 @@ public final class ViaVersionFabricPlatform implements ViaVersionPlatform.Provid
 
     public static void install() {
         ViaVersionPlatform.install(INSTANCE);
-    }
-
-    @Override
-    public Path getConfigDirectory() {
-        return FabricLoader.getInstance().getConfigDir();
     }
 
     @Override

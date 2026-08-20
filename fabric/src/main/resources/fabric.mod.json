@@ -12,7 +12,6 @@
     "${mod_id}.mixins.json",
     "${mod_id}.fabric.mixins.json",
     "viaversion.mixins.json",
-    "viaversion-visuals.mixins.json",
     "viaversion.fabric.mixins.json"
   ],
   "accessWidener": "${mod_id}.accesswidener",

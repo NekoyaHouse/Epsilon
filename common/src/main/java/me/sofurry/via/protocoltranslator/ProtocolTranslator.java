@@ -23,7 +23,6 @@ package me.sofurry.via.protocoltranslator;
 
 import com.mojang.authlib.GameProfile;
 import com.viaversion.viaaprilfools.ViaAprilFoolsPlatformImpl;
-import com.viaversion.viabackwards.ViaBackwardsPlatformImpl;
 import com.viaversion.viaversion.ViaManagerImpl;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.ProtocolInfo;
@@ -51,6 +50,8 @@ import me.sofurry.via.injection.access.core.IConnection;
 import me.sofurry.via.platform.ViaVersionPlatform;
 import me.sofurry.via.protocoltranslator.impl.command.ViaVersionCommandHandler;
 import me.sofurry.via.protocoltranslator.impl.platform.ViaVersionPlatformImpl;
+import me.sofurry.via.protocoltranslator.impl.platform.ViaVersionViaBackwardsPlatform;
+import me.sofurry.via.protocoltranslator.impl.platform.ViaVersionViaBedrockPlatform;
 import me.sofurry.via.protocoltranslator.impl.platform.ViaVersionViaLegacyPlatform;
 import me.sofurry.via.protocoltranslator.impl.viaversion.ViaVersionPlatformLoader;
 import me.sofurry.via.protocoltranslator.netty.NoReadFlowControlHandler;
@@ -63,7 +64,6 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.HandlerNames;
 import net.minecraft.util.Util;
-import net.raphimc.viabedrock.ViaBedrockPlatformImpl;
 import net.raphimc.viabedrock.api.BedrockProtocolVersion;
 import net.raphimc.viabedrock.netty.BatchLengthCodec;
 import net.raphimc.viabedrock.netty.DisconnectHandler;
@@ -317,10 +317,10 @@ public final class ProtocolTranslator {
                     commandHandler,
                     new ViaVersionPlatformLoader(),
                     () -> {
-                        new ViaBackwardsPlatformImpl();
+                        new ViaVersionViaBackwardsPlatform();
                         new ViaVersionViaLegacyPlatform();
                         new ViaAprilFoolsPlatformImpl();
-                        new ViaBedrockPlatformImpl();
+                        new ViaVersionViaBedrockPlatform();
                     }
             );
             ProtocolVersion.register(AUTO_DETECT_PROTOCOL);

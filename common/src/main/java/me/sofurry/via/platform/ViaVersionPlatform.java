@@ -14,7 +14,6 @@ package me.sofurry.via.platform;
 import me.sofurry.via.api.ViaVersionBase;
 import me.sofurry.via.protocoltranslator.impl.command.ViaVersionCommandHandler;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -46,10 +45,6 @@ public final class ViaVersionPlatform {
     }
 
     public interface Provider {
-
-        default Path getConfigDirectory() {
-            return Path.of("config");
-        }
 
         default String getVersion() {
             return DEFAULT_VERSION;
