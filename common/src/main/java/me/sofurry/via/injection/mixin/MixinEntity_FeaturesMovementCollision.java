@@ -1,6 +1,9 @@
 package me.sofurry.via.injection.mixin;
 
 import com.google.common.collect.ImmutableList;
+import com.llamalad7.mixinextras.expression.Definition;
+import com.llamalad7.mixinextras.expression.Expression;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
@@ -52,9 +55,6 @@ public abstract class MixinEntity_FeaturesMovementCollision {
     public abstract Vec3 getDeltaMovement();
 
     @Shadow
-    protected abstract double getEffectiveGravity();
-
-    @Shadow
     public boolean verticalCollision;
 
     @Redirect(method = "move", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;horizontalCollision:Z", ordinal = 2, opcode = Opcodes.GETFIELD))
@@ -67,12 +67,15 @@ public abstract class MixinEntity_FeaturesMovementCollision {
         return instance.verticalCollisionBelow || ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1);
     }
 
-    @Redirect(method = {"restituteMovementAfterCollisions(Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V", "restituteMovementAfterCollisions(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V"}, at = @At(value = "FIELD", target = "Lnet/minecraft/world/phys/Vec3;y:D", ordinal = 0))
-    private double fixGravityCheck(Vec3 currentMovement) {
+    @Definition(id = "y", field = "Lnet/minecraft/world/phys/Vec3;y:D")
+    @Definition(id = "currentMovement", local = @Local(type = Vec3.class, name = "currentMovement"))
+    @Expression("-currentMovement.y < ?")
+    @ModifyExpressionValue(method = {"restituteMovementAfterCollisions(Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V", "restituteMovementAfterCollisions(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V"}, at = @At("MIXINEXTRAS:EXPRESSION"))
+    private boolean fixGravityCheck(boolean original, @Local(name = "currentMovement") Vec3 currentMovement) {
         if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1)) {
-            return -currentMovement.y - this.getEffectiveGravity();
+            return !(currentMovement.y < 0.0);
         } else {
-            return currentMovement.y;
+            return original;
         }
     }
 
