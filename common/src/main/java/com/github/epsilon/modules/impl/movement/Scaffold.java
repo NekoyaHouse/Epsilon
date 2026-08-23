@@ -5,7 +5,10 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.*;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.PacketEvent;
+import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.managers.rotation.RotationManager;
@@ -37,7 +40,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -218,13 +220,6 @@ public class Scaffold extends Module {
         if (shouldSwapBack) {
             InvUtils.swapBack();
             shouldSwapBack = false;
-        }
-    }
-
-    @EventHandler
-    private void onMousePress(MousePressEvent event) {
-        if (mc.gui.screen() == null && (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1 || event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2)) {
-            event.cancel();
         }
     }
 

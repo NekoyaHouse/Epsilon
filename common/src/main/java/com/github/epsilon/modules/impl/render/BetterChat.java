@@ -37,7 +37,7 @@ public class BetterChat extends Module {
     private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 8.0, 1.0, 20.0, 0.5);
     private final BoolSetting dropShadow = boolSetting("Drop Shadow", true);
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 24.0, 1.0, dropShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 135), dropShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 110), dropShadow::getValue);
 
     private static final float CHAT_BOTTOM_OFFSET = 40.0f;
     private static final float CHAT_HORIZONTAL_PADDING = 4.0f;
