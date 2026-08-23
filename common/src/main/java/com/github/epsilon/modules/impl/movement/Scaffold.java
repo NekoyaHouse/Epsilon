@@ -29,11 +29,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -163,7 +165,7 @@ public class Scaffold extends Module {
             Blocks.FLOWER_POT,
             Blocks.SCAFFOLDING
     ));
-    private final BoolSetting toggleOnTeleport = boolSetting("Toggle On Teleport", true);
+    private final BoolSetting toggleOnTeleport = boolSetting("Toggle On Teleport", false);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
@@ -198,6 +200,11 @@ public class Scaffold extends Module {
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
     private boolean emergencyPlacementActive;
+    private float lastPlacedYawDelta = Float.NaN;
+    private float serverYaw;
+    private float lastSendYawDelta;
+    private boolean rotationSent;
+    private boolean pearlUsePacketSent;
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
@@ -211,12 +218,18 @@ public class Scaffold extends Module {
         blockResult = null;
         shouldSwapBack = false;
         emergencyPlacementActive = false;
+        lastPlacedYawDelta = Float.NaN;
+        serverYaw = RotationManager.INSTANCE.getLastRotation().getYaw();
+        lastSendYawDelta = Float.NaN;
+        rotationSent = false;
+        pearlUsePacketSent = false;
     }
 
     @Override
     protected void onDisable() {
         yLevel = 0;
         emergencyPlacementActive = false;
+        pearlUsePacketSent = false;
         if (shouldSwapBack) {
             InvUtils.swapBack();
             shouldSwapBack = false;
@@ -259,6 +272,7 @@ public class Scaffold extends Module {
             Rot2f rotation = getRotation(blockPos, direction);
             RotationManager.INSTANCE.rotations = rotation;
             RotationManager.INSTANCE.setActive(true);
+
             mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
 
             swap();
@@ -282,7 +296,6 @@ public class Scaffold extends Module {
             }
 
             swapBack();
-            //onPlayerTick(event);
             return;
         } else {
             rotateCount = 0;
@@ -308,9 +321,25 @@ public class Scaffold extends Module {
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
-        if (!nullCheck() && toggleOnTeleport.getValue() && event.getPacket() instanceof ClientboundPlayerPositionPacket) {
+        if (!nullCheck() && toggleOnTeleport.getValue() && pearlUsePacketSent && event.getPacket() instanceof ClientboundPlayerPositionPacket) {
+            pearlUsePacketSent = false;
             NotificationManager.INSTANCE.error(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT.getTranslatedName());
             setEnabled(false);
+        }
+    }
+
+    @EventHandler
+    private void onPacketSend(PacketEvent.Send event) {
+        if (event.getPacket() instanceof ServerboundUseItemPacket packet) {
+            ItemStack usedStack = mc.player.getItemInHand(packet.getHand());
+            if (usedStack.is(Items.ENDER_PEARL) || usedStack.isEmpty() && mc.player.getCooldowns().isOnCooldown(Items.ENDER_PEARL.getDefaultInstance())) {
+                pearlUsePacketSent = true;
+            }
+        } else if (event.getPacket() instanceof ServerboundMovePlayerPacket packet && packet.hasRotation()) {
+            float yaw = packet.getYRot(serverYaw);
+            lastSendYawDelta = Math.abs(yaw - serverYaw);
+            serverYaw = yaw;
+            rotationSent = true;
         }
     }
 
@@ -388,6 +417,10 @@ public class Scaffold extends Module {
             return;
         }
 
+        if (rotationSent && !Float.isNaN(lastPlacedYawDelta) && lastSendYawDelta > 2.0f && Math.abs(lastSendYawDelta - lastPlacedYawDelta) < 0.0001f) {
+            return;
+        }
+
         swap();
 
         InteractionHand hand = blockResult.getHand();
@@ -395,6 +428,11 @@ public class Scaffold extends Module {
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
 
         if (result.consumesAction()) {
+            if (rotationSent) {
+                lastPlacedYawDelta = lastSendYawDelta;
+                rotationSent = false;
+            }
+
             if (swingHand.getValue()) {
                 mc.player.swing(hand);
             } else {
@@ -556,7 +594,10 @@ public class Scaffold extends Module {
             }
         }
 
-        return calculated;
+        return new Rot2f(
+                calculated.getYaw() - MathUtils.getRandom(0.0001F, 0.0003F),
+                Mth.clamp(calculated.getPitch() - MathUtils.getRandom(0.001F, 0.003F), -90.0F, 90.0F)
+        );
     }
 
     private boolean onAir() {
