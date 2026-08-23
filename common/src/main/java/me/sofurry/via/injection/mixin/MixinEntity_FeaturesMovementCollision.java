@@ -22,10 +22,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
@@ -70,8 +67,22 @@ public abstract class MixinEntity_FeaturesMovementCollision {
     @Definition(id = "y", field = "Lnet/minecraft/world/phys/Vec3;y:D")
     @Definition(id = "currentMovement", local = @Local(type = Vec3.class, name = "currentMovement"))
     @Expression("-currentMovement.y < ?")
-    @ModifyExpressionValue(method = {"restituteMovementAfterCollisions(Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V", "restituteMovementAfterCollisions(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V"}, at = @At("MIXINEXTRAS:EXPRESSION"))
-    private boolean fixGravityCheck(boolean original, @Local(name = "currentMovement") Vec3 currentMovement) {
+    @Group(name = "viaVersion$fixGravityCheck", min = 1, max = 1)
+    @ModifyExpressionValue(method = "restituteMovementAfterCollisions(Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V", at = @At("MIXINEXTRAS:EXPRESSION"), require = 0)
+    private boolean fixVanillaGravityCheck(boolean original, @Local(name = "currentMovement") Vec3 currentMovement) {
+        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1)) {
+            return !(currentMovement.y < 0.0);
+        } else {
+            return original;
+        }
+    }
+
+    @Definition(id = "y", field = "Lnet/minecraft/world/phys/Vec3;y:D")
+    @Definition(id = "currentMovement", local = @Local(type = Vec3.class, name = "currentMovement"))
+    @Expression("-currentMovement.y < ?")
+    @Group(name = "viaVersion$fixGravityCheck", min = 1, max = 1)
+    @ModifyExpressionValue(method = "restituteMovementAfterCollisions(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;ZZLnet/minecraft/world/phys/Vec3;)V", at = @At("MIXINEXTRAS:EXPRESSION"), require = 0)
+    private boolean fixNeoForgeGravityCheck(boolean original, @Local(name = "currentMovement") Vec3 currentMovement) {
         if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1)) {
             return !(currentMovement.y < 0.0);
         } else {

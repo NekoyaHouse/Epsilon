@@ -5,6 +5,7 @@ import com.github.epsilon.gui.lib.UiTheme;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
+import net.minecraft.util.Mth;
 
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  */
 public class UiScrollBar {
 
-    public static final float WIDTH = 2.0f;
+    public static final float WIDTH = 3.5f;
     public static final float RIGHT_INSET = 2.5f;
     public static final float MIN_THUMB_HEIGHT = 10.0f;
     public static final float HIT_WIDTH = 10.0f;
@@ -36,8 +37,7 @@ public class UiScrollBar {
         return dragging;
     }
 
-    public void draw(UiTree.Scope scope, UiRect viewport, float scroll, float maxScroll,
-                     float contentHeight, double mouseX, double mouseY) {
+    public void draw(UiTree.Scope scope, UiRect viewport, float scroll, float maxScroll, float contentHeight, double mouseX, double mouseY) {
         Geometry geometry = computeGeometry(viewport, scroll, maxScroll, contentHeight);
         if (geometry == null) {
             hoverAnimation.run(0.0f);
@@ -102,7 +102,7 @@ public class UiScrollBar {
         if (trackHeight <= 0.5f) {
             return null;
         }
-        float thumbHeight = Math.min(trackHeight, Math.max(MIN_THUMB_HEIGHT, viewport.height() / contentHeight * trackHeight));
+        float thumbHeight = Mth.clamp(viewport.height() / contentHeight * trackHeight, MIN_THUMB_HEIGHT, trackHeight);
         float thumbTravel = trackHeight - thumbHeight;
         float scrollRatio = maxScroll > 0.0f ? scroll / maxScroll : 0.0f;
         float thumbY = viewport.y() + thumbTravel * Math.clamp(scrollRatio, 0.0f, 1.0f);
@@ -127,12 +127,13 @@ public class UiScrollBar {
     private static void draw(UiTree.Scope scope, Geometry geometry, float hoverProgress, UiTheme theme) {
         float thumbWidth = geometry.thumbWidth() + (HOVER_WIDTH - geometry.thumbWidth()) * hoverProgress;
         float thumbX = geometry.thumbX() - (thumbWidth - geometry.thumbWidth()) * 0.5f;
-        scope.roundRect(thumbX, geometry.thumbY(), thumbWidth, geometry.thumbHeight(),
-                thumbWidth * 0.5f, theme.scrollBar(hoverProgress));
+        scope.roundRect(thumbX, geometry.thumbY(), thumbWidth, geometry.thumbHeight(), thumbWidth * 0.5f, theme.scrollBar(hoverProgress));
     }
 
-    public record Geometry(float thumbX, float thumbY, float thumbWidth, float thumbHeight,
-                           float trackX, float trackY, float trackWidth, float trackHeight) {
+    public record Geometry(
+            float thumbX, float thumbY, float thumbWidth, float thumbHeight, float trackX, float trackY,
+            float trackWidth, float trackHeight
+    ) {
         public boolean thumbContains(double mouseX, double mouseY) {
             return mouseX >= trackX && mouseX <= trackX + trackWidth && mouseY >= thumbY && mouseY <= thumbY + thumbHeight;
         }
