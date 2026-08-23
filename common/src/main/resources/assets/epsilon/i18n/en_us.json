@@ -779,18 +779,7 @@
         "mace": "Mace",
         "trident": "Trident"
       },
-      "criticals": {
-        "_value": "Criticals",
-        "packet mode": {
-          "_value": "Packet Mode",
-          "pure": "Pure",
-          "legit": "Legit",
-          "new": "New"
-        },
-        "groundonly": "Ground Only",
-        "show crit particles": "Show Crit Particles",
-        "debug damage": "Debug Damage"
-      },
+      "criticals": "Criticals",
       "zealot crystal+": {
         "_value": "Zealot Crystal+",
         "general": "General",
@@ -1012,7 +1001,7 @@
         "_value": "Kill Aura",
         "pause on eat": "Pause On Eat",
         "pause on scaffold": "Pause On Scaffold",
-        "only crosshair": "Only Crosshair",
+        "hit select": "Hit Select",
         "mode": {
           "_value": "Mode",
           "onepointeight": "1.8",
@@ -1635,13 +1624,7 @@
         "color": "Color"
       },
       "jump reset": "Jump Reset",
-      "keep sprint": {
-        "_value": "Keep Sprint",
-        "slowdown": "Slowdown",
-        "ground only": "Ground Only",
-        "prediction": "Prediction",
-        "reach only": "Reach Only"
-      },
+      "keep sprint": "Keep Sprint",
       "movement fix": "Movement Fix",
       "no slowdown": {
         "_value": "No Slowdown",

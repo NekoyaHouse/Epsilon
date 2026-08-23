@@ -779,18 +779,7 @@
         "mace": "仅在重锤上交换",
         "trident": "仅在三叉戟上交换"
       },
-      "criticals": {
-        "_value": "暴击",
-        "packet mode": {
-          "_value": "封包模式",
-          "pure": "纯粹",
-          "legit": "合法",
-          "new": "New"
-        },
-        "groundonly": "仅地面",
-        "show crit particles": "显示暴击粒子",
-        "debug damage": "调试伤害"
-      },
+      "criticals": "刀暴",
       "zealot crystal+": {
         "_value": "狂暴水晶+",
         "general": "常规",
@@ -1012,7 +1001,7 @@
         "_value": "杀戮光环",
         "pause on eat": "进食时暂停",
         "pause on scaffold": "搭路时暂停",
-        "only crosshair": "仅准星目标",
+        "hit select": "攻击筛选",
         "mode": {
           "_value": "模式",
           "onepointeight": "1.8",
@@ -1635,13 +1624,7 @@
         "color": "颜色"
       },
       "jump reset": "跳跃重置",
-      "keep sprint": {
-        "_value": "保持疾跑",
-        "slowdown": "减速",
-        "ground only": "仅地面",
-        "prediction": "预测",
-        "reach only": "仅攻击范围"
-      },
+      "keep sprint": "保持疾跑",
       "movement fix": "移动修复",
       "no slowdown": {
         "_value": "无减速",

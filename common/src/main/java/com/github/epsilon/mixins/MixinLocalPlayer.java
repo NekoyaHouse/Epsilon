@@ -21,6 +21,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static com.github.epsilon.Constants.mc;
+
 @Mixin(LocalPlayer.class)
 public class MixinLocalPlayer extends AbstractClientPlayer {
 
@@ -29,6 +31,9 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Unique
     private SendPositionEvent epsilon$sendPositionEvent;
+
+    @Unique
+    private boolean epsilon$dispatchPositionEvents;
 
     protected MixinLocalPlayer(ClientLevel level, GameProfile gameProfile) {
         super(level, gameProfile);
@@ -59,16 +64,26 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        epsilon$sendPositionEvent = EventBus.INSTANCE.post(new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()));
+        SendPositionEvent event = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround());
+        epsilon$dispatchPositionEvents = player == mc.player;
+        epsilon$sendPositionEvent = epsilon$dispatchPositionEvents ? EventBus.INSTANCE.post(event) : event;
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
-            EventBus.INSTANCE.post(new AfterSendPositionEvent());
+            boolean dispatchAfter = epsilon$dispatchPositionEvents && player == mc.player;
+            epsilon$dispatchPositionEvents = false;
+            if (dispatchAfter) {
+                EventBus.INSTANCE.post(new AfterSendPositionEvent());
+            }
         }
     }
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
     private void onPostSendPosition(CallbackInfo ci) {
-        EventBus.INSTANCE.post(new AfterSendPositionEvent());
+        boolean dispatchAfter = epsilon$dispatchPositionEvents && (LocalPlayer) (Object) this == mc.player;
+        epsilon$dispatchPositionEvents = false;
+        if (dispatchAfter) {
+            EventBus.INSTANCE.post(new AfterSendPositionEvent());
+        }
     }
 
     @Inject(method = "swing", at = @At("HEAD"), cancellable = true)
