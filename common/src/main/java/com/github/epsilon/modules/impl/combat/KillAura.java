@@ -78,7 +78,7 @@ public class KillAura extends Module {
 
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
-    private final BoolSetting onlyCrosshair = boolSetting("Only Crosshair", true);
+    private final BoolSetting hitSelect = boolSetting("Hit Select", true);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
     private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));
@@ -213,8 +213,8 @@ public class KillAura extends Module {
         RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target, rotationPriority.getValue());
 
         HitResult hitResult = RotationManager.INSTANCE.getHitResult();
-        if (onlyCrosshair.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
-            if (player.hurtTime <= 1 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
+        if (hitSelect.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
+            if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
@@ -259,7 +259,7 @@ public class KillAura extends Module {
     private void onRender3D(Render3DEvent event) {
         if (target != null && Velocity.INSTANCE.attackQueue <= 0) {
             HitResult hitResult = RotationManager.INSTANCE.getHitResult();
-            if (!onlyCrosshair.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
+            if (!hitSelect.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
