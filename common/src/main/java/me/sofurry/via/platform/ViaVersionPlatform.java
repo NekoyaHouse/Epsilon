@@ -21,7 +21,7 @@ import java.util.Map;
  * Small loader boundary used by the embedded ViaVersion implementation.
  * Minecraft-facing code stays in common while loader APIs are supplied here.
  */
-public final class ViaVersionPlatform {
+public class ViaVersionPlatform {
 
     public static final String DEFAULT_VERSION = "4.6.2-SNAPSHOT";
 

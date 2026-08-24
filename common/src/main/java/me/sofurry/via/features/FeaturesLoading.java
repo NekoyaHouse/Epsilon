@@ -18,7 +18,7 @@ import me.sofurry.via.features.world.footstep_particle.FootStepParticle1_12_2;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 
-public final class FeaturesLoading {
+public class FeaturesLoading {
 
     // Initialize various data classes required for feature mixins
     public static void init() {

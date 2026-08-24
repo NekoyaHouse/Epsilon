@@ -16,7 +16,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 
-public final class EnchantmentAttributesEmulation1_20_6 {
+public class EnchantmentAttributesEmulation1_20_6 {
 
     public static void init() {
         ViaVersionClientEvents.START_LEVEL_TICK.register(world -> {

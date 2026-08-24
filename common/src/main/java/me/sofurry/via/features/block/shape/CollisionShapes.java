@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class CollisionShapes {
+public class CollisionShapes {
 
     public static void reloadBlockShapes() {
         for (Block block : BuiltInRegistries.BLOCK) {

@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import me.sofurry.via.util.ChatUtil;
 import net.minecraft.ChatFormatting;
 
-public final class ViaVersionDecoder extends ViaDecodeHandler {
+public class ViaVersionDecoder extends ViaDecodeHandler {
 
     public ViaVersionDecoder(UserConnection connection) {
         super(connection);

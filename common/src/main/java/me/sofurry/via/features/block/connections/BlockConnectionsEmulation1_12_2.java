@@ -24,7 +24,7 @@ import net.raphimc.viabedrock.api.BedrockProtocolVersion;
  * - wish it was as instant visually like in older or equal 1.12.2, there is a noticeable delay before blocks connect when placed (not on join)
  *   - Probably due to the update logic being handled in packet-related stuff instead of something native
  */
-public final class BlockConnectionsEmulation1_12_2 {
+public class BlockConnectionsEmulation1_12_2 {
 
     private static final int UPDATE_FLAGS = 18;
     private static final Object2ObjectOpenHashMap<Class<? extends Block>, IBlockStateHandler> connectionHandlers = new Object2ObjectOpenHashMap<>();

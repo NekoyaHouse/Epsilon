@@ -10,7 +10,7 @@ import net.raphimc.vialegacy.api.LegacyProtocolVersion;
 import net.raphimc.vialegacy.protocol.classic.c0_30cpetoc0_28_30.data.ClassicProtocolExtension;
 import net.raphimc.vialegacy.protocol.classic.c0_30cpetoc0_28_30.storage.ExtensionProtocolMetadataStorage;
 
-public final class MaxChatLength {
+public class MaxChatLength {
 
     public static final int MAX_CHAT_LENGTH_LATEST = 256;
 

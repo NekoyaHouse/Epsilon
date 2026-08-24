@@ -12,7 +12,7 @@ import com.viaversion.viaversion.libs.gson.JsonElement;
 import com.viaversion.viaversion.protocols.v1_13_2to1_14.packet.ClientboundPackets1_14;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 
-public final class TextComponentTranslator {
+public class TextComponentTranslator {
 
     private static final UserConnection DUMMY_USER_CONNECTION = ProtocolTranslator.createDummyUserConnection(ProtocolTranslator.NATIVE_VERSION, ProtocolVersion.v1_14);
 

@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.WallSide;
 
-public final class WallStateHandler implements IBlockStateHandler {
+public class WallStateHandler implements IBlockStateHandler {
 
     @Override
     public BlockState connect(final BlockState blockState, final LevelReader levelReader, final BlockPos blockPos) {

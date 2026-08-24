@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
-public final class ShulkerBoxColoringRecipe extends CustomRecipe {
+public class ShulkerBoxColoringRecipe extends CustomRecipe {
 
     public static final RecipeSerializer<ShulkerBoxColoringRecipe> SERIALIZER = new RecipeSerializer<>(MapCodec.unit(new ShulkerBoxColoringRecipe()), StreamCodec.unit(new ShulkerBoxColoringRecipe()));
 

@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import net.minecraft.world.entity.LivingEntity;
 
-public final class WolfHealthTracker1_14_4 implements StorableObject {
+public class WolfHealthTracker1_14_4 implements StorableObject {
 
     private final Int2FloatMap healthDataMap = new Int2FloatOpenHashMap();
 

@@ -24,7 +24,7 @@ import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ViaVersionDebugHudEntry implements DebugScreenEntry {
+public class ViaVersionDebugHudEntry implements DebugScreenEntry {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("viafabricplus", "viafabricplus");
 

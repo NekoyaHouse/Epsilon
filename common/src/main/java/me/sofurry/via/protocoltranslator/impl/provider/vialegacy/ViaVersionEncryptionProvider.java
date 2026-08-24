@@ -5,7 +5,7 @@ import me.sofurry.via.injection.access.core.IConnection;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import net.raphimc.vialegacy.protocol.release.r1_6_4tor1_7_2_5.provider.EncryptionProvider;
 
-public final class ViaVersionEncryptionProvider extends EncryptionProvider {
+public class ViaVersionEncryptionProvider extends EncryptionProvider {
 
     @Override
     public void enableDecryption(UserConnection connection) {

@@ -17,7 +17,7 @@ import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public final class PerServerVersionScreen extends ViaVersionScreen {
+public class PerServerVersionScreen extends ViaVersionScreen {
 
     private final Consumer<ProtocolVersion> selectionConsumer;
     private final Supplier<ProtocolVersion> selectionSupplier;
@@ -39,7 +39,7 @@ public final class PerServerVersionScreen extends ViaVersionScreen {
         this.addRenderableWidget(new SlotList(this.minecraft, width, height, 3 + 3 /* start offset */ + (font.lineHeight + 2) * 3 /* title is 2 */, -5, font.lineHeight + 4));
     }
 
-    public final class SlotList extends ViaVersionList {
+    public class SlotList extends ViaVersionList {
 
         public SlotList(Minecraft minecraftClient, int width, int height, int top, int bottom, int entryHeight) {
             super(minecraftClient, width, height, top, bottom, entryHeight);
@@ -57,7 +57,7 @@ public final class PerServerVersionScreen extends ViaVersionScreen {
         }
     }
 
-    public final class ResetSlot extends SharedSlot {
+    public class ResetSlot extends SharedSlot {
 
         @Override
         public Component getNarration() {
@@ -76,7 +76,7 @@ public final class PerServerVersionScreen extends ViaVersionScreen {
         }
     }
 
-    public final class ProtocolSlot extends SharedSlot {
+    public class ProtocolSlot extends SharedSlot {
 
         private final ProtocolVersion protocolVersion;
 

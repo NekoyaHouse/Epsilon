@@ -6,7 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
-public final class ItemUtil {
+public class ItemUtil {
 
     // ViaVersion's 1.20.5 -> 1.20.3 protocol will save the original item nbt inside custom data to later restore
     // it for creative clients, we can use this to get nbt stored in older protocols as well

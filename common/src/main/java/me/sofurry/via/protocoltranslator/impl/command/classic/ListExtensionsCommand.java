@@ -7,7 +7,7 @@ import net.minecraft.ChatFormatting;
 import net.raphimc.vialegacy.api.LegacyProtocolVersion;
 import net.raphimc.vialegacy.protocol.classic.c0_30cpetoc0_28_30.storage.ExtensionProtocolMetadataStorage;
 
-public final class ListExtensionsCommand implements ViaVersionSubCommand {
+public class ListExtensionsCommand implements ViaVersionSubCommand {
 
     @Override
     public String name() {

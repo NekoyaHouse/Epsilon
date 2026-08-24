@@ -16,7 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 
-public final class AddBannerPatternRecipe extends CustomRecipe {
+public class AddBannerPatternRecipe extends CustomRecipe {
 
     public static final RecipeSerializer<AddBannerPatternRecipe> SERIALIZER = new RecipeSerializer<>(MapCodec.unit(new AddBannerPatternRecipe()), StreamCodec.unit(new AddBannerPatternRecipe()));
 

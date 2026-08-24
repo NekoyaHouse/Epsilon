@@ -6,7 +6,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.Identifier;
 
-public final class DataCustomPayloadStreamCodec<B extends FriendlyByteBuf> implements StreamCodec<B, ClientboundCustomPayloadPacket> {
+public class DataCustomPayloadStreamCodec<B extends FriendlyByteBuf> implements StreamCodec<B, ClientboundCustomPayloadPacket> {
 
     private final StreamCodec<B, ClientboundCustomPayloadPacket> original;
 

@@ -11,7 +11,7 @@ import net.raphimc.viabedrock.protocol.provider.NettyPipelineProvider;
 
 import javax.crypto.SecretKey;
 
-public final class ViaVersionNettyPipelineProvider extends NettyPipelineProvider {
+public class ViaVersionNettyPipelineProvider extends NettyPipelineProvider {
 
     @Override
     public void enableCompression(UserConnection user, PacketCompressionAlgorithm preferredCompressionAlgorithm, int threshold) {

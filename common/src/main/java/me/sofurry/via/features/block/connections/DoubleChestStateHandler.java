@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
-public final class DoubleChestStateHandler implements IBlockStateHandler {
+public class DoubleChestStateHandler implements IBlockStateHandler {
 
     @Override
     public BlockState connect(final BlockState blockState, final LevelReader levelReader, final BlockPos blockPos) {

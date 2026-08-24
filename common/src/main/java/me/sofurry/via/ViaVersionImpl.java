@@ -39,7 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-public final class ViaVersionImpl implements ViaVersionBase {
+public class ViaVersionImpl implements ViaVersionBase {
 
     public static final ViaVersionEvent<LoadingCycleCallback> LOADING_CYCLE = new ViaVersionEvent<>(listeners -> state -> {
         for (final LoadingCycleCallback listener : listeners) {

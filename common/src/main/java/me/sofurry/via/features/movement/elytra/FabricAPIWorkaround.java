@@ -4,7 +4,7 @@ import net.lenni0451.reflect.stream.RStream;
 
 import java.util.Set;
 
-public final class FabricAPIWorkaround {
+public class FabricAPIWorkaround {
 
     public static void init() {
         // Force unload some FabricAPI mixins because FabricAPI overwrites some of the elytra code

@@ -6,7 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.raphimc.vialegacy.api.LegacyProtocolVersion;
 import net.raphimc.vialegacy.protocol.alpha.a1_0_16_2toa1_0_17_1_0_17_4.storage.TimeLockStorage;
 
-public final class SetTimeCommand implements ViaVersionSubCommand {
+public class SetTimeCommand implements ViaVersionSubCommand {
 
     @Override
     public String name() {

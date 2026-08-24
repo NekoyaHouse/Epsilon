@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public final class LegacyKeyPairResponse {
+public class LegacyKeyPairResponse {
 
     private static final Map<KeyPairResponse, byte[]> LEGACY_SIGNATURES = Collections.synchronizedMap(new WeakHashMap<>());
 

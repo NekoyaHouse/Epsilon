@@ -2,7 +2,7 @@ package me.sofurry.via.util;
 
 import com.github.epsilon.Constants;
 
-public final class NotificationUtil {
+public class NotificationUtil {
 
     public static void warnIncompatibilityPacket(final String version, final String packet, final String methodName) {
         Constants.LOGGER.error("===========================================");

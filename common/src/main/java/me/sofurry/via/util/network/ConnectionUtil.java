@@ -10,7 +10,7 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.raphimc.viabedrock.api.BedrockProtocolVersion;
 
-public final class ConnectionUtil {
+public class ConnectionUtil {
 
     public static void connect(final String address, final ProtocolVersion version) {
         connect(address, address, version);

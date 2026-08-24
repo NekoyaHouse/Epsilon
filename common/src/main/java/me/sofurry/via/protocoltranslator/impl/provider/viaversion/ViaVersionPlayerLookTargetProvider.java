@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 
-public final class ViaVersionPlayerLookTargetProvider extends PlayerLookTargetProvider {
+public class ViaVersionPlayerLookTargetProvider extends PlayerLookTargetProvider {
 
     @Override
     public BlockPosition getPlayerLookTarget(UserConnection info) {

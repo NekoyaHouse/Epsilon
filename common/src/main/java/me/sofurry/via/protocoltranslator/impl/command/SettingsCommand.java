@@ -3,7 +3,7 @@ package me.sofurry.via.protocoltranslator.impl.command;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.viaversion.viaversion.api.command.ViaCommandSender;
 
-public final class SettingsCommand implements ViaVersionSubCommand {
+public class SettingsCommand implements ViaVersionSubCommand {
 
     @Override
     public String name() {

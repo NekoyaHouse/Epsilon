@@ -4,7 +4,7 @@ import dev.kastle.netty.channel.nethernet.config.NetherNetAddress;
 
 import java.net.InetSocketAddress;
 
-public final class NetherNetInetSocketAddress extends InetSocketAddress {
+public class NetherNetInetSocketAddress extends InetSocketAddress {
 
     private final NetherNetAddress netherNetAddress;
 

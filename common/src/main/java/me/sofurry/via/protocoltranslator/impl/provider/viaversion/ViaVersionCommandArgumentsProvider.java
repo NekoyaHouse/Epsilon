@@ -9,7 +9,7 @@ import net.minecraft.network.chat.SignableCommand;
 import java.util.Collections;
 import java.util.List;
 
-public final class ViaVersionCommandArgumentsProvider extends SignableCommandArgumentsProvider {
+public class ViaVersionCommandArgumentsProvider extends SignableCommandArgumentsProvider {
 
     @Override
     public List<Pair<String, String>> getSignableArguments(String command) {

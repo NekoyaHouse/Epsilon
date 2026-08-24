@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class ViaVersionGameProfileFetcher extends GameProfileFetcher {
+public class ViaVersionGameProfileFetcher extends GameProfileFetcher {
 
     private static final HttpAuthenticationService AUTHENTICATION_SERVICE = new YggdrasilAuthenticationService(Proxy.NO_PROXY);
     private static final MinecraftSessionService SESSION_SERVICE = AUTHENTICATION_SERVICE.createMinecraftSessionService();

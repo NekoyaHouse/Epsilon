@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 /**
  * Model for boats in 1.8 and lower.
  */
-public final class BoatModel1_8 extends EntityModel<BoatRenderState> {
+public class BoatModel1_8 extends EntityModel<BoatRenderState> {
 
     public static final ModelLayerLocation MODEL_LAYER = new ModelLayerLocation(Identifier.fromNamespaceAndPath("viafabricplus", "boat1_8"), "main");
 

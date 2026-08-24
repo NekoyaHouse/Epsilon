@@ -2,7 +2,7 @@ package me.sofurry.via.visuals.features.force_unicode_font;
 
 import java.util.Map;
 
-public final class LanguageUtil {
+public class LanguageUtil {
 
     private static final int NON_ASCII_THRESHOLD = 256;
 

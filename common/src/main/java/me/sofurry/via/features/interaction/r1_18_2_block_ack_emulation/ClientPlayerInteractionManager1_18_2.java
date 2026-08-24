@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
 
-public final class ClientPlayerInteractionManager1_18_2 {
+public class ClientPlayerInteractionManager1_18_2 {
 
     private final Object2ObjectLinkedOpenHashMap<Pair<BlockPos, ServerboundPlayerActionPacket.Action>, Pair<Vec3, Vec2>> unAckedActions = new Object2ObjectLinkedOpenHashMap<>();
 

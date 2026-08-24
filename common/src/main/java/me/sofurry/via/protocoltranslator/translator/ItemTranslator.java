@@ -17,7 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 
-public final class ItemTranslator {
+public class ItemTranslator {
 
     public static Item mcToVia(final ItemStack stack, final ProtocolVersion targetVersion) {
         final UserConnection connection = ProtocolTranslator.createDummyUserConnection(ProtocolTranslator.NATIVE_VERSION, targetVersion);

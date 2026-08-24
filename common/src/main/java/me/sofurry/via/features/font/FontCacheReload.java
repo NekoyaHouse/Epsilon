@@ -3,7 +3,7 @@ package me.sofurry.via.features.font;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontSet;
 
-public final class FontCacheReload {
+public class FontCacheReload {
 
     public static void reload() {
         if (Minecraft.getInstance() == null) {

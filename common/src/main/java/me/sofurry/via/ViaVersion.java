@@ -5,7 +5,7 @@ import me.sofurry.via.api.ViaVersionBase;
 /**
  * Holder class for the {@link ViaVersionBase} implementation
  */
-public final class ViaVersion {
+public class ViaVersion {
 
     private static ViaVersionBase impl;
 

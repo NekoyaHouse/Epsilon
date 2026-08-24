@@ -5,7 +5,7 @@ import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 
 import java.net.InetSocketAddress;
 
-public final class NetherNetResolvedServerAddress implements ResolvedServerAddress {
+public class NetherNetResolvedServerAddress implements ResolvedServerAddress {
 
     private final NetherNetAddress netherNetAddress;
 

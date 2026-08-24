@@ -2,7 +2,7 @@ package me.sofurry.via.features.block.interaction;
 
 import net.minecraft.world.level.block.*;
 
-public final class Block1_14 {
+public class Block1_14 {
 
     public static boolean isExceptBlockForAttachWithPiston(final Block block) {
         return block instanceof ShulkerBoxBlock

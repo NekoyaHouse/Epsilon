@@ -7,7 +7,7 @@ import net.raphimc.viabedrock.platform.ViaBedrockPlatform;
 import java.io.File;
 import java.util.logging.Logger;
 
-public final class ViaVersionViaBedrockPlatform implements ViaBedrockPlatform {
+public class ViaVersionViaBedrockPlatform implements ViaBedrockPlatform {
 
     private final Logger logger;
 

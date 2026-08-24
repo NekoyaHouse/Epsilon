@@ -7,7 +7,7 @@ import com.viaversion.viaversion.api.Via;
 import java.io.File;
 import java.util.logging.Logger;
 
-public final class ViaVersionViaBackwardsPlatform implements ViaBackwardsPlatform {
+public class ViaVersionViaBackwardsPlatform implements ViaBackwardsPlatform {
 
     private final Logger logger;
 

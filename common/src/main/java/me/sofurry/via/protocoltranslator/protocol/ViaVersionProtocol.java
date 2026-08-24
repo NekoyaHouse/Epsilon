@@ -36,7 +36,7 @@ import java.util.TreeMap;
 
 import static com.viaversion.viaversion.util.ProtocolUtil.packetTypeMap;
 
-public final class ViaVersionProtocol extends AbstractProtocol<ClientboundPacket26_1, ClientboundPacket26_1, ServerboundPacket26_1, ServerboundPacket26_1> {
+public class ViaVersionProtocol extends AbstractProtocol<ClientboundPacket26_1, ClientboundPacket26_1, ServerboundPacket26_1, ServerboundPacket26_1> {
 
     public static final ViaVersionProtocol INSTANCE = new ViaVersionProtocol();
 

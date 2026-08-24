@@ -14,7 +14,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class ViaVersionCommandHandler extends ViaCommandHandler {
+public class ViaVersionCommandHandler extends ViaCommandHandler {
 
     public ViaVersionCommandHandler() {
         super(false);

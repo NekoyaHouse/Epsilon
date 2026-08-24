@@ -20,7 +20,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.joml.Quaternionf;
 
-public final class FootStepParticle1_12_2 extends SingleQuadParticle {
+public class FootStepParticle1_12_2 extends SingleQuadParticle {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("viafabricplus", "footstep");
     private static final Identifier SPRITE_ID = Identifier.fromNamespaceAndPath("viafabricplus", "footprint");

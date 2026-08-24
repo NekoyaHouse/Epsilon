@@ -24,7 +24,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.slf4j.Logger;
 
-public final class ItemPick1_21_3 {
+public class ItemPick1_21_3 {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 

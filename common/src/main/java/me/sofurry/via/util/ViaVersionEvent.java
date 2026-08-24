@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
-public final class ViaVersionEvent<T> {
+public class ViaVersionEvent<T> {
 
     private final CopyOnWriteArrayList<T> listeners = new CopyOnWriteArrayList<>();
     private final Function<List<T>, T> invokerFactory;

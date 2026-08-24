@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.GameType;
 import net.raphimc.vialegacy.api.LegacyProtocolVersion;
 
-public final class SignedCommands1_21_6 {
+public class SignedCommands1_21_6 {
 
     public static void sendGameMode(final GameType gameMode) {
         final String command;

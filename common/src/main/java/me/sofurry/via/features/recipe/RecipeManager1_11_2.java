@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public final class RecipeManager1_11_2 {
+public class RecipeManager1_11_2 {
 
     private final Multimap<RecipeType<?>, RecipeHolder<?>> recipesByType;
     private final Map<ResourceKey<Recipe<?>>, RecipeHolder<?>> recipesById;

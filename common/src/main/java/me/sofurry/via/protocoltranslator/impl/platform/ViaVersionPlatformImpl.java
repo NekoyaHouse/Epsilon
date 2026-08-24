@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-public final class ViaVersionPlatformImpl extends UserConnectionViaVersionPlatform {
+public class ViaVersionPlatformImpl extends UserConnectionViaVersionPlatform {
 
     public ViaVersionPlatformImpl(File dataFolder) {
         super(dataFolder);

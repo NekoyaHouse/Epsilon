@@ -2,7 +2,7 @@ package me.sofurry.via.features.interaction.replace_block_placement_logic;
 
 import net.minecraft.world.InteractionResult;
 
-public final class ActionResultException1_12_2 extends RuntimeException {
+public class ActionResultException1_12_2 extends RuntimeException {
 
     private final InteractionResult actionResult;
 

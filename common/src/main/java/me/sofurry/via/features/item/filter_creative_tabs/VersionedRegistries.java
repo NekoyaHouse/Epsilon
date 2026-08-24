@@ -35,7 +35,7 @@ import java.util.Objects;
 import static me.sofurry.via.features.classic.cpe_extension.CPEAdditions.EXTENDED_CLASSIC_ITEMS;
 import static net.raphimc.vialegacy.api.LegacyProtocolVersion.c0_30cpe;
 
-public final class VersionedRegistries {
+public class VersionedRegistries {
 
     public static final Reference2ObjectMap<ResourceKey<Enchantment>, ProtocolVersionRange> ENCHANTMENT_DIFF = new Reference2ObjectOpenHashMap<>();
     public static final Reference2ObjectMap<ResourceKey<BannerPattern>, ProtocolVersionRange> PATTERN_DIFF = new Reference2ObjectOpenHashMap<>();

@@ -20,7 +20,7 @@ import static com.viaversion.viaversion.api.protocol.version.ProtocolVersion.v1_
  * characters which the client doesn't know about and therefore can't render as placeholder for e.g. scoreboards, we have
  * to hide them because our client would render them as a different character.
  */
-public final class RenderableGlyphDiff {
+public class RenderableGlyphDiff {
 
     private static final Int2ObjectMap<ProtocolVersion> RENDERABLE_GLYPH_DIFF_LEGACY = new Int2ObjectOpenHashMap<>();
     private static final Int2ObjectMap<ProtocolVersion> RENDERABLE_GLYPH_DIFF = new Int2ObjectOpenHashMap<>();

@@ -38,7 +38,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class can be used to detect the protocol version of a server without connecting to it.
  */
-public final class ProtocolVersionDetector {
+public class ProtocolVersionDetector {
 
     private static final int TIMEOUT = 3_000;
     private static final Gson GSON = new Gson();

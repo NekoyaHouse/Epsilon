@@ -185,9 +185,12 @@ public class Trajectories extends Module {
             box = new AABB(point.x - depth, point.y - radius, point.z - radius, point.x + depth, point.y + radius, point.z + radius);
         }
 
-        if (impactFill.getValue()) scheduler.addFilledSide(box, impactFillColor.getValue().getRGB(), direction);
-        if (impactOutline.getValue())
+        if (impactFill.getValue()) {
+            scheduler.addFilledSide(box, impactFillColor.getValue().getRGB(), direction);
+        }
+        if (impactOutline.getValue()) {
             scheduler.addSideOutline(box, impactOutlineColor.getValue().getRGB(), width, direction);
+        }
     }
 
     private static List<Item> defaultItems() {

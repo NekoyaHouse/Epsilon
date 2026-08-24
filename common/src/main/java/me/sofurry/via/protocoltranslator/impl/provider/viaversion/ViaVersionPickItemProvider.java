@@ -5,7 +5,7 @@ import com.viaversion.viaversion.api.minecraft.BlockPosition;
 import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.provider.PickItemProvider;
 import me.sofurry.via.util.NotificationUtil;
 
-public final class ViaVersionPickItemProvider extends PickItemProvider {
+public class ViaVersionPickItemProvider extends PickItemProvider {
 
     @Override
     public void pickItemFromBlock(UserConnection connection, BlockPosition blockPosition, boolean includeData) {

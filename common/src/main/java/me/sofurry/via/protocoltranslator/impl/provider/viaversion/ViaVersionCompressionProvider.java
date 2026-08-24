@@ -5,7 +5,7 @@ import com.viaversion.viaversion.protocols.v1_8to1_9.provider.CompressionProvide
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 import net.minecraft.network.Connection;
 
-public final class ViaVersionCompressionProvider extends CompressionProvider {
+public class ViaVersionCompressionProvider extends CompressionProvider {
 
     @Override
     public void handlePlayCompression(final UserConnection user, final int threshold) {

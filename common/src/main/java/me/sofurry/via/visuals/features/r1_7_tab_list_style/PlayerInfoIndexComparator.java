@@ -5,7 +5,7 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 
 import java.util.Comparator;
 
-public final class PlayerInfoIndexComparator implements Comparator<PlayerInfo> {
+public class PlayerInfoIndexComparator implements Comparator<PlayerInfo> {
 
     public static final PlayerInfoIndexComparator INSTANCE = new PlayerInfoIndexComparator();
 

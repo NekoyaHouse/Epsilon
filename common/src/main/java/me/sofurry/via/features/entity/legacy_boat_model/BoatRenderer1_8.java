@@ -15,7 +15,7 @@ import net.minecraft.util.Mth;
 /**
  * Renderer for boats in 1.8 and lower.
  */
-public final class BoatRenderer1_8 extends AbstractBoatRenderer {
+public class BoatRenderer1_8 extends AbstractBoatRenderer {
 
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("viafabricplus", "textures/boat1_8.png");
     private final BoatModel1_8 model;

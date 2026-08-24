@@ -30,7 +30,7 @@ import org.cloudburstmc.netty.channel.raknet.RakPong;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public final class RakNetPingEncapsulationCodec extends MessageToMessageCodec<RakPong, ByteBuf> {
+public class RakNetPingEncapsulationCodec extends MessageToMessageCodec<RakPong, ByteBuf> {
 
     public static final String NAME = "viabedrock-ping-encapsulation";
 

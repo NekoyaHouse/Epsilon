@@ -6,7 +6,7 @@ import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_19_3to1_19_4.Protocol1_19_3To1_19_4;
 import com.viaversion.viaversion.protocols.v1_19_3to1_19_4.packet.ClientboundPackets1_19_4;
 
-public final class CPEWeatherTypePacketHandlers extends PacketHandlers {
+public class CPEWeatherTypePacketHandlers extends PacketHandlers {
 
     @Override
     public void register() {

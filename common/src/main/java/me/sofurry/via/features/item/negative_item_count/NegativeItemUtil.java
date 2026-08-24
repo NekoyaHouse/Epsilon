@@ -5,7 +5,7 @@ import me.sofurry.via.util.ItemUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-public final class NegativeItemUtil {
+public class NegativeItemUtil {
 
     /**
      * Returns the actual amount of items in the stack, versions older or equal to 1.10 can have negative stack sizes

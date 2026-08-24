@@ -134,8 +134,8 @@ public class ProjectileSimulator {
         ignoredEntity = projectile.getOwner();
         setMotion(data, projectile.tickCount, 0, projectile.isInWater());
         dimensions = projectile.getDimensions(projectile.getPose());
-        if (projectile.isNoGravity()) motion = new MotionData(data.power, data.roll, 0.0, data.airDrag,
-                data.waterDrag, data.entityType, data.updateOrder);
+        if (projectile.isNoGravity())
+            motion = new MotionData(data.power, data.roll, 0.0, data.airDrag, data.waterDrag, data.entityType, data.updateOrder);
         return velocity.lengthSqr() > 1.0E-8;
     }
 
@@ -272,8 +272,10 @@ public class ProjectileSimulator {
         return new MotionData(power, roll, gravity, 0.99, 0.8, type, UpdateOrder.GRAVITY_DRAG_POSITION);
     }
 
-    private record MotionData(double power, double roll, double gravity, double airDrag, double waterDrag,
-                              EntityType<?> entityType, UpdateOrder updateOrder) {
+    private record MotionData(
+            double power, double roll, double gravity, double airDrag, double waterDrag, EntityType<?> entityType,
+            UpdateOrder updateOrder
+    ) {
         private MotionData withPower(double power) {
             return new MotionData(power, roll, gravity, airDrag, waterDrag, entityType, updateOrder);
         }

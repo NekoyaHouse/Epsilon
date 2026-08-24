@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.Block;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ViaVersionMappingDataLoader extends MappingDataLoader {
+public class ViaVersionMappingDataLoader extends MappingDataLoader {
 
     public static final Map<String, Material> MATERIALS = new HashMap<>();
     public static final Map<String, Map<ProtocolVersion, String>> BLOCK_MATERIALS = new HashMap<>();

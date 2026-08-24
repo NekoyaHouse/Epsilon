@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
 
-public final class ViaVersionCommandSender implements ViaCommandSender {
+public class ViaVersionCommandSender implements ViaCommandSender {
 
     private final SharedSuggestionProvider source;
 

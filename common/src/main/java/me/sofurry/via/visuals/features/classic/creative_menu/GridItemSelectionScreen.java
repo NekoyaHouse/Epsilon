@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("DataFlowIssue")
-public final class GridItemSelectionScreen extends Screen {
+public class GridItemSelectionScreen extends Screen {
 
     public static final GridItemSelectionScreen INSTANCE = new GridItemSelectionScreen();
 

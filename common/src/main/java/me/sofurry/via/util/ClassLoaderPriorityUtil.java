@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * Allows the user to override the Via* jar files with custom ones using the "jars" folder in the run directory
  */
-public final class ClassLoaderPriorityUtil {
+public class ClassLoaderPriorityUtil {
 
     private static final Set<String> overridingJars = new HashSet<>();
 

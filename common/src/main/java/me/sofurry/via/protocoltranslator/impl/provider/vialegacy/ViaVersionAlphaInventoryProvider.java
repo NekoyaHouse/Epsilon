@@ -13,7 +13,7 @@ import net.raphimc.vialegacy.protocol.alpha.a1_2_3_5_1_2_6tob1_0_1_1_1.provider.
 
 import java.util.List;
 
-public final class ViaVersionAlphaInventoryProvider extends AlphaInventoryProvider {
+public class ViaVersionAlphaInventoryProvider extends AlphaInventoryProvider {
 
     @Override
     public boolean usesInventoryTracker() {

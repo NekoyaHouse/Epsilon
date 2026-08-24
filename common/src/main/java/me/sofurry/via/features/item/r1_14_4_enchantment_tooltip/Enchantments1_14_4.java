@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class Enchantments1_14_4 {
+public class Enchantments1_14_4 {
 
     private static final Map<String, ResourceKey<Enchantment>> ENCHANTMENT_REGISTRY = new HashMap<>();
 

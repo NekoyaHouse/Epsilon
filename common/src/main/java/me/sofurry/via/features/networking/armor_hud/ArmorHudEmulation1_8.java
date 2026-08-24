@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.UUID;
 
-public final class ArmorHudEmulation1_8 {
+public class ArmorHudEmulation1_8 {
 
     private static final UUID ARMOR_POINTS_UUID = UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150");
     private static final EquipmentSlot[] ARMOR_SLOTS = new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};

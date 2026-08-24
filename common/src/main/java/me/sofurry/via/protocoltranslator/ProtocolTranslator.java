@@ -81,7 +81,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class ProtocolTranslator {
+public class ProtocolTranslator {
 
     /**
      * Internal state tracking for the game client connection, used in various Via providers

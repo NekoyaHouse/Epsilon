@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-public final class WorldHeightSupport {
+public class WorldHeightSupport {
 
     public static PacketHandler handleJoinGame(final PacketHandler parentHandler) {
         return wrapper -> {

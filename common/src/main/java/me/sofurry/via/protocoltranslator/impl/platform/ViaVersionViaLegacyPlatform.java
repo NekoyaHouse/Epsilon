@@ -8,7 +8,7 @@ import net.raphimc.vialegacy.platform.ViaLegacyPlatform;
 import java.io.File;
 import java.util.logging.Logger;
 
-public final class ViaVersionViaLegacyPlatform implements ViaLegacyPlatform {
+public class ViaVersionViaLegacyPlatform implements ViaLegacyPlatform {
 
     private final Logger logger;
 

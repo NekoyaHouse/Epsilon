@@ -5,7 +5,7 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.protocol.version.BaseVersionProvider;
 import me.sofurry.via.protocoltranslator.ProtocolTranslator;
 
-public final class ViaVersionBaseVersionProvider extends BaseVersionProvider {
+public class ViaVersionBaseVersionProvider extends BaseVersionProvider {
 
     @Override
     public ProtocolVersion getClosestServerProtocol(UserConnection connection) throws Exception {

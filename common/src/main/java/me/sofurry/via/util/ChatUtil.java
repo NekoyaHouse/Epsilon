@@ -8,7 +8,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 /**
  * This class contains methods to send messages to the player with the ViaVersion prefix
  */
-public final class ChatUtil {
+public class ChatUtil {
 
     public static final String PREFIX = ChatFormatting.WHITE + "[" + ChatFormatting.GOLD + "ViaVersion" + ChatFormatting.WHITE + "]";
     public static final Component PREFIX_TEXT = Component.literal("[").withStyle(ChatFormatting.WHITE).append(Component.literal("ViaVersion").withStyle(ChatFormatting.GOLD)).append("]");

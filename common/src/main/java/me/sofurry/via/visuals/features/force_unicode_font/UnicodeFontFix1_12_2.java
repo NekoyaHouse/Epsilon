@@ -13,7 +13,7 @@ import net.minecraft.locale.Language;
  * Older versions only had unicode font support for some languages and therefore servers are expecting the client
  * to use a unicode font, not using it on older versions can cause issues with wrong dimensions in chat components.
  */
-public final class UnicodeFontFix1_12_2 {
+public class UnicodeFontFix1_12_2 {
 
     private static boolean enabled = false;
     private static Runnable task = null;

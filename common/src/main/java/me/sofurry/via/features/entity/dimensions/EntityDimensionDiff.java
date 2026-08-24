@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Data dump for entity dimension changes between versions.
  */
-public final class EntityDimensionDiff {
+public class EntityDimensionDiff {
 
     /**
      * A map of entity types to a map of versions to dimensions.

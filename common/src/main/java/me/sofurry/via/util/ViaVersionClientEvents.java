@@ -16,7 +16,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-public final class ViaVersionClientEvents {
+public class ViaVersionClientEvents {
 
     public static final LevelTickEvent START_LEVEL_TICK = new LevelTickEvent();
 
