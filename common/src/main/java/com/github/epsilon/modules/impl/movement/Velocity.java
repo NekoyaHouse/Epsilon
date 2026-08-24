@@ -40,13 +40,13 @@ public class Velocity extends Module {
         super("Velocity", Category.MOVEMENT);
     }
 
-    private enum Mode {
+    public enum Mode {
         Cancel,
         Reduce,
         Delay
     }
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Cancel, newMode -> {
+    public final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Cancel, newMode -> {
         if (newMode != Mode.Reduce) resetReduceState();
         if (newMode != Mode.Delay) resetDelayState();
     });

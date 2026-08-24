@@ -33,7 +33,7 @@ public class Criticals extends Module {
             fallTicks = 0;
         } else {
             fallTicks++;
-            if (KillAura.INSTANCE.target != null && Velocity.INSTANCE.attackQueue == 0) {
+            if (KillAura.INSTANCE.target != null && fallTicks < 3 && Velocity.INSTANCE.attackQueue == 0) {
                 stopSprinting = true;
             }
         }
