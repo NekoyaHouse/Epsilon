@@ -30,7 +30,6 @@ public class MultiAura extends Module {
     private final IntSetting fov = intSetting("FOV", 360, 30, 360, 10);
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
     private final BoolSetting pauseOnContainers = boolSetting("Pause On Containers", false);
-    private final BoolSetting throughWalls = boolSetting("Through Walls", false);
 
     private final BoolSetting targetPlayer = boolSetting("Player", true);
     private final BoolSetting targetMob = boolSetting("Mob", true);
@@ -68,7 +67,6 @@ public class MultiAura extends Module {
                 targetWater.getValue(),
                 targetOthers.getValue(),
                 targetInvisible.getValue(),
-                throughWalls.getValue(),
                 64
         ));
 

@@ -549,7 +549,6 @@ public class ZealotCrystalPlus extends Module {
                 false,
                 false,
                 true,
-                true,
                 living -> living.position().y > -64.0,
                 maxTargets.getValue()
         ));

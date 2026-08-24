@@ -88,7 +88,6 @@ public class SilentAim extends Module {
                 false,
                 false,
                 invisible.getValue(),
-                true,
                 1
         ));
 

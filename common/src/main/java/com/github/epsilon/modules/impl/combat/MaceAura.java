@@ -84,7 +84,6 @@ public class MaceAura extends Module {
                 false,
                 false,
                 true,
-                true,
                 64
         ));
 

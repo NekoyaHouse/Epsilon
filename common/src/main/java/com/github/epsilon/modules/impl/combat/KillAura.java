@@ -97,7 +97,6 @@ public class KillAura extends Module {
     private final BoolSetting water = boolSetting("Water", false);
     private final BoolSetting others = boolSetting("Others", false);
     private final BoolSetting invisible = boolSetting("Invisible", true);
-    private final BoolSetting throughWalls = boolSetting("Through Walls", false);
 
     private final BoolSetting swingHand = boolSetting("SwingHand", true);
     private final BoolSetting esp = boolSetting("ESP", true);
@@ -112,7 +111,7 @@ public class KillAura extends Module {
     private final DoubleSetting espSize = doubleSetting("ESP Size", 1.2, 0.5, 3.0, 0.1, () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
     private final DoubleSetting espRotSpeed = doubleSetting("Rot Speed", 2.0, 0.5, 10.0, 0.1, () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
     private final DoubleSetting waveSpeed = doubleSetting("Wave Speed", 3.0, 0.5, 10.0, 0.1, () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
-    private final ColorSetting sideColor = colorSetting("Side Color", Color.WHITE, false);
+    private final ColorSetting sideColor = colorSetting("Side Color", Color.WHITE, false, () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 255, 255, 233), () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final DoubleSetting circleRadius = doubleSetting("Circle Radius", 0.75, 0.1, 2.0, 0.05, () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final DoubleSetting circleAlphaFactor = doubleSetting("Circle Alpha Factor", 1.0, 0.0, 2.0, 0.05, () -> esp.getValue() && espMode.is(ESPMode.Circle));
@@ -173,7 +172,6 @@ public class KillAura extends Module {
                 water.getValue(),
                 others.getValue(),
                 invisible.getValue(),
-                throughWalls.getValue(),
                 64
         )));
 

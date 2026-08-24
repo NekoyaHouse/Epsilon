@@ -29,6 +29,7 @@ public class MixinParticleManager {
     private boolean shouldCancel(ParticleOptions particleOptions) {
         if (particleOptions == null) return false;
         var type = particleOptions.getType();
+//        if (type == ParticleTypes.FLAME) return true; // LoyisaIsImposter
         if (type == ParticleTypes.TOTEM_OF_UNDYING && MasEffects.INSTANCE.shouldHideVanillaTotemParticles())
             return true;
         if (NoRender.INSTANCE.isEnabled()) {

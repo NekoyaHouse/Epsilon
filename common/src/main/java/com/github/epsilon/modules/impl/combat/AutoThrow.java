@@ -97,7 +97,6 @@ public class AutoThrow extends Module {
                         false,
                         false,
                         true,
-                        false,
                         64
                 )));
 

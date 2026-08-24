@@ -115,7 +115,6 @@ public class SpearKill extends Module {
                             false,
                             false,
                             invisible.getValue(),
-                            true,
                             64
                     )
             );

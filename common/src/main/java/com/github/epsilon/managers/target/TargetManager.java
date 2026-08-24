@@ -120,8 +120,6 @@ public class TargetManager {
 
         if (request.fov() < 360.0f && !RotationUtils.isInFov(entity, request.fov())) return false;
 
-        if (!request.throughWalls() && !mc.player.hasLineOfSight(entity)) return false;
-
         if (entity instanceof Player player) {
             if (FriendManager.INSTANCE.isFriend(player)) return false;
             if (!request.player()) return false;

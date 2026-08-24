@@ -27,24 +27,43 @@ public class Criticals extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onClientTick(ClientTickEvent.Pre event) {
-        if (nullCheck()) return;
-
-        if (mc.player.fallDistance <= 0 || mc.player.fallDistance >= 1) {
+        if (nullCheck() || !canCrit() || mc.player.fallDistance >= 1.0f) {
             fallTicks = 0;
         } else {
             fallTicks++;
-            if (KillAura.INSTANCE.target != null && fallTicks < 3 && Velocity.INSTANCE.attackQueue == 0) {
-                stopSprinting = true;
-            }
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void prepareSprintStop(ClientTickEvent.Pre event) {
+        stopSprinting = !nullCheck()
+                && fallTicks > 0
+                && fallTicks < 3
+                && mc.player.isSprinting()
+                && KillAura.INSTANCE.target != null
+                && Velocity.INSTANCE.attackQueue == 0;
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (stopSprinting) {
-            stopSprinting = false;
-            event.setForward(0);
+        if (!stopSprinting) return;
+        stopSprinting = false;
+
+        if (fallTicks > 0
+                && fallTicks < 3
+                && canCrit()
+                && mc.player.isSprinting()
+                && KillAura.INSTANCE.target != null
+                && Velocity.INSTANCE.attackQueue == 0
+                && event.getForward() > 0.0f) {
+            event.setSprint(false);
+            mc.player.setSprinting(false);
+            mc.options.keySprint.setDown(false);
         }
+    }
+
+    private boolean canCrit() {
+        return mc.player.fallDistance > 0.0 && !mc.player.onGround() && !mc.player.onClimbable() && !mc.player.isInWater() && !mc.player.isMobilityRestricted() && !mc.player.isPassenger();
     }
 
 }

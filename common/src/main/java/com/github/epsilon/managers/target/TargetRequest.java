@@ -15,7 +15,6 @@ public record TargetRequest(
         boolean water,
         boolean others,
         boolean invisible,
-        boolean throughWalls,
         Predicate<LivingEntity> extraFilter,
         int maxTargets
 ) {
@@ -38,10 +37,9 @@ public record TargetRequest(
             boolean water,
             boolean others,
             boolean invisible,
-            boolean throughWalls,
             int maxTargets
     ) {
-        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, throughWalls, livingEntity -> true, maxTargets);
+        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, livingEntity -> true, maxTargets);
     }
 
     public static TargetRequest of(
@@ -55,10 +53,9 @@ public record TargetRequest(
             boolean water,
             boolean others,
             boolean invisible,
-            boolean throughWalls,
             Predicate<LivingEntity> extraFilter,
             int maxTargets
     ) {
-        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, throughWalls, extraFilter, maxTargets);
+        return new TargetRequest(range, fov, player, mob, animal, villager, ambient, water, others, invisible, extraFilter, maxTargets);
     }
 }
