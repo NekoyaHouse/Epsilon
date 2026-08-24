@@ -9,6 +9,7 @@ import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.HealthManager;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -142,7 +143,7 @@ public class NameTags extends Module {
         }
         contents.add(new Segment(null, player.getName().getString(), true, nameColor.getValue(), nameColor.getValue()));
         if (showHealth.getValue()) {
-            contents.add(new Segment(IconChars.FAVORITE, healthText(player), false, heartColor.getValue(), healthColor.getValue()));
+            contents.add(new Segment(IconChars.FAVORITE, String.valueOf(HealthManager.INSTANCE.getHealth(player)), false, heartColor.getValue(), healthColor.getValue()));
         }
 
         List<MeasuredSegment> measured = new ArrayList<>(contents.size());
@@ -264,12 +265,6 @@ public class NameTags extends Module {
 
             BlurShader.INSTANCE.render(minX, minY, maxX - minX, maxY - minY, 0.0f, strength, rects, radii, count);
         }
-    }
-
-    private static String healthText(Player player) {
-        String health = Integer.toString(Math.max(0, Math.round(player.getHealth())));
-        int absorption = Math.max(0, Math.round(player.getAbsorptionAmount()));
-        return absorption > 0 ? health + "+" + absorption : health;
     }
 
     private static float[] segmentRects(List<SegmentLayout> segments) {
