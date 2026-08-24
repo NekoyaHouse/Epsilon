@@ -7,6 +7,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.modules.impl.player.NameProtect;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -375,6 +376,7 @@ public class TabListInstance extends LandInstance {
     }
 
     private void appendLegacyIntoLines(List<List<TextSegment>> lines, String text, Color baseColor, Color resetColor, float scale, TextRenderer renderer) {
+        text = NameProtect.INSTANCE.replaceName(text);
         if (text == null || text.isEmpty()) return;
         Color currentColor = baseColor;
         StringBuilder builder = new StringBuilder();
@@ -417,8 +419,8 @@ public class TabListInstance extends LandInstance {
         flushSegment(lines.getLast(), builder, currentColor, scale, renderer);
     }
 
-    private void appendLegacySegments(List<TextSegment> output, String text, Color baseColor,
-                                      Color resetColor, float scale, TextRenderer renderer) {
+    private void appendLegacySegments(List<TextSegment> output, String text, Color baseColor, Color resetColor, float scale, TextRenderer renderer) {
+        text = NameProtect.INSTANCE.replaceName(text);
         if (text == null || text.isEmpty()) return;
         Color currentColor = baseColor;
         StringBuilder builder = new StringBuilder();

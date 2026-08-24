@@ -39,7 +39,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @ClInitNative
 public class KillAura extends Module {
@@ -221,8 +220,7 @@ public class KillAura extends Module {
                     }
                     case OnePointEight -> {
                         long time = System.currentTimeMillis();
-                        long delay = (long) (1000.0 / Math.max(0.01, ThreadLocalRandom.current().nextGaussian(cps.getValue(), 5)));
-                        if (time - lastAttackTime >= delay) {
+                        if (time - lastAttackTime >= (long) (1000.0 / cps.getValue())) {
                             attacks++;
                             lastAttackTime = time;
                         }
@@ -266,8 +264,7 @@ public class KillAura extends Module {
                     }
                     case OnePointEight -> {
                         long time = System.currentTimeMillis();
-                        long delay = (long) (1000.0 / Math.max(0.01, ThreadLocalRandom.current().nextGaussian(cps.getValue(), 5)));
-                        if (time - lastAttackTime >= delay) {
+                        if (time - lastAttackTime >= (long) (1000.0 / cps.getValue())) {
                             attacks++;
                             lastAttackTime = time;
                         }
@@ -327,6 +324,7 @@ public class KillAura extends Module {
         targets = null;
         target = null;
         attacks = 0;
+        lastAttackTime = 0L;
     }
 
 }

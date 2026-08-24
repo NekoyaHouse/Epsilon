@@ -28,9 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
 
 public class Velocity extends Module {
 
@@ -39,6 +37,9 @@ public class Velocity extends Module {
     private Velocity() {
         super("Velocity", Category.MOVEMENT);
     }
+
+    // Packet receive events run on Netty while delayed packets are flushed on the client thread.
+    private final Object packetLock = new Object();
 
     public enum Mode {
         Cancel,
@@ -64,18 +65,18 @@ public class Velocity extends Module {
     private final IntSetting delayTicks = intSetting("Delay Ticks", 3, 1, 5, 1, () -> mode.is(Mode.Delay));
     private final BoolSetting jumpReset = boolSetting("Jump Reset", false, () -> mode.is(Mode.Delay));
 
-    private long lag;
-    private long delayLag;
-    private long startDelay;
-    public int attackQueue;
-    private int sprintQueue;
-    public float yaw;
-    public boolean delay;
-    private boolean jump;
-    private int delayTicksRemaining;
+    private volatile long lag;
+    private volatile long delayLag;
+    private volatile long startDelay;
+    public volatile int attackQueue;
+    private volatile int sprintQueue;
+    public volatile float yaw;
+    public volatile boolean delay;
+    private volatile boolean jump;
+    private volatile int delayTicksRemaining;
 
-    private final Queue<Packet<? super ClientPacketListener>> packets = new ConcurrentLinkedQueue<>();
-    private final Queue<Packet<? super ClientPacketListener>> delayPackets = new ConcurrentLinkedQueue<>();
+    private final Queue<Packet<? super ClientPacketListener>> packets = new ArrayDeque<>();
+    private final Queue<Packet<? super ClientPacketListener>> delayPackets = new ArrayDeque<>();
 
     @Override
     public String getInfo() {
@@ -88,21 +89,22 @@ public class Velocity extends Module {
 
     @Override
     protected void onDisable() {
-        delay = false;
-        packets.clear();
-        attackQueue = 0;
-        jump = false;
+        flush();
+        flushDelay();
+        resetReduceState();
         resetDelayState();
     }
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
-        if (nullCheck()) return;
+        synchronized (packetLock) {
+            if (!isEnabled() || nullCheck()) return;
 
-        switch (mode.getValue()) {
-            case Cancel -> cancelPacket(event);
-            case Reduce -> reducePacket(event);
-            case Delay -> delayPacket(event);
+            switch (mode.getValue()) {
+                case Cancel -> cancelPacket(event);
+                case Reduce -> reducePacket(event);
+                case Delay -> delayPacket(event);
+            }
         }
     }
 
@@ -129,6 +131,11 @@ public class Velocity extends Module {
 
     private void reducePacket(PacketEvent.Receive event) {
         Packet<?> packet = event.getPacket();
+
+        if (packet instanceof ClientboundDisconnectPacket) {
+            resetReduceState();
+            return;
+        }
 
         if (delay && (packet instanceof ClientboundSetEntityMotionPacket
                 || packet instanceof ClientboundMoveEntityPacket
@@ -191,9 +198,8 @@ public class Velocity extends Module {
     private void onReduceTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.Reduce)) return;
 
-        if (delay && (mc.player.onGround() || System.currentTimeMillis() - lag < 100 || System.currentTimeMillis() - startDelay >= maxDelay.getValue())) {
-            flush();
-            if (System.currentTimeMillis() - lag >= 100) {
+        if (delay && (mc.player.onGround() || System.currentTimeMillis() - lag < 100 || System.currentTimeMillis() - startDelay >= maxDelay.getValue()) && flush()) {
+            if (System.currentTimeMillis() - lag >= 100L) {
                 attackQueue = attackCounts.getValue();
                 sprintQueue = sprintTicks.getValue();
             }
@@ -207,10 +213,14 @@ public class Velocity extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onDelayTick(PlayerTickEvent.Pre event) {
-        if (!mode.is(Mode.Delay) || delayTicksRemaining <= 0) return;
-        if (--delayTicksRemaining == 0) {
-            flushDelay();
+        List<Packet<? super ClientPacketListener>> pending = List.of();
+        synchronized (packetLock) {
+            if (!mode.is(Mode.Delay) || delayTicksRemaining <= 0) return;
+            if (--delayTicksRemaining == 0) {
+                pending = drain(delayPackets);
+            }
         }
+        handlePackets(pending);
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -261,39 +271,66 @@ public class Velocity extends Module {
         }
     }
 
-    private void flush() {
-        if (!delay) return;
+    private boolean flush() {
+        List<Packet<? super ClientPacketListener>> pending;
+        synchronized (packetLock) {
+            if (!delay) return false;
 
-        Packet<? super ClientPacketListener> packet;
-        while ((packet = packets.poll()) != null) {
-            packet.handle(mc.getConnection());
+            delay = false;
+            pending = drain(packets);
         }
-        delay = false;
+
+        handlePackets(pending);
         jump = true;
+        return true;
     }
 
     private void flushDelay() {
-        Packet<? super ClientPacketListener> packet;
-        while ((packet = delayPackets.poll()) != null) {
-            packet.handle(mc.getConnection());
+        List<Packet<? super ClientPacketListener>> pending;
+        synchronized (packetLock) {
+            delayTicksRemaining = 0;
+            pending = drain(delayPackets);
         }
+        handlePackets(pending);
     }
 
     private void resetReduceState() {
-        delay = false;
-        packets.clear();
-        lag = 0L;
-        startDelay = 0L;
-        attackQueue = 0;
-        sprintQueue = 0;
-        jump = false;
-        yaw = 0.0f;
+        synchronized (packetLock) {
+            delay = false;
+            packets.clear();
+            lag = 0L;
+            startDelay = 0L;
+            attackQueue = 0;
+            sprintQueue = 0;
+            jump = false;
+            yaw = 0.0f;
+        }
     }
 
     private void resetDelayState() {
-        delayTicksRemaining = 0;
-        delayPackets.clear();
-        delayLag = 0L;
+        synchronized (packetLock) {
+            delayTicksRemaining = 0;
+            delayPackets.clear();
+            delayLag = 0L;
+        }
+    }
+
+    private static <T> List<T> drain(Queue<T> queue) {
+        List<T> packets = new ArrayList<>(queue.size());
+        T packet;
+        while ((packet = queue.poll()) != null) {
+            packets.add(packet);
+        }
+        return packets;
+    }
+
+    private void handlePackets(List<Packet<? super ClientPacketListener>> packets) {
+        ClientPacketListener listener = mc.getConnection();
+        if (listener == null) return;
+
+        for (Packet<? super ClientPacketListener> packet : packets) {
+            packet.handle(listener);
+        }
     }
 
 }

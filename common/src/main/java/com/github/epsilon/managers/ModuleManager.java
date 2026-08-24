@@ -89,6 +89,7 @@ public class ModuleManager {
         addModule(InvManager.INSTANCE);
         addModule(JumpCooldown.INSTANCE);
         addModule(MultiTask.INSTANCE);
+        addModule(NameProtect.INSTANCE);
         addModule(NoFall.INSTANCE);
         addModule(NoRotate.INSTANCE);
         addModule(PacketEat.INSTANCE);

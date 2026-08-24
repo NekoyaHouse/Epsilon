@@ -32,7 +32,7 @@ public class Stealer extends Module {
     private final IntSetting minDelay = intSetting("Min Delay", 110, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 140, 0, 1000, 50);
     private final BoolSetting autoClose = boolSetting("Auto Close", true);
-    private final IntSetting closeDelay = intSetting("Close Delay", 150, 0, 1000, 1, autoClose::getValue);
+    private final IntSetting closeDelay = intSetting("Close Delay", 100, 0, 1000, 1, autoClose::getValue);
     private final BoolSetting pickEnderChest = boolSetting("Ender Chest", false);
 
     private Screen lastTickScreen;
