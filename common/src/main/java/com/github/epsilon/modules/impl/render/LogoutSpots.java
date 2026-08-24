@@ -115,7 +115,7 @@ public class LogoutSpots extends Module {
         if (renderMode.is(RenderMode.Box)) {
             for (LogoutPlayer player : logoutCache.values()) {
                 Render3DScheduler.INSTANCE.addFilledBox(player.getBoundingBox(), sideColor.getValue());
-                Render3DScheduler.INSTANCE.addOutlineBox(event.getPoseStack(), player.getBoundingBox(), lineColor.getValue());
+                Render3DScheduler.INSTANCE.addOutlineBox(player.getBoundingBox(), lineColor.getValue());
             }
         } else {
             boolean batching = false;
