@@ -79,7 +79,6 @@
     "MixinScreen",
     "MixinScreenEffectRenderer",
     "MixinSpawnerRenderer",
-    "MixinStringDecomposer",
     "MixinTitleScreen",
     "MixinVisGraph",
     "MixinWalkAnimationState",
