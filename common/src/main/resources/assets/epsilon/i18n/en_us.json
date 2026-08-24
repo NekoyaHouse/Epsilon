@@ -2129,7 +2129,7 @@
         "friend status": "Friend Status",
         "team status": "Team Status",
         "show health": "Show Health",
-        "outline": "",
+        "outline": "Outline",
         "name color": "Name Color",
         "friend color": "Friend Color",
         "team color": "Team Color",
@@ -2142,29 +2142,6 @@
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color"
-      },
-      "trajectories": {
-        "_value": "Trajectories",
-        "general": "General",
-        "render": "Render",
-        "position boxes": "Position Boxes",
-        "items": "Items",
-        "other players": "Other Players",
-        "fired projectiles": "Fired Projectiles",
-        "ignore wither skulls": "Ignore Wither Skulls",
-        "accurate": "Accurate Motion",
-        "simulation steps": "Simulation Steps",
-        "ignore first ticks": "Ignore First Ticks",
-        "line color": "Line Color",
-        "line width": "Line Width",
-        "impact fill": "Impact Fill",
-        "impact outline": "Impact Outline",
-        "impact fill color": "Impact Fill Color",
-        "impact outline color": "Impact Outline Color",
-        "render position boxes": "Render Position Boxes",
-        "position box size": "Position Box Size",
-        "position fill color": "Position Fill Color",
-        "position outline color": "Position Outline Color"
       },
       "no ghost blocks": {
         "_value": "No Ghost Blocks",
@@ -2432,12 +2409,12 @@
         "third person eye height": "Third Person Eye Height"
       },
       "title replace": {
-        "_value": "",
-        "value": "",
-        "gradient": "",
-        "color": "",
-        "start color": "",
-        "end color": ""
+        "_value": "Title Replace",
+        "value": "Replacement Text",
+        "gradient": "Gradient",
+        "color": "Color",
+        "start color": "Start Color",
+        "end color": "End Color"
       },
       "totem animation": {
         "_value": "Totem Animation",
@@ -2452,6 +2429,28 @@
           "roll": "Roll"
         },
         "speed": "Speed"
+      },
+      "trajectories": {
+        "_value": "Trajectories",
+        "general": "General",
+        "render": "Render",
+        "items": "Items",
+        "other players": "Other Players",
+        "fired projectiles": "Fired Projectiles",
+        "ignore wither skulls": "Ignore Wither Skulls",
+        "accurate": "Accurate Motion",
+        "simulation steps": "Simulation Steps",
+        "ignore first ticks": "Ignore First Ticks",
+        "line color": "Line Color",
+        "line width": "Line Width",
+        "impact fill": "Impact Fill",
+        "impact outline": "Impact Outline",
+        "impact fill color": "Impact Fill Color",
+        "impact outline color": "Impact Outline Color",
+        "render position boxes": "Render Position Boxes",
+        "position box size": "Position Box Size",
+        "position fill color": "Position Fill Color",
+        "position outline color": "Position Outline Color"
       },
       "world tweaks": {
         "_value": "World Tweaks",

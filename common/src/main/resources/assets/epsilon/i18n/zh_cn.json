@@ -2129,7 +2129,7 @@
         "friend status": "好友标识",
         "team status": "队伍标识",
         "show health": "显示生命值",
-        "outline": "",
+        "outline": "描边",
         "name color": "名称颜色",
         "friend color": "好友颜色",
         "team color": "队伍颜色",
@@ -2142,29 +2142,6 @@
         "drop shadow": "投影",
         "shadow blur": "投影模糊",
         "shadow color": "投影颜色"
-      },
-      "trajectories": {
-        "_value": "弹道预测",
-        "general": "常规",
-        "render": "渲染",
-        "position boxes": "位置方框",
-        "items": "物品",
-        "other players": "其他玩家",
-        "fired projectiles": "已发射投射物",
-        "ignore wither skulls": "忽略凋灵之首",
-        "accurate": "精确运动",
-        "simulation steps": "模拟步数",
-        "ignore first ticks": "忽略起始刻",
-        "line color": "轨迹颜色",
-        "line width": "轨迹宽度",
-        "impact fill": "落点填充",
-        "impact outline": "落点描边",
-        "impact fill color": "落点填充颜色",
-        "impact outline color": "落点描边颜色",
-        "render position boxes": "显示逐刻位置",
-        "position box size": "位置方框大小",
-        "position fill color": "位置填充颜色",
-        "position outline color": "位置描边颜色"
       },
       "no ghost blocks": {
         "_value": "无幽灵方块",
@@ -2432,12 +2409,12 @@
         "third person eye height": "第三人称视野高度"
       },
       "title replace": {
-        "_value": "",
-        "value": "",
-        "gradient": "",
-        "color": "",
-        "start color": "",
-        "end color": ""
+        "_value": "标题替换",
+        "value": "替换文本",
+        "gradient": "渐变",
+        "color": "颜色",
+        "start color": "起始颜色",
+        "end color": "结束颜色"
       },
       "totem animation": {
         "_value": "图腾动画",
@@ -2452,6 +2429,28 @@
           "roll": "翻滚"
         },
         "speed": "速度"
+      },
+      "trajectories": {
+        "_value": "弹道预测",
+        "general": "常规",
+        "render": "渲染",
+        "items": "物品",
+        "other players": "其他玩家",
+        "fired projectiles": "已发射投射物",
+        "ignore wither skulls": "忽略凋灵之首",
+        "accurate": "精确运动",
+        "simulation steps": "模拟步数",
+        "ignore first ticks": "忽略起始刻",
+        "line color": "轨迹颜色",
+        "line width": "轨迹宽度",
+        "impact fill": "落点填充",
+        "impact outline": "落点描边",
+        "impact fill color": "落点填充颜色",
+        "impact outline color": "落点描边颜色",
+        "render position boxes": "显示逐刻位置",
+        "position box size": "位置方框大小",
+        "position fill color": "位置填充颜色",
+        "position outline color": "位置描边颜色"
       },
       "world tweaks": {
         "_value": "世界调整",
