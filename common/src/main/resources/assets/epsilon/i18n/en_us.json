@@ -1034,7 +1034,6 @@
         "water": "Water",
         "others": "Others",
         "invisible": "Invisible",
-        "through walls": "Through Walls",
         "swinghand": "Swing Hand",
         "esp": "ESP",
         "esp mode": {
@@ -1119,7 +1118,6 @@
         "fov": "FOV",
         "swing hand": "Swing Hand",
         "pause on containers": "Pause On Containers",
-        "through walls": "Through Walls",
         "player": "Player",
         "mob": "Mob",
         "animal": "Animal",
@@ -2127,10 +2125,23 @@
         "range": "Range",
         "scale": "Scale",
         "height offset": "Height Offset",
+        "show self": "Show Self",
+        "friend status": "Friend Status",
+        "team status": "Team Status",
+        "show health": "Show Health",
+        "outline": "",
+        "name color": "Name Color",
+        "friend color": "Friend Color",
+        "team color": "Team Color",
+        "health color": "Health Color",
+        "heart color": "Heart Color",
         "background color": "Background Color",
-        "show equipment": "Show Equipment",
-        "show hands": "Show Hands",
-        "show self": "Show Self"
+        "outline color": "Outline Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color"
       },
       "no ghost blocks": {
         "_value": "No Ghost Blocks",
@@ -2396,6 +2407,14 @@
         },
         "custom sneaking eye height": "Custom Sneaking Eye Height",
         "third person eye height": "Third Person Eye Height"
+      },
+      "title replace": {
+        "_value": "",
+        "value": "",
+        "gradient": "",
+        "color": "",
+        "start color": "",
+        "end color": ""
       },
       "totem animation": {
         "_value": "Totem Animation",

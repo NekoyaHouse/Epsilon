@@ -163,8 +163,7 @@ public class BlurShader {
         render(x, y, width, height, radius, radius, radius, radius, blurStrength);
     }
 
-    public void render(float x, float y, float width, float height, float radius, float blurStrength,
-                       float[] segmentRects, float[] segmentRadii, int segmentCount) {
+    public void render(float x, float y, float width, float height, float radius, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
         render(x, y, width, height, radius, radius, radius, radius, blurStrength, segmentRects, segmentRadii, segmentCount);
     }
 

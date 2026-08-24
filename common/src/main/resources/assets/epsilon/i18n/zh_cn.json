@@ -1034,7 +1034,6 @@
         "water": "水生生物",
         "others": "其他",
         "invisible": "隐身",
-        "through walls": "穿墙",
         "swinghand": "挥手",
         "esp": "ESP",
         "esp mode": {
@@ -1119,7 +1118,6 @@
         "fov": "视野角度",
         "swing hand": "挥手",
         "pause on containers": "容器暂停",
-        "through walls": "穿墙",
         "player": "玩家",
         "mob": "怪物",
         "animal": "动物",
@@ -2127,10 +2125,23 @@
         "range": "范围",
         "scale": "缩放",
         "height offset": "高度偏移",
+        "show self": "显示自己",
+        "friend status": "好友标识",
+        "team status": "队伍标识",
+        "show health": "显示生命值",
+        "outline": "",
+        "name color": "名称颜色",
+        "friend color": "好友颜色",
+        "team color": "队伍颜色",
+        "health color": "生命文字颜色",
+        "heart color": "心形颜色",
         "background color": "背景颜色",
-        "show equipment": "显示装备",
-        "show hands": "显示手部",
-        "show self": "显示自己"
+        "outline color": "描边颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "drop shadow": "投影",
+        "shadow blur": "投影模糊",
+        "shadow color": "投影颜色"
       },
       "no ghost blocks": {
         "_value": "无幽灵方块",
@@ -2396,6 +2407,14 @@
         },
         "custom sneaking eye height": "自定义潜行视野高度",
         "third person eye height": "第三人称视野高度"
+      },
+      "title replace": {
+        "_value": "",
+        "value": "",
+        "gradient": "",
+        "color": "",
+        "start color": "",
+        "end color": ""
       },
       "totem animation": {
         "_value": "图腾动画",
