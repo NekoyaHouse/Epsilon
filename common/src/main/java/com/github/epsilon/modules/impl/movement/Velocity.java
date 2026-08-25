@@ -228,7 +228,7 @@ public class Velocity extends Module {
         if (!mode.is(Mode.Reduce)) return;
 
         if (attackQueue >= 1) {
-            if (RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && !AntiBot.INSTANCE.isBot(pl)) {
+            if (RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && pl.isAlive() && !AntiBot.INSTANCE.isBot(pl)) {
                 mc.gameMode.attack(mc.player, pl);
                 if (swingHand.getValue()) {
                     mc.player.swing(InteractionHand.MAIN_HAND);
