@@ -1951,8 +1951,11 @@
         "hotbar": "Hotbar",
         "inventory": "Inventory"
       },
-      "hands view": {
-        "_value": "Hands View",
+      "hand view": {
+        "_value": "Hand View",
+        "main hand": "Main Hand",
+        "off hand": "Off Hand",
+        "arm": "Arm",
         "disable swap main": "Disable Swap Main",
         "disable swap off": "Disable Swap Off",
         "blocking animation": "Blocking Animation",
@@ -1974,7 +1977,35 @@
         "modify swing duration": "Modify Swing Duration",
         "swing duration": "Swing Duration",
         "visual swing on use": "Visual Swing On Use",
-        "only on block": "Only On Block"
+        "only on block": "Only On Block",
+        "custom transform": "Custom Transform",
+        "main hand scale x": "Scale X",
+        "main hand scale y": "Scale Y",
+        "main hand scale z": "Scale Z",
+        "main hand position x": "Position X",
+        "main hand position y": "Position Y",
+        "main hand position z": "Position Z",
+        "main hand rotation x": "Rotation X",
+        "main hand rotation y": "Rotation Y",
+        "main hand rotation z": "Rotation Z",
+        "off hand scale x": "Scale X",
+        "off hand scale y": "Scale Y",
+        "off hand scale z": "Scale Z",
+        "off hand position x": "Position X",
+        "off hand position y": "Position Y",
+        "off hand position z": "Position Z",
+        "off hand rotation x": "Rotation X",
+        "off hand rotation y": "Rotation Y",
+        "off hand rotation z": "Rotation Z",
+        "arm scale x": "Scale X",
+        "arm scale y": "Scale Y",
+        "arm scale z": "Scale Z",
+        "arm position x": "Position X",
+        "arm position y": "Position Y",
+        "arm position z": "Position Z",
+        "arm rotation x": "Rotation X",
+        "arm rotation y": "Rotation Y",
+        "arm rotation z": "Rotation Z"
       },
       "hat": {
         "_value": "Hat",
@@ -2142,6 +2173,19 @@
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color"
+      },
+      "motion blur": {
+        "_value": "Motion Blur",
+        "strength": "Strength",
+        "samples": "Samples",
+        "algorithm": {
+          "_value": "Algorithm",
+          "backwards": "Backwards",
+          "centered": "Centered"
+        },
+        "depth blur": "Depth Blur",
+        "third person": "Third Person",
+        "refresh rate scaling": "Refresh Rate Scaling"
       },
       "no ghost blocks": {
         "_value": "No Ghost Blocks",
@@ -2438,7 +2482,6 @@
         "other players": "Other Players",
         "fired projectiles": "Fired Projectiles",
         "ignore wither skulls": "Ignore Wither Skulls",
-        "accurate": "Accurate Motion",
         "simulation steps": "Simulation Steps",
         "ignore first ticks": "Ignore First Ticks",
         "line color": "Line Color",

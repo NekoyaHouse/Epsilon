@@ -75,8 +75,7 @@ public class ProjectileSimulator {
                 || item instanceof WindChargeItem;
     }
 
-    public boolean configureHeld(Entity user, ItemStack stack, double angleOffset, boolean accurate,
-                                 float partialTick, int piercing) {
+    public boolean configureHeld(Entity user, ItemStack stack, double angleOffset, float partialTick, int piercing) {
         Item item = stack.getItem();
         MotionData data;
 
@@ -103,13 +102,13 @@ public class ProjectileSimulator {
         else if (item instanceof WindChargeItem) data = WIND_CHARGE;
         else return false;
 
-        configureShot(user, angleOffset, accurate, partialTick, data, piercing);
+        configureShot(user, angleOffset, partialTick, data, piercing);
         return true;
     }
 
-    public void configureCrossbow(Entity user, boolean firework, double angleOffset, boolean accurate, float partialTick, int piercing) {
+    public void configureCrossbow(Entity user, boolean firework, double angleOffset, float partialTick, int piercing) {
         MotionData data = firework ? FIREWORK.withPower(1.6) : ARROW.withPower(3.15);
-        configureShot(user, angleOffset, accurate, partialTick, data, firework ? 0 : piercing);
+        configureShot(user, angleOffset, partialTick, data, firework ? 0 : piercing);
     }
 
     public boolean configureFired(Projectile projectile) {
@@ -134,8 +133,9 @@ public class ProjectileSimulator {
         ignoredEntity = projectile.getOwner();
         setMotion(data, projectile.tickCount, 0, projectile.isInWater());
         dimensions = projectile.getDimensions(projectile.getPose());
-        if (projectile.isNoGravity())
+        if (projectile.isNoGravity()) {
             motion = new MotionData(data.power, data.roll, 0.0, data.airDrag, data.waterDrag, data.entityType, data.updateOrder);
+        }
         return velocity.lengthSqr() > 1.0E-8;
     }
 
@@ -172,7 +172,7 @@ public class ProjectileSimulator {
         }
 
         HitResult hit = findCollision(previous, position);
-        if (hit == null || hit.getType() == HitResult.Type.MISS) return new Step(position, null, false);
+        if (hit.getType() == HitResult.Type.MISS) return new Step(position, null, false);
 
         position = hit.getLocation();
         if (hit instanceof EntityHitResult && pierceLevel > 0) {
@@ -183,7 +183,7 @@ public class ProjectileSimulator {
         return new Step(position, hit, true);
     }
 
-    private void configureShot(Entity user, double angleOffset, boolean accurate, float partialTick, MotionData data, int piercing) {
+    private void configureShot(Entity user, double angleOffset, float partialTick, MotionData data, int piercing) {
         position = user.getPosition(partialTick).add(0.0, user.getEyeHeight(user.getPose()) - 0.1, 0.0);
         double yaw = Math.toRadians(user.getYRot(partialTick));
         double pitch = Math.toRadians(user.getXRot(partialTick) + data.roll);
@@ -197,10 +197,6 @@ public class ProjectileSimulator {
         }
 
         velocity = direction.normalize().scale(data.power);
-        if (accurate) {
-            Vec3 movement = user.getKnownMovement();
-            velocity = velocity.add(movement.x, user.onGround() ? 0.0 : movement.y, movement.z);
-        }
 
         collisionSource = user;
         ignoredEntity = user;
@@ -239,7 +235,6 @@ public class ProjectileSimulator {
         Vec3 clippedTo = blockHit.getType() == HitResult.Type.MISS ? to : blockHit.getLocation();
         Vec3 delta = clippedTo.subtract(from);
         AABB search = dimensions.makeBoundingBox(from).expandTowards(delta).inflate(1.0);
-
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level, collisionSource, from, clippedTo, search, entity -> entity != ignoredEntity && !piercedEntities.contains(entity) && !entity.isSpectator() && entity.isAlive() && entity.isPickable(), Mth.clamp((ticks - 2) / 20.0F, 0.0F, 0.3F));
         return entityHit != null ? entityHit : blockHit;
     }

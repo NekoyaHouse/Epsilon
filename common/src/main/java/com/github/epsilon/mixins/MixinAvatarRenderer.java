@@ -1,7 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
-import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.epsilon.modules.impl.render.HandView;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -28,11 +28,11 @@ public class MixinAvatarRenderer {
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("RETURN"))
     private void applyThirdPersonBlockingPose(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
-        HandsView handsView = HandsView.INSTANCE;
-        if (handsView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.RIGHT)) {
+        HandView handView = HandView.INSTANCE;
+        if (handView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.RIGHT)) {
             state.rightArmPose = HumanoidModel.ArmPose.BLOCK;
         }
-        if (handsView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.LEFT)) {
+        if (handView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.LEFT)) {
             state.leftArmPose = HumanoidModel.ArmPose.BLOCK;
         }
     }

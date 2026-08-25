@@ -143,7 +143,7 @@ public class ModuleManager {
         addModule(FreeCamera.INSTANCE);
         addModule(Fullbright.INSTANCE);
         addModule(GameAnimation.INSTANCE);
-        addModule(HandsView.INSTANCE);
+        addModule(HandView.INSTANCE);
         addModule(Hat.INSTANCE);
         addModule(Health.INSTANCE);
         addModule(HitParticles.INSTANCE);
@@ -152,6 +152,7 @@ public class ModuleManager {
         addModule(JumpCircle.INSTANCE);
         addModule(LogoutSpots.INSTANCE);
         addModule(MasEffects.INSTANCE);
+        addModule(MotionBlur.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoGhostBlocks.INSTANCE);
         addModule(NoRender.INSTANCE);

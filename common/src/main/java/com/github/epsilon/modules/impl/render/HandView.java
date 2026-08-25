@@ -1,9 +1,15 @@
 package com.github.epsilon.modules.impl.render;
 
+import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.ArmRenderEvent;
+import com.github.epsilon.events.impl.HeldItemRenderEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.combat.KillAura;
+import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -17,12 +23,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
 
-public class HandsView extends Module {
+public class HandView extends Module {
 
-    public static final HandsView INSTANCE = new HandsView();
+    public static final HandView INSTANCE = new HandView();
 
-    private HandsView() {
-        super("Hands View", Category.RENDER);
+    private HandView() {
+        super("Hand View", Category.RENDER);
     }
 
     public enum SwingMode {
@@ -53,6 +59,28 @@ public class HandsView extends Module {
 
     public final BoolSetting swingWhileUsing = boolSetting("Visual Swing On Use", true);
     public final BoolSetting onlyOnBlock = boolSetting("Only On Block", true, swingWhileUsing::getValue);
+
+    private final SettingGroup mainHandGroup = settingGroup("Main Hand");
+    private final SettingGroup offHandGroup = settingGroup("Off Hand");
+    private final SettingGroup armGroup = settingGroup("Arm");
+
+    private final BoolSetting customTransform = boolSetting("Custom Transform", false);
+    private final TransformSettings mainHandTransform = new TransformSettings("Main Hand", mainHandGroup);
+    private final TransformSettings offHandTransform = new TransformSettings("Off Hand", offHandGroup);
+    private final TransformSettings armTransform = new TransformSettings("Arm", armGroup);
+
+    @EventHandler
+    private void onHeldItemRender(HeldItemRenderEvent event) {
+        if (customTransform.getValue()) {
+            TransformSettings transform = event.hand() == InteractionHand.MAIN_HAND ? mainHandTransform : offHandTransform;
+            transform.apply(event.poseStack());
+        }
+    }
+
+    @EventHandler
+    private void onArmRender(ArmRenderEvent event) {
+        if (customTransform.getValue()) armTransform.apply(event.poseStack());
+    }
 
     public boolean isBlocking() {
         KillAura killAura = KillAura.INSTANCE;
@@ -134,6 +162,39 @@ public class HandsView extends Module {
         poseStack.mulPose(Axis.XP.rotationDegrees(rotateX));
         poseStack.mulPose(Axis.YP.rotationDegrees(invert * rotateY));
         poseStack.mulPose(Axis.ZP.rotationDegrees(invert * rotateZ));
+    }
+
+    private class TransformSettings {
+        private final DoubleSetting scaleX;
+        private final DoubleSetting scaleY;
+        private final DoubleSetting scaleZ;
+        private final DoubleSetting positionX;
+        private final DoubleSetting positionY;
+        private final DoubleSetting positionZ;
+        private final DoubleSetting rotationX;
+        private final DoubleSetting rotationY;
+        private final DoubleSetting rotationZ;
+
+        private TransformSettings(String prefix, SettingGroup group) {
+            Setting.Dependency enabled = customTransform::getValue;
+            scaleX = doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, enabled).group(group);
+            scaleY = doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, enabled).group(group);
+            scaleZ = doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, enabled).group(group);
+            positionX = doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, enabled).group(group);
+            positionY = doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, enabled).group(group);
+            positionZ = doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, enabled).group(group);
+            rotationX = doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, enabled).group(group);
+            rotationY = doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, enabled).group(group);
+            rotationZ = doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, enabled).group(group);
+        }
+
+        private void apply(PoseStack poseStack) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(rotationX.getValue().floatValue()));
+            poseStack.mulPose(Axis.YP.rotationDegrees(rotationY.getValue().floatValue()));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(rotationZ.getValue().floatValue()));
+            poseStack.scale(scaleX.getValue().floatValue(), scaleY.getValue().floatValue(), scaleZ.getValue().floatValue());
+            poseStack.translate(positionX.getValue(), positionY.getValue(), positionZ.getValue());
+        }
     }
 
 }

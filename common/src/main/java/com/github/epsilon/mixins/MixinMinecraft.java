@@ -11,7 +11,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
 import com.github.epsilon.modules.impl.render.FreeCamera;
-import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.epsilon.modules.impl.render.HandView;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.sofurry.smtc.SmtcService;
@@ -129,12 +129,12 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "handleKeybinds", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;keyUse:Lnet/minecraft/client/KeyMapping;", ordinal = 0, opcode = Opcodes.GETFIELD))
     private void onItemUseMouseHandle(CallbackInfo ci) {
-        HandsView handsView = HandsView.INSTANCE;
+        HandView handView = HandView.INSTANCE;
         Minecraft mc = (Minecraft) (Object) this;
-        if (handsView.isEnabled() && handsView.swingWhileUsing.getValue()
+        if (handView.isEnabled() && handView.swingWhileUsing.getValue()
                 && mc.options.keyAttack.isDown()
                 && mc.options.keyAttack.consumeClick()
-                && (!handsView.onlyOnBlock.getValue() || mc.hitResult.getType() == HitResult.Type.BLOCK)
+                && (!handView.onlyOnBlock.getValue() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
             mc.player.swing(InteractionHand.MAIN_HAND, false); // Use this method can swing client side.
         }

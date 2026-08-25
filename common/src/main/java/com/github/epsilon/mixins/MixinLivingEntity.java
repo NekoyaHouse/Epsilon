@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
 import com.github.epsilon.modules.impl.player.InvManager;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
-import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.epsilon.modules.impl.render.HandView;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -82,9 +82,9 @@ public class MixinLivingEntity {
 
     @Inject(method = "getCurrentSwingDuration", at = @At("HEAD"), cancellable = true)
     private void hookGetCurrentSwingDuration(CallbackInfoReturnable<Integer> cir) {
-        HandsView handsView = HandsView.INSTANCE;
-        if ((LivingEntity) (Object) this == mc.player && handsView.isEnabled() && handsView.modifySwingDuration.getValue()) {
-            cir.setReturnValue(handsView.swingDuration.getValue());
+        HandView handView = HandView.INSTANCE;
+        if ((LivingEntity) (Object) this == mc.player && handView.isEnabled() && handView.modifySwingDuration.getValue()) {
+            cir.setReturnValue(handView.swingDuration.getValue());
         }
     }
 

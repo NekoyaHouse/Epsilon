@@ -238,6 +238,8 @@ public class KillAura extends Module {
             if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking()) return;
             if (hitResult instanceof EntityHitResult entityHitResult) {
                 Entity entity = entityHitResult.getEntity();
+                if (!entity.isAlive()) return;
+
                 mc.gameMode.attack(mc.player, entity);
 
                 if (espMode.is(ESPMode.Deobf)) DeobfESP.markHit(entity);

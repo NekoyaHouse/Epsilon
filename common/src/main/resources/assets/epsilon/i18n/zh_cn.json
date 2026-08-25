@@ -1951,8 +1951,11 @@
         "hotbar": "快捷栏",
         "inventory": "物品栏"
       },
-      "hands view": {
+      "hand view": {
         "_value": "手部视图",
+        "main hand": "主手",
+        "off hand": "副手",
+        "arm": "空手手臂",
         "disable swap main": "禁用主手交换",
         "disable swap off": "禁用副手交换",
         "blocking animation": "格挡动画",
@@ -1974,7 +1977,35 @@
         "modify swing duration": "修改挥手时长",
         "swing duration": "挥手时长",
         "visual swing on use": "使用时视觉挥手",
-        "only on block": "仅方块"
+        "only on block": "仅方块",
+        "custom transform": "自定义手部变换",
+        "main hand scale x": "X 轴缩放",
+        "main hand scale y": "Y 轴缩放",
+        "main hand scale z": "Z 轴缩放",
+        "main hand position x": "X 轴位置",
+        "main hand position y": "Y 轴位置",
+        "main hand position z": "Z 轴位置",
+        "main hand rotation x": "X 轴旋转",
+        "main hand rotation y": "Y 轴旋转",
+        "main hand rotation z": "Z 轴旋转",
+        "off hand scale x": "X 轴缩放",
+        "off hand scale y": "Y 轴缩放",
+        "off hand scale z": "Z 轴缩放",
+        "off hand position x": "X 轴位置",
+        "off hand position y": "Y 轴位置",
+        "off hand position z": "Z 轴位置",
+        "off hand rotation x": "X 轴旋转",
+        "off hand rotation y": "Y 轴旋转",
+        "off hand rotation z": "Z 轴旋转",
+        "arm scale x": "X 轴缩放",
+        "arm scale y": "Y 轴缩放",
+        "arm scale z": "Z 轴缩放",
+        "arm position x": "X 轴位置",
+        "arm position y": "Y 轴位置",
+        "arm position z": "Z 轴位置",
+        "arm rotation x": "X 轴旋转",
+        "arm rotation y": "Y 轴旋转",
+        "arm rotation z": "Z 轴旋转"
       },
       "hat": {
         "_value": "帽子",
@@ -2142,6 +2173,19 @@
         "drop shadow": "投影",
         "shadow blur": "投影模糊",
         "shadow color": "投影颜色"
+      },
+      "motion blur": {
+        "_value": "动态模糊",
+        "strength": "强度",
+        "samples": "采样数",
+        "algorithm": {
+          "_value": "算法",
+          "backwards": "向后",
+          "centered": "居中"
+        },
+        "depth blur": "深度位移",
+        "third person": "第三人称",
+        "refresh rate scaling": "按刷新率缩放"
       },
       "no ghost blocks": {
         "_value": "无幽灵方块",
@@ -2438,7 +2482,6 @@
         "other players": "其他玩家",
         "fired projectiles": "已发射投射物",
         "ignore wither skulls": "忽略凋灵之首",
-        "accurate": "精确运动",
         "simulation steps": "模拟步数",
         "ignore first ticks": "忽略起始刻",
         "line color": "轨迹颜色",

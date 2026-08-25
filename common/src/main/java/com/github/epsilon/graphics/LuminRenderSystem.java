@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.shaders.MotionBlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.managers.RenderTargetManager;
 import com.github.epsilon.managers.RendererManager;
@@ -45,6 +46,7 @@ public class LuminRenderSystem {
 
     public static void destroyAll() {
         guiProjectionMatrixBuffer.close();
+        MotionBlurShader.INSTANCE.close();
         ShaderUniforms.closeAll();
         RenderTargetManager.INSTANCE.destroyAll();
         RendererManager.INSTANCE.destroyAll();

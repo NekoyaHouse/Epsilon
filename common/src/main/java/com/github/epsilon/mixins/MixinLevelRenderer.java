@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.AfterRender3DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.shaders.CustomSkyShader;
 import com.github.epsilon.modules.impl.render.CustomSky;
+import com.github.epsilon.modules.impl.render.MotionBlur;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -41,6 +42,7 @@ public class MixinLevelRenderer {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void onPostRenderLevel(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
+        MotionBlur.INSTANCE.captureFrame(cameraState, modelViewMatrix);
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(modelViewMatrix);
         EventBus.INSTANCE.post(new Render3DEvent(poseStack));

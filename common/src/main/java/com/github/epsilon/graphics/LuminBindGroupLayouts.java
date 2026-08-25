@@ -17,7 +17,9 @@ public class LuminBindGroupLayouts {
     public static final BindGroupLayout GLOW_CONFIG = uniform("GlowConfig");
     public static final BindGroupLayout SHADER_PARAMS = uniform("ShaderParams");
     public static final BindGroupLayout SHADER_COLORS = uniform("ShaderColors");
+    public static final BindGroupLayout MOTION_BLUR_DATA = uniform("MotionBlurData");
     public static final BindGroupLayout INPUT_SAMPLER = BindGroupLayout.builder().withSampler("InputSampler").build();
+    public static final BindGroupLayout MOTION_BLUR_TEXTURES = BindGroupLayout.builder().withSampler("InputSampler").withSampler("DepthSampler").build();
 
     private static BindGroupLayout uniform(String name) {
         return BindGroupLayout.builder().withUniform(name, UniformType.UNIFORM_BUFFER).build();
