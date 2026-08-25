@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -43,12 +42,12 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
         }
     }
 
-    @Inject(method = "getNameTag", at = @At("HEAD"), cancellable = true)
-    private void onGetNameTag(T entity, CallbackInfoReturnable<Component> cir) {
+    @Inject(method = "extractNameTags(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FDD)V", at = @At("HEAD"), cancellable = true)
+    private void hookExtractNameTags(T entity, S state, float partialTicks, double nameTagDistance, double belowNameDistance, CallbackInfo ci) {
         boolean hideGlobalNametags = NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noNametags.getValue();
         boolean hidePlayerNametags = NameTags.INSTANCE.isEnabled() && entity instanceof Player;
         if (hideGlobalNametags || hidePlayerNametags) {
-            cir.setReturnValue(null);
+            ci.cancel();
         }
     }
 
