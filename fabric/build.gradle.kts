@@ -29,8 +29,8 @@ dependencies {
     implementation(libs.fabric.api)
     implementation("com.viaversion:viaversion-common:5.12.0-SNAPSHOT")
     implementation("com.viaversion:viabackwards-common:5.12.0-SNAPSHOT")
-    implementation("com.viaversion:viaaprilfools-common:4.2.2")
-    implementation("net.raphimc:ViaLegacy:3.0.16")
+    implementation("com.viaversion:viaaprilfools-common:4.2.3-SNAPSHOT")
+    implementation("net.raphimc:ViaLegacy:3.1.0-SNAPSHOT")
     implementation("net.raphimc:ViaBedrock:0.0.29-SNAPSHOT") {
         exclude(group = "com.mojang", module = "brigadier")
         exclude(group = "at.yawk.lz4", module = "lz4-java")

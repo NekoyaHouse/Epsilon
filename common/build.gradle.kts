@@ -37,8 +37,8 @@ dependencies {
     // compiles against their shared APIs.
     compileOnly("com.viaversion:viaversion-common:5.12.0-SNAPSHOT")
     compileOnly("com.viaversion:viabackwards-common:5.12.0-SNAPSHOT")
-    compileOnly("com.viaversion:viaaprilfools-common:4.2.2")
-    compileOnly("net.raphimc:ViaLegacy:3.0.16")
+    compileOnly("com.viaversion:viaaprilfools-common:4.2.3-SNAPSHOT")
+    compileOnly("net.raphimc:ViaLegacy:3.1.0-SNAPSHOT")
     compileOnly("net.raphimc:ViaBedrock:0.0.29-SNAPSHOT") {
         exclude(group = "com.mojang", module = "brigadier")
         exclude(group = "at.yawk.lz4", module = "lz4-java")

@@ -47,7 +47,7 @@ public class ViaVersionDebugHudEntry implements DebugScreenEntry {
         }
         final SeedStorage seedStorage = connection.get(SeedStorage.class);
         if (seedStorage != null && connection.getProtocolInfo().serverProtocolVersion().newerThanOrEqualTo(LegacyProtocolVersion.a1_2_0toa1_2_1_1)) {
-            information.add("World Seed: " + seedStorage.seed);
+            information.add("World Seed: " + seedStorage.getSeed());
         }
         final ExtensionProtocolMetadataStorage extensionProtocolMetadataStorage = connection.get(ExtensionProtocolMetadataStorage.class);
         if (extensionProtocolMetadataStorage != null) {

@@ -28,7 +28,7 @@ public abstract class MixinClientHandshakePacketListenerImpl_CoreConnection {
             // We are in the 1.7 -> 1.6 protocol, so we need to skip the joinServer call
             // if the server is in offline mode, due to the packet changes <-> networking changes
             // Minecraft's networking code is bad for us.
-            if (!mixinClientConnection.viaVersion$getUserConnection().get(ProtocolMetadataStorage.class).authenticate) {
+            if (!mixinClientConnection.viaVersion$getUserConnection().get(ProtocolMetadataStorage.class).isAuthenticate()) {
                 cir.setReturnValue(null);
             }
         }
