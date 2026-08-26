@@ -45,14 +45,14 @@ val gameLibrarySources = gameLibrarySpecs.associateWith { spec ->
     }
 }
 
-val markedGameLibraryTasks = gameLibrarySources.map { (spec, source) ->
+val markedGameLibraryTasks = gameLibrarySources.mapValues { (spec, source) ->
     tasks.register<MarkGameLibraryJar>("mark${spec.taskSuffix}AsGameLibrary") {
         inputJar.set(layout.file(source.elements.map { it.single().asFile }))
         outputJar.set(layout.buildDirectory.file("game-libraries/${spec.fileName}"))
     }
 }
 
-val markedGameLibraryJars = files(markedGameLibraryTasks.map { it.flatMap(MarkGameLibraryJar::outputJar) })
+val markedGameLibraryJars = files(markedGameLibraryTasks.values.map { it.flatMap(MarkGameLibraryJar::outputJar) })
 
 val jarJarDependencySource by configurations.creating {
     isCanBeResolved = true
@@ -137,10 +137,11 @@ tasks.named<JarJar>("jarJar") {
 
     doLast {
         val nestedDirectory = outputDirectory.dir("META-INF/jarjar").get().asFile
-        markedGameLibraryJars.files.forEach { markedJar ->
-            val embeddedJar = nestedDirectory.resolve(markedJar.name)
+        gameLibrarySources.forEach { (spec, source) ->
+            val markedJar = markedGameLibraryTasks.getValue(spec).get().outputJar.get().asFile
+            val embeddedJar = nestedDirectory.resolve(source.singleFile.name)
             check(embeddedJar.isFile) {
-                "JarJar did not embed the expected game library ${markedJar.name}"
+                "JarJar did not embed the expected game library ${source.singleFile.name}"
             }
             markedJar.copyTo(embeddedJar, overwrite = true)
         }

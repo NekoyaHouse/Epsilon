@@ -107,7 +107,6 @@ public class ModuleManager {
         addModule(Blink.INSTANCE);
         addModule(Eagle.INSTANCE);
         addModule(AutoMap.INSTANCE);
-        addModule(FastWeb.INSTANCE);
         addModule(Flight.INSTANCE);
         addModule(GUIMove.INSTANCE);
         addModule(HoleSnap.INSTANCE);
