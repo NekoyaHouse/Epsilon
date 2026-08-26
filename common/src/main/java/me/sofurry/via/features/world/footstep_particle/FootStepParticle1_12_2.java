@@ -22,8 +22,8 @@ import org.joml.Quaternionf;
 
 public class FootStepParticle1_12_2 extends SingleQuadParticle {
 
-    public static final Identifier ID = Identifier.fromNamespaceAndPath("viafabricplus", "footstep");
-    private static final Identifier SPRITE_ID = Identifier.fromNamespaceAndPath("viafabricplus", "footprint");
+    public static final Identifier ID = Identifier.fromNamespaceAndPath("viaversion", "footstep");
+    private static final Identifier SPRITE_ID = Identifier.fromNamespaceAndPath("viaversion", "footprint");
     public static final SimpleParticleType TYPE = new SimpleParticleType(true);
     public static int RAW_ID;
 

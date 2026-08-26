@@ -123,7 +123,6 @@ public class ProjectileSimulator {
         else if (projectile instanceof AbstractHurtingProjectile) data = EXPLOSIVE;
         else if (projectile instanceof LlamaSpit) data = LLAMA_SPIT;
         else if (projectile instanceof FishingHook) data = FISHING_BOBBER;
-        else if (projectile instanceof FireworkRocketEntity) data = FIREWORK;
         else if (projectile instanceof ThrowableProjectile) data = SNOWBALL;
         else return false;
 

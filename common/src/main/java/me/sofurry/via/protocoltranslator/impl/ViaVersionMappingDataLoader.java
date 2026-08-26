@@ -19,7 +19,7 @@ public class ViaVersionMappingDataLoader extends MappingDataLoader {
     public static final ViaVersionMappingDataLoader INSTANCE = new ViaVersionMappingDataLoader();
 
     private ViaVersionMappingDataLoader() {
-        super(ViaVersionMappingDataLoader.class, "assets/viafabricplus/data/");
+        super(ViaVersionMappingDataLoader.class, "assets/viaversion/data/");
 
         final JsonObject materialsData = this.loadData("materials-1.19.4.json");
         for (Map.Entry<String, JsonElement> entry : materialsData.getAsJsonObject("materials").entrySet()) {

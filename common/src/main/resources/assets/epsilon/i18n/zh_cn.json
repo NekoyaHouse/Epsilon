@@ -1818,9 +1818,9 @@
         "chat radius": "聊天圆角半径",
         "input radius": "输入框圆角半径",
         "blur strength": "模糊强度",
-        "drop shadow": "投影",
-        "shadow blur": "投影模糊",
-        "shadow color": "投影颜色"
+        "drop shadow": "阴影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色"
       },
       "better scoreboard": {
         "_value": "计分板美化",
@@ -1831,8 +1831,8 @@
         "background blur": "背景模糊",
         "blur strength": "模糊强度",
         "draw shadow": "绘制阴影",
-        "shadow blur": "投影模糊",
-        "shadow color": "投影颜色"
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色"
       },
       "block esp": {
         "_value": "方块透视",
@@ -2170,9 +2170,9 @@
         "outline color": "描边颜色",
         "background blur": "背景模糊",
         "blur strength": "模糊强度",
-        "drop shadow": "投影",
-        "shadow blur": "投影模糊",
-        "shadow color": "投影颜色"
+        "drop shadow": "阴影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色"
       },
       "motion blur": {
         "_value": "动态模糊",
@@ -2553,7 +2553,7 @@
         "background color": "背景颜色",
         "header color": "表头颜色",
         "text color": "文本颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
         "background blur": "背景模糊",
@@ -2581,7 +2581,7 @@
         "background color": "背景颜色",
         "background blur": "背景模糊",
         "blur strength": "模糊强度",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
         "quantum display time": "量子显示时间",
@@ -2614,7 +2614,7 @@
         "corner radius": "圆角半径",
         "background color": "背景颜色",
         "slot color": "槽位颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
         "background blur": "背景模糊",
@@ -2629,7 +2629,7 @@
         "tab list": "玩家列表",
         "music": "音乐",
         "background color": "背景颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "background blur": "背景模糊",
         "blur strength": "模糊强度",
         "shadow blur": "阴影模糊",
@@ -2668,7 +2668,7 @@
         "slider speed": "滑动速度",
         "background": "背景",
         "background color": "背景颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
         "color mode": {
@@ -2696,7 +2696,7 @@
         "background color": "背景颜色",
         "text color": "文本颜色",
         "text secondary": "次要文本颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
         "background blur": "背景模糊",
@@ -2731,7 +2731,7 @@
         "delay bar color": "延迟条颜色",
         "bar outline color": "条边框颜色",
         "text color": "文本颜色",
-        "drop shadow": "投影",
+        "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色"
       },

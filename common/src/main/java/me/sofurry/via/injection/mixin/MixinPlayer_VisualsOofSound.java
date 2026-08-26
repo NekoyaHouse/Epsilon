@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinPlayer_VisualsOofSound {
 
     @Unique
-    private static final SoundEvent viaVersionVisuals$oof_hurt = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("viafabricplus-visuals", "oof.hurt"));
+    private static final SoundEvent viaVersionVisuals$oof_hurt = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("viaversion-visuals", "oof.hurt"));
 
     @Inject(method = "getHurtSound", at = @At("HEAD"), cancellable = true)
     private void replaceSound(DamageSource source, CallbackInfoReturnable<SoundEvent> cir) {

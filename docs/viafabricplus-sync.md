@@ -24,8 +24,9 @@ Epsilon 的源码树与其逐字节一致。加载器边界、NeoForge 集成、
 - 仅 NeoForge 使用的桥接、Mixin 和访问转换器：`neoforge/src/main/java` 与 `neoforge/src/main/resources`
 
 Java 符号已重命名为 ViaVersion。Java 包命名空间为 `me.sofurry.via`；嵌入的源码
-不使用上游包 `com.viaversion.viafabricplus`。资源命名空间 `viafabricplus`、翻译键
-和上游 URL 均刻意保留。本地 Mixin 配置文件使用 `viaversion*.mixins.json` 名称。
+不使用上游包 `com.viaversion.viafabricplus`。资产命名空间使用 `viaversion` 和
+`viaversion-visuals`；翻译键和上游 URL 均刻意保留。本地 Mixin 配置文件使用
+`viaversion*.mixins.json` 名称。
 
 ViaFabricPlus 的保存/设置子系统以及协议库 YAML 文件已移除。用户设置由 Epsilon 的
 `ConfigManager` 负责，设置本身位于 `ClientSetting` 模块中。选定的协议版本全局存储于
@@ -93,7 +94,7 @@ Java 包映射为：
 com.viaversion.viafabricplus -> me.sofurry.via
 ```
 
-除非计划进行刻意迁移，否则保持以下运行时/资源标识符不变：
+除非计划进行刻意迁移，否则保持以下运行时标识符不变：
 
 ```text
 viafabricplus
@@ -101,7 +102,8 @@ viaversion*.mixins.json
 viafabricplus*.accesswidener
 ```
 
-同步更新文件名及所有 Java/Mixin 配置引用。保留许可证头和来源注释中的上游 GitHub URL。
+资产位于 `assets/viaversion` 和 `assets/viaversion-visuals`。同步资产时，必须一并更新
+文件名及所有 Java/Mixin/JSON 中的资源定位符引用。保留许可证头和来源注释中的上游 GitHub URL。
 
 ### 5. 重新应用加载器特定适配
 

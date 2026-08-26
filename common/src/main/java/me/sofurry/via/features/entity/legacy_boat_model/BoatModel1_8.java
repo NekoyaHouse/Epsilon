@@ -16,7 +16,7 @@ import net.minecraft.resources.Identifier;
  */
 public class BoatModel1_8 extends EntityModel<BoatRenderState> {
 
-    public static final ModelLayerLocation MODEL_LAYER = new ModelLayerLocation(Identifier.fromNamespaceAndPath("viafabricplus", "boat1_8"), "main");
+    public static final ModelLayerLocation MODEL_LAYER = new ModelLayerLocation(Identifier.fromNamespaceAndPath("viaversion", "boat1_8"), "main");
 
     public BoatModel1_8(ModelPart root) {
         super(root);

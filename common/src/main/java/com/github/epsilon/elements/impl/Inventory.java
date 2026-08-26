@@ -57,7 +57,7 @@ public class Inventory extends HudModule {
         }
 
         if (drawShadow.getValue()) {
-            scope.shadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            scope.shadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue() * scale, shadowColor.getValue());
         }
         scope.roundRect(this.x, this.y, totalWidth, totalHeight, radius, backgroundColor.getValue());
 

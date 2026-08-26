@@ -17,7 +17,7 @@ import net.minecraft.util.Mth;
  */
 public class BoatRenderer1_8 extends AbstractBoatRenderer {
 
-    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("viafabricplus", "textures/boat1_8.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("viaversion", "textures/boat1_8.png");
     private final BoatModel1_8 model;
 
     public BoatRenderer1_8(EntityRendererProvider.Context ctx) {

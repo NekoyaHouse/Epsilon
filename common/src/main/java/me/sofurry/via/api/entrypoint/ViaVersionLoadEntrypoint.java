@@ -11,7 +11,7 @@ import me.sofurry.via.api.events.LoadingCycleCallback;
 @FunctionalInterface
 public interface ViaVersionLoadEntrypoint {
 
-    String KEY = "viafabricplus";
+    String KEY = "viaversion";
 
     void onPlatformLoad(final ViaVersionBase platform);
 
