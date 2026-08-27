@@ -54,7 +54,6 @@ public class ModuleManager {
         addModule(AutoTotem.INSTANCE);
         addModule(AutoWeapon.INSTANCE);
         addModule(Criticals.INSTANCE);
-        addModule(ZealotCrystalPlus.INSTANCE);
         addModule(CrystalAura.INSTANCE);
         addModule(CrystalBlocker.INSTANCE);
         addModule(FeetTrap.INSTANCE);
@@ -69,7 +68,9 @@ public class ModuleManager {
         addModule(SafeCrystal.INSTANCE);
         addModule(SilentAim.INSTANCE);
         addModule(SpearKill.INSTANCE);
+        addModule(SuperKnockback.INSTANCE);
         addModule(TriggerBot.INSTANCE);
+        addModule(ZealotCrystalPlus.INSTANCE);
 
         // Player
         addModule(AutoArmor.INSTANCE);

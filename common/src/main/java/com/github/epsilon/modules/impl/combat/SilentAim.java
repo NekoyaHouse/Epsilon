@@ -28,13 +28,11 @@ public class SilentAim extends Module {
     }
 
     private final BoolSetting weaponOnly = boolSetting("Weapon Only", false);
-
     private final BoolSetting player = boolSetting("Player", true);
     private final BoolSetting mob = boolSetting("Mob", false);
     private final BoolSetting animal = boolSetting("Animal", false);
     private final BoolSetting villagers = boolSetting("Villagers", false);
     private final BoolSetting invisible = boolSetting("Invisible", false);
-
     private final DoubleSetting range = doubleSetting("Range", 3.0, 1.0, 6.0, 0.1);
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
 
@@ -45,10 +43,7 @@ public class SilentAim extends Module {
     private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !redirecting) return;
 
-        if (
-                target == null || !target.isAlive() || target.isDeadOrDying()
-                        || RotationUtils.getEyeDistanceToEntity(target) > range.getValue()
-        ) {
+        if (target == null || !target.isAlive() || target.isDeadOrDying() || RotationUtils.getEyeDistanceToEntity(target) > range.getValue()) {
             redirecting = false;
             return;
         }

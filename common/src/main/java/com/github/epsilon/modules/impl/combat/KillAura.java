@@ -28,6 +28,7 @@ import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.sofurry.ClInitNative;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -63,9 +64,16 @@ public class KillAura extends Module {
         OnePointNinePlus
     }
 
-    public enum TargetMode {
+    private enum TargetMode {
         Single,
         Switch
+    }
+
+    private enum PriorityMode {
+        None,
+        Health,
+        Fov,
+        Range
     }
 
     private enum ESPMode {
@@ -81,6 +89,7 @@ public class KillAura extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
     private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));
+    private final EnumSetting<PriorityMode> priorityMode = enumSetting("Priority Mode", PriorityMode.None);
     public final DoubleSetting searchRange = doubleSetting("Search Range", 4.0, 1.0, 6.0, 0.1);
     public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 1.0, 6.0, 0.1);
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
@@ -127,9 +136,9 @@ public class KillAura extends Module {
     private final DoubleSetting fireflyShaking = doubleSetting("Firefly Shaking", 1.8, 0.25, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
     private final DoubleSetting fireflyAmplitude = doubleSetting("Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
 
-    private List<LivingEntity> targets;
     public LivingEntity target;
-    private int targetNumber;
+    private List<LivingEntity> targets;
+    private int targetIndex;
 
     private long lastAttackTime;
     private int attacks;
@@ -183,19 +192,19 @@ public class KillAura extends Module {
         }
 
         switch (targetMode.getValue()) {
-            case Single -> targetNumber = 0;
+            case Single -> targetIndex = 0;
             case Switch -> {
                 if (switchTimer.passedMillise(switchDelay.getValue())) {
                     switchTimer.reset();
-                    if (++targetNumber >= targets.size()) {
-                        targetNumber = 0;
+                    if (++targetIndex >= targets.size()) {
+                        targetIndex = 0;
                     }
                 }
             }
         }
 
-        if (targetNumber >= targets.size()) {
-            targetNumber = 0;
+        if (targetIndex >= targets.size()) {
+            targetIndex = 0;
         }
 
         if (targets.isEmpty()) {
@@ -203,7 +212,17 @@ public class KillAura extends Module {
             return;
         }
 
-        target = targets.get(targetNumber);
+        switch (priorityMode.getValue()) {
+            case Range -> targets.sort(Comparator.comparingDouble(o -> (double) o.distanceTo(mc.player)));
+            case Fov -> {
+                targets.sort(Comparator.comparingDouble(o -> (double) Math.abs(Mth.wrapDegrees(mc.player.getXRot() - RotationUtils.calculate(o).getYaw()))));
+            }
+            case Health -> {
+                targets.sort(Comparator.comparingDouble(o -> o instanceof LivingEntity living ? (double) living.getHealth() : 0.0));
+            }
+        }
+
+        target = targets.get(targetIndex);
 
         Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
         if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;

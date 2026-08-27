@@ -45,10 +45,10 @@ public class NoSlowdown extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Vanilla);
-    private final BoolSetting cobweb = boolSetting("Cobweb", true, () -> mode.is(Mode.Vanilla));
     private final BoolSetting food = boolSetting("Food", true);
     private final BoolSetting bow = boolSetting("Bow", true, () -> !mode.is(Mode.GrimBlink));
     private final BoolSetting crossbow = boolSetting("Crossbow", true, () -> !mode.is(Mode.GrimBlink));
+    private final BoolSetting cobweb = boolSetting("Cobweb", true, () -> mode.is(Mode.Vanilla));
 
     private int ticks;
     private boolean eating;
