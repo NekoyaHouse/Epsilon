@@ -4,6 +4,7 @@ import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.video.VideoPlayer;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
@@ -148,6 +149,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         SmtcService.INSTANCE.stop();
+        VideoPlayer.stop();
         LuminRenderSystem.destroyAll();
     }
 

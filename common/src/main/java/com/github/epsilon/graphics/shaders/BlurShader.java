@@ -77,34 +77,45 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
-        render(x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, null, null, 0);
+        render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, null, null, 0);
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
+        render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, segmentRects, segmentRadii, segmentCount);
+    }
+
+    public void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float radius, float blurStrength) {
+        render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0);
+    }
+
+    private void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
         this.ensureProgram();
 
         if (width <= 0.0f || height <= 0.0f) {
             return;
         }
 
-        RenderTarget sourceTarget = mc.gameRenderer.mainRenderTarget();
+        RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
         LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
-        GpuTexture targetTexture = activeTarget == null ? sourceTarget.getColorTexture() : activeTarget.colorTexture();
-        GpuTextureView targetView = activeTarget == null ? sourceTarget.getColorTextureView() : activeTarget.colorView();
-        int targetWidth = activeTarget == null ? sourceTarget.width : activeTarget.width();
-        int targetHeight = activeTarget == null ? sourceTarget.height : activeTarget.height();
+        GpuTexture sourceTexture = source == null ? mainTarget.getColorTexture() : source.colorTexture();
+        int sourceWidth = source == null ? mainTarget.width : source.width();
+        int sourceHeight = source == null ? mainTarget.height : source.height();
+        GpuTexture targetTexture = activeTarget == null ? mainTarget.getColorTexture() : activeTarget.colorTexture();
+        GpuTextureView targetView = activeTarget == null ? mainTarget.getColorTextureView() : activeTarget.colorView();
+        int targetWidth = activeTarget == null ? mainTarget.width : activeTarget.width();
+        int targetHeight = activeTarget == null ? mainTarget.height : activeTarget.height();
 
-        if (sourceTarget.width <= 0 || sourceTarget.height <= 0 || targetWidth <= 0 || targetHeight <= 0
-                || sourceTarget.getColorTexture() == null || targetTexture == null || targetView == null) {
+        if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0
+                || sourceTexture == null || targetTexture == null || targetView == null) {
             return;
         }
 
         if (input == null) {
-            input = new TextureTarget("Lumin Blur Input", sourceTarget.width, sourceTarget.height, false, GpuFormat.RGBA8_UNORM);
+            input = new TextureTarget("Lumin Blur Input", sourceWidth, sourceHeight, false, GpuFormat.RGBA8_UNORM);
         }
 
-        if (this.input.width != sourceTarget.width || this.input.height != sourceTarget.height) {
-            this.input.resize(sourceTarget.width, sourceTarget.height);
+        if (this.input.width != sourceWidth || this.input.height != sourceHeight) {
+            this.input.resize(sourceWidth, sourceHeight);
         }
 
         if (this.input.getColorTexture() == null || this.input.getColorTextureView() == null) {
@@ -127,10 +138,10 @@ public class BlurShader {
 
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         encoder.copyTextureToTexture(
-                sourceTarget.getColorTexture(),
+                sourceTexture,
                 input.getColorTexture(),
                 0, 0, 0, 0, 0,
-                sourceTarget.width, sourceTarget.height
+                sourceWidth, sourceHeight
         );
 
         GpuBufferSlice blurUniforms = LuminRenderSystem.writeDynamicUniform(
@@ -139,7 +150,7 @@ public class BlurShader {
                 UNIFORMS_SIZE,
                 16,
                 new BlurUniforms(
-                        sourceTarget.width, sourceTarget.height, quality,
+                        sourceWidth, sourceHeight, quality,
                         pxW, pxH, pxX, pxY,
                         rTLPx, rTRPx, rBRPx, rBLPx,
                         scale, targetHeight, segmentRects, segmentRadii, count
@@ -329,8 +340,9 @@ public class BlurShader {
         }
     }
 
-    private record BoxBlurUniforms(float width, float height,
-                                   float quality) implements DynamicUniformStorage.DynamicUniform {
+    private record BoxBlurUniforms(
+            float width, float height, float quality
+    ) implements DynamicUniformStorage.DynamicUniform {
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer).putVec4(width, height, quality, 0.0f);

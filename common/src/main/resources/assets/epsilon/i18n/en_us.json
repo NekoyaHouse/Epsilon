@@ -359,6 +359,11 @@
           "epsilon": "Epsilon"
         },
         "use mainmenu": "Use Main Menu",
+        "mainmenu style": {
+          "_value": "Main Menu Style",
+          "columbia": "Columbia",
+          "classic": "Classic"
+        },
         "mainmenu background": {
           "_value": "Main Menu Background",
           "sea_level": "Sea Level",

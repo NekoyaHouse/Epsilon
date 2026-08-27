@@ -7,7 +7,8 @@ import java.awt.*;
 
 sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand.SegmentedShadow, Render2DCommand.RoundRect,
         Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle, Render2DCommand.Arc,
-        Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.GlitchText, Render2DCommand.Text {
+        Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.GlitchText, Render2DCommand.Text,
+        Render2DCommand.GradientText {
 
     int layer();
 
@@ -121,6 +122,15 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
                 String text, float x, float y, float scale, Color color,
                 TtfFontLoader fontLoader, float originX, float originY,
                 float rotationDegrees) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.TEXT;
+        }
+    }
+
+    record GradientText(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                        String text, float x, float y, float scale, Color startColor, Color endColor,
+                        TtfFontLoader fontLoader) implements Render2DCommand {
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.TEXT;

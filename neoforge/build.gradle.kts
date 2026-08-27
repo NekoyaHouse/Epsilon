@@ -109,6 +109,12 @@ dependencies {
     gameLibrarySources.forEach { (spec, source) ->
         add(source.name, spec.notation)
     }
+
+    implementation(jarJar("org.bytedeco:javacpp:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
 }
 
 configurations.named("jarJar") {

@@ -359,6 +359,11 @@
           "epsilon": "Epsilon"
         },
         "use mainmenu": "自定义主菜单",
+        "mainmenu style": {
+          "_value": "主菜单风格",
+          "columbia": "Columbia",
+          "classic": "经典"
+        },
         "mainmenu background": {
           "_value": "主菜单背景",
           "sea_level": "海平面",

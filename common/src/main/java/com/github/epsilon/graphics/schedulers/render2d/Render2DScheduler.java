@@ -296,6 +296,13 @@ public class Render2DScheduler implements AutoCloseable {
                     }
                 }
             }
+            case Render2DCommand.GradientText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addGradientText(text.text(), text.x(), text.y(), text.scale(), text.startColor(), text.endColor(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addGradientText(text.text(), text.x(), text.y(), text.scale(), text.startColor(), text.endColor());
+                }
+            }
             case Render2DCommand.BlurText text -> {
                 if (text.fontLoader() != null) {
                     renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity(), text.fontLoader());
@@ -492,6 +499,17 @@ public class Render2DScheduler implements AutoCloseable {
 
         public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
             addText(text, x, y, scale, color, fontLoader, x, y, 0.0f);
+        }
+
+        public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
+            addGradientText(text, x, y, scale, startColor, endColor, null);
+        }
+
+        public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            scheduler.add(new Render2DCommand.GradientText(layer, scheduler.nextSequence(), Render2DBounds.of(x, y, width, height), scissor, text, x, y, scale, startColor, endColor, fontLoader));
         }
 
         public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {

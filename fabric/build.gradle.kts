@@ -49,6 +49,12 @@ dependencies {
     }
     compileOnly(libs.sodium.fabric)
     compileOnly(libs.iris.fabric)
+
+    implementation(include("org.bytedeco:javacpp:1.5.10")!!)
+    implementation(include("org.bytedeco:javacv:1.5.10")!!)
+    implementation(include("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    runtimeOnly(include("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(include("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
 }
 
 configurations.named("include") {

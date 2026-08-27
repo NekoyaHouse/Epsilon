@@ -235,7 +235,6 @@ public class LuminRenderSystem {
     }
 
     private static final class ShaderUniforms {
-
         private static final Map<String, DynamicUniformStorage<DynamicUniformStorage.DynamicUniform>> UNIFORMS = new HashMap<>();
 
         private ShaderUniforms() {
@@ -262,11 +261,9 @@ public class LuminRenderSystem {
             UNIFORMS.values().forEach(DynamicUniformStorage::close);
             UNIFORMS.clear();
         }
-
     }
 
     public static final class LuminRenderTarget implements AutoCloseable {
-
         private LuminTexture colorTexture;
         private GpuTexture depthTexture;
         private GpuTextureView depthView;

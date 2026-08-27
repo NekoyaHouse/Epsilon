@@ -28,6 +28,8 @@ public class StaticFontLoader {
 
     public static final TtfFontLoader JURA_LIGHT = new TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/jura-light.ttf"));
 
+    public static final TtfFontLoader CINZEL_DECORATIVE = new TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/cinzeldecorative.ttf"));
+
     public static final TtfFontLoader OSAKA_CHIPS = new TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/osakachips.ttf"));
 
     private static TtfFontLoader customDefault;

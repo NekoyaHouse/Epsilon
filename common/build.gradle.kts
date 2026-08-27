@@ -56,6 +56,7 @@ dependencies {
         compileOnly("dev.kastle.webrtc:webrtc-java:1.0.3:$platform")
     }
 
+    compileOnly("org.bytedeco:javacv-platform:1.5.11")
 }
 
 configurations {

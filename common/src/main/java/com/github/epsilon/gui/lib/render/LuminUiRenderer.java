@@ -143,6 +143,13 @@ public class LuminUiRenderer {
             layer.addText(text, x, y, scale, color, fontLoader);
             return;
         }
+        if (node instanceof UiTree.GradientTextNode(
+                String text, float x, float y, float scale, Color startColor, Color endColor,
+                TtfFontLoader fontLoader
+        )) {
+            layer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
+            return;
+        }
         if (node instanceof UiTree.BlurTextNode(
                 String text, float x, float y, float scale, Color color, float blurRadius, int intensity,
                 TtfFontLoader fontLoader

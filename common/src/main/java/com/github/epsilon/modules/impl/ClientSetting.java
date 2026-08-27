@@ -47,6 +47,11 @@ public class ClientSetting extends Module {
         Panel
     }
 
+    public enum MainMenuStyle {
+        Columbia,
+        Classic
+    }
+
     public enum ModuleSort {
         Name,
         EnabledFirst,
@@ -226,7 +231,13 @@ public class ClientSetting extends Module {
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
-    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbia, useMainMenu::getValue).group(sgAppearance);
+
+    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting(
+            "MainMenu Background",
+            MainMenuScreen.Background.PLANET,
+            () -> useMainMenu.getValue() && mainMenuStyle.is(MainMenuStyle.Classic)
+    ).group(sgAppearance);
 
     public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting().group(sgAppearance);
 

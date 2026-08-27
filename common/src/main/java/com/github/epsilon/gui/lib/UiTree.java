@@ -453,6 +453,14 @@ public class UiTree {
             addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
         }
 
+        public void gradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
+            nodes.add(new GradientTextNode(text, resolveX(x), resolveY(y), scale, startColor, endColor, null));
+        }
+
+        public void gradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+            nodes.add(new GradientTextNode(text, resolveX(x), resolveY(y), scale, startColor, endColor, fontLoader));
+        }
+
         public void blurredText(String text, float x, float y, float scale, float blurRadius, int intensity, Color color) {
             nodes.add(new BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, null));
         }
@@ -1129,7 +1137,7 @@ public class UiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, BlurTextNode, GlitchTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ArcNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, SegmentedShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, GradientTextNode, BlurTextNode, GlitchTextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ArcNode, ViewportNode {
     }
 
     /**
@@ -1239,6 +1247,10 @@ public class UiTree {
 
     public record TextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader) implements UiNode {
+    }
+
+    public record GradientTextNode(String text, float x, float y, float scale, Color startColor, Color endColor,
+                                   TtfFontLoader fontLoader) implements UiNode {
     }
 
     public record BlurTextNode(String text, float x, float y, float scale, Color color, float blurRadius, int intensity,
