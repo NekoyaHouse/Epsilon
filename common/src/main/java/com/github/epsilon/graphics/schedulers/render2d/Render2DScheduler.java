@@ -224,7 +224,7 @@ public class Render2DScheduler implements AutoCloseable {
                     shadow.bounds().x(), shadow.bounds().y(), shadow.bounds().width(), shadow.bounds().height(),
                     shadow.radiusTopLeft(), shadow.radiusTopRight(), shadow.radiusBottomRight(), shadow.radiusBottomLeft(),
                     shadow.blurRadius(), shadow.color(),
-                    shadow.segmentRects(), shadow.segmentRadii(), shadow.segmentCount()
+                    shadow.segmentRects(), shadow.segmentRadii(), shadow.segmentColors(), shadow.segmentCount()
             );
             case Render2DCommand.RoundRect rect -> renderers.roundRectRenderer().addRoundRectGradient(
                     rect.bounds().x(), rect.bounds().y(), rect.bounds().width(), rect.bounds().height(),
@@ -371,17 +371,31 @@ public class Render2DScheduler implements AutoCloseable {
         public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
                               float[] segmentRects, float[] segmentRadii, int segmentCount) {
             addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
-                    segmentRects, segmentRadii, segmentCount);
+                    segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
+            addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
+                    segmentRects, segmentRadii, segmentColors, segmentCount);
         }
 
         public void addShadow(float x, float y, float width, float height,
                               float topLeft, float topRight, float bottomRight, float bottomLeft,
                               float blurRadius, Color color,
                               float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
+                    segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height,
+                              float topLeft, float topRight, float bottomRight, float bottomLeft,
+                              float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
             scheduler.add(new Render2DCommand.SegmentedShadow(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor,
                     topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
-                    segmentRects, segmentRadii, segmentCount));
+                    segmentRects, segmentRadii, segmentColors, segmentCount));
         }
 
         public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {

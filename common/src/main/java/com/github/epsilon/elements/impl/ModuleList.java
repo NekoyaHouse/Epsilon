@@ -56,7 +56,10 @@ public class ModuleList extends HudModule {
     private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(0, 0, 0, 50), () -> mode.is(DisplayMode.Normal) && background.getValue());
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final EnumSetting<ColorMode> shadowColorMode = enumSetting("Shadow Color Mode", ColorMode.Single, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final DoubleSetting shadowGradientLength = doubleSetting("Shadow Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && (shadowColorMode.is(ColorMode.Double) || shadowColorMode.is(ColorMode.Fade)));
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && !shadowColorMode.is(ColorMode.Rainbow));
+    private final ColorSetting shadowColor2 = colorSetting("Shadow Color 2", new Color(255, 0, 0, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Double));
 
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single);
     private final BoolSetting blur = boolSetting("Blur", true, () -> mode.is(DisplayMode.Normal));
@@ -203,10 +206,12 @@ public class ModuleList extends HudModule {
 
     private List<SegmentBatch> buildSegmentBatches(List<NormalRow> rows) {
         List<SegmentBatch> batches = new ArrayList<>((rows.size() + MAX_SEGMENTS - 1) / MAX_SEGMENTS);
+        long gradientStep = shadowGradientLength.getValue().longValue();
         for (int offset = 0; offset < rows.size(); offset += MAX_SEGMENTS) {
             int count = Math.min(MAX_SEGMENTS, rows.size() - offset);
             float[] segmentRects = new float[count * 4];
             float[] segmentRadii = new float[count];
+            Color[] segmentColors = new Color[count];
             float minX = Float.POSITIVE_INFINITY;
             float minY = Float.POSITIVE_INFINITY;
             float maxX = Float.NEGATIVE_INFINITY;
@@ -219,6 +224,7 @@ public class ModuleList extends HudModule {
                 segmentRects[index + 1] = row.backgroundY();
                 segmentRects[index + 2] = row.backgroundWidth();
                 segmentRects[index + 3] = row.backgroundHeight();
+                segmentColors[i] = resolveShadowColor(offset + i, gradientStep);
 
                 minX = Math.min(minX, row.backgroundX());
                 minY = Math.min(minY, row.backgroundY());
@@ -229,7 +235,7 @@ public class ModuleList extends HudModule {
             if (maxX > minX && maxY > minY) {
                 batches.add(new SegmentBatch(
                         minX, minY, maxX - minX, maxY - minY,
-                        segmentRects, segmentRadii, count
+                        segmentRects, segmentRadii, segmentColors, count
                 ));
             }
         }
@@ -250,10 +256,18 @@ public class ModuleList extends HudModule {
         float blurRadius = shadowBlur.getValue().floatValue();
         Color color = shadowColor.getValue();
         for (SegmentBatch batch : batches) {
+            float[] segmentColors = new float[batch.count() * 3];
+            for (int i = 0; i < batch.count(); i++) {
+                Color segmentColor = batch.colors()[i];
+                int offset = i * 3;
+                segmentColors[offset] = segmentColor.getRed() / 255.0f;
+                segmentColors[offset + 1] = segmentColor.getGreen() / 255.0f;
+                segmentColors[offset + 2] = segmentColor.getBlue() / 255.0f;
+            }
             scope.shadow(
                     batch.x(), batch.y(), batch.width(), batch.height(),
                     0.0f, blurRadius, color,
-                    batch.rects(), batch.radii(), batch.count()
+                    batch.rects(), batch.radii(), segmentColors, batch.count()
             );
         }
     }
@@ -336,9 +350,15 @@ public class ModuleList extends HudModule {
         };
     }
 
-    /**
-     * Shared animated theme colors for HUD styles that use the module-list accent.
-     */
+    private Color resolveShadowColor(int index, long offsetStep) {
+        return switch (shadowColorMode.getValue()) {
+            case Rainbow -> rainbowColor(index);
+            case Double -> animateColor(shadowColor.getValue(), shadowColor2.getValue(), index * offsetStep);
+            case Fade -> animateColor(shadowColor.getValue(), darker(shadowColor.getValue()), index * offsetStep);
+            case Single -> shadowColor.getValue();
+        };
+    }
+
     public Color getThemeColor(int index, long offsetStep) {
         return resolveColor(index, offsetStep);
     }
@@ -422,7 +442,7 @@ public class ModuleList extends HudModule {
 
     private record SegmentBatch(
             float x, float y, float width, float height,
-            float[] rects, float[] radii, int count
+            float[] rects, float[] radii, Color[] colors, int count
     ) {
     }
 

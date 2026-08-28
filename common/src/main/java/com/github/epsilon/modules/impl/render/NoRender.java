@@ -31,6 +31,7 @@ public class NoRender extends Module {
     // HUD
     public final BoolSetting bossBar = boolSetting("Boss Bar", false);
     public final BoolSetting scoreboard = boolSetting("Scoreboard", false);
+    public final BoolSetting chat = boolSetting("Chat", false);
     public final BoolSetting crosshair = boolSetting("Crosshair", false);
     public final BoolSetting title = boolSetting("Title", false);
     public final BoolSetting heldItemName = boolSetting("Held Item Name", false);

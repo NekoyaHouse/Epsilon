@@ -7,6 +7,7 @@ layout(std140) uniform SegmentedShadowUniforms {
     vec4 ShadowInfo;
     vec4 SegmentRects[64];
     vec4 SegmentRadii[64];
+    vec4 SegmentColors[64];
 };
 
 layout(location = 0) out vec4 fragColor;
@@ -38,6 +39,25 @@ float segmentedDistance(vec2 position, int count) {
         distance = min(distance, roundedRectDistance(position, SegmentRects[i], max(0.0, SegmentRadii[i].x)));
     }
     return distance;
+}
+
+vec3 shadowColorAt(float y, int count) {
+    if (count <= 1) return SegmentColors[0].rgb;
+
+    float firstCenter = SegmentRects[0].y + SegmentRects[0].w * 0.5;
+    if (y <= firstCenter) return SegmentColors[0].rgb;
+
+    for (int i = 0; i < 63; i++) {
+        if (i + 1 >= count) break;
+        float currentCenter = SegmentRects[i].y + SegmentRects[i].w * 0.5;
+        float nextCenter = SegmentRects[i + 1].y + SegmentRects[i + 1].w * 0.5;
+        if (y <= nextCenter) {
+            float progress = clamp((y - currentCenter) / max(nextCenter - currentCenter, 0.0001), 0.0, 1.0);
+            return mix(SegmentColors[i].rgb, SegmentColors[i + 1].rgb, progress);
+        }
+    }
+
+    return SegmentColors[count - 1].rgb;
 }
 
 float maskAt(vec2 position, int count, float antialias) {
@@ -74,5 +94,5 @@ void main() {
     float alpha = ShadowColor.a * clamp(blurredMask * outsideCoverage * rangeCoverage, 0.0, 1.0);
     if (alpha < 0.001) discard;
 
-    fragColor = vec4(ShadowColor.rgb, alpha);
+    fragColor = vec4(shadowColorAt(f_Position.y, count), alpha);
 }

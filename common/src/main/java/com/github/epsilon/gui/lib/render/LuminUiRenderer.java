@@ -90,10 +90,10 @@ public class LuminUiRenderer {
         if (node instanceof UiTree.SegmentedShadowNode(
                 float x, float y, float width, float height, float topLeft, float topRight, float bottomRight,
                 float bottomLeft, float blurRadius, Color color,
-                float[] segmentRects, float[] segmentRadii, int segmentCount
+                float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount
         )) {
             layer.addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
-                    segmentRects, segmentRadii, segmentCount);
+                    segmentRects, segmentRadii, segmentColors, segmentCount);
             return;
         }
         if (node instanceof UiTree.RoundRectNode(

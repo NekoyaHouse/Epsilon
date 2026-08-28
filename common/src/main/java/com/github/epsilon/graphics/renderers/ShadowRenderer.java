@@ -80,12 +80,18 @@ public class ShadowRenderer implements IRenderer {
     public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
                           float[] segmentRects, float[] segmentRadii, int segmentCount) {
         addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
-                segmentRects, segmentRadii, segmentCount);
+                segmentRects, segmentRadii, null, segmentCount);
+    }
+
+    public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                          float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
+        addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
+                segmentRects, segmentRadii, segmentColors, segmentCount);
     }
 
     public void addShadow(float x, float y, float width, float height,
                           float rTL, float rTR, float rBR, float rBL, float blurRadius, Color color,
-                          float[] segmentRects, float[] segmentRadii, int segmentCount) {
+                          float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
         int count = clampSegmentCount(segmentRects, segmentCount);
         if (count == 0) {
             addShadow(x, y, width, height, rTL, rTR, rBR, rBL, blurRadius, color);
@@ -129,7 +135,8 @@ public class ShadowRenderer implements IRenderer {
         float[] rects = Arrays.copyOf(segmentRects, count * 4);
         float[] radii = segmentRadii == null ? new float[count] : Arrays.copyOf(segmentRadii, count);
         int shadowIndex = segmentedShadows.size();
-        segmentedShadows.add(new SegmentedShadow(range, color, rects, radii, count));
+        float[] colors = segmentColors == null ? null : Arrays.copyOf(segmentColors, count * 3);
+        segmentedShadows.add(new SegmentedShadow(range, color, rects, radii, colors, count));
         draws.add(new ShadowDraw(true, shadowIndex * 6, 6, shadowIndex));
     }
 
@@ -312,13 +319,15 @@ public class ShadowRenderer implements IRenderer {
 
     private static int segmentedUniformsSize() {
         Std140SizeCalculator calculator = new Std140SizeCalculator().putVec4().putVec4();
-        for (int i = 0; i < MAX_SEGMENTS * 2; i++) {
+        for (int i = 0; i < MAX_SEGMENTS * 3; i++) {
             calculator.putVec4();
         }
         return calculator.get();
     }
 
-    private record SegmentedShadow(float blurRadius, Color color, float[] rects, float[] radii, int count) {
+    private record SegmentedShadow(
+            float blurRadius, Color color, float[] rects, float[] radii, float[] colors, int count
+    ) {
     }
 
     private record PreparedSegmentedShadow(GpuBufferSlice uniforms) {
@@ -357,6 +366,15 @@ public class ShadowRenderer implements IRenderer {
             for (int i = 0; i < MAX_SEGMENTS; i++) {
                 float radius = i < shadow.count() ? Math.max(0.0f, shadow.radii()[i]) : 0.0f;
                 builder.putVec4(radius, 0.0f, 0.0f, 0.0f);
+            }
+
+            for (int i = 0; i < MAX_SEGMENTS; i++) {
+                if (shadow.colors() != null && i < shadow.count() && shadow.colors().length >= i * 3 + 3) {
+                    int offset = i * 3;
+                    builder.putVec4(shadow.colors()[offset], shadow.colors()[offset + 1], shadow.colors()[offset + 2], 1.0f);
+                } else {
+                    builder.putVec4(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, 1.0f);
+                }
             }
         }
     }

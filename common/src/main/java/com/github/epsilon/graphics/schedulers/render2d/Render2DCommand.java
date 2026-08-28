@@ -43,7 +43,8 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
     record SegmentedShadow(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                            float blurRadius, Color color,
-                           float[] segmentRects, float[] segmentRadii, int segmentCount) implements Render2DCommand {
+                           float[] segmentRects, float[] segmentRadii, float[] segmentColors,
+                           int segmentCount) implements Render2DCommand {
         @Override
         public Render2DBounds orderingBounds() {
             float pad = Math.max(0.0f, blurRadius);

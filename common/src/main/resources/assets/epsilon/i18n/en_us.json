@@ -2687,6 +2687,15 @@
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color",
+        "shadow color mode": {
+          "_value": "Shadow Color Mode",
+          "single": "Single",
+          "double": "Double",
+          "rainbow": "Rainbow",
+          "fade": "Fade"
+        },
+        "shadow gradient length": "Shadow Gradient Length",
+        "shadow color 2": "Shadow Color 2",
         "color mode": {
           "_value": "Color Mode",
           "single": "Single",

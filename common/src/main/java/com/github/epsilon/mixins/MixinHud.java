@@ -49,15 +49,15 @@ public class MixinHud {
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.vignette.getValue()) ci.cancel();
     }
 
-    @Inject(method = "displayScoreboardSidebar", at = @At("HEAD"), cancellable = true)
-    private void onDisplayScoreboardSidebar(GuiGraphicsExtractor graphics, Objective objective, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.scoreboard.getValue()) ci.cancel();
-    }
-
     @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"), cancellable = true)
     private void onExtractScoreboardSidebar(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         if (BetterScoreboard.INSTANCE.isEnabled()) BetterScoreboard.INSTANCE.beginScoreboardExtraction();
         if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.scoreboard.getValue()) ci.cancel();
+    }
+
+    @Inject(method = "extractChat", at = @At("HEAD"), cancellable = true)
+    private void onExtractChat(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.chat.getValue()) ci.cancel();
     }
 
     @WrapOperation(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))

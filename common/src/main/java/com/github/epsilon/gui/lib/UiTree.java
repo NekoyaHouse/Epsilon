@@ -311,10 +311,16 @@ public class UiTree {
 
         public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
                            float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            shadow(x, y, width, height, radius, blurRadius, color, segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                           float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
             nodes.add(new SegmentedShadowNode(
                     resolveX(x), resolveY(y), width, height,
                     radius, radius, radius, radius, blurRadius, color,
-                    resolveSegmentRects(segmentRects), segmentRadii == null ? null : segmentRadii.clone(), segmentCount
+                    resolveSegmentRects(segmentRects), segmentRadii == null ? null : segmentRadii.clone(),
+                    segmentColors == null ? null : segmentColors.clone(), segmentCount
             ));
         }
 
@@ -326,6 +332,25 @@ public class UiTree {
                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                            float blurRadius, Color color) {
             nodes.add(new ShadowNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
+        }
+
+        public void shadow(float x, float y, float width, float height,
+                           float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                           float blurRadius, Color color, float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            shadow(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    blurRadius, color, segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void shadow(float x, float y, float width, float height,
+                           float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                           float blurRadius, Color color, float[] segmentRects, float[] segmentRadii,
+                           float[] segmentColors, int segmentCount) {
+            nodes.add(new SegmentedShadowNode(
+                    resolveX(x), resolveY(y), width, height,
+                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color,
+                    resolveSegmentRects(segmentRects), segmentRadii == null ? null : segmentRadii.clone(),
+                    segmentColors == null ? null : segmentColors.clone(), segmentCount
+            ));
         }
 
         public void shadow(int layer, float x, float y, float width, float height,
@@ -1202,7 +1227,7 @@ public class UiTree {
             float radiusTopLeft, float radiusTopRight,
             float radiusBottomRight, float radiusBottomLeft,
             float blurRadius, Color color,
-            float[] segmentRects, float[] segmentRadii, int segmentCount
+            float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount
     ) implements UiNode {
     }
 

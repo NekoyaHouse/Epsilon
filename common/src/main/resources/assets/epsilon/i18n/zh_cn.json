@@ -2687,6 +2687,15 @@
         "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
+        "shadow color mode": {
+          "_value": "阴影颜色模式",
+          "single": "单色",
+          "double": "双色",
+          "rainbow": "彩虹",
+          "fade": "淡入淡出"
+        },
+        "shadow gradient length": "阴影渐变长度",
+        "shadow color 2": "阴影颜色 2",
         "color mode": {
           "_value": "颜色模式",
           "single": "单色",
