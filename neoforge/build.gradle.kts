@@ -110,11 +110,11 @@ dependencies {
         add(source.name, spec.notation)
     }
 
-    implementation(jarJar("org.bytedeco:javacpp:1.5.10")!!)
-    implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
-    implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
-    runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
-    runtimeOnly(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
+    implementation("org.bytedeco:javacpp:1.5.10")
+    implementation("org.bytedeco:javacv:1.5.10")
+    implementation("org.bytedeco:ffmpeg:6.1.1-1.5.10")
+    runtimeOnly("org.bytedeco:javacpp:1.5.10:windows-x86_64")
+    runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
 }
 
 configurations.named("jarJar") {

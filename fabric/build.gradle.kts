@@ -61,7 +61,7 @@ configurations.named("include") {
     // Fabric Loom only nests direct include dependencies. Resolve the Via
     // implementation graph once and add its modules as non-transitive direct
     // dependencies, matching ViaFabricPlus's upstream JIJ setup.
-    defaultDependencies {
+    withDependencies {
         includeDependencySource.incoming.resolutionResult.allComponents
             .mapNotNull { it.id as? ModuleComponentIdentifier }
             .filterNot { id ->

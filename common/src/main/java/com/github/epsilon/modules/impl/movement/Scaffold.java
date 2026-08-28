@@ -200,10 +200,6 @@ public class Scaffold extends Module {
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
     private boolean emergencyPlacementActive;
-    private float lastPlacedYawDelta = Float.NaN;
-    private float serverYaw;
-    private float lastSendYawDelta;
-    private boolean rotationSent;
     private boolean pearlUsePacketSent;
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
@@ -218,10 +214,6 @@ public class Scaffold extends Module {
         blockResult = null;
         shouldSwapBack = false;
         emergencyPlacementActive = false;
-        lastPlacedYawDelta = Float.NaN;
-        serverYaw = RotationManager.INSTANCE.getLastRotation().getYaw();
-        lastSendYawDelta = Float.NaN;
-        rotationSent = false;
         pearlUsePacketSent = false;
     }
 
@@ -335,11 +327,6 @@ public class Scaffold extends Module {
             if (usedStack.is(Items.ENDER_PEARL) || usedStack.isEmpty() && mc.player.getCooldowns().isOnCooldown(Items.ENDER_PEARL.getDefaultInstance())) {
                 pearlUsePacketSent = true;
             }
-        } else if (event.getPacket() instanceof ServerboundMovePlayerPacket packet && packet.hasRotation()) {
-            float yaw = packet.getYRot(serverYaw);
-            lastSendYawDelta = Math.abs(yaw - serverYaw);
-            serverYaw = yaw;
-            rotationSent = true;
         }
     }
 
@@ -417,10 +404,6 @@ public class Scaffold extends Module {
             return;
         }
 
-        if (rotationSent && !Float.isNaN(lastPlacedYawDelta) && lastSendYawDelta > 2.0f && Math.abs(lastSendYawDelta - lastPlacedYawDelta) < 0.0001f) {
-            return;
-        }
-
         swap();
 
         InteractionHand hand = blockResult.getHand();
@@ -428,11 +411,6 @@ public class Scaffold extends Module {
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
 
         if (result.consumesAction()) {
-            if (rotationSent) {
-                lastPlacedYawDelta = lastSendYawDelta;
-                rotationSent = false;
-            }
-
             if (swingHand.getValue()) {
                 mc.player.swing(hand);
             } else {
@@ -594,10 +572,7 @@ public class Scaffold extends Module {
             }
         }
 
-        return new Rot2f(
-                calculated.getYaw() - MathUtils.getRandom(0.0001F, 0.0003F),
-                Mth.clamp(calculated.getPitch() - MathUtils.getRandom(0.001F, 0.003F), -90.0F, 90.0F)
-        );
+        return calculated;
     }
 
     private boolean onAir() {

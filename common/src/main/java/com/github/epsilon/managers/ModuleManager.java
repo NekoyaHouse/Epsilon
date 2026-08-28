@@ -82,6 +82,7 @@ public class ModuleManager {
         addModule(BedNuker.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
         addModule(ChestAura.INSTANCE);
+        addModule(Disabler.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
         addModule(FakePlayer.INSTANCE);
         addModule(GhostHand.INSTANCE);

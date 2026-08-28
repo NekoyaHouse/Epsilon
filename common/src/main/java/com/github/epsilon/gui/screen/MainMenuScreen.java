@@ -51,7 +51,7 @@ public class MainMenuScreen extends Screen {
         MINECRAFT
     }
 
-    private static final Identifier COLUMBIA_LIGHT_TRAILS_TEXTURE = ResourceLocationUtils.getIdentifier("textures/lighttrails.png");
+    private static final Identifier COLUMBINA_LIGHT_TRAILS_TEXTURE = ResourceLocationUtils.getIdentifier("textures/lighttrails.png");
 
     private static final float MENU_REFERENCE_WIDTH = 1600.0f;
     private static final float MENU_REFERENCE_HEIGHT = 900.0f;
@@ -123,7 +123,7 @@ public class MainMenuScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbia)) {
+        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina)) {
             if (VideoPlayer.isStopped()) {
                 try {
                     VideoManager.INSTANCE.loadBackground();
@@ -244,7 +244,7 @@ public class MainMenuScreen extends Screen {
         backgroundRenderTarget.clear();
         LuminRenderSystem.setActiveTarget(backgroundRenderTarget);
 
-        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbia) && drawColumbiaBackground()) {
+        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina) && drawColumbinaBackground()) {
             LuminRenderSystem.setActiveTarget(null);
             graphics.blit(backgroundRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
         } else {
@@ -276,8 +276,8 @@ public class MainMenuScreen extends Screen {
         uiRenderTarget.clear();
         LuminRenderSystem.setActiveTarget(uiRenderTarget);
 
-        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbia)) {
-            drawColumbiaMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
+        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina)) {
+            drawColumbinaMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
         } else {
             scene.beginFrame();
             drawClassicMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
@@ -288,7 +288,7 @@ public class MainMenuScreen extends Screen {
         graphics.blit(uiRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
     }
 
-    private boolean drawColumbiaBackground() {
+    private boolean drawColumbinaBackground() {
         Identifier texture = VideoPlayer.getGuiTexture();
         int textureWidth = VideoPlayer.getGuiTextureWidth();
         int textureHeight = VideoPlayer.getGuiTextureHeight();
@@ -321,7 +321,7 @@ public class MainMenuScreen extends Screen {
         UiTree backgroundTree = UiTree.build(scope -> {
             scope.layer(0, layer -> {
                 layer.texture(texture, 0.0f, 0.0f, width, height, finalU0, finalV0, finalU1, finalV1, Color.WHITE, true);
-                layer.texture(COLUMBIA_LIGHT_TRAILS_TEXTURE, 0.0f, 0.0f, width, height, 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE, true);
+                layer.texture(COLUMBINA_LIGHT_TRAILS_TEXTURE, 0.0f, 0.0f, width, height, 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE, true);
             });
             scope.layer(1, layer -> {
                 layer.rectHorizontalGradient(width * 0.42f, 0.0f, width * 0.58f, height, new Color(14, 20, 45, 0), new Color(7, 11, 30, 150));
@@ -334,7 +334,7 @@ public class MainMenuScreen extends Screen {
         return true;
     }
 
-    private void drawColumbiaMenu(int mouseX, int mouseY) {
+    private void drawColumbinaMenu(int mouseX, int mouseY) {
         String clientName = Constants.NAME.toUpperCase();
         long now = Util.getMillis();
         int width = LuminRenderSystem.getScaledWidthInt();
@@ -346,7 +346,7 @@ public class MainMenuScreen extends Screen {
         float layoutY = height - layoutHeight;
         float layoutMouseX = mouseX - layoutX;
         float layoutMouseY = mouseY - layoutY;
-        float menuCenterCorrectionX = (width - layoutWidth) * 0.25f;
+        float menuCenterCorrectionX = (width - layoutWidth) * 0.2f;
         float intro = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp((now - introStartMs) / 850.0f, 0.0f, 1.0f));
         float shutdownElapsed = reisaShutdownStartMs < 0L ? 0.0f : now - reisaShutdownStartMs;
         float exit = Easing.EASE_IN_OUT_CUBIC.getFunction().apply(Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS, 0.0f, 1.0f));
@@ -364,7 +364,7 @@ public class MainMenuScreen extends Screen {
         float titleX = titleCenterX - titleWidth * 0.5f + (1.0f - intro) * 31.0f * scale + exit * 27.9f * scale;
         float titleY = Math.max(37.2f * scale, layoutHeight * 0.095f);
         float subtitleScale = 1.705f * scale;
-        String subtitle = "COLUMBIA / " + Constants.VERSION;
+        String subtitle = "COLUMBINA / " + Constants.VERSION;
         float subtitleWidth = scene.scheduler().textMetrics().getWidth(subtitle, subtitleScale);
         float subtitleX = titleCenterX - subtitleWidth * 0.5f + (1.0f - intro) * 31.0f * scale + exit * 27.9f * scale;
         float subtitleY = titleY + titleHeight - 6.2f * scale;
@@ -941,7 +941,7 @@ public class MainMenuScreen extends Screen {
             float scale = resolutionScale(width, height);
             int layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale);
             int layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale);
-            boolean columbia = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbia);
+            boolean columbia = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
             float layoutX = columbia ? width - layoutWidth : (width - layoutWidth) * 0.5f;
             float layoutY = columbia ? height - layoutHeight : (height - layoutHeight) * 0.5f;
             for (MenuEntry entry : entries) {

@@ -48,7 +48,7 @@ public class ClientSetting extends Module {
     }
 
     public enum MainMenuStyle {
-        Columbia,
+        Columbina,
         Classic
     }
 
@@ -231,7 +231,7 @@ public class ClientSetting extends Module {
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
-    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbia, useMainMenu::getValue).group(sgAppearance);
+    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue).group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting(
             "MainMenu Background",
