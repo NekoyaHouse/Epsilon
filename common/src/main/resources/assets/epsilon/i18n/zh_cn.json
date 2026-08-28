@@ -1331,6 +1331,7 @@
         "ignore curse": "忽略绑定诅咒",
         "strict": "严格模式"
       },
+      "auto crossbow release": "弩自动松手",
       "auto firework": {
         "_value": "自动烟花",
         "activate key": "激活按键",

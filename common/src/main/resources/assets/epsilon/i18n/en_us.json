@@ -1331,6 +1331,7 @@
         "ignore curse": "Ignore Binding Curse",
         "strict": "Strict"
       },
+      "auto crossbow release": "Auto Crossbow Release",
       "auto firework": {
         "_value": "Auto Firework",
         "activate key": "Activate Key",
