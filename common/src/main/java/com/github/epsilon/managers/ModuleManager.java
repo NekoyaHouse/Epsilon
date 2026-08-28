@@ -46,6 +46,7 @@ public class ModuleManager {
         addModule(AimBot.INSTANCE);
         addModule(AnchorBlast.INSTANCE);
         addModule(AntiBot.INSTANCE);
+        addModule(Backtrack.INSTANCE);
         addModule(AutoClicker.INSTANCE);
         addModule(AutoDtap.INSTANCE);
         addModule(AutoHitCrystal.INSTANCE);

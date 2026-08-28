@@ -663,6 +663,36 @@
         "charge cps": "Charge CPS"
       },
       "anti bot": "Anti Bot",
+      "backtrack": {
+        "_value": "Backtrack",
+        "min range": "Min Range",
+        "max range": "Max Range",
+        "min delay": "Min Delay",
+        "max delay": "Max Delay",
+        "next backtrack min": "Next Backtrack Min",
+        "next backtrack max": "Next Backtrack Max",
+        "tracking buffer": "Tracking Buffer",
+        "chance": "Chance",
+        "pause on hurt time": "Pause On Hurt Time",
+        "hurt time": "Hurt Time",
+        "target mode": {
+          "_value": "Target Mode",
+          "attack": "Attack",
+          "range": "Range"
+        },
+        "last attack time": "Last Attack Time",
+        "players": "Players",
+        "mobs": "Mobs",
+        "animals": "Animals",
+        "villagers": "Villagers",
+        "ambient": "Ambient",
+        "water": "Water",
+        "others": "Others",
+        "invisible": "Invisible",
+        "esp": "",
+        "side color": "",
+        "outline color": "Outline Color"
+      },
       "auto clicker": {
         "_value": "Auto Clicker",
         "button": {
@@ -1398,6 +1428,11 @@
         "delay": "Delay",
         "turn speed": "Turn Speed",
         "disable in hypixel lobby": "Disable In Hypixel Lobby"
+      },
+      "disabler": {
+        "_value": "",
+        "aca duplicate slot": "",
+        "aca fast switch": ""
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -2222,6 +2257,7 @@
         "enchant glint": "Enchant Glint",
         "boss bar": "Boss Bar",
         "scoreboard": "Scoreboard",
+        "chat": "",
         "crosshair": "Crosshair",
         "title": "Title",
         "held item name": "Held Item Name",
@@ -2686,7 +2722,6 @@
         "background color": "Background Color",
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
         "shadow color mode": {
           "_value": "Shadow Color Mode",
           "single": "Single",
@@ -2695,6 +2730,7 @@
           "fade": "Fade"
         },
         "shadow gradient length": "Shadow Gradient Length",
+        "shadow color": "Shadow Color",
         "shadow color 2": "Shadow Color 2",
         "color mode": {
           "_value": "Color Mode",

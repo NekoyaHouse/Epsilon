@@ -140,8 +140,8 @@ public class KillAura extends Module {
     private List<LivingEntity> targets;
     private int targetIndex;
 
-    private long lastAttackTime;
     private int attacks;
+    private long lastAttackTime;
 
     private final TimerUtils switchTimer = new TimerUtils();
 
@@ -230,7 +230,7 @@ public class KillAura extends Module {
 
         HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         if (hitSelect.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
-            if (player.hurtTime <= 1 || Criticals.INSTANCE.fallTicks == 2 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled())) {
+            if (player.hurtTime <= mc.getConnection().getPlayerInfo(mc.player.getUUID()).getLatency() / 50 + 1 || (mc.player.hurtTime >= 6 && !Velocity.INSTANCE.isEnabled()) || Criticals.INSTANCE.fallTicks == 2) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {

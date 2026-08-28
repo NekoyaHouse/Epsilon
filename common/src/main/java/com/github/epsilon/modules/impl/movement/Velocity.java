@@ -74,6 +74,14 @@ public class Velocity extends Module {
     private volatile boolean jump;
     private volatile int delayTicksRemaining;
 
+    public boolean ownsIncomingDelayQueue() {
+        return isEnabled() && (mode.is(Mode.Reduce) && delay || mode.is(Mode.Delay) && delayTicksRemaining > 0);
+    }
+
+    public boolean blocksBacktrack() {
+        return isEnabled() && (mode.is(Mode.Reduce) && (delay || attackQueue > 0) || mode.is(Mode.Delay) && delayTicksRemaining > 0);
+    }
+
     private final Queue<Packet<? super ClientPacketListener>> packets = new ArrayDeque<>();
     private final Queue<Packet<? super ClientPacketListener>> delayPackets = new ArrayDeque<>();
 
