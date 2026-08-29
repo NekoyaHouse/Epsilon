@@ -78,7 +78,7 @@ public class UiTree {
      * <p>
      * 作用域负责收集节点、传播动画活动状态，并在需要时把子树包装成 layer 或 viewport。
      */
-    public static final class Scope {
+    public static class Scope {
 
         private List<UiNode> nodes = new ArrayList<>();
         private boolean hasActiveAnimations;
@@ -1028,7 +1028,7 @@ public class UiTree {
      * <p>
      * 该作用域负责在 row/column 中计算子元素位置，GUI 代码只需要声明间距、尺寸和内容。
      */
-    public static final class LayoutScope {
+    public static class LayoutScope {
         private final Scope draw;
         private final UiRect bounds;
 
@@ -1091,7 +1091,7 @@ public class UiTree {
      * <p>
      * 固定尺寸和 fill 尺寸可以混用；fill 会使用当前容器尚未消费的剩余空间。
      */
-    public static final class LinearScope {
+    public static class LinearScope {
         private final Scope draw;
         private final UiRect bounds;
         private final Axis axis;

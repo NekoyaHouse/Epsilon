@@ -330,7 +330,7 @@ public class Render2DScheduler implements AutoCloseable {
         layerHandles.clear();
     }
 
-    public static final class LayerHandle {
+    public static class LayerHandle {
         private final Render2DScheduler scheduler;
         private final int layer;
         private Render2DScissor scissor;

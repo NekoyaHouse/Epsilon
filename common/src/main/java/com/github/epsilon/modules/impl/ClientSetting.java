@@ -126,7 +126,7 @@ public class ClientSetting extends Module {
         Disabled
     }
 
-    public static final class VersionedBoolSetting extends EnumSetting<VersionedMode> {
+    public static class VersionedBoolSetting extends EnumSetting<VersionedMode> {
 
         private final ProtocolVersionRange protocolRange;
 

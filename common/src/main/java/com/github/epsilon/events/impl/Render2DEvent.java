@@ -14,13 +14,13 @@ public class Render2DEvent {
         return guiGraphics;
     }
 
-    public static final class Level extends Render2DEvent {
+    public static class Level extends Render2DEvent {
         public Level(GuiGraphicsExtractor guiGraphics) {
             super(guiGraphics);
         }
     }
 
-    public static final class HUD extends Render2DEvent {
+    public static class HUD extends Render2DEvent {
         public HUD(GuiGraphicsExtractor guiGraphics) {
             super(guiGraphics);
         }

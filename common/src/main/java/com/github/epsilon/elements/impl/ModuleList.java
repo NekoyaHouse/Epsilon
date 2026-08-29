@@ -50,7 +50,6 @@ public class ModuleList extends HudModule {
     private final BoolSetting textGlow = boolSetting("Text Glow", true);
     private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
     private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
-    private final DoubleSetting doubleGradientLength = doubleSetting("Double Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting sliderSpeed = doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01);
     private final BoolSetting background = boolSetting("Background", true, () -> mode.is(DisplayMode.Normal));
     private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(0, 0, 0, 50), () -> mode.is(DisplayMode.Normal) && background.getValue());
@@ -60,8 +59,15 @@ public class ModuleList extends HudModule {
     private final DoubleSetting shadowGradientLength = doubleSetting("Shadow Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && (shadowColorMode.is(ColorMode.Double) || shadowColorMode.is(ColorMode.Fade)));
     private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && !shadowColorMode.is(ColorMode.Rainbow));
     private final ColorSetting shadowColor2 = colorSetting("Shadow Color 2", new Color(255, 0, 0, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Double));
-
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single);
+    private final DoubleSetting doubleGradientLength = doubleSetting("Double Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal) && (colorMode.is(ColorMode.Double) || colorMode.is(ColorMode.Fade)));
+    private final DoubleSetting rainbowSpeed = doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, this::usesRainbow);
+    private final DoubleSetting rainbowSpread = doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, this::usesRainbow);
+    private final DoubleSetting rainbowHueOffset = doubleSetting("Rainbow Hue Offset", 0.0, 0.0, 360.0, 1.0, this::usesRainbow);
+    private final DoubleSetting rainbowSaturation = doubleSetting("Rainbow Saturation", 0.5, 0.0, 1.0, 0.05, this::usesRainbow);
+    private final DoubleSetting rainbowBrightness = doubleSetting("Rainbow Brightness", 1.0, 0.1, 1.0, 0.05, this::usesRainbow);
+    private final IntSetting rainbowAlpha = intSetting("Rainbow Alpha", 255, 0, 255, 1, () -> colorMode.is(ColorMode.Rainbow));
+    private final IntSetting shadowRainbowAlpha = intSetting("Shadow Rainbow Alpha", 90, 0, 255, 1, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Rainbow));
     private final BoolSetting blur = boolSetting("Blur", true, () -> mode.is(DisplayMode.Normal));
     private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 20, 1, () -> mode.is(DisplayMode.Normal) && blur.getValue());
     private final ColorSetting themeColor1 = colorSetting("Theme Color 1", Color.WHITE, false, () -> !colorMode.is(ColorMode.Rainbow));
@@ -165,15 +171,14 @@ public class ModuleList extends HudModule {
 
             float backgroundWidth = entry.displayWidth() + horizontalPadding * 2.0f;
             float slideOffset = backgroundWidth * (1.0f - animation);
-            float textX = rightSide
-                    ? baseTextX + maxTextWidth - entry.displayWidth() + slideOffset
-                    : baseTextX - slideOffset;
+            float textX = rightSide ? baseTextX + maxTextWidth - entry.displayWidth() + slideOffset : baseTextX - slideOffset;
             float backgroundX = textX - horizontalPadding;
             float backgroundY = this.y + layout.renderY()[i];
             float backgroundHeight = lineHeight * animation;
-            Color color = resolveColor(colorIndex++, gradientStep);
+            Color startColor = rows.isEmpty() ? resolveColor(colorIndex, gradientStep) : rows.getLast().endColor();
+            Color endColor = resolveColor(++colorIndex, gradientStep);
 
-            rows.add(new NormalRow(entry, textX, backgroundX, backgroundY, backgroundWidth, backgroundHeight, color));
+            rows.add(new NormalRow(entry, textX, backgroundX, backgroundY, backgroundWidth, backgroundHeight, startColor, endColor));
         }
 
         List<SegmentBatch> segmentBatches = buildSegmentBatches(rows);
@@ -189,7 +194,7 @@ public class ModuleList extends HudModule {
             }
 
             float textY = row.backgroundY() + (row.backgroundHeight() - textHeight) * 0.5f;
-            drawModuleText(scope, row.entry(), row.textX(), textY, textScale, withAlpha(row.color(), animation), animation);
+            drawModuleText(scope, row.entry(), row.textX(), textY, textScale, withAlpha(row.startColor(), animation), withAlpha(row.endColor(), animation), animation);
         }
 
         float lineWidth = this.lineWidth.getValue().floatValue() * textScale;
@@ -200,7 +205,8 @@ public class ModuleList extends HudModule {
             if (i + 1 < rows.size()) {
                 lineBottom = Math.max(lineBottom, rows.get(i + 1).backgroundY());
             }
-            scope.rect(lineX, row.backgroundY(), lineWidth, Math.max(0.0f, lineBottom - row.backgroundY()), withAlpha(row.color(), row.entry().animation()));
+            float bottomAnimation = i + 1 < rows.size() ? rows.get(i + 1).entry().animation() : row.entry().animation();
+            scope.rectVerticalGradient(lineX, row.backgroundY(), lineWidth, Math.max(0.0f, lineBottom - row.backgroundY()), withAlpha(row.startColor(), row.entry().animation()), withAlpha(row.endColor(), bottomAnimation));
         }
     }
 
@@ -233,10 +239,7 @@ public class ModuleList extends HudModule {
             }
 
             if (maxX > minX && maxY > minY) {
-                batches.add(new SegmentBatch(
-                        minX, minY, maxX - minX, maxY - minY,
-                        segmentRects, segmentRadii, segmentColors, count
-                ));
+                batches.add(new SegmentBatch(minX, minY, maxX - minX, maxY - minY, segmentRects, segmentRadii, segmentColors, count));
             }
         }
         return batches;
@@ -244,17 +247,16 @@ public class ModuleList extends HudModule {
 
     private void renderBlur(List<SegmentBatch> batches) {
         for (SegmentBatch batch : batches) {
-            BlurShader.INSTANCE.render(
-                    batch.x(), batch.y(), batch.width(), batch.height(),
-                    0.0f, blurStrength.getValue(),
-                    batch.rects(), batch.radii(), batch.count()
-            );
+            BlurShader.INSTANCE.render(batch.x(), batch.y(), batch.width(), batch.height(), 0.0f, blurStrength.getValue(), batch.rects(), batch.radii(), batch.count());
         }
     }
 
     private void renderShadow(UiTree.Scope scope, List<SegmentBatch> batches) {
         float blurRadius = shadowBlur.getValue().floatValue();
         Color color = shadowColor.getValue();
+        if (shadowColorMode.is(ColorMode.Rainbow)) {
+            color = new Color(color.getRed(), color.getGreen(), color.getBlue(), shadowRainbowAlpha.getValue());
+        }
         for (SegmentBatch batch : batches) {
             float[] segmentColors = new float[batch.count() * 3];
             for (int i = 0; i < batch.count(); i++) {
@@ -264,11 +266,7 @@ public class ModuleList extends HudModule {
                 segmentColors[offset + 1] = segmentColor.getGreen() / 255.0f;
                 segmentColors[offset + 2] = segmentColor.getBlue() / 255.0f;
             }
-            scope.shadow(
-                    batch.x(), batch.y(), batch.width(), batch.height(),
-                    0.0f, blurRadius, color,
-                    batch.rects(), batch.radii(), segmentColors, batch.count()
-            );
+            scope.shadow(batch.x(), batch.y(), batch.width(), batch.height(), 0.0f, blurRadius, color, batch.rects(), batch.radii(), segmentColors, batch.count());
         }
     }
 
@@ -326,11 +324,17 @@ public class ModuleList extends HudModule {
     }
 
     private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameColor, float animation) {
+        drawModuleText(scope, entry, x, y, textScale, nameColor, nameColor, animation);
+    }
+
+    private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameStartColor, Color nameEndColor, float animation) {
         float glowRadius = this.glowRadius.getValue().floatValue();
         int glowIntensity = this.glowIntensity.getValue();
-        if (textGlow.getValue())
-            scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, nameColor);
-        scope.text(entry.name, x, y, textScale, nameColor);
+        Color glowColor = ColorUtils.interpolateColor(nameStartColor, nameEndColor, 0.5f);
+        if (textGlow.getValue()) {
+            scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, glowColor);
+        }
+        scope.gradientText(entry.name, x, y, textScale, nameStartColor, nameEndColor);
         if (!entry.info.isEmpty()) {
             String text = " " + entry.info;
             float textX = x + entry.nameWidth;
@@ -343,7 +347,7 @@ public class ModuleList extends HudModule {
 
     private Color resolveColor(int index, long offsetStep) {
         return switch (colorMode.getValue()) {
-            case Rainbow -> rainbowColor(index);
+            case Rainbow -> rainbowColor(index, rainbowAlpha.getValue());
             case Double -> animateColor(themeColor1.getValue(), themeColor2.getValue(), index * offsetStep);
             case Fade -> animateColor(themeColor1.getValue(), darker(themeColor1.getValue()), index * offsetStep);
             case Single -> themeColor1.getValue();
@@ -352,7 +356,7 @@ public class ModuleList extends HudModule {
 
     private Color resolveShadowColor(int index, long offsetStep) {
         return switch (shadowColorMode.getValue()) {
-            case Rainbow -> rainbowColor(index);
+            case Rainbow -> rainbowColor(index, shadowRainbowAlpha.getValue());
             case Double -> animateColor(shadowColor.getValue(), shadowColor2.getValue(), index * offsetStep);
             case Fade -> animateColor(shadowColor.getValue(), darker(shadowColor.getValue()), index * offsetStep);
             case Single -> shadowColor.getValue();
@@ -363,9 +367,14 @@ public class ModuleList extends HudModule {
         return resolveColor(index, offsetStep);
     }
 
-    private Color rainbowColor(int index) {
-        int hueDegrees = (int) ((System.currentTimeMillis() / 10L + index * 8L) % 360L);
-        return new Color(Color.HSBtoRGB(hueDegrees / 360.0f, 0.5f, 1.0f));
+    private boolean usesRainbow() {
+        return colorMode.is(ColorMode.Rainbow) || mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Rainbow);
+    }
+
+    private Color rainbowColor(int index, int alpha) {
+        double hueDegrees = System.currentTimeMillis() * 0.1 * rainbowSpeed.getValue() + rainbowHueOffset.getValue() + index * rainbowSpread.getValue();
+        int rgb = Color.HSBtoRGB((float) ((hueDegrees % 360.0) / 360.0), rainbowSaturation.getValue().floatValue(), rainbowBrightness.getValue().floatValue());
+        return new Color(rgb >>> 16 & 0xFF, rgb >>> 8 & 0xFF, rgb & 0xFF, Mth.clamp(alpha, 0, 255));
     }
 
     private Color animateColor(Color start, Color end, long offset) {
@@ -399,7 +408,7 @@ public class ModuleList extends HudModule {
         return info == null || info.isBlank() ? "" : info;
     }
 
-    private static final class ToggleAnimation {
+    private static class ToggleAnimation {
         private boolean target;
         private float progress;
         private long startedAt;
@@ -427,8 +436,9 @@ public class ModuleList extends HudModule {
         }
     }
 
-    private record RenderEntry(Module module, String name, String info, float nameWidth, float displayWidth,
-                               float animation) {
+    private record RenderEntry(
+            Module module, String name, String info, float nameWidth, float displayWidth, float animation
+    ) {
     }
 
     private record LayoutState(float[] renderY, float height) {
@@ -436,13 +446,12 @@ public class ModuleList extends HudModule {
 
     private record NormalRow(
             RenderEntry entry, float textX, float backgroundX, float backgroundY, float backgroundWidth,
-            float backgroundHeight, Color color
+            float backgroundHeight, Color startColor, Color endColor
     ) {
     }
 
     private record SegmentBatch(
-            float x, float y, float width, float height,
-            float[] rects, float[] radii, Color[] colors, int count
+            float x, float y, float width, float height, float[] rects, float[] radii, Color[] colors, int count
     ) {
     }
 

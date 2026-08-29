@@ -263,7 +263,7 @@ public class LuminRenderSystem {
         }
     }
 
-    public static final class LuminRenderTarget implements AutoCloseable {
+    public static class LuminRenderTarget implements AutoCloseable {
         private LuminTexture colorTexture;
         private GpuTexture depthTexture;
         private GpuTextureView depthView;

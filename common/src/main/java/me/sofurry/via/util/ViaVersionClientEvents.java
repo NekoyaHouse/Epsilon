@@ -23,7 +23,7 @@ public class ViaVersionClientEvents {
     private ViaVersionClientEvents() {
     }
 
-    public static final class LevelTickEvent {
+    public static class LevelTickEvent {
 
         private final CopyOnWriteArrayList<Consumer<ClientLevel>> listeners = new CopyOnWriteArrayList<>();
 

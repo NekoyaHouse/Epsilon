@@ -76,7 +76,7 @@ public class LuminImmediateRenderer {
         POS_COLOR_NORMAL_LINE_WIDTH_LINES.endFrame();
     }
 
-    public static final class PosColorQuads {
+    public static class PosColorQuads {
 
         private final Channel channel;
 
@@ -95,7 +95,7 @@ public class LuminImmediateRenderer {
         }
     }
 
-    public static final class PosColorTriangleStrip {
+    public static class PosColorTriangleStrip {
 
         private final Channel channel;
 
@@ -115,7 +115,7 @@ public class LuminImmediateRenderer {
 
     }
 
-    public static final class PosColorTriangleFan {
+    public static class PosColorTriangleFan {
 
         private final Channel channel;
 
@@ -135,7 +135,7 @@ public class LuminImmediateRenderer {
 
     }
 
-    public static final class PosTexColorQuads {
+    public static class PosTexColorQuads {
 
         private final Channel channel;
 
@@ -155,7 +155,7 @@ public class LuminImmediateRenderer {
         }
     }
 
-    public static final class Lines {
+    public static class Lines {
 
         private final Channel channel;
         private final Vector3f normalTmp = new Vector3f();

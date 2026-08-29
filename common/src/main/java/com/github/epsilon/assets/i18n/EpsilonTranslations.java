@@ -172,7 +172,7 @@ public class EpsilonTranslations {
         return ALL;
     }
 
-    public static final class Keybind {
+    public static class Keybind {
         public static final TranslateComponent NONE = create("keybind", "none");
         public static final TranslateComponent TOGGLE = create("keybind", "toggle");
         public static final TranslateComponent HOLD = create("keybind", "hold");
@@ -181,7 +181,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class Module {
+    public static class Module {
         public static final TranslateComponent VISIBLE = create("module", "visible");
         public static final TranslateComponent HIDDEN = create("module", "hidden");
         public static final TranslateComponent FROM = create("module", "from");
@@ -193,7 +193,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class Gui {
+    public static class Gui {
         public static final TranslateComponent SEARCH = create("gui", "search");
         public static final TranslateComponent CLIENT_SETTINGS = create("gui", "clientsettings");
         public static final TranslateComponent NO_MODULE = create("gui", "no_module");
@@ -303,7 +303,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class ElytraFly {
+    public static class ElytraFly {
         public static final TranslateComponent PITCH40_TAKEOFF_COMPLETE = create("modules.elytra fly", "pitch40_takeoff_complete");
         public static final TranslateComponent PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS = create("modules.elytra fly", "pitch40_too_close_to_lower_bounds");
         public static final TranslateComponent PITCH40_NO_USABLE_ELYTRA = create("modules.elytra fly", "pitch40_no_usable_elytra");
@@ -312,7 +312,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class PlayerAlarms {
+    public static class PlayerAlarms {
         public static final TranslateComponent JOIN_ALERT_TEXT = create("modules.player alarms", "join_alert_text");
         public static final TranslateComponent LEAVE_ALERT_TEXT = create("modules.player alarms", "leave_alert_text");
         public static final TranslateComponent ENTER_RD_ALERT_TEXT = create("modules.player alarms", "enter_rd_alert_text");
@@ -328,7 +328,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class PlayerInfo {
+    public static class PlayerInfo {
         public static final TranslateComponent PLAYERS = create("elements.player info", "players");
         public static final TranslateComponent DISTANCE = create("elements.player info", "distance");
         public static final TranslateComponent HEALTH = create("elements.player info", "health");
@@ -340,7 +340,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class Notifications {
+    public static class Notifications {
         public static final TranslateComponent PREVIEW_TITLE = create("elements.notifications", "preview.title");
         public static final TranslateComponent PREVIEW_MESSAGE = create("elements.notifications", "preview.message");
         public static final TranslateComponent NO_SLOWDOWN_DISABLED_WATER = create("notification", "no_slowdown_disabled_water");
@@ -358,7 +358,7 @@ public class EpsilonTranslations {
         }
     }
 
-    public static final class Via {
+    public static class Via {
         public static final TranslateComponent BASE_CANCEL = create("via", "base.cancel");
         public static final TranslateComponent BASE_REFRESH = create("via", "base.refresh");
         public static final TranslateComponent BASE_SOMETHING_WENT_WRONG = create("via", "base.something_went_wrong");
