@@ -13,40 +13,6 @@ layout(std140) uniform BlurUniforms {
 
 layout(location = 0) out vec4 fragColor;
 
-float roundRectDistance(vec2 position, vec4 innerRect, vec4 radius) {
-    vec2 halfSize = (innerRect.zw - innerRect.xy) * 0.5;
-    vec2 center = (innerRect.xy + innerRect.zw) * 0.5;
-    vec2 p = position - center;
-
-    vec2 s = step(0.0, p);
-    float rCurrent = mix(
-        mix(radius.x, radius.w, s.y),
-        mix(radius.y, radius.z, s.y),
-        s.x
-    );
-
-    vec2 q = abs(p) - halfSize + rCurrent;
-    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - rCurrent;
-}
-
-float shapeCoverage(float distance) {
-    float delta = max(fwidth(distance), 1e-4);
-    return 1.0 - smoothstep(-delta, delta, distance);
-}
-
-float segmentedCoverage(vec2 position, int count) {
-    float coverage = 0.0;
-    for (int i = 0; i < 64; i++) {
-        if (i >= count) break;
-
-        vec4 rect = SegmentRects[i];
-        vec4 bounds = vec4(rect.xy, rect.xy + rect.zw);
-        float radius = max(0.0, SegmentRadii[i].x);
-        coverage = min(1.0, coverage + shapeCoverage(roundRectDistance(position, bounds, vec4(radius))));
-    }
-    return coverage;
-}
-
 vec4 blur() {
     #define TAU 6.28318530718
 
@@ -80,9 +46,30 @@ void main() {
     vec4 bounds = vec4(uLocation, uLocation + uSize);
 
     int segmentCount = int(SegmentInfo.x);
-    float alpha = segmentCount > 0
-        ? segmentedCoverage(gl_FragCoord.xy, segmentCount)
-        : shapeCoverage(roundRectDistance(gl_FragCoord.xy, bounds, radii));
+    int shapeCount = max(segmentCount, 1);
+    float alpha = 0.0;
+
+    for (int i = 0; i < 64; i++) {
+        if (i >= shapeCount) break;
+
+        vec4 shapeBounds = bounds;
+        vec4 shapeRadii = radii;
+        if (segmentCount > 0) {
+            vec4 rect = SegmentRects[i];
+            shapeBounds = vec4(rect.xy, rect.xy + rect.zw);
+            shapeRadii = vec4(max(0.0, SegmentRadii[i].x));
+        }
+
+        vec2 halfSize = (shapeBounds.zw - shapeBounds.xy) * 0.5;
+        vec2 center = (shapeBounds.xy + shapeBounds.zw) * 0.5;
+        vec2 position = gl_FragCoord.xy - center;
+        vec2 quadrant = step(0.0, position);
+        float radius = mix(mix(shapeRadii.x, shapeRadii.w, quadrant.y), mix(shapeRadii.y, shapeRadii.z, quadrant.y), quadrant.x);
+        vec2 distanceToEdge = abs(position) - halfSize + radius;
+        float distance = length(max(distanceToEdge, 0.0)) + min(max(distanceToEdge.x, distanceToEdge.y), 0.0) - radius;
+        float delta = max(fwidth(distance), 1e-4);
+        alpha = min(1.0, alpha + 1.0 - smoothstep(-delta, delta, distance));
+    }
 
     if (alpha < 0.001) discard;
     fragColor = vec4(blur().rgb, alpha);
