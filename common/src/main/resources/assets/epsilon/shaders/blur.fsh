@@ -14,7 +14,10 @@ layout(std140) uniform BlurUniforms {
 layout(location = 0) out vec4 fragColor;
 
 vec4 blur() {
-    #define TAU 6.28318530718
+    const float TAU = 6.28318530718;
+    const int DIRECTION_COUNT = 16;
+    const int RING_COUNT = 5;
+    const float SAMPLE_COUNT = float(1 + DIRECTION_COUNT * RING_COUNT);
 
     vec2 inputResolution = InputInfo.xy;
     float quality = InputInfo.z;
@@ -26,17 +29,18 @@ vec4 blur() {
     float centerAlpha = sampleColor.a;
     vec3 colorSum = centerColor;
 
-    float step =  TAU / 16.0;
-
-    for (float d = 0.0; d < TAU; d += step) {
-        for (float i = 0.2; i <= 1.0; i += 0.2) {
-            sampleColor = texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
+    for (int direction = 0; direction < DIRECTION_COUNT; direction++) {
+        float angle = TAU * float(direction) / float(DIRECTION_COUNT);
+        vec2 directionOffset = vec2(cos(angle), sin(angle)) * radius;
+        for (int ring = 1; ring <= RING_COUNT; ring++) {
+            float ringOffset = float(ring) / float(RING_COUNT);
+            sampleColor = texture(InputSampler, uv + directionOffset * ringOffset);
             float signal = max(sampleColor.a, max(sampleColor.r, max(sampleColor.g, sampleColor.b)));
             colorSum += signal > 1e-5 ? sampleColor.rgb : centerColor;
         }
     }
 
-    return vec4(colorSum / 81.0, centerAlpha);
+    return vec4(colorSum / SAMPLE_COUNT, centerAlpha);
 }
 
 void main() {
