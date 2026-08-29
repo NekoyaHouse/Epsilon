@@ -62,8 +62,6 @@ public class NameTags extends Module {
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 8.0, 2.0, 24.0, 0.5, dropShadow::getValue);
     private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 135), dropShadow::getValue);
 
-    private static final int MAX_BLUR_SEGMENTS = 64;
-
     private final Supplier<Render2DScheduler> schedulerSupplier = Suppliers.memoize(Render2DScheduler::new);
 
     @EventHandler
@@ -113,7 +111,6 @@ public class NameTags extends Module {
             tags.add(tag);
         }
 
-        // Lower layers are flushed first, so nearby tags remain legible when two labels overlap.
         tags.sort(Comparator.comparingDouble(TagLayout::distanceSquared).reversed());
         return tags;
     }
@@ -169,18 +166,11 @@ public class NameTags extends Module {
         List<SegmentLayout> segments = new ArrayList<>(measured.size());
         for (MeasuredSegment segment : measured) {
             float y = startY + (tagHeight - segment.height()) * 0.5f;
-            segments.add(new SegmentLayout(
-                    segment.content(), currentX, y, segment.width(), segment.height(), radius,
-                    paddingX, iconGap, segment.textWidth(), segment.textHeight(),
-                    segment.iconWidth(), segment.iconHeight()
-            ));
+            segments.add(new SegmentLayout(segment.content(), currentX, y, segment.width(), segment.height(), radius, paddingX, iconGap, segment.textWidth(), segment.textHeight(), segment.iconWidth(), segment.iconHeight()));
             currentX += segment.width() + segmentGap;
         }
 
-        return new TagLayout(
-                startX, startY, totalWidth, tagHeight, radius, renderScale,
-                mc.player.distanceToSqr(player), List.copyOf(segments)
-        );
+        return new TagLayout(startX, startY, totalWidth, tagHeight, radius, renderScale, mc.player.distanceToSqr(player), List.copyOf(segments));
     }
 
     private void renderTag(Render2DScheduler.LayerHandle layer, TagLayout tag) {
@@ -188,27 +178,16 @@ public class NameTags extends Module {
         float[] segmentRadii = segmentRadii(tag.segments());
 
         if (dropShadow.getValue()) {
-            layer.addShadow(
-                    tag.x(), tag.y(), tag.width(), tag.height(), tag.radius(),
-                    shadowBlur.getValue().floatValue() * tag.scale(), shadowColor.getValue(),
-                    segmentRects, segmentRadii, tag.segments().size()
-            );
+            layer.addShadow(tag.x(), tag.y(), tag.width(), tag.height(), tag.radius(), shadowBlur.getValue().floatValue() * tag.scale(), shadowColor.getValue(), segmentRects, segmentRadii, tag.segments().size());
         }
 
         Color base = backgroundColor.getValue();
         Color top = mix(base, Color.WHITE, 0.065f);
         Color bottom = mix(base, Color.BLACK, 0.055f);
         for (SegmentLayout segment : tag.segments()) {
-            layer.addRoundRectGradient(
-                    segment.x(), segment.y(), segment.width(), segment.height(),
-                    segment.radius(), segment.radius(), segment.radius(), segment.radius(),
-                    top, bottom, bottom, top
-            );
+            layer.addRoundRectGradient(segment.x(), segment.y(), segment.width(), segment.height(), segment.radius(), segment.radius(), segment.radius(), segment.radius(), top, bottom, bottom, top);
             if (outline.getValue()) {
-                layer.addOutline(
-                        segment.x(), segment.y(), segment.width(), segment.height(), segment.radius(),
-                        Math.max(0.45f, 0.55f * tag.scale()), outlineColor.getValue()
-                );
+                layer.addOutline(segment.x(), segment.y(), segment.width(), segment.height(), segment.radius(), Math.max(0.45f, 0.55f * tag.scale()), outlineColor.getValue());
             }
             renderSegmentContent(layer, segment, tag.scale());
         }
@@ -218,7 +197,7 @@ public class NameTags extends Module {
         Segment content = segment.content();
         float cursorX = segment.x() + segment.paddingX();
         float textY = segment.y() + (segment.height() - segment.textHeight()) * 0.5f;
-        float iconY = segment.y() + (segment.height() - segment.iconHeight()) * 0.5f;
+        float iconY = segment.y() + (segment.height() - segment.iconHeight()) * 0.5f + renderScale;
 
         if (content.icon() != null && content.iconFirst()) {
             layer.addText(content.icon(), cursorX, iconY, renderScale, content.iconColor(), StaticFontLoader.ICONS);
@@ -229,10 +208,7 @@ public class NameTags extends Module {
         cursorX += segment.textWidth();
 
         if (content.icon() != null && !content.iconFirst()) {
-            layer.addText(
-                    content.icon(), cursorX + segment.iconGap(), iconY,
-                    renderScale, content.iconColor(), StaticFontLoader.ICONS
-            );
+            layer.addText(content.icon(), cursorX + segment.iconGap(), iconY, renderScale, content.iconColor(), StaticFontLoader.ICONS);
         }
     }
 
@@ -240,8 +216,9 @@ public class NameTags extends Module {
         List<SegmentLayout> segments = tags.stream().flatMap(tag -> tag.segments().stream()).toList();
         float strength = blurStrength.getValue().floatValue();
 
-        for (int start = 0; start < segments.size(); start += MAX_BLUR_SEGMENTS) {
-            int count = Math.min(MAX_BLUR_SEGMENTS, segments.size() - start);
+        int maxBlurSegments = 64;
+        for (int start = 0; start < segments.size(); start += maxBlurSegments) {
+            int count = Math.min(maxBlurSegments, segments.size() - start);
             float[] rects = new float[count * 4];
             float[] radii = new float[count];
             float minX = Float.POSITIVE_INFINITY;

@@ -47,7 +47,7 @@ public class KeyFriend extends Module {
             String playerName = player.getGameProfile().name();
             if (FriendManager.INSTANCE.isFriend(playerName)) {
                 FriendManager.INSTANCE.removeFriend(playerName);
-                NotificationManager.INSTANCE.success(getTranslatedName(), EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).getString());
+                NotificationManager.INSTANCE.error(getTranslatedName(), EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).getString());
             } else {
                 FriendManager.INSTANCE.addFriend(playerName);
                 NotificationManager.INSTANCE.success(getTranslatedName(), EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).getString());
