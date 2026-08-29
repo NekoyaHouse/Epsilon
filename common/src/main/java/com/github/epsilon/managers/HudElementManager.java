@@ -40,6 +40,7 @@ public class HudElementManager {
         addElement(PlayerInfo.INSTANCE);
         addElement(ScaffoldBlock.INSTANCE);
         addElement(TargetHUD.INSTANCE);
+        addElement(VictoryBanner.INSTANCE);
         addElement(Watermark.INSTANCE);
     }
 
