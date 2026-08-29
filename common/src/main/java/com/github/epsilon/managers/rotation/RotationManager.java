@@ -8,6 +8,7 @@ import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import me.sofurry.ClInitNative;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
 
@@ -156,11 +157,11 @@ public abstract class RotationManager {
         return Mth.clamp(pitch, -90.0F, 90.0F);
     }
 
-    protected void correctDisabledRotations() {
-        Rot2f rotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-        Rot2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
-        mc.player.setYRot(fixedRotations.getYaw());
-        mc.player.setXRot(fixedRotations.getPitch());
+    protected void correctDisabledRotations(LocalPlayer player) {
+        Rot2f playerRotation = new Rot2f(player.getYRot(), player.getXRot());
+        Rot2f fixedRotations = RotationUtils.applySensitivityPatch(playerRotation, lastRotations);
+        float fixedYaw = fixedRotations.getYaw() + Mth.wrapDegrees(player.getYRot() - fixedRotations.getYaw());
+        player.setYRot(fixedYaw);
     }
 
     public float getYaw() {
@@ -271,23 +272,36 @@ public abstract class RotationManager {
 
     @EventHandler(priority = EventPriority.LOWEST)
     protected void onSendPosition(SendPositionEvent event) {
+        LocalPlayer player = mc.player;
+        if (player == null) {
+            active = false;
+            priority = 0;
+            targetRotations = null;
+            raytrace = null;
+            smoothed = false;
+            rotationHitResult = null;
+            calculatingHitResult = false;
+            resetModeState();
+            return;
+        }
+
         if (active && rotations != null) {
             handleSendPosition(event);
 
-            if (Math.abs((rotations.getYaw() - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.getPitch() - mc.player.getXRot())) < 1) {
+            if (Math.abs((rotations.getYaw() - player.getYRot()) % 360) < 1 && Math.abs((rotations.getPitch() - player.getXRot())) < 1) {
                 active = false;
                 priority = 0;
-                this.correctDisabledRotations();
+                this.correctDisabledRotations(player);
             }
 
             lastRotations = rotations;
         } else {
-            lastRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+            lastRotations = new Rot2f(player.getYRot(), player.getXRot());
         }
 
         lastAnimationRotation = animationRotation;
         animationRotation = new Rot2f(event.getYaw(), event.getPitch());
-        targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+        targetRotations = new Rot2f(player.getYRot(), player.getXRot());
         raytrace = null;
         smoothed = false;
     }

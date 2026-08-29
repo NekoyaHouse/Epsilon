@@ -3,8 +3,6 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.AttackEntityEvent;
-import com.github.epsilon.events.impl.GameJoinedEvent;
-import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.QQAvatarManager;
@@ -158,17 +156,12 @@ public class VictoryBanner extends HudModule {
                     case ClientboundPlayerChatPacket playerPacket -> visiblePlayerChat(playerPacket);
                     default -> null;
                 };
-                if (matches(message, List.of("胜利", "挑战成功", "Victory"))) {
+                if (matches(message, List.of("获胜", "胜利", "挑战成功", "Victory"))) {
                     play(null);
                 }
             }
             case Kill -> {
-                if (packet instanceof ClientboundRemoveEntitiesPacket removePacket) {
-                    for (int entityId : removePacket.getEntityIds()) {
-                        mc.execute(() -> confirmRemovedTarget(entityId));
-                    }
-                } else if (packet instanceof ClientboundEntityEventPacket entityPacket
-                        && entityPacket.getEventId() == EntityEvent.DEATH) {
+                if (packet instanceof ClientboundEntityEventPacket entityPacket && entityPacket.getEventId() == EntityEvent.DEATH) {
                     mc.execute(() -> confirmDeathEvent(entityPacket));
                 }
             }
@@ -182,16 +175,6 @@ public class VictoryBanner extends HudModule {
         }
     }
 
-    @EventHandler
-    private void onGameJoined(GameJoinedEvent event) {
-        clearRuntimeState();
-    }
-
-    @EventHandler
-    private void onGameLeft(GameLeftEvent event) {
-        clearRuntimeState();
-    }
-
     private void updateKillTrigger() {
         if (trigger.is(Trigger.Kill) && !nullCheck()) {
             long now = System.currentTimeMillis();
@@ -201,6 +184,11 @@ public class VictoryBanner extends HudModule {
                 TrackedTarget target = entry.getValue();
                 Player player = target.player();
                 if (!target.isRecent(now)) {
+                    iterator.remove();
+                    continue;
+                }
+
+                if (player.level() != mc.level) {
                     iterator.remove();
                     continue;
                 }
@@ -217,10 +205,11 @@ public class VictoryBanner extends HudModule {
         }
     }
 
-    private void confirmRemovedTarget(int entityId) {
+    private void confirmTrackedDeath(int entityId) {
         if (!isEnabled() || !trigger.is(Trigger.Kill)) return;
         TrackedTarget target = recentTargets.get(entityId);
-        if (target == null || !target.isRecent(System.currentTimeMillis())) return;
+        if (target == null || target.player().level() != mc.level || !target.isRecent(System.currentTimeMillis()))
+            return;
         recentTargets.remove(entityId);
         play(null);
     }
@@ -229,7 +218,7 @@ public class VictoryBanner extends HudModule {
         if (!isEnabled() || !trigger.is(Trigger.Kill) || mc.level == null) return;
         Entity entity = packet.getEntity(mc.level);
         if (entity != null) {
-            confirmRemovedTarget(entity.getId());
+            confirmTrackedDeath(entity.getId());
         }
     }
 
@@ -341,7 +330,7 @@ public class VictoryBanner extends HudModule {
         float groupY = y + (layout.height() - groupHeight) * 0.5f + offset;
 
         scope.text("01", moduleX + 9.0f * uiScale, groupY, numberScale, withAlpha(TEXT, alpha));
-        scope.text(preview ? "TEST" : "KILL", moduleX + 28.0f * uiScale, groupY + (primaryHeight - labelHeight) * 0.5f, labelScale, withAlpha(accentColor.getValue(), alpha));
+        scope.text(preview ? "TEST" : "KILL", moduleX + 30.0f * uiScale, groupY + (primaryHeight - labelHeight) * 0.5f, labelScale, withAlpha(accentColor.getValue(), alpha));
         scope.text("STATUS / OK", moduleX + 9.0f * uiScale, groupY + primaryHeight + 3.0f * uiScale, statusScale, withAlpha(MUTED, alpha));
     }
 
