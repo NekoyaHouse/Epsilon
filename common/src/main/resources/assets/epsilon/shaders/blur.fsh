@@ -56,23 +56,21 @@ vec4 blur() {
 
     vec2 uv = gl_FragCoord.xy / inputResolution;
     vec4 sampleColor = texture(InputSampler, uv);
-    vec3 colorSum = sampleColor.rgb;
-    vec3 premultipliedColorSum = sampleColor.rgb * sampleColor.a;
-    float alphaSum = sampleColor.a;
+    vec3 centerColor = sampleColor.rgb;
+    float centerAlpha = sampleColor.a;
+    vec3 colorSum = centerColor;
 
     float step =  TAU / 16.0;
 
     for (float d = 0.0; d < TAU; d += step) {
         for (float i = 0.2; i <= 1.0; i += 0.2) {
             sampleColor = texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
-            colorSum += sampleColor.rgb;
-            premultipliedColorSum += sampleColor.rgb * sampleColor.a;
-            alphaSum += sampleColor.a;
+            float signal = max(sampleColor.a, max(sampleColor.r, max(sampleColor.g, sampleColor.b)));
+            colorSum += signal > 1e-5 ? sampleColor.rgb : centerColor;
         }
     }
 
-    vec3 color = alphaSum > 1e-5 ? premultipliedColorSum / alphaSum : colorSum / 81.0;
-    return vec4(color, alphaSum / 81.0);
+    return vec4(colorSum / 81.0, centerAlpha);
 }
 
 void main() {
@@ -86,6 +84,6 @@ void main() {
         ? segmentedCoverage(gl_FragCoord.xy, segmentCount)
         : shapeCoverage(roundRectDistance(gl_FragCoord.xy, bounds, radii));
 
-    fragColor = vec4(blur().rgb, alpha);
     if (alpha < 0.001) discard;
+    fragColor = vec4(blur().rgb, alpha);
 }
