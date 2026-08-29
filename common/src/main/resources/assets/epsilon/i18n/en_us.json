@@ -350,13 +350,15 @@
           "_value": "Custom Icon",
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
-          "epsilon": "Epsilon"
+          "epsilon": "Epsilon",
+          "endfield": "Endfield"
         },
         "custom title": {
           "_value": "Custom Title",
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
-          "epsilon": "Epsilon"
+          "epsilon": "Epsilon",
+          "endfield": "Endfield"
         },
         "use mainmenu": "Use Main Menu",
         "mainmenu style": {
@@ -1528,6 +1530,10 @@
       "jump cooldown": {
         "_value": "Jump Cooldown",
         "cooldown": "Cooldown"
+      },
+      "key friend": {
+        "_value": "Key Friend",
+        "activate key": "Activate Key"
       },
       "multi task": "Multi Task",
       "no fall": {
@@ -2796,6 +2802,32 @@
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color"
       },
+      "victory banner": {
+        "_value": "Victory Banner",
+        "general": "General",
+        "trigger": "Trigger",
+        "appearance": "Appearance",
+        "trigger mode": {
+          "_value": "Trigger Mode",
+          "off": "Off",
+          "title": "Title",
+          "kill": "Kill",
+          "chat": "Chat"
+        },
+        "title triggers": "Title Triggers",
+        "chat triggers": "Chat Triggers",
+        "title": "Title",
+        "subtitle": "Subtitle",
+        "hold time": "Hold Time",
+        "scale": "Scale",
+        "title scale": "Title Scale",
+        "subtitle scale": "Subtitle Scale",
+        "accent color": "Accent Color",
+        "subtitle color": "Subtitle Color",
+        "background color": "Background Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength"
+      },
       "watermark": {
         "_value": "Watermark",
         "text": "Text",
@@ -2843,7 +2875,9 @@
       "scaffold_flying_warning": "You are about to fly",
       "scaffold_toggle_on_teleport": "Toggled off on teleport",
       "serverbound_packet_flush_failed": "Failed to flush serverbound packets",
-      "clientbound_packet_flush_failed": "Failed to flush clientbound packets"
+      "clientbound_packet_flush_failed": "Failed to flush clientbound packets",
+      "key_friend_added": "Added %s as a friend",
+      "key_friend_removed": "Removed %s from friends"
     },
     "via": {
       "base": {

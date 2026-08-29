@@ -92,6 +92,7 @@ public class ModuleManager {
         addModule(InputDisabler.INSTANCE);
         addModule(InvManager.INSTANCE);
         addModule(JumpCooldown.INSTANCE);
+        addModule(KeyFriend.INSTANCE);
         addModule(MultiTask.INSTANCE);
         addModule(NoFall.INSTANCE);
         addModule(NoRotate.INSTANCE);

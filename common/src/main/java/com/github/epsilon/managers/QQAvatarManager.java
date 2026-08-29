@@ -1,7 +1,6 @@
-package com.github.epsilon.graphics;
+package com.github.epsilon.managers;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.managers.ExecutorManager;
 import com.github.epsilon.utils.network.Http;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;

@@ -146,6 +146,8 @@ public class EpsilonTranslations {
             Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT,
             Notifications.SERVERBOUND_PACKET_FLUSH_FAILED,
             Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
+            Notifications.KEY_FRIEND_ADDED,
+            Notifications.KEY_FRIEND_REMOVED,
             Notifications.PREVIEW_TITLE,
             Notifications.PREVIEW_MESSAGE,
             Via.BASE_CANCEL,
@@ -349,6 +351,8 @@ public class EpsilonTranslations {
         public static final TranslateComponent SCAFFOLD_TOGGLE_ON_TELEPORT = create("notification", "scaffold_toggle_on_teleport");
         public static final TranslateComponent SERVERBOUND_PACKET_FLUSH_FAILED = create("notification", "serverbound_packet_flush_failed");
         public static final TranslateComponent CLIENTBOUND_PACKET_FLUSH_FAILED = create("notification", "clientbound_packet_flush_failed");
+        public static final TranslateComponent KEY_FRIEND_ADDED = create("notification", "key_friend_added");
+        public static final TranslateComponent KEY_FRIEND_REMOVED = create("notification", "key_friend_removed");
 
         private Notifications() {
         }

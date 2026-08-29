@@ -350,13 +350,15 @@
           "_value": "自定义图标",
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
-          "epsilon": "Epsilon"
+          "epsilon": "Epsilon",
+          "endfield": "终末地"
         },
         "custom title": {
           "_value": "自定义标题",
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
-          "epsilon": "Epsilon"
+          "epsilon": "Epsilon",
+          "endfield": "终末地"
         },
         "use mainmenu": "自定义主菜单",
         "mainmenu style": {
@@ -1528,6 +1530,10 @@
       "jump cooldown": {
         "_value": "自定义跳跃冷却",
         "cooldown": "冷却时间"
+      },
+      "key friend": {
+        "_value": "按键好友",
+        "activate key": "激活按键"
       },
       "multi task": "多任务",
       "no fall": {
@@ -2796,6 +2802,32 @@
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色"
       },
+      "victory banner": {
+        "_value": "胜利横幅",
+        "general": "常规",
+        "trigger": "触发",
+        "appearance": "外观",
+        "trigger mode": {
+          "_value": "触发模式",
+          "off": "关闭",
+          "title": "标题",
+          "kill": "击杀",
+          "chat": "聊天"
+        },
+        "title triggers": "标题触发词",
+        "chat triggers": "聊天触发词",
+        "title": "标题",
+        "subtitle": "副标题",
+        "hold time": "停留时间",
+        "scale": "缩放",
+        "title scale": "标题缩放",
+        "subtitle scale": "副标题缩放",
+        "accent color": "强调色",
+        "subtitle color": "副标题颜色",
+        "background color": "背景颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度"
+      },
       "watermark": {
         "_value": "水印",
         "text": "文本",
@@ -2843,7 +2875,9 @@
       "scaffold_flying_warning": "你也是要飞了",
       "scaffold_toggle_on_teleport": "传送时已关闭",
       "serverbound_packet_flush_failed": "客户端数据包队列释放失败",
-      "clientbound_packet_flush_failed": "服务端数据包队列释放失败"
+      "clientbound_packet_flush_failed": "服务端数据包队列释放失败",
+      "key_friend_added": "已将 %s 添加为好友",
+      "key_friend_removed": "已将 %s 移出好友"
     },
     "via": {
       "base": {
