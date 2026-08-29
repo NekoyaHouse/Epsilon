@@ -689,8 +689,8 @@
         "water": "水生生物",
         "others": "其他",
         "invisible": "隐身",
-        "esp": "",
-        "side color": "",
+        "esp": "ESP",
+        "side color": "侧面颜色",
         "outline color": "轮廓颜色"
       },
       "auto clicker": {
@@ -1430,9 +1430,9 @@
         "disable in hypixel lobby": "在 Hypixel 大厅中禁用"
       },
       "disabler": {
-        "_value": "",
-        "aca duplicate slot": "",
-        "aca fast switch": ""
+        "_value": "禁用器",
+        "aca duplicate slot": "ACA Duplicate Slot",
+        "aca fast switch": "ACA Fast Switch"
       },
       "elytra swap": {
         "_value": "鞘翅切换",
@@ -2257,7 +2257,7 @@
         "enchant glint": "附魔光效",
         "boss bar": "Boss 血条",
         "scoreboard": "计分板",
-        "chat": "",
+        "chat": "聊天栏",
         "crosshair": "准星",
         "title": "标题",
         "held item name": "手持物品名称",

@@ -68,8 +68,8 @@ public class Backtrack extends Module {
     private final BoolSetting others = boolSetting("Others", false, () -> targetMode.is(TargetMode.Range));
     private final BoolSetting invisible = boolSetting("Invisible", true, () -> targetMode.is(TargetMode.Range));
     private final BoolSetting esp = boolSetting("ESP", true);
-    private final ColorSetting sideColor = colorSetting("Side Color", new Color(80, 170, 255, 35), esp::getValue);
-    private final ColorSetting outlineColor = colorSetting("Outline Color", new Color(80, 170, 255, 190), esp::getValue);
+    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 255, 255, 35), esp::getValue);
+    private final ColorSetting outlineColor = colorSetting("Outline Color", new Color(255, 255, 255, 190), esp::getValue);
 
     private final Object packetLock = new Object();
     private final Deque<QueuedPacket> packetQueue = new ArrayDeque<>();
@@ -416,9 +416,7 @@ public class Backtrack extends Module {
     }
 
     private void schedulePackets(List<Packet<? super ClientPacketListener>> packets) {
-        if (!packets.isEmpty()) {
-            mc.execute(() -> handlePackets(packets));
-        }
+        if (!packets.isEmpty()) mc.execute(() -> handlePackets(packets));
     }
 
     private void handlePackets(List<Packet<? super ClientPacketListener>> packets) {

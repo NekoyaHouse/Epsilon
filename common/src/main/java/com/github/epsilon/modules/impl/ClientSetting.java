@@ -78,13 +78,15 @@ public class ClientSetting extends Module {
     public enum IconMode {
         Vanilla,
         Minecraft_1_8_9,
-        Epsilon
+        Epsilon,
+        Endfield
     }
 
     public enum TitleMode {
         Vanilla,
         Minecraft_1_8_9,
-        Epsilon
+        Epsilon,
+        Endfield
     }
 
     public enum HideMode {

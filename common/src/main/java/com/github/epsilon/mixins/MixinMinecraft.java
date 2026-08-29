@@ -82,6 +82,8 @@ public abstract class MixinMinecraft {
             return title;
         } else if (mode == ClientSetting.TitleMode.Minecraft_1_8_9) {
             return "Minecraft 1.8.9";
+        } else if (mode == ClientSetting.TitleMode.Endfield) {
+            return "Endfield";
         } else {
             return Constants.NAME + " " + Constants.VERSION + " for " + title;
         }

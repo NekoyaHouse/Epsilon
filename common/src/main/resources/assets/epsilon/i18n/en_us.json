@@ -689,8 +689,8 @@
         "water": "Water",
         "others": "Others",
         "invisible": "Invisible",
-        "esp": "",
-        "side color": "",
+        "esp": "ESP",
+        "side color": "Side Color",
         "outline color": "Outline Color"
       },
       "auto clicker": {
@@ -1430,9 +1430,9 @@
         "disable in hypixel lobby": "Disable In Hypixel Lobby"
       },
       "disabler": {
-        "_value": "",
-        "aca duplicate slot": "",
-        "aca fast switch": ""
+        "_value": "Disabler",
+        "aca duplicate slot": "ACA Duplicate Slot",
+        "aca fast switch": "ACA Fast Switch"
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -2257,7 +2257,7 @@
         "enchant glint": "Enchant Glint",
         "boss bar": "Boss Bar",
         "scoreboard": "Scoreboard",
-        "chat": "",
+        "chat": "Chat",
         "crosshair": "Crosshair",
         "title": "Title",
         "held item name": "Held Item Name",
