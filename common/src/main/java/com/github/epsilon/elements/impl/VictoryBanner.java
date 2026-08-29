@@ -39,7 +39,7 @@ public class VictoryBanner extends HudModule {
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f);
     }
 
-    private enum Trigger {
+    private enum TriggerMode {
         Off,
         Title,
         Kill,
@@ -67,12 +67,12 @@ public class VictoryBanner extends HudModule {
     private final SettingGroup generalGroup = settingGroup("General");
     private final SettingGroup triggerGroup = settingGroup("Trigger");
     private final SettingGroup appearanceGroup = settingGroup("Appearance");
-
-    private final EnumSetting<Trigger> trigger = enumSetting("Trigger", Trigger.Kill, ignored -> recentTargets.clear()).group(triggerGroup);
+    private final EnumSetting<TriggerMode> triggerMode = enumSetting("Trigger Mode", TriggerMode.Kill, ignored -> recentTargets.clear()).group(triggerGroup);
+    private final StringListSetting titleTriggers = stringListSetting("Title Triggers", List.of("胜利", "挑战成功", "Victory"), () -> triggerMode.is(TriggerMode.Title));
+    private final StringListSetting chatTriggers = stringListSetting("Chat Triggers", List.of("获胜", "胜利", "挑战成功", "Victory"), () -> triggerMode.is(TriggerMode.Chat));
     private final StringSetting title = stringSetting("Title", "TARGET ELIMINATED").group(generalGroup);
     private final StringSetting subtitle = stringSetting("Subtitle", "ELIMINATION CONFIRMED").group(generalGroup);
     private final DoubleSetting holdTime = doubleSetting("Hold Time", 1.9, 0.2, 10.0, 0.1).group(generalGroup);
-
     private final DoubleSetting scale = doubleSetting("Scale", 0.75, 0.5, 2.0, 0.05).group(appearanceGroup);
     private final DoubleSetting titleScale = doubleSetting("Title Scale", 1.5, 0.8, 1.8, 0.05).group(appearanceGroup);
     private final DoubleSetting subtitleScale = doubleSetting("Subtitle Scale", 0.7, 0.6, 1.2, 0.05).group(appearanceGroup);
@@ -137,14 +137,14 @@ public class VictoryBanner extends HudModule {
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         Packet<?> packet = event.getPacket();
-        switch (trigger.getValue()) {
+        switch (triggerMode.getValue()) {
             case Title -> {
                 Component text = switch (packet) {
                     case ClientboundSetTitleTextPacket titlePacket -> titlePacket.text();
                     case ClientboundSetSubtitleTextPacket subtitlePacket -> subtitlePacket.text();
                     default -> null;
                 };
-                if (text != null && matches(text.getString(), List.of("胜利", "挑战成功", "Victory"))) {
+                if (text != null && matches(text.getString(), titleTriggers.getValue())) {
                     play(null);
                 }
             }
@@ -156,7 +156,7 @@ public class VictoryBanner extends HudModule {
                     case ClientboundPlayerChatPacket playerPacket -> visiblePlayerChat(playerPacket);
                     default -> null;
                 };
-                if (matches(message, List.of("获胜", "胜利", "挑战成功", "Victory"))) {
+                if (matches(message, chatTriggers.getValue())) {
                     play(null);
                 }
             }
@@ -170,13 +170,13 @@ public class VictoryBanner extends HudModule {
 
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
-        if (trigger.is(Trigger.Kill) && event.getPlayer() == mc.player && event.getEntity() instanceof Player player && player != mc.player && player.isAlive()) {
+        if (triggerMode.is(TriggerMode.Kill) && event.getPlayer() == mc.player && event.getEntity() instanceof Player player && player != mc.player && player.isAlive()) {
             recentTargets.put(player.getId(), new TrackedTarget(player, System.currentTimeMillis()));
         }
     }
 
     private void updateKillTrigger() {
-        if (trigger.is(Trigger.Kill) && !nullCheck()) {
+        if (triggerMode.is(TriggerMode.Kill) && !nullCheck()) {
             long now = System.currentTimeMillis();
             Iterator<Map.Entry<Integer, TrackedTarget>> iterator = recentTargets.entrySet().iterator();
             while (iterator.hasNext()) {
@@ -206,7 +206,7 @@ public class VictoryBanner extends HudModule {
     }
 
     private void confirmTrackedDeath(int entityId) {
-        if (!isEnabled() || !trigger.is(Trigger.Kill)) return;
+        if (!isEnabled() || !triggerMode.is(TriggerMode.Kill)) return;
         TrackedTarget target = recentTargets.get(entityId);
         if (target == null || target.player().level() != mc.level || !target.isRecent(System.currentTimeMillis()))
             return;
@@ -215,7 +215,7 @@ public class VictoryBanner extends HudModule {
     }
 
     private void confirmDeathEvent(ClientboundEntityEventPacket packet) {
-        if (!isEnabled() || !trigger.is(Trigger.Kill) || mc.level == null) return;
+        if (!isEnabled() || !triggerMode.is(TriggerMode.Kill) || mc.level == null) return;
         Entity entity = packet.getEntity(mc.level);
         if (entity != null) {
             confirmTrackedDeath(entity.getId());

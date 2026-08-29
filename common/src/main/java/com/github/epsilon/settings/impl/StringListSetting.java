@@ -77,4 +77,5 @@ public class StringListSetting extends Setting<List<String>> {
         }
         return result;
     }
+
 }

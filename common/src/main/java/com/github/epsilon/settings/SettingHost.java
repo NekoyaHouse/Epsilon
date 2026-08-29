@@ -190,8 +190,7 @@ public interface SettingHost {
         return addSetting(new ButtonSetting(name, func, () -> true));
     }
 
-    default StringListSetting stringListSetting(String name, Collection<String> defaultValue,
-                                                Setting.Dependency dependency) {
+    default StringListSetting stringListSetting(String name, Collection<String> defaultValue, Setting.Dependency dependency) {
         return addSetting(new StringListSetting(name, defaultValue, dependency));
     }
 

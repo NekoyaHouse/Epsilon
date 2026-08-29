@@ -29,17 +29,22 @@ float roundRectDistance(vec2 position, vec4 innerRect, vec4 radius) {
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - rCurrent;
 }
 
-float segmentedDistance(vec2 position, int count) {
-    float distance = 1e20;
+float shapeCoverage(float distance) {
+    float delta = max(fwidth(distance), 1e-4);
+    return 1.0 - smoothstep(-delta, delta, distance);
+}
+
+float segmentedCoverage(vec2 position, int count) {
+    float coverage = 0.0;
     for (int i = 0; i < 64; i++) {
         if (i >= count) break;
 
         vec4 rect = SegmentRects[i];
         vec4 bounds = vec4(rect.xy, rect.xy + rect.zw);
         float radius = max(0.0, SegmentRadii[i].x);
-        distance = min(distance, roundRectDistance(position, bounds, vec4(radius)));
+        coverage = min(1.0, coverage + shapeCoverage(roundRectDistance(position, bounds, vec4(radius))));
     }
-    return distance;
+    return coverage;
 }
 
 vec4 blur() {
@@ -49,19 +54,25 @@ vec4 blur() {
     float quality = InputInfo.z;
     vec2 radius = quality / inputResolution.xy;
 
-    vec2 uv = gl_FragCoord.xy / inputResolution.xy;
-    vec4 color = texture(InputSampler, uv);
+    vec2 uv = gl_FragCoord.xy / inputResolution;
+    vec4 sampleColor = texture(InputSampler, uv);
+    vec3 colorSum = sampleColor.rgb;
+    vec3 premultipliedColorSum = sampleColor.rgb * sampleColor.a;
+    float alphaSum = sampleColor.a;
 
     float step =  TAU / 16.0;
 
     for (float d = 0.0; d < TAU; d += step) {
         for (float i = 0.2; i <= 1.0; i += 0.2) {
-            color += texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
+            sampleColor = texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
+            colorSum += sampleColor.rgb;
+            premultipliedColorSum += sampleColor.rgb * sampleColor.a;
+            alphaSum += sampleColor.a;
         }
     }
 
-    color /= 81.0;
-    return color;
+    vec3 color = alphaSum > 1e-5 ? premultipliedColorSum / alphaSum : colorSum / 81.0;
+    return vec4(color, alphaSum / 81.0);
 }
 
 void main() {
@@ -71,11 +82,9 @@ void main() {
     vec4 bounds = vec4(uLocation, uLocation + uSize);
 
     int segmentCount = int(SegmentInfo.x);
-    float dist = segmentCount > 0
-        ? segmentedDistance(gl_FragCoord.xy, segmentCount)
-        : roundRectDistance(gl_FragCoord.xy, bounds, radii);
-    float delta = fwidth(dist);
-    float alpha = 1.0 - smoothstep(-delta, delta, dist);
+    float alpha = segmentCount > 0
+        ? segmentedCoverage(gl_FragCoord.xy, segmentCount)
+        : shapeCoverage(roundRectDistance(gl_FragCoord.xy, bounds, radii));
 
     fragColor = vec4(blur().rgb, alpha);
     if (alpha < 0.001) discard;

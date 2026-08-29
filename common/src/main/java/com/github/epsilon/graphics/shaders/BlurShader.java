@@ -39,9 +39,7 @@ public class BlurShader {
 
     private static final int UNIFORMS_SIZE = blurUniformsSize();
 
-    private static final int BOX_UNIFORMS_SIZE = new Std140SizeCalculator()
-            .putVec4()
-            .get();
+    private static final int BOX_UNIFORMS_SIZE = new Std140SizeCalculator().putVec4().get();
 
     private RenderPipeline pipeline;
     private RenderPipeline boxPipeline;
@@ -105,8 +103,7 @@ public class BlurShader {
         int targetWidth = activeTarget == null ? mainTarget.width : activeTarget.width();
         int targetHeight = activeTarget == null ? mainTarget.height : activeTarget.height();
 
-        if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0
-                || sourceTexture == null || targetTexture == null || targetView == null) {
+        if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0 || sourceTexture == null || targetTexture == null || targetView == null) {
             return;
         }
 
@@ -320,12 +317,7 @@ public class BlurShader {
                     float segmentY = segmentRects[offset + 1];
                     float segmentWidth = segmentRects[offset + 2];
                     float segmentHeight = segmentRects[offset + 3];
-                    builder.putVec4(
-                            segmentX * scale,
-                            targetHeight - (segmentY + segmentHeight) * scale,
-                            segmentWidth * scale,
-                            segmentHeight * scale
-                    );
+                    builder.putVec4(segmentX * scale, targetHeight - (segmentY + segmentHeight) * scale, segmentWidth * scale, segmentHeight * scale);
                 } else {
                     builder.putVec4(0.0f, 0.0f, 0.0f, 0.0f);
                 }
