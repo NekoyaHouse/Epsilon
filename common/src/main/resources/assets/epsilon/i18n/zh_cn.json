@@ -2023,7 +2023,8 @@
           "scale": "缩放",
           "leaked": "裂痕",
           "ninja": "忍者",
-          "down": "下"
+          "newexhibition": "New Exhibition",
+          "oldexhibition": "Old Exhibition"
         },
         "swing mode": {
           "_value": "挥手模式",
@@ -2531,6 +2532,22 @@
           "roll": "翻滚"
         },
         "speed": "速度"
+      },
+      "tnt timer": {
+        "_value": "TNT计时器",
+        "danger radius": "危险半径",
+        "lethal radius": "致命半径",
+        "outer thickness": "外圈厚度",
+        "inner thickness": "内圈厚度",
+        "alpha": "透明度",
+        "segments": "分段数",
+        "sphere rings": "球体环数",
+        "filled sphere": "实心球体",
+        "wireframe sphere": "线框球体",
+        "pulse near explosion": "爆炸临近时脉冲",
+        "pulse threshold (s)": "脉冲阈值（秒）",
+        "pulse amplitude": "脉冲幅度",
+        "pulse speed (hz)": "脉冲速度（Hz）"
       },
       "trajectories": {
         "_value": "弹道预测",

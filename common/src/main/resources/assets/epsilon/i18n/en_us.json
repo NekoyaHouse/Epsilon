@@ -2023,7 +2023,8 @@
           "scale": "Scale",
           "leaked": "Leaked",
           "ninja": "Ninja",
-          "down": "Down"
+          "newexhibition": "New Exhibition",
+          "oldexhibition": "Old Exhibition"
         },
         "swing mode": {
           "_value": "Swing Mode",
@@ -2531,6 +2532,22 @@
           "roll": "Roll"
         },
         "speed": "Speed"
+      },
+      "tnt timer": {
+        "_value": "TNT Timer",
+        "danger radius": "Danger Radius",
+        "lethal radius": "Lethal Radius",
+        "outer thickness": "Outer Thickness",
+        "inner thickness": "Inner Thickness",
+        "alpha": "Alpha",
+        "segments": "Segments",
+        "sphere rings": "Sphere Rings",
+        "filled sphere": "Filled Sphere",
+        "wireframe sphere": "Wireframe Sphere",
+        "pulse near explosion": "Pulse Near Explosion",
+        "pulse threshold (s)": "Pulse Threshold (s)",
+        "pulse amplitude": "Pulse Amplitude",
+        "pulse speed (hz)": "Pulse Speed (Hz)"
       },
       "trajectories": {
         "_value": "Trajectories",

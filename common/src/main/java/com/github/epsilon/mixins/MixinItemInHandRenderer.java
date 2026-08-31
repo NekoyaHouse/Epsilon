@@ -18,6 +18,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUseAnimation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -67,6 +68,22 @@ public abstract class MixinItemInHandRenderer {
         epsilon$blocked = HandView.INSTANCE.shouldApplyBlockingAnimation(hand, itemStack);
     }
 
+    @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getUseAnimation()Lnet/minecraft/world/item/ItemUseAnimation;"))
+    private ItemUseAnimation redirectGetUseAnimation(ItemStack itemStack, Operation<ItemUseAnimation> original) {
+        // HandView功能提供完整的防砍动画实现，得抑制翻译物品的原始BLOCK pose
+        // 不然进入Legacy服务器会给你的pose修改为BLOCK，导致视觉上看起来双重变换
+        ItemUseAnimation useAnimation = original.call(itemStack);
+        if (epsilon$blocked) {
+            return ItemUseAnimation.NONE;
+        }
+
+        // 旧版服务器可以在松开右键单击后保持isUsingItem为true一帧
+        if (useAnimation == ItemUseAnimation.BLOCK && !minecraft.options.keyUse.isDown()) {
+            return ItemUseAnimation.NONE;
+        }
+        return useAnimation;
+    }
+
     @Inject(method = "submitArmWithItem", at = @At("RETURN"))
     private void clearBlockingState(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         epsilon$blocked = false;
@@ -108,7 +125,7 @@ public abstract class MixinItemInHandRenderer {
         EventBus.INSTANCE.post(new HeldItemRenderEvent(hand, poseStack));
         if (epsilon$blocked) {
             HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
-            HandView.INSTANCE.applyBlockingTransform(poseStack, arm, attack);
+            HandView.INSTANCE.applyBlockingTransform(poseStack, arm, attack, inverseArmHeight);
         }
     }
 

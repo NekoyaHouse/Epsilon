@@ -54,6 +54,7 @@ public class TNTTimer extends Module {
     private final DoubleSetting pulseThresholdSec = doubleSetting("Pulse Threshold (s)", 2.0, 0.2, 10.0, 0.1);
     private final DoubleSetting pulseAmplitude = doubleSetting("Pulse Amplitude", 0.12, 0.0, 0.5, 0.01);
     private final DoubleSetting pulseSpeedHz = doubleSetting("Pulse Speed (Hz)", 2.0, 0.2, 8.0, 0.1);
+
     private final Supplier<Render2DScheduler> scheduler = Suppliers.memoize(Render2DScheduler::new);
 
     private static final RenderPipeline FILLED_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)

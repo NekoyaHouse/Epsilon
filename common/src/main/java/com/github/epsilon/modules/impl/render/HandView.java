@@ -22,6 +22,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
+import org.joml.Vector3f;
 
 public class HandView extends Module {
 
@@ -42,14 +43,15 @@ public class HandView extends Module {
         Scale,
         Leaked,
         Ninja,
-        Down
+        NewExhibition,
+        OldExhibition
     }
 
     public final BoolSetting disableSwapMain = boolSetting("Disable Swap Main", true);
     public final BoolSetting disableSwapOff = boolSetting("Disable Swap Off", true);
 
     private final BoolSetting blockingAnimation = boolSetting("Blocking Animation", true);
-    private final EnumSetting<BlockMode> blockingMode = enumSetting("Blocking Mode", BlockMode.V1_7, blockingAnimation::getValue);
+    private final EnumSetting<BlockMode> blockingMode = enumSetting("Blocking Mode", BlockMode.NewExhibition, blockingAnimation::getValue);
 
     public final EnumSetting<SwingMode> swingMode = enumSetting("Swing Mode", SwingMode.Vanilla);
     public final BoolSetting onlyWeapon = boolSetting("Only Weapon", true, () -> swingMode.is(SwingMode.Flux));
@@ -84,7 +86,8 @@ public class HandView extends Module {
 
     public boolean isBlocking() {
         KillAura killAura = KillAura.INSTANCE;
-        return (killAura.isEnabled() && killAura.target != null) || (isBlockableWeapon(mc.player.getMainHandItem()) && mc.options.keyUse.isDown());
+        boolean usingMainHand = mc.player.isUsingItem() && mc.player.getUsedItemHand() == InteractionHand.MAIN_HAND;
+        return (killAura.isEnabled() && killAura.target != null) || (isBlockableWeapon(mc.player.getMainHandItem()) && (mc.options.keyUse.isDown() || usingMainHand));
     }
 
     public boolean shouldApplyBlockingAnimation(InteractionHand hand, ItemStack itemStack) {
@@ -111,57 +114,89 @@ public class HandView extends Module {
         return !mc.player.isUsingItem() ? mc.player.getMainHandItem().getUseAnimation() == ItemUseAnimation.NONE : mc.player.getUsedItemHand() == InteractionHand.OFF_HAND;
     }
 
-    public void applyBlockingTransform(PoseStack poseStack, HumanoidArm arm, float attack) {
+    public void applyBlockingTransform(PoseStack poseStack, HumanoidArm arm, float attack, float inverseArmHeight) {
+        int side = arm == HumanoidArm.RIGHT ? 1 : -1;
+        float progress = Mth.sin(Mth.sqrt(attack) * (float) Math.PI);
+
         switch (blockingMode.getValue()) {
             case V1_7 -> {
-                poseStack.translate((arm == HumanoidArm.RIGHT ? -0.1F : 0.1F), 0.1F, 0.0F);
-                applyAttackTransform(poseStack, arm, attack, 0.9F);
-                applyBlockPose(poseStack, arm, 0.0F, 0.0F, 0.0F, -102.25F, 13.365F, 78.05F);
+                poseStack.translate(-side * 0.1F, 0.1F, 0.0F);
+                applyAttackTransform(poseStack, side, attack, 0.9F);
+                applyBlockPose(poseStack, side, 0.0F, 0.0F, 0.0F, -102.25F, 13.365F, 78.05F);
             }
             case Pushdown -> {
-                poseStack.translate((arm == HumanoidArm.RIGHT ? -0.1F : 0.1F), 0.1F, 0.0F);
-                float swing = Mth.sin(Mth.sqrt(attack) * (float) Math.PI);
-                poseStack.mulPose(Axis.ZP.rotationDegrees((arm == HumanoidArm.RIGHT ? 1 : -1) * swing * 10.0F));
-                poseStack.mulPose(Axis.XP.rotationDegrees(swing * -35.0F));
-                applyBlockPose(poseStack, arm, 0.0F, 0.0F, 0.0F, -102.25F, 13.365F, 78.05F);
+                poseStack.translate(-side * 0.1F, 0.1F, 0.0F);
+                poseStack.mulPose(Axis.ZP.rotationDegrees(side * progress * 10.0F));
+                poseStack.mulPose(Axis.XP.rotationDegrees(progress * -35.0F));
+                applyBlockPose(poseStack, side, 0.0F, 0.0F, 0.0F, -102.25F, 13.365F, 78.05F);
             }
             case Scale -> {
-                poseStack.translate((arm == HumanoidArm.RIGHT ? -0.16F : 0.16F), 0.12F, 0.16F);
+                poseStack.translate(-side * 0.16F, 0.12F, 0.16F);
                 poseStack.scale(0.85F, 0.85F, 0.85F);
-                applyAttackTransform(poseStack, arm, attack, 0.35F);
-                applyBlockPose(poseStack, arm, 0.0F, 0.0F, 0.0F, -100.0F, 18.0F, 72.0F);
+                applyAttackTransform(poseStack, side, attack, 0.35F);
+                applyBlockPose(poseStack, side, 0.0F, 0.0F, 0.0F, -100.0F, 18.0F, 72.0F);
             }
             case Leaked -> {
-                applyAttackTransform(poseStack, arm, attack, 0.6F);
-                applyBlockPose(poseStack, arm, -0.18F, 0.18F, 0.1F, -96.0F, 24.0F, 68.0F);
+                applyAttackTransform(poseStack, side, attack, 0.6F);
+                applyBlockPose(poseStack, side, -0.18F, 0.18F, 0.1F, -96.0F, 24.0F, 68.0F);
             }
             case Ninja -> {
-                applyAttackTransform(poseStack, arm, attack, 0.25F);
-                applyBlockPose(poseStack, arm, -0.05F, 0.22F, 0.2F, -88.0F, 35.0F, 82.0F);
+                applyAttackTransform(poseStack, side, attack, 0.25F);
+                applyBlockPose(poseStack, side, -0.05F, 0.22F, 0.2F, -88.0F, 35.0F, 82.0F);
             }
-            case Down -> {
-                applyAttackTransform(poseStack, arm, attack, 0.2F);
-                applyBlockPose(poseStack, arm, -0.25F, -0.02F, 0.05F, -120.0F, 8.0F, 72.0F);
+            case NewExhibition -> {
+                applySourceBaseTransform(poseStack, side, -0.01F, attack);
+                poseStack.mulPose(Axis.of(new Vector3f(-0.3F, 1.0F, 1.3F)).rotationDegrees(side * progress * -40.0F));
+                poseStack.mulPose(Axis.of(new Vector3f(progress / 2.0F, 0.0F, 4.0F)).rotationDegrees(side * progress * 50.0F));
+                poseStack.mulPose(Axis.of(new Vector3f(1.0F, progress / 2.0F, 0.0F)).rotationDegrees(side * progress * 40.0F));
+                poseStack.mulPose(Axis.of(new Vector3f(0.3F, 0.1F, 0.4F)).rotationDegrees(side * progress * -20.7F));
+                poseStack.scale(0.9F, 0.9F, 0.9F);
+                applySourceBlockTransform(poseStack);
+            }
+            case OldExhibition -> {
+                applySourceBaseTransform(poseStack, side, inverseArmHeight * 0.6F - 0.07F, 1.0F);
+                poseStack.mulPose(Axis.of(new Vector3f(progress / 2.0F, 0.0F, 4.0F)).rotationDegrees(-progress * 50.0F / 2.0F));
+                poseStack.mulPose(Axis.of(new Vector3f(1.0F, progress / 2.0F, 0.0F)).rotationDegrees(-progress * 30.0F));
+                applySourceBlockTransform(poseStack);
             }
         }
     }
 
-    private void applyAttackTransform(PoseStack poseStack, HumanoidArm arm, float attack, float scale) {
-        int invert = arm == HumanoidArm.RIGHT ? 1 : -1;
-        float ySwingRotation = Mth.sin(attack * attack * (float) Math.PI);
-        poseStack.mulPose(Axis.YP.rotationDegrees(invert * (45.0F + ySwingRotation * -20.0F * scale)));
-        float xzSwingRotation = Mth.sin(Mth.sqrt(attack) * (float) Math.PI);
-        poseStack.mulPose(Axis.ZP.rotationDegrees(invert * xzSwingRotation * -20.0F * scale));
-        poseStack.mulPose(Axis.XP.rotationDegrees(xzSwingRotation * -80.0F * scale));
-        poseStack.mulPose(Axis.YP.rotationDegrees(invert * -45.0F));
+    private void applySourceBaseTransform(PoseStack poseStack, int side, float y, float swingProgress) {
+        poseStack.translate(side * 0.29F, y, -0.18F);
+        poseStack.mulPose(Axis.YP.rotationDegrees(45.0F));
+        applySourceSwingTransform(poseStack, side, swingProgress);
     }
 
-    private void applyBlockPose(PoseStack poseStack, HumanoidArm arm, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
-        int invert = arm == HumanoidArm.RIGHT ? 1 : -1;
-        poseStack.translate(invert * translateX, translateY, translateZ);
+    private void applySourceSwingTransform(PoseStack poseStack, float side, float swingProgress) {
+        float ySwing = Mth.sin(swingProgress * swingProgress * (float) Math.PI);
+        float xzSwing = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
+        poseStack.mulPose(Axis.YP.rotationDegrees(side * ySwing * -20.0F));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(side * xzSwing * -20.0F));
+        poseStack.mulPose(Axis.XP.rotationDegrees(side * xzSwing * -80.0F));
+    }
+
+    private void applySourceBlockTransform(PoseStack poseStack) {
+        poseStack.translate(-0.5F, 0.2F, 0.0F);
+        poseStack.mulPose(Axis.YP.rotationDegrees(30.0F));
+        poseStack.mulPose(Axis.XP.rotationDegrees(-80.0F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(60.0F));
+    }
+
+    private void applyAttackTransform(PoseStack poseStack, int side, float attack, float scale) {
+        float ySwingRotation = Mth.sin(attack * attack * (float) Math.PI);
+        poseStack.mulPose(Axis.YP.rotationDegrees(side * (45.0F + ySwingRotation * -20.0F * scale)));
+        float xzSwingRotation = Mth.sin(Mth.sqrt(attack) * (float) Math.PI);
+        poseStack.mulPose(Axis.ZP.rotationDegrees(side * xzSwingRotation * -20.0F * scale));
+        poseStack.mulPose(Axis.XP.rotationDegrees(xzSwingRotation * -80.0F * scale));
+        poseStack.mulPose(Axis.YP.rotationDegrees(side * -45.0F));
+    }
+
+    private void applyBlockPose(PoseStack poseStack, int side, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
+        poseStack.translate(side * translateX, translateY, translateZ);
         poseStack.mulPose(Axis.XP.rotationDegrees(rotateX));
-        poseStack.mulPose(Axis.YP.rotationDegrees(invert * rotateY));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(invert * rotateZ));
+        poseStack.mulPose(Axis.YP.rotationDegrees(side * rotateY));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(side * rotateZ));
     }
 
     private class TransformSettings {
