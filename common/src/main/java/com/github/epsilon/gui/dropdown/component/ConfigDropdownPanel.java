@@ -32,9 +32,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     @Override
     protected float computeContentHeight() {
         int configCount = configsForFrame().size();
-        return PADDING * 2.0f + FIELD_HEIGHT + GAP + BUTTON_HEIGHT * 3.0f + GAP * 3.0f
-                + Math.max(ROW_HEIGHT, configCount * (ROW_HEIGHT + GAP))
-                + (status.isEmpty() ? 0.0f : ROW_HEIGHT);
+        return PADDING * 2.0f + FIELD_HEIGHT + GAP + BUTTON_HEIGHT * 3.0f + GAP * 3.0f + Math.max(ROW_HEIGHT, configCount * (ROW_HEIGHT + GAP)) + (status.isEmpty() ? 0.0f : ROW_HEIGHT);
     }
 
     @Override
@@ -61,7 +59,6 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 2; col++) {
                 int index = row * 2 + col;
-                if (index >= actions.length) continue;
                 float btnW = (contentW - GAP) * 0.5f;
                 float btnX = contentX + col * (btnW + GAP);
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
@@ -119,7 +116,6 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 2; col++) {
                 int index = row * 2 + col;
-                if (index >= 6) continue;
                 float btnW = (contentW - GAP) * 0.5f;
                 float btnX = contentX + col * (btnW + GAP);
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
@@ -157,6 +153,17 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             currentY += ROW_HEIGHT + GAP;
         }
         return false;
+    }
+
+    @Override
+    public void onGlobalMouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0) return;
+        float fieldX = x + PADDING;
+        float fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
+        float fieldW = width - PADDING * 2.0f;
+        if (!isHovered(mouseX, mouseY, fieldX, fieldY, fieldW, FIELD_HEIGHT)) {
+            inputField.blur();
+        }
     }
 
     private void runAction(int index) {

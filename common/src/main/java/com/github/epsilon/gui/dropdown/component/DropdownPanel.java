@@ -28,6 +28,9 @@ public interface DropdownPanel {
 
     boolean mouseClicked(double mouseX, double mouseY, int button);
 
+    default void onGlobalMouseClicked(double mouseX, double mouseY, int button) {
+    }
+
     boolean mouseReleased(double mouseX, double mouseY, int button);
 
     boolean mouseDragged(double mouseX, double mouseY);

@@ -6,11 +6,13 @@ import com.github.epsilon.interfaces.EntityRenderStateAccessor;
 import com.github.epsilon.modules.impl.render.Chams;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,16 +26,16 @@ import static com.github.epsilon.Constants.mc;
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState> {
 
-    @Shadow
-    public abstract Identifier getTextureLocation(S s);
-
-    @ModifyReturnValue(method = "getRenderType", at = @At("RETURN"))
-    private RenderType modifyRenderType(RenderType original, S state, boolean isBodyVisible, boolean forceTransparent, boolean appearGlowing) {
-        Chams chamsModule = Chams.INSTANCE;
-        if (((EntityRenderStateAccessor) state).epsilon$getEntity() instanceof Player player && chamsModule.shouldRenderPlayer(player)) {
-            return chamsModule.getRenderType(getTextureLocation(state));
+    @WrapMethod(method = "submit")
+    private void wrapChamsPlayerSubmit(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, Operation<Void> original) {
+        Chams chams = Chams.INSTANCE;
+        boolean renderThroughWalls = ((EntityRenderStateAccessor) state).epsilon$getEntity() instanceof Player player && chams.shouldRenderPlayer(player);
+        if (renderThroughWalls) chams.beginPlayerSubmit();
+        try {
+            original.call(state, poseStack, submitNodeCollector, camera);
+        } finally {
+            if (renderThroughWalls) chams.endPlayerSubmit();
         }
-        return original;
     }
 
     @ModifyExpressionValue(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))

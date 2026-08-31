@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @ClInitNative
-public class DropdownScreen extends Screen {
+public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     public static final DropdownScreen INSTANCE = new DropdownScreen();
 
@@ -298,6 +298,14 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
             react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
+        }
+
+        if (button == 0) {
+            for (DropdownPanel panel : panels) {
+                if (panel.isVisible()) {
+                    panel.onGlobalMouseClicked(mx, my, button);
+                }
+            }
         }
 
         if (button == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
@@ -633,6 +641,7 @@ public class DropdownScreen extends Screen {
         return ClientSetting.INSTANCE.showReisaInDropdown.getValue();
     }
 
+    @Override
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
@@ -642,6 +651,7 @@ public class DropdownScreen extends Screen {
         react(ReisaDropdownCompanion.Action.PANEL_OPEN);
     }
 
+    @Override
     public void openStringListSettingPopup(StringListSetting setting) {
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
