@@ -166,6 +166,7 @@ public class ModuleManager {
         addModule(SneakTweak.INSTANCE);
         addModule(TitleReplace.INSTANCE);
         addModule(TotemAnimation.INSTANCE);
+        addModule(TNTTimer.INSTANCE);
         addModule(Trajectories.INSTANCE);
         addModule(WorldTweaks.INSTANCE);
         addModule(Xray.INSTANCE);
