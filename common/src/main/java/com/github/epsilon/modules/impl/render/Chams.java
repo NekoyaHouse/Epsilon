@@ -28,7 +28,7 @@ public class Chams extends Module {
     private final BoolSetting players = boolSetting("Players", true, noDepth::getValue);
     private final BoolSetting chests = boolSetting("Chests", true, noDepth::getValue);
 
-    private static final ThreadLocal<Integer> PLAYER_SUBMIT_DEPTH = ThreadLocal.withInitial(() -> 0);
+    private final ThreadLocal<Boolean> submittingPlayer = ThreadLocal.withInitial(() -> false);
 
     private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
             .withLocation("pipeline/epsilon_entity_chams")
@@ -56,29 +56,24 @@ public class Chams extends Module {
         return renderType.pipeline() == PIPELINE;
     }
 
-    public void beginPlayerSubmit() {
-        PLAYER_SUBMIT_DEPTH.set(PLAYER_SUBMIT_DEPTH.get() + 1);
-    }
-
-    public void endPlayerSubmit() {
-        int depth = PLAYER_SUBMIT_DEPTH.get();
-        if (depth <= 1) {
-            PLAYER_SUBMIT_DEPTH.remove();
-        } else {
-            PLAYER_SUBMIT_DEPTH.set(depth - 1);
-        }
-    }
-
-    public boolean isSubmittingPlayer() {
-        return PLAYER_SUBMIT_DEPTH.get() > 0;
+    public boolean noDepth() {
+        return isEnabled() && noDepth.getValue();
     }
 
     public boolean shouldRenderPlayer(Player player) {
-        return isEnabled() && noDepth.getValue() && players.getValue() && player != mc.player;
+        return noDepth() && players.getValue() && player != mc.player;
+    }
+
+    public boolean isSubmittingPlayer() {
+        return submittingPlayer.get();
+    }
+
+    public void setSubmittingPlayer(boolean submittingPlayer) {
+        this.submittingPlayer.set(submittingPlayer);
     }
 
     public boolean shouldRenderChests() {
-        return isEnabled() && noDepth.getValue() && chests.getValue();
+        return noDepth() && chests.getValue();
     }
 
 }

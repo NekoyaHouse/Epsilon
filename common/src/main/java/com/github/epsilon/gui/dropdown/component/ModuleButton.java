@@ -358,7 +358,7 @@ public class ModuleButton extends Component {
         float btnW = 18.0f;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
         float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
-        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) / 2.0f;
         boolean hovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         if (!module.isHidden()) {
             scope.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
@@ -366,7 +366,7 @@ public class ModuleButton extends Component {
             float scale = 0.58f;
             float iconW = textMetrics.textWidth(icon, scale, StaticFontLoader.ICONS);
             float iconH = textMetrics.textHeight(scale, StaticFontLoader.ICONS);
-            scope.text(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+            scope.text(icon, btnX + (btnW - iconW) / 2.0f, btnY + (btnH - iconH) / 2.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
         }
         if (hovered) {
             String hint = module.isHidden() ? EpsilonTranslations.Module.HIDDEN.getTranslatedName() : EpsilonTranslations.Module.VISIBLE.getTranslatedName();

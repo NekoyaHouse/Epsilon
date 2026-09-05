@@ -164,8 +164,8 @@ public class Shaders extends Module {
             fillAlpha = intSetting(prefix + "Fill Alpha", 170, 0, 255, 1, () -> outlineAvailable.check() && (mode.is(ShaderManager.Shader.Smoke) || mode.is(ShaderManager.Shader.Gradient) || mode.is(ShaderManager.Shader.Fade))).group(group);
             glow = boolSetting(prefix + "Smoke Glow", true, () -> outlineAvailable.check() && !mode.is(ShaderManager.Shader.Snow)).group(group);
             outlineColor = colorSetting(prefix + "Outline", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && !mode.is(ShaderManager.Shader.Gradient) && !mode.is(ShaderManager.Shader.Snow)).group(group);
-            smokeOutlineColor1 = colorSetting(prefix + "Smoke Outline", new Color(255, 0, 0, 136), () -> outlineAvailable.check() && mode.is(ShaderManager.Shader.Smoke)).group(group);
-            smokeOutlineColor2 = colorSetting(prefix + "Smoke Outline 2", new Color(255, 0, 0, 136), () -> outlineAvailable.check() && mode.is(ShaderManager.Shader.Smoke)).group(group);
+            smokeOutlineColor1 = colorSetting(prefix + "Smoke Outline", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && mode.is(ShaderManager.Shader.Smoke)).group(group);
+            smokeOutlineColor2 = colorSetting(prefix + "Smoke Outline 2", new Color(250, 250, 250, 136), () -> outlineAvailable.check() && mode.is(ShaderManager.Shader.Smoke)).group(group);
             fillColor1 = colorSetting(prefix + "Fill", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && !mode.is(ShaderManager.Shader.Gradient)).group(group);
             fillColor2 = colorSetting(prefix + "Smoke Fill", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && (mode.is(ShaderManager.Shader.Smoke) || mode.is(ShaderManager.Shader.Fade))).group(group);
             fillColor3 = colorSetting(prefix + "Smoke Fill 2", new Color(255, 255, 255, 136), () -> outlineAvailable.check() && mode.is(ShaderManager.Shader.Smoke)).group(group);

@@ -59,7 +59,7 @@ public class HitParticles extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Stars);
     private final EnumSetting<Physics> physics = enumSetting("Physics", Physics.Fall);
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Sync);
-    private final ColorSetting color = colorSetting("Color", new Color(0, 255, 0, 53), true, () -> colorMode.is(ColorMode.Custom));
+    private final ColorSetting color = colorSetting("Color", new Color(255, 255, 255, 53), true, () -> colorMode.is(ColorMode.Custom));
     private final BoolSetting onlySelf = boolSetting("Only Self", false);
     private final IntSetting amount = intSetting("Amount", 2, 1, 5, 1);
     private final IntSetting lifeTime = intSetting("Life Time", 2, 1, 10, 1);

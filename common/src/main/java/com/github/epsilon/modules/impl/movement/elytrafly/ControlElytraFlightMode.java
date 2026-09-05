@@ -63,7 +63,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
 
     @Override
     public void onKeyboardInput(KeyboardInputEvent event) {
-        if (elytraFly.noSprint.getValue()) event.setSprint(false);
+        if (elytraFly.noSprint.getValue()) {
+            event.setSprint(false);
+            mc.player.setSprinting(false);
+            mc.options.keySprint.setDown(false);
+        }
         if (shouldJump) {
             event.setJump(true);
             shouldJump = false;

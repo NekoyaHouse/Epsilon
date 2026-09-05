@@ -105,8 +105,17 @@ public class MixinCamera {
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
-    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true) float partialTicks) {
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"), require = 0)
+    private void onAlignSetRotation(Args args, @Local(argsOnly = true) float partialTicks) {
+        FreeCamera freeCamera = FreeCamera.INSTANCE;
+        if (freeCamera.isEnabled()) {
+            args.set(0, (float) freeCamera.getYaw(partialTicks));
+            args.set(1, (float) freeCamera.getPitch(partialTicks));
+        }
+    }
+
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FFF)V"), require = 0)
+    private void onAlignSetRotationNeoForge(Args args, @Local(argsOnly = true) float partialTicks) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {
             args.set(0, (float) freeCamera.getYaw(partialTicks));

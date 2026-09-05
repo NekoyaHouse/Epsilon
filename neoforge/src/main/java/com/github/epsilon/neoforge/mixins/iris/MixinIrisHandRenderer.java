@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 
-@SuppressWarnings("UnresolvedMixinReference")
 @Pseudo
 @Mixin(targets = "net.irisshaders.iris.pathways.HandRenderer", remap = false)
 public abstract class MixinIrisHandRenderer {

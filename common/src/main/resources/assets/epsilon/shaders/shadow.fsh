@@ -10,7 +10,6 @@ layout(location = 0) out vec4 fragColor;
 
 const int DIRECTION_PAIR_COUNT = 8;
 const int SAMPLE_COUNT = 5;
-const float SAMPLE_WEIGHT = 1.0 / 81.0;
 const vec2 SAMPLE_DIRECTIONS[DIRECTION_PAIR_COUNT] = vec2[DIRECTION_PAIR_COUNT](
     vec2(1.0, 0.0),
     vec2(0.92387953, 0.38268343),
@@ -63,8 +62,8 @@ void main() {
         }
     }
 
-    blurredMask *= SAMPLE_WEIGHT;
-    float outsideCoverage = smoothstep(-edgeAntialias, edgeAntialias, baseDistance);
+    blurredMask *= 1.0 / 81.0;
+    float outsideCoverage = smoothstep(-edgeAntialias, 0.0, baseDistance);
     float fadeWidth = min(antialias, f_BlurRadius);
     float rangeCoverage = 1.0 - smoothstep(f_BlurRadius - fadeWidth, f_BlurRadius, max(baseDistance, 0.0));
     float outsideAlpha = clamp(blurredMask * outsideCoverage * rangeCoverage, 0.0, 1.0);

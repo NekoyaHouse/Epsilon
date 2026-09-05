@@ -1,6 +1,9 @@
-import com.github.epsilon.gradle.MarkGameLibraryJar
 import net.neoforged.moddevgradle.tasks.JarJar
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
 
 plugins {
     id("multiloader-loader")
@@ -9,56 +12,6 @@ plugins {
 
 val neoforgeVersion = project.property("neoforge_version").toString()
 val modId = project.property("mod_id").toString()
-
-data class GameLibrarySpec(val group: String, val artifact: String, val version: String) {
-    val notation = "$group:$artifact:$version"
-    val fileName = "$artifact-$version.jar"
-    val taskSuffix = artifact
-        .split(Regex("[^A-Za-z0-9]+"))
-        .joinToString("") { it.replaceFirstChar(Char::uppercaseChar) }
-}
-
-// Minecraft already supplies these modules; nesting them would duplicate classes and inflate the mod jar.
-val minecraftProvidedModules = setOf(
-    "com.google.code.gson:gson",
-    "com.google.errorprone:error_prone_annotations",
-    "it.unimi.dsi:fastutil",
-    "org.jetbrains:annotations",
-    "org.joml:joml",
-    "org.projectlombok:lombok",
-)
-
-val gameLibrarySpecs = listOf(
-    GameLibrarySpec("com.viaversion", "viaversion-common", "5.12.0-SNAPSHOT"),
-    GameLibrarySpec("com.viaversion", "viabackwards-common", "5.12.0-SNAPSHOT"),
-    GameLibrarySpec("com.viaversion", "viaaprilfools-common", "4.2.3-SNAPSHOT"),
-    GameLibrarySpec("net.raphimc", "ViaLegacy", "3.1.0-SNAPSHOT"),
-    GameLibrarySpec("net.raphimc", "ViaBedrock", "0.0.29-SNAPSHOT"),
-    GameLibrarySpec("dev.kastle.netty", "netty-transport-raknet", "1.7.0"),
-)
-
-val gameLibrarySources = gameLibrarySpecs.associateWith { spec ->
-    configurations.create("gameLibrary${spec.taskSuffix}") {
-        isCanBeResolved = true
-        isCanBeConsumed = false
-        isTransitive = false
-    }
-}
-
-val markedGameLibraryTasks = gameLibrarySources.mapValues { (spec, source) ->
-    tasks.register<MarkGameLibraryJar>("mark${spec.taskSuffix}AsGameLibrary") {
-        inputJar.set(layout.file(source.elements.map { it.single().asFile }))
-        outputJar.set(layout.buildDirectory.file("game-libraries/${spec.fileName}"))
-    }
-}
-
-val markedGameLibraryJars = files(markedGameLibraryTasks.values.map { it.flatMap(MarkGameLibraryJar::outputJar) })
-
-val jarJarDependencySource by configurations.creating {
-    isCanBeResolved = true
-    isCanBeConsumed = false
-    extendsFrom(configurations.implementation.get())
-}
 
 val sodiumNeoForgeOuterJar by configurations.creating {
     isCanBeResolved = true
@@ -82,81 +35,94 @@ val extractedSodiumNeoForgeModJar = files(
 ).builtBy(extractSodiumNeoForgeModJar)
 
 dependencies {
-    implementation("com.viaversion:viaversion-common:5.12.0-SNAPSHOT")
-    implementation("com.viaversion:viabackwards-common:5.12.0-SNAPSHOT")
-    implementation("com.viaversion:viaaprilfools-common:4.2.3-SNAPSHOT")
-    implementation("net.raphimc:ViaLegacy:3.1.0-SNAPSHOT")
-    implementation("net.raphimc:ViaBedrock:0.0.29-SNAPSHOT") {
-        exclude(group = "com.mojang", module = "brigadier")
-        exclude(group = "at.yawk.lz4", module = "lz4-java")
-        exclude(group = "io.netty")
-    }
-    implementation("net.lenni0451:Reflect:1.6.4")
-    implementation("dev.kastle.netty:netty-transport-raknet:1.7.0") {
-        exclude(group = "io.netty")
-    }
-    implementation("dev.kastle.netty:netty-transport-nethernet:1.7.0") {
-        exclude(group = "io.netty")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
-    listOf("windows-x86_64", "windows-aarch64", "linux-x86_64", "linux-aarch64", "macos-aarch64").forEach { platform ->
-        implementation("dev.kastle.webrtc:webrtc-java:1.0.3:$platform")
-    }
+    compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
     compileOnly(libs.iris.neoforge)
-
-    gameLibrarySources.forEach { (spec, source) ->
-        add(source.name, spec.notation)
-    }
-
-    implementation("org.bytedeco:javacpp:1.5.10")
-    implementation("org.bytedeco:javacv:1.5.10")
-    implementation("org.bytedeco:ffmpeg:6.1.1-1.5.10")
-    runtimeOnly("org.bytedeco:javacpp:1.5.10:windows-x86_64")
-    runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
+    implementation(jarJar("org.bytedeco:javacpp:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
 }
 
-configurations.named("jarJar") {
-    // NeoForge JarJar only records direct dependencies. Mirror the upstream
-    // ViaFabricPlus build by turning every resolved implementation component
-    // into a non-transitive direct dependency.
-    defaultDependencies {
-        jarJarDependencySource.incoming.resolutionResult.allComponents
-            .mapNotNull { it.id as? ModuleComponentIdentifier }
-            .filterNot { id -> "${id.group}:${id.module}" in minecraftProvidedModules }
-            .forEach { id ->
-                add(project.dependencies.create("${id.group}:${id.module}:${id.version}").apply {
-                    isTransitive = false
-                })
-            }
-    }
-    exclude(group = "com.mojang", module = "brigadier")
-    exclude(group = "at.yawk.lz4", module = "lz4-java")
-    exclude(group = "io.netty")
-}
-
+// NeoForge 26.2 resolves Jar-in-Jar dependencies by group and artifact only;
+// classifiers are ignored. Give platform jars distinct identifiers so both
+// the Java API jar and the native Windows jar remain loadable at runtime.
 tasks.named<JarJar>("jarJar") {
-    inputs.files(markedGameLibraryJars)
-        .withPathSensitivity(PathSensitivity.NONE)
-    dependsOn(markedGameLibraryTasks)
-
     doLast {
-        val nestedDirectory = outputDirectory.dir("META-INF/jarjar").get().asFile
-        gameLibrarySources.forEach { (spec, source) ->
-            val markedJar = markedGameLibraryTasks.getValue(spec).get().outputJar.get().asFile
-            val embeddedJar = nestedDirectory.resolve(source.singleFile.name)
-            check(embeddedJar.isFile) {
-                "JarJar did not embed the expected game library ${source.singleFile.name}"
+        val metadataFile = outputDirectory.dir("META-INF/jarjar/metadata.json").get().asFile
+        val metadataLegacy = metadataFile.readText()
+            .replace(
+                "\"artifact\": \"javacpp\",\n      }\n      ,\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\"",
+                "\"artifact\": \"javacpp-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\""
+            )
+            .replace(
+                "\"artifact\": \"ffmpeg\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\"",
+                "\"artifact\": \"ffmpeg-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\""
+            )
+        fun renameArtifact(metadata: String, path: String, artifact: String): String {
+            val pathIndex = metadata.indexOf("\"path\": \"$path\"")
+            check(pathIndex >= 0) { "JarJar metadata does not contain $path" }
+            val identifierIndex = metadata.lastIndexOf("\"identifier\": {", pathIndex)
+            val marker = "\"artifact\": \""
+            val artifactIndex = metadata.indexOf(marker, identifierIndex)
+            check(identifierIndex >= 0 && artifactIndex >= 0 && artifactIndex < pathIndex) {
+                "JarJar metadata entry for $path is malformed"
             }
-            markedJar.copyTo(embeddedJar, overwrite = true)
+            val valueStart = artifactIndex + marker.length
+            val valueEnd = metadata.indexOf('"', valueStart)
+            return metadata.substring(0, valueStart) + artifact + metadata.substring(valueEnd)
+        }
+
+        val metadata = metadataLegacy
+            .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+            .let { renameArtifact(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
+        metadataFile.writeText(metadata)
+    }
+}
+
+fun fixJarJarMetadata(metadata: String): String {
+    fun rename(input: String, path: String, artifact: String): String {
+        val pathIndex = input.indexOf("\"path\": \"$path\"")
+        check(pathIndex >= 0) { "JarJar metadata does not contain $path" }
+        val identifierIndex = input.lastIndexOf("\"identifier\": {", pathIndex)
+        val marker = "\"artifact\": \""
+        val artifactIndex = input.indexOf(marker, identifierIndex)
+        val valueStart = artifactIndex + marker.length
+        val valueEnd = input.indexOf('"', valueStart)
+        return input.substring(0, valueStart) + artifact + input.substring(valueEnd)
+    }
+    return metadata
+        .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+        .let { rename(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
+}
+
+tasks.named<Jar>("jar") {
+    dependsOn("jarJar")
+    doLast {
+        val archive = archiveFile.get().asFile.toPath()
+        val temporary = Files.createTempFile(archive.parent, archive.fileName.toString(), ".tmp")
+        try {
+            JarFile(archive.toFile()).use { input ->
+                JarOutputStream(Files.newOutputStream(temporary)).use { output ->
+                    input.entries().asSequence().forEach { entry ->
+                        val contents = input.getInputStream(entry).readBytes()
+                        output.putNextEntry(JarEntry(entry.name))
+                        output.write(if (entry.name == "META-INF/jarjar/metadata.json") fixJarJarMetadata(String(contents)) .toByteArray() else contents)
+                        output.closeEntry()
+                    }
+                }
+            }
+            Files.move(temporary, archive, StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temporary)
         }
     }
 }
 
 neoForge {
     version = neoforgeVersion
-    validateAccessTransformers = true
     val at = project(":common").file("src/main/resources/META-INF/accesstransformer.cfg")
     if (at.exists()) {
         accessTransformers.from(at.absolutePath)
@@ -175,7 +141,15 @@ neoForge {
         register("data") {
             clientData()
             gameDirectory = file("runs/data").also { it.mkdirs() }
-            programArguments.addAll("--mod", modId, "--all", "--output", file("src/generated/resources/").absolutePath, "--existing", file("src/main/resources/").absolutePath)
+            programArguments.addAll(
+                "--mod",
+                modId,
+                "--all",
+                "--output",
+                file("src/generated/resources/").absolutePath,
+                "--existing",
+                file("src/main/resources/").absolutePath
+            )
         }
     }
     mods {
@@ -187,11 +161,6 @@ neoForge {
 
 sourceSets.main.get().resources.srcDir("src/generated/resources")
 
-val originalRuntimeClasspath = sourceSets.main.get().runtimeClasspath
-sourceSets.main.get().runtimeClasspath = originalRuntimeClasspath.filter {
-    it.name !in gameLibrarySpecs.map(GameLibrarySpec::fileName)
-} + markedGameLibraryJars
-
 val loaderAttribute = Attribute.of("io.github.mcgradleconventions.loader", String::class.java)
 listOf("apiElements", "runtimeElements", "sourcesElements").forEach { variant ->
     configurations.named(variant) {
@@ -201,7 +170,11 @@ listOf("apiElements", "runtimeElements", "sourcesElements").forEach { variant ->
     }
 }
 sourceSets.configureEach {
-    listOf(compileClasspathConfigurationName, runtimeClasspathConfigurationName, getTaskName(null, "jarJar")).forEach { variant ->
+    listOf(
+        compileClasspathConfigurationName,
+        runtimeClasspathConfigurationName,
+        getTaskName(null, "jarJar")
+    ).forEach { variant ->
         configurations.named(variant) {
             attributes {
                 attribute(loaderAttribute, "neoforge")

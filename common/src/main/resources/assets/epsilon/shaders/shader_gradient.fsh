@@ -32,7 +32,9 @@ in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
 float random(vec2 pos) {
-    return fract(sin(dot(pos.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    precise float seed = pos.x * 12.9898 + pos.y * 78.233;
+    precise float value = sin(seed) * 43758.5453123;
+    return fract(value);
 }
 
 float noise(vec2 pos) {
