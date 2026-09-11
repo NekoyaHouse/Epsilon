@@ -24,7 +24,7 @@ public class MixinChestRenderer {
         boolean renderShaderOutline = shaders.isEnabled() && shaders.shouldRenderChest(state.blockPos);
         int finalOutlineColor = renderShaderOutline ? 0 : outlineColor;
         Chams chams = Chams.INSTANCE;
-        if (chams.shouldRenderChests()) {
+        if (chams.isEnabled() && chams.chests.getValue()) {
             submitNodeCollector.submitModel(model, modelState, poseStack, chams.getRenderType(sprite.atlasLocation()), lightCoords, overlayCoords, tintedColor, sprites.get(sprite), finalOutlineColor, crumblingOverlay);
         } else {
             submitNodeCollector.submitModel(model, modelState, poseStack, lightCoords, overlayCoords, tintedColor, sprite, sprites, finalOutlineColor, crumblingOverlay);

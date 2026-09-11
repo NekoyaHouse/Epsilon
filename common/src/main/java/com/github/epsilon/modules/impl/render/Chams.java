@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render;
 
+import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -12,6 +14,8 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.function.Function;
@@ -24,9 +28,15 @@ public class Chams extends Module {
         super("Chams", Category.RENDER);
     }
 
-    private final BoolSetting noDepth = boolSetting("No Depth", true);
-    private final BoolSetting players = boolSetting("Players", true, noDepth::getValue);
-    private final BoolSetting chests = boolSetting("Chests", true, noDepth::getValue);
+    private final BoolSetting players = boolSetting("Players", true);
+    private final BoolSetting self = boolSetting("Self", true, players::getValue);
+    private final BoolSetting friends = boolSetting("Friends", true);
+    private final BoolSetting crystals = boolSetting("Crystals", true);
+    public final BoolSetting chests = boolSetting("Chests", true);
+    private final BoolSetting creatures = boolSetting("Creatures", false);
+    private final BoolSetting monsters = boolSetting("Monsters", false);
+    private final BoolSetting ambients = boolSetting("Ambients", false);
+    private final BoolSetting others = boolSetting("Others", false);
 
     private final ThreadLocal<Boolean> submittingPlayer = ThreadLocal.withInitial(() -> false);
 
@@ -56,14 +66,6 @@ public class Chams extends Module {
         return renderType.pipeline() == PIPELINE;
     }
 
-    public boolean noDepth() {
-        return isEnabled() && noDepth.getValue();
-    }
-
-    public boolean shouldRenderPlayer(Player player) {
-        return noDepth() && players.getValue() && player != mc.player;
-    }
-
     public boolean isSubmittingPlayer() {
         return submittingPlayer.get();
     }
@@ -72,8 +74,27 @@ public class Chams extends Module {
         this.submittingPlayer.set(submittingPlayer);
     }
 
-    public boolean shouldRenderChests() {
-        return noDepth() && chests.getValue();
+    public boolean isValidEntity(Entity entity) {
+        if (entity instanceof Player player) {
+            if (player == mc.player && !self.getValue()) {
+                return false;
+            }
+            if (FriendManager.INSTANCE.isFriend(player) || TargetManager.INSTANCE.isSameTeam(player)) {
+                return friends.getValue();
+            }
+            return players.getValue();
+        }
+
+        if (entity instanceof EndCrystal) {
+            return crystals.getValue();
+        }
+
+        return switch (entity.getType().getCategory()) {
+            case CREATURE, WATER_CREATURE -> creatures.getValue();
+            case MONSTER -> monsters.getValue();
+            case AMBIENT, WATER_AMBIENT -> ambients.getValue();
+            default -> others.getValue();
+        };
     }
 
 }

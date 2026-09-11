@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -23,7 +22,7 @@ public class MixinEntityRenderDispatcher {
     private void submitChamsPlayer(EntityRenderer<?, ?> renderer, EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, Operation<Void> original) {
         Chams chams = Chams.INSTANCE;
         boolean previous = chams.isSubmittingPlayer();
-        chams.setSubmittingPlayer(state instanceof EntityRenderStateAccessor accessor && accessor.epsilon$getEntity() instanceof Player player && chams.shouldRenderPlayer(player));
+        chams.setSubmittingPlayer(chams.isEnabled() && state instanceof EntityRenderStateAccessor accessor && chams.isValidEntity(accessor.epsilon$getEntity()));
         try {
             original.call(renderer, state, poseStack, submitNodeCollector, camera);
         } finally {
