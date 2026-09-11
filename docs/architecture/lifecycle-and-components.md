@@ -46,6 +46,7 @@ Minecraft.<init> TAIL
 | `ShaderManager` | 手部/箱子 outline 等共享 shader 状态 |
 | `AccountManager` / `SkinManager` / `QQAvatarManager` | 账号、皮肤与头像资源 |
 | `ExecutorManager` / `TimerManager` / `VideoManager` | 线程池、计时与视频播放 |
+| `AssetManager` | 视频/玲纱/FFmpeg 资源的按需下载、缓存与纹理注册 |
 
 `RotationManager` 是抽象基类，实现为 `SilentRotationManager` 与 `SnapRotationManager`。它的
 `INSTANCE` 是可变静态字段，`RotationManager.switchRotationManager(mode)` 会通过 `copyStateFrom()`

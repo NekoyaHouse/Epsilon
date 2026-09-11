@@ -1,6 +1,7 @@
 package me.sofurry.smtc;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.utils.client.ClientPlatform;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +12,6 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.Locale;
 
 public class SmtcNativeBridge {
 
@@ -41,9 +41,7 @@ public class SmtcNativeBridge {
     private static native void resetNative();
 
     private static boolean loadLibrary() {
-        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        String architecture = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT);
-        if (!osName.contains("windows") || !(architecture.equals("amd64") || architecture.equals("x86_64"))) {
+        if (!ClientPlatform.isWindowsX64()) {
             return false;
         }
 

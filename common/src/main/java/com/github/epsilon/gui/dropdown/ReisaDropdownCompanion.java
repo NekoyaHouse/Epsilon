@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown;
 
-import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.resources.Identifier;
@@ -71,8 +71,15 @@ public class ReisaDropdownCompanion {
                      int mouseX, int mouseY, boolean mouseBlockedByGui) {
         long now = Util.getMillis();
         Layout layout = resolveLayout(screenWidth, screenHeight);
+        if (shownAction.texture() == null) {
+            return;
+        }
         Action desiredAction = resolveAction(now, layout, mouseX, mouseY, mouseBlockedByGui);
         switchExpression(desiredAction);
+        Identifier texture = shownAction.texture();
+        if (texture == null) {
+            return;
+        }
         if (!texturesPrewarmed) {
             prewarmTextures(scope);
             texturesPrewarmed = true;
@@ -95,11 +102,11 @@ public class ReisaDropdownCompanion {
         float alpha = entrance * 0.94f;
 
         scope.layer(-2, layer -> layer.texture(
-                shownAction.texture(), drawX + 2.0f, drawY + 3.0f, drawWidth, drawHeight,
+                texture, drawX + 2.0f, drawY + 3.0f, drawWidth, drawHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.BLACK, alpha * 0.15f), true
         ));
         scope.layer(-1, layer -> layer.texture(
-                shownAction.texture(), drawX, drawY, drawWidth, drawHeight,
+                texture, drawX, drawY, drawWidth, drawHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), true
         ));
     }
@@ -135,7 +142,11 @@ public class ReisaDropdownCompanion {
         Color transparent = withAlpha(Color.WHITE, 0.0f);
         scope.layer(-3, layer -> {
             for (Action action : Action.values()) {
-                layer.texture(action.texture(), -1.0f, -1.0f, 1.0f, 1.0f,
+                Identifier texture = action.texture();
+                if (texture == null) {
+                    continue;
+                }
+                layer.texture(texture, -1.0f, -1.0f, 1.0f, 1.0f,
                         0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
             }
         });
@@ -234,20 +245,21 @@ public class ReisaDropdownCompanion {
         HEAD_HOVER("18", 0L, 0),
         BLINK("99", 0L, 0);
 
-        private final Identifier texture;
+        private final String textureSuffix;
         private final long durationMs;
         private final int priority;
 
         Action(String textureSuffix, long durationMs, int priority) {
-            this.texture = ResourceLocationUtils.getIdentifier(
-                    "textures/gui/galgame/reisa_" + textureSuffix + ".png"
-            );
+            this.textureSuffix = textureSuffix;
             this.durationMs = durationMs;
             this.priority = priority;
         }
 
+        /**
+         * 返回玲纱立绘纹理，资源尚未下载时返回 {@code null}。
+         */
         public Identifier texture() {
-            return texture;
+            return AssetManager.INSTANCE.reisaTexture(textureSuffix);
         }
 
         public long durationMs() {

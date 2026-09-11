@@ -175,6 +175,56 @@
         "all": "All",
         "available": "Available",
         "selected_header": "Selected"
+      },
+      "resource": {
+        "video": "Main Menu Video",
+        "reisa": "Reisa Artwork",
+        "ffmpeg": "FFmpeg Runtime",
+        "title": "Resource Download",
+        "status": {
+          "ready": "Ready",
+          "missing": "Not downloaded",
+          "downloading": "Downloading"
+        },
+        "button": {
+          "download": "Download",
+          "retry": "Retry",
+          "cancel": "Cancel",
+          "close": "Close",
+          "done": "Done",
+          "background": "Keep Downloading",
+          "stop": "Stop Download"
+        },
+        "hint": "Resources are downloaded on demand to ~/.epsilon/assets. The address can be changed in Client Setting - Resources.",
+        "downloading": "Downloading",
+        "failed": {
+          "_value": "Download failed: %s",
+          "title": "Download Failed"
+        },
+        "success": {
+          "title": "Resources Ready",
+          "message": "All requested resources are ready to use."
+        },
+        "clear": {
+          "title": "Clear Asset Cache",
+          "message": "Delete every downloaded resource under ~/.epsilon/assets?",
+          "yes": "Clear",
+          "no": "Cancel"
+        },
+        "cleared": {
+          "title": "Asset Cache Cleared",
+          "message": "Resources will be downloaded again on next use."
+        },
+        "open_folder_failed": "Unable to open the asset folder"
+      },
+      "platform": {
+        "badge": "Platform Only",
+        "title": "Platform Only",
+        "feature": "Feature: %s",
+        "requirement": "Requires %s",
+        "current": "Current platform: %s",
+        "hint": "This feature is unavailable on the current platform.",
+        "confirm": "Got it"
       }
     },
     "modules": {
@@ -279,6 +329,7 @@
         "anti cheat": "Anti Cheat",
         "appearance": "Appearance",
         "uzawa reisa": "Uzawa Reisa",
+        "resources": "Resources",
         "notification": "Notification",
         "via general": "Via General",
         "via bedrock": "Via Bedrock",
@@ -382,6 +433,11 @@
         "show reisa on startup": "Show Reisa On Startup",
         "show reisa on shutdown": "Show Reisa On Shutdown",
         "reisa volume": "Reisa Volume",
+        "resource base url": "Resource Base URL",
+        "ffmpeg download url": "FFmpeg Download URL",
+        "download assets": "Download Assets",
+        "clear asset cache": "Clear Asset Cache",
+        "open asset folder": "Open Asset Folder",
         "sound notify": "Sound Notify",
         "chat notify": "Chat Notify",
         "animated chat prefix": "Animated Chat Prefix",

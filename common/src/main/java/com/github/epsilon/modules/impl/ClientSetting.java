@@ -2,23 +2,33 @@ package com.github.epsilon.modules.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.screen.ConfirmDialogScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.managers.AssetManager;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.utils.client.PlatformRequirement;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 public class ClientSetting extends Module {
 
@@ -98,6 +108,7 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgReisa = settingGroup("Uzawa Reisa");
     private final SettingGroup sgNotification = settingGroup("Notification");
+    private final SettingGroup sgResources = settingGroup("Resources");
 
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.gui.setScreen(HudEditorScreen.INSTANCE));
@@ -164,7 +175,9 @@ public class ClientSetting extends Module {
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
-    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue).group(sgAppearance);
+    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue)
+            .restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64)
+            .group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting(
             "MainMenu Background",
@@ -182,6 +195,47 @@ public class ClientSetting extends Module {
     public final BoolSetting showReisaOnShutdown = boolSetting("Show Reisa On Shutdown", true).group(sgReisa);
 
     public final DoubleSetting reisaVolume = doubleSetting("Reisa Volume", 0.15, 0.0, 0.5, 0.05).group(sgReisa);
+
+    // Resources
+    public final StringSetting resourceBaseUrl = stringSetting("Resource Base URL", AssetManager.DEFAULT_RESOURCE_BASE_URL).group(sgResources);
+
+    public final StringSetting ffmpegDownloadUrl = stringSetting("FFmpeg Download URL", AssetManager.DEFAULT_FFMPEG_URL).group(sgResources);
+
+    @SuppressWarnings("unused")
+    private final ButtonSetting downloadAssets = buttonSetting("Download Assets", () -> AssetManager.INSTANCE.openDownloadScreen()).group(sgResources);
+
+    @SuppressWarnings("unused")
+    private final ButtonSetting clearAssetCache = buttonSetting("Clear Asset Cache", () -> {
+        Screen parent = mc.gui.screen();
+        List<String> lines = List.of(
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_MESSAGE.getTranslatedName(),
+                AssetManager.INSTANCE.rootDirectory().toString()
+        );
+        mc.gui.setScreen(new ConfirmDialogScreen(parent,
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.getTranslatedName(),
+                lines,
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.getTranslatedName(),
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName(),
+                () -> {
+                    AssetManager.INSTANCE.clearCache();
+                    NotificationManager.INSTANCE.success(
+                            EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
+                            EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName());
+                }));
+    }).group(sgResources);
+
+    @SuppressWarnings("unused")
+    private final ButtonSetting openAssetFolder = buttonSetting("Open Asset Folder", () -> {
+        try {
+            Path directory = AssetManager.INSTANCE.rootDirectory();
+            Files.createDirectories(directory);
+            Util.getPlatform().openPath(directory);
+        } catch (IOException e) {
+            NotificationManager.INSTANCE.error(
+                    EpsilonTranslations.Resources.OPEN_FOLDER_FAILED.getTranslatedName(),
+                    e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+        }
+    }).group(sgResources);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);

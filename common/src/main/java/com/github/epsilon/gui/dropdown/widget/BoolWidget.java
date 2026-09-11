@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
@@ -9,6 +10,7 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.gui.screen.PlatformNoticeScreen;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
@@ -44,11 +46,12 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
 
     @Override
     public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+        boolean supported = setting.isPlatformSupported();
         float target = setting.getValue() ? 1.0f : 0.0f;
         toggleAnim.run(target);
         knobBounceAnim.run(target);
-        float t = toggleAnim.getValue();
-        float bounce = knobBounceAnim.getValue();
+        float t = supported ? toggleAnim.getValue() : 0.0f;
+        float bounce = supported ? knobBounceAnim.getValue() : 0.0f;
 
         float sw = SWITCH_WIDTH;
         float sh = SWITCH_HEIGHT;
@@ -56,12 +59,17 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         float sy = (getHeight() - sh) * 0.5f;
 
         boolean hovered = isHovered(mouseX, mouseY, absoluteX(sx - 2), absoluteY(sy - 2), sw + 4, sh + 4);
-        hoverAnim.run(hovered ? 1.0f : 0.0f);
+        hoverAnim.run(supported && hovered ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
                 (getHeight() - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
-                DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+                DropdownTheme.SETTING_TEXT_SCALE,
+                supported ? DropdownTheme.settingLabel() : MD3Theme.TEXT_MUTED);
+
+        if (!supported) {
+            drawPlatformBadge(scope, textMetrics, sx - 6.0f);
+        }
 
         scope.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
 
@@ -97,6 +105,10 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
             float sx = absoluteX(width - DropdownTheme.SETTING_PADDING_X - sw);
             float sy = absoluteY((getHeight() - sh) * 0.5f);
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
+                if (!setting.isPlatformSupported()) {
+                    PlatformNoticeScreen.showOnce(setting);
+                    return true;
+                }
                 boolean newValue = !setting.getValue();
                 setting.setValue(newValue);
                 SoundManager.INSTANCE.playInUi(newValue ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
@@ -107,6 +119,17 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
             }
         }
         return false;
+    }
+
+    private void drawPlatformBadge(UiTree.Scope scope, UiTextMetrics textMetrics, float trailingX) {
+        String label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
+        float scale = 0.5f;
+        float width = textMetrics.textWidth(label, scale) + 12.0f;
+        float height = 12.0f;
+        float x = Math.max(DropdownTheme.SETTING_PADDING_X, trailingX - width);
+        float y = (getHeight() - height) * 0.5f;
+        scope.chip(new com.github.epsilon.gui.lib.UiRect(x, y, width, height), label, scale,
+                MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null);
     }
 
 }

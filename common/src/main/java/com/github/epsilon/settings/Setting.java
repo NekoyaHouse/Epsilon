@@ -1,6 +1,7 @@
 package com.github.epsilon.settings;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.utils.client.PlatformRequirement;
 
 import java.util.function.Consumer;
 
@@ -14,6 +15,7 @@ public abstract class Setting<V> {
     protected boolean rootSetting;
     protected boolean applyWhenRelease;
     protected SettingGroup group;
+    protected PlatformRequirement platformRequirement = PlatformRequirement.ANY;
 
     protected TranslateComponent translateComponent;
 
@@ -62,6 +64,33 @@ public abstract class Setting<V> {
 
     public boolean isAvailable() {
         return dependency != null && this.dependency.check();
+    }
+
+    /**
+     * 声明该设置只在指定平台上可用。
+     */
+    @SuppressWarnings("unchecked")
+    public <S extends Setting<V>> S platformOnly(PlatformRequirement requirement) {
+        this.platformRequirement = requirement == null ? PlatformRequirement.ANY : requirement;
+        return (S) this;
+    }
+
+    public PlatformRequirement getPlatformRequirement() {
+        return platformRequirement;
+    }
+
+    /**
+     * 当前平台是否满足该设置的功能要求。
+     */
+    public boolean isPlatformSupported() {
+        return platformRequirement.isSatisfied();
+    }
+
+    /**
+     * 返回可跨会话识别该设置的稳定 key，用于 Platform Only 提示去重。
+     */
+    public String getNoticeKey() {
+        return translateComponent != null ? translateComponent.getFullKey() : name;
     }
 
     @SuppressWarnings("unchecked")

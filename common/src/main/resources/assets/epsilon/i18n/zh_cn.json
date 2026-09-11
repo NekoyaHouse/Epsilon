@@ -175,6 +175,56 @@
         "all": "全部",
         "available": "可用",
         "selected_header": "已选"
+      },
+      "resource": {
+        "video": "主菜单视频",
+        "reisa": "玲纱立绘",
+        "ffmpeg": "FFmpeg 运行库",
+        "title": "资源下载",
+        "status": {
+          "ready": "已就绪",
+          "missing": "未下载",
+          "downloading": "下载中"
+        },
+        "button": {
+          "download": "下载",
+          "retry": "重试",
+          "cancel": "取消",
+          "close": "关闭",
+          "done": "完成",
+          "background": "后台继续",
+          "stop": "停止下载"
+        },
+        "hint": "资源在首次使用时下载到 ~/.epsilon/assets，下载地址可在「客户端设置 - 资源」中修改。",
+        "downloading": "正在下载",
+        "failed": {
+          "_value": "下载失败：%s",
+          "title": "下载失败"
+        },
+        "success": {
+          "title": "资源已就绪",
+          "message": "所需资源已全部下载完成。"
+        },
+        "clear": {
+          "title": "清除资源缓存",
+          "message": "要删除 ~/.epsilon/assets 下已下载的全部资源吗？",
+          "yes": "清除",
+          "no": "取消"
+        },
+        "cleared": {
+          "title": "资源缓存已清除",
+          "message": "资源会在下次使用时重新下载。"
+        },
+        "open_folder_failed": "无法打开资源目录"
+      },
+      "platform": {
+        "badge": "Platform Only",
+        "title": "Platform Only",
+        "feature": "功能：%s",
+        "requirement": "仅支持 %s",
+        "current": "当前平台：%s",
+        "hint": "该功能在当前平台上不可用。",
+        "confirm": "知道了"
       }
     },
     "modules": {
@@ -279,6 +329,7 @@
         "anti cheat": "反作弊",
         "appearance": "外观",
         "uzawa reisa": "宇泽玲纱",
+        "resources": "资源",
         "notification": "通知",
         "via general": "Via 通用",
         "via bedrock": "Via Bedrock",
@@ -382,6 +433,11 @@
         "show reisa on startup": "启动游戏时显示玲纱",
         "show reisa on shutdown": "关闭游戏时显示玲纱",
         "reisa volume": "玲纱音量",
+        "resource base url": "资源下载地址",
+        "ffmpeg download url": "FFmpeg 下载地址",
+        "download assets": "下载资源",
+        "clear asset cache": "清除资源缓存",
+        "open asset folder": "打开资源目录",
         "sound notify": "声音通知",
         "chat notify": "聊天通知",
         "animated chat prefix": "聊天前缀动画",

@@ -1,10 +1,12 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
+import com.github.epsilon.gui.screen.PlatformNoticeScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
@@ -27,14 +29,20 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
 
     @Override
     public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+        boolean supported = setting.isPlatformSupported();
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
-        float animatedHover = scope.animate(hoverAnimation, hoverProgress);
+        float animatedHover = scope.animate(hoverAnimation, supported ? hoverProgress : 0.0f);
         float toggleProgress = scope.animate(toggleAnimation, setting.getValue());
+        UiRect switchBounds = getSwitchBounds(bounds).relativeTo(bounds);
 
-        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
-        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
-        scope.toggle(getSwitchBounds(bounds).relativeTo(bounds), toggleProgress, animatedHover);
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(supported ? animatedHover : 0.0f));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale,
+                supported ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED);
+        if (!supported) {
+            LabelBadges.platformOnlyChip(scope, textRenderer, bounds, switchBounds);
+        }
+        scope.toggle(switchBounds, supported ? toggleProgress : 0.0f, animatedHover);
     }
 
     private UiRect getSwitchBounds(UiRect bounds) {
@@ -45,6 +53,10 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
     public boolean mouseClicked(UiRect bounds, MouseButtonEvent event, boolean isDoubleClick) {
         if (!bounds.contains(event.x(), event.y()) || event.button() != 0) {
             return false;
+        }
+        if (!setting.isPlatformSupported()) {
+            PlatformNoticeScreen.showOnce(setting);
+            return true;
         }
         setting.setValue(!setting.getValue());
         SoundManager.INSTANCE.playInUi(setting.getValue() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);

@@ -119,6 +119,40 @@ public class EpsilonTranslations {
             Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
+            Resources.VIDEO,
+            Resources.REISA,
+            Resources.FFMPEG,
+            Resources.TITLE,
+            Resources.STATUS_READY,
+            Resources.STATUS_MISSING,
+            Resources.STATUS_DOWNLOADING,
+            Resources.BUTTON_DOWNLOAD,
+            Resources.BUTTON_RETRY,
+            Resources.BUTTON_CANCEL,
+            Resources.BUTTON_CLOSE,
+            Resources.BUTTON_DONE,
+            Resources.BUTTON_BACKGROUND,
+            Resources.BUTTON_STOP,
+            Resources.HINT,
+            Resources.DOWNLOADING,
+            Resources.FAILED,
+            Resources.DOWNLOAD_SUCCESS_TITLE,
+            Resources.DOWNLOAD_SUCCESS_MESSAGE,
+            Resources.DOWNLOAD_FAILED_TITLE,
+            Resources.CLEAR_CONFIRM_TITLE,
+            Resources.CLEAR_CONFIRM_MESSAGE,
+            Resources.CLEAR_CONFIRM_YES,
+            Resources.CLEAR_CONFIRM_NO,
+            Resources.CLEAR_SUCCESS_TITLE,
+            Resources.CLEAR_SUCCESS_MESSAGE,
+            Resources.OPEN_FOLDER_FAILED,
+            PlatformOnly.BADGE,
+            PlatformOnly.TITLE,
+            PlatformOnly.FEATURE,
+            PlatformOnly.REQUIREMENT,
+            PlatformOnly.CURRENT,
+            PlatformOnly.HINT,
+            PlatformOnly.CONFIRM,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
             ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS,
             ElytraFly.PITCH40_NO_USABLE_ELYTRA,
@@ -300,6 +334,58 @@ public class EpsilonTranslations {
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
 
         private Gui() {
+        }
+    }
+
+    /**
+     * 大体积运行时资源下载相关的界面文案。
+     */
+    public static class Resources {
+        public static final TranslateComponent VIDEO = create("gui", "resource.video");
+        public static final TranslateComponent REISA = create("gui", "resource.reisa");
+        public static final TranslateComponent FFMPEG = create("gui", "resource.ffmpeg");
+        public static final TranslateComponent TITLE = create("gui", "resource.title");
+        public static final TranslateComponent STATUS_READY = create("gui", "resource.status.ready");
+        public static final TranslateComponent STATUS_MISSING = create("gui", "resource.status.missing");
+        public static final TranslateComponent STATUS_DOWNLOADING = create("gui", "resource.status.downloading");
+        public static final TranslateComponent BUTTON_DOWNLOAD = create("gui", "resource.button.download");
+        public static final TranslateComponent BUTTON_RETRY = create("gui", "resource.button.retry");
+        public static final TranslateComponent BUTTON_CANCEL = create("gui", "resource.button.cancel");
+        public static final TranslateComponent BUTTON_CLOSE = create("gui", "resource.button.close");
+        public static final TranslateComponent BUTTON_DONE = create("gui", "resource.button.done");
+        public static final TranslateComponent BUTTON_BACKGROUND = create("gui", "resource.button.background");
+        public static final TranslateComponent BUTTON_STOP = create("gui", "resource.button.stop");
+        public static final TranslateComponent HINT = create("gui", "resource.hint");
+        public static final TranslateComponent DOWNLOADING = create("gui", "resource.downloading");
+        public static final TranslateComponent FAILED = create("gui", "resource.failed");
+        public static final TranslateComponent DOWNLOAD_SUCCESS_TITLE = create("gui", "resource.success.title");
+        public static final TranslateComponent DOWNLOAD_SUCCESS_MESSAGE = create("gui", "resource.success.message");
+        public static final TranslateComponent DOWNLOAD_FAILED_TITLE = create("gui", "resource.failed.title");
+        public static final TranslateComponent CLEAR_CONFIRM_TITLE = create("gui", "resource.clear.title");
+        public static final TranslateComponent CLEAR_CONFIRM_MESSAGE = create("gui", "resource.clear.message");
+        public static final TranslateComponent CLEAR_CONFIRM_YES = create("gui", "resource.clear.yes");
+        public static final TranslateComponent CLEAR_CONFIRM_NO = create("gui", "resource.clear.no");
+        public static final TranslateComponent CLEAR_SUCCESS_TITLE = create("gui", "resource.cleared.title");
+        public static final TranslateComponent CLEAR_SUCCESS_MESSAGE = create("gui", "resource.cleared.message");
+        public static final TranslateComponent OPEN_FOLDER_FAILED = create("gui", "resource.open_folder_failed");
+
+        private Resources() {
+        }
+    }
+
+    /**
+     * Platform Only 提示相关文案。
+     */
+    public static class PlatformOnly {
+        public static final TranslateComponent BADGE = create("gui", "platform.badge");
+        public static final TranslateComponent TITLE = create("gui", "platform.title");
+        public static final TranslateComponent FEATURE = create("gui", "platform.feature");
+        public static final TranslateComponent REQUIREMENT = create("gui", "platform.requirement");
+        public static final TranslateComponent CURRENT = create("gui", "platform.current");
+        public static final TranslateComponent HINT = create("gui", "platform.hint");
+        public static final TranslateComponent CONFIRM = create("gui", "platform.confirm");
+
+        private PlatformOnly() {
         }
     }
 

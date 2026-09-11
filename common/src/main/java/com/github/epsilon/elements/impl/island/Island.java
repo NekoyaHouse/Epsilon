@@ -11,6 +11,8 @@ import com.github.epsilon.modules.impl.player.Timer;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.utils.client.ClientPlatform;
+import com.github.epsilon.utils.client.PlatformRequirement;
 import com.github.epsilon.utils.player.InvHelper;
 import com.google.common.base.Suppliers;
 import me.sofurry.smtc.SmtcService;
@@ -35,7 +37,7 @@ public class Island extends HudModule {
     private final BoolSetting scaffoldBlocks = boolSetting("Scaffold Blocks", true);
     private final BoolSetting timerBalance = boolSetting("Timer Balance", true);
     private final BoolSetting tabList = boolSetting("Tab List", true);
-    private final BoolSetting music = boolSetting("Music", true);
+    private final BoolSetting music = boolSetting("Music", true).platformOnly(PlatformRequirement.WINDOWS_X64);
     public final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 50));
     public final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
     public final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
@@ -64,7 +66,7 @@ public class Island extends HudModule {
 
     @Override
     protected void onEnable() {
-        if (music.getValue()) SmtcService.INSTANCE.start();
+        if (music.getValue() && ClientPlatform.isWindowsX64()) SmtcService.INSTANCE.start();
     }
 
     @Override
@@ -170,7 +172,7 @@ public class Island extends HudModule {
     }
 
     private void updateMusicInstance() {
-        if (music.getValue()) {
+        if (music.getValue() && ClientPlatform.isWindowsX64()) {
             SmtcService.INSTANCE.start();
             SmtcSnapshot snapshot = SmtcService.INSTANCE.snapshot();
             if (!snapshot.available() || !snapshot.isPlaying()) {
