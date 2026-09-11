@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.PanelElements;

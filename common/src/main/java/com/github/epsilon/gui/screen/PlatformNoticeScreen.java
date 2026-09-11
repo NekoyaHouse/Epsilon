@@ -24,7 +24,9 @@ import static com.github.epsilon.Constants.mc;
  */
 public class PlatformNoticeScreen extends EpsilonDialogScreen {
 
-    /** 正在展示中的提示 key，用于避免同一功能重复堆叠窗口。 */
+    /**
+     * 正在展示中的提示 key，用于避免同一功能重复堆叠窗口。
+     */
     private static final Set<String> OPEN_KEYS = ConcurrentHashMap.newKeySet();
 
     private static final float ROW_HEIGHT = 17.0f;

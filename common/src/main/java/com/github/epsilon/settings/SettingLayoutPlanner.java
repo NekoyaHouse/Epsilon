@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * 将显式 SettingGroup 转换为 GUI 可消费的 section。
  * <p>
- * 这里不再根据名称或控件类型自动推断分组，模块和 Addon 需要通过 settingGroup(...).group(...)
+ * 这里不再根据名称或控件类型自动推断分组，模块需要通过 settingGroup(...).group(...)
  * 手动表达结构；布局层只负责聚合、排序和暴露折叠状态。
  */
 public class SettingLayoutPlanner {

@@ -28,10 +28,10 @@ public class LegacyConfigMigrator {
 
     /**
      * Returns the per-module config file path for the new layout:
-     * {@code {targetConfigDir}/{addonId}/{moduleName}.json}
+     * {@code {targetConfigDir}/epsilon/{moduleName}.json}
      */
     public Path getModuleFile(Module module) {
-        return targetConfigDir.resolve(module.getAddonId()).resolve(module.getName() + ".json");
+        return targetConfigDir.resolve("epsilon").resolve(module.getName() + ".json");
     }
 
     public void migrateIfNeeded(List<Module> modules) {

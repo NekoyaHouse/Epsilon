@@ -2,7 +2,6 @@ package com.github.epsilon.managers;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.accounts.Account;
-import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.config.LegacyConfigMigrator;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.Module;
@@ -34,7 +33,6 @@ public class ConfigManager {
     private static final String IMPORTS_FOLDER = "imports";
     private static final String EXPORTS_FOLDER = "exports";
     private static final String FRIENDS_FILE_NAME = "friends.json";
-    private static final String ADDON_SETTINGS_FILE_NAME = "addon-settings.json";
     private static final String ACTIVE_CONFIG_FILE_NAME = "active-config.txt";
     private static final String ROOT_SETTINGS_FILE_NAME = "client-settings.json";
     private static final String ACCOUNTS_FILE_NAME = "accounts.json";
@@ -279,8 +277,7 @@ public class ConfigManager {
     }
 
     private Path getModuleFile(Path configStorageDir, Module module) {
-        String addonId = module.getAddonId() != null ? module.getAddonId() : "unknown";
-        return configStorageDir.resolve(addonId).resolve(module.getName() + ".json");
+        return configStorageDir.resolve("epsilon").resolve(module.getName() + ".json");
     }
 
     private void applyModuleFromDisk(Module module, Path configStorageDir) {
@@ -402,74 +399,6 @@ public class ConfigManager {
         } catch (Exception e) {
             Constants.LOGGER.error("写入模块自定义状态失败: {}", module.getName(), e);
         }
-
-        return obj;
-    }
-
-    private Path getAddonSettingsFile(Path configStorageDir, EpsilonAddon addon) {
-        return configStorageDir.resolve(addon.getAddonId()).resolve(ADDON_SETTINGS_FILE_NAME);
-    }
-
-    private void applyAddonFromDisk(EpsilonAddon addon, Path configStorageDir) {
-        if (addon == null || addon.getSettings().isEmpty()) {
-            return;
-        }
-
-        Path file = getAddonSettingsFile(configStorageDir, addon);
-        if (!Files.exists(file)) {
-            return;
-        }
-
-        try {
-            String json = Files.readString(file, StandardCharsets.UTF_8);
-            JsonElement parsed = JsonParser.parseString(json);
-            if (parsed == null || !parsed.isJsonObject()) {
-                return;
-            }
-
-            JsonObject settingsObj = getObject(parsed.getAsJsonObject(), "settings");
-            if (settingsObj == null) {
-                return;
-            }
-
-            for (Setting<?> setting : addon.getSettings()) {
-                applySetting(setting, settingsObj.get(setting.getName()));
-            }
-        } catch (Exception e) {
-            Constants.LOGGER.error("读取 addon 配置失败: {}", file, e);
-        }
-    }
-
-    private void saveAddonToDisk(EpsilonAddon addon, Path configStorageDir) throws IOException {
-        if (addon == null || addon.getSettings().isEmpty()) {
-            return;
-        }
-
-        Path file = getAddonSettingsFile(configStorageDir, addon);
-        try {
-            Files.createDirectories(file.getParent());
-            String json = gson.toJson(buildAddonObject(addon));
-            Files.writeString(file, json, StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING,
-                    StandardOpenOption.WRITE);
-        } catch (IOException e) {
-            Constants.LOGGER.error("写入 addon 配置失败: {}", file, e);
-            throw e;
-        }
-    }
-
-    private JsonObject buildAddonObject(EpsilonAddon addon) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("version", CONFIG_VERSION);
-
-        JsonObject settingsObj = new JsonObject();
-        for (Setting<?> setting : addon.getSettings()) {
-            if (setting == null) continue;
-            JsonElement value = serializeSetting(setting);
-            if (value != null) settingsObj.add(setting.getName(), value);
-        }
-        obj.add("settings", settingsObj);
 
         return obj;
     }
@@ -685,49 +614,13 @@ public class ConfigManager {
         }
     }
 
-    private void resetAddonsToDefaults(List<EpsilonAddon> addons) {
-        if (addons == null) {
-            return;
-        }
-        for (EpsilonAddon addon : addons) {
-            if (addon != null) {
-                addon.resetSettings();
-            }
-        }
-    }
-
-    private void applyToAddons(List<EpsilonAddon> addons) {
-        if (addons == null) {
-            return;
-        }
-        for (EpsilonAddon addon : addons) {
-            if (addon != null) {
-                applyAddonFromDisk(addon, getActiveConfigStorageDir());
-            }
-        }
-    }
-
-    private void saveAddonsToDisk(List<EpsilonAddon> addons, Path configStorageDir) throws IOException {
-        if (addons == null) {
-            return;
-        }
-        for (EpsilonAddon addon : addons) {
-            if (addon != null) {
-                saveAddonToDisk(addon, configStorageDir);
-            }
-        }
-    }
-
     private void loadActiveConfigSnapshot() throws IOException {
         ensureRootDirectories();
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
         List<Module> modules = getConfigurableModules();
-        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
         resetModulesToDefaults(modules);
-        resetAddonsToDefaults(addons);
         applyToModules(modules);
-        applyToAddons(addons);
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
         loadAccounts();
@@ -745,7 +638,6 @@ public class ConfigManager {
                 saveModuleToDisk(module, configStorageDir);
             }
         }
-        saveAddonsToDisk(AddonManager.INSTANCE.getAddons(), configStorageDir);
         saveFriends(configStorageDir);
         saveRootClientSettings();
         saveAccounts();

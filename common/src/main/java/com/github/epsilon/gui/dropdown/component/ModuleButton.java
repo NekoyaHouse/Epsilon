@@ -103,7 +103,7 @@ public class ModuleButton extends Component {
     }
 
     private float computeSettingsHeight() {
-        float height = DropdownTheme.SETTING_GAP + DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
+        float height = DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
             if (section.hasHeader()) {
                 height += DropdownTheme.GROUP_HEADER_HEIGHT;
@@ -152,8 +152,7 @@ public class ModuleButton extends Component {
     }
 
     private Animation getGroupExpandAnimation(SettingSection section) {
-        return sectionExpandAnimations.computeIfAbsent(section.key(),
-                k -> createGroupAnimation(DropdownTheme.ANIM_GROUP, section.isCollapsed() ? 0.0f : 1.0f));
+        return sectionExpandAnimations.computeIfAbsent(section.key(), _ -> createGroupAnimation(DropdownTheme.ANIM_GROUP, section.isCollapsed() ? 0.0f : 1.0f));
     }
 
     @Override
@@ -182,10 +181,6 @@ public class ModuleButton extends Component {
 
         if (expand > 0.01f) {
             float settingY = DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
-            if (expand > 0.5f) {
-                drawAddonInfo(scope, textMetrics, settingY);
-            }
-            settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 float sectionH = getSectionHeight(section);
                 if (section.hasHeader()) {
@@ -212,16 +207,6 @@ public class ModuleButton extends Component {
                 settingY += sectionH;
             }
         }
-    }
-
-    private void drawAddonInfo(UiTree.Scope scope, UiTextMetrics textMetrics, float infoY) {
-        float infoX = DropdownTheme.SETTING_INDENT;
-        float infoH = DropdownTheme.MODULE_ADDON_INFO_HEIGHT;
-
-        float scale = DropdownTheme.MODULE_ADDON_INFO_TEXT_SCALE;
-        String addonLabel = EpsilonTranslations.Module.FROM.getTranslatedName() + " " + getAddonLabel();
-        float textY = infoY + (infoH - textMetrics.textHeight(scale)) * 0.5f - 0.5f;
-        scope.text(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
     private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float sectionY) {
@@ -279,11 +264,6 @@ public class ModuleButton extends Component {
         Animation anim = new Animation(Easing.EASE_OUT_CUBIC, duration);
         anim.setStartValue(startValue);
         return anim;
-    }
-
-    private String getAddonLabel() {
-        String addonId = module.getAddonId();
-        return addonId == null || addonId.isBlank() ? "unknown" : addonId;
     }
 
     private void drawKeybindButton(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float toggle) {
@@ -425,6 +405,9 @@ public class ModuleButton extends Component {
                 return true;
             }
             if (button == 1) {
+                if (sections.isEmpty()) {
+                    return true;
+                }
                 expanded = !expanded;
                 DropdownScreen.INSTANCE.react(expanded
                         ? ReisaDropdownCompanion.Action.PANEL_OPEN
@@ -435,7 +418,6 @@ public class ModuleButton extends Component {
 
         if (expanded && expandAnim.getValue() > 0.5f) {
             float settingY = absoluteY(DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP);
-            settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 if (section.hasHeader()) {
                     float headerX = absoluteX(DropdownTheme.SETTING_INDENT);

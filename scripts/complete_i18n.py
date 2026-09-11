@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
         "--owner",
         "--match-owner",
         dest="owner",
-        help="仅同步一个 owner；本体使用 epsilon，Addon 使用其 addonId。未指定时同步全部。",
+        help="仅同步 epsilon owner。未指定时同步全部。",
     )
     parser.add_argument(
         "--missing-value",

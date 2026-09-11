@@ -14,7 +14,9 @@ final class LabelBadges {
     private static final float CHIP_TEXT_SCALE = 0.54f;
     private static final float CHIP_HEIGHT = 13.0f;
     private static final float CHIP_GAP = 6.0f;
-    /** assist chip 渲染器固定使用 8px 左内边距，宽度必须按左右各 8px 计算才能让文字居中。 */
+    /**
+     * assist chip 渲染器固定使用 8px 左内边距，宽度必须按左右各 8px 计算才能让文字居中。
+     */
     private static final float CHIP_PADDING = 8.0f;
 
     private LabelBadges() {

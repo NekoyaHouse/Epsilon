@@ -42,7 +42,6 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
         add(EpsilonTranslations.Gui.TAB_FRIEND::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
         add(EpsilonTranslations.Gui.TAB_CONFIG::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
-        add(EpsilonTranslations.Gui.TAB_ADDON::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);
         entries.add(new Entry(EpsilonTranslations.Gui.DROPDOWN_COLLAPSE_ALL::getTranslatedName, IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible));
     }
 

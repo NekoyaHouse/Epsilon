@@ -20,7 +20,6 @@ public class EpsilonTranslations {
             Keybind.HOLD,
             Module.VISIBLE,
             Module.HIDDEN,
-            Module.FROM,
             Module.STATE_PREFIX,
             Module.STATE_ENABLED,
             Module.STATE_DISABLED,
@@ -59,7 +58,6 @@ public class EpsilonTranslations {
             Gui.TAB_GENERAL,
             Gui.TAB_FRIEND,
             Gui.TAB_CONFIG,
-            Gui.TAB_ADDON,
             Gui.FRIEND_EMPTY,
             Gui.FRIEND_INPUT_PLACEHOLDER,
             Gui.CONFIG_INPUT_PLACEHOLDER,
@@ -99,12 +97,7 @@ public class EpsilonTranslations {
             Gui.DROPDOWN_HINT_SEARCH,
             Gui.DROPDOWN_HINT_PANELS,
             Gui.DROPDOWN_HINT_DRAG,
-            Gui.ADDON_EMPTY,
-            Gui.ADDON_NO_SETTINGS,
-            Gui.ADDON_INFO_ID,
-            Gui.ADDON_INFO_VERSION,
-            Gui.ADDON_INFO_AUTHORS,
-            Gui.ADDON_INFO_MODULES,
+            Gui.NO_SETTINGS,
             Gui.INSPECTOR,
             Gui.INSPECTOR_SELECT,
             Gui.LIST_ENTRIES,
@@ -218,7 +211,6 @@ public class EpsilonTranslations {
     public static class Module {
         public static final TranslateComponent VISIBLE = create("module", "visible");
         public static final TranslateComponent HIDDEN = create("module", "hidden");
-        public static final TranslateComponent FROM = create("module", "from");
         public static final TranslateComponent STATE_PREFIX = create("module", "state.prefix");
         public static final TranslateComponent STATE_ENABLED = create("module", "state.enabled");
         public static final TranslateComponent STATE_DISABLED = create("module", "state.disabled");
@@ -266,9 +258,9 @@ public class EpsilonTranslations {
         public static final TranslateComponent TAB_GENERAL = create("gui", "tab.general");
         public static final TranslateComponent TAB_FRIEND = create("gui", "tab.friend");
         public static final TranslateComponent TAB_CONFIG = create("gui", "tab.config");
-        public static final TranslateComponent TAB_ADDON = create("gui", "tab.addon");
 
         public static final TranslateComponent FRIEND_EMPTY = create("gui", "friend.empty");
+        public static final TranslateComponent NO_SETTINGS = create("gui", "no_settings");
         public static final TranslateComponent FRIEND_INPUT_PLACEHOLDER = create("gui", "friend.input.placeholder");
 
         public static final TranslateComponent CONFIG_INPUT_PLACEHOLDER = create("gui", "config.input.placeholder");
@@ -309,13 +301,6 @@ public class EpsilonTranslations {
         public static final TranslateComponent DROPDOWN_HINT_SEARCH = create("gui", "dropdown.hint.search");
         public static final TranslateComponent DROPDOWN_HINT_PANELS = create("gui", "dropdown.hint.panels");
         public static final TranslateComponent DROPDOWN_HINT_DRAG = create("gui", "dropdown.hint.drag");
-
-        public static final TranslateComponent ADDON_EMPTY = create("gui", "addon.empty");
-        public static final TranslateComponent ADDON_NO_SETTINGS = create("gui", "addon.no_settings");
-        public static final TranslateComponent ADDON_INFO_ID = create("gui", "addon.info.id");
-        public static final TranslateComponent ADDON_INFO_VERSION = create("gui", "addon.info.version");
-        public static final TranslateComponent ADDON_INFO_AUTHORS = create("gui", "addon.info.authors");
-        public static final TranslateComponent ADDON_INFO_MODULES = create("gui", "addon.info.modules");
 
         public static final TranslateComponent INSPECTOR = create("gui", "inspector");
         public static final TranslateComponent INSPECTOR_SELECT = create("gui", "inspector.select");

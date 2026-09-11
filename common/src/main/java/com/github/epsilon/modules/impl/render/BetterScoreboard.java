@@ -21,6 +21,7 @@ public class BetterScoreboard extends Module {
 
     private BetterScoreboard() {
         super("Better Scoreboard", Category.RENDER);
+        setDefaultEnabled(true);
     }
 
     private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(16, 17, 20, 90));

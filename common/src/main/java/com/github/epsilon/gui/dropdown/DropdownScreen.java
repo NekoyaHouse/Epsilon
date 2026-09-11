@@ -18,9 +18,9 @@ import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -521,8 +521,6 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
         panels.add(createSubPanel(new FriendDropdownPanel(index++), x, y));
         y += DropdownTheme.PANEL_HEADER_HEIGHT + DropdownTheme.PANEL_GAP;
         panels.add(createSubPanel(new ConfigDropdownPanel(index++), x, y));
-        y += DropdownTheme.PANEL_HEADER_HEIGHT + DropdownTheme.PANEL_GAP;
-        panels.add(createSubPanel(new AddonDropdownPanel(index), x, y));
 
         DropdownLayoutState.load(panels);
     }
@@ -583,7 +581,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     private float resolveMaxPanelHeight(DropdownPanel panel, float screenLimited) {
         return switch (panel.getId()) {
-            case "main", "addon" -> Math.min(screenLimited, 260.0f);
+            case "main" -> Math.min(screenLimited, 260.0f);
             case "friend", "config" -> Math.min(screenLimited, 220.0f);
             default -> Math.min(screenLimited, 350.0f);
         };

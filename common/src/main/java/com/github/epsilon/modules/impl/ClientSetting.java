@@ -56,8 +56,7 @@ public class ClientSetting extends Module {
 
     public enum ModuleSort {
         Name,
-        EnabledFirst,
-        Addon
+        EnabledFirst
     }
 
     public enum ThemePreset {

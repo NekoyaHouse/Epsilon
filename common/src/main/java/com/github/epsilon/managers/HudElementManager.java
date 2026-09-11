@@ -46,7 +46,6 @@ public class HudElementManager {
 
     private void addElement(HudModule module) {
         elements.add(module);
-        module.setAddonId("epsilon");
         module.initI18n(EpsilonTranslateComponent.create("elements", module.getName().toLowerCase()));
     }
 

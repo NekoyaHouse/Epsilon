@@ -21,11 +21,6 @@
 ## 📌 项目简介
 基于 NeoForge & Fabric 构建的多加载器现代化 Minecraft 辅助客户端，拥有先进的渲染系统和模块化架构。
 
-## 🚀 插件系统
-[Epsilon 插件模板](https://github.com/slmpc/Epsilon-Addon-Template)
-
-[Addon 开发文档](docs/addon-development.md)
-
 ## 🎨 渲染系统
 
 Lumin 渲染系统提供自定义渲染管线，支持：

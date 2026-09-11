@@ -8,11 +8,6 @@
     "Chen_Meng",
     "06789"
   ],
-  "entrypoints": {
-    "epsilon:addon": [
-      "com.github.epsilon.fabric.addon.FabricSelfAddonEntrypoint"
-    ]
-  },
   "license": "GPL-3.0-only",
   "mixins": [
     "${mod_id}.mixins.json",

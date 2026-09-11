@@ -29,7 +29,7 @@ public class I18NFileGenerator {
      * 生成指定 owner 的空翻译模板。
      *
      * @param filePath 输出文件路径
-     * @param ownerId  {@code epsilon}、Addon ID，或使用 {@code null} / 空字符串生成全部
+     * @param ownerId  {@code epsilon}，或使用 {@code null} / 空字符串生成全部
      */
     public static void generate(String filePath, String ownerId) {
         String selectedOwner = normalizeOwner(ownerId);
@@ -42,22 +42,15 @@ public class I18NFileGenerator {
             matched = true;
         }
 
-//        for (EpsilonAddon addon : AddonManager.INSTANCE.getAddons()) {
-//            if (matchesOwner(addon.getAddonId(), selectedOwner)) {
-//                addAddonKeys(root, addon);
-//                matched = true;
-//            }
-//        }
-
         for (Module module : ModuleManager.INSTANCE.getModules()) {
-            if (matchesOwner(module.getAddonId(), selectedOwner)) {
+            if (matchesOwner(EPSILON_OWNER, selectedOwner)) {
                 addModuleKeys(root, module);
                 matched = true;
             }
         }
 
         for (Module module : HudElementManager.INSTANCE.getElements()) {
-            if (matchesOwner(module.getAddonId(), selectedOwner)) {
+            if (matchesOwner(EPSILON_OWNER, selectedOwner)) {
                 addModuleKeys(root, module);
                 matched = true;
             }
@@ -95,16 +88,6 @@ public class I18NFileGenerator {
             I18NJson.addTranslation(root, component.getFullKey(), "");
         }
     }
-
-//    private static void addAddonKeys(JsonObject root, EpsilonAddon addon) {
-//        I18NJson.addTranslation(root, addon.getAddonId(), "");
-//        for (SettingGroup group : addon.getSettingGroups()) {
-//            addSettingGroupKey(root, group);
-//        }
-//        for (Setting<?> setting : addon.getSettings()) {
-//            addSettingKey(root, setting);
-//        }
-//    }
 
     private static void addModuleKeys(JsonObject root, Module module) {
         if (module.translateComponent == null) return;

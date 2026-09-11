@@ -21,11 +21,6 @@
 ## 📌 Overview
 A modern multi loader Minecraft utility client built on NeoForge & Fabric with advanced rendering system and modular architecture.
 
-## 🚀 Addon System
-[Epsilon Addon Template](https://github.com/slmpc/Epsilon-Addon-Template)
-
-[Addon Development Guide](docs/addon-development.md)
-
 ## 🎨 Graphics System
 
 The Lumin rendering system provides custom render pipelines for:

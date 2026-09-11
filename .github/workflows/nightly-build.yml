@@ -67,10 +67,10 @@ jobs:
             echo
             echo "English:"
             echo "Regular users only need to download the non-sources Fabric or NeoForge jar for their runtime environment."
-            echo "The common artifacts are intended for addon development."
+            echo "The common artifacts contain shared runtime code."
             echo
             echo "中文："
             echo "普通用户只需要根据自己的运行环境下载不带 sources 的 Fabric 或 NeoForge 版本。"
-            echo "common 产物用于 addon 开发。"
+            echo "common 产物包含共享运行时代码。"
           } > "$RUNNER_TEMP/nightly-release-notes.md"
           gh release edit nightly --notes-file "$RUNNER_TEMP/nightly-release-notes.md"

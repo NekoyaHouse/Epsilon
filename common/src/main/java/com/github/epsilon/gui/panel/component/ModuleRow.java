@@ -12,7 +12,7 @@ import java.awt.*;
 /**
  * 模块列表中的单行展示组件。
  * <p>
- * 一行通常包含模块名称、来源 addon、副标题、快捷键提示以及启用开关。
+ * 一行通常包含模块名称、副标题、快捷键提示以及启用开关。
  * 该类会把自身内容写入外部 DSL 作用域。
  */
 public class ModuleRow {
@@ -99,7 +99,7 @@ public class ModuleRow {
         }
 
         scope.text(module.displayName(), PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor);
-        scope.text(module.module().getAddonId() != null ? module.module().getAddonId() : "unknown", PanelElements.ROW_LABEL_INSET, subY, subScale, subColor);
+        scope.text(module.module().getCategory().getName(), PanelElements.ROW_LABEL_INSET, subY, subScale, subColor);
         scope.toggle(localToggleBounds, toggleProgress, toggleHoverProgress);
 
         if (keyWidth <= KEYBIND_CLIP_WIDTH + 0.5f) {

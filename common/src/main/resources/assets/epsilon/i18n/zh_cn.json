@@ -15,7 +15,6 @@
     "module": {
       "visible": "可见",
       "hidden": "隐藏",
-      "from": "来自:",
       "state": {
         "prefix": "",
         "enabled": "开启",
@@ -80,9 +79,9 @@
       "tab": {
         "general": "常规",
         "friend": "好友",
-        "config": "配置",
-        "addon": "附加组件"
+        "config": "配置"
       },
+      "no_settings": "无可用设置",
       "friend": {
         "empty": "未添加好友",
         "input": {
@@ -146,16 +145,6 @@
           "search": "Ctrl + F 打开搜索",
           "panels": "点击分类展开面板",
           "drag": "拖动标题移动面板"
-        }
-      },
-      "addon": {
-        "empty": "未找到附加组件",
-        "no_settings": "无可用设置",
-        "info": {
-          "id": "ID",
-          "version": "版本",
-          "authors": "作者",
-          "modules": "模块"
         }
       },
       "inspector": {
@@ -345,8 +334,7 @@
         "module sort": {
           "_value": "模块排序",
           "name": "名称",
-          "enabledfirst": "已启用优先",
-          "addon": "附加组件"
+          "enabledfirst": "已启用优先"
         },
         "language": {
           "_value": "语言",

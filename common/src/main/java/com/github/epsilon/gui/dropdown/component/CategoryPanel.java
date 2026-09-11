@@ -194,7 +194,6 @@ public class CategoryPanel extends AbstractDropdownPanel {
         for (ModuleButton button : moduleButtons) {
             Module module = button.getModule();
             signature = signature * 31L + Objects.hashCode(module.getName());
-            signature = signature * 31L + Objects.hashCode(module.getAddonId());
             signature = signature * 31L + (module.isEnabled() ? 1 : 0);
         }
         return signature;
@@ -205,8 +204,6 @@ public class CategoryPanel extends AbstractDropdownPanel {
         return switch (sortMode) {
             case EnabledFirst ->
                     Comparator.comparing((ModuleButton button) -> button.getModule().isEnabled()).reversed().thenComparing(nameComparator);
-            case Addon ->
-                    Comparator.comparing((ModuleButton button) -> normalizedAddon(button.getModule()), String.CASE_INSENSITIVE_ORDER).thenComparing(nameComparator);
             case Name -> nameComparator;
         };
     }
@@ -216,11 +213,6 @@ public class CategoryPanel extends AbstractDropdownPanel {
         if (translated != null && !translated.isBlank()) return translated;
         String name = module.getName();
         return name == null ? "" : name;
-    }
-
-    private String normalizedAddon(Module module) {
-        String addonId = module.getAddonId();
-        return addonId == null || addonId.isBlank() ? "unknown" : addonId.toLowerCase(Locale.ROOT);
     }
 
     private boolean matchesSearch(ModuleButton button) {
@@ -241,8 +233,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
             String translated = module.getTranslatedName() == null ? "" : module.getTranslatedName();
             String name = module.getName() == null ? "" : module.getName();
             String categoryName = module.getCategory() == null ? "" : module.getCategory().getName();
-            String addon = module.getAddonId() == null ? "" : module.getAddonId();
-            searchTextCache.put(button, (translated + '\n' + name + '\n' + categoryName + '\n' + addon).toLowerCase(Locale.ROOT));
+            searchTextCache.put(button, (translated + '\n' + name + '\n' + categoryName).toLowerCase(Locale.ROOT));
         }
         cachedSearchTextRevision = revision;
     }

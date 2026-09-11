@@ -16,8 +16,6 @@ public class Module implements SettingHost {
 
     private final String name;
 
-    private String addonId;
-
     private final Category category;
 
     private int keyBind = -1;
@@ -58,14 +56,6 @@ public class Module implements SettingHost {
         for (Setting<?> setting : settings) {
             setting.initTranslateComponent(moduleComponent.createChild(setting.getName().toLowerCase()));
         }
-    }
-
-    public void setAddonId(String addonId) {
-        this.addonId = addonId;
-    }
-
-    public String getAddonId() {
-        return addonId;
     }
 
     protected boolean nullCheck() {
@@ -116,8 +106,7 @@ public class Module implements SettingHost {
     }
 
     private int getNotificationHash() {
-        String owner = addonId != null ? addonId : "epsilon";
-        return (owner + ":" + name).hashCode();
+        return ("epsilon:" + name).hashCode();
     }
 
     public void reset() {

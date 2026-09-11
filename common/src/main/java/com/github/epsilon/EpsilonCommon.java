@@ -25,7 +25,6 @@ public class EpsilonCommon {
         // 初始化客户端系统
         ModuleManager.INSTANCE.initModules();
         HudElementManager.INSTANCE.initElements();
-        AddonManager.INSTANCE.setupAddons();
 
         // 初始化 Managers
         ExecutorManager.INSTANCE.getClass();

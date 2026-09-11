@@ -19,8 +19,7 @@ public abstract class Component {
         scope.pushAbsolute(bounds, child -> drawInScope(child, textMetrics, mouseX, mouseY, bounds));
     }
 
-    public final void drawInScope(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY,
-                                  UiRect bounds) {
+    public final void drawInScope(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, UiRect bounds) {
         setPosition(bounds.x(), bounds.y(), bounds.width());
         draw(scope, textMetrics, mouseX, mouseY);
     }

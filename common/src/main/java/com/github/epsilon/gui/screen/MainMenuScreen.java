@@ -15,8 +15,8 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.accounts.AccountsScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.VideoManager;
 import com.github.epsilon.managers.AssetManager;
+import com.github.epsilon.managers.VideoManager;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -218,7 +218,8 @@ public class MainMenuScreen extends Screen {
     }
 
     public boolean requestShutdown() {
-        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue() || !AssetManager.INSTANCE.isReisaReady()) return false;
+        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue() || !AssetManager.INSTANCE.isReisaReady())
+            return false;
         if (!initialized || minecraft.gui.screen() != this || reisaShutdownCommitted) return false;
         if (reisaShutdownStartMs >= 0L) return true;
 

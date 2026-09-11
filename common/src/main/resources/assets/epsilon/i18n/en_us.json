@@ -15,7 +15,6 @@
     "module": {
       "visible": "Visible",
       "hidden": "Hidden",
-      "from": "From:",
       "state": {
         "prefix": "has been ",
         "enabled": "enabled",
@@ -80,9 +79,9 @@
       "tab": {
         "general": "General",
         "friend": "Friend",
-        "config": "Config",
-        "addon": "Addon"
+        "config": "Config"
       },
+      "no_settings": "No Available Settings",
       "friend": {
         "empty": "No Friends Added",
         "input": {
@@ -146,16 +145,6 @@
           "search": "Ctrl + F to Search",
           "panels": "Click Categories to Open Panels",
           "drag": "Drag Headers to Move Panels"
-        }
-      },
-      "addon": {
-        "empty": "No Addons Found",
-        "no_settings": "No Available Settings",
-        "info": {
-          "id": "ID",
-          "version": "Version",
-          "authors": "Authors",
-          "modules": "Modules"
         }
       },
       "inspector": {
@@ -345,8 +334,7 @@
         "module sort": {
           "_value": "Module Sort",
           "name": "Name",
-          "enabledfirst": "Enabled First",
-          "addon": "Addon"
+          "enabledfirst": "Enabled First"
         },
         "language": {
           "_value": "Language",

@@ -1,7 +1,6 @@
 package com.github.epsilon.managers;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyPressEvent;
@@ -172,14 +171,7 @@ public class ModuleManager {
 
     private void addModule(Module module) {
         modules.add(module);
-        module.setAddonId("epsilon");
         module.initI18n(EpsilonTranslateComponent.create("modules", module.getName().toLowerCase()));
-    }
-
-    public void registerAddonModule(String addonId, Module module, TranslateComponent moduleComponent) {
-        module.setAddonId(addonId);
-        module.initI18n(moduleComponent);
-        modules.add(module);
     }
 
     public List<Module> getModules() {

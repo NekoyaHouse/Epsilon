@@ -31,10 +31,6 @@ public class SettingsContent {
     private float cachedContentHeight;
     private final List<Float> cachedSectionHeights = new ArrayList<>();
 
-    public SettingsContent(List<Setting<?>> settings) {
-        this("dropdown:" + System.identityHashCode(settings), settings);
-    }
-
     public SettingsContent(String ownerKey, List<Setting<?>> settings) {
         List<SettingLayoutPlanner.Section> plannedSections = SettingLayoutPlanner.plan(ownerKey, settings);
         Map<Setting<?>, SettingWidget<?>> widgets = new HashMap<>();
@@ -116,7 +112,7 @@ public class SettingsContent {
 
     public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
         if (sections.isEmpty()) {
-            String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
+            String label = EpsilonTranslations.Gui.NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
             float textW = textMetrics.textWidth(label, labelScale);
             scope.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
