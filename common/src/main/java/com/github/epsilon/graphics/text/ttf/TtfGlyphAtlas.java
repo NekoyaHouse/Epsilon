@@ -1,12 +1,17 @@
 package com.github.epsilon.graphics.text.ttf;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -19,6 +24,8 @@ public class TtfGlyphAtlas {
 
     private static final int SIZE = 1024;
     private static final int GLYPH_GUTTER = 2;
+    /** Vulkan 要求 bufferOffset 为格式 texel block size 的倍数，取 4 同时覆盖 R8（1）与 RGBA8（4）。 */
+    private static final long STAGING_ALIGNMENT = 4L;
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
     private final LuminTexture texture;
     private final LuminTexture alphaTexture;
@@ -73,17 +80,43 @@ public class TtfGlyphAtlas {
         ByteBuffer pixels = MemoryUtil.memAlloc(SIZE * SIZE);
         try {
             MemoryUtil.memSet(MemoryUtil.memAddress(pixels), value & 0xFF, SIZE * SIZE);
-            RenderSystem.getDevice().createCommandEncoder().writeToTexture(
-                    texture,
-                    pixels,
-                    0,
-                    0,
-                    0, 0,
-                    SIZE,
-                    SIZE
-            );
+            uploadToTexture(texture, pixels, 0, 0, SIZE, SIZE);
         } finally {
             MemoryUtil.memFree(pixels);
+        }
+    }
+
+    /**
+     * 上传一段像素数据到 atlas 纹理。
+     * <p>
+     * Vulkan 下 {@code VkBufferImageCopy.bufferOffset} 必须是目标格式 texel block size 的倍数
+     * （VUID-vkCmdCopyBufferToImage-dstImage-07975），而 blaze3d 的
+     * {@code writeToTexture(GpuTexture, ByteBuffer, ...)} 固定按 alignment = 1 申请 staging，
+     * 且暂存区游标按原始长度前进。字形是 R8 且宽高不保证 4 字节对齐，一旦游标错位，
+     * 之后走同一路径的 RGBA8 纹理上传（视频帧、动态纹理等）都会拿到非法的 bufferOffset。
+     * 因此 Vulkan 下自行申请 4 字节对齐的暂存区，并把分配长度补齐到 4 的倍数；
+     * 后端判定由 {@link LuminRenderSystem#IS_VULKAN_BACKEND} 提供。
+     */
+    private static void uploadToTexture(GpuTexture texture, ByteBuffer data, int destX, int destY, int width, int height) {
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        if (!LuminRenderSystem.IS_VULKAN_BACKEND) {
+            encoder.writeToTexture(texture, data, 0, 0, destX, destY, width, height);
+            return;
+        }
+
+        long stagingSize = Mth.roundToward(data.remaining(), STAGING_ALIGNMENT);
+        try (GpuBufferSlice.MappedView staging = encoder.transientMemory()
+                .allocateStaging(stagingSize, STAGING_ALIGNMENT, GpuBuffer.USAGE_COPY_SRC)) {
+            MemoryUtil.memCopy(MemoryUtil.memAddress(data), MemoryUtil.memAddress(staging.data()), data.remaining());
+            encoder.copyBufferToTexture(
+                    staging.slice(),
+                    0, 0,
+                    width, height,
+                    texture,
+                    destX, destY,
+                    width, height,
+                    0, 0
+            );
         }
     }
 
@@ -112,21 +145,17 @@ public class TtfGlyphAtlas {
         int glyphX = currentX + GLYPH_GUTTER;
         int glyphY = currentY + GLYPH_GUTTER;
 
-        RenderSystem.getDevice().createCommandEncoder().writeToTexture(
+        uploadToTexture(
                 this.texture.getTexture(),
                 glyph.glyphData(),
-                0,
-                0,
                 glyphX, glyphY,
                 glyph.width(),
                 glyph.height()
         );
         if (glyph.alphaData() != null) {
-            RenderSystem.getDevice().createCommandEncoder().writeToTexture(
+            uploadToTexture(
                     this.alphaTexture.getTexture(),
                     glyph.alphaData(),
-                    0,
-                    0,
                     glyphX, glyphY,
                     glyph.width(),
                     glyph.height()

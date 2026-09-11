@@ -37,6 +37,9 @@ public class LuminRenderSystem {
 
     private static final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("lumin-gui");
 
+    /** 当前 GPU 后端是否为 Vulkan。设备创建后后端不会再变，因此只判定一次。 */
+    public static final boolean IS_VULKAN_BACKEND = "Vulkan".equals(RenderSystem.getDevice().getDeviceInfo().backendName());
+
     private static LuminRenderTarget activeTarget = null;
     private static long renderFrameId;
 

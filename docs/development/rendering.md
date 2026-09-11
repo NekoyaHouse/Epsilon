@@ -101,6 +101,11 @@ texture/view；GPU 资源只由创建它们的渲染线程释放。
 - `StaticFontLoader.defaultFont()` 依据 `ClientSetting.font`（Default/Custom）解析字体；Custom 模式先按
   绝对/相对路径直接查找，相对路径再依次尝试工作目录和用户目录 `.epsilon/fonts/`，最后按文件名在系统
   字体目录中递归查找；路径不可读或字体无效时回退内置字体并记录日志。
+- Vulkan 后端下 atlas 上传必须走 `TtfGlyphAtlas` 内部的 `TransientMemory.allocateStaging` +
+  `copyBufferToTexture`：blaze3d 的 `writeToTexture(ByteBuffer)` 固定按 alignment = 1 申请 staging，
+  R8 字形长度不保证 4 字节对齐，会让共享暂存游标错位，导致后续 RGBA8 纹理上传出现非法的
+  `VkBufferImageCopy.bufferOffset`；OpenGL 后端保持原有上传路径。后端由
+  `LuminRenderSystem.IS_VULKAN_BACKEND` 判定一次并复用，不得在调用点重复查询 `DeviceInfo`。
 - 文本测量与绘制必须使用同一 `TtfFontLoader` 与 scale：`TextRenderer.getWidth/getHeight` 与
   `addText` 共享字体实例。
 
