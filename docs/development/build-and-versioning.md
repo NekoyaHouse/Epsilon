@@ -25,8 +25,11 @@
   `common/src/main/resources/META-INF/accesstransformer.cfg`。
 - Fabric 通过 Loom 读取 `common/src/main/resources/epsilon.accesswidener`。
 - Sodium 和 Iris 只以 `compileOnly` 参与编译，不会打入成品；对应 Mixin 使用 `@Pseudo` 软定位。
-- 视频能力通过 Jar-in-Jar 引入 `org.bytedeco:javacpp`、`javacv`、`ffmpeg`，两个平台的打包方式不同：
-  Fabric 使用 Loom `include`，NeoForge 使用 `jarJar` 并修正 metadata 中的 artifact 标识。
+- 视频能力通过 Jar-in-Jar 引入 `org.bytedeco:javacpp`、`javacv`、`ffmpeg` 的 Java API 与
+  `javacpp` 原生库，两个平台的打包方式不同：Fabric 使用 Loom `include`，NeoForge 使用 `jarJar`
+  并修正 metadata 中的 artifact 标识。
+- `ffmpeg` 的 Windows 原生库、主菜单视频和玲纱立绘不再随 jar 分发，改为首次使用时下载到
+  `~/.epsilon/assets/`，详见[运行时资源下载](runtime-assets.md)。
 - Windows SMTC 桥的 native 产物随资源打包：`common/src/main/resources/natives/windows-x86_64/epsilon_smtc.dll`。
 
 ## 常用命令

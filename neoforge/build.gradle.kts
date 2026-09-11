@@ -43,7 +43,9 @@ dependencies {
     implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
     implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
     runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
-    runtimeOnly(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
+    // FFmpeg 原生库不再随 jar 分发，改为首次使用时下载到 ~/.epsilon/assets/ffmpeg/natives。
+    // 开发环境仍保留在运行时类路径，便于本地调试。
+    runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
 }
 
 // NeoForge 26.2 resolves Jar-in-Jar dependencies by group and artifact only;
@@ -56,10 +58,6 @@ tasks.named<JarJar>("jarJar") {
             .replace(
                 "\"artifact\": \"javacpp\",\n      }\n      ,\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\"",
                 "\"artifact\": \"javacpp-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\""
-            )
-            .replace(
-                "\"artifact\": \"ffmpeg\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\"",
-                "\"artifact\": \"ffmpeg-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\""
             )
         fun renameArtifact(metadata: String, path: String, artifact: String): String {
             val pathIndex = metadata.indexOf("\"path\": \"$path\"")
@@ -77,7 +75,6 @@ tasks.named<JarJar>("jarJar") {
 
         val metadata = metadataLegacy
             .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
-            .let { renameArtifact(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
         metadataFile.writeText(metadata)
     }
 }
@@ -95,7 +92,6 @@ fun fixJarJarMetadata(metadata: String): String {
     }
     return metadata
         .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
-        .let { rename(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
 }
 
 tasks.named<Jar>("jar") {

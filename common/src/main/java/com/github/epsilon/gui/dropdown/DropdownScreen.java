@@ -20,6 +20,7 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -74,6 +75,9 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
     protected void init() {
         super.init();
         sessionId++;
+        if (ClientSetting.INSTANCE.showReisaInDropdown.getValue() && !AssetManager.INSTANCE.isReisaReady()) {
+            AssetManager.INSTANCE.requestDownload(java.util.List.of(AssetManager.Asset.REISA));
+        }
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(sessionId);
         }
@@ -636,7 +640,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
     }
 
     private boolean isReisaCompanionEnabled() {
-        return ClientSetting.INSTANCE.showReisaInDropdown.getValue();
+        return ClientSetting.INSTANCE.showReisaInDropdown.getValue() && AssetManager.INSTANCE.isReisaReady();
     }
 
     @Override

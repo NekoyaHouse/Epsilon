@@ -2,10 +2,12 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.screen.PlatformNoticeScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -96,11 +98,15 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                             hoveredIndex = i;
                         }
                         boolean selected = i == setting.getModeIndex();
+                        boolean supported = setting.isModeSupportedUnchecked(modes[i]);
                         Color baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0);
                         Color hoverBackground = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f);
                         Color selectedBackground = MD3Theme.SECONDARY_CONTAINER;
                         Color background = selected ? selectedBackground : (hovered ? hoverBackground : baseBackground);
-                        Color textColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
+                        Color textColor = !supported
+                                ? MD3Theme.TEXT_MUTED
+                                : selected ? MD3Theme.ON_SECONDARY_CONTAINER
+                                : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
                         UiRect localItemBounds = new UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT);
                         content.roundRect(localItemBounds.x(), localItemBounds.y(), localItemBounds.width(), localItemBounds.height(), 8.0f, background);
                         float textScale = 0.62f;
@@ -114,6 +120,17 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                             content.text(IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x() + 8.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
                         }
                         content.text(setting.getTranslatedValueByIndex(i), localItemBounds.x() + (selected ? 22.0f : 10.0f), textY, textScale, textColor);
+                        if (!supported) {
+                            String badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
+                            float badgeScale = 0.52f;
+                            // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+                            float badgeWidth = contentBuffer.textMetrics().getWidth(badge, badgeScale) + 16.0f;
+                            float badgeHeight = 12.0f;
+                            float badgeX = localItemBounds.right() - badgeWidth - 8.0f;
+                            float badgeY = localItemBounds.y() + (localItemBounds.height() - badgeHeight) * 0.5f;
+                            content.chip(new UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
+                                    MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null);
+                        }
                     }
                 });
             });
@@ -136,7 +153,12 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
         if (hoveredIndex < 0 || hoveredIndex >= modes.length) {
             return false;
         }
-        ((EnumSetting) setting).setMode(modes[hoveredIndex]);
+        Enum<?> mode = modes[hoveredIndex];
+        if (!setting.isModeSupportedUnchecked(mode)) {
+            PlatformNoticeScreen.showOption(setting, mode);
+            return true;
+        }
+        ((EnumSetting) setting).setMode(mode);
         return true;
     }
 

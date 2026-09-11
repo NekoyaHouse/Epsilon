@@ -1,28 +1,28 @@
 package com.github.epsilon.managers;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.video.VideoPlayer;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-
-import static com.github.epsilon.Constants.mc;
 
 public class VideoManager {
 
     public static final VideoManager INSTANCE = new VideoManager();
 
-    private static final Path BACKGROUND_PATH = new File(mc.gameDirectory, "epsilon-video/columbina.mp4").toPath();
-
+    /**
+     * 从 {@code ~/.epsilon/assets/video} 加载按需下载的主菜单背景视频。
+     * <p>
+     * 资源缺失时直接抛错，由调用方决定是提示下载还是回退到经典背景。
+     */
     public void loadBackground() throws IOException {
-        if (Files.notExists(BACKGROUND_PATH)) {
-            Files.createDirectories(BACKGROUND_PATH.getParent());
-            Files.copy(Constants.class.getClassLoader().getResourceAsStream("assets/epsilon/video/columbina.mp4"), BACKGROUND_PATH, StandardCopyOption.REPLACE_EXISTING);
+        AssetManager assets = AssetManager.INSTANCE;
+        Path background = assets.videoFile();
+        if (Files.notExists(background)) {
+            throw new IOException("Main menu video asset is missing: " + background);
         }
-        VideoPlayer.init(BACKGROUND_PATH.toFile());
+        assets.ensureFfmpegLoaded();
+        VideoPlayer.init(background.toFile());
     }
 
 }

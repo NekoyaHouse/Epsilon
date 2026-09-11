@@ -33,19 +33,28 @@ public class EnumSettingRow extends SettingRow<EnumSetting<?>> {
 
     @Override
     public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+        boolean supported = setting.isCurrentValueSupported();
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         float chipTextScale = 0.60f;
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
-        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale,
+                supported ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED);
         UiRect chipBounds = getChipBounds(textRenderer, bounds).relativeTo(bounds);
-        scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER, null, 0.58f, null);
+        if (supported) {
+            scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER, null, 0.58f, null);
+        } else {
+            scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale,
+                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 255), MD3Theme.TEXT_MUTED, null, 0.58f, null);
+            LabelBadges.platformOnlyChip(scope, textRenderer, bounds, chipBounds);
+        }
 
         float chevronProgress = scope.animate(dropdownAnimation, dropdownOpen);
         float chevronSize = 3.0f;
         float chevronCenterX = chipBounds.right() - 7.5f;
         float chevronCenterY = chipBounds.y() + chipBounds.height() / 2.0f;
-        scope.triangle(chevronCenterX, chevronCenterY, chevronSize, chevronProgress, MD3Theme.ON_SECONDARY_CONTAINER);
+        scope.triangle(chevronCenterX, chevronCenterY, chevronSize, chevronProgress,
+                supported ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.TEXT_MUTED);
     }
 
     public UiRect getChipBounds(TextRenderer textRenderer, UiRect bounds) {

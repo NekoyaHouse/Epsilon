@@ -16,6 +16,7 @@ import com.github.epsilon.gui.screen.accounts.AccountsScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.VideoManager;
+import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -78,10 +79,29 @@ public class MainMenuScreen extends Screen {
     private static final float REISA_SHUTDOWN_BUBBLE_SHADOW_ALPHA = 0.60f;
     private static final float REISA_GREETING_BUBBLE_SHADOW_ALPHA = 0.58f;
 
-    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_00.png");
-    private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
-    private static final Identifier REISA_SHUTDOWN_ENTRANCE_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_10.png");
-    private static final Identifier REISA_SHUTDOWN_FINAL_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_18.png");
+    private static final String REISA_WELCOME_SUFFIX = "00";
+    private static final String REISA_EXIT_SUFFIX = "09";
+    private static final String REISA_SHUTDOWN_ENTRANCE_SUFFIX = "10";
+    private static final String REISA_SHUTDOWN_FINAL_SUFFIX = "18";
+
+    /**
+     * 玲纱立绘改为按需下载，纹理标识在渲染线程上惰性注册；未下载时返回 {@code null}。
+     */
+    private static Identifier reisaWelcomeTexture() {
+        return AssetManager.INSTANCE.reisaTexture(REISA_WELCOME_SUFFIX);
+    }
+
+    private static Identifier reisaExitTexture() {
+        return AssetManager.INSTANCE.reisaTexture(REISA_EXIT_SUFFIX);
+    }
+
+    private static Identifier reisaShutdownEntranceTexture() {
+        return AssetManager.INSTANCE.reisaTexture(REISA_SHUTDOWN_ENTRANCE_SUFFIX);
+    }
+
+    private static Identifier reisaShutdownFinalTexture() {
+        return AssetManager.INSTANCE.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX);
+    }
 
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
 
@@ -123,12 +143,18 @@ public class MainMenuScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        if (ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina)) {
+        AssetManager assets = AssetManager.INSTANCE;
+        boolean columbinaStyle = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
+        if (columbinaStyle && assets.isVideoSupported()) {
             if (VideoPlayer.isStopped()) {
-                try {
-                    VideoManager.INSTANCE.loadBackground();
-                } catch (Exception exception) {
-                    Constants.LOGGER.error("Unable to load the Columbia main-menu video", exception);
+                if (assets.isVideoReady() && assets.isFfmpegReady()) {
+                    try {
+                        VideoManager.INSTANCE.loadBackground();
+                    } catch (Exception exception) {
+                        Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception);
+                    }
+                } else {
+                    assets.requestDownload(List.of(AssetManager.Asset.VIDEO, AssetManager.Asset.FFMPEG));
                 }
             } else {
                 VideoPlayer.resume();
@@ -136,6 +162,7 @@ public class MainMenuScreen extends Screen {
         } else if (!VideoPlayer.isStopped()) {
             VideoPlayer.stop();
         }
+        requestReisaAssetsIfNeeded();
         if (!initialized) {
             initialized = true;
             introStartMs = Util.getMillis();
@@ -151,7 +178,7 @@ public class MainMenuScreen extends Screen {
     }
 
     public void queueReisaGreeting() {
-        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) {
+        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue() || !AssetManager.INSTANCE.isReisaReady()) {
             reisaGreetingQueued = false;
             return;
         }
@@ -161,8 +188,23 @@ public class MainMenuScreen extends Screen {
         }
     }
 
+    /**
+     * 玲纱立绘缺失时提示下载，仅在启用了启动问候或关机动画时需要。
+     */
+    private void requestReisaAssetsIfNeeded() {
+        AssetManager assets = AssetManager.INSTANCE;
+        if (assets.isReisaReady()) {
+            return;
+        }
+        boolean needed = ClientSetting.INSTANCE.showReisaOnStartup.getValue()
+                || ClientSetting.INSTANCE.showReisaOnShutdown.getValue();
+        if (needed) {
+            assets.requestDownload(List.of(AssetManager.Asset.REISA));
+        }
+    }
+
     private void startReisaGreeting() {
-        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) {
+        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue() || !AssetManager.INSTANCE.isReisaReady()) {
             clearReisaGreeting();
             return;
         }
@@ -176,7 +218,7 @@ public class MainMenuScreen extends Screen {
     }
 
     public boolean requestShutdown() {
-        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue()) return false;
+        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue() || !AssetManager.INSTANCE.isReisaReady()) return false;
         if (!initialized || minecraft.gui.screen() != this || reisaShutdownCommitted) return false;
         if (reisaShutdownStartMs >= 0L) return true;
 
@@ -376,14 +418,16 @@ public class MainMenuScreen extends Screen {
 
         scene.beginFrame();
         UiTree tree = UiTree.build(scope -> scope.pushAbsolute(layoutX, layoutY, content -> {
-            if (!reisaShutdownTexturesPrewarmed) {
-                prewarmReisaShutdownTextures(content);
-                reisaShutdownTexturesPrewarmed = true;
-            }
-            if (reisaShutdownStartMs >= 0L) {
-                drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX, -layoutY, width, height);
-            } else {
-                drawReisaGreeting(content, layoutWidth, layoutHeight, scale);
+            if (AssetManager.INSTANCE.isReisaReady()) {
+                if (!reisaShutdownTexturesPrewarmed) {
+                    prewarmReisaShutdownTextures(content);
+                    reisaShutdownTexturesPrewarmed = true;
+                }
+                if (reisaShutdownStartMs >= 0L) {
+                    drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX, -layoutY, width, height);
+                } else {
+                    drawReisaGreeting(content, layoutWidth, layoutHeight, scale);
+                }
             }
 
             Color titleStart = applyAlpha(new Color(158, 181, 222), visibility * 0.98f);
@@ -644,12 +688,12 @@ public class MainMenuScreen extends Screen {
         if (exitElapsed >= 0L) {
             drawReisaExitAfterimages(scope, drawX, drawY, drawWidth, drawHeight, imageAlpha, poseEase, moveProgress, scale);
             if (poseEase < 0.999f) {
-                drawReisa(scope, REISA_WELCOME_TEXTURE, drawX, drawY, drawWidth, drawHeight, imageAlpha);
+                drawReisa(scope, reisaWelcomeTexture(), drawX, drawY, drawWidth, drawHeight, imageAlpha);
                 if (poseEase > 0.001f) {
                     drawReisaPoseOverlay(scope, drawX, drawY, drawWidth, drawHeight, imageAlpha * poseEase);
                 }
             } else {
-                drawReisa(scope, REISA_EXIT_TEXTURE, drawX, drawY, drawWidth, drawHeight, imageAlpha);
+                drawReisa(scope, reisaExitTexture(), drawX, drawY, drawWidth, drawHeight, imageAlpha);
             }
         } else {
             if (elapsed <= REISA_ENTRANCE_DURATION_MS) {
@@ -753,18 +797,24 @@ public class MainMenuScreen extends Screen {
     }
 
     private Identifier reisaShutdownTexture(long elapsed, boolean exiting) {
-        if (exiting) return REISA_SHUTDOWN_FINAL_TEXTURE;
-        if (elapsed < REISA_SHUTDOWN_BUBBLE_DELAY_MS) return REISA_SHUTDOWN_ENTRANCE_TEXTURE;
+        if (exiting) return reisaShutdownFinalTexture();
+        if (elapsed < REISA_SHUTDOWN_BUBBLE_DELAY_MS) return reisaShutdownEntranceTexture();
 
         long speechElapsed = elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS;
-        return (speechElapsed / 145L & 1L) == 0L ? REISA_WELCOME_TEXTURE : REISA_EXIT_TEXTURE;
+        return (speechElapsed / 145L & 1L) == 0L ? reisaWelcomeTexture() : reisaExitTexture();
     }
 
     private void prewarmReisaShutdownTextures(UiTree.Scope scope) {
         Color transparent = applyAlpha(Color.WHITE, 0.0f);
+        Identifier entrance = reisaShutdownEntranceTexture();
+        Identifier last = reisaShutdownFinalTexture();
         scope.layer(-60, layer -> {
-            layer.texture(REISA_SHUTDOWN_ENTRANCE_TEXTURE, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
-            layer.texture(REISA_SHUTDOWN_FINAL_TEXTURE, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+            if (entrance != null) {
+                layer.texture(entrance, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+            }
+            if (last != null) {
+                layer.texture(last, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+            }
         });
     }
 
@@ -798,34 +848,43 @@ public class MainMenuScreen extends Screen {
 
         Color farTrail = applyAlpha(new Color(216, 185, 255), trailAlpha * 0.08f);
         Color nearTrail = applyAlpha(new Color(228, 205, 255), trailAlpha * 0.14f);
+        Identifier exit = reisaExitTexture();
+        if (exit == null) return;
         scope.layer(-22, layer -> {
-            layer.texture(REISA_EXIT_TEXTURE, imageX - 24.8f * scale, imageY + 2.325f * scale,
+            layer.texture(exit, imageX - 24.8f * scale, imageY + 2.325f * scale,
                     imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, farTrail, true);
-            layer.texture(REISA_EXIT_TEXTURE, imageX - 12.4f * scale, imageY + 1.1625f * scale,
+            layer.texture(exit, imageX - 12.4f * scale, imageY + 1.1625f * scale,
                     imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, nearTrail, true);
         });
     }
 
     private void drawReisaPoseOverlay(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
-        scope.layer(-20, layer -> layer.texture(REISA_EXIT_TEXTURE, imageX, imageY,
+        Identifier exit = reisaExitTexture();
+        if (exit == null) return;
+        scope.layer(-20, layer -> layer.texture(exit, imageX, imageY,
                 imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f,
                 applyAlpha(Color.WHITE, alpha), true));
     }
 
     private void prewarmReisaExitTexture(UiTree.Scope scope) {
-        scope.layer(-30, layer -> layer.texture(REISA_EXIT_TEXTURE,
+        Identifier exit = reisaExitTexture();
+        if (exit == null) return;
+        scope.layer(-30, layer -> layer.texture(exit,
                 -1.0f, -1.0f, 1.0f, 1.0f,
                 0.0f, 0.0f, 1.0f, 1.0f,
                 applyAlpha(Color.WHITE, 0.0f), true));
     }
 
     private void drawReisa(UiTree.Scope scope, Identifier texture, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
+        if (texture == null) return;
         scope.layer(-21, layer -> layer.texture(texture, imageX, imageY, imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true));
     }
 
     private void drawReisaFoldedPage(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float unfold, float alpha, float scale) {
+        Identifier welcome = reisaWelcomeTexture();
+        if (welcome == null) return;
         if (unfold >= 0.999f) {
-            drawReisa(scope, MainMenuScreen.REISA_WELCOME_TEXTURE, imageX, imageY, imageWidth, imageHeight, alpha);
+            drawReisa(scope, welcome, imageX, imageY, imageWidth, imageHeight, alpha);
             return;
         }
 
@@ -839,7 +898,7 @@ public class MainMenuScreen extends Screen {
             float curl = (float) Math.sin(center * Math.PI) * (1.0f - unfold) * 20.15f * scale;
             float shade = 1.0f - (1.0f - unfold) * (0.18f + 0.38f * (float) Math.sin(center * Math.PI));
             Color sliceColor = applyAlpha(Color.WHITE, alpha * shade);
-            scope.layer(-20, layer -> layer.texture(MainMenuScreen.REISA_WELCOME_TEXTURE, sliceX, imageY + curl,
+            scope.layer(-20, layer -> layer.texture(welcome, sliceX, imageY + curl,
                     Math.max(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
                     u0, 0.0f, u1, 1.0f, sliceColor, true));
         }
