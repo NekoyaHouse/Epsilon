@@ -25,7 +25,6 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@ClInitNative
 public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     public static final DropdownScreen INSTANCE = new DropdownScreen();

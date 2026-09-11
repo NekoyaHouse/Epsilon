@@ -10,7 +10,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.network.NetworkUtils;
 import com.mojang.authlib.GameProfile;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.network.protocol.Packet;
@@ -23,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@ClInitNative
 public class Blink extends Module {
 
     public static final Blink INSTANCE = new Blink();

@@ -5,14 +5,12 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.network.NetworkUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.world.entity.player.Input;
 
-@ClInitNative
 public class InputDisabler extends Module {
 
     public static final InputDisabler INSTANCE = new InputDisabler();

@@ -10,13 +10,11 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.google.common.base.Suppliers;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 
 import java.awt.*;
 import java.util.function.Supplier;
 
-@ClInitNative
 public class Watermark extends HudModule {
 
     public static final Watermark INSTANCE = new Watermark();

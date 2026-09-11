@@ -5,7 +5,6 @@ import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -20,7 +19,6 @@ import java.util.*;
  * 相同标识的活动通知会刷新内容和显示时间，同时复用聊天栏消息位置。
  * 通知队列不是线程安全容器，调用方应在客户端主线程中访问。
  */
-@ClInitNative
 public class NotificationManager {
 
     public static final NotificationManager INSTANCE = new NotificationManager();

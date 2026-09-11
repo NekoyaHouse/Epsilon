@@ -14,7 +14,6 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.tags.ItemTags;
@@ -34,7 +33,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@ClInitNative
 public class AutoHitCrystal extends Module {
 
     public static final AutoHitCrystal INSTANCE = new AutoHitCrystal();

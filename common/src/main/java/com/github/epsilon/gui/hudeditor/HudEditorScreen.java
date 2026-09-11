@@ -27,7 +27,6 @@ import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,7 +42,6 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-@ClInitNative
 public class HudEditorScreen extends Screen implements ListSettingPopupScreen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();

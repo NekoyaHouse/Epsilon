@@ -7,7 +7,6 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
@@ -16,7 +15,6 @@ import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
-@ClInitNative
 public abstract class RotationManager {
 
     public static RotationManager INSTANCE;

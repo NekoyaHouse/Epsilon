@@ -14,7 +14,6 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
@@ -23,7 +22,6 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-@ClInitNative
 public class Hotkey extends HudModule {
 
     public static final Hotkey INSTANCE = new Hotkey();

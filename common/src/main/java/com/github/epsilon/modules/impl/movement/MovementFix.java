@@ -3,10 +3,8 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import me.sofurry.ClInitNative;
 import net.minecraft.util.Mth;
 
-@ClInitNative
 public class MovementFix extends Module {
 
     public static final MovementFix INSTANCE = new MovementFix();

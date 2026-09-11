@@ -6,7 +6,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.network.NetworkUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
@@ -15,7 +14,6 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@ClInitNative
 public class Stuck extends Module {
 
     public static final Stuck INSTANCE = new Stuck();

@@ -8,7 +8,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.StringSetting;
 import com.github.epsilon.utils.render.ColorUtils;
-import me.sofurry.ClInitNative;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -19,7 +18,6 @@ import java.awt.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@ClInitNative
 public class TitleReplace extends Module {
 
     public static final TitleReplace INSTANCE = new TitleReplace();

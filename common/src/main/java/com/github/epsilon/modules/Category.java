@@ -3,9 +3,7 @@ package com.github.epsilon.modules;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.text.IconChars;
-import me.sofurry.ClInitNative;
 
-@ClInitNative
 public enum Category {
 
     COMBAT(IconChars.SWORDS, "combat"),

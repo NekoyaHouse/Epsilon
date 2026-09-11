@@ -1,6 +1,5 @@
 package com.github.epsilon.managers.sound;
 
-import me.sofurry.ClInitNative;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
@@ -11,7 +10,6 @@ import java.util.Optional;
 
 import static com.github.epsilon.Constants.mc;
 
-@ClInitNative
 public class SoundManager {
 
     public static final SoundManager INSTANCE = new SoundManager();

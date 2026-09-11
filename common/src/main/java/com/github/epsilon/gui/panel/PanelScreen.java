@@ -17,7 +17,6 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,7 +32,6 @@ import net.minecraft.network.chat.Component;
  * 它负责维护全局状态、调度各子面板的 extract 阶段、统一 flush renderer，
  * 并将输入事件路由到 rail、模块列表、详情面板、客户端设置面板和弹窗宿主。
  */
-@ClInitNative
 public class PanelScreen extends Screen {
 
     public static final PanelScreen INSTANCE = new PanelScreen();

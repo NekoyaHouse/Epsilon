@@ -1,10 +1,7 @@
 package com.github.epsilon.utils.math;
 
-import me.sofurry.ClInitNative;
-
 import java.util.concurrent.ThreadLocalRandom;
 
-@ClInitNative
 public class MathUtils {
 
     private MathUtils() {

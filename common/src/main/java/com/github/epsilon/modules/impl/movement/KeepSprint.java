@@ -5,9 +5,7 @@ import com.github.epsilon.events.impl.AfterSendPositionEvent;
 import com.github.epsilon.events.impl.AttackSlowdownEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import me.sofurry.ClInitNative;
 
-@ClInitNative
 public class KeepSprint extends Module {
 
     public static final KeepSprint INSTANCE = new KeepSprint();

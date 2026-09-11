@@ -24,7 +24,6 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -34,7 +33,6 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-@ClInitNative
 public class ModuleDetailPanel implements AutoCloseable {
 
     protected final PanelState state;

@@ -19,7 +19,6 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.base.Suppliers;
-import me.sofurry.ClInitNative;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -32,7 +31,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
-@ClInitNative
 public class NameTags extends Module {
 
     public static final NameTags INSTANCE = new NameTags();

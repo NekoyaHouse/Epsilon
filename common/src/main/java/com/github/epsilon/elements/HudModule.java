@@ -5,12 +5,10 @@ import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.modules.Module;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
-@ClInitNative
 public abstract class HudModule extends Module {
 
     public enum HorizontalAnchor {

@@ -4,11 +4,9 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import me.sofurry.ClInitNative;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
-@ClInitNative
 public class CameraClip extends Module {
 
     public static final CameraClip INSTANCE = new CameraClip();

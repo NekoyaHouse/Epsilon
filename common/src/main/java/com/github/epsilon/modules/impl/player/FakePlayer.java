@@ -7,7 +7,6 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.StringSetting;
 import com.mojang.authlib.GameProfile;
-import me.sofurry.ClInitNative;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.world.entity.Entity;
 
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@ClInitNative
 public class FakePlayer extends Module {
 
     public static final FakePlayer INSTANCE = new FakePlayer();
