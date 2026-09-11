@@ -19,59 +19,68 @@ import static com.github.epsilon.Constants.mc;
 /**
  * 平台限定功能的说明界面。
  * <p>
- * 非支持平台上功能开关会被置灰，用户点击时弹出一次该说明界面；每个功能每次会话最多提示一次，
+ * 非支持平台上功能开关会被置灰，用户每次点击都会弹出该说明界面（同一功能不会重复堆叠），
  * 且不会修改用户已保存的配置值。
  */
 public class PlatformNoticeScreen extends EpsilonDialogScreen {
 
-    private static final Set<String> SHOWN_THIS_SESSION = ConcurrentHashMap.newKeySet();
+    /** 正在展示中的提示 key，用于避免同一功能重复堆叠窗口。 */
+    private static final Set<String> OPEN_KEYS = ConcurrentHashMap.newKeySet();
 
     private static final float ROW_HEIGHT = 17.0f;
 
+    private final String noticeKey;
     private final String featureName;
     private final PlatformRequirement requirement;
 
-    private PlatformNoticeScreen(Screen parent, String featureName, PlatformRequirement requirement) {
+    private PlatformNoticeScreen(Screen parent, String noticeKey, String featureName, PlatformRequirement requirement) {
         super(parent, Component.literal("Platform Only"));
+        this.noticeKey = noticeKey;
         this.featureName = featureName;
         this.requirement = requirement;
     }
 
     /**
-     * 在功能不可用的平台上弹出说明界面，每个 key 每次会话只会弹出一次。
+     * 在功能不可用的平台上弹出说明界面；同一 key 的窗口未关闭时不会重复打开。
      */
-    public static void showOnce(Screen parent, String key, String featureName, PlatformRequirement requirement) {
+    public static void show(Screen parent, String key, String featureName, PlatformRequirement requirement) {
         if (requirement == null || requirement == PlatformRequirement.ANY || requirement.isSatisfied()) {
             return;
         }
-        if (mc == null || !SHOWN_THIS_SESSION.add(key)) {
+        if (mc == null || !OPEN_KEYS.add(key)) {
             return;
         }
-        mc.gui.setScreen(new PlatformNoticeScreen(parent, featureName, requirement));
+        mc.gui.setScreen(new PlatformNoticeScreen(parent, key, featureName, requirement));
     }
 
     /**
      * 设置行/枚举选项在非支持平台上被点击时调用。
      */
-    public static void showOnce(Setting<?> setting) {
+    public static void show(Setting<?> setting) {
         if (setting == null) {
             return;
         }
         Screen parent = mc != null ? mc.gui.screen() : null;
-        showOnce(parent, setting.getNoticeKey(), setting.getDisplayName(), setting.getPlatformRequirement());
+        show(parent, setting.getNoticeKey(), setting.getDisplayName(), setting.getPlatformRequirement());
     }
 
     /**
      * 枚举选项在非支持平台上被点击时调用。
      */
-    public static void showOnceOption(EnumSetting<?> setting, Enum<?> mode) {
+    public static void showOption(EnumSetting<?> setting, Enum<?> mode) {
         if (setting == null || mode == null) {
             return;
         }
         PlatformRequirement requirement = setting.getModeRequirementUnchecked(mode);
         String feature = setting.getDisplayName() + " · " + setting.getTranslatedValueUnchecked(mode);
         Screen parent = mc != null ? mc.gui.screen() : null;
-        showOnce(parent, setting.getNoticeKey() + "#" + mode.name(), feature, requirement);
+        show(parent, setting.getNoticeKey() + "#" + mode.name(), feature, requirement);
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        OPEN_KEYS.remove(noticeKey);
     }
 
     @Override

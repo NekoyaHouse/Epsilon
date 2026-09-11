@@ -160,7 +160,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         Enum<?> mode = getHoveredOption(mouseX, mouseY);
         if (mode != null) {
             if (!setting.isModeSupportedUnchecked(mode)) {
-                PlatformNoticeScreen.showOnceOption(setting, mode);
+                PlatformNoticeScreen.showOption(setting, mode);
                 return true;
             }
             setting.setMode(mode.name());
@@ -234,7 +234,8 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if (!supported) {
             String badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
             float badgeScale = 0.48f;
-            float badgeWidth = textMetrics.textWidth(badge, badgeScale) + 10.0f;
+            // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+            float badgeWidth = textMetrics.textWidth(badge, badgeScale) + 16.0f;
             float badgeHeight = 11.0f;
             float badgeX = listX + fieldW - badgeWidth - 8.0f;
             float badgeY = optionY + (OPTION_HEIGHT - badgeHeight) * 0.5f;
@@ -246,10 +247,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     private void drawPlatformBadge(UiTree.Scope scope, UiTextMetrics textMetrics, float trailingX) {
         String label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
         float scale = 0.5f;
-        float width = textMetrics.textWidth(label, scale) + 12.0f;
+        float width = textMetrics.textWidth(label, scale) + 16.0f;
         float height = 12.0f;
         float x = Math.max(DropdownTheme.SETTING_PADDING_X, trailingX - width);
-        scope.chip(new UiRect(x, 1.0f, width, height), label, scale,
+        float labelHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        float y = 1.0f + (labelHeight - height) * 0.5f;
+        scope.chip(new UiRect(x, y, width, height), label, scale,
                 MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null);
     }
 

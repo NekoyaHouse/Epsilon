@@ -106,7 +106,7 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
             float sy = absoluteY((getHeight() - sh) * 0.5f);
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
                 if (!setting.isPlatformSupported()) {
-                    PlatformNoticeScreen.showOnce(setting);
+                    PlatformNoticeScreen.show(setting);
                     return true;
                 }
                 boolean newValue = !setting.getValue();
@@ -124,10 +124,11 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
     private void drawPlatformBadge(UiTree.Scope scope, UiTextMetrics textMetrics, float trailingX) {
         String label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
         float scale = 0.5f;
-        float width = textMetrics.textWidth(label, scale) + 12.0f;
+        // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+        float width = textMetrics.textWidth(label, scale) + 16.0f;
         float height = 12.0f;
         float x = Math.max(DropdownTheme.SETTING_PADDING_X, trailingX - width);
-        float y = (getHeight() - height) * 0.5f;
+        float y = (getHeight() - SWITCH_HEIGHT) * 0.5f + (SWITCH_HEIGHT - height) * 0.5f;
         scope.chip(new com.github.epsilon.gui.lib.UiRect(x, y, width, height), label, scale,
                 MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null);
     }

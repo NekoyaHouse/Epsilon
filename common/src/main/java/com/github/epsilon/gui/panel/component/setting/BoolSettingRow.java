@@ -55,7 +55,7 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
             return false;
         }
         if (!setting.isPlatformSupported()) {
-            PlatformNoticeScreen.showOnce(setting);
+            PlatformNoticeScreen.show(setting);
             return true;
         }
         setting.setValue(!setting.getValue());

@@ -123,7 +123,8 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                         if (!supported) {
                             String badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName();
                             float badgeScale = 0.52f;
-                            float badgeWidth = contentBuffer.textMetrics().getWidth(badge, badgeScale) + 12.0f;
+                            // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+                            float badgeWidth = contentBuffer.textMetrics().getWidth(badge, badgeScale) + 16.0f;
                             float badgeHeight = 12.0f;
                             float badgeX = localItemBounds.right() - badgeWidth - 8.0f;
                             float badgeY = localItemBounds.y() + (localItemBounds.height() - badgeHeight) * 0.5f;
@@ -154,7 +155,7 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
         }
         Enum<?> mode = modes[hoveredIndex];
         if (!setting.isModeSupportedUnchecked(mode)) {
-            PlatformNoticeScreen.showOnceOption(setting, mode);
+            PlatformNoticeScreen.showOption(setting, mode);
             return true;
         }
         ((EnumSetting) setting).setMode(mode);
