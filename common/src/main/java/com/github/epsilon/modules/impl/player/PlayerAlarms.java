@@ -6,7 +6,7 @@ import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -248,7 +248,7 @@ public class PlayerAlarms extends Module {
                                 }
                                 if (mode == AlertMode.Notification || mode == AlertMode.Both) {
                                     int hash = java.util.Objects.hash(playerName, "gamemode");
-                                    Managers.NOTIFICATION.notifyHud(msg, "", NotificationMode.Info, hash);
+                                    NotificationManager.INSTANCE.notifyHud(msg, "", NotificationMode.Info, hash);
                                 }
                             }
                         }
@@ -330,7 +330,7 @@ public class PlayerAlarms extends Module {
             int hash = java.util.Objects.hash(playerName, template.getTranslatedName());
             NotificationMode notifMode = color == ChatFormatting.RED || color == ChatFormatting.DARK_RED
                     ? NotificationMode.Error : NotificationMode.Success;
-            Managers.NOTIFICATION.notifyHud(msg, "", notifMode, hash);
+            NotificationManager.INSTANCE.notifyHud(msg, "", notifMode, hash);
         }
     }
 

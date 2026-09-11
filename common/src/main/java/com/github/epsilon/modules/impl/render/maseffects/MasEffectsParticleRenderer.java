@@ -1,28 +1,20 @@
 package com.github.epsilon.modules.impl.render.maseffects;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.StagedVertexBuffer;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.PreparedRenderType;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,16 +25,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Function;
 
-public final class MasEffectsParticleRenderer {
+import static com.github.epsilon.Constants.mc;
+
+public class MasEffectsParticleRenderer {
 
     private static final int MAX_PARTICLES = 8192;
     private static final Set<Item> DIAMOND_ARMOR = Set.of(
@@ -74,32 +66,17 @@ public final class MasEffectsParticleRenderer {
     private static final RenderPipeline PARTICLE_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
             .withLocation("pipeline/epsilon_mas_effects")
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withCull(false)
             .build();
 
-    private static final Function<Identifier, RenderType> PARTICLE_LAYER = Util.memoize(texture -> RenderType.create(
-            "epsilon_mas_effects",
-            RenderSetup.builder(PARTICLE_PIPELINE)
-                    .withTexture("Sampler0", texture)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputTarget(OutputTarget.MAIN_TARGET)
-                    .createRenderSetup()
-    ));
-
-    private final Minecraft mc = Minecraft.getInstance();
     private final MasEffects module;
     private final RandomSource random = RandomSource.create();
     private final List<EffectParticle> particles = new ArrayList<>();
     private final ConcurrentLinkedQueue<EffectParticle> pendingParticles = new ConcurrentLinkedQueue<>();
-    private final StagedVertexBuffer vertexBuffer = new StagedVertexBuffer(() -> "Epsilon Mas Effects Particles", RenderType.SMALL_BUFFER_SIZE);
 
     public MasEffectsParticleRenderer(MasEffects module) {
         this.module = module;
-    }
-
-    private record ParticleBatch(PreparedRenderType renderType, StagedVertexBuffer.Draw draw) {
     }
 
     public void tick() {
@@ -118,31 +95,12 @@ public final class MasEffectsParticleRenderer {
             batches.computeIfAbsent(particle.texture(), ignored -> new ArrayList<>()).add(particle);
         }
 
-        List<ParticleBatch> particleBatches = new ArrayList<>(batches.size());
-        try {
-            for (Map.Entry<Identifier, List<EffectParticle>> entry : batches.entrySet()) {
-                RenderType renderType = PARTICLE_LAYER.apply(entry.getKey());
-                StagedVertexBuffer.Draw draw = vertexBuffer.appendDraw(
-                        renderType.format(),
-                        renderType.primitiveTopology(),
-                        renderType.sortOnUpload() ? RenderSystem.getProjectionType().vertexSorting() : null
-                );
-                VertexConsumer buffer = vertexBuffer.getVertexBuilder(draw);
-                for (EffectParticle particle : entry.getValue()) {
-                    particle.render(poseStack, buffer, partialTick);
-                }
-                particleBatches.add(new ParticleBatch(renderType.prepare(), draw));
+        for (Map.Entry<Identifier, List<EffectParticle>> entry : batches.entrySet()) {
+            LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(PARTICLE_PIPELINE, entry.getKey());
+            for (EffectParticle particle : entry.getValue()) {
+                particle.render(poseStack, renderer, partialTick);
             }
-
-            vertexBuffer.upload();
-            for (ParticleBatch batch : particleBatches) {
-                StagedVertexBuffer.ExecuteInfo executeInfo = vertexBuffer.getExecuteInfo(batch.draw());
-                if (executeInfo != null) {
-                    batch.renderType().drawFromBuffer(executeInfo);
-                }
-            }
-        } finally {
-            vertexBuffer.endFrame();
+            renderer.end();
         }
     }
 
@@ -371,11 +329,11 @@ public final class MasEffectsParticleRenderer {
             return lifetime;
         }
 
-        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
-            renderPlane(poseStack, buffer, partialTick, mc.gameRenderer.mainCamera().rotation());
+        protected void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, float partialTick) {
+            renderPlane(poseStack, renderer, partialTick, mc.gameRenderer.mainCamera().rotation());
         }
 
-        protected void renderPlane(PoseStack poseStack, VertexConsumer buffer, float partialTick, Quaternionf rotation) {
+        protected void renderPlane(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, float partialTick, Quaternionf rotation) {
             Camera camera = mc.gameRenderer.mainCamera();
             double renderX = Mth.lerp(partialTick, xo, x) - camera.position().x;
             double renderY = Mth.lerp(partialTick, yo, y) - camera.position().y;
@@ -394,10 +352,10 @@ public final class MasEffectsParticleRenderer {
                     Mth.clamp(blue, 0.0F, 1.0F)
             );
 
-            buffer.addVertex(matrix, -halfSize, -halfSize, 0.0F).setUv(0.0F, 1.0F).setColor(color);
-            buffer.addVertex(matrix, halfSize, -halfSize, 0.0F).setUv(1.0F, 1.0F).setColor(color);
-            buffer.addVertex(matrix, halfSize, halfSize, 0.0F).setUv(1.0F, 0.0F).setColor(color);
-            buffer.addVertex(matrix, -halfSize, halfSize, 0.0F).setUv(0.0F, 0.0F).setColor(color);
+            renderer.vertex(matrix, -halfSize, -halfSize, 0.0F, 0.0F, 1.0F, color);
+            renderer.vertex(matrix, halfSize, -halfSize, 0.0F, 1.0F, 1.0F, color);
+            renderer.vertex(matrix, halfSize, halfSize, 0.0F, 1.0F, 0.0F, color);
+            renderer.vertex(matrix, -halfSize, halfSize, 0.0F, 0.0F, 0.0F, color);
 
             poseStack.popPose();
         }
@@ -418,7 +376,7 @@ public final class MasEffectsParticleRenderer {
             }
 
             AABB box = new AABB(x - 0.1, y, z - 0.1, x + 0.1, y + 0.2, z + 0.1);
-            Vec3 adjusted = Entity.collideBoundingBox(CollisionContext.empty(), movement, box, mc.level, List.of());
+            Vec3 adjusted = Entity.collideBoundingBox((Entity) null, movement, box, mc.level, List.of());
             x += adjusted.x;
             y += adjusted.y;
             z += adjusted.z;
@@ -467,10 +425,10 @@ public final class MasEffectsParticleRenderer {
         }
 
         @Override
-        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
-            renderPlane(poseStack, buffer, partialTick, new Quaternionf().rotateX((float) Math.PI / 2.0F));
+        protected void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, float partialTick) {
+            renderPlane(poseStack, renderer, partialTick, new Quaternionf().rotateX((float) Math.PI / 2.0F));
             if (crossed) {
-                renderPlane(poseStack, buffer, partialTick, new Quaternionf().rotateY((float) Math.PI / 4.0F).rotateX((float) Math.PI / 2.0F));
+                renderPlane(poseStack, renderer, partialTick, new Quaternionf().rotateY((float) Math.PI / 4.0F).rotateX((float) Math.PI / 2.0F));
             }
         }
     }
@@ -597,9 +555,9 @@ public final class MasEffectsParticleRenderer {
         }
 
         @Override
-        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
+        protected void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, float partialTick) {
             Quaternionf rotation = euler(rotZ, rotX, -rotZ).mul(euler(0.0F, 0.0F, rotY));
-            renderPlane(poseStack, buffer, partialTick, rotation);
+            renderPlane(poseStack, renderer, partialTick, rotation);
         }
     }
 

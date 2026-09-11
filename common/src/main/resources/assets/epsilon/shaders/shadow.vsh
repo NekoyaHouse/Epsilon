@@ -10,7 +10,7 @@ layout(location = 3) in vec4 Radius;
 
 out vec2 f_Position;
 out vec4 f_Color;
-out vec4 f_Bounds;
+out vec4 f_InnerRect;
 out vec4 f_Radius;
 out float f_BlurRadius;
 
@@ -19,7 +19,7 @@ void main() {
 
     f_Position = Position.xy;
     f_Color = Color;
-    f_Bounds = InnerRect;
+    f_InnerRect = InnerRect;
     f_Radius = Radius;
     f_BlurRadius = Position.z;
 }

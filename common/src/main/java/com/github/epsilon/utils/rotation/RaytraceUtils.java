@@ -13,18 +13,49 @@ import static com.github.epsilon.Constants.mc;
 
 public class RaytraceUtils {
 
+    /**
+     * 判断两点之间是否没有方块遮挡。
+     *
+     * @param eyes 射线起点
+     * @param vec3 射线终点
+     * @return 判断结果
+     */
     public static boolean canSeePointFrom(Vec3 eyes, Vec3 vec3) {
         return mc.level.clip(new ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player)).getType() == HitResult.Type.MISS;
     }
 
+    /**
+     * 按指定旋转执行方块和实体射线追踪。
+     *
+     * @param rotation 旋转角
+     * @param range    射线追踪或自适应选点距离
+     * @return 操作结果
+     */
     public static HitResult raytrace(Rot2f rotation, double range) {
         return raytrace(rotation, range, 0);
     }
 
+    /**
+     * 按指定旋转执行方块和实体射线追踪。
+     *
+     * @param rotation 旋转角
+     * @param range    射线追踪或自适应选点距离
+     * @param expand   实体包围盒扩大量
+     * @return 操作结果
+     */
     public static HitResult raytrace(Rot2f rotation, double range, float expand) {
         return raytrace(rotation, range, expand, mc.player);
     }
 
+    /**
+     * 按指定旋转执行方块和实体射线追踪。
+     *
+     * @param rotation 旋转角
+     * @param range    射线追踪或自适应选点距离
+     * @param expand   实体包围盒扩大量
+     * @param entity   实体
+     * @return 操作结果
+     */
     public static HitResult raytrace(Rot2f rotation, double range, float expand, Entity entity) {
         if (mc.level == null || entity == null) return null;
 
@@ -95,6 +126,15 @@ public class RaytraceUtils {
         return objectMouseOver;
     }
 
+    /**
+     * 判断指定旋转是否命中目标方块或指定方块面。
+     *
+     * @param rotation 旋转角
+     * @param dir      预期命中的方块面
+     * @param pos      目标位置
+     * @param strict   是否要求命中指定方块面
+     * @return 判断结果
+     */
     public static boolean overBlock(Rot2f rotation, Direction dir, BlockPos pos, boolean strict) {
         Vec3 lookVec = Vec3.directionFromRotation(rotation.getPitch(), rotation.getYaw());
 
@@ -117,14 +157,37 @@ public class RaytraceUtils {
         return result.getBlockPos().equals(pos) && (!strict || result.getDirection() == dir);
     }
 
+    /**
+     * 判断指定旋转是否命中目标方块或指定方块面。
+     *
+     * @param rotation 旋转角
+     * @param pos      目标位置
+     * @param strict   是否要求命中指定方块面
+     * @return 判断结果
+     */
     public static boolean overBlock(Rot2f rotation, BlockPos pos, boolean strict) {
         return overBlock(rotation, Direction.UP, pos, strict);
     }
 
+    /**
+     * 判断指定旋转是否命中目标方块或指定方块面。
+     *
+     * @param rotation 旋转角
+     * @param pos      目标位置
+     * @return 判断结果
+     */
     public static boolean overBlock(Rot2f rotation, BlockPos pos) {
         return overBlock(rotation, Direction.UP, pos, false);
     }
 
+    /**
+     * 判断指定旋转是否命中目标方块或指定方块面。
+     *
+     * @param rotation   旋转角
+     * @param pos        目标位置
+     * @param enumFacing 预期命中的方块面
+     * @return 判断结果
+     */
     public static boolean overBlock(Rot2f rotation, BlockPos pos, Direction enumFacing) {
         return overBlock(rotation, enumFacing, pos, true);
     }

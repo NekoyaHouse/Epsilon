@@ -15,8 +15,9 @@ import com.github.epsilon.gui.panel.view.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.view.ModuleListPanel;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,6 +33,7 @@ import net.minecraft.network.chat.Component;
  * 它负责维护全局状态、调度各子面板的 extract 阶段、统一 flush renderer，
  * 并将输入事件路由到 rail、模块列表、详情面板、客户端设置面板和弹窗宿主。
  */
+@ClInitNative
 public class PanelScreen extends Screen {
 
     public static final PanelScreen INSTANCE = new PanelScreen();
@@ -77,7 +79,6 @@ public class PanelScreen extends Screen {
      */
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-
         final var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight());
@@ -94,7 +95,7 @@ public class PanelScreen extends Screen {
         ClientSetting.ModuleSort currentModuleSort = ClientSetting.INSTANCE.moduleSort.getValue();
         boolean sidebarExpanded = state.isSidebarExpanded();
         boolean clientSettingMode = state.isClientSettingMode();
-        long currentI18nRevision = TranslateHolder.INSTANCE.getRevision();
+        long currentI18nRevision = TranslationManager.INSTANCE.getRevision();
         if (!lastSelectedCategory.equals(currentCategory)
                 || !lastSelectedModule.equals(currentModule)
                 || !lastSearchQuery.equals(currentQuery)
@@ -177,7 +178,8 @@ public class PanelScreen extends Screen {
         UiTree tree = UiTree.build(scope -> {
             scope.pushAbsolute(layout.panel(), panel -> {
                 panel.shadow(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
-                        MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
+                        MD3Theme.PANEL_RADIUS, MD3Theme.PANEL_SHADOW_BLUR,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
                 panel.roundRect(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
                         MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
             });
@@ -217,6 +219,12 @@ public class PanelScreen extends Screen {
         scene.clear();
     }
 
+    public PanelScreen openClientSettings() {
+        state.setClientSettingMode(true);
+        state.setClientSettingTab(PanelState.ClientSettingTab.GENERAL);
+        dirtyState.markAllDirty();
+        return this;
+    }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
@@ -345,6 +353,7 @@ public class PanelScreen extends Screen {
         super.removed();
         popupHost.close();
         moduleListPanel.resetTransientState();
+        state.setSearchQuery("");
         moduleDetailPanel.resetTransientState();
         clientSettingPanel.resetTransientState();
         state.setListeningKeyBindModule(null);
@@ -361,4 +370,5 @@ public class PanelScreen extends Screen {
     public LuminRenderSystem.LuminRenderTarget getRenderTarget() {
         return renderTarget;
     }
+
 }

@@ -1,16 +1,15 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,8 +41,8 @@ public class FilterShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filter"))
                     .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("filter"))
-                    .withBindGroupLayout(BindGroupLayout.builder().withUniform("FilterColor", UniformType.UNIFORM_BUFFER).build())
-                    .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
+                    .withBindGroupLayout(LuminBindGroupLayouts.FILTER_COLOR)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withCull(false)
                     .build();
         }
@@ -112,12 +111,8 @@ public class FilterShader {
         }
     }
 
-    private record FilterColor(
-            float red,
-            float green,
-            float blue,
-            float alpha
-    ) implements DynamicUniformStorage.DynamicUniform {
+    private record FilterColor(float red, float green, float blue,
+                               float alpha) implements DynamicUniformStorage.DynamicUniform {
 
         private FilterColor(Color color) {
             this(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);

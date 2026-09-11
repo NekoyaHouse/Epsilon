@@ -6,8 +6,8 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes;
@@ -81,10 +81,13 @@ public class Follower extends Module {
             return;
         }
 
-        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
+        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 360.0f,
                 true,
+                false,
+                false,
+                false,
                 false,
                 false,
                 false,

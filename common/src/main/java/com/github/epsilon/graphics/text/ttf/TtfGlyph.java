@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 public record TtfGlyph(
         ByteBuffer glyphData,
+        ByteBuffer alphaData,
         int width,
         int height,
         int xOffset,

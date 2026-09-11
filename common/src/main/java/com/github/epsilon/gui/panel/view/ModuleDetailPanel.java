@@ -16,7 +16,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
@@ -24,6 +24,7 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -33,6 +34,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+@ClInitNative
 public class ModuleDetailPanel implements AutoCloseable {
 
     protected final PanelState state;
@@ -548,7 +550,7 @@ public class ModuleDetailPanel implements AutoCloseable {
 
     private long buildContentSignature(Module module, List<Setting<?>> settings, String settingOwnerKey) {
         long signature = 17L;
-        signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
+        signature = signature * 31L + TranslationManager.INSTANCE.getRevision();
         signature = signature * 31L + module.getName().hashCode();
         signature = signature * 31L + module.getBindMode().ordinal();
         signature = signature * 31L + module.getKeyBind();

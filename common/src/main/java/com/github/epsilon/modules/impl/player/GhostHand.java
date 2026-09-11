@@ -6,6 +6,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import me.sofurry.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -15,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Set;
 
+@ClInitNative
 public class GhostHand extends Module {
 
     public static final GhostHand INSTANCE = new GhostHand();

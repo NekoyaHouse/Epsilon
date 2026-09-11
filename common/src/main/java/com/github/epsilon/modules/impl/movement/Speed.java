@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -225,7 +226,7 @@ public class Speed extends Module {
             Vec2 moveVector = mc.player.input.getMoveVector();
             double n = moveVector.y;
             double n2 = moveVector.x;
-            double n3 = mc.player.getYRot();
+            double n3 = RotationManager.INSTANCE.getYaw();
             if (n == 0.0 && n2 == 0.0) {
                 event.setX(0.0);
                 event.setZ(0.0);
@@ -299,7 +300,7 @@ public class Speed extends Module {
         float forward = moveVector.y;
         float strafe = moveVector.x;
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        float yaw = Mth.lerp(tickDelta, mc.player.yRotO, mc.player.getYRot());
+        float yaw = Mth.lerp(tickDelta, RotationManager.INSTANCE.getLastRotation().getYaw(), RotationManager.INSTANCE.getYaw());
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO;
         }

@@ -190,8 +190,6 @@ public class PanelPopupHost {
      * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(UiRenderBatch)} 中补充。
      */
     public interface Popup extends AutoCloseable {
-        float POPUP_SHADOW_RADIUS = 2.5f;
-
         /**
          * 返回当前弹窗的命中与布局区域。
          */

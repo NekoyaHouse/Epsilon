@@ -15,6 +15,7 @@ layout(std140) uniform ShaderParams {
     float GradientScale;
     float Octaves;
     vec2 Resolution;
+    float UseTargetColors;
 };
 
 layout(std140) uniform ShaderColors {
@@ -29,11 +30,13 @@ in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
-float random(in vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+float random(vec2 st) {
+    precise float seed = st.x * 12.9898 + st.y * 78.233;
+    precise float value = sin(seed) * 43758.5453123;
+    return fract(value);
 }
 
-float noise(in vec2 st) {
+float noise(vec2 st) {
     vec2 i = floor(st);
     vec2 f = fract(st);
     float a = random(i);
@@ -44,7 +47,7 @@ float noise(in vec2 st) {
     return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 }
 
-float fbm(in vec2 st) {
+float fbm(vec2 st) {
     float v = 0.0;
     float a = 0.5;
     vec2 shift = vec2(100.0);
@@ -121,23 +124,32 @@ void main() {
     } else {
         float alphaOutline = 0.0;
         float outlineHit = 0.0;
+        vec4 targetColor = vec4(0.0);
 
         for (int x = -quality; x < quality; x++) {
             for (int y = -quality; y < quality; y++) {
-                vec2 offset = vec2(x, y);
+                vec2 offset = vec2(float(x) + 0.5, float(y) + 0.5);
                 vec2 coord = texCoord + offset * oneTexel;
-                float sampleHit = alphaMask(texture(InputSampler, coord).a);
+                vec4 sampleColor = texture(InputSampler, coord);
+                float sampleHit = alphaMask(sampleColor.a);
                 outlineHit += sampleHit;
-                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), Outline.a);
+                if (sampleColor.a > targetColor.a) {
+                    targetColor = sampleColor;
+                }
+                float sourceAlpha = mix(Outline.a, sampleColor.a, UseTargetColors);
+                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), sourceAlpha);
             }
         }
 
         float hitMask = alphaMask(outlineHit);
         float hardMode = 1.0 - softMode;
-        float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
+        vec3 sourceColor = targetColor.rgb;
+        float sourceAlpha = targetColor.a;
+        float customColor = UseTargetColors * step(1.0e-3, distance(sourceColor, Outline.rgb));
+        float finalAlpha = alphaOutline + hardMode * mix(alpha0, sourceAlpha, customColor) * hitMask;
 
         if (outlineHit != 0.0) {
-            fragColor = vec4(getColor(), finalAlpha);
+            fragColor = vec4(mix(getColor(), sourceColor, customColor), finalAlpha);
         } else {
             fragColor = vec4(vec3(-1.0), 0.0);
         }

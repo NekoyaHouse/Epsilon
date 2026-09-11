@@ -1,9 +1,11 @@
 package com.github.epsilon.gui.screen;
 
-import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.assets.i18n.EpsilonLanguage;
+import com.github.epsilon.managers.ConfigManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -12,22 +14,22 @@ import net.minecraft.util.Util;
 
 import java.awt.*;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
 public class WelcomeScreen extends Screen {
 
-    private static final String TITLE_B64 = "5qyi6L+O5L2/55SoIEVwc2lsb24gLyBXZWxjb21lIHRvIEVwc2lsb24=";
-    private static final String NOTICE_B64 = "5pys5a6i5oi356uv5a6M5YWo5YWN6LS577yM6K+35Yu/5ZCR5Lu75L2V5Lq65LuY6LS56LSt5Lmw44CCLyBUaGlzIGNsaWVudCBpcyBjb21wbGV0ZWx5IGZyZWUuIFBsZWFzZSBkbyBub3QgcGF5IGFueW9uZSBmb3IgaXQu";
-    private static final String GITHUB_PREFIX_ZH_B64 = "R2l0SHViIOS7k+W6kzog";
-    private static final String GITHUB_PREFIX_EN_B64 = "R2l0SHViIHJlcG9zaXRvcnk6IA==";
-    private static final String REPO_LABEL_B64 = "TmVrb3lhSG91c2UvRXBzaWxvbg==";
-    private static final String REPOSITORY_URL_B64 = "aHR0cHM6Ly9naXRodWIuY29tL05la295YUhvdXNlL0Vwc2lsb24=";
-    private static final String CONTINUE_B64 = "57un57utIC8gQ29udGludWU=";
-    private static final String DONT_SHOW_AGAIN_B64 = "5LiL5qyh5LiN5YaN5pi+56S6IC8gRG8gbm90IHNob3cgYWdhaW4=";
-    private static final String OPEN_GITHUB_B64 = "5omT5byAR2l0aHViIC8gT3BlbiBHaXRodWI=";
-    private static final Component REPO_LINK = Component.literal(decode(REPO_LABEL_B64)).withStyle(style -> style
+    private static final String TITLE = "欢迎使用 Epsilon / Welcome to Epsilon";
+    private static final String NOTICE = "本客户端为免费项目，别买！/ This client is FURRY, don't buy.";
+    private static final String WEBSITE_PREFIX_ZH = "官网: ";
+    private static final String WEBSITE_PREFIX_EN = "Official website: ";
+    private static final String WEBSITE_LABEL = "https://sofurry.me/";
+    private static final String WEBSITE_URL = "https://sofurry.me/";
+    private static final String CONTINUE = "继续 / Continue";
+    private static final String DONT_SHOW_AGAIN = "下次不再显示 / Do not show again";
+    private static final String OPEN_WEBSITE = "打开官网 / Open Website";
+    private static final String LANGUAGE = "语言 / Language";
+
+    private static final Component WEBSITE_LINK = Component.literal(WEBSITE_LABEL).withStyle(style -> style
             .withColor(0x6FA8FF)
             .withUnderlined(true)
     );
@@ -42,17 +44,17 @@ public class WelcomeScreen extends Screen {
     private static final int BODY_BLOCK_GAP = 4;
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_GAP = 6;
-    private static final int BUTTON_BLOCK_HEIGHT = BUTTON_HEIGHT * 3 + BUTTON_GAP * 2;
+    private static final int BUTTON_BLOCK_HEIGHT = BUTTON_HEIGHT * 4 + BUTTON_GAP * 3;
     private static final int BUTTON_BOTTOM_PADDING = 12;
 
     private final List<Component> bodyLines = List.of(
-            Component.literal(decode(NOTICE_B64)),
-            githubLine(decode(GITHUB_PREFIX_ZH_B64)),
-            githubLine(decode(GITHUB_PREFIX_EN_B64))
+            Component.literal(NOTICE),
+            websiteLine(WEBSITE_PREFIX_ZH),
+            websiteLine(WEBSITE_PREFIX_EN)
     );
 
     private WelcomeScreen() {
-        super(Component.literal(decode(TITLE_B64)));
+        super(Component.literal(TITLE));
     }
 
     private long openedAtMs;
@@ -62,19 +64,28 @@ public class WelcomeScreen extends Screen {
         super.init();
         openedAtMs = Util.getMillis();
 
-        int buttonWidth = Math.min(200, Math.max(160, this.width - 40));
+        int buttonWidth = Math.clamp(this.width - 40, 160, 200);
         int buttonX = (this.width - buttonWidth) / 2;
         int cardHeight = getCardHeight();
         int buttonY = getCardY(cardHeight) + cardHeight - BUTTON_BOTTOM_PADDING - BUTTON_BLOCK_HEIGHT;
 
-        this.addRenderableWidget(Button.builder(Component.literal(decode(DONT_SHOW_AGAIN_B64)), button -> confirmDoNotShowAgain())
-                .bounds(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT)
-                .build());
-        this.addRenderableWidget(Button.builder(Component.literal(decode(CONTINUE_B64)), button -> continueToNextScreen())
+        this.addRenderableWidget(CycleButton.<EpsilonLanguage>builder(
+                        language -> Component.literal(language.toString()),
+                        ClientSetting.INSTANCE.language::getValue
+                )
+                .withValues(EpsilonLanguage.values())
+                .create(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT, Component.literal(LANGUAGE), (button, language) -> {
+                    ClientSetting.INSTANCE.language.setValue(language);
+                    ConfigManager.INSTANCE.saveNow();
+                }));
+        this.addRenderableWidget(Button.builder(Component.literal(DONT_SHOW_AGAIN), button -> confirmDoNotShowAgain())
                 .bounds(buttonX, buttonY + BUTTON_HEIGHT + BUTTON_GAP, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        this.addRenderableWidget(Button.builder(Component.literal(decode(OPEN_GITHUB_B64)), button -> Util.getPlatform().openUri(URI.create(decode(REPOSITORY_URL_B64))))
+        this.addRenderableWidget(Button.builder(Component.literal(CONTINUE), button -> continueToNextScreen())
                 .bounds(buttonX, buttonY + (BUTTON_HEIGHT + BUTTON_GAP) * 2, buttonWidth, BUTTON_HEIGHT)
+                .build());
+        this.addRenderableWidget(Button.builder(Component.literal(OPEN_WEBSITE), button -> Util.getPlatform().openUri(URI.create(WEBSITE_URL)))
+                .bounds(buttonX, buttonY + (BUTTON_HEIGHT + BUTTON_GAP) * 3, buttonWidth, BUTTON_HEIGHT)
                 .build());
     }
 
@@ -133,7 +144,7 @@ public class WelcomeScreen extends Screen {
 
     private void confirmDoNotShowAgain() {
         ClientSetting.INSTANCE.showWelcomeScreen.setValue(false);
-        ConfigHolder.INSTANCE.saveNow();
+        ConfigManager.INSTANCE.saveNow();
         continueToNextScreen();
     }
 
@@ -145,8 +156,8 @@ public class WelcomeScreen extends Screen {
         }
     }
 
-    private static Component githubLine(String prefix) {
-        return Component.literal(prefix).append(REPO_LINK);
+    private static Component websiteLine(String prefix) {
+        return Component.literal(prefix).append(WEBSITE_LINK);
     }
 
     private int getCardHeight() {
@@ -165,10 +176,6 @@ public class WelcomeScreen extends Screen {
 
     private int getCardY(int cardHeight) {
         return (this.height - cardHeight) / 2;
-    }
-
-    private static String decode(String value) {
-        return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
     }
 
 }

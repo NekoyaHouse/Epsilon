@@ -5,11 +5,13 @@ import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ItemTags;
@@ -25,10 +27,6 @@ import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.enchantment.Enchantments;
 
-/**
- * @author Nykrop
- */
-
 public class AutoWeapon extends Module {
 
     public static final AutoWeapon INSTANCE = new AutoWeapon();
@@ -42,50 +40,47 @@ public class AutoWeapon extends Module {
         Smart
     }
 
-    private enum Page {
-        General,
-        Swapping,
-        SwordEnchants,
-        MaceEnchants,
-        OtherEnchants,
-        Weapon
-    }
+    private final SettingGroup sgGeneral = settingGroup("General");
+    private final SettingGroup sgSwapping = settingGroup("Swapping");
+    private final SettingGroup sgSwordEnchants = settingGroup("Sword Enchants");
+    private final SettingGroup sgMaceEnchants = settingGroup("Mace Enchants");
+    private final SettingGroup sgOtherEnchants = settingGroup("Other Enchants");
+    private final SettingGroup sgWeapon = settingGroup("Weapon");
 
-    private final EnumSetting<Page> page = enumSetting("Page", Page.General);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true).group(sgGeneral);
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Simple).group(sgGeneral);
+    private final IntSetting targetSlot = intSetting("Target Slot", 1, 1, 9, 1, () -> mode.is(Mode.Simple)).group(sgGeneral);
+    private final BoolSetting swapBack = boolSetting("Swap Back", true).group(sgGeneral);
+    private final IntSetting swapBackDelay = intSetting("Swap Back Delay", 200, 0, 500, 10).group(sgGeneral);
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Simple, () -> page.is(Page.General));
-    private final IntSetting targetSlot = intSetting("Target Slot", 1, 1, 9, 1, () -> page.is(Page.General) && mode.is(Mode.Simple));
-    private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> page.is(Page.General));
-    private final IntSetting swapBackDelay = intSetting("Swap Back Delay", 200, 0, 500, 10, () -> page.is(Page.General));
+    private final BoolSetting smartDurability = boolSetting("Smart Durability Saver", false, () -> mode.is(Mode.Smart)).group(sgSwapping);
+    private final BoolSetting smartShieldBreak = boolSetting("Smart Shield Breaker", true, () -> mode.is(Mode.Smart)).group(sgSwapping);
+    private final BoolSetting swordSwapping = boolSetting("Sword Swapping", true, () -> mode.is(Mode.Smart)).group(sgSwapping);
+    private final BoolSetting maceSwapping = boolSetting("Mace Swapping", true, () -> mode.is(Mode.Smart)).group(sgSwapping);
+    private final BoolSetting otherSwapping = boolSetting("Other Swapping", true, () -> mode.is(Mode.Smart)).group(sgSwapping);
 
-    private final BoolSetting smartDurability = boolSetting("Smart Durability Saver", false, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
-    private final BoolSetting smartShieldBreak = boolSetting("Smart Shield Breaker", true, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
-    private final BoolSetting swordSwapping = boolSetting("Sword Swapping", true, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
-    private final BoolSetting maceSwapping = boolSetting("Mace Swapping", true, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
-    private final BoolSetting otherSwapping = boolSetting("Other Swapping", true, () -> page.is(Page.Swapping) && mode.is(Mode.Smart));
+    private final BoolSetting enchantFireAspect = boolSetting("Fire Aspect", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
+    private final BoolSetting enchantLooting = boolSetting("Looting", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
+    private final BoolSetting enchantSharpness = boolSetting("Sharpness", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
+    private final BoolSetting enchantSmite = boolSetting("Smite", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
+    private final BoolSetting enchantBaneOfArthropods = boolSetting("Bane of Arthropods", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
+    private final BoolSetting enchantSweepingEdge = boolSetting("Sweeping Edge", true, () -> mode.is(Mode.Smart) && swordSwapping.getValue()).group(sgSwordEnchants);
 
-    private final BoolSetting enchantFireAspect = boolSetting("Fire Aspect", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
-    private final BoolSetting enchantLooting = boolSetting("Looting", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
-    private final BoolSetting enchantSharpness = boolSetting("Sharpness", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
-    private final BoolSetting enchantSmite = boolSetting("Smite", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
-    private final BoolSetting enchantBaneOfArthropods = boolSetting("Bane of Arthropods", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
+    private final BoolSetting regularMace = boolSetting("Regular Mace", true, () -> mode.is(Mode.Smart) && maceSwapping.getValue()).group(sgMaceEnchants);
+    private final BoolSetting enchantDensity = boolSetting("Density", true, () -> mode.is(Mode.Smart) && maceSwapping.getValue()).group(sgMaceEnchants);
+    private final BoolSetting enchantBreach = boolSetting("Breach", true, () -> mode.is(Mode.Smart) && maceSwapping.getValue()).group(sgMaceEnchants);
+    private final BoolSetting enchantWindBurst = boolSetting("Wind Burst", true, () -> mode.is(Mode.Smart) && maceSwapping.getValue()).group(sgMaceEnchants);
 
-    private final BoolSetting enchantSweepingEdge = boolSetting("Sweeping Edge", true, () -> page.is(Page.SwordEnchants) && mode.is(Mode.Smart) && swordSwapping.getValue());
-    private final BoolSetting regularMace = boolSetting("Regular Mace", true, () -> page.is(Page.MaceEnchants) && mode.is(Mode.Smart) && maceSwapping.getValue());
-    private final BoolSetting enchantDensity = boolSetting("Density", true, () -> page.is(Page.MaceEnchants) && mode.is(Mode.Smart) && maceSwapping.getValue());
-    private final BoolSetting enchantBreach = boolSetting("Breach", true, () -> page.is(Page.MaceEnchants) && mode.is(Mode.Smart) && maceSwapping.getValue());
-    private final BoolSetting enchantWindBurst = boolSetting("Wind Burst", true, () -> page.is(Page.MaceEnchants) && mode.is(Mode.Smart) && maceSwapping.getValue());
+    private final BoolSetting enchantImpaling = boolSetting("Impaling", true, () -> mode.is(Mode.Smart) && otherSwapping.getValue()).group(sgOtherEnchants);
 
-    private final BoolSetting enchantImpaling = boolSetting("Impaling", true, () -> page.is(Page.OtherEnchants) && mode.is(Mode.Smart) && otherSwapping.getValue());
-
-    private final BoolSetting onlyOnWeapon = boolSetting("Only On Weapon", false, () -> page.is(Page.Weapon) && mode.is(Mode.Smart));
-    private final BoolSetting sword = boolSetting("Sword", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting axe = boolSetting("Axe", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting pickaxe = boolSetting("Pickaxe", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting shovel = boolSetting("Shovel", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting hoe = boolSetting("Hoe", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting mace = boolSetting("Mace", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
-    private final BoolSetting trident = boolSetting("Trident", true, () -> page.is(Page.Weapon) && mode.is(Mode.Smart) && onlyOnWeapon.getValue());
+    private final BoolSetting onlyOnWeapon = boolSetting("Only On Weapon", false, () -> mode.is(Mode.Smart)).group(sgWeapon);
+    private final BoolSetting sword = boolSetting("Sword", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting axe = boolSetting("Axe", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting pickaxe = boolSetting("Pickaxe", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting shovel = boolSetting("Shovel", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting hoe = boolSetting("Hoe", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting mace = boolSetting("Mace", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
+    private final BoolSetting trident = boolSetting("Trident", true, () -> mode.is(Mode.Smart) && onlyOnWeapon.getValue()).group(sgWeapon);
 
     private final TimerUtils backTimer = new TimerUtils();
     private boolean awaitingBack;
@@ -98,6 +93,7 @@ public class AutoWeapon extends Module {
 
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
         if (!canSwapByWeapon()) return;
         performSwap(event.getEntity());
     }

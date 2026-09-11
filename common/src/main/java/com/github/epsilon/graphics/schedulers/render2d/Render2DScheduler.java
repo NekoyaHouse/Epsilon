@@ -2,7 +2,9 @@ package com.github.epsilon.graphics.schedulers.render2d;
 
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -12,6 +14,7 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.resources.Identifier;
 
 import java.awt.*;
 import java.util.*;
@@ -22,9 +25,10 @@ import java.util.List;
  * <p>
  * GUI 只提交声明式绘制命令；调度器负责 layer、scissor、空间桶、批次规划和 renderer 复用。
  */
-public final class Render2DScheduler implements AutoCloseable {
+public class Render2DScheduler implements AutoCloseable {
 
     public static final int DEFAULT_QUADTREE_THRESHOLD = 192;
+    private static final float MAX_FONT_BLUR_RADIUS = 20.0f;
     private static final int DEFAULT_QUADTREE_MAX_DEPTH = 5;
     private static final Comparator<Render2DCommand> STABLE_SEQUENCE_ORDER = Comparator.comparingLong(Render2DCommand::sequence);
     private static final List<Render2DCommandKind> KIND_FLUSH_ORDER = List.of(
@@ -33,7 +37,10 @@ public final class Render2DScheduler implements AutoCloseable {
             Render2DCommandKind.ROUND_RECT_OUTLINE,
             Render2DCommandKind.RECT,
             Render2DCommandKind.TRIANGLE,
+            Render2DCommandKind.ARC,
             Render2DCommandKind.TEXTURE,
+            Render2DCommandKind.BLUR_TEXT,
+            Render2DCommandKind.GLITCH_TEXT,
             Render2DCommandKind.TEXT
     );
 
@@ -196,7 +203,10 @@ public final class Render2DScheduler implements AutoCloseable {
             case ROUND_RECT_OUTLINE -> LuminRenderPipelines.ROUND_RECT_OUTLINE;
             case RECT -> LuminRenderPipelines.RECTANGLE;
             case TRIANGLE -> LuminRenderPipelines.TRIANGLE;
+            case ARC -> LuminRenderPipelines.ARC;
             case TEXTURE -> LuminRenderPipelines.TEXTURE;
+            case BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR;
+            case GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH;
             case TEXT -> ClientSetting.INSTANCE.fontAntiAliasing.getValue()
                     ? LuminRenderPipelines.TTF_FONT_AA
                     : LuminRenderPipelines.TTF_FONT_NO_AA;
@@ -209,6 +219,12 @@ public final class Render2DScheduler implements AutoCloseable {
                     shadow.bounds().x(), shadow.bounds().y(), shadow.bounds().width(), shadow.bounds().height(),
                     shadow.radiusTopLeft(), shadow.radiusTopRight(), shadow.radiusBottomRight(), shadow.radiusBottomLeft(),
                     shadow.blurRadius(), shadow.color()
+            );
+            case Render2DCommand.SegmentedShadow shadow -> renderers.shadowRenderer().addShadow(
+                    shadow.bounds().x(), shadow.bounds().y(), shadow.bounds().width(), shadow.bounds().height(),
+                    shadow.radiusTopLeft(), shadow.radiusTopRight(), shadow.radiusBottomRight(), shadow.radiusBottomLeft(),
+                    shadow.blurRadius(), shadow.color(),
+                    shadow.segmentRects(), shadow.segmentRadii(), shadow.segmentColors(), shadow.segmentCount()
             );
             case Render2DCommand.RoundRect rect -> renderers.roundRectRenderer().addRoundRectGradient(
                     rect.bounds().x(), rect.bounds().y(), rect.bounds().width(), rect.bounds().height(),
@@ -227,28 +243,39 @@ public final class Render2DScheduler implements AutoCloseable {
             case Render2DCommand.Triangle triangle -> renderers.triangleRenderer().addChevronTriangle(
                     triangle.centerX(), triangle.centerY(), triangle.size(), triangle.progress(), triangle.color()
             );
+            case Render2DCommand.Arc arc -> renderers.arcRenderer().addGradientArc(
+                    arc.centerX(), arc.centerY(), arc.radius(), arc.strokeWidth(),
+                    arc.startDegrees(), arc.sweepDegrees(), arc.roundCap(), arc.gradientRotationDegrees(),
+                    arc.startColor(), arc.middleColor(), arc.endColor()
+            );
             case Render2DCommand.Texture texture -> {
-                if (texture.texture() instanceof Render2DTexture.IdentifierRef ref) {
+                if (texture.texture() instanceof Render2DTexture.IdentifierRef(
+                        Identifier identifier, boolean linearFilter
+                )) {
                     if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(ref.identifier(),
+                        renderers.textureRenderer().addRoundedTexture(identifier,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), ref.linearFilter());
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), linearFilter);
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(ref.identifier(),
+                        renderers.textureRenderer().addRotatedRoundedTexture(identifier,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
-                                texture.originX(), texture.originY(), texture.rotationDegrees(), ref.linearFilter());
+                                texture.originX(), texture.originY(), texture.rotationDegrees(), linearFilter);
                     }
-                } else if (texture.texture() instanceof Render2DTexture.LuminRef ref) {
+                } else if (texture.texture() instanceof Render2DTexture.LuminRef(
+                        LuminTexture luminTexture
+                )) {
                     if (texture.rotationDegrees() == 0.0f) {
-                        renderers.textureRenderer().addRoundedTexture(ref.texture(),
+                        renderers.textureRenderer().addRoundedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
                                 texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
                     } else {
-                        renderers.textureRenderer().addRotatedTexture(ref.texture(),
+                        renderers.textureRenderer().addRotatedRoundedTexture(luminTexture,
                                 texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
                                 texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
                                 texture.originX(), texture.originY(), texture.rotationDegrees());
                     }
@@ -269,6 +296,29 @@ public final class Render2DScheduler implements AutoCloseable {
                     }
                 }
             }
+            case Render2DCommand.GradientText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addGradientText(text.text(), text.x(), text.y(), text.scale(), text.startColor(), text.endColor(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addGradientText(text.text(), text.x(), text.y(), text.scale(), text.startColor(), text.endColor());
+                }
+            }
+            case Render2DCommand.BlurText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addBlurredText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.blurRadius(), text.intensity());
+                }
+            }
+            case Render2DCommand.GlitchText text -> {
+                if (text.fontLoader() != null) {
+                    renderers.textRenderer().addGlitchText(text.text(), text.x(), text.y(), text.scale(),
+                            text.color(), text.effect(), text.fontLoader());
+                } else {
+                    renderers.textRenderer().addGlitchText(text.text(), text.x(), text.y(), text.scale(),
+                            text.color(), text.effect());
+                }
+            }
         }
     }
 
@@ -280,7 +330,7 @@ public final class Render2DScheduler implements AutoCloseable {
         layerHandles.clear();
     }
 
-    public static final class LayerHandle {
+    public static class LayerHandle {
         private final Render2DScheduler scheduler;
         private final int layer;
         private Render2DScissor scissor;
@@ -316,6 +366,36 @@ public final class Render2DScheduler implements AutoCloseable {
             scheduler.add(new Render2DCommand.Shadow(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor,
                     topLeft, topRight, bottomRight, bottomLeft, blurRadius, color));
+        }
+
+        public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
+                    segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
+            addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color,
+                    segmentRects, segmentRadii, segmentColors, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height,
+                              float topLeft, float topRight, float bottomRight, float bottomLeft,
+                              float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, int segmentCount) {
+            addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
+                    segmentRects, segmentRadii, null, segmentCount);
+        }
+
+        public void addShadow(float x, float y, float width, float height,
+                              float topLeft, float topRight, float bottomRight, float bottomLeft,
+                              float blurRadius, Color color,
+                              float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
+            scheduler.add(new Render2DCommand.SegmentedShadow(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x, y, width, height), scissor,
+                    topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
+                    segmentRects, segmentRadii, segmentColors, segmentCount));
         }
 
         public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {
@@ -372,6 +452,23 @@ public final class Render2DScheduler implements AutoCloseable {
                     centerX, centerY, size, progress, color));
         }
 
+        public void addArc(float centerX, float centerY, float radius, float strokeWidth,
+                           float startDegrees, float sweepDegrees, boolean roundCap, Color color) {
+            addGradientArc(centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    0.0f, color, color, color);
+        }
+
+        public void addGradientArc(float centerX, float centerY, float radius, float strokeWidth,
+                                   float startDegrees, float sweepDegrees, boolean roundCap,
+                                   float gradientRotationDegrees,
+                                   Color startColor, Color middleColor, Color endColor) {
+            float extent = radius + strokeWidth * 0.5f + 1.0f;
+            scheduler.add(new Render2DCommand.Arc(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(centerX - extent, centerY - extent, extent * 2.0f, extent * 2.0f), scissor,
+                    centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    gradientRotationDegrees, startColor, middleColor, endColor));
+        }
+
         public void addTexture(Render2DTexture texture, float x, float y, float width, float height,
                                float u0, float v0, float u1, float v1, Color color) {
             addRoundedTexture(texture, x, y, width, height, 0.0f, u0, v0, u1, v1, color);
@@ -385,7 +482,7 @@ public final class Render2DScheduler implements AutoCloseable {
         public void addRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
                                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                                       float u0, float v0, float u1, float v1, Color color) {
-            // Texture command 只保存轻量资源引用；真正的纹理缓存和 GPU 提交由 TextureRenderer 在 flush 时处理。
+            // Texture command 只保存轻量资源引用；纹理解析和 GPU 提交由 TextureRenderer 在 flush 时处理。
             scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor, texture,
                     radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
@@ -395,9 +492,18 @@ public final class Render2DScheduler implements AutoCloseable {
         public void addRotatedTexture(Render2DTexture texture, float x, float y, float width, float height,
                                       float u0, float v0, float u1, float v1, Color color,
                                       float originX, float originY, float rotationDegrees) {
+            addRotatedRoundedTexture(texture, x, y, width, height, 0.0f, 0.0f, 0.0f, 0.0f,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+        }
+
+        public void addRotatedRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                             float radiusTopLeft, float radiusTopRight,
+                                             float radiusBottomRight, float radiusBottomLeft,
+                                             float u0, float v0, float u1, float v1, Color color,
+                                             float originX, float originY, float rotationDegrees) {
             scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor, texture,
-                    0.0f, 0.0f, 0.0f, 0.0f,
+                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     u0, v0, u1, v1, color, originX, originY, rotationDegrees));
         }
 
@@ -407,6 +513,55 @@ public final class Render2DScheduler implements AutoCloseable {
 
         public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
             addText(text, x, y, scale, color, fontLoader, x, y, 0.0f);
+        }
+
+        public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
+            addGradientText(text, x, y, scale, startColor, endColor, null);
+        }
+
+        public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            scheduler.add(new Render2DCommand.GradientText(layer, scheduler.nextSequence(), Render2DBounds.of(x, y, width, height), scissor, text, x, y, scale, startColor, endColor, fontLoader));
+        }
+
+        public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity) {
+            addBlurredText(text, x, y, scale, color, blurRadius, intensity, null);
+        }
+
+        public void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, int intensity, TtfFontLoader fontLoader) {
+            if (!Float.isFinite(blurRadius) || blurRadius <= 0.0f) {
+                return;
+            }
+            float clampedBlur = Math.min(blurRadius, MAX_FONT_BLUR_RADIUS);
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            float padding = clampedBlur + 2.0f;
+            scheduler.add(new Render2DCommand.BlurText(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x - padding, y - padding, width + padding * 2.0f, height + padding * 2.0f),
+                    scissor, text, x, y, scale, color, clampedBlur, intensity, fontLoader));
+        }
+
+        public void addGlitchText(String text, float x, float y, float scale, Color color,
+                                  TextGlitchEffect effect) {
+            addGlitchText(text, x, y, scale, color, effect, null);
+        }
+
+        public void addGlitchText(String text, float x, float y, float scale, Color color,
+                                  TextGlitchEffect effect, TtfFontLoader fontLoader) {
+            if (text.isEmpty() || color.getAlpha() == 0 || effect == null) {
+                return;
+            }
+            TextRenderer metrics = scheduler.textMetrics();
+            float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
+            float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            float padding = effect.requiredPadding();
+            scheduler.add(new Render2DCommand.GlitchText(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x - padding, y - padding,
+                            width + padding * 2.0f, height + padding * 2.0f),
+                    scissor, text, x, y, scale, color, effect, fontLoader));
         }
 
         public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
@@ -889,7 +1044,10 @@ public final class Render2DScheduler implements AutoCloseable {
                 case ROUND_RECT_OUTLINE -> new RendererBundle(kind, RoundRectOutlineRenderer.create());
                 case RECT -> new RendererBundle(kind, RectRenderer.create());
                 case TRIANGLE -> new RendererBundle(kind, TriangleRenderer.create());
+                case ARC -> new RendererBundle(kind, ArcRenderer.create());
                 case TEXTURE -> new RendererBundle(kind, TextureRenderer.create());
+                case BLUR_TEXT -> new RendererBundle(kind, TextRenderer.createFontBlur());
+                case GLITCH_TEXT -> new RendererBundle(kind, TextRenderer.createGlitch());
                 case TEXT -> new RendererBundle(kind, TextRenderer.create());
             };
         }
@@ -922,6 +1080,10 @@ public final class Render2DScheduler implements AutoCloseable {
             return (TriangleRenderer) renderer;
         }
 
+        private ArcRenderer arcRenderer() {
+            return (ArcRenderer) renderer;
+        }
+
         private TextureRenderer textureRenderer() {
             return (TextureRenderer) renderer;
         }
@@ -946,6 +1108,7 @@ public final class Render2DScheduler implements AutoCloseable {
                 case RectRenderer rect -> rect.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TriangleRenderer triangle ->
                         triangle.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case ArcRenderer arc -> arc.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TextureRenderer texture ->
                         texture.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TextRenderer text -> text.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
@@ -961,6 +1124,7 @@ public final class Render2DScheduler implements AutoCloseable {
                 case RoundRectOutlineRenderer outline -> outline.clearScissor();
                 case RectRenderer rect -> rect.clearScissor();
                 case TriangleRenderer triangle -> triangle.clearScissor();
+                case ArcRenderer arc -> arc.clearScissor();
                 case TextureRenderer texture -> texture.clearScissor();
                 case TextRenderer text -> text.clearScissor();
                 default -> {

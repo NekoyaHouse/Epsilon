@@ -23,12 +23,10 @@ Lumin Graphics is a lightweight, high-performance rendering framework designed f
 
 Within a single frame's render loop, avoid calling `Renderer.clear()`
 and then `draw()` again on the same instance after one or more
-`Renderer.draw()` calls have already been executed. Doing so will lead
-to multiple buffer allocations within a single frame, reducing the
-effectiveness of **In-Flight** optimizations.
+`Renderer.draw()` calls have already been executed. Doing so will lead to multiple buffer allocations within a single
+frame, reducing the effectiveness of **In-Flight** optimizations.
 
-If your logic requirements necessitate multiple cycles of clearing and
-drawing within a single frame:
+If your logic requirements necessitate multiple cycles of clearing and drawing within a single frame:
 
 **It is recommended to instantiate a new `Renderer` to handle subsequent tasks.**
 

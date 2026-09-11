@@ -6,13 +6,14 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.UseItemEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.FriendManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.timer.TimerUtils;
+import me.sofurry.ClInitNative;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -21,6 +22,7 @@ import net.minecraft.world.item.BowItem;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+@ClInitNative
 public class AimBot extends Module {
 
     public static final AimBot INSTANCE = new AimBot();
@@ -246,7 +248,7 @@ public class AimBot extends Module {
     private boolean shouldSkipPlayer(Player player) {
         if (player == mc.player || !player.isAlive() || player.isDeadOrDying()) return true;
         if (AntiBot.INSTANCE.isBot(player)) return true;
-        if (Managers.FRIEND.isFriend(player)) return true;
+        if (FriendManager.INSTANCE.isFriend(player)) return true;
         return false;
     }
 

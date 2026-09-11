@@ -27,8 +27,6 @@ public class CrystalChams extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (nullCheck()) return;
-
         boolean batching = false;
 
         for (Entity entity : mc.level.entitiesForRendering()) {

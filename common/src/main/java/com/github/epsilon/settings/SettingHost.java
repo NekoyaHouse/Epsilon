@@ -190,8 +190,7 @@ public interface SettingHost {
         return addSetting(new ButtonSetting(name, func, () -> true));
     }
 
-    default StringListSetting stringListSetting(String name, Collection<String> defaultValue,
-                                                Setting.Dependency dependency) {
+    default StringListSetting stringListSetting(String name, Collection<String> defaultValue, Setting.Dependency dependency) {
         return addSetting(new StringListSetting(name, defaultValue, dependency));
     }
 
@@ -207,4 +206,5 @@ public interface SettingHost {
     default RegistryListSetting<SoundEvent> soundEventListSetting(String name, Collection<SoundEvent> defaultValue) {
         return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, () -> true));
     }
+
 }

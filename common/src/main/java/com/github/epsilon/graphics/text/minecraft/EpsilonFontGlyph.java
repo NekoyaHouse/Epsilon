@@ -17,12 +17,11 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Style;
 import org.joml.Matrix4fc;
-import org.jspecify.annotations.Nullable;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-public final class EpsilonFontGlyph implements BakedGlyph {
+public class EpsilonFontGlyph implements BakedGlyph {
 
     private static final float SHADOW_OFFSET = 0.45f;
     private static final float BOLD_OFFSET = 0.45f;
@@ -30,19 +29,17 @@ public final class EpsilonFontGlyph implements BakedGlyph {
     private static final Map<TtfGlyphAtlas, RenderType> AA_RENDER_TYPES = new IdentityHashMap<>();
     private static final Map<TtfGlyphAtlas, RenderType> NO_AA_RENDER_TYPES = new IdentityHashMap<>();
 
-    private final int codepoint;
     private final TtfFontLoader font;
-    private final @Nullable GlyphDescriptor descriptor;
+    private final GlyphDescriptor descriptor;
     private final GlyphInfo info;
 
-    private EpsilonFontGlyph(int codepoint, TtfFontLoader font, @Nullable GlyphDescriptor descriptor) {
-        this.codepoint = codepoint;
+    private EpsilonFontGlyph(int codepoint, TtfFontLoader font, GlyphDescriptor descriptor) {
         this.font = font;
         this.descriptor = descriptor;
         this.info = new EpsilonGlyphInfo(EpsilonFontMetrics.advance(codepoint, Style.EMPTY, font));
     }
 
-    public static @Nullable EpsilonFontGlyph create(int codepoint) {
+    public static EpsilonFontGlyph create(int codepoint) {
         TtfFontLoader font = EpsilonFontMetrics.font();
         if (font == null) {
             return null;
@@ -66,7 +63,7 @@ public final class EpsilonFontGlyph implements BakedGlyph {
     }
 
     @Override
-    public TextRenderable.@Nullable Styled createGlyph(float x, float y, int color, int shadowColor, Style style, float boldOffset, float shadowOffset) {
+    public TextRenderable.Styled createGlyph(float x, float y, int color, int shadowColor, Style style, float boldOffset, float shadowOffset) {
         if (this.descriptor == null) {
             return null;
         }
@@ -91,7 +88,7 @@ public final class EpsilonFontGlyph implements BakedGlyph {
     }
 
     private float baselineY(float y) {
-        return y + this.font.fontFile.pixelAscent * scale();
+        return y + EpsilonFontMetrics.MINECRAFT_BASELINE;
     }
 
     private float scale() {

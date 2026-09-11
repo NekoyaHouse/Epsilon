@@ -31,14 +31,7 @@ dependencies {
     compileOnly(libs.mixinextras.common)
     annotationProcessor(libs.mixinextras.common)
     compileOnly(libs.asm)
-    compileOnly(libs.jsr305)
-    testImplementation(libs.gson)
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform.launcher)
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
+    compileOnly("org.bytedeco:javacv-platform:1.5.11")
 }
 
 configurations {

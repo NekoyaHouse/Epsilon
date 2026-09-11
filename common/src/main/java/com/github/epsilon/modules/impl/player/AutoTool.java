@@ -1,22 +1,27 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.bus.EventPriority;
+import com.github.epsilon.events.impl.AfterSendPositionEvent;
+import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
+import com.github.epsilon.utils.player.InvHelper;
+import me.sofurry.ClInitNative;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.block.AirBlock;
-import net.minecraft.world.level.block.EnderChestBlock;
-import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.RedStoneOreBlock;
+import net.minecraft.world.level.block.WebBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@ClInitNative
 public class AutoTool extends Module {
 
     public static final AutoTool INSTANCE = new AutoTool();
@@ -26,76 +31,80 @@ public class AutoTool extends Module {
     }
 
     private final BoolSetting swapBack = boolSetting("Swap Back", true);
-    private final BoolSetting saveItem = boolSetting("Save Item", true);
-    private final BoolSetting silent = boolSetting("Silent", false);
-    private final BoolSetting echestSilk = boolSetting("Ender Chest Silk Touch", true);
+    private final IntSetting swapBackDelay = intSetting("Swap Back Delay", 0, 0, 15, 1, swapBack::getValue);
 
-    public static int itemIndex;
-    private boolean swap;
-    private long swapDelay;
-    private final List<Integer> lastItem = new ArrayList<>();
+    private int oldSlot = -1;
+    private int lastDestroyTick = -1;
+
+    @Override
+    protected void onDisable() {
+        if (oldSlot != -1) {
+            mc.player.getInventory().setSelectedSlot(oldSlot);
+        }
+        oldSlot = -1;
+        lastDestroyTick = -1;
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void onStartDestroyBlock(StartDestroyBlockEvent event) {
+        lastDestroyTick = mc.player.tickCount;
+        int bestTool = getBestTool(event.getBlockPos());
+        int selectedSlot = mc.player.getInventory().getSelectedSlot();
+        if (bestTool == -1 || bestTool == selectedSlot) return;
+        if (swapBack.getValue()) {
+            if (oldSlot == -1) oldSlot = selectedSlot;
+        } else {
+            oldSlot = -1;
+        }
+        mc.player.getInventory().setSelectedSlot(bestTool);
+        mc.gameMode.ensureHasSentCarriedItem();
+    }
 
     @EventHandler
-    public void onClientTick(PlayerTickEvent.Pre event) {
-        if (!(mc.hitResult instanceof BlockHitResult result)) return;
+    private void onAfterSendPosition(AfterSendPositionEvent event) {
+        if (oldSlot == -1) return;
 
-        BlockPos pos = result.getBlockPos();
-        if (mc.level.getBlockState(pos).isAir()) {
+        if (mc.gameMode.isDestroying() || BedNuker.INSTANCE.isBreakingTarget()) {
+            lastDestroyTick = mc.player.tickCount;
             return;
         }
 
-        if (getTool(pos) != -1 && mc.options.keyAttack.isDown()) {
-            lastItem.add(mc.player.getInventory().getSelectedSlot());
-
-            if (silent.getValue()) {
-                mc.getConnection().send(new ServerboundSetCarriedItemPacket(getTool(pos)));
-            } else {
-                mc.player.getInventory().setSelectedSlot(getTool(pos));
-            }
-
-            itemIndex = getTool(pos);
-            swap = true;
-
-            swapDelay = System.currentTimeMillis();
-        } else if (swap && !lastItem.isEmpty() && System.currentTimeMillis() >= swapDelay + 300 && swapBack.getValue()) {
-            if (silent.getValue()) {
-                mc.getConnection().send(new ServerboundSetCarriedItemPacket(lastItem.get(0)));
-            } else {
-                mc.player.getInventory().setSelectedSlot(lastItem.get(0));
-            }
-
-            itemIndex = lastItem.get(0);
-            lastItem.clear();
-            swap = false;
+        if (mc.player.tickCount - lastDestroyTick >= swapBackDelay.getValue()) {
+            mc.player.getInventory().setSelectedSlot(oldSlot);
+            oldSlot = -1;
         }
     }
 
-    public int getTool(final BlockPos pos) {
-        int index = -1;
-        float CurrentFastest = 1.0f;
-        for (int i = 0; i < 9; ++i) {
-            final ItemStack stack = mc.player.getInventory().getItem(i);
-            if (stack != ItemStack.EMPTY) {
-                if (!(mc.player.getInventory().getItem(i).getMaxDamage() - mc.player.getInventory().getItem(i).getDamageValue() > 10) && saveItem.getValue()) {
-                    continue;
+    public int getBestTool(BlockPos pos) {
+        BlockState blockState = mc.level.getBlockState(pos);
+        Block block = blockState.getBlock();
+        int slot = 0;
+        float dmg = 1.0F;
+
+        for (int index = 0; index < 9; index++) {
+            ItemStack itemStack = mc.player.getInventory().getItem(index);
+            if (
+                    !InvHelper.isGodItem(itemStack)
+                            && !itemStack.isEmpty()
+                            && !blockState.isAir()
+                            && (!(itemStack.is(ItemTags.SWORDS)) || block instanceof WebBlock)
+            ) {
+                float strVsBlock = itemStack.getItem().getDestroySpeed(itemStack, blockState);
+                if (strVsBlock > 1.0F && !(block instanceof DropExperienceBlock) && !(block instanceof RedStoneOreBlock)) {
+                    int i = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY);
+                    if (i > 0) {
+                        strVsBlock += (float) (i * i + 1);
+                    }
                 }
 
-                float digSpeed = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.EFFICIENCY);
-                float destroySpeed = stack.getDestroySpeed(mc.level.getBlockState(pos));
-
-                if (mc.level.getBlockState(pos).getBlock() instanceof AirBlock) return -1;
-                if (mc.level.getBlockState(pos).getBlock() instanceof EnderChestBlock && echestSilk.getValue()) {
-                    if (EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.SILK_TOUCH) > 0 && digSpeed + destroySpeed > CurrentFastest) {
-                        CurrentFastest = digSpeed + destroySpeed;
-                        index = i;
-                    }
-                } else if (digSpeed + destroySpeed > CurrentFastest) {
-                    CurrentFastest = digSpeed + destroySpeed;
-                    index = i;
+                if (strVsBlock > dmg) {
+                    slot = index;
+                    dmg = strVsBlock;
                 }
             }
         }
-        return index;
+
+        return dmg > 1.0F ? slot : -1;
     }
 
 }

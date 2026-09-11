@@ -25,6 +25,7 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,7 +44,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class DropdownScreen extends Screen {
+@ClInitNative
+public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     public static final DropdownScreen INSTANCE = new DropdownScreen();
 
@@ -54,6 +56,7 @@ public class DropdownScreen extends Screen {
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
+    private final ReisaDropdownCompanion reisaCompanion = new ReisaDropdownCompanion();
     private final Set<String> visiblePanelIds = new HashSet<>();
 
     private LuminRenderSystem.LuminRenderTarget renderTarget;
@@ -73,6 +76,9 @@ public class DropdownScreen extends Screen {
     protected void init() {
         super.init();
         sessionId++;
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+        }
         scrimAnim.setStartValue(0.0f);
         scrimAnim.run(0.0f);
         scrimAnim.run(1.0f);
@@ -147,6 +153,20 @@ public class DropdownScreen extends Screen {
             }
         }
 
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+            beginDropdownLayer();
+            reisaCompanion.draw(
+                    dropdownScope,
+                    LuminRenderSystem.getScaledWidth(),
+                    LuminRenderSystem.getScaledHeight(),
+                    mouseX,
+                    mouseY,
+                    popupHovered || topmostHovered != null
+            );
+            flushDropdownLayer();
+        }
+
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             float intro = panel.getIntroValue();
@@ -210,7 +230,13 @@ public class DropdownScreen extends Screen {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
                     EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
             };
-            float xRight = LuminRenderSystem.getScaledWidth() - DropdownTheme.PANEL_MARGIN_X;
+            float screenWidth = LuminRenderSystem.getScaledWidth();
+            float xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X;
+            if (isReisaCompanionEnabled()) {
+                float companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight());
+                xRight = Math.min(xRight, companionLeft - 8.0f);
+            }
+            xRight = Math.max(getSearchX() + getSearchWidth(), xRight);
             float y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y - hints.length * lineHeight - (hints.length - 1) * lineGap;
             int alpha = (int) (255 * scrimAnim.getValue());
             if (alpha <= 0) {
@@ -270,10 +296,20 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
+            react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 
+        if (button == 0) {
+            for (DropdownPanel panel : panels) {
+                if (panel.isVisible()) {
+                    panel.onGlobalMouseClicked(mx, my, button);
+                }
+            }
+        }
+
         if (button == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
+            react(ReisaDropdownCompanion.Action.TYPING);
             return true;
         } else if (button == 0 && searchField.isFocused()) {
             searchField.blur();
@@ -282,12 +318,16 @@ public class DropdownScreen extends Screen {
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
+            long reactionRevision = reisaCompanion.getReactionRevision();
             if (panel.mouseClicked(mx, my, button)) {
                 if (i < panels.size() - 1) {
                     panels.remove(i);
                     panels.add(panel);
                 }
                 DropdownLayoutState.save(panels);
+                if (reactionRevision == reisaCompanion.getReactionRevision()) {
+                    reactMouseButton(button);
+                }
                 return true;
             }
         }
@@ -302,6 +342,7 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseReleased(epsilonEvent)) {
+            react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 
@@ -309,6 +350,7 @@ public class DropdownScreen extends Screen {
             if (!panel.isVisible()) continue;
             if (panel.mouseReleased(mx, my, button)) {
                 DropdownLayoutState.save(panels);
+                react(ReisaDropdownCompanion.Action.CONFIRM);
                 return true;
             }
         }
@@ -321,6 +363,7 @@ public class DropdownScreen extends Screen {
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
+            react(ReisaDropdownCompanion.Action.DRAG);
             return true;
         }
         boolean handled = false;
@@ -332,6 +375,7 @@ public class DropdownScreen extends Screen {
         }
         if (handled) {
             DropdownLayoutState.save(panels);
+            react(ReisaDropdownCompanion.Action.DRAG);
             return true;
         }
         return super.mouseDragged(epsilonEvent, LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
@@ -342,12 +386,14 @@ public class DropdownScreen extends Screen {
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
+            reactScroll(scrollY);
             return true;
         }
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
             if (panel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
+                reactScroll(scrollY);
                 return true;
             }
         }
@@ -357,19 +403,23 @@ public class DropdownScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (popupHost.keyPressed(event)) {
+            react(event.isEscape() ? ReisaDropdownCompanion.Action.CANCEL : ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         if (event.key() == GLFW.GLFW_KEY_F && InputConstants.isKeyDown(minecraft.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)) {
             searchField.focus();
+            react(ReisaDropdownCompanion.Action.TYPING);
             return true;
         }
         if (searchField.isFocused()) {
             if (event.isEscape()) {
                 searchField.blur();
+                react(ReisaDropdownCompanion.Action.CANCEL);
                 return true;
             }
             if (searchField.keyPressed(event)) {
                 syncSearchQuery();
+                react(ReisaDropdownCompanion.Action.TYPING);
                 return true;
             }
         }
@@ -380,6 +430,7 @@ public class DropdownScreen extends Screen {
             for (DropdownPanel panel : panels) {
                 if (!panel.isVisible()) continue;
                 if (panel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
+                    react(event.isEscape() ? ReisaDropdownCompanion.Action.CANCEL : ReisaDropdownCompanion.Action.CONFIRM);
                     return true;
                 }
             }
@@ -393,6 +444,7 @@ public class DropdownScreen extends Screen {
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             if (panel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
+                react(event.isEscape() ? ReisaDropdownCompanion.Action.CANCEL : ReisaDropdownCompanion.Action.CONFIRM);
                 return true;
             }
         }
@@ -402,16 +454,19 @@ public class DropdownScreen extends Screen {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (popupHost.charTyped(event)) {
+            react(ReisaDropdownCompanion.Action.TYPING);
             return true;
         }
         if (searchField.charTyped(event)) {
             syncSearchQuery();
+            react(ReisaDropdownCompanion.Action.TYPING);
             return true;
         }
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             String typed = event.codepointAsString();
             if (!typed.isEmpty() && panel.charTyped(typed)) {
+                react(ReisaDropdownCompanion.Action.TYPING);
                 return true;
             }
         }
@@ -435,6 +490,8 @@ public class DropdownScreen extends Screen {
     public void removed() {
         super.removed();
         popupHost.close();
+        searchField.clear();
+        syncSearchQuery();
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
@@ -484,6 +541,7 @@ public class DropdownScreen extends Screen {
                 }
             }
             DropdownLayoutState.save(panels);
+            react(ReisaDropdownCompanion.Action.PANEL_CLOSE);
             return;
         }
 
@@ -492,6 +550,9 @@ public class DropdownScreen extends Screen {
                 panel.setVisible(!panel.isVisible());
                 panel.setOpened(false);
                 DropdownLayoutState.save(panels);
+                react(panel.isVisible()
+                        ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                        : ReisaDropdownCompanion.Action.PANEL_CLOSE);
                 return;
             }
         }
@@ -569,20 +630,47 @@ public class DropdownScreen extends Screen {
         return sessionId;
     }
 
+    public void react(ReisaDropdownCompanion.Action action) {
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+            reisaCompanion.react(action);
+        }
+    }
+
+    private boolean isReisaCompanionEnabled() {
+        return ClientSetting.INSTANCE.showReisaInDropdown.getValue();
+    }
+
+    @Override
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(RegistryListSelectPopup.create(bounds, setting));
+        react(ReisaDropdownCompanion.Action.PANEL_OPEN);
     }
 
+    @Override
     public void openStringListSettingPopup(StringListSetting setting) {
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
+        react(ReisaDropdownCompanion.Action.PANEL_OPEN);
+    }
+
+    private void reactMouseButton(int button) {
+        react(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT
+                ? ReisaDropdownCompanion.Action.SECONDARY_CLICK
+                : ReisaDropdownCompanion.Action.PRIMARY_CLICK);
+    }
+
+    private void reactScroll(double scrollY) {
+        react(scrollY >= 0.0
+                ? ReisaDropdownCompanion.Action.SCROLL_UP
+                : ReisaDropdownCompanion.Action.SCROLL_DOWN);
     }
 
 }

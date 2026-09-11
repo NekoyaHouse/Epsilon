@@ -6,13 +6,15 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.HealthManager;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -28,21 +30,28 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+@ClInitNative
 public class TargetHUD extends HudModule {
 
     public static final TargetHUD INSTANCE = new TargetHUD();
+
+    private enum Style {
+        Modern,
+        Akrien
+    }
 
     private TargetHUD() {
         super("Target HUD", 0f, 0f, 180f, 80f);
     }
 
+    private final EnumSetting<Style> style = enumSetting("Style", Style.Modern);
     private final DoubleSetting scale = doubleSetting("Scale", 0.9, 0.5, 2.0, 0.1);
     private final DoubleSetting width = doubleSetting("Width", 150.0, 100.0, 300.0, 1.0);
     private final DoubleSetting height = doubleSetting("Height", 52.0, 30.0, 100.0, 1.0);
     private final DoubleSetting radius = doubleSetting("Radius", 5.0, 0.0, 20.0, 1.0);
     private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0);
-    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 3.0, 2.0, 20.0, 1.0);
-    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 1.2, 0.0, 15.0, 1.0);
+    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 5.0, 2.0, 20.0, 1.0);
+    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 2.0, 0.0, 15.0, 1.0);
     private final DoubleSetting nameSize = doubleSetting("Name Size", 10.5, 8.0, 18.0, 0.5);
     private final BoolSetting delayBar = boolSetting("Delay Bar", true);
     private final BoolSetting delayWait = boolSetting("Delay Wait", true, delayBar::getValue);
@@ -50,18 +59,20 @@ public class TargetHUD extends HudModule {
     private final DoubleSetting delaySpeed = doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, delayBar::getValue);
     private final BoolSetting barOutline = boolSetting("Bar Outline", true);
     private final DoubleSetting barOutlineWidth = doubleSetting("Bar Outline Width", 1.0, 0.5, 5.0, 0.5, barOutline::getValue);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 50));
     private final ColorSetting barBackgroundColor = colorSetting("Bar Background Color", new Color(255, 255, 255, 55));
     private final ColorSetting barFillColor = colorSetting("Bar Fill Color", new Color(255, 236, 248, 235));
     private final ColorSetting delayBarColor = colorSetting("Delay Bar Color", new Color(190, 190, 190, 100), delayBar::getValue);
     private final ColorSetting barOutlineColor = colorSetting("Bar Outline Color", new Color(255, 255, 255, 85), barOutline::getValue);
     private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 110), drawShadow::getValue);
 
     private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
     private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;
+    private static final float AKRIEN_HEAD_SIZE = 28.0f;
+    private static final float AKRIEN_HEAD_DAMAGE_SCALE_FACTOR = 0.08f;
     private static final float EQUIPMENT_ITEM_SCALE = 0.85f;
 
     private int lastTargetId = Integer.MIN_VALUE;
@@ -78,6 +89,11 @@ public class TargetHUD extends HudModule {
 
     @Override
     public void render(DeltaTracker deltaTracker) {
+        if (style.is(Style.Akrien)) {
+            renderAkrien(deltaTracker);
+            return;
+        }
+
         float panelScale = scale.getValue().floatValue();
         float panelWidth = width.getValue().floatValue() * panelScale;
         float panelHeight = height.getValue().floatValue() * panelScale;
@@ -92,10 +108,10 @@ public class TargetHUD extends HudModule {
         UiTree.Scope scope = renderScope();
 
         LivingEntity liveTarget = resolveTarget();
-        float maxHealth = lastKnownMaxHealth;
+        float maxHealth;
         float healthPercent;
         if (liveTarget == target) {
-            float health = Managers.HEALTH.getHealth(target);
+            float health = HealthManager.INSTANCE.getHealth(target);
             maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
             lastKnownMaxHealth = maxHealth;
             healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime);
@@ -211,6 +227,10 @@ public class TargetHUD extends HudModule {
 
     @Override
     public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        if (style.is(Style.Akrien)) {
+            return;
+        }
+
         float panelScale = scale.getValue().floatValue();
         LivingEntity target = renderedTarget;
         if (target == null || visibilityProgress <= 0.01f) return;
@@ -269,6 +289,110 @@ public class TargetHUD extends HudModule {
     private void appendEquipmentItem(List<ItemStack> items, ItemStack stack) {
         if (!stack.isEmpty()) {
             items.add(stack);
+        }
+    }
+
+    /**
+     * Akrien's compact HUD: a square-cornered panel, two thin status bars,
+     * and the target's head/name/health/distance arranged like the original.
+     */
+    private void renderAkrien(DeltaTracker deltaTracker) {
+        float panelScale = scale.getValue().floatValue();
+        float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
+        LivingEntity target = updateRenderedTarget(resolveTarget());
+        float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
+        if (target == null || animationScale <= 0.01f) {
+            setBounds(110.0f * panelScale, 39.0f * panelScale);
+            return;
+        }
+
+        float maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
+        float health = HealthManager.INSTANCE.getHealth(target);
+        float healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime);
+        float armorPercent = Mth.clamp(target.getArmorValue() / 20.0f, 0.0f, 1.0f);
+        float damageProgress = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f));
+        float headScale = 1.0f - damageProgress * AKRIEN_HEAD_DAMAGE_SCALE_FACTOR;
+
+        TextRenderer textRenderer = textRendererSupplier.get();
+        float nameScale = Math.max(0.45f, nameSize.getValue().floatValue() / 14.0f) * panelScale;
+        float bodyScale = Math.max(0.4f, nameScale * 0.78f);
+        String name = target.getName().getString();
+        String healthText = String.format(Locale.ROOT, "Health: %.1f", health);
+        float distance = mc.player == null ? 0.0f : mc.player.distanceTo(target);
+        String distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance);
+        float textWidth = Math.max(
+                textRenderer.getWidth(name, nameScale),
+                Math.max(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale))
+        );
+        float panelWidth = Math.max(110.0f * panelScale, textWidth + 40.0f * panelScale);
+        float panelHeight = 39.0f * panelScale;
+        setBounds(panelWidth, panelHeight);
+
+        float centerX = this.x + panelWidth / 2.0f;
+        float centerY = this.y + panelHeight / 2.0f;
+        float panelX = Mth.lerp(animationScale, centerX, this.x);
+        float panelY = Mth.lerp(animationScale, centerY, this.y);
+        float scaledWidth = panelWidth * animationScale;
+        float scaledHeight = panelHeight * animationScale;
+        float scaled = panelScale * animationScale;
+        float pad = 2.5f * scaled;
+        float barWidth = Math.max(1.0f, scaledWidth - 4.5f * scaled);
+        float healthWidth = Math.max(0.0f, barWidth * healthPercent);
+        float armorWidth = Math.max(0.0f, barWidth * armorPercent);
+        Color background = withAlpha(new Color(8, 8, 8, 225), 0.62f * animationScale);
+        Color track = withAlpha(new Color(0, 0, 0, 205), animationScale);
+        Color border = withAlpha(new Color(0, 0, 0, 235), animationScale);
+        Color shadow = withAlpha(Color.BLACK, 0.68f * animationScale);
+        UiTree.Scope scope = renderScope();
+
+        BlurShader.INSTANCE.render(panelX, panelY, scaledWidth, scaledHeight, 0.0f, blurStrength.getValue().floatValue());
+        float shadowBlur = Math.max(6.0f, blurStrength.getValue().floatValue() * 1.35f) * animationScale;
+        scope.shadow(panelX, panelY, scaledWidth, scaledHeight, 0.0f,
+                shadowBlur, shadow);
+        scope.rect(panelX, panelY, scaledWidth, scaledHeight, background);
+        scope.rect(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, track);
+        scope.rect(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, track);
+        if (healthWidth > 0.0f) {
+            scope.rectHorizontalGradient(panelX + pad, panelY + 31.0f * scaled, healthWidth, 2.5f * scaled,
+                    withAlpha(new Color(0, 156, 65), animationScale),
+                    withAlpha(new Color(142, 255, 193), animationScale));
+        }
+        if (armorWidth > 0.0f) {
+            scope.rectHorizontalGradient(panelX + pad, panelY + 34.5f * scaled, armorWidth, 2.5f * scaled,
+                    withAlpha(new Color(0, 103, 176), animationScale),
+                    withAlpha(new Color(57, 213, 255), animationScale));
+        }
+        scope.rectOutline(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border);
+        scope.rectOutline(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border);
+
+        float headSize = AKRIEN_HEAD_SIZE * scaled * headScale;
+        float headX = panelX + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f;
+        float headY = panelY + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f;
+        Color headColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale);
+        if (target instanceof AbstractClientPlayer player) {
+            AbstractTexture texture = mc.getTextureManager().getTexture(player.getSkin().body().texturePath());
+            scope.playerHead(new LuminTexture(texture.getTexture(), texture.getTextureView(), texture.getSampler()),
+                    headX, headY, headSize, 0.0f, headColor);
+        } else {
+            scope.rect(panelX + 3.0f * scaled, panelY + 3.0f * scaled, 25.0f * scaled, 25.0f * scaled,
+                    withAlpha(new Color(35, 35, 35, 220), animationScale));
+            float questionScale = Math.max(0.72f * panelScale, nameScale * 1.45f) * animationScale;
+            float questionWidth = textRenderer.getWidth("?", questionScale);
+            float questionHeight = textRenderer.getHeight(questionScale);
+            float questionX = panelX + 3.0f * scaled + (25.0f * scaled - questionWidth) / 2.0f;
+            float questionY = panelY + 3.0f * scaled + (25.0f * scaled - questionHeight) / 2.0f;
+            scope.text("?", questionX, questionY, questionScale,
+                    withAlpha(new Color(255, 255, 255, 245), animationScale));
+        }
+
+        if (animationScale > 0.01f) {
+            float textX = panelX + 31.0f * scaled;
+            float textY = panelY + 2.0f * scaled;
+            scope.text(name, textX, textY, nameScale, withAlpha(new Color(255, 255, 255, 250), animationScale));
+            scope.text(healthText, textX, panelY + 13.0f * scaled, bodyScale,
+                    withAlpha(new Color(228, 228, 228, 238), animationScale));
+            scope.text(distanceText, textX, panelY + 22.0f * scaled, bodyScale,
+                    withAlpha(new Color(175, 175, 175, 225), animationScale));
         }
     }
 

@@ -10,9 +10,9 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -188,7 +188,7 @@ public class CategoryRailPanel {
         }
         if (getMenuButtonBounds().contains(event.x(), event.y())) {
             state.toggleSidebarExpanded();
-            Managers.SOUND.playInUi(state.isSidebarExpanded() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(state.isSidebarExpanded() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             return true;
         }
 
@@ -265,7 +265,7 @@ public class CategoryRailPanel {
         float iconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
         float labelHeight = textRenderer.getHeight(itemLabelScale);
         float countHeight = textRenderer.getHeight(itemCountScale);
-        float iconY = (itemRect.height() - iconHeight) / 2.0f - 2.0f;
+        float iconY = (itemRect.height() - iconHeight) / 2.0f;
         float labelY = (itemRect.height() - labelHeight) / 2.0f;
         float countY = (itemRect.height() - countHeight) / 2.0f;
 
@@ -297,7 +297,7 @@ public class CategoryRailPanel {
             float settingsIconWidth = textRenderer.getWidth(SETTINGS_ICON, itemIconScale, StaticFontLoader.ICONS);
             float settingsIconX = getRailIconCenterX(menuButton) - settingsRect.x() - settingsIconWidth / 2.0f;
             float settingsIconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
-            float settingsIconY = (settingsRect.height() - settingsIconHeight) / 2.0f - 2.0f;
+            float settingsIconY = (settingsRect.height() - settingsIconHeight) / 2.0f;
             settings.text(SETTINGS_ICON, settingsIconX, settingsIconY, itemIconScale, settingsIconColor, StaticFontLoader.ICONS);
             if (contentProgress > 0.02f) {
                 float textOffset = (1.0f - contentProgress) * 5.0f;
@@ -314,7 +314,7 @@ public class CategoryRailPanel {
     }
 
     private int getCategoryCount(Category category) {
-        return (int) ModuleHolder.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).count();
+        return (int) ModuleManager.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).count();
     }
 
 }

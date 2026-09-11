@@ -21,10 +21,6 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-/*
- * Author Moli
- */
-
 public class TriggerBot extends Module {
 
     public static final TriggerBot INSTANCE = new TriggerBot();

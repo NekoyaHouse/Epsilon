@@ -9,7 +9,7 @@ public class JumpEvent {
     }
 
     public float getYaw() {
-        return this.yaw;
+        return yaw;
     }
 
     public void setYaw(float yaw) {

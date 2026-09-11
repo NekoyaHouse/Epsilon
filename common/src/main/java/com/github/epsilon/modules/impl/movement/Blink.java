@@ -8,8 +8,9 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.utils.network.PacketUtils;
+import com.github.epsilon.utils.network.NetworkUtils;
 import com.mojang.authlib.GameProfile;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.network.protocol.Packet;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+@ClInitNative
 public class Blink extends Module {
 
     public static final Blink INSTANCE = new Blink();
@@ -111,7 +113,7 @@ public class Blink extends Module {
     private void releaseTick() {
         while (!this.packets.isEmpty()) {
             Packet<?> poll = this.packets.poll();
-            PacketUtils.sendSilently(poll);
+            NetworkUtils.sendPacketNoEvent(poll);
             if (poll instanceof ServerboundMovePlayerPacket) {
                 handlePlayerMove((ServerboundMovePlayerPacket) poll);
                 break;
@@ -122,7 +124,7 @@ public class Blink extends Module {
     private void releaseAll() {
         if (!packets.isEmpty()) {
             for (Packet packet : packets) {
-                PacketUtils.sendSilently(packet);
+                NetworkUtils.sendPacketNoEvent(packet);
                 if (packet instanceof ServerboundMovePlayerPacket serverboundMovePlayerPacket) {
                     handlePlayerMove(serverboundMovePlayerPacket);
                 }

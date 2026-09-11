@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor;
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTheme;
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * 将 {@link UiTree} 编译为 {@link Render2DScheduler} 命令。
  */
-public final class LuminUiRenderer {
+public class LuminUiRenderer {
 
     private LuminUiRenderer() {
     }
@@ -86,6 +87,15 @@ public final class LuminUiRenderer {
             layer.addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color);
             return;
         }
+        if (node instanceof UiTree.SegmentedShadowNode(
+                float x, float y, float width, float height, float topLeft, float topRight, float bottomRight,
+                float bottomLeft, float blurRadius, Color color,
+                float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount
+        )) {
+            layer.addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
+                    segmentRects, segmentRadii, segmentColors, segmentCount);
+            return;
+        }
         if (node instanceof UiTree.RoundRectNode(
                 float x, float y, float width, float height, float radiusTopLeft, float radiusTopRight,
                 float radiusBottomRight, float radiusBottomLeft, Color color
@@ -133,6 +143,27 @@ public final class LuminUiRenderer {
             layer.addText(text, x, y, scale, color, fontLoader);
             return;
         }
+        if (node instanceof UiTree.GradientTextNode(
+                String text, float x, float y, float scale, Color startColor, Color endColor,
+                TtfFontLoader fontLoader
+        )) {
+            layer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
+            return;
+        }
+        if (node instanceof UiTree.BlurTextNode(
+                String text, float x, float y, float scale, Color color, float blurRadius, int intensity,
+                TtfFontLoader fontLoader
+        )) {
+            layer.addBlurredText(text, x, y, scale, color, blurRadius, intensity, fontLoader);
+            return;
+        }
+        if (node instanceof UiTree.GlitchTextNode(
+                String text, float x, float y, float scale, Color color, TextGlitchEffect effect,
+                TtfFontLoader fontLoader
+        )) {
+            layer.addGlitchText(text, x, y, scale, color, effect, fontLoader);
+            return;
+        }
         if (node instanceof UiTree.RotatedTextNode(
                 String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX,
                 float originY, float rotationDegrees
@@ -161,10 +192,13 @@ public final class LuminUiRenderer {
         }
         if (node instanceof UiTree.RotatedTextureNode(
                 var texture, float x, float y, float width, float height,
+                float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                 float u0, float v0, float u1, float v1, Color color,
                 float originX, float originY, float rotationDegrees
         )) {
-            layer.addRotatedTexture(texture, x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+            layer.addRotatedRoundedTexture(texture, x, y, width, height,
+                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees);
             return;
         }
         if (node instanceof UiTree.ButtonNode(
@@ -244,6 +278,15 @@ public final class LuminUiRenderer {
                 float centerX, float centerY, float size, float progress, Color color
         )) {
             layer.addChevronTriangle(centerX, centerY, size, progress, color);
+            return;
+        }
+        if (node instanceof UiTree.ArcNode(
+                float centerX, float centerY, float radius, float strokeWidth,
+                float startDegrees, float sweepDegrees, boolean roundCap, float gradientRotationDegrees,
+                Color startColor, Color middleColor, Color endColor
+        )) {
+            layer.addGradientArc(centerX, centerY, radius, strokeWidth, startDegrees, sweepDegrees, roundCap,
+                    gradientRotationDegrees, startColor, middleColor, endColor);
             return;
         }
         if (node instanceof UiTree.ViewportNode(
@@ -391,22 +434,24 @@ public final class LuminUiRenderer {
         }
 
         String text = element.text();
-        if (text != null && !text.isEmpty()) {
+        if (text != null) {
             float textX = bounds.x() + element.textInset();
             float textY = bounds.y() + (bounds.height() - metrics.getHeight(element.textScale())) / 2.0f;
 
-            UiTree.SelectionRange selection = element.selection();
-            if (selection != null && element.selectionColor() != null) {
-                int start = Math.clamp(selection.start(), 0, text.length());
-                int end = Math.clamp(selection.end(), start, text.length());
-                if (end > start) {
-                    float selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale());
-                    float selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale());
-                    layer.addRect(selectionX, bounds.y() + 3.0f, selectionWidth, bounds.height() - 6.0f, element.selectionColor());
+            if (!text.isEmpty()) {
+                UiTree.SelectionRange selection = element.selection();
+                if (selection != null && element.selectionColor() != null) {
+                    int start = Math.clamp(selection.start(), 0, text.length());
+                    int end = Math.clamp(selection.end(), start, text.length());
+                    if (end > start) {
+                        float selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale());
+                        float selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale());
+                        layer.addRect(selectionX, bounds.y() + 3.0f, selectionWidth, bounds.height() - 6.0f, element.selectionColor());
+                    }
                 }
-            }
 
-            layer.addText(text, textX, textY, element.textScale(), element.textColor());
+                layer.addText(text, textX, textY, element.textScale(), element.textColor());
+            }
 
             if (element.caretIndex() != null && element.caretColor() != null) {
                 int caretIndex = Math.clamp(element.caretIndex(), 0, text.length());

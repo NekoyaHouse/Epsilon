@@ -11,7 +11,7 @@ import java.util.*;
  * <p>
  * 上层只提交 {@link UiTree}，本类负责把树写入共享的 layer/scheduler 管线，并维护局部视图触碰过的 layer。
  */
-public final class UiRenderBatch implements AutoCloseable {
+public class UiRenderBatch implements AutoCloseable {
 
     private final Render2DScheduler scheduler;
     private final boolean ownsScheduler;

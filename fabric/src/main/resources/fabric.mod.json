@@ -3,30 +3,26 @@
   "id": "${mod_id}",
   "version": "${version}",
   "name": "Epsilon",
-  "description": "",
+  "description": "The client developed by Jurassic Old Man.",
   "authors": [
     "Chen_Meng",
     "06789"
   ],
   "entrypoints": {
-    "client": [
-      "com.github.epsilon.fabric.EpsilonFabric"
-    ],
     "epsilon:addon": [
       "com.github.epsilon.fabric.addon.FabricSelfAddonEntrypoint"
     ]
   },
   "license": "GPL-3.0-only",
-  "environment": "client",
   "mixins": [
-      "${mod_id}.mixins.json",
-      "${mod_id}.fabric.mixins.json"
+    "${mod_id}.mixins.json",
+    "${mod_id}.fabric.mixins.json"
   ],
   "accessWidener": "${mod_id}.accesswidener",
   "depends": {
-      "fabricloader": ">=${fabric_loader_version}",
-      "fabric-api": "*",
-      "minecraft": "${fabric_minecraft_version_range}",
-      "java": ">=${java_version}"
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=${java_version}"
   }
 }

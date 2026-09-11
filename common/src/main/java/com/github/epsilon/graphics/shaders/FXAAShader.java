@@ -1,16 +1,15 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -44,8 +43,8 @@ public class FXAAShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/fxaa"))
                     .withVertexShader(vertexShader)
                     .withFragmentShader(fragmentShader)
-                    .withBindGroupLayout(BindGroupLayout.builder().withUniform("FxaaInfo", UniformType.UNIFORM_BUFFER).build())
-                    .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
+                    .withBindGroupLayout(LuminBindGroupLayouts.FXAA_INFO)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                     .withCull(false)
                     .build();
         }

@@ -1,30 +1,47 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.EventPriority;
+import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.combat.KillAura;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
+import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@ClInitNative
 public class InvManager extends Module {
 
     public static final InvManager INSTANCE = new InvManager();
+
+    private InvManager() {
+        super("Inv Manager", Category.PLAYER);
+    }
+
+    private enum Mode {
+        Inventory,
+        Silent
+    }
 
     private enum OffhandItemMode {
         None,
@@ -40,15 +57,25 @@ public class InvManager extends Module {
         PunchBow
     }
 
-    private final IntSetting minDelay = intSetting("Min Delay", 50, 0, 1000, 50);
-    private final IntSetting delay = intSetting("Delay", 50, 0, 1000, 50);
-    private final EnumSetting<OffhandItemMode> offhandItems = enumSetting("Offhand Items", OffhandItemMode.None);
+    private enum ActionState {
+        IDLE,
+        WAITING_FOR_SPRINT_STOP,
+        READY_TO_EXECUTE,
+        WAITING_FOR_INVENTORY_CLOSE
+    }
+
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Silent);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
+    private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
+    private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
+    private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
+    private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
+    private final EnumSetting<OffhandItemMode> offhandItem = enumSetting("Offhand Item", OffhandItemMode.None);
     private final BoolSetting autoArmor = boolSetting("Auto Armor", true);
-    private final BoolSetting inventoryOnly = boolSetting("Inventory Only", true);
     private final BoolSetting switchSword = boolSetting("Switch Sword", true);
     private final IntSetting swordSlot = intSetting("Sword Slot", 1, 1, 9, 1, switchSword::getValue);
-    private final BoolSetting switchBlock = boolSetting("Switch Block", true, () -> !offhandItems.is(OffhandItemMode.Block));
-    private final IntSetting blockSlot = intSetting("Block Slot", 2, 1, 9, 1, () -> switchBlock.getValue() && !offhandItems.is(OffhandItemMode.Block));
+    private final BoolSetting switchBlock = boolSetting("Switch Block", true, () -> !offhandItem.is(OffhandItemMode.Block));
+    private final IntSetting blockSlot = intSetting("Block Slot", 2, 1, 9, 1, () -> switchBlock.getValue() && !offhandItem.is(OffhandItemMode.Block));
     public final IntSetting maxBlockSize = intSetting("Max Block Size", 256, 64, 512, 64, switchBlock::getValue);
     private final BoolSetting switchPickaxe = boolSetting("Switch Pickaxe", true);
     private final IntSetting pickaxeSlot = intSetting("Pickaxe Slot", 3, 1, 9, 1, switchPickaxe::getValue);
@@ -64,30 +91,52 @@ public class InvManager extends Module {
     private final IntSetting enderPearlSlot = intSetting("Ender Pearl Slot", 7, 1, 9, 1, switchEnderPearl::getValue);
     private final BoolSetting switchFireball = boolSetting("Switch Fireball", true);
     private final IntSetting fireballSlot = intSetting("Fireball Slot", 8, 1, 9, 1, switchFireball::getValue);
-    private final BoolSetting switchGoldenApple = boolSetting("Switch Golden Apple", true, () -> !offhandItems.is(OffhandItemMode.GoldenApple));
-    private final IntSetting goldenAppleSlot = intSetting("Golden Apple Slot", 9, 1, 9, 1, () -> switchGoldenApple.getValue() && !offhandItems.is(OffhandItemMode.GoldenApple));
+    private final BoolSetting switchGoldenApple = boolSetting("Switch Golden Apple", true, () -> !offhandItem.is(OffhandItemMode.GoldenApple));
+    private final IntSetting goldenAppleSlot = intSetting("Golden Apple Slot", 9, 1, 9, 1, () -> switchGoldenApple.getValue() && !offhandItem.is(OffhandItemMode.GoldenApple));
     private final BoolSetting throwItems = boolSetting("Throw Items", true);
     public final IntSetting waterBucketCount = intSetting("Keep Water Buckets", 1, 0, 5, 1, throwItems::getValue);
     public final IntSetting lavaBucketCount = intSetting("Keep Lava Buckets", 1, 0, 5, 1, throwItems::getValue);
     public final BoolSetting keepProjectile = boolSetting("Keep Eggs & Snowballs", true);
-    private final BoolSetting switchProjectile = boolSetting("Switch Eggs & Snowballs", false, () -> keepProjectile.getValue() && !offhandItems.is(OffhandItemMode.Projectile));
-    private final IntSetting projectileSlot = intSetting("Eggs & Snowballs Slot", 9, 1, 9, 1, () -> switchProjectile.getValue() && keepProjectile.getValue() && !offhandItems.is(OffhandItemMode.Projectile));
+    private final BoolSetting switchProjectile = boolSetting("Switch Eggs & Snowballs", false, () -> keepProjectile.getValue() && !offhandItem.is(OffhandItemMode.Projectile));
+    private final IntSetting projectileSlot = intSetting("Eggs & Snowballs Slot", 9, 1, 9, 1, () -> switchProjectile.getValue() && keepProjectile.getValue() && !offhandItem.is(OffhandItemMode.Projectile));
     public final IntSetting maxProjectileSize = intSetting("Max Eggs & Snowballs Size", 64, 16, 256, 16, keepProjectile::getValue);
-    private final BoolSetting switchRod = boolSetting("Switch Rod", false, () -> !offhandItems.is(OffhandItemMode.FishingRod));
-    private final IntSetting rodSlot = intSetting("Rod Slot", 9, 1, 9, 1, () -> switchRod.getValue() && !offhandItems.is(OffhandItemMode.FishingRod));
-
-    private static final TimerUtils timer = new TimerUtils();
-    private static final Random random = new Random();
+    private final BoolSetting switchRod = boolSetting("Switch Rod", false, () -> !offhandItem.is(OffhandItemMode.FishingRod));
+    private final IntSetting rodSlot = intSetting("Rod Slot", 9, 1, 9, 1, () -> switchRod.getValue() && !offhandItem.is(OffhandItemMode.FishingRod));
 
     private int noMoveTicks = 0;
     private boolean clickOffHand = false;
     private boolean inventoryOpen = false;
 
-    private InvManager() {
-        super("Inv Manager", Category.PLAYER);
+    private ActionState actionState = ActionState.IDLE;
+    private boolean actionConsumed;
+    private int delayMs;
+
+    private final TimerUtils timer = new TimerUtils();
+
+    @Override
+    protected void onEnable() {
+        clickOffHand = false;
+        inventoryOpen = false;
+        actionState = ActionState.IDLE;
+        actionConsumed = false;
+        delayMs = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
+        timer.reset();
     }
 
-    public boolean isItemUseful(ItemStack stack) {
+    @Override
+    protected void onDisable() {
+        boolean closeSilentInventory = inventoryOpen && mode.is(Mode.Silent) && mc.getConnection() != null && mc.player != null;
+        clickOffHand = false;
+        inventoryOpen = false;
+        actionState = ActionState.IDLE;
+        actionConsumed = false;
+        delayMs = 0;
+        if (closeSilentInventory) {
+            mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
+        }
+    }
+
+    private boolean isItemUseful(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (InvHelper.isGodItem(stack)) return true;
         if (stack.getDisplayName().getString().contains("点击使用")) return true;
@@ -122,68 +171,79 @@ public class InvManager extends Module {
 
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
-        if (event.getPacket() instanceof ServerboundContainerClosePacket) this.inventoryOpen = false;
-        if (this.inventoryOpen && !this.inventoryOnly.getValue()) {
-            if (event.getPacket() instanceof ServerboundMovePlayerPacket) {
-                if (mc.player.isMoving()) {
-                    mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
-                }
-            } else if (event.getPacket() instanceof ServerboundUseItemOnPacket || event.getPacket() instanceof ServerboundUseItemPacket || event.getPacket() instanceof ServerboundInteractPacket || event.getPacket() instanceof ServerboundPlayerActionPacket) {
+        if (event.getPacket() instanceof ServerboundContainerClosePacket) {
+            this.inventoryOpen = false;
+            if (actionState == ActionState.WAITING_FOR_INVENTORY_CLOSE) {
+                actionState = ActionState.IDLE;
+            }
+        }
+        if (this.inventoryOpen && mode.is(Mode.Silent)) {
+            if (
+                    event.getPacket() instanceof ServerboundMovePlayerPacket
+                            || event.getPacket() instanceof ServerboundUseItemOnPacket
+                            || event.getPacket() instanceof ServerboundUseItemPacket
+                            || event.getPacket() instanceof ServerboundInteractPacket
+                            || event.getPacket() instanceof ServerboundAttackPacket
+                            || event.getPacket() instanceof ServerboundPlayerActionPacket
+            ) {
+                this.inventoryOpen = false;
                 mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
             }
         }
     }
 
-    private boolean checkConfig() {
-        List<Pair<BoolSetting, IntSetting>> pairs = new ArrayList<>();
-        if (!this.keepProjectile.getValue()) this.switchProjectile.setValue(false);
-        pairs.add(Pair.of(this.switchSword, this.swordSlot));
-        pairs.add(Pair.of(this.switchPickaxe, this.pickaxeSlot));
-        pairs.add(Pair.of(this.switchAxe, this.axeSlot));
-        pairs.add(Pair.of(this.switchBow, this.bowSlot));
-        pairs.add(Pair.of(this.switchWaterBucket, this.waterBucketSlot));
-        pairs.add(Pair.of(this.switchEnderPearl, this.enderPearlSlot));
-        pairs.add(Pair.of(this.switchFireball, this.fireballSlot));
-        if (!this.offhandItems.is(OffhandItemMode.GoldenApple))
-            pairs.add(Pair.of(this.switchGoldenApple, this.goldenAppleSlot));
-        if (!this.offhandItems.is(OffhandItemMode.Projectile))
-            pairs.add(Pair.of(this.switchProjectile, this.projectileSlot));
-        if (!this.offhandItems.is(OffhandItemMode.FishingRod)) pairs.add(Pair.of(this.switchRod, this.rodSlot));
-        if (!this.offhandItems.is(OffhandItemMode.Block)) pairs.add(Pair.of(this.switchBlock, this.blockSlot));
-        Set<Integer> usedSlot = new HashSet<>();
-        for (Pair<BoolSetting, IntSetting> pair : pairs) {
-            if (pair.getKey().getValue()) {
-                int targetSlot = pair.getValue().getValue() - 1;
-                if (usedSlot.contains(targetSlot)) return false;
-                usedSlot.add(targetSlot);
-            }
-        }
-        return true;
-    }
-
     @EventHandler
-    private void onTick(PlayerTickEvent.Pre event) {
-        if (InvHelper.shouldDisableFeatures()) return;
-        if (mc.player.isMoving()) this.noMoveTicks = 0;
-        else this.noMoveTicks++;
-        boolean allowMove = !this.inventoryOnly.getValue();
-        if (Stealer.INSTANCE.isWorking() || (this.inventoryOnly.getValue() ? !(mc.gui.screen() instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
-            this.clickOffHand = false;
+    private void onTick(ClientTickEvent.Pre event) {
+        if (nullCheck()) return;
+
+        actionConsumed = false;
+
+        if (InvHelper.shouldDisableFeatures()) {
+            cancelPendingAction();
             return;
         }
-        if (mc.gui.screen() instanceof AbstractContainerScreen container && container.getMenu().containerId != mc.player.inventoryMenu.containerId)
+        if (NoSlowdown.INSTANCE.isWorking()) {
+            cancelPendingAction();
             return;
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
+        }
+
+        if (mc.player.isMoving()) {
+            this.noMoveTicks = 0;
+        } else {
+            this.noMoveTicks++;
+        }
+
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) {
+            cancelPendingAction();
+            return;
+        }
+        if (pauseOnKillAura.getValue() && KillAura.INSTANCE.isEnabled() && KillAura.INSTANCE.target != null) {
+            cancelPendingAction();
+            return;
+        }
+        if (pauseOnScaffold.getValue() && Scaffold.INSTANCE.isEnabled()) {
+            cancelPendingAction();
+            return;
+        }
+
+        boolean allowMove = mode.is(Mode.Silent);
+        if (Stealer.INSTANCE.isWorking() || (mode.is(Mode.Inventory) ? !(mc.gui.screen() instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {
+            this.clickOffHand = false;
+            cancelPendingAction();
+            return;
+        }
+        if (mc.gui.screen() instanceof AbstractContainerScreen<?> container && container.getMenu().containerId != mc.player.inventoryMenu.containerId) {
+            cancelPendingAction();
+            return;
+        }
 
         if (this.autoArmor.getValue()) {
             EquipmentSlot[] armorSlots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
             for (int i = 0; i < armorSlots.length; i++) {
                 ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);
                 if (InvHelper.isArmor(stack)) {
-                    if (!stack.isEmpty() && timer.passedMillise(nextDelay) && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
-                        ClickSlotUtils.dropAll(4 + (4 - i));
-                        this.inventoryOpen = true;
-                        timer.reset();
+                    if (!stack.isEmpty() && canExecuteInventoryAction() && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
+                        dropAll(4 + (4 - i));
                     }
                 }
             }
@@ -193,26 +253,24 @@ public class InvManager extends Module {
                     float currentItemScore = InvHelper.getProtection(stack);
                     boolean isBestItem = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)) == currentItemScore;
                     boolean isBetterItem = InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) < currentItemScore;
-                    if (isBestItem && isBetterItem && timer.passedMillise(nextDelay)) {
-                        if (ix < 9)
-                            ClickSlotUtils.shiftClick(ix + 36);
-                        else
-                            ClickSlotUtils.shiftClick(ix);
-                        this.inventoryOpen = true;
-                        timer.reset();
+                    if (isBestItem && isBetterItem && canExecuteInventoryAction()) {
+                        if (ix < 9) {
+                            shiftClick(ix + 36);
+                        } else {
+                            shiftClick(ix);
+                        }
                     }
                 }
             }
         }
 
-        if (this.clickOffHand && timer.passedMillise(nextDelay)) {
-            ClickSlotUtils.click(45);
-            this.inventoryOpen = true;
-            this.clickOffHand = false;
-            timer.reset();
+        if (this.clickOffHand && canExecuteInventoryAction()) {
+            if (click(45)) {
+                this.clickOffHand = false;
+            }
         }
 
-        if (this.offhandItems.is(OffhandItemMode.GoldenApple)) {
+        if (this.offhandItem.is(OffhandItemMode.GoldenApple)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             Item offHandItem = offHand.getItem();
 
@@ -221,72 +279,72 @@ public class InvManager extends Module {
 
             if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                 if (offHand.getCount() < offHand.getMaxStackSize() && egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
-                        int targetSlot = egapSlot;
-                        if (targetSlot < 9)
-                            ClickSlotUtils.click(targetSlot + 36);
-                        else
-                            ClickSlotUtils.click(targetSlot);
-                        this.inventoryOpen = true;
-                        this.clickOffHand = true;
-                        timer.reset();
+                    if (canExecuteInventoryAction()) {
+                        boolean clicked;
+                        if (egapSlot < 9) {
+                            clicked = click(egapSlot + 36);
+                        } else {
+                            clicked = click(egapSlot);
+                        }
+                        if (clicked) {
+                            this.clickOffHand = true;
+                        }
                     }
                 }
             } else if (offHandItem == Items.GOLDEN_APPLE) {
                 if (egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
-                        timer.reset();
                     }
                 } else if (offHand.getCount() < offHand.getMaxStackSize() && gapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         int targetSlot = gapSlot;
-                        if (targetSlot < 9)
-                            ClickSlotUtils.click(targetSlot + 36);
-                        else
-                            ClickSlotUtils.click(targetSlot);
-                        this.inventoryOpen = true;
-                        this.clickOffHand = true;
-                        timer.reset();
+                        boolean clicked;
+                        if (targetSlot < 9) {
+                            clicked = click(targetSlot + 36);
+                        } else {
+                            clicked = click(targetSlot);
+                        }
+                        if (clicked) {
+                            this.clickOffHand = true;
+                        }
                     }
                 }
             } else {
                 if (egapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(egapSlot);
-                        timer.reset();
                     }
                 } else if (gapSlot != -1) {
-                    if (timer.passedMillise(nextDelay)) {
+                    if (canExecuteInventoryAction()) {
                         this.swapOffHand(gapSlot);
-                        timer.reset();
                     }
                 }
             }
-        } else if (this.offhandItems.is(OffhandItemMode.Projectile)) {
+        } else if (this.offhandItem.is(OffhandItemMode.Projectile)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             ItemStack bestProjectile = InvHelper.getBestProjectile();
             if (bestProjectile != null) {
                 int slot = InvHelper.getItemStackSlot(bestProjectile);
                 boolean shouldSwap = offHand.getItem() != Items.EGG && offHand.getItem() != Items.SNOWBALL || offHand.getCount() < bestProjectile.getCount();
-                if (shouldSwap && slot != -1 && timer.passedMillise(nextDelay)) this.swapOffHand(slot);
+                if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this.swapOffHand(slot);
             }
-        } else if (this.offhandItems.is(OffhandItemMode.FishingRod)) {
+        } else if (this.offhandItem.is(OffhandItemMode.FishingRod)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             int slotx = InvHelper.getItemSlot(Items.FISHING_ROD);
-            if (slotx != -1 && timer.passedMillise(nextDelay) && offHand.getItem() != Items.FISHING_ROD)
+            if (slotx != -1 && canExecuteInventoryAction() && offHand.getItem() != Items.FISHING_ROD)
                 this.swapOffHand(slotx);
-        } else if (this.offhandItems.is(OffhandItemMode.Block)) {
+        } else if (this.offhandItem.is(OffhandItemMode.Block)) {
             ItemStack offHand = InvHelper.getOffhandStack();
             ItemStack bestBlock = InvHelper.getBestBlock();
             if (bestBlock != null) {
                 int slotx = InvHelper.getItemStackSlot(bestBlock);
                 boolean shouldSwapx = !InvHelper.isValidStack(offHand) || offHand.getCount() < bestBlock.getCount();
-                if (shouldSwapx && slotx != -1 && timer.passedMillise(nextDelay)) this.swapOffHand(slotx);
+                if (shouldSwapx && slotx != -1 && canExecuteInventoryAction()) this.swapOffHand(slotx);
             }
         }
 
-        if (this.switchGoldenApple.getValue() && !this.offhandItems.is(OffhandItemMode.GoldenApple)) {
+        if (this.switchGoldenApple.getValue() && !this.offhandItem.is(OffhandItemMode.GoldenApple)) {
             int targetSlotIdx = this.goldenAppleSlot.getValue() - 1;
             int egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE);
             int gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE);
@@ -304,7 +362,7 @@ public class InvManager extends Module {
             int blockSlotIndex = this.blockSlot.getValue() - 1;
             ItemStack currentBlock = InvHelper.getInventoryStack(blockSlotIndex);
             ItemStack bestBlock = InvHelper.getBestBlock();
-            if (bestBlock != null && (bestBlock.getCount() > currentBlock.getCount() || !InvHelper.isValidStack(currentBlock)) && !this.offhandItems.is(OffhandItemMode.Block)) {
+            if (bestBlock != null && (bestBlock.getCount() > currentBlock.getCount() || !InvHelper.isValidStack(currentBlock)) && !this.offhandItem.is(OffhandItemMode.Block)) {
                 this.swapItem(blockSlotIndex, bestBlock);
             }
             if ((float) InvHelper.getBlockCountInInventory() > this.maxBlockSize.getValue()) {
@@ -342,7 +400,7 @@ public class InvManager extends Module {
                 this.swapItem(slotIndex, bestAxe);
         }
 
-        if (this.switchRod.getValue() && !this.offhandItems.is(OffhandItemMode.FishingRod)) {
+        if (this.switchRod.getValue() && !this.offhandItem.is(OffhandItemMode.FishingRod)) {
             int slotIndex = this.rodSlot.getValue() - 1;
             ItemStack bestRod = InvHelper.getFishingRod();
             ItemStack currentRod = InvHelper.getInventoryStack(slotIndex);
@@ -397,7 +455,7 @@ public class InvManager extends Module {
         if (this.keepProjectile.getValue()) {
             if ((float) (InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)) > this.maxProjectileSize.getValue())
                 this.throwItem(InvHelper.getWorstProjectile());
-            if (this.switchProjectile.getValue() && !this.offhandItems.is(OffhandItemMode.Projectile)) {
+            if (this.switchProjectile.getValue() && !this.offhandItem.is(OffhandItemMode.Projectile)) {
                 int pSlot = this.projectileSlot.getValue() - 1;
                 if (InvHelper.getItemCount(Items.EGG) > 0) this.swapItem(pSlot, Items.EGG);
                 else if (InvHelper.getItemCount(Items.SNOWBALL) > 0) this.swapItem(pSlot, Items.SNOWBALL);
@@ -409,77 +467,150 @@ public class InvManager extends Module {
             Collections.shuffle(slots);
             for (Integer slotIdx : slots) {
                 ItemStack stack = InvHelper.getInventoryStack(slotIdx);
-                if (!stack.isEmpty() && !this.isItemUseful(stack) && timer.passedMillise(nextDelay)) {
-                    this.throwItem(stack);
-                    timer.reset();
-                    return;
+                if (!stack.isEmpty() && !this.isItemUseful(stack) && canExecuteInventoryAction()) {
+                    if (this.throwItem(stack)) {
+                        return;
+                    }
                 }
             }
         }
 
+        if (actionState == ActionState.READY_TO_EXECUTE && !actionConsumed) {
+            actionState = ActionState.IDLE;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onSprintTick(ClientTickEvent.Pre event) {
+        if (!nullCheck() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+            mc.player.setSprinting(false);
+            if (!mc.player.wasSprinting) {
+                actionState = ActionState.READY_TO_EXECUTE;
+            }
+        }
     }
 
     private void swapOffHand(int slot) {
         if (slot < 9) {
-            ClickSlotUtils.swap(slot + 36, 40);
+            swap(slot + 36, 40);
         } else {
-            ClickSlotUtils.swap(slot, 40);
+            swap(slot, 40);
         }
-        this.inventoryOpen = true;
-        timer.reset();
     }
 
-    private void throwItem(ItemStack item) {
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
-        if (InvHelper.isItemValid(item) && timer.passedMillise(nextDelay)) {
+    private boolean throwItem(ItemStack item) {
+        if (InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
                 if (itemSlot < 9) {
-                    ClickSlotUtils.dropAll(itemSlot + 36);
+                    return dropAll(itemSlot + 36);
                 } else {
-                    ClickSlotUtils.dropAll(itemSlot);
+                    return dropAll(itemSlot);
                 }
-                this.inventoryOpen = true;
-                timer.reset();
             }
         }
+        return false;
     }
 
     private void swapItem(int targetSlot, ItemStack bestItem) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
-        if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && timer.passedMillise(nextDelay)) {
+        if (InvHelper.isItemValid(currentSlot) && bestItem != currentSlot && canExecuteInventoryAction()) {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
-                    ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
+                    swap(bestItemSlot + 36, targetSlot);
                 } else {
-                    ClickSlotUtils.swap(bestItemSlot, targetSlot);
+                    swap(bestItemSlot, targetSlot);
                 }
-                this.inventoryOpen = true;
-                timer.reset();
             }
         }
     }
 
     private void swapItem(int targetSlot, Item item) {
         ItemStack currentSlot = InvHelper.getInventoryStack(targetSlot);
-        int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
-        if (InvHelper.isItemValid(currentSlot) && timer.passedMillise(nextDelay)) {
+        if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
             int bestItemSlot = InvHelper.getItemSlot(item);
             if (bestItemSlot != -1) {
                 ItemStack bestItemStack = InvHelper.getInventoryStack(bestItemSlot);
                 if (currentSlot.getItem() != item || currentSlot.getItem() == item && currentSlot.getCount() < bestItemStack.getCount()) {
                     if (bestItemSlot < 9) {
-                        ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
+                        swap(bestItemSlot + 36, targetSlot);
                     } else {
-                        ClickSlotUtils.swap(bestItemSlot, targetSlot);
+                        swap(bestItemSlot, targetSlot);
                     }
-                    this.inventoryOpen = true;
-                    timer.reset();
                 }
             }
         }
+    }
+
+    public boolean isSprintTransitionPending() {
+        return mode.is(Mode.Silent) && actionState != ActionState.IDLE;
+    }
+
+    public boolean prepareInventoryAction() {
+        if (!mode.is(Mode.Silent)) {
+            return true;
+        }
+        if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+            return false;
+        }
+        if (actionState == ActionState.READY_TO_EXECUTE) {
+            return true;
+        }
+
+        if (mc.player.isSprinting() || mc.player.wasSprinting) {
+            actionState = ActionState.WAITING_FOR_SPRINT_STOP;
+            mc.player.setSprinting(false);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void completeInventoryAction() {
+        timer.reset();
+        delayMs = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
+        this.inventoryOpen = true;
+        actionConsumed = true;
+        actionState = mode.is(Mode.Silent) ? ActionState.WAITING_FOR_INVENTORY_CLOSE : ActionState.IDLE;
+    }
+
+    private boolean canExecuteInventoryAction() {
+        return !actionConsumed && timer.passedMillise(delayMs);
+    }
+
+    private void cancelPendingAction() {
+        if (actionState != ActionState.IDLE && actionState != ActionState.WAITING_FOR_INVENTORY_CLOSE) {
+            actionState = ActionState.IDLE;
+        }
+    }
+
+    private boolean click(int slot) {
+        if (!prepareInventoryAction()) return false;
+        ClickSlotUtils.click(slot);
+        completeInventoryAction();
+        return true;
+    }
+
+    private boolean swap(int slot, int hotbarSlot) {
+        if (!prepareInventoryAction()) return false;
+        ClickSlotUtils.swap(slot, hotbarSlot);
+        completeInventoryAction();
+        return true;
+    }
+
+    private boolean shiftClick(int slot) {
+        if (!prepareInventoryAction()) return false;
+        ClickSlotUtils.shiftClick(slot);
+        completeInventoryAction();
+        return true;
+    }
+
+    private boolean dropAll(int slot) {
+        if (!prepareInventoryAction()) return false;
+        ClickSlotUtils.dropAll(slot);
+        completeInventoryAction();
+        return true;
     }
 
 }

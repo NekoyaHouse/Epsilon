@@ -1,76 +1,83 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.RightClickEvent;
-import com.github.epsilon.events.impl.TravelEvent;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.utils.network.PacketUtils;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import com.github.epsilon.utils.network.NetworkUtils;
+import me.sofurry.ClInitNative;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+@ClInitNative
 public class Stuck extends Module {
 
     public static final Stuck INSTANCE = new Stuck();
-
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.NoPacket);
 
     private Stuck() {
         super("Stuck", Category.MOVEMENT);
     }
 
-    private float lastYaw;
-    private float lastPitch;
+    private int ticks;
+    private int stage;
+    private final Queue<Packet<?>> packets = new ConcurrentLinkedQueue<>();
 
-    private enum Mode {
-        NoPacket,
-        CancelMove
+    @Override
+    protected void onEnable() {
+        ticks = 20;
+        stage = 0;
+        packets.clear();
     }
 
     @Override
     protected void onDisable() {
-        if (!nullCheck() && mode.is(Mode.NoPacket) && !mc.player.onGround()) {
-            PacketUtils.sendSilently(new ServerboundMovePlayerPacket.PosRot(mc.player.getX() + 1337, mc.player.getY(), mc.player.getZ() + 1337, mc.player.getYRot() + 0.01f, mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
-        }
-    }
-
-    @EventHandler
-    private void onKeyboardInput(KeyboardInputEvent event) {
-        event.setForward(0);
-        event.setStrafe(0);
+        packets.clear();
     }
 
     @EventHandler
     private void onPacket(PacketEvent.Send event) {
-        if (mode.is(Mode.NoPacket)) {
-            if (event.getPacket() instanceof ServerboundMovePlayerPacket || (event.getPacket() instanceof ClientboundSetEntityMotionPacket setEntityMotionPacket && setEntityMotionPacket.id() == mc.player.getId())) {
+        Packet<?> packet = event.getPacket();
+        if (stage == 0) {
+            if (packet instanceof ServerboundUseItemPacket || packet instanceof ServerboundUseItemOnPacket) {
+                packets.add(packet);
                 event.cancel();
+                stage = 1;
             }
-        }
-        if (event.getPacket() instanceof ClientboundPlayerPositionPacket) {
-            toggle();
         }
     }
 
     @EventHandler
-    private void onTravel(TravelEvent event) {
-        if (mode.is(Mode.CancelMove) && mc.player.positionReminder < 19) {
-            event.cancel();
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (mc.player.onGround()) {
+            setEnabled(false);
+            return;
         }
-    }
-
-    @EventHandler
-    private void onInteract(RightClickEvent event) {
-        if (mode.is(Mode.NoPacket)) {
-            if (mc.player.getYRot() != lastYaw || mc.player.getXRot() != lastPitch) {
-                PacketUtils.sendSilently(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
+        switch (stage) {
+            case 0 -> {
+                if (ticks > 0) {
+                    event.cancel();
+                    if (ticks == 10) {
+                        NetworkUtils.sendPacketNoEvent(new ServerboundMovePlayerPacket.StatusOnly(mc.player.onGround(), mc.player.horizontalCollision));
+                    }
+                    ticks--;
+                } else {
+                    ticks = 20;
+                }
             }
-            lastPitch = mc.player.getXRot();
-            lastYaw = mc.player.getYRot();
+            case 1 -> stage = 2;
+            case 2 -> {
+                while (!packets.isEmpty()) {
+                    Packet<?> poll = packets.poll();
+                    NetworkUtils.sendPacketNoEvent(poll);
+                }
+                stage = 0;
+            }
         }
     }
 

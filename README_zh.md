@@ -18,14 +18,6 @@
   <a href="https://qm.qq.com/q/3hhg8ww9ag"><img alt="QQ 二群" src="https://img.shields.io/badge/QQ%20%E4%BA%8C%E7%BE%A4-join-12B7F5?style=flat-square&logo=tencentqq&logoColor=white"></a>
 </p>
 
-> [!IMPORTANT]
-> ## Public Archive 公告
-> 本仓库将进入 Public Archive 准备阶段，当前公开源码会继续保留，供查阅和参考。公开开发、Issue 维护与免费公开发布将逐步停止。
->
-> 客户端的持续开发需要长期投入时间和资源；大量二改版本被他人用于商业化获利，已经让原有的公益开发模式难以维持。为让开发可以继续，后续官方版本、支持服务与分发可能转为付费模式。
->
-> 本仓库中已经发布的代码仍遵循 [GNU General Public License v3.0](LICENSE)。本公告不会改变现有版本的许可证或既有权利。
-
 ## 📌 项目简介
 基于 NeoForge & Fabric 构建的多加载器现代化 Minecraft 辅助客户端，拥有先进的渲染系统和模块化架构。
 

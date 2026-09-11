@@ -8,6 +8,7 @@ import java.util.function.Consumer;
  * Listener that takes in a {@link java.util.function.Consumer}.
  */
 public class ConsumerListener<T> implements IListener {
+
     private final Class<T> target;
     private final int priority;
     private final Consumer<T> executor;

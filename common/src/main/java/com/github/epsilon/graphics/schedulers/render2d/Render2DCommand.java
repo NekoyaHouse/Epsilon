@@ -1,12 +1,14 @@
 package com.github.epsilon.graphics.schedulers.render2d;
 
+import com.github.epsilon.graphics.text.TextGlitchEffect;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 
 import java.awt.*;
 
-sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand.RoundRect,
-        Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle,
-        Render2DCommand.Texture, Render2DCommand.Text {
+sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand.SegmentedShadow, Render2DCommand.RoundRect,
+        Render2DCommand.RoundRectOutline, Render2DCommand.Rect, Render2DCommand.Triangle, Render2DCommand.Arc,
+        Render2DCommand.Texture, Render2DCommand.BlurText, Render2DCommand.GlitchText, Render2DCommand.Text,
+        Render2DCommand.GradientText {
 
     int layer();
 
@@ -25,6 +27,24 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
     record Shadow(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                   float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                   float blurRadius, Color color) implements Render2DCommand {
+        @Override
+        public Render2DBounds orderingBounds() {
+            float pad = Math.max(0.0f, blurRadius);
+            return Render2DBounds.of(bounds.x() - pad, bounds.y() - pad,
+                    bounds.width() + pad * 2.0f, bounds.height() + pad * 2.0f);
+        }
+
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.SHADOW;
+        }
+    }
+
+    record SegmentedShadow(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                           float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                           float blurRadius, Color color,
+                           float[] segmentRects, float[] segmentRadii, float[] segmentColors,
+                           int segmentCount) implements Render2DCommand {
         @Override
         public Render2DBounds orderingBounds() {
             float pad = Math.max(0.0f, blurRadius);
@@ -79,6 +99,16 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
         }
     }
 
+    record Arc(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+               float centerX, float centerY, float radius, float strokeWidth,
+               float startDegrees, float sweepDegrees, boolean roundCap, float gradientRotationDegrees,
+               Color startColor, Color middleColor, Color endColor) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.ARC;
+        }
+    }
+
     record Texture(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                    Render2DTexture texture, float radiusTopLeft, float radiusTopRight,
                    float radiusBottomRight, float radiusBottomLeft, float u0, float v0, float u1, float v1,
@@ -96,6 +126,33 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.TEXT;
+        }
+    }
+
+    record GradientText(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                        String text, float x, float y, float scale, Color startColor, Color endColor,
+                        TtfFontLoader fontLoader) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.TEXT;
+        }
+    }
+
+    record BlurText(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                    String text, float x, float y, float scale, Color color,
+                    float blurRadius, int intensity, TtfFontLoader fontLoader) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.BLUR_TEXT;
+        }
+    }
+
+    record GlitchText(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
+                      String text, float x, float y, float scale, Color color,
+                      TextGlitchEffect effect, TtfFontLoader fontLoader) implements Render2DCommand {
+        @Override
+        public Render2DCommandKind kind() {
+            return Render2DCommandKind.GLITCH_TEXT;
         }
     }
 

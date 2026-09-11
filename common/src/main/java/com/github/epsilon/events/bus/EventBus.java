@@ -39,6 +39,9 @@ public class EventBus {
         if (listeners != null) {
             for (IListener listener : listeners) {
                 listener.call(event);
+                if (event instanceof Cancellable cancellable && cancellable.isCancelled()) {
+                    break;
+                }
             }
         }
 

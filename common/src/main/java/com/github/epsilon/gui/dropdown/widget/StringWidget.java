@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.StringSetting;
@@ -47,6 +49,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
                 inputField.setText(setting.getValue());
             }
             inputField.focusIfContains(mouseX, mouseY, fieldX, fieldY, fieldW, fieldH);
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.TYPING);
             return true;
         }
         if (inputField.isFocused()) {
@@ -63,11 +66,13 @@ public class StringWidget extends SettingWidget<StringSetting> {
         if (keyCode == 257 || keyCode == 335) {
             commitSetting();
             inputField.blur();
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         if (keyCode == 256) {
             inputField.setText(setting.getValue());
             inputField.blur();
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
         if (inputField.keyPressed(keyCode)) {

@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
+import me.sofurry.ClInitNative;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+@ClInitNative
 public class Eagle extends Module {
 
     public static final Eagle INSTANCE = new Eagle();
@@ -87,7 +89,7 @@ public class Eagle extends Module {
         return (!blocksOnly.getValue() || isHoldingBlock()) && mc.player.onGround();
     }
 
-    private boolean isOverEdge() {
+    public boolean isOverEdge() {
         Vec3 predictedMovement = predictMovement();
         Vec3 movement = mc.player.getDeltaMovement().add(predictedMovement.x, 0.0, predictedMovement.z);
         return mc.level.noCollision(mc.player, mc.player.getBoundingBox().move(movement.x, -1.0, movement.z));

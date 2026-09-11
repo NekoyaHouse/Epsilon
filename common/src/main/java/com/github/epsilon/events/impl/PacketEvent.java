@@ -14,7 +14,7 @@ public class PacketEvent {
         }
 
         public Packet<?> getPacket() {
-            return this.packet;
+            return packet;
         }
 
         public void setPacket(Packet<?> packet) {
@@ -32,7 +32,7 @@ public class PacketEvent {
         }
 
         public Packet<?> getPacket() {
-            return this.packet;
+            return packet;
         }
 
         public void setPacket(Packet<?> packet) {

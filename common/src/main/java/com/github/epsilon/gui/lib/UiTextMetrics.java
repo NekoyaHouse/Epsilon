@@ -16,4 +16,5 @@ public interface UiTextMetrics {
     float textHeight(float scale);
 
     float textHeight(float scale, TtfFontLoader fontLoader);
+
 }

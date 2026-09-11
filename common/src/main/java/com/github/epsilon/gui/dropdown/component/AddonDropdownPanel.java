@@ -11,7 +11,7 @@ import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.AddonHolder;
+import com.github.epsilon.managers.AddonManager;
 import com.github.epsilon.settings.Setting;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             return PADDING * 2.0f + ADDON_ROW_HEIGHT;
         }
         ensureWidgets(addon);
-        float height = PADDING + AddonHolder.INSTANCE.getAddons().size() * (ADDON_ROW_HEIGHT + GAP) + INFO_HEIGHT + GAP;
+        float height = PADDING + AddonManager.INSTANCE.getAddons().size() * (ADDON_ROW_HEIGHT + GAP) + INFO_HEIGHT + GAP;
         if (widgets.isEmpty()) {
             height += ADDON_ROW_HEIGHT;
         } else {
@@ -56,7 +56,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
-        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
         EpsilonAddon selected = resolveSelectedAddon();
         if (addons.isEmpty()) {
             scope.text(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
@@ -105,7 +105,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
-        for (EpsilonAddon addon : AddonHolder.INSTANCE.getAddons()) {
+        for (EpsilonAddon addon : AddonManager.INSTANCE.getAddons()) {
             if (isHovered(mouseX, mouseY, contentX, currentY, contentW, ADDON_ROW_HEIGHT)) {
                 selectedAddonId = addon.getAddonId();
                 setScrollImmediate(Math.min(scroll, Math.max(0.0f, currentY - y)));
@@ -169,7 +169,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     }
 
     private EpsilonAddon resolveSelectedAddon() {
-        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
         if (addons.isEmpty()) {
             selectedAddonId = "";
             lastAddon = null;

@@ -4,9 +4,11 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import me.sofurry.ClInitNative;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
+@ClInitNative
 public class CameraClip extends Module {
 
     public static final CameraClip INSTANCE = new CameraClip();
@@ -19,6 +21,7 @@ public class CameraClip extends Module {
     public final BoolSetting action = boolSetting("Action", true, _ -> resetCameraPos());
     public final DoubleSetting actionSmoothness = doubleSetting("Action Smoothness", 0.3, 0.1, 0.95, 0.01, action::getValue);
     public final DoubleSetting actionMaxDistance = doubleSetting("Action Max Distance", 20.0, 1.0, 50.0, 0.5, action::getValue);
+    public final BoolSetting betterBobView = boolSetting("Better Bob View", true, () -> mc.options.bobView().get());
 
     private Vec3 cameraPos;
 

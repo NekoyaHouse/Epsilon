@@ -2,6 +2,7 @@ package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
+import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
@@ -14,6 +15,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -25,11 +27,28 @@ import java.util.Map;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class DeobfESP {
+public class DeobfESP {
 
-    private static final Identifier TEXTURE = ResourceLocationUtils.getIdentifier("textures/hud/deobf.png");
+    public enum TextureMode {
+        Niuren(ResourceLocationUtils.getIdentifier("textures/esp/niuren.png")),
+        Mengcha(ResourceLocationUtils.getIdentifier("textures/esp/mengcha.png"));
 
-    private static final float TEXTURE_ASPECT_RATIO = 751.0f / 376.0f;
+        private final Identifier texture;
+
+        TextureMode(Identifier texture) {
+            this.texture = texture;
+        }
+
+        /**
+         * 获取该特效类型使用的纹理标识符。
+         *
+         * @return 获取或计算得到的结果
+         */
+        public Identifier getTexture() {
+            return texture;
+        }
+    }
+
     private static final long INTRO_DURATION_MS = 1600L;
     private static final long KILL_DURATION_MS = 1800L;
     private static final float CONTINUOUS_ROTATION_SPEED = 180.0f;
@@ -41,27 +60,38 @@ public final class DeobfESP {
             .withCull(false)
             .build();
 
-    private static final Map<Integer, Effect> EFFECTS = new LinkedHashMap<>();
+    private static final Map<Integer, Effect> effects = new LinkedHashMap<>();
 
     private DeobfESP() {
     }
 
-    public static void markHit(LivingEntity target) {
-        if (target == null || target.isDeadOrDying()) return;
-
-        long now = System.currentTimeMillis();
-        Effect effect = EFFECTS.get(target.getId());
-        if (effect == null || effect.target != target || effect.killedAtMs >= 0L) {
-            EFFECTS.put(target.getId(), new Effect(target, now));
+    /**
+     * 为目标记录一次命中特效。
+     *
+     * @param entity 目标实体
+     */
+    public static void markHit(Entity entity) {
+        if (entity instanceof LivingEntity target && !target.isDeadOrDying()) {
+            long now = System.currentTimeMillis();
+            Effect effect = effects.get(target.getId());
+            if (effect == null || effect.target != target || effect.killedAtMs >= 0L) {
+                effects.put(target.getId(), new Effect(target, now));
+            }
         }
     }
 
+    /**
+     * 清除全部活动命中特效。
+     */
     public static void clear() {
-        EFFECTS.clear();
+        effects.clear();
     }
 
+    /**
+     * 仅保留仍处于上升阶段的命中特效。
+     */
     public static void retainRisingEffects() {
-        if (EFFECTS.isEmpty()) return;
+        if (effects.isEmpty()) return;
         if (mc.level == null) {
             clear();
             return;
@@ -69,7 +99,7 @@ public final class DeobfESP {
 
         long now = System.currentTimeMillis();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        Iterator<Effect> iterator = EFFECTS.values().iterator();
+        Iterator<Effect> iterator = effects.values().iterator();
 
         while (iterator.hasNext()) {
             Effect effect = iterator.next();
@@ -87,8 +117,17 @@ public final class DeobfESP {
         }
     }
 
+    /**
+     * 渲染全部活动命中特效。
+     *
+     * @param poseStack 渲染姿态栈
+     * @param size      特效尺寸
+     * @param spins     旋转圈数
+     * @param wobble    摆动幅度
+     * @param flyHeight 特效上升高度
+     */
     public static void render(PoseStack poseStack, float size, float spins, float wobble, float flyHeight) {
-        if (EFFECTS.isEmpty()) return;
+        if (effects.isEmpty()) return;
         if (mc.level == null) {
             clear();
             return;
@@ -97,8 +136,9 @@ public final class DeobfESP {
         long now = System.currentTimeMillis();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         Camera camera = mc.gameRenderer.mainCamera();
-        LuminImmediateRenderer.PosTexColorQuads buffer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, TEXTURE);
-        Iterator<Effect> iterator = EFFECTS.values().iterator();
+        Identifier texture = KillAura.INSTANCE.deobfMode.getValue().getTexture();
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture);
+        Iterator<Effect> iterator = effects.values().iterator();
 
         while (iterator.hasNext()) {
             Effect effect = iterator.next();
@@ -121,18 +161,18 @@ public final class DeobfESP {
                 continue;
             }
 
-            renderEffect(poseStack, buffer, camera, effect, now, partialTick, size, spins, wobble, flyHeight);
+            renderEffect(poseStack, renderer, camera, effect, now, partialTick, size, spins, wobble, flyHeight);
         }
 
-        buffer.end();
+        renderer.end();
     }
 
     private static void renderEffect(
-            PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer, Camera camera, Effect effect,
+            PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Camera camera, Effect effect,
             long now, float partialTick, float size, float spins, float wobble, float flyHeight
     ) {
         float baseWidth = Math.max(0.01f, size);
-        float baseHeight = baseWidth * TEXTURE_ASPECT_RATIO;
+        float baseHeight = baseWidth * (KillAura.INSTANCE.deobfMode.is(TextureMode.Niuren) ? 751.0f / 376.0f : 1280.0f / 1073.0f);
         float drawWidth;
         float drawHeight;
         float rotation;
@@ -187,10 +227,10 @@ public final class DeobfESP {
         float halfHeight = drawHeight / 2.0f;
         int argb = tint.getRGB();
 
-        buffer.vertex(matrix, -halfWidth, halfHeight, 0.0f, 0.0f, 1.0f, argb);
-        buffer.vertex(matrix, halfWidth, halfHeight, 0.0f, 1.0f, 1.0f, argb);
-        buffer.vertex(matrix, halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f, argb);
-        buffer.vertex(matrix, -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f, argb);
+        renderer.vertex(matrix, -halfWidth, halfHeight, 0.0f, 0.0f, 1.0f, argb);
+        renderer.vertex(matrix, halfWidth, halfHeight, 0.0f, 1.0f, 1.0f, argb);
+        renderer.vertex(matrix, halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f, argb);
+        renderer.vertex(matrix, -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f, argb);
 
         poseStack.popPose();
     }

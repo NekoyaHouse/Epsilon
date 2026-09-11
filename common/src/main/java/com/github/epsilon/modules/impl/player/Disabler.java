@@ -5,10 +5,8 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.utils.network.PacketUtils;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.world.entity.player.Input;
+import com.github.epsilon.utils.network.NetworkUtils;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 
 public class Disabler extends Module {
 
@@ -18,78 +16,30 @@ public class Disabler extends Module {
         super("Disabler", Category.PLAYER);
     }
 
-    private final BoolSetting badPacketsA = boolSetting("BadPacketsA", true);
+    private final BoolSetting duplicateSlot = boolSetting("ACA Duplicate Slot", true);
+    private final BoolSetting fastSwitch = boolSetting("ACA Fast Switch", true);
 
-    private final BoolSetting sprinting = boolSetting("Sprinting", true);
-    private final BoolSetting input = boolSetting("Input", true);
-
-    private int lastSendSlot = -1;
-    private boolean hasOldInput;
-    private Input oldInput;
-    private boolean shouldRestore;
+    private int lastSlot = -1;
 
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
-        Packet<?> packet = event.getPacket();
-
-        if (badPacketsA.getValue()) {
-            if (packet instanceof ServerboundSetCarriedItemPacket setCarriedItemPacket) {
-                int slot = setCarriedItemPacket.getSlot();
-                if (slot == lastSendSlot && slot != -1) {
-                    event.cancel();
+        if (nullCheck()) return;
+        if (duplicateSlot.getValue() && event.getPacket() instanceof ServerboundSetCarriedItemPacket packet) {
+            int nextSlot = packet.getSlot();
+            if (nextSlot < 0 || nextSlot > 8 || nextSlot == lastSlot && !fastSwitch.getValue()) {
+                event.cancel();
+                return;
+            }
+            if (fastSwitch.getValue() && lastSlot >= 0 && nextSlot != lastSlot && !((lastSlot == 0 && nextSlot == 8) || (lastSlot == 8 && nextSlot == 0))) {
+                event.cancel();
+                int step = lastSlot < nextSlot ? 1 : -1;
+                for (int slot = lastSlot + step; slot != nextSlot; slot += step) {
+                    NetworkUtils.sendPacketNoEvent(new ServerboundSetCarriedItemPacket(slot));
                 }
-                lastSendSlot = setCarriedItemPacket.getSlot();
+                NetworkUtils.sendPacketNoEvent(packet);
             }
+            lastSlot = nextSlot;
         }
-
-        if (packet instanceof ServerboundContainerClickPacket || packet instanceof ServerboundContainerClosePacket) {
-            event.cancel();
-
-            boolean sprinted = false;
-
-            if (input.getValue()) {
-                spoofInput();
-                hasOldInput = true;
-            }
-
-            if (sprinting.getValue() && mc.player.isSprinting()) {
-                raoGuoSprinting(false);
-                sprinted = true;
-            }
-
-            PacketUtils.sendSilently(packet);
-
-            if (sprinted) {
-                raoGuoSprinting(true);
-            }
-
-            if (input.getValue() && hasOldInput) {
-                restoreInput();
-                hasOldInput = false;
-            }
-        }
-    }
-
-    private void raoGuoSprinting(boolean sprintState) {
-        mc.player.setSprinting(sprintState);
-        mc.player.wasSprinting = sprintState; // BadPacketsF
-        mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, sprintState ? ServerboundPlayerCommandPacket.Action.START_SPRINTING : ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
-    }
-
-    private void spoofInput() {
-        if (shouldRestore) return;
-        oldInput = mc.player.input.keyPresses;
-        mc.player.input.keyPresses = Input.EMPTY;
-        mc.getConnection().send(new ServerboundPlayerInputPacket(Input.EMPTY));
-        mc.player.lastSentInput = Input.EMPTY;
-        shouldRestore = true;
-    }
-
-    private void restoreInput() {
-        if (!shouldRestore) return;
-        mc.player.input.keyPresses = oldInput;
-        oldInput = null;
-        shouldRestore = false;
     }
 
 }

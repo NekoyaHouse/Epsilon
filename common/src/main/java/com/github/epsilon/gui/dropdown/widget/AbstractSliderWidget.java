@@ -2,6 +2,7 @@ package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.Setting;
@@ -62,6 +63,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             scope.roundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
 
             if (dragging && mouseX >= 0) {
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST);
                 float rawRatio = Mth.clamp((float) (mouseX - getTrackX()) / trackW, 0.0f, 1.0f);
                 updateValueFromRatio(rawRatio);
             }
@@ -123,6 +125,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
                 inputField.setText(formatPlainValue());
                 inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
                 dragging = false;
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.TYPING);
                 return true;
             }
         }
@@ -130,6 +133,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             if (inputField.isFocused()) {
                 if (isEditorBoundsHovered(mouseX, mouseY)) {
                     inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
+                    DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.TYPING);
                     return true;
                 }
                 commitInput();
@@ -137,6 +141,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             }
             if (isEditorHitboxHovered(mouseX, mouseY)) {
                 dragging = true;
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST);
                 return true;
             }
         }
@@ -149,6 +154,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         if (button == 0 && dragging) {
             commitPendingValue();
             dragging = false;
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         if (inputField.isFocused()) {
@@ -157,6 +163,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             }
             commitInput();
             inputField.blur();
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         return false;
@@ -169,12 +176,14 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
             commitInput();
             inputField.blur();
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             clearPendingValue();
             inputField.setText(formatPlainValue());
             inputField.blur();
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
         if (inputField.keyPressed(keyCode)) {

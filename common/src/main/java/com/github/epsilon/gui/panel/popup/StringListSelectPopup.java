@@ -89,7 +89,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             UiRect animatedViewport = getViewport(popupY);
             lastViewport = animatedViewport;
             scope.pushAbsolute(animatedBounds, popup -> {
-                popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
+                popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, MD3Theme.POPUP_SHADOW_BLUR,
                         MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
                         MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
 

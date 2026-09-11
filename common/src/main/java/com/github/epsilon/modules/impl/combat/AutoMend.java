@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -50,7 +50,7 @@ public class AutoMend extends Module {
         FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
         if (!result.found()) return;
 
-        Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), 90), 10, Priority.High);
+        RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), 90), 180, Priority.High);
 
         InvUtils.swap(result.slot(), true);
 

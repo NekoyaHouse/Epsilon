@@ -5,7 +5,6 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
 
@@ -82,7 +81,7 @@ public class PanelElements {
      */
     public static void buildAssistChip(UiTree.Scope scope, TextRenderer textRenderer, UiRect bounds,
                                        String label, float textScale, Color background, Color foreground,
-                                       @Nullable String trailingIcon, float trailingIconScale, @Nullable TtfFontLoader trailingIconFont) {
+                                       String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont) {
         scope.chip(bounds, label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont);
     }
 

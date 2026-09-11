@@ -15,6 +15,7 @@ layout(std140) uniform ShaderParams {
     float GradientScale;
     float Octaves;
     vec2 Resolution;
+    float UseTargetColors;
 };
 
 layout(std140) uniform ShaderColors {
@@ -56,19 +57,28 @@ void main() {
     } else {
         float alphaOutline = 0.0;
         float outlineHit = 0.0;
+        vec4 targetColor = vec4(0.0);
         for (int x = -quality; x < quality; x++) {
             for (int y = -quality; y < quality; y++) {
-                vec2 offset = vec2(x, y);
+                vec2 offset = vec2(float(x) + 0.5, float(y) + 0.5);
                 vec2 coord = texCoord + offset * oneTexel;
-                float sampleHit = alphaMask(texture(InputSampler, coord).a);
+                vec4 sampleColor = texture(InputSampler, coord);
+                float sampleHit = alphaMask(sampleColor.a);
                 outlineHit += sampleHit;
-                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), Outline.a);
+                if (sampleColor.a > targetColor.a) {
+                    targetColor = sampleColor;
+                }
+                float sourceAlpha = mix(Outline.a, sampleColor.a, UseTargetColors);
+                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), sourceAlpha);
             }
         }
 
         float hitMask = alphaMask(outlineHit);
         float hardMode = 1.0 - softMode;
-        float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
-        fragColor = vec4(mix(vec3(-1.0), Outline.rgb, hitMask), finalAlpha);
+        vec3 sourceColor = targetColor.rgb;
+        float sourceAlpha = targetColor.a;
+        vec3 finalColor = mix(Outline.rgb, sourceColor, UseTargetColors);
+        float finalAlpha = alphaOutline + hardMode * mix(alpha0, sourceAlpha, UseTargetColors) * hitMask;
+        fragColor = vec4(mix(vec3(-1.0), finalColor, hitMask), finalAlpha);
     }
 }

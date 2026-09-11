@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
-import org.joml.Vector2f;
 
 import java.awt.*;
 
@@ -48,6 +47,16 @@ public class CircleESP {
             .withCull(false)
             .build();
 
+    /**
+     * 在目标周围渲染圆形 ESP。
+     *
+     * @param poseStack   渲染姿态栈
+     * @param target      目标实体
+     * @param radius      爆炸或特效半径
+     * @param sideColor   填充面颜色
+     * @param lineColor   轮廓线颜色
+     * @param alphaFactor 透明度系数
+     */
     public static void render(PoseStack poseStack, LivingEntity target, float radius, Color sideColor, Color lineColor, float alphaFactor) {
         boolean canSee = mc.player.hasLineOfSight(target);
 
@@ -86,12 +95,12 @@ public class CircleESP {
             float radAngle = (float) (i * Math.PI * 2 / 90);
             float nextAngle = (float) ((i + 1) * Math.PI * 2 / 90);
 
-            Vector2f nextPoint = getPoint(nextAngle, radius);
-            Vector2f linePoint = getPoint(radAngle, radius);
-            Vector2f normal = getNormal(radAngle);
+            float[] nextPoint = getPoint(nextAngle, radius);
+            float[] linePoint = getPoint(radAngle, radius);
+            float[] normal = getNormal(radAngle);
 
-            lineBuilder.vertex(matrix, entry, linePoint.x, 0f, linePoint.y, new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), Math.round(lineColor.getAlpha() * alpha)).getRGB(), normal.x, 0f, normal.y, 2f);
-            lineBuilder.vertex(matrix, entry, nextPoint.x, 0f, nextPoint.y, new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), Math.round(lineColor.getAlpha() * alpha)).getRGB(), normal.x, 0f, normal.y, 2f);
+            lineBuilder.vertex(matrix, entry, linePoint[0], 0f, linePoint[1], new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), Math.round(lineColor.getAlpha() * alpha)).getRGB(), normal[0], 0f, normal[1], 2f);
+            lineBuilder.vertex(matrix, entry, nextPoint[0], 0f, nextPoint[1], new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), Math.round(lineColor.getAlpha() * alpha)).getRGB(), normal[0], 0f, normal[1], 2f);
         }
 
         lineBuilder.end();
@@ -99,12 +108,12 @@ public class CircleESP {
         poseStack.popPose();
     }
 
-    private static Vector2f getPoint(float radAngle, float radius) {
-        return new Vector2f((float) (-Math.sin(radAngle) * radius), (float) (Math.cos(radAngle) * radius));
+    private static float[] getPoint(float radAngle, float radius) {
+        return new float[]{(float) (-Math.sin(radAngle) * radius), (float) (Math.cos(radAngle) * radius)};
     }
 
-    private static Vector2f getNormal(float radAngle) {
-        return new Vector2f((float) -Math.cos(radAngle), (float) -Math.sin(radAngle));
+    private static float[] getNormal(float radAngle) {
+        return new float[]{(float) -Math.cos(radAngle), (float) -Math.sin(radAngle)};
     }
 
 }

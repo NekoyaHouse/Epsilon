@@ -7,18 +7,50 @@ import static com.github.epsilon.Constants.mc;
 
 public class HoleUtils {
 
+    /**
+     * 检测指定位置开始的洞结构。
+     *
+     * @param pos 目标位置
+     * @return 操作结果
+     */
     public static Hole getHole(BlockPos pos) {
         return getHole(pos, true, true, true, 3, true);
     }
 
+    /**
+     * 检测指定位置开始的洞结构。
+     *
+     * @param pos   目标位置
+     * @param depth 洞结构需要检查的内部高度
+     * @return 操作结果
+     */
     public static Hole getHole(BlockPos pos, int depth) {
         return getHole(pos, depth, true);
     }
 
+    /**
+     * 检测指定位置开始的洞结构。
+     *
+     * @param pos   目标位置
+     * @param depth 洞结构需要检查的内部高度
+     * @param floor 是否要求洞底为抗爆方块
+     * @return 操作结果
+     */
     public static Hole getHole(BlockPos pos, int depth, boolean floor) {
         return getHole(pos, true, true, true, depth, floor);
     }
 
+    /**
+     * 检测指定位置开始的洞结构。
+     *
+     * @param pos     目标位置
+     * @param single  是否检测单格洞
+     * @param doubles 是否检测双格洞
+     * @param quad    是否检测四格洞
+     * @param depth   洞结构需要检查的内部高度
+     * @param floor   是否要求洞底为抗爆方块
+     * @return 操作结果
+     */
     public static Hole getHole(BlockPos pos, boolean single, boolean doubles, boolean quad, int depth, boolean floor) {
         if (!isHole(pos, depth, floor)) {
             return new Hole(pos, HoleType.NotHole);
@@ -59,6 +91,12 @@ public class HoleUtils {
         return new Hole(pos, HoleType.NotHole);
     }
 
+    /**
+     * 判断指定位置是否为可作为洞壁的抗爆方块。
+     *
+     * @param pos 目标位置
+     * @return 判断结果
+     */
     public static boolean isBlock(BlockPos pos) {
         return mc.level != null
                 && mc.level.isLoaded(pos)
@@ -78,6 +116,12 @@ public class HoleUtils {
         return true;
     }
 
+    /**
+     * 判断玩家当前是否位于洞结构中。
+     *
+     * @param player 玩家
+     * @return 判断结果
+     */
     public static boolean inHole(Player player) {
         BlockPos pos = player.blockPosition();
 

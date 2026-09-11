@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.utils.render.EpsilonGuiRenderer;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.GuiRenderer;
@@ -36,42 +37,13 @@ public class MixinGuiRenderer {
     @Unique
     private EpsilonGuiRenderer epsilon$guiRenderer;
 
-    @Inject(method = "draw", at = @At("HEAD"))
-    private void onDrawHead(CallbackInfo ci) {
-        epsilon$ensureRenderers();
-
-        int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
-        int mouseY = (int) mc.mouseHandler.getScaledYPos(mc.getWindow());
-
-        GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
-        epsilon$levelGuiRenderer.render();
-        epsilon$levelGuiRenderer.endFrame();
-
-        GuiGraphicsExtractor guiGraphics = new GuiGraphicsExtractor(mc, epsilon$renderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
-
-        epsilon$guiRenderer.render();
-
-        epsilon$guiRenderer.endFrame();
-    }
-
-    @Inject(method = "close", at = @At("HEAD"))
-    private void onClose(CallbackInfo ci) {
-        if (epsilon$levelGuiRenderer != null) {
-            epsilon$levelGuiRenderer.close();
-            epsilon$levelGuiRenderer = null;
-            epsilon$levelRenderState = null;
+    @Inject(method = "render", at = @At("HEAD"))
+    private void onRenderHead(CallbackInfo ci) {
+        // 只在原版主 GuiRenderer 上运行，避免被 MeteorClient 继承的自定义 GuiRenderer 重复触发
+        if (((GuiRenderer) (Object) this).getClass() != GuiRenderer.class) {
+            return;
         }
-        if (epsilon$guiRenderer != null) {
-            epsilon$guiRenderer.close();
-            epsilon$guiRenderer = null;
-            epsilon$renderState = null;
-        }
-    }
 
-    @Unique
-    private void epsilon$ensureRenderers() {
         if (epsilon$levelRenderState == null || epsilon$levelGuiRenderer == null) {
             this.epsilon$levelRenderState = new GuiRenderState();
             this.epsilon$levelGuiRenderer = new EpsilonGuiRenderer(
@@ -86,6 +58,23 @@ public class MixinGuiRenderer {
                     this.featureRenderDispatcher
             );
         }
+
+        int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
+        int mouseY = (int) mc.mouseHandler.getScaledYPos(mc.getWindow());
+
+        HudEditorScreen.INSTANCE.renderPendingHudElements();
+
+        GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
+        EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
+        epsilon$levelGuiRenderer.render();
+        epsilon$levelGuiRenderer.endFrame();
+
+        GuiGraphicsExtractor guiGraphics = new GuiGraphicsExtractor(mc, epsilon$renderState, mouseX, mouseY);
+        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
+
+        epsilon$guiRenderer.render();
+
+        epsilon$guiRenderer.endFrame();
     }
 
 }

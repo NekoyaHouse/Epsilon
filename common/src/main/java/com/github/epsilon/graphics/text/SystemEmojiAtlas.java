@@ -27,7 +27,7 @@ import java.util.Map;
  * @author 06789
  * 我也不知道这他妈是个什么 78 东西。
  */
-public final class SystemEmojiAtlas implements AutoCloseable {
+public class SystemEmojiAtlas implements AutoCloseable {
 
     public static final SystemEmojiAtlas INSTANCE = new SystemEmojiAtlas();
 

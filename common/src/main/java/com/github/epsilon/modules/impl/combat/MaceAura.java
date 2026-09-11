@@ -2,8 +2,9 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.target.TargetRequest;
+import com.github.epsilon.managers.rotation.RotationManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -18,7 +19,6 @@ import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -73,13 +73,16 @@ public class MaceAura extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
-        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
+        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 360.0f,
                 players.getValue(),
                 mobs.getValue(),
                 animals.getValue(),
                 villagers.getValue(),
+                false,
+                false,
+                false,
                 true,
                 64
         ));
@@ -88,7 +91,7 @@ public class MaceAura extends Module {
             return;
         }
 
-        Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), 10, Priority.Medium);
+        RotationManager.INSTANCE.setRotations(RotationUtils.getRotationsToEntity(target), 180, Priority.Medium);
 
         if (!isReadyToAttack()) return;
 
@@ -96,7 +99,8 @@ public class MaceAura extends Module {
     }
 
     private boolean isReadyToAttack() {
-        if (mc.hitResult.getType() != HitResult.Type.ENTITY) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
             return false;
         }
         if (cooldown.getValue()) {

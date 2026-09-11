@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.modules.impl.movement.FastWeb;
+import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
@@ -19,7 +19,7 @@ public class MixinWebBlock {
 
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
     private void onEntityCollision(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
-        if (entity == mc.player && FastWeb.INSTANCE.cobweb()) {
+        if (entity == mc.player && NoSlowdown.INSTANCE.noWeb()) {
             ci.cancel();
         }
     }

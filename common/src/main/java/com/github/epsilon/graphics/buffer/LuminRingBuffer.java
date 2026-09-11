@@ -11,9 +11,17 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Lumin 的环形 GPU 缓冲区。
+ *
+ * <p>默认维护 3 个轮转槽位，用来避免同一帧内写入和读取冲突。
+ * 当当前槽位容量不足时，会自动扩展当前槽位的字节容量，并尽量保留已写入数据。
+ *
+ * <p>该类只负责缓冲区管理，不负责具体顶点格式或绘制逻辑。
+ */
 public class LuminRingBuffer {
 
-    private static final int BUFFER_COUNT = 8;
+    private static final int BUFFER_COUNT = 3;
 
     private final int usage;
     private final GpuBuffer[] buffers = new GpuBuffer[BUFFER_COUNT];
@@ -40,22 +48,44 @@ public class LuminRingBuffer {
         }
     }
 
+    /**
+     * 获取当前槽位的容量。
+     *
+     * @return 当前 GPU 缓冲区大小，单位字节
+     */
     public int size() {
         return sizes[current];
     }
 
+    /**
+     * 判断当前槽位是否已经映射到 CPU 可写内存。
+     *
+     * @return 已映射返回 true
+     */
     public boolean isMapped() {
         return mapped;
     }
 
+    /**
+     * 获取当前映射视图。
+     *
+     * @return 当前映射的 ByteBuffer
+     * @throws IllegalStateException 当缓冲区尚未映射时抛出
+     */
     public ByteBuffer getMappedBuffer() {
         if (mappedBuffer == null) {
             throw new IllegalStateException("LuminRingBuffer is not mapped");
         }
-
         return mappedBuffer.data();
     }
 
+    /**
+     * 确保当前槽位拥有足够容量。
+     *
+     * <p>若容量不足，会扩展当前槽位并尽量保留已有内容。
+     *
+     * @param requiredBytes 所需的最小字节数
+     */
     public void ensureCapacity(long requiredBytes) {
         if (requiredBytes <= size()) {
             return;
@@ -64,6 +94,11 @@ public class LuminRingBuffer {
         resizeCurrent(growSize(size(), requiredBytes));
     }
 
+    /**
+     * 将当前槽位映射为可写内存。
+     *
+     * <p>如果已经映射，则直接返回。
+     */
     public void tryMap() {
         if (mapped) return;
         beginFrameIfNeeded();
@@ -71,6 +106,9 @@ public class LuminRingBuffer {
         mapped = true;
     }
 
+    /**
+     * 取消当前槽位映射。
+     */
     public void unmap() {
         if (!mapped) return;
         mappedBuffer.close();
@@ -78,11 +116,19 @@ public class LuminRingBuffer {
         mapped = false;
     }
 
+    /**
+     * 切换到下一个轮转槽位。
+     */
     public void rotate() {
         beginFrameIfNeeded();
         current = (current + 1) % buffers.length;
     }
 
+    /**
+     * 取消映射当前槽位并切换到下一个轮转槽位。
+     *
+     * @return 切换前的 GPU 缓冲区
+     */
     public GpuBuffer unmapAndRotate() {
         GpuBuffer lastGpuBuffer = getGpuBuffer();
         unmap();
@@ -90,6 +136,11 @@ public class LuminRingBuffer {
         return lastGpuBuffer;
     }
 
+    /**
+     * 获取当前槽位对应的 GPU 缓冲区。
+     *
+     * @return 当前 GPU 缓冲区
+     */
     public GpuBuffer getGpuBuffer() {
         return buffers[current];
     }
@@ -106,6 +157,9 @@ public class LuminRingBuffer {
         commandEncoder.writeToBuffer(getGpuBuffer().slice(offset, source.remaining()), source);
     }
 
+    /**
+     * 关闭所有 GPU 资源。
+     */
     public void close() {
         if (mapped) unmap();
         for (GpuBuffer buffer : buffers) {
@@ -145,9 +199,7 @@ public class LuminRingBuffer {
                 MemoryUtil.memFree(preservedMappedData);
             }
         } else if (preservedBytes > 0) {
-            RenderSystem.getDevice()
-                    .createCommandEncoder()
-                    .copyToBuffer(oldBuffer.slice(0, preservedBytes), nextBuffer.slice(0, preservedBytes));
+            RenderSystem.getDevice().createCommandEncoder().copyToBuffer(oldBuffer.slice(0, preservedBytes), nextBuffer.slice(0, preservedBytes));
         }
 
         retiredBuffers.add(oldBuffer);

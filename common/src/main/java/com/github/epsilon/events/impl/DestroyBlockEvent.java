@@ -5,14 +5,14 @@ import net.minecraft.core.BlockPos;
 
 public class DestroyBlockEvent extends Cancellable {
 
-    private final BlockPos pos;
+    private final BlockPos blockPos;
 
-    public DestroyBlockEvent(BlockPos pos) {
-        this.pos = pos;
+    public DestroyBlockEvent(BlockPos blockPos) {
+        this.blockPos = blockPos;
     }
 
-    public BlockPos getPos() {
-        return this.pos;
+    public BlockPos getBlockPos() {
+        return blockPos;
     }
 
 }

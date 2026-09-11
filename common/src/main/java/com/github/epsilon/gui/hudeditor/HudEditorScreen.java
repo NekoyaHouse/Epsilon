@@ -7,6 +7,7 @@ import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ListSettingPopupScreen;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
@@ -15,16 +16,26 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
+import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.HudElementHolder;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.HudElementManager;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
+import com.github.epsilon.settings.impl.StringListSetting;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.PreeditEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -32,7 +43,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class HudEditorScreen extends Screen {
+@ClInitNative
+public class HudEditorScreen extends Screen implements ListSettingPopupScreen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
 
@@ -43,6 +55,7 @@ public class HudEditorScreen extends Screen {
 
     private CategoryPanel hudPanel;
     private LuminRenderSystem.LuminRenderTarget renderTarget;
+    private IMEPreeditOverlay preeditOverlay;
     private int renderFrameId;
     private int panelElementCount = -1;
     private HudModule selectedElement;
@@ -54,9 +67,11 @@ public class HudEditorScreen extends Screen {
     private final TextRenderer textMetrics = TextRenderer.create();
     private final UiTextMetrics uiTextMetrics = new EditorTextMetrics();
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
+    private final PanelPopupHost popupHost = new PanelPopupHost();
     private UiRenderBatch editorBatch;
     private UiTree.Scope editorScope;
     private int editorLayer;
+    private boolean shouldRenderElements;
 
     private HudEditorScreen() {
         super(Component.literal("HudEditor"));
@@ -64,7 +79,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        Managers.NOTIFICATION.clearAll();
+        NotificationManager.INSTANCE.clearAll();
         ensureHudPanel();
         hudPanel.setVisible(true);
         hudPanel.setOpened(true);
@@ -84,18 +99,40 @@ public class HudEditorScreen extends Screen {
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        drawEditor(graphics, epsilonMouseX, epsilonMouseY);
-        scene.endFrame();
+
+        drawEditor(graphics, epsilonMouseX, epsilonMouseY, a);
+
+        shouldRenderElements = true;
 
         LuminRenderSystem.setActiveTarget(null);
-        graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
-        drawElementOverlays(graphics);
+        if (preeditOverlay != null) {
+            preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
+            graphics.setPreeditOverlay(preeditOverlay);
+        }
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+                renderTarget.getIdentifier(),
+                0,
+                0,
+                0.0f,
+                window.getHeight(),
+                window.getGuiScaledWidth(),
+                window.getGuiScaledHeight(),
+                window.getWidth(),
+                -window.getHeight(),
+                window.getWidth(),
+                window.getHeight()
+        );
+        if (popupHost.getActivePopup() == null) {
+            drawElementOverlays(graphics);
+        }
+        popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, a);
     }
 
-    private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         ensureHudPanel();
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
             element.updateLayout();
         }
 
@@ -106,6 +143,7 @@ public class HudEditorScreen extends Screen {
 
         float screenW = LuminRenderSystem.getScaledWidth();
         float screenH = LuminRenderSystem.getScaledHeight();
+        popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, screenW, screenH));
 
         beginEditorLayer(10);
         editorScope.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
@@ -121,14 +159,13 @@ public class HudEditorScreen extends Screen {
         drawSnapGuides(editorScope, screenW, screenH);
         flushEditorLayer();
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            if (!element.isEnabled()) continue;
-            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
-        }
+        boolean popupActive = popupHost.getActivePopup() != null;
+        int backgroundMouseX = popupActive ? Integer.MIN_VALUE : mouseX;
+        int backgroundMouseY = popupActive ? Integer.MIN_VALUE : mouseY;
 
         beginEditorLayer(100);
-        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
-        HudModule hovered = findElementAt(mouseX, mouseY, true);
+        List<HudModule> elements = HudElementManager.INSTANCE.getElements();
+        HudModule hovered = findElementAt(backgroundMouseX, backgroundMouseY, true);
         for (HudModule element : elements) {
             if (!element.isEnabled()) continue;
             boolean selected = element == selectedElement;
@@ -140,7 +177,32 @@ public class HudEditorScreen extends Screen {
 
         drawCanvasChrome();
 
-        drawPanel(mouseX, mouseY);
+        drawPanel(backgroundMouseX, backgroundMouseY);
+        popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
+    }
+
+    /**
+     * 在世界画面提交后执行 HUD 预览，确保背景模糊能读取到主渲染目标的有效内容。
+     */
+    public void renderPendingHudElements() {
+        if (!shouldRenderElements || minecraft.gui.screen() != this || renderTarget == null) {
+            return;
+        }
+
+        LuminRenderSystem.LuminRenderTarget previousTarget = LuminRenderSystem.getActiveTarget();
+        LuminRenderSystem.setActiveTarget(renderTarget);
+
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
+            if (element.isEnabled()) {
+                element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
+            }
+        }
+        scene.flush();
+        popupHost.flush();
+        scene.clear();
+
+        shouldRenderElements = false;
+        LuminRenderSystem.setActiveTarget(previousTarget);
     }
 
     private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {
@@ -154,7 +216,7 @@ public class HudEditorScreen extends Screen {
         float overlayScale = (float) (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale());
         graphics.pose().pushMatrix();
         graphics.pose().scale(overlayScale, overlayScale);
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+        for (HudModule element : HudElementManager.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
             element.renderOverlay(graphics, minecraft.getDeltaTracker());
         }
@@ -220,7 +282,8 @@ public class HudEditorScreen extends Screen {
         float subtitleY = titleY + titleH + middlePadding;
 
         beginEditorLayer(10);
-        editorScope.shadow(labelX, labelY, boxW, boxH, radius, 8.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
+        editorScope.shadow(labelX, labelY, boxW, boxH, radius, MD3Theme.FLOATING_LABEL_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.FLOATING_LABEL_SHADOW_ALPHA));
         editorScope.roundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238));
         editorScope.text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
         editorScope.text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED);
@@ -315,6 +378,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (popupHost.keyPressed(event)) {
+            return true;
+        }
         if (hudPanel != null && hudPanel.hasActiveInput() && hudPanel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
             return true;
         }
@@ -333,6 +399,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        if (popupHost.charTyped(event)) {
+            return true;
+        }
         String typed = event.codepointAsString();
         if (hudPanel != null && !typed.isEmpty() && hudPanel.charTyped(typed)) {
             return true;
@@ -341,8 +410,17 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
+    public boolean preeditUpdated(PreeditEvent event) {
+        preeditOverlay = event == null ? null : new IMEPreeditOverlay(event, font, 10);
+        return true;
+    }
+
+    @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
+            return true;
+        }
         if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             validateSelection();
             return true;
@@ -367,6 +445,9 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (popupHost.mouseReleased(epsilonEvent)) {
+            return true;
+        }
         if (draggingElement != null && epsilonEvent.button() == 0) {
             draggingElement = null;
             currentSnap = SnapInfo.none();
@@ -381,22 +462,30 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
+            return true;
+        }
         if (draggingElement != null) {
-            double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(event.x());
-            double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(event.y());
-            moveElementTo(draggingElement, (float) epsilonMouseX - dragOffsetX, (float) epsilonMouseY - dragOffsetY, true);
+            double epsilonEventX = LuminRenderSystem.toEpsilonMouseX(event.x());
+            double epsilonEventY = LuminRenderSystem.toEpsilonMouseY(event.y());
+            moveElementTo(draggingElement, (float) epsilonEventX - dragOffsetX, (float) epsilonEventY - dragOffsetY, true);
             return true;
         }
         if (hudPanel != null) {
             hudPanel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
         }
-        return super.mouseDragged(epsilonEvent, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
+        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
+            return true;
+        }
         if (hudPanel != null && hudPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
             return true;
         }
@@ -508,7 +597,7 @@ public class HudEditorScreen extends Screen {
         if (!includePanelArea && isOverPanel(mouseX, mouseY)) {
             return null;
         }
-        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        List<HudModule> elements = HudElementManager.INSTANCE.getElements();
         for (int i = elements.size() - 1; i >= 0; i--) {
             HudModule element = elements.get(i);
             if (!element.isEnabled()) continue;
@@ -542,6 +631,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void onClose() {
+        IMEFocusHelper.forceDeactivate();
         super.onClose();
 
         minecraft.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
@@ -553,8 +643,13 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
+        popupHost.close();
+        shouldRenderElements = false;
+        scene.clear();
         draggingElement = null;
         currentSnap = SnapInfo.none();
+        IMEFocusHelper.forceDeactivate();
+        preeditOverlay = null;
     }
 
     @Override
@@ -568,13 +663,31 @@ public class HudEditorScreen extends Screen {
         return Math.min(LuminRenderSystem.getScaledHeight() * 0.72f, 350.0f);
     }
 
+    @Override
+    public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
+        UiRect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(RegistryListSelectPopup.create(bounds, setting));
+    }
+
+    @Override
+    public void openStringListSettingPopup(StringListSetting setting) {
+        UiRect bounds = popupHost.getCenteredBounds(
+                Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
+    }
+
     private void ensureHudPanel() {
-        int elementCount = HudElementHolder.INSTANCE.getElements().size();
+        int elementCount = HudElementManager.INSTANCE.getElements().size();
         if (hudPanel != null && panelElementCount == elementCount) return;
 
         float x = hudPanel == null ? DropdownTheme.PANEL_MARGIN_X : hudPanel.getX();
         float y = hudPanel == null ? DropdownTheme.PANEL_MARGIN_Y : hudPanel.getY();
-        hudPanel = new CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementHolder.INSTANCE.getElements());
+        hudPanel = new CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementManager.INSTANCE.getElements());
         hudPanel.setVisible(true);
         hudPanel.setOpened(true);
         hudPanel.setPosition(x, y);

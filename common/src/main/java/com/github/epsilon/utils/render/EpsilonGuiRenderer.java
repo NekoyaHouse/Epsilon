@@ -34,7 +34,6 @@ import org.joml.Matrix3x2fc;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.joml.Vector4fc;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -69,13 +68,13 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private final Projection guiProjection = new Projection();
     private final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("gui");
     private final FeatureRenderDispatcher featureRenderDispatcher;
-    private @Nullable GuiItemAtlas itemAtlas;
+    private GuiItemAtlas itemAtlas;
     private double cachedGuiScale = Double.NaN;
     private final CubeMap cubeMap = new CubeMap(Identifier.withDefaultNamespace("textures/gui/title/background/panorama"));
-    private @Nullable ScreenRectangle previousScissorArea = null;
-    private @Nullable RenderPipeline previousPipeline = null;
-    private @Nullable TextureSetup previousTextureSetup = null;
-    private StagedVertexBuffer.@Nullable Draw previousDraw;
+    private ScreenRectangle previousScissorArea = null;
+    private RenderPipeline previousPipeline = null;
+    private TextureSetup previousTextureSetup = null;
+    private StagedVertexBuffer.Draw previousDraw;
 
     public EpsilonGuiRenderer(GuiRenderState renderState, FeatureRenderDispatcher featureRenderDispatcher) {
         this.renderState = renderState;
@@ -353,11 +352,11 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         }
     }
 
-    private boolean scissorChanged(@Nullable ScreenRectangle newScissor, @Nullable ScreenRectangle oldScissor) {
+    private boolean scissorChanged(ScreenRectangle newScissor, ScreenRectangle oldScissor) {
         if (newScissor == oldScissor) {
             return false;
         } else {
-            return newScissor != null ? !newScissor.equals(oldScissor) : true;
+            return newScissor == null || !newScissor.equals(oldScissor);
         }
     }
 
@@ -395,7 +394,8 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             StagedVertexBuffer.Draw draw,
             RenderPipeline pipeline,
             TextureSetup textureSetup,
-            @Nullable ScreenRectangle scissorArea
+            ScreenRectangle scissorArea
     ) {
     }
+
 }

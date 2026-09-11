@@ -1,42 +1,30 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.immediate.LuminTessellator;
-import com.github.epsilon.utils.render.ScissorUtils;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.IndexType;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.*;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -44,24 +32,14 @@ public class BlurShader {
 
     public static final BlurShader INSTANCE = new BlurShader();
 
+    private static final int MAX_SEGMENTS = 64;
+
     private static final Identifier BLUR_PATH = ResourceLocationUtils.getIdentifier("blur");
     private static final Identifier BLUR_3D_BOX_PATH = ResourceLocationUtils.getIdentifier("blur_3d_box");
 
-    private static final int UNIFORMS_SIZE = new Std140SizeCalculator()
-            .putVec3()
-            .putVec4()
-            .putVec4()
-            .get();
+    private static final int UNIFORMS_SIZE = blurUniformsSize();
 
-    private static final int BOX_UNIFORMS_SIZE = new Std140SizeCalculator()
-            .putVec4()
-            .get();
-
-    private static final ColorTargetState BLUR_COLOR_TARGET = new ColorTargetState(
-            Optional.of(BlendFunction.TRANSLUCENT),
-            GpuFormat.RGBA8_UNORM,
-            ColorTargetState.WRITE_COLOR
-    );
+    private static final int BOX_UNIFORMS_SIZE = new Std140SizeCalculator().putVec4().get();
 
     private RenderPipeline pipeline;
     private RenderPipeline boxPipeline;
@@ -73,9 +51,9 @@ public class BlurShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur"))
                     .withVertexShader(BLUR_PATH)
                     .withFragmentShader(BLUR_PATH)
-                    .withBindGroupLayout(BindGroupLayout.builder().withUniform("BlurUniforms", UniformType.UNIFORM_BUFFER).build())
-                    .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
-                    .withColorTargetState(BLUR_COLOR_TARGET)
+                    .withBindGroupLayout(LuminBindGroupLayouts.BLUR)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
+                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
                     .withCull(false)
                     .build();
         }
@@ -87,9 +65,9 @@ public class BlurShader {
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur_3d_box"))
                     .withVertexShader(BLUR_3D_BOX_PATH)
                     .withFragmentShader(BLUR_3D_BOX_PATH)
-                    .withBindGroupLayout(BindGroupLayout.builder().withUniform("BoxBlurUniforms", UniformType.UNIFORM_BUFFER).build())
-                    .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
-                    .withColorTargetState(BLUR_COLOR_TARGET)
+                    .withBindGroupLayout(LuminBindGroupLayouts.BOX_BLUR)
+                    .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
+                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
                     .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
                     .withCull(false)
                     .build();
@@ -97,47 +75,55 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
-        if (mc.gui.screen() != null) return;
+        render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, null, null, 0);
+    }
 
+    public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
+        render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, segmentRects, segmentRadii, segmentCount);
+    }
+
+    public void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float radius, float blurStrength) {
+        render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0);
+    }
+
+    private void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
         this.ensureProgram();
 
         if (width <= 0.0f || height <= 0.0f) {
             return;
         }
 
-        RenderTarget target = mc.gameRenderer.mainRenderTarget();
+        RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
         LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
-        GpuTexture targetTexture = activeTarget == null ? target.getColorTexture() : activeTarget.colorTexture();
-        GpuTextureView targetView = activeTarget == null ? target.getColorTextureView() : activeTarget.colorView();
-        int targetWidth = activeTarget == null ? target.width : activeTarget.width();
-        int targetHeight = activeTarget == null ? target.height : activeTarget.height();
+        GpuTexture sourceTexture = source == null ? mainTarget.getColorTexture() : source.colorTexture();
+        int sourceWidth = source == null ? mainTarget.width : source.width();
+        int sourceHeight = source == null ? mainTarget.height : source.height();
+        GpuTexture targetTexture = activeTarget == null ? mainTarget.getColorTexture() : activeTarget.colorTexture();
+        GpuTextureView targetView = activeTarget == null ? mainTarget.getColorTextureView() : activeTarget.colorView();
+        int targetWidth = activeTarget == null ? mainTarget.width : activeTarget.width();
+        int targetHeight = activeTarget == null ? mainTarget.height : activeTarget.height();
 
-        if (targetWidth <= 0 || targetHeight <= 0 || targetTexture == null || targetView == null) {
+        if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0 || sourceTexture == null || targetTexture == null || targetView == null) {
             return;
         }
 
         if (input == null) {
-            input = new TextureTarget("Lumin Blur Input", targetWidth, targetHeight, false, GpuFormat.RGBA8_UNORM);
+            input = new TextureTarget("Lumin Blur Input", sourceWidth, sourceHeight, false, GpuFormat.RGBA8_UNORM);
         }
 
-        if (this.input.width != targetWidth || this.input.height != targetHeight) {
-            this.input.resize(targetWidth, targetHeight);
+        if (this.input.width != sourceWidth || this.input.height != sourceHeight) {
+            this.input.resize(sourceWidth, sourceHeight);
         }
 
         if (this.input.getColorTexture() == null || this.input.getColorTextureView() == null) {
             return;
         }
 
-        LuminRenderSystem.ScissorRect blurRect = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
-        if (!ScissorUtils.isVisible(blurRect)) {
-            return;
-        }
-
         float scale = (float) LuminRenderSystem.getGuiScale();
-        float pxX = blurRect.x();
-        float pxY = blurRect.y();
-        float pxW = blurRect.width();
-        float pxH = blurRect.height();
+        float pxX = x * scale;
+        float pxY = targetHeight - (y + height) * scale;
+        float pxW = width * scale;
+        float pxH = height * scale;
 
         float rTLPx = Math.max(0.0f, rTL * scale);
         float rTRPx = Math.max(0.0f, rTR * scale);
@@ -145,13 +131,14 @@ public class BlurShader {
         float rBLPx = Math.max(0.0f, rBL * scale);
 
         float quality = Math.max(0.0f, blurStrength);
+        int count = clampSegmentCount(segmentRects, segmentCount);
 
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         encoder.copyTextureToTexture(
-                targetTexture,
+                sourceTexture,
                 input.getColorTexture(),
                 0, 0, 0, 0, 0,
-                targetWidth, targetHeight
+                sourceWidth, sourceHeight
         );
 
         GpuBufferSlice blurUniforms = LuminRenderSystem.writeDynamicUniform(
@@ -159,7 +146,12 @@ public class BlurShader {
                 "Lumin Blur UBO",
                 UNIFORMS_SIZE,
                 16,
-                new BlurUniforms(targetWidth, targetHeight, quality, pxW, pxH, pxX, pxY, rTLPx, rTRPx, rBRPx, rBLPx)
+                new BlurUniforms(
+                        sourceWidth, sourceHeight, quality,
+                        pxW, pxH, pxX, pxY,
+                        rTLPx, rTRPx, rBRPx, rBLPx,
+                        scale, targetHeight, segmentRects, segmentRadii, count
+                )
         );
 
         try (RenderPass renderPass = encoder.createRenderPass(
@@ -168,7 +160,6 @@ public class BlurShader {
                 Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
-            ScissorUtils.enableScissor(renderPass, blurRect);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("BlurUniforms", blurUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
@@ -180,11 +171,11 @@ public class BlurShader {
         render(x, y, width, height, radius, radius, radius, radius, blurStrength);
     }
 
-    public void render3DBoxes(List<AABB> boxes, double blurStrength) {
-        if (boxes.isEmpty()) {
-            return;
-        }
+    public void render(float x, float y, float width, float height, float radius, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
+        render(x, y, width, height, radius, radius, radius, radius, blurStrength, segmentRects, segmentRadii, segmentCount);
+    }
 
+    public void render3DBox(AABB box, double blurStrength) {
         this.ensureBoxProgram();
 
         RenderTarget fb = mc.gameRenderer.mainRenderTarget();
@@ -225,43 +216,15 @@ public class BlurShader {
                 new BoxBlurUniforms(fb.width, fb.height, quality)
         );
 
-        BufferBuilder buffer = LuminTessellator.getInstance().begin(PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        for (AABB box : boxes) {
-            addBoxVertices(buffer, box);
-        }
-        MeshData mesh = buffer.buildOrThrow();
-
-        GpuBuffer vertices = RenderSystem.getDevice().createBuffer(() -> "Lumin 3D Box Blur Vertices", GpuBuffer.USAGE_VERTEX, mesh.vertexBuffer());
-        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(mesh.drawState().primitiveTopology());
-        GpuBuffer indices = autoIndices.getBuffer(mesh.drawState().indexCount());
-        IndexType indexType = autoIndices.type();
-        GpuBufferSlice dynamicTransforms = LuminRenderSystem.writeTransform(
-                RenderSystem.getModelViewMatrixCopy(),
-                new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                new Vector3f(),
-                TextureTransform.DEFAULT_TEXTURING.createMatrix()
-        );
-
-        try (RenderPass renderPass = encoder.createRenderPass(
-                () -> "Lumin 3D Box Blur",
-                fb.getColorTextureView(), Optional.empty(),
-                fb.useDepth ? fb.getDepthTextureView() : null, OptionalDouble.empty()
-        )) {
-            renderPass.setPipeline(this.boxPipeline);
-            RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform("DynamicTransforms", dynamicTransforms);
-            renderPass.setUniform("BoxBlurUniforms", boxBlurUniforms);
-            renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-            renderPass.setVertexBuffer(0, new GpuBufferSlice(vertices, 0, vertices.size()));
-            renderPass.setIndexBuffer(indices, indexType);
-            renderPass.drawIndexed(mesh.drawState().indexCount(), 1, 0, 0, 0);
-        }
-
-        vertices.close();
-        mesh.close();
+        LuminImmediateRenderer.PosColorQuads renderer = LuminImmediateRenderer.beginPosColorQuads(this.boxPipeline, pass -> {
+            pass.setUniform("BoxBlurUniforms", boxBlurUniforms);
+            pass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+        });
+        addBoxVertices(renderer, box);
+        renderer.end();
     }
 
-    private void addBoxVertices(BufferBuilder buffer, AABB box) {
+    private void addBoxVertices(LuminImmediateRenderer.PosColorQuads renderer, AABB box) {
         Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
 
         float minX = (float) (box.minX - camPos.x);
@@ -273,39 +236,52 @@ public class BlurShader {
 
         Matrix4f matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
 
-        vertex(buffer, matrix, minX, minY, minZ);
-        vertex(buffer, matrix, minX, minY, maxZ);
-        vertex(buffer, matrix, maxX, minY, maxZ);
-        vertex(buffer, matrix, maxX, minY, minZ);
+        vertex(renderer, matrix, minX, minY, minZ);
+        vertex(renderer, matrix, minX, minY, maxZ);
+        vertex(renderer, matrix, maxX, minY, maxZ);
+        vertex(renderer, matrix, maxX, minY, minZ);
 
-        vertex(buffer, matrix, minX, maxY, minZ);
-        vertex(buffer, matrix, maxX, maxY, minZ);
-        vertex(buffer, matrix, maxX, maxY, maxZ);
-        vertex(buffer, matrix, minX, maxY, maxZ);
+        vertex(renderer, matrix, minX, maxY, minZ);
+        vertex(renderer, matrix, maxX, maxY, minZ);
+        vertex(renderer, matrix, maxX, maxY, maxZ);
+        vertex(renderer, matrix, minX, maxY, maxZ);
 
-        vertex(buffer, matrix, minX, minY, minZ);
-        vertex(buffer, matrix, minX, maxY, minZ);
-        vertex(buffer, matrix, maxX, maxY, minZ);
-        vertex(buffer, matrix, maxX, minY, minZ);
+        vertex(renderer, matrix, minX, minY, minZ);
+        vertex(renderer, matrix, minX, maxY, minZ);
+        vertex(renderer, matrix, maxX, maxY, minZ);
+        vertex(renderer, matrix, maxX, minY, minZ);
 
-        vertex(buffer, matrix, maxX, minY, minZ);
-        vertex(buffer, matrix, maxX, maxY, minZ);
-        vertex(buffer, matrix, maxX, maxY, maxZ);
-        vertex(buffer, matrix, maxX, minY, maxZ);
+        vertex(renderer, matrix, maxX, minY, minZ);
+        vertex(renderer, matrix, maxX, maxY, minZ);
+        vertex(renderer, matrix, maxX, maxY, maxZ);
+        vertex(renderer, matrix, maxX, minY, maxZ);
 
-        vertex(buffer, matrix, minX, minY, maxZ);
-        vertex(buffer, matrix, maxX, minY, maxZ);
-        vertex(buffer, matrix, maxX, maxY, maxZ);
-        vertex(buffer, matrix, minX, maxY, maxZ);
+        vertex(renderer, matrix, minX, minY, maxZ);
+        vertex(renderer, matrix, maxX, minY, maxZ);
+        vertex(renderer, matrix, maxX, maxY, maxZ);
+        vertex(renderer, matrix, minX, maxY, maxZ);
 
-        vertex(buffer, matrix, minX, minY, minZ);
-        vertex(buffer, matrix, minX, minY, maxZ);
-        vertex(buffer, matrix, minX, maxY, maxZ);
-        vertex(buffer, matrix, minX, maxY, minZ);
+        vertex(renderer, matrix, minX, minY, minZ);
+        vertex(renderer, matrix, minX, minY, maxZ);
+        vertex(renderer, matrix, minX, maxY, maxZ);
+        vertex(renderer, matrix, minX, maxY, minZ);
     }
 
-    private void vertex(BufferBuilder buffer, Matrix4f matrix, float x, float y, float z) {
-        buffer.addVertex(matrix, x, y, z).setColor(-1);
+    private void vertex(LuminImmediateRenderer.PosColorQuads renderer, Matrix4f matrix, float x, float y, float z) {
+        renderer.vertex(matrix, x, y, z, -1);
+    }
+
+    private static int blurUniformsSize() {
+        Std140SizeCalculator calculator = new Std140SizeCalculator().putVec3().putVec4().putVec4().putVec4();
+        for (int i = 0; i < MAX_SEGMENTS * 2; i++) {
+            calculator.putVec4();
+        }
+        return calculator.get();
+    }
+
+    private static int clampSegmentCount(float[] segmentRects, int segmentCount) {
+        if (segmentRects == null || segmentCount <= 0) return 0;
+        return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.length / 4));
     }
 
     private record BlurUniforms(
@@ -319,27 +295,50 @@ public class BlurShader {
             float radiusTopLeft,
             float radiusTopRight,
             float radiusBottomRight,
-            float radiusBottomLeft
+            float radiusBottomLeft,
+            float scale,
+            float targetHeight,
+            float[] segmentRects,
+            float[] segmentRadii,
+            int segmentCount
     ) implements DynamicUniformStorage.DynamicUniform {
-
         @Override
         public void write(ByteBuffer buffer) {
-            Std140Builder.intoBuffer(buffer)
+            Std140Builder builder = Std140Builder.intoBuffer(buffer)
                     .putVec3(width, height, quality)
                     .putVec4(rectWidth, rectHeight, rectX, rectY)
-                    .putVec4(radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
-        }
+                    .putVec4(radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft)
+                    .putVec4(segmentCount, 0.0f, 0.0f, 0.0f);
 
+            for (int i = 0; i < MAX_SEGMENTS; i++) {
+                if (i < segmentCount) {
+                    int offset = i * 4;
+                    float segmentX = segmentRects[offset];
+                    float segmentY = segmentRects[offset + 1];
+                    float segmentWidth = segmentRects[offset + 2];
+                    float segmentHeight = segmentRects[offset + 3];
+                    builder.putVec4(segmentX * scale, targetHeight - (segmentY + segmentHeight) * scale, segmentWidth * scale, segmentHeight * scale);
+                } else {
+                    builder.putVec4(0.0f, 0.0f, 0.0f, 0.0f);
+                }
+            }
+
+            for (int i = 0; i < MAX_SEGMENTS; i++) {
+                float radius = segmentRadii != null && i < segmentCount && i < segmentRadii.length
+                        ? Math.max(0.0f, segmentRadii[i] * scale)
+                        : 0.0f;
+                builder.putVec4(radius, 0.0f, 0.0f, 0.0f);
+            }
+        }
     }
 
-    private record BoxBlurUniforms(float width, float height,
-                                   float quality) implements DynamicUniformStorage.DynamicUniform {
-
+    private record BoxBlurUniforms(
+            float width, float height, float quality
+    ) implements DynamicUniformStorage.DynamicUniform {
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer).putVec4(width, height, quality, 0.0f);
         }
-
     }
 
 }

@@ -5,7 +5,7 @@ import com.github.epsilon.gui.lib.UiRect;
 /**
  * 记录缓存内容的输入快照，并判断下一帧是否需要重建。
  */
-public final class UiInvalidationState {
+public class UiInvalidationState {
 
     private boolean dirty = true;
     private boolean hasActiveAnimations;

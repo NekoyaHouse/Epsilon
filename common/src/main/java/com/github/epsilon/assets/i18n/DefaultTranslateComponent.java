@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 
 public class DefaultTranslateComponent implements TranslateComponent {
@@ -14,7 +14,7 @@ public class DefaultTranslateComponent implements TranslateComponent {
 
     public static DefaultTranslateComponent create(String fullKey) {
         DefaultTranslateComponent component = new DefaultTranslateComponent(fullKey);
-        TranslateHolder.INSTANCE.registerTranslateComponent(component);
+        TranslationManager.INSTANCE.registerTranslateComponent(component);
         return component;
     }
 

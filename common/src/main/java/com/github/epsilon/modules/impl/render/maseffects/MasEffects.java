@@ -126,10 +126,7 @@ public class MasEffects extends Module {
 
     @EventHandler
     private void onPacket(PacketEvent.Receive event) {
-        if (
-                !(event.getPacket() instanceof ClientboundEntityEventPacket packet)
-                        || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH || !customTotemEffect.getValue()
-        ) {
+        if (!(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH || !customTotemEffect.getValue()) {
             return;
         }
 

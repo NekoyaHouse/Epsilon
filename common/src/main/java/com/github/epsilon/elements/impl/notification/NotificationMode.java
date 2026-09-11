@@ -8,6 +8,8 @@ public enum NotificationMode {
 
     Info(255, 255, 255),
 
+    Warning(255, 204, 0),
+
     Error(236, 67, 48);
 
     private final int red;

@@ -10,10 +10,20 @@ import static com.github.epsilon.Constants.mc;
 
 public class PlayerUtils {
 
+    /**
+     * 判断本地玩家是否正在使用食物。
+     *
+     * @return 判断结果
+     */
     public static boolean isEating() {
         return (mc.player.getMainHandItem().getComponents().has(DataComponents.FOOD) || mc.player.getOffhandItem().getComponents().has(DataComponents.FOOD)) && mc.player.isUsingItem();
     }
 
+    /**
+     * 判断本地玩家的包围盒是否与蜘蛛网相交。
+     *
+     * @return 判断结果
+     */
     public static boolean isInWeb() {
         AABB box = mc.player.getBoundingBox().deflate(1.0E-6);
 
@@ -39,6 +49,11 @@ public class PlayerUtils {
         return false;
     }
 
+    /**
+     * 判断本地玩家的包围盒是否与实体方块相交。
+     *
+     * @return 判断结果
+     */
     public static boolean isInBlock() {
         AABB box = mc.player.getBoundingBox().deflate(1.0E-6);
 

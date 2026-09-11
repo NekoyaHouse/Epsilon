@@ -3,10 +3,9 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.ARGB;
@@ -34,7 +33,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     }
 
     public static RoundRectOutlineRenderer create() {
-        return RendererHolder.INSTANCE.register(new RoundRectOutlineRenderer());
+        return RendererManager.INSTANCE.register(new RoundRectOutlineRenderer());
     }
 
     public void addOutline(float x, float y, float width, float height, float radius, float outlineWidth, Color color) {
@@ -42,8 +41,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     }
 
     public void addOutline(float x, float y, float width, float height, float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft, float outlineWidth, Color color) {
-        addOutlineGradient(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, outlineWidth, color, color, color, color
-        );
+        addOutlineGradient(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, outlineWidth, color, color, color, color);
     }
 
     public void addVerticalGradient(float x, float y, float width, float height, float radius, float outlineWidth, Color top, Color bottom) {
@@ -171,7 +169,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
+        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice());
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
         pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
     }
@@ -190,7 +188,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
 }

@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -253,7 +253,7 @@ public class Xray extends Module {
     }
 
     private void log(String message) {
-        Managers.NOTIFICATION.info("Xray", message);
+        NotificationManager.INSTANCE.info("Xray", message);
     }
 
     public static class BlockMemory {

@@ -1,7 +1,7 @@
 package com.github.epsilon.addon;
 
 import com.github.epsilon.assets.i18n.DefaultTranslateComponent;
-import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
@@ -97,7 +97,7 @@ public abstract class EpsilonAddon implements SettingHost {
         if (module == null) {
             return;
         }
-        ModuleHolder.INSTANCE.registerAddonModule(
+        ModuleManager.INSTANCE.registerAddonModule(
                 addonId,
                 module,
                 DefaultTranslateComponent.create(addonId + ".modules." + module.getName().toLowerCase())

@@ -39,22 +39,8 @@ public class BlockESP extends Module {
         super("Block ESP", Category.RENDER);
     }
 
-    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List", defaultBlockList());
-
-    private static List<Block> defaultBlockList() {
-        List<Block> blocks = new ArrayList<>(List.of(
-                Blocks.CHEST,
-                Blocks.TRAPPED_CHEST,
-                Blocks.ENDER_CHEST,
-                Blocks.BARREL,
-                Blocks.SHULKER_BOX
-        ));
-        blocks.addAll(Blocks.COPPER_CHEST.asList());
-        blocks.addAll(Blocks.DYED_SHULKER_BOX.asList());
-        return blocks;
-    }
-
-    private final BoolSetting illegals = boolSetting("Illegals", true);
+    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List", defaultBlocks());
+    private final BoolSetting illegals = boolSetting("Illegals", false);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(160, 210, 255, 180));
@@ -66,6 +52,18 @@ public class BlockESP extends Module {
     private boolean canContinue;
 
     public static List<AABB> boxes = new ArrayList<>();
+
+    private static List<Block> defaultBlocks() {
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(Blocks.CHEST);
+        blocks.add(Blocks.TRAPPED_CHEST);
+        blocks.addAll(Blocks.COPPER_CHEST.asList());
+        blocks.add(Blocks.ENDER_CHEST);
+        blocks.add(Blocks.BARREL);
+        blocks.add(Blocks.SHULKER_BOX);
+        blocks.addAll(Blocks.DYED_SHULKER_BOX.asList());
+        return blocks;
+    }
 
     @Override
     protected void onEnable() {

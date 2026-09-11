@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.ButtonSetting;
@@ -52,6 +54,7 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
             if (action != null) {
                 action.run();
             }
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.BUTTON_ACTION);
             return true;
         }
         return false;

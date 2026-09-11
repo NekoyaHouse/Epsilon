@@ -59,7 +59,7 @@ public class HitParticles extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Stars);
     private final EnumSetting<Physics> physics = enumSetting("Physics", Physics.Fall);
     private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Sync);
-    private final ColorSetting color = colorSetting("Color", new Color(0, 255, 0, 53), true, () -> colorMode.is(ColorMode.Custom));
+    private final ColorSetting color = colorSetting("Color", new Color(255, 255, 255, 53), true, () -> colorMode.is(ColorMode.Custom));
     private final BoolSetting onlySelf = boolSetting("Only Self", false);
     private final IntSetting amount = intSetting("Amount", 2, 1, 5, 1);
     private final IntSetting lifeTime = intSetting("Life Time", 2, 1, 10, 1);
@@ -111,15 +111,16 @@ public class HitParticles extends Module {
     private void onRender3D(Render3DEvent event) {
         if (particles.isEmpty()) return;
 
-        LuminImmediateRenderer.PosTexColorQuads buffer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, switch (mode.getValue()) {
+        Identifier texture = switch (mode.getValue()) {
             case Stars -> STAR_TEXTURE;
             case Hearts -> HEART_TEXTURE;
             case Bloom -> BLOOM_TEXTURE;
-        });
+        };
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, texture);
         for (Particle particle : particles) {
-            particle.renderTexture(event.getPoseStack(), buffer);
+            particle.renderTexture(event.getPoseStack(), renderer);
         }
-        buffer.end();
+        renderer.end();
     }
 
     private Color resolveColor(int offset) {
@@ -203,7 +204,7 @@ public class HitParticles extends Module {
             return System.currentTimeMillis() - spawnTime > lifeTime.getValue() * 1000L;
         }
 
-        private void renderTexture(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer) {
+        private void renderTexture(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             float particleScale = 0.07f;
             float size = scale.getValue().floatValue();
@@ -220,10 +221,10 @@ public class HitParticles extends Module {
             Matrix4f matrix = poseStack.last().pose();
             int argb = particleColor.getRGB();
 
-            buffer.vertex(matrix, 0.0f, size, 0.0f, 0.0f, 1.0f, argb);
-            buffer.vertex(matrix, size, size, 0.0f, 1.0f, 1.0f, argb);
-            buffer.vertex(matrix, size, 0.0f, 0.0f, 1.0f, 0.0f, argb);
-            buffer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, size, 0.0f, 0.0f, 1.0f, argb);
+            renderer.vertex(matrix, size, size, 0.0f, 1.0f, 1.0f, argb);
+            renderer.vertex(matrix, size, 0.0f, 0.0f, 1.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
 
             poseStack.popPose();
         }

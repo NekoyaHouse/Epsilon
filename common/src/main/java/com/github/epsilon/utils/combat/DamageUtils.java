@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.combat;
 
 import com.github.epsilon.utils.player.EnchantmentUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffects;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -18,20 +20,20 @@ import net.minecraft.world.phys.Vec3;
 import static com.github.epsilon.Constants.mc;
 
 /**
- * Utility class for calculating explosion damage dealt to entities.
- * Mirrors the vanilla {@code ServerExplosion} + {@code ExplosionDamageCalculator} +
- * {@code CombatRules} + {@code LivingEntity.getDamageAfterArmorAbsorb/getDamageAfterMagicAbsorb}
- * pipeline on the client side.
+ * 用于计算实体所受爆炸伤害的工具类。
+ * 客户端计算流程与原版 {@code ServerExplosion}、{@code ExplosionDamageCalculator}、
+ * {@code CombatRules} 以及
+ * {@code LivingEntity.getDamageAfterArmorAbsorb/getDamageAfterMagicAbsorb} 保持一致。
  */
 public class DamageUtils {
 
     /**
-     * End Crystal explosion radius as defined in {@code EndCrystal.hurtServer}.
+     * {@code EndCrystal.hurtServer} 定义的末影水晶爆炸半径。
      */
     public static final float CRYSTAL_EXPLOSION_RADIUS = 6.0f;
 
     /**
-     * Respawn Anchor explosion radius as defined in {@code RespawnAnchorBlock.explode}.
+     * {@code RespawnAnchorBlock.explode} 定义的重生锚爆炸半径。
      */
     public static final float ANCHOR_EXPLOSION_RADIUS = 5.0f;
 
@@ -42,42 +44,39 @@ public class DamageUtils {
     // ── public API ──────────────────────────────────────────────────────────
 
     /**
-     * Calculates the damage an End Crystal exploding at {@code crystalPos} would
-     * deal to {@code target}, taking into account exposure, difficulty, armor,
-     * enchantments, the Resistance effect and absorption.
+     * 估算末影水晶爆炸对目标造成的最终伤害。
      *
-     * @param target     the entity that would be damaged
-     * @param crystalPos the position of the End Crystal (explosion center)
-     * @param mode       the armor enchantment mode to apply for calculate
-     * @return estimated damage after all reductions (≥ 0)
+     * @param target     目标实体
+     * @param crystalPos 末影水晶爆炸中心
+     * @param targetPos  目标预测位置；为 null 时使用实体当前位置
+     * @param mode       护甲附魔计算模式
+     * @return 应用全部减免后的估算伤害，最小为 0
      */
     public static float crystalDamage(LivingEntity target, Vec3 crystalPos, Vec3 targetPos, ArmorEnchantmentMode mode) {
         return explosionDamage(target, crystalPos, CRYSTAL_EXPLOSION_RADIUS, targetPos, mode);
     }
 
     /**
-     * Calculates the damage a Respawn Anchor exploding at {@code anchorPos} would
-     * deal to {@code target}, taking into account exposure, difficulty, armor,
-     * enchantments, the Resistance effect and absorption.
+     * 估算重生锚爆炸对目标造成的最终伤害。
      *
-     * @param target    the entity that would be damaged
-     * @param anchorPos the position of the Respawn Anchor (explosion center)
-     * @param mode      the armor enchantment mode to apply for calculate
-     * @return estimated damage after all reductions (≥ 0)
+     * @param target    目标实体
+     * @param anchorPos 重生锚爆炸中心
+     * @param mode      护甲附魔计算模式
+     * @return 应用全部减免后的估算伤害，最小为 0
      */
     public static float anchorDamage(LivingEntity target, Vec3 anchorPos, ArmorEnchantmentMode mode) {
         return explosionDamage(target, anchorPos, ANCHOR_EXPLOSION_RADIUS, null, mode);
     }
 
     /**
-     * Calculates the damage an explosion with a given {@code radius} at
-     * {@code explosionPos} would deal to {@code target}.
+     * 估算指定爆炸对目标造成的最终伤害。
      *
-     * @param target       the entity that would be damaged
-     * @param explosionPos the center of the explosion
-     * @param radius       the explosion radius (e.g. 6.0 for End Crystals)
-     * @param mode         the armor enchantment mode to apply for calculate
-     * @return estimated damage after all reductions (≥ 0)
+     * @param target       目标实体
+     * @param explosionPos 爆炸中心
+     * @param radius       爆炸或特效半径
+     * @param targetPos    目标预测位置；为 null 时使用实体当前位置
+     * @param mode         护甲附魔计算模式
+     * @return 应用全部减免后的估算伤害，最小为 0
      */
     public static float explosionDamage(LivingEntity target, Vec3 explosionPos, float radius, Vec3 targetPos, ArmorEnchantmentMode mode) {
         if (target.isInvulnerable()) return 0f;
@@ -106,8 +105,12 @@ public class DamageUtils {
     }
 
     /**
-     * Returns the raw (pre-reduction) explosion damage that would be dealt, useful
-     * for comparing crystal placements without the cost of reading entity equipment.
+     * 计算尚未应用护甲等减免的原始爆炸伤害。
+     *
+     * @param target       目标实体
+     * @param explosionPos 爆炸中心
+     * @param radius       爆炸或特效半径
+     * @return 未应用减免的估算伤害，最小为 0
      */
     public static float rawExplosionDamage(LivingEntity target, Vec3 explosionPos, float radius) {
         float doubleRadius = radius * 2.0f;
@@ -124,14 +127,24 @@ public class DamageUtils {
     // ── exposure (seen percent) ─────────────────────────────────────────────
 
     /**
-     * Re-implementation of {@code ServerExplosion.getSeenPercent} that works on the
-     * client level. Traces rays from sub-samples of the entity bounding box to the
-     * explosion center and returns the fraction that are unobstructed.
+     * 计算爆炸中心对目标包围盒的无遮挡采样比例。
+     *
+     * @param center 爆炸中心
+     * @param entity 实体
+     * @return 范围为 0 到 1 的无遮挡比例
      */
     public static float getSeenPercent(Vec3 center, LivingEntity entity) {
         return getSeenPercent(center, entity.getBoundingBox(), entity);
     }
 
+    /**
+     * 计算爆炸中心对目标包围盒的无遮挡采样比例。
+     *
+     * @param center 爆炸中心
+     * @param bb     用于采样的实体包围盒
+     * @param entity 实体
+     * @return 范围为 0 到 1 的无遮挡比例
+     */
     public static float getSeenPercent(Vec3 center, AABB bb, LivingEntity entity) {
         double xs = 1.0 / ((bb.maxX - bb.minX) * 2.0 + 1.0);
         double ys = 1.0 / ((bb.maxY - bb.minY) * 2.0 + 1.0);
@@ -168,17 +181,16 @@ public class DamageUtils {
         return (float) hits / total;
     }
 
-    // ── difficulty scaling ──────────────────────────────────────────────────
+    // ── 难度缩放 ───────────────────────────────────────────────────────────
 
     /**
-     * Mirrors the vanilla difficulty-based damage scaling applied to players.
-     * Explosion damage type uses {@code DamageScaling.ALWAYS}, meaning it always
-     * scales with difficulty:
+     * 复现原版对玩家应用的难度伤害缩放。
+     * 爆炸伤害类型使用 {@code DamageScaling.ALWAYS}，因此始终按难度缩放：
      * <ul>
-     *   <li>Peaceful → 0</li>
-     *   <li>Easy → min(damage / 2 + 1, damage)</li>
-     *   <li>Normal → damage (unchanged)</li>
-     *   <li>Hard → damage × 1.5</li>
+     *   <li>和平：0</li>
+     *   <li>简单：min(伤害 / 2 + 1, 伤害)</li>
+     *   <li>普通：伤害不变</li>
+     *   <li>困难：伤害乘以 1.5</li>
      * </ul>
      */
     private static float applyDifficultyScaling(float damage, Player player) {
@@ -191,11 +203,11 @@ public class DamageUtils {
         };
     }
 
-    // ── armor reduction ─────────────────────────────────────────────────────
+    // ── 护甲减免 ───────────────────────────────────────────────────────────
 
     /**
-     * Client-side mirror of {@code CombatRules.getDamageAfterAbsorb}.
-     * Explosion damage is NOT tagged {@code BYPASSES_ARMOR}, so armor applies.
+     * 在客户端复现 {@code CombatRules.getDamageAfterAbsorb}。
+     * 爆炸伤害没有 {@code BYPASSES_ARMOR} 标签，因此需要应用护甲减免。
      */
     private static float applyArmorReduction(LivingEntity target, float damage) {
         float totalArmor = (float) target.getAttributeValue(Attributes.ARMOR);
@@ -208,12 +220,11 @@ public class DamageUtils {
         return damage * (1.0f - armorFraction);
     }
 
-    // ── Resistance effect ───────────────────────────────────────────────────
+    // ── 抗性提升效果 ───────────────────────────────────────────────────────
 
     /**
-     * Mirrors the Resistance potion effect reduction from
-     * {@code LivingEntity.getDamageAfterMagicAbsorb}.
-     * Each level of Resistance reduces damage by 20%.
+     * 复现 {@code LivingEntity.getDamageAfterMagicAbsorb} 中抗性提升效果的减伤。
+     * 每级抗性提升减少 20% 伤害。
      */
     private static float applyResistanceReduction(LivingEntity target, float damage) {
         if (target.hasEffect(MobEffects.RESISTANCE)) {
@@ -226,19 +237,18 @@ public class DamageUtils {
         return damage;
     }
 
-    // ── enchantment protection ──────────────────────────────────────────────
+    // ── 附魔保护 ───────────────────────────────────────────────────────────
 
     /**
-     * Estimates enchantment-based explosion protection on the client side by
-     * reading armor item enchantments directly.
+     * 通过直接读取护甲附魔，在客户端估算针对爆炸的附魔保护值。
      * <p>
-     * Vanilla values (from {@code Enchantments} data-pack definitions):
+     * 原版数据包中 {@code Enchantments} 定义的数值：
      * <ul>
-     *   <li>{@code Protection}: +1 per level (applies to all damage)</li>
-     *   <li>{@code Blast Protection}: +2 per level (applies to explosion damage)</li>
+     *   <li>{@code Protection}：每级增加 1，适用于全部伤害</li>
+     *   <li>{@code Blast Protection}：每级增加 2，适用于爆炸伤害</li>
      * </ul>
-     * The total is clamped to [0, 20] and applied via
-     * {@code CombatRules.getDamageAfterMagicAbsorb}.
+     * 总保护值限制在 [0, 20]，再按
+     * {@code CombatRules.getDamageAfterMagicAbsorb} 应用。
      */
     private static float applyEnchantmentReduction(LivingEntity target, float damage, ArmorEnchantmentMode mode) {
         float totalProtection = 0f;
@@ -273,17 +283,36 @@ public class DamageUtils {
     // ── helper: self-damage shortcut ────────────────────────────────────────
 
     /**
-     * Shortcut: calculates how much crystal damage the local player would take.
+     * 估算末影水晶爆炸对本地玩家造成的最终伤害。
+     *
+     * @param crystalPos 末影水晶爆炸中心
+     * @param mode       护甲附魔计算模式
+     * @return 本地玩家预计受到的伤害，最小为 0
      */
     public static float selfCrystalDamage(Vec3 crystalPos, ArmorEnchantmentMode mode) {
         return selfCrystalDamage(crystalPos, null, mode);
     }
 
+    /**
+     * 估算末影水晶爆炸对本地玩家造成的最终伤害。
+     *
+     * @param crystalPos 末影水晶爆炸中心
+     * @param selfPos    本地玩家预测位置；为 null 时使用当前位置
+     * @param mode       护甲附魔计算模式
+     * @return 本地玩家预计受到的伤害，最小为 0
+     */
     public static float selfCrystalDamage(Vec3 crystalPos, Vec3 selfPos, ArmorEnchantmentMode mode) {
         if (mc.player == null) return 0f;
         return crystalDamage(mc.player, crystalPos, selfPos, mode);
     }
 
+    /**
+     * 根据预测位置构造实体的受限包围盒。
+     *
+     * @param entity 实体
+     * @param pos    目标位置
+     * @return 以预测位置为中心构造的实体包围盒
+     */
     public static AABB getPredictedBoundingBox(LivingEntity entity, Vec3 pos) {
         float width = entity.getBbWidth();
         float height = entity.getBbHeight();
@@ -299,10 +328,55 @@ public class DamageUtils {
     private DamageUtils() {
     }
 
+    public static boolean breakCrosshairCrystal() {
+        if (mc.level == null || mc.player == null || mc.getCameraEntity() == null) return false;
+
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 look = mc.player.getLookAngle();
+        Vec3 end = eye.add(look.scale(4.0));
+
+        BlockPos placePos = null;
+        for (double d = 0.1; d <= 4.0; d += 0.1) {
+            Vec3 point = eye.add(look.scale(d));
+            BlockPos pos = BlockPos.containing(point);
+            BlockState state = mc.level.getBlockState(pos);
+            if (state.isAir() || state.canBeReplaced()) {
+                placePos = pos;
+                break;
+            }
+        }
+
+        if (placePos == null) return false;
+
+        net.minecraft.world.entity.boss.enderdragon.EndCrystal target = null;
+        double bestDistSq = Double.MAX_VALUE;
+        AABB searchBox = new AABB(eye, end).inflate(0.5);
+        for (net.minecraft.world.entity.boss.enderdragon.EndCrystal crystal : mc.level.getEntitiesOfClass(net.minecraft.world.entity.boss.enderdragon.EndCrystal.class, searchBox)) {
+            if (!crystal.isAlive()) continue;
+            Vec3 toCrystal = crystal.position().subtract(eye);
+            double projection = toCrystal.dot(look);
+            if (projection < 0 || projection > 4.0) continue;
+            Vec3 closest = eye.add(look.scale(projection));
+            if (closest.distanceToSqr(crystal.position()) > 1.5 * 1.5) continue;
+            double distSq = eye.distanceToSqr(crystal.position());
+            if (distSq < bestDistSq) {
+                bestDistSq = distSq;
+                target = crystal;
+            }
+        }
+
+        if (target != null) {
+            mc.gameMode.attack(mc.player, target);
+            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            return true;
+        }
+        return false;
+    }
+
     public enum ArmorEnchantmentMode {
         None,
-        PPPP,   // Protection 4 x4
-        PPBP,   // Protection 4 x2 + Blast Protection 4 x1 + Protection 4 x1
+        PPPP,
+        PPBP,
     }
-}
 
+}

@@ -1,8 +1,10 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dropdown.DropdownScreen;
+import com.github.epsilon.gui.dropdown.ListSettingPopupScreen;
 import com.github.epsilon.settings.impl.StringListSetting;
+
+import static com.github.epsilon.Constants.mc;
 
 public class StringListSettingWidget extends AbstractSetSettingWidget<StringListSetting> {
 
@@ -22,7 +24,9 @@ public class StringListSettingWidget extends AbstractSetSettingWidget<StringList
 
     @Override
     protected void openPopup() {
-        DropdownScreen.INSTANCE.openStringListSettingPopup(setting);
+        if (mc.gui.screen() instanceof ListSettingPopupScreen popupScreen) {
+            popupScreen.openStringListSettingPopup(setting);
+        }
     }
 
 }

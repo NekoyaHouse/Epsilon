@@ -25,6 +25,12 @@ public class Notification {
         this(0, title, subTitle, mode, replaceable);
     }
 
+    static Notification preview(String title, String subTitle, NotificationMode mode) {
+        Notification notification = new Notification(title, subTitle, mode, false);
+        notification.skipIntroAnim = true;
+        return notification;
+    }
+
     public void refresh(String newTitle, String newSubTitle, NotificationMode newMode) {
         this.title = newTitle;
         this.subTitle = newSubTitle;
@@ -75,7 +81,7 @@ public class Notification {
     }
 
     public int getDisplayTime() {
-        return Notifications.INSTANCE.displayTime.getValue();
+        return Notifications.INSTANCE.getDisplayTime();
     }
 
     public int getId() {

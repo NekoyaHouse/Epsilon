@@ -1,19 +1,15 @@
 package com.github.epsilon.neoforge;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.EpsilonCommon;
 import com.github.epsilon.addon.AddonBootstrap;
-import com.github.epsilon.assets.i18n.LanguageReloadListener;
-import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.neoforge.addon.EpsilonAddonSetupEvent;
 import com.github.epsilon.neoforge.addon.NeoForgeSelfAddonRegistrar;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.api.v0.IrisProgram;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
 
-@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class EpsilonNeoForge {
 
     public static void init() {
@@ -22,12 +18,13 @@ public class EpsilonNeoForge {
         EpsilonAddonSetupEvent addonEvent = NeoForge.EVENT_BUS.post(new EpsilonAddonSetupEvent());
         AddonBootstrap.registerAddons(addonEvent.getAddons());
 
-        EpsilonCommon.init();
-    }
+        if (ModList.get().isLoaded("iris")) {
+            IrisApi iris = IrisApi.getInstance();
+            iris.assignPipeline(LuminRenderPipelines.TTF_FONT_AA, IrisProgram.TEXTURED);
+            iris.assignPipeline(LuminRenderPipelines.TTF_FONT_NO_AA, IrisProgram.TEXTURED);
+        }
 
-    @SubscribeEvent
-    private static void onResourcesReload(AddClientReloadListenersEvent event) {
-        event.addListener(ResourceLocationUtils.getIdentifier("objects/reload_listener"), new LanguageReloadListener());
+        EpsilonCommon.init();
     }
 
 }

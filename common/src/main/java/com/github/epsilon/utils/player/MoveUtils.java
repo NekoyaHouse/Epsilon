@@ -1,13 +1,20 @@
 package com.github.epsilon.utils.player;
 
+import com.github.epsilon.managers.rotation.RotationManager;
 import net.minecraft.world.phys.Vec2;
 
 import static com.github.epsilon.Constants.mc;
 
 public class MoveUtils {
 
+    /**
+     * 根据当前旋转计算忽略横移输入的水平速度向量。
+     *
+     * @param speed 移动速度或最大旋转速度
+     * @return 操作结果
+     */
     public static double[] forwardWithoutStrafe(double speed) {
-        float yaw = mc.player.getYRot();
+        float yaw = RotationManager.INSTANCE.getYaw();
 
         double rad = Math.toRadians(yaw + 90.0f);
 
@@ -17,8 +24,14 @@ public class MoveUtils {
         return new double[]{d4, d5};
     }
 
+    /**
+     * 根据当前旋转和移动输入计算水平速度向量。
+     *
+     * @param speed 移动速度或最大旋转速度
+     * @return 操作结果
+     */
     public static double[] forward(double speed) {
-        float yaw = mc.player.getYRot();
+        float yaw = RotationManager.INSTANCE.getYaw();
         Vec2 moveVector = mc.player.input.getMoveVector();
         float forward = moveVector.y;
         float left = moveVector.x;

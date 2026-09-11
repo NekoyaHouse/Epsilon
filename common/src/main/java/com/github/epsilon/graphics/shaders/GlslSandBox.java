@@ -1,13 +1,12 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.LuminBindGroupLayouts;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -29,6 +28,9 @@ public class GlslSandBox implements AutoCloseable {
     public static final GlslSandBox INSTANCE = new GlslSandBox();
 
     public static final Identifier SEA_LEVEL = ResourceLocationUtils.getIdentifier("menu/sea_level");
+    public static final Identifier CLOUDS = ResourceLocationUtils.getIdentifier("menu/clouds");
+    public static final Identifier ALIEN_TERRAIN = ResourceLocationUtils.getIdentifier("menu/alien_terrain");
+    public static final Identifier INFERNO = ResourceLocationUtils.getIdentifier("menu/inferno");
     public static final Identifier PLANET = ResourceLocationUtils.getIdentifier("menu/planet");
     public static final Identifier BLACK_HOLE = ResourceLocationUtils.getIdentifier("menu/black_hole");
     public static final Identifier MINECRAFT = ResourceLocationUtils.getIdentifier("menu/minecraft");
@@ -47,7 +49,7 @@ public class GlslSandBox implements AutoCloseable {
                 .withLocation(Identifier.fromNamespaceAndPath(shader.getNamespace(), "pipelines/glsl_sandbox/" + shader.getPath().replace('/', '_')))
                 .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(shader)
-                .withBindGroupLayout(BindGroupLayout.builder().withUniform("GlslSandboxInfo", UniformType.UNIFORM_BUFFER).build())
+                .withBindGroupLayout(LuminBindGroupLayouts.GLSL_SANDBOX_INFO)
                 .withCull(false)
                 .build()
         );
@@ -114,14 +116,12 @@ public class GlslSandBox implements AutoCloseable {
             float mousePxX,
             float mousePxY
     ) implements DynamicUniformStorage.DynamicUniform {
-
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer)
                     .putVec4(width, height, elapsedTime, 0.0f)
                     .putVec4(mouseUvX, mouseUvY, mousePxX, mousePxY);
         }
-
     }
 
 }

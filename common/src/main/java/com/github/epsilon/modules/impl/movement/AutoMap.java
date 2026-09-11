@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
@@ -30,7 +30,7 @@ public class AutoMap extends Module {
     private final DoubleSetting spiralSpacing = doubleSetting("Spiral Spacing", 192.0, 16.0, 1024.0, 1.0);
     private final IntSetting pointsPerLap = intSetting("Points Per Lap", 16, 4, 96, 1);
     private final DoubleSetting arrivalDistance = doubleSetting("Arrival Distance", 8.0, 2.0, 64.0, 0.5);
-    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 10.0, 1.0, 20.0, 0.25);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
     private final DoubleSetting takeoffHeight = doubleSetting("Takeoff Height", 192.0, 16.0, 1024.0, 1.0);
     private final BoolSetting takeoffFirework = boolSetting("Takeoff Firework", true, autoLaunch::getValue);
 
@@ -201,8 +201,8 @@ public class AutoMap extends Module {
         }
 
         float yaw = yawTo(target);
-        float pitch = Managers.ROTATION.isActive() ? Managers.ROTATION.getPitch() : mc.player.getXRot();
-        Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed.getValue(), Priority.Highest);
+        float pitch = RotationManager.INSTANCE.isActive() ? RotationManager.INSTANCE.getPitch() : mc.player.getXRot();
+        RotationManager.INSTANCE.setRotations(new Rot2f(yaw, pitch), rotationSpeed.getValue(), Priority.Highest);
     }
 
     private Vec3 currentTarget() {

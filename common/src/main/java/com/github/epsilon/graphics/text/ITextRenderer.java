@@ -9,8 +9,15 @@ public interface ITextRenderer {
 
     void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader);
 
-    default void addRotatedText(String text, float x, float y, float scale, Color color,
-                                TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+    default void addBlurredText(String text, float x, float y, float scale, Color color, float blurRadius, TtfFontLoader fontLoader) {
+        addText(text, x, y, scale, color, fontLoader);
+    }
+
+    default void addGlitchText(String text, float x, float y, float scale, Color color, TextGlitchEffect effect, TtfFontLoader fontLoader) {
+        addText(text, x, y, scale, color, fontLoader);
+    }
+
+    default void addRotatedText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
         addText(text, x, y, scale, color, fontLoader);
     }
 

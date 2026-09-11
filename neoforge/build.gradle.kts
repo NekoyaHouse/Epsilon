@@ -1,3 +1,10 @@
+import net.neoforged.moddevgradle.tasks.JarJar
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+
 plugins {
     id("multiloader-loader")
     alias(libs.plugins.neoforged.moddev)
@@ -31,6 +38,87 @@ dependencies {
     compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
+    compileOnly(libs.iris.neoforge)
+    implementation(jarJar("org.bytedeco:javacpp:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
+    implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")!!)
+}
+
+// NeoForge 26.2 resolves Jar-in-Jar dependencies by group and artifact only;
+// classifiers are ignored. Give platform jars distinct identifiers so both
+// the Java API jar and the native Windows jar remain loadable at runtime.
+tasks.named<JarJar>("jarJar") {
+    doLast {
+        val metadataFile = outputDirectory.dir("META-INF/jarjar/metadata.json").get().asFile
+        val metadataLegacy = metadataFile.readText()
+            .replace(
+                "\"artifact\": \"javacpp\",\n      }\n      ,\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\"",
+                "\"artifact\": \"javacpp-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[1.5.10,)\",\n        \"artifactVersion\": \"1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar\""
+            )
+            .replace(
+                "\"artifact\": \"ffmpeg\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\"",
+                "\"artifact\": \"ffmpeg-windows-x86_64\",\n      },\n      \"version\": {\n        \"range\": \"[6.1.1-1.5.10,)\",\n        \"artifactVersion\": \"6.1.1-1.5.10\"\n      },\n      \"path\": \"META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar\""
+            )
+        fun renameArtifact(metadata: String, path: String, artifact: String): String {
+            val pathIndex = metadata.indexOf("\"path\": \"$path\"")
+            check(pathIndex >= 0) { "JarJar metadata does not contain $path" }
+            val identifierIndex = metadata.lastIndexOf("\"identifier\": {", pathIndex)
+            val marker = "\"artifact\": \""
+            val artifactIndex = metadata.indexOf(marker, identifierIndex)
+            check(identifierIndex >= 0 && artifactIndex >= 0 && artifactIndex < pathIndex) {
+                "JarJar metadata entry for $path is malformed"
+            }
+            val valueStart = artifactIndex + marker.length
+            val valueEnd = metadata.indexOf('"', valueStart)
+            return metadata.substring(0, valueStart) + artifact + metadata.substring(valueEnd)
+        }
+
+        val metadata = metadataLegacy
+            .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+            .let { renameArtifact(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
+        metadataFile.writeText(metadata)
+    }
+}
+
+fun fixJarJarMetadata(metadata: String): String {
+    fun rename(input: String, path: String, artifact: String): String {
+        val pathIndex = input.indexOf("\"path\": \"$path\"")
+        check(pathIndex >= 0) { "JarJar metadata does not contain $path" }
+        val identifierIndex = input.lastIndexOf("\"identifier\": {", pathIndex)
+        val marker = "\"artifact\": \""
+        val artifactIndex = input.indexOf(marker, identifierIndex)
+        val valueStart = artifactIndex + marker.length
+        val valueEnd = input.indexOf('"', valueStart)
+        return input.substring(0, valueStart) + artifact + input.substring(valueEnd)
+    }
+    return metadata
+        .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+        .let { rename(it, "META-INF/jarjar/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar", "ffmpeg-windows-x86_64") }
+}
+
+tasks.named<Jar>("jar") {
+    dependsOn("jarJar")
+    doLast {
+        val archive = archiveFile.get().asFile.toPath()
+        val temporary = Files.createTempFile(archive.parent, archive.fileName.toString(), ".tmp")
+        try {
+            JarFile(archive.toFile()).use { input ->
+                JarOutputStream(Files.newOutputStream(temporary)).use { output ->
+                    input.entries().asSequence().forEach { entry ->
+                        val contents = input.getInputStream(entry).readBytes()
+                        output.putNextEntry(JarEntry(entry.name))
+                        output.write(if (entry.name == "META-INF/jarjar/metadata.json") fixJarJarMetadata(String(contents)) .toByteArray() else contents)
+                        output.closeEntry()
+                    }
+                }
+            }
+            Files.move(temporary, archive, StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temporary)
+        }
+    }
 }
 
 neoForge {
@@ -53,7 +141,15 @@ neoForge {
         register("data") {
             clientData()
             gameDirectory = file("runs/data").also { it.mkdirs() }
-            programArguments.addAll("--mod", modId, "--all", "--output", file("src/generated/resources/").absolutePath, "--existing", file("src/main/resources/").absolutePath)
+            programArguments.addAll(
+                "--mod",
+                modId,
+                "--all",
+                "--output",
+                file("src/generated/resources/").absolutePath,
+                "--existing",
+                file("src/main/resources/").absolutePath
+            )
         }
     }
     mods {
@@ -74,7 +170,11 @@ listOf("apiElements", "runtimeElements", "sourcesElements").forEach { variant ->
     }
 }
 sourceSets.configureEach {
-    listOf(compileClasspathConfigurationName, runtimeClasspathConfigurationName, getTaskName(null, "jarJar")).forEach { variant ->
+    listOf(
+        compileClasspathConfigurationName,
+        runtimeClasspathConfigurationName,
+        getTaskName(null, "jarJar")
+    ).forEach { variant ->
         configurations.named(variant) {
             attributes {
                 attribute(loaderAttribute, "neoforge")
@@ -82,3 +182,13 @@ sourceSets.configureEach {
         }
     }
 }
+
+/*
+tasks.register<Copy>("extractRuntimeClasspath") {
+    from(configurations.runtimeClasspath)
+    into("$projectDir/build/runtimeClasspath")
+    doFirst {
+        file("$projectDir/build/runtimeClasspath").mkdirs()
+    }
+}
+*/

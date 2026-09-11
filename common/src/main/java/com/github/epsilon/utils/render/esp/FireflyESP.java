@@ -45,6 +45,24 @@ public class FireflyESP {
             .withCull(false)
             .build();
 
+    /**
+     * 在目标周围渲染萤火轨迹 ESP。
+     *
+     * @param stack             渲染姿态栈
+     * @param target            目标实体
+     * @param espLength         轨迹长度
+     * @param factor            轨迹采样因子
+     * @param shaking           轨迹抖动幅度
+     * @param amplitude         轨迹振幅
+     * @param color             主颜色
+     * @param colorMode         颜色模式
+     * @param secondColor       第二种颜色
+     * @param colorMix          双色混合比例
+     * @param colorSpeed        颜色动画速度
+     * @param rainbowSpeed      彩虹颜色变化速度
+     * @param rainbowSaturation 彩虹颜色饱和度
+     * @param rainbowBrightness 彩虹颜色亮度
+     */
     public static void render(PoseStack stack, LivingEntity target, int espLength, int factor, double shaking, double amplitude, Color color, ColorMode colorMode, Color secondColor, double colorMix, double colorSpeed, double rainbowSpeed, double rainbowSaturation, double rainbowBrightness) {
         boolean canSee = mc.player.hasLineOfSight(target);
 
@@ -56,8 +74,8 @@ public class FireflyESP {
         double tPosZ = Mth.lerp(tickDelta, target.zOld, target.getZ()) - camera.position().z;
         float iAge = (float) (target.tickCount - 1) + tickDelta;
 
-        RenderPipeline usePipeline = canSee ? TARGET_ICON_PIPELINE : TARGET_ICON_NO_DEPTH_PIPELINE;
-        LuminImmediateRenderer.PosTexColorQuads builder = LuminImmediateRenderer.beginPosTexColorQuads(usePipeline, FIREFLY_TEX);
+        RenderPipeline pipeline = canSee ? TARGET_ICON_PIPELINE : TARGET_ICON_NO_DEPTH_PIPELINE;
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, FIREFLY_TEX);
 
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i <= espLength; i++) {
@@ -90,16 +108,16 @@ public class FireflyESP {
                         (float) rainbowBrightness
                 ).getRGB();
 
-                builder.vertex(matrix, -scale, scale, 0, 0f, 1f, renderColor);
-                builder.vertex(matrix, scale, scale, 0, 1f, 1f, renderColor);
-                builder.vertex(matrix, scale, -scale, 0, 1f, 0f, renderColor);
-                builder.vertex(matrix, -scale, -scale, 0, 0f, 0f, renderColor);
+                renderer.vertex(matrix, -scale, scale, 0, 0f, 1f, renderColor);
+                renderer.vertex(matrix, scale, scale, 0, 1f, 1f, renderColor);
+                renderer.vertex(matrix, scale, -scale, 0, 1f, 0f, renderColor);
+                renderer.vertex(matrix, -scale, -scale, 0, 0f, 0f, renderColor);
 
                 stack.popPose();
             }
         }
 
-        builder.end();
+        renderer.end();
     }
 
     private static Color resolveColor(float age, int index, int ringIndex, int espLength, ColorMode mode, Color primaryColor, Color secondaryColor, float mixAmount, float blendSpeed, float rainbowSpeed, float rainbowSaturation, float rainbowBrightness) {

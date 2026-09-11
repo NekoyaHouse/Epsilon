@@ -89,7 +89,8 @@ public class AStarFollowerNavigator implements FollowerNavigator {
                 double tentativeG = current.gScore() + direction.cost();
                 double previousG = gScore.getOrDefault(next, Double.MAX_VALUE);
                 if (tentativeG >= previousG) continue;
-                if (!isSegmentClear(player, Vec3.atBottomCenterOf(current.pos()), Vec3.atBottomCenterOf(next))) continue;
+                if (!isSegmentClear(player, Vec3.atBottomCenterOf(current.pos()), Vec3.atBottomCenterOf(next)))
+                    continue;
 
                 cameFrom.put(next, current.pos());
                 gScore.put(next, tentativeG);

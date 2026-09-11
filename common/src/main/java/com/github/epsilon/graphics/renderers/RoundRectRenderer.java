@@ -3,10 +3,9 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.holders.RendererHolder;
+import com.github.epsilon.managers.RendererManager;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.ARGB;
@@ -33,7 +32,7 @@ public class RoundRectRenderer implements IRenderer {
     }
 
     public static RoundRectRenderer create() {
-        return RendererHolder.INSTANCE.register(new RoundRectRenderer());
+        return RendererManager.INSTANCE.register(new RoundRectRenderer());
     }
 
     public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {
@@ -145,7 +144,7 @@ public class RoundRectRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
+        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice());
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
         pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
     }
@@ -164,7 +163,7 @@ public class RoundRectRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
-        RendererHolder.INSTANCE.unregister(this);
+        RendererManager.INSTANCE.unregister(this);
     }
 
     public void setScissor(int x, int y, int width, int height) {

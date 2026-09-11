@@ -7,22 +7,22 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringDecomposer;
-import org.jspecify.annotations.Nullable;
 
-public final class EpsilonFontMetrics {
+public class EpsilonFontMetrics {
 
-    private static final float VANILLA_LINE_HEIGHT = 9.0f;
+    private static final float REPLACEMENT_LINE_HEIGHT = 10.0f;
+    static final float MINECRAFT_BASELINE = 7.0f;
     private static final Identifier FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
 
     public static final float LETTER_SPACING = 0f;
     public static final float SPACE_WIDTH = 3.0f;
 
-    private static @Nullable TtfFontLoader font;
+    private static TtfFontLoader font;
 
     private EpsilonFontMetrics() {
     }
 
-    public static @Nullable TtfFontLoader font() {
+    public static TtfFontLoader font() {
         if (font != null) {
             return font;
         }
@@ -36,10 +36,10 @@ public final class EpsilonFontMetrics {
     }
 
     public static float minecraftScale(TtfFontLoader font) {
-        return VANILLA_LINE_HEIGHT / font.fontFile.fontHeight;
+        return REPLACEMENT_LINE_HEIGHT / font.fontFile.fontHeight;
     }
 
-    public static float advance(int codepoint, Style style, @Nullable TtfFontLoader font) {
+    public static float advance(int codepoint, Style style, TtfFontLoader font) {
         if (Character.isWhitespace(codepoint)) {
             return SPACE_WIDTH + (style.isBold() ? 1.0f : 0.0f);
         }
@@ -53,7 +53,7 @@ public final class EpsilonFontMetrics {
         return font.getAdvance(codepoint) * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
     }
 
-    public static @Nullable Float width(String text) {
+    public static Float width(String text) {
         TtfFontLoader font = font();
         if (font == null) {
             return null;
@@ -67,7 +67,7 @@ public final class EpsilonFontMetrics {
         return width[0];
     }
 
-    public static @Nullable Float width(FormattedCharSequence text) {
+    public static Float width(FormattedCharSequence text) {
         TtfFontLoader font = font();
         if (font == null) {
             return null;
@@ -81,7 +81,7 @@ public final class EpsilonFontMetrics {
         return width[0];
     }
 
-    public static @Nullable Float width(FormattedText text) {
+    public static Float width(FormattedText text) {
         TtfFontLoader font = font();
         if (font == null) {
             return null;

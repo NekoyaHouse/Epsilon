@@ -24,6 +24,22 @@
       "epsilon:shutdown"
     ]
   },
+  "reisa_welcome": {
+    "sounds": [
+      {
+        "name": "epsilon:reisa/welcome",
+        "stream": true
+      }
+    ]
+  },
+  "reisa_bye": {
+    "sounds": [
+      {
+        "name": "epsilon:reisa/bye",
+        "stream": true
+      }
+    ]
+  },
   "uwu": {
     "sounds": [
       "epsilon:uwu"

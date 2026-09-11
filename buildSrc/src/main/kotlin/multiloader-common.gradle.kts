@@ -32,11 +32,9 @@ val modAuthor = project.findProperty("mod_author")?.toString() ?: ""
 val minecraftVersionRange = project.property("minecraft_version_range").toString()
 val fabricVersion = project.property("fabric_version").toString()
 val fabricLoaderVersion = project.property("fabric_loader_version").toString()
-val fabricMinecraftVersionRange = project.findProperty("fabric_minecraft_version_range")?.toString() ?: "~$minecraftVersion"
 val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
-val credits = project.findProperty("credits")?.toString() ?: ""
 
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
@@ -71,11 +69,11 @@ repositories {
     exclusiveContent {
         forRepository {
             maven {
-                name = "CaffeineMC"
-                url = uri("https://maven.caffeinemc.net/releases")
+                name = "Modrinth"
+                url = uri("https://api.modrinth.com/maven")
             }
         }
-        filter { includeGroup("net.caffeinemc") }
+        filter { includeGroup("maven.modrinth") }
     }
 }
 
@@ -117,7 +115,6 @@ tasks.named<ProcessResources>("processResources") {
         "minecraft_version_range" to minecraftVersionRange,
         "fabric_version" to fabricVersion,
         "fabric_loader_version" to fabricLoaderVersion,
-        "fabric_minecraft_version_range" to fabricMinecraftVersionRange,
         "mod_name" to modName,
         "mod_author" to modAuthor,
         "mod_id" to modId,
@@ -125,7 +122,6 @@ tasks.named<ProcessResources>("processResources") {
         "description" to (project.findProperty("description")?.toString() ?: ""),
         "neoforge_version" to neoforgeVersion,
         "neoforge_loader_version_range" to neoforgeLoaderVersionRange,
-        "credits" to credits,
         "java_version" to javaVersion
     )
 

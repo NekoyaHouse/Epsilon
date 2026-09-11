@@ -17,15 +17,15 @@ Lumin Graphics 是一个为现代 Minecraft 模组开发设计的轻量化、高
 
 ### 生命周期同步限制
 
-在单帧渲染循环内，尽可能不在调用一次或多次 Renderer.draw() 之后再调用 Renderer.clear()
-并再次对同一个实例调用 draw()。这会导致单帧内使用多个 Buffers 导致 In-Fight 优化力度减少
+在单帧渲染循环内，尽可能不在调用一次或多次 Renderer.draw () 之后再调用 Renderer.clear ()
+并再次对同一个实例调用 draw ()。这会导致单帧内使用多个 Buffers 导致 In-Fight 优化力度减少
 
 如果业务逻辑确实需要在单帧内进行多轮清理与绘制：
 
 建议实例化一个新的 Renderer 来处理后续任务。
 
-**💡注意**： 请避免创建过多的 Renderer 实例，否则会造成显存空间的过度占用，
-或者你可以在创建 Renderer 实例时设置比默认值更小的 Buffer 大小。
+**💡注意**： 请避免创建过多的 Renderer 实例，否则会造成显存空间的过度占用， 或者你可以在创建 Renderer 实例时设置比默认值更小的
+Buffer 大小。
 
 ---
 

@@ -21,14 +21,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
 
 import static com.github.epsilon.Constants.mc;
 
-public final class WireframeEntityRenderer {
+public class WireframeEntityRenderer {
 
     private static final PoseStack modelPoseStack = new PoseStack();
     private static final WireframeSubmitNodeStorage submitNodeStorage = new WireframeSubmitNodeStorage();
@@ -67,16 +65,11 @@ public final class WireframeEntityRenderer {
         if (isBatching()) {
             throw new IllegalStateException("Wireframe entity renderer is already batching");
         }
-
         beginDraw(renderStack);
     }
 
     public static void endBatch() {
-        if (!isBatching()) {
-            return;
-        }
-
-        endDraw();
+        if (isBatching()) endDraw();
     }
 
     public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
@@ -86,19 +79,15 @@ public final class WireframeEntityRenderer {
             startedBatch = true;
         }
 
-        try {
-            renderEntity(entity, scale, sideColor, lineColor, lineWidth);
-        } finally {
-            if (startedBatch) {
-                endBatch();
-            }
+        renderEntity(entity, scale, sideColor, lineColor, lineWidth);
+
+        if (startedBatch) {
+            endBatch();
         }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void renderEntity(Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
-        if (mc.level == null) return;
-
         WireframeEntityRenderer.sideColor = sideColor;
         WireframeEntityRenderer.lineColor = lineColor;
         WireframeEntityRenderer.lineWidth = lineWidth;
@@ -118,14 +107,11 @@ public final class WireframeEntityRenderer {
         offsetZ += renderOffset.z;
 
         modelPoseStack.pushPose();
-        try {
-            modelPoseStack.scale((float) scale, (float) scale, (float) scale);
-            renderer.submit(state, modelPoseStack, submitNodeStorage, mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState);
-        } finally {
-            modelPoseStack.popPose();
-            vertexConsumer.reset();
-            submitNodeStorage.getSubmitsPerOrder().clear();
-        }
+        modelPoseStack.scale((float) scale, (float) scale, (float) scale);
+        renderer.submit(state, modelPoseStack, submitNodeStorage, mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState);
+        modelPoseStack.popPose();
+        vertexConsumer.reset();
+        submitNodeStorage.getSubmitsPerOrder().clear();
     }
 
     private static boolean isBatching() {
@@ -202,9 +188,8 @@ public final class WireframeEntityRenderer {
     }
 
     private static final class WireframeSubmitNodeStorage extends SubmitNodeStorage {
-
         @Override
-        public <S> void submitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @Nullable TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay) {
+        public <S> void submitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
             model.setupAnim(state);
             model.renderToBuffer(poseStack, vertexConsumer, lightCoords, overlayCoords, tintedColor);
         }
@@ -222,7 +207,7 @@ public final class WireframeEntityRenderer {
         private int index;
 
         @Override
-        public @NonNull VertexConsumer addVertex(float x, float y, float z) {
+        public VertexConsumer addVertex(float x, float y, float z) {
             xs[index] = x;
             ys[index] = y;
             zs[index] = z;
@@ -242,37 +227,37 @@ public final class WireframeEntityRenderer {
         }
 
         @Override
-        public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
+        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setColor(int color) {
+        public VertexConsumer setColor(int color) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv(float u, float v) {
+        public VertexConsumer setUv(float u, float v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv1(int u, int v) {
+        public VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setUv2(int u, int v) {
+        public VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setNormal(float x, float y, float z) {
+        public VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public @NonNull VertexConsumer setLineWidth(float width) {
+        public VertexConsumer setLineWidth(float width) {
             return this;
         }
 

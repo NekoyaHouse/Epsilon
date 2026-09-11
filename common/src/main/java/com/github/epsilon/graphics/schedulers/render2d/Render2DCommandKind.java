@@ -6,6 +6,9 @@ public enum Render2DCommandKind {
     ROUND_RECT_OUTLINE,
     RECT,
     TRIANGLE,
+    ARC,
     TEXTURE,
+    BLUR_TEXT,
+    GLITCH_TEXT,
     TEXT
 }

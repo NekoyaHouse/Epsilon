@@ -3,14 +3,16 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
@@ -356,7 +358,7 @@ public class ModuleButton extends Component {
         float btnW = 18.0f;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
         float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
-        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) / 2.0f;
         boolean hovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         if (!module.isHidden()) {
             scope.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
@@ -364,7 +366,7 @@ public class ModuleButton extends Component {
             float scale = 0.58f;
             float iconW = textMetrics.textWidth(icon, scale, StaticFontLoader.ICONS);
             float iconH = textMetrics.textHeight(scale, StaticFontLoader.ICONS);
-            scope.text(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+            scope.text(icon, btnX + (btnW - iconW) / 2.0f, btnY + (btnH - iconH) / 2.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
         }
         if (hovered) {
             String hint = module.isHidden() ? EpsilonTranslations.Module.HIDDEN.getTranslatedName() : EpsilonTranslations.Module.VISIBLE.getTranslatedName();
@@ -393,30 +395,40 @@ public class ModuleButton extends Component {
         if (listeningKeybind) {
             module.setKeyBind(KeybindUtils.encodeMouseButton(button));
             listeningKeybind = false;
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 
         if (isHovered(mouseX, mouseY, x, y, width, DropdownTheme.MODULE_HEIGHT)) {
             if (isHiddenButtonHovered(mouseX, mouseY)) {
                 module.setHidden(!module.isHidden());
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.MODULE_HIDDEN);
                 return true;
             }
             if (isKeybindButtonHovered(mouseX, mouseY)) {
                 if (button == 0) {
                     listeningKeybind = true;
+                    DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.KEY_BIND);
                     return true;
                 }
                 if (button == 2) {
                     module.setBindMode(module.getBindMode() == Module.BindMode.Toggle ? Module.BindMode.Hold : Module.BindMode.Toggle);
+                    DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.KEY_BIND);
                     return true;
                 }
             }
             if (button == 0) {
                 module.toggle();
+                DropdownScreen.INSTANCE.react(module.isEnabled()
+                        ? ReisaDropdownCompanion.Action.TOGGLE_ON
+                        : ReisaDropdownCompanion.Action.TOGGLE_OFF);
                 return true;
             }
             if (button == 1) {
                 expanded = !expanded;
+                DropdownScreen.INSTANCE.react(expanded
+                        ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                        : ReisaDropdownCompanion.Action.PANEL_CLOSE);
                 return true;
             }
         }
@@ -432,7 +444,10 @@ public class ModuleButton extends Component {
                         if (section.isCollapsed()) {
                             blurInputs(section);
                         }
-                        Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        SoundManager.INSTANCE.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        DropdownScreen.INSTANCE.react(section.isCollapsed()
+                                ? ReisaDropdownCompanion.Action.PANEL_CLOSE
+                                : ReisaDropdownCompanion.Action.PANEL_OPEN);
                         return true;
                     }
                     if (!section.isCollapsed() && getGroupExpandProgress(section) >= 0.999f) {
@@ -477,6 +492,9 @@ public class ModuleButton extends Component {
         if (listeningKeybind) {
             module.setKeyBind(keyCode == 256 || keyCode == 259 ? KeybindUtils.NONE : keyCode);
             listeningKeybind = false;
+            DropdownScreen.INSTANCE.react(keyCode == 256
+                    ? ReisaDropdownCompanion.Action.CANCEL
+                    : ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 

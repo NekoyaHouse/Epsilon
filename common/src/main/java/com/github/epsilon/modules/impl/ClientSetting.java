@@ -8,10 +8,8 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TextureCacheHolder;
-import com.github.epsilon.holders.TranslateHolder;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.rotations.RotationManager;
+import com.github.epsilon.managers.TranslationManager;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -30,9 +28,20 @@ public class ClientSetting extends Module {
         super("Client Setting", null);
     }
 
+    public enum Teams {
+        None,
+        Color,
+        Scoreboard
+    }
+
     public enum GuiMode {
         Dropdown,
         Panel
+    }
+
+    public enum MainMenuStyle {
+        Columbina,
+        Classic
     }
 
     public enum ModuleSort {
@@ -61,13 +70,15 @@ public class ClientSetting extends Module {
     public enum IconMode {
         Vanilla,
         Minecraft_1_8_9,
-        Epsilon
+        Epsilon,
+        Endfield
     }
 
     public enum TitleMode {
         Vanilla,
         Minecraft_1_8_9,
-        Epsilon
+        Epsilon,
+        Endfield
     }
 
     public enum HideMode {
@@ -82,8 +93,10 @@ public class ClientSetting extends Module {
     }
 
     private final SettingGroup sgGeneral = settingGroup("General");
+    private final SettingGroup sgTeams = settingGroup("Teams");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
+    private final SettingGroup sgReisa = settingGroup("Uzawa Reisa");
     private final SettingGroup sgNotification = settingGroup("Notification");
 
     @SuppressWarnings("unused")
@@ -109,18 +122,13 @@ public class ClientSetting extends Module {
             .group(sgGeneral)
             .applyWhenRelease();
 
-    public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
-        TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
-    }).group(sgGeneral);
+    public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> TranslationManager.INSTANCE.refresh()).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
 
     public final EnumSetting<FontMode> font = enumSetting("Font", FontMode.Default).group(sgGeneral);
 
-    public final StringSetting customFont = stringSetting("Custom Font", "", () -> font.is(FontMode.Custom))
-            .group(sgGeneral)
-            .applyWhenRelease();
+    public final StringSetting customFont = stringSetting("Custom Font", "", () -> font.is(FontMode.Custom)).group(sgGeneral).applyWhenRelease();
 
     public final IntSetting fontGlyphsPerFrame = intSetting("Font Glyphs Per Frame", 8, 1, 64, 1, this::applyFontGlyphUploadBudget).group(sgGeneral);
 
@@ -130,13 +138,11 @@ public class ClientSetting extends Module {
 
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
 
+    // Teams
+    public final EnumSetting<Teams> teams = enumSetting("Teams", Teams.None).group(sgTeams);
+
     // Anti Cheat
-    public final EnumSetting<RotationManager.RotationMode> rotationMode =
-            enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, mode -> {
-                if (Managers.ROTATION != null) {
-                    Managers.switchRotationManager(mode);
-                }
-            }).group(sgAntiCheat);
+    public final EnumSetting<RotationManager.RotationMode> rotationMode = enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, RotationManager::switchRotationManager).group(sgAntiCheat);
 
     public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
 
@@ -158,9 +164,24 @@ public class ClientSetting extends Module {
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
-    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue).group(sgAppearance);
+
+    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting(
+            "MainMenu Background",
+            MainMenuScreen.Background.PLANET,
+            () -> useMainMenu.getValue() && mainMenuStyle.is(MainMenuStyle.Classic)
+    ).group(sgAppearance);
 
     public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting().group(sgAppearance);
+
+    // 宇泽玲纱
+    public final BoolSetting showReisaInDropdown = boolSetting("Show Reisa In Dropdown", true).group(sgReisa);
+
+    public final BoolSetting showReisaOnStartup = boolSetting("Show Reisa On Startup", true).group(sgReisa);
+
+    public final BoolSetting showReisaOnShutdown = boolSetting("Show Reisa On Shutdown", true).group(sgReisa);
+
+    public final DoubleSetting reisaVolume = doubleSetting("Reisa Volume", 0.15, 0.0, 0.5, 0.05).group(sgReisa);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
@@ -179,10 +200,6 @@ public class ClientSetting extends Module {
         return renderScale.getValue();
     }
 
-    public int getFontGlyphsPerFrame() {
-        return fontGlyphsPerFrame.getValue();
-    }
-
     public void syncFontGlyphUploadBudget() {
         applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
     }
@@ -190,14 +207,6 @@ public class ClientSetting extends Module {
     private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
         int budget = Math.max(1, maxGlyphsPerFrame);
         TtfFontLoader.setMaxGlyphUploadsPerFrame(budget);
-    }
-
-    public boolean snapRotation() {
-        return rotationMode.is(RotationManager.RotationMode.SNAP);
-    }
-
-    public boolean silentRotation() {
-        return rotationMode.is(RotationManager.RotationMode.SILENT);
     }
 
 }

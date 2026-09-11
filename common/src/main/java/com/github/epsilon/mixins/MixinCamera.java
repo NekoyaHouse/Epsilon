@@ -2,12 +2,14 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.SneakTweak;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,11 +37,27 @@ public class MixinCamera {
     private float eyeHeightOld;
 
     @Unique
-    private final Pose[] epsilon$lastPoses = new Pose[2];
+    private Pose[] epsilon$lastPoses;
+
+    @Unique
+    private Pose[] epsilon$getLastPoses() {
+        if (epsilon$lastPoses == null) {
+            epsilon$lastPoses = new Pose[2];
+        }
+        return epsilon$lastPoses;
+    }
 
     @Unique
     private boolean epsilon$isStandingCrouchingTransition() {
-        return epsilon$lastPoses[1] == Pose.STANDING && epsilon$lastPoses[0] == Pose.CROUCHING || epsilon$lastPoses[1] == Pose.CROUCHING && epsilon$lastPoses[0] == Pose.STANDING;
+        Pose[] lastPoses = epsilon$getLastPoses();
+        return lastPoses[1] == Pose.STANDING && lastPoses[0] == Pose.CROUCHING || lastPoses[1] == Pose.CROUCHING && lastPoses[0] == Pose.STANDING;
+    }
+
+    @Inject(method = "getFluidInCamera", at = @At("HEAD"), cancellable = true)
+    private void onGetFluidInCamera(CallbackInfoReturnable<FogType> cir) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.liquidOverlay.getValue()) {
+            cir.setReturnValue(FogType.NONE);
+        }
     }
 
     @Inject(method = "getMaxZoom", at = @At("HEAD"), cancellable = true)
@@ -87,8 +105,17 @@ public class MixinCamera {
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
-    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true) float partialTicks) {
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"), require = 0)
+    private void onAlignSetRotation(Args args, @Local(argsOnly = true) float partialTicks) {
+        FreeCamera freeCamera = FreeCamera.INSTANCE;
+        if (freeCamera.isEnabled()) {
+            args.set(0, (float) freeCamera.getYaw(partialTicks));
+            args.set(1, (float) freeCamera.getPitch(partialTicks));
+        }
+    }
+
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FFF)V"), require = 0)
+    private void onAlignSetRotationNeoForge(Args args, @Local(argsOnly = true) float partialTicks) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {
             args.set(0, (float) freeCamera.getYaw(partialTicks));
@@ -102,10 +129,11 @@ public class MixinCamera {
             return;
         }
 
+        Pose[] lastPoses = epsilon$getLastPoses();
         Pose pose = entity.getPose();
-        if (pose != epsilon$lastPoses[0]) {
-            epsilon$lastPoses[1] = epsilon$lastPoses[0];
-            epsilon$lastPoses[0] = pose;
+        if (pose != lastPoses[0]) {
+            lastPoses[1] = lastPoses[0];
+            lastPoses[0] = pose;
         }
 
         if (SneakTweak.INSTANCE.shouldSnapCameraEyeHeight() && epsilon$isStandingCrouchingTransition()) {

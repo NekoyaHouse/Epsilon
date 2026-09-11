@@ -1,11 +1,13 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -97,7 +99,10 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
                 boolean newValue = !setting.getValue();
                 setting.setValue(newValue);
-                Managers.SOUND.playInUi(newValue ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+                SoundManager.INSTANCE.playInUi(newValue ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+                DropdownScreen.INSTANCE.react(newValue
+                        ? ReisaDropdownCompanion.Action.TOGGLE_ON
+                        : ReisaDropdownCompanion.Action.TOGGLE_OFF);
                 return true;
             }
         }

@@ -1,13 +1,13 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.AttackSlowDownEvent;
+import com.github.epsilon.events.impl.AttackSlowdownEvent;
 import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
-import com.github.epsilon.modules.impl.movement.KeepSprint;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,29 +36,16 @@ public class MixinPlayer {
         return event.getYaw();
     }
 
-    @Inject(method = "causeExtraKnockback", at = @At("HEAD"), cancellable = true)
-    private void onCauseExtraKnockback(Entity entity, float knockbackAmount, Vec3 oldMovement, DamageSource damageSource, float damage, boolean comesFromEffect, CallbackInfo ci) {
-        AttackSlowDownEvent event = EventBus.INSTANCE.post(new AttackSlowDownEvent(entity, knockbackAmount));
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
+    @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
+    private boolean onAttackSlowdown(Player instance, Vec3 movement, @Share("cancelAttackSlowdown") LocalBooleanRef cancelled) {
+        AttackSlowdownEvent event = EventBus.INSTANCE.post(new AttackSlowdownEvent());
+        cancelled.set(event.isCancelled());
+        return !cancelled.get();
     }
 
-    @Inject(method = "attack", at = @At("RETURN"))
-    private void onAfterAttack(Entity entity, CallbackInfo ci) {
-        KeepSprint keepSprint = KeepSprint.INSTANCE;
-        if ((Player) (Object) this == mc.player && keepSprint.isEnabled() && keepSprint.shouldKeepSprint()) {
-            // Re-enable sprint if vanilla attack stopped it
-            if (!mc.player.isSprinting()) {
-                mc.player.setSprinting(true);
-            }
-            // Apply custom slowdown factor (matching LeaderClient formula)
-            double slowdownPercent = keepSprint.slowdown.getValue().doubleValue() / 100.0;
-            if (slowdownPercent > 0.0) {
-                double customFactor = 0.6 + 0.4 * (1.0 - slowdownPercent);
-                mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(customFactor, 1.0, customFactor));
-            }
-        }
+    @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V"))
+    private boolean onAttackStopSprinting(Player instance, boolean sprinting, @Share("cancelAttackSlowdown") LocalBooleanRef cancelled) {
+        return !cancelled.get();
     }
 
 }

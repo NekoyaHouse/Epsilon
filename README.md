@@ -18,14 +18,6 @@
   <a href="https://qm.qq.com/q/3hhg8ww9ag"><img alt="QQ Group 2" src="https://img.shields.io/badge/QQ%202%E7%BE%A4-join-12B7F5?style=flat-square&logo=tencentqq&logoColor=white"></a>
 </p>
 
-> [!IMPORTANT]
-> ## Public archive notice
-> This repository is being prepared for archival and will remain available as a public reference for the current source release. Active public development, issue triage, and free public releases are winding down.
->
-> Maintaining a feature-rich client takes sustained time and resources. Repackaged and modified builds being monetized by others have made the previous public-development model unsustainable. Future official releases, support, and distribution may move to a paid model so development can continue.
->
-> The code already published here remains available under the [GNU General Public License v3.0](LICENSE). This notice does not change the license or rights for existing releases.
-
 ## 📌 Overview
 A modern multi loader Minecraft utility client built on NeoForge & Fabric with advanced rendering system and modular architecture.
 

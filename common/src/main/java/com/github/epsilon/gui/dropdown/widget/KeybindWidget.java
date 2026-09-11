@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
@@ -60,12 +62,16 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && isHovered(mouseX, mouseY, buttonX, buttonY, buttonW, buttonH)) {
             listening = !listening;
+            DropdownScreen.INSTANCE.react(listening
+                    ? ReisaDropdownCompanion.Action.KEY_BIND
+                    : ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
 
         if (listening && button != 0) {
             setting.setValue(KeybindUtils.encodeMouseButton(button));
             listening = false;
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         return false;
@@ -83,6 +89,9 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
             setting.setValue(keyCode);
         }
         listening = false;
+        DropdownScreen.INSTANCE.react(keyCode == 256
+                ? ReisaDropdownCompanion.Action.CANCEL
+                : ReisaDropdownCompanion.Action.CONFIRM);
         return true;
     }
 

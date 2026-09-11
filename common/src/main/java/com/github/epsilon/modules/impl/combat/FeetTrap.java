@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -72,7 +72,7 @@ public class FeetTrap extends Module {
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (rotation != null && rotate.getValue()) {
-            Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue().doubleValue());
+            RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue().doubleValue());
         }
     }
 
@@ -182,7 +182,7 @@ public class FeetTrap extends Module {
 
         if (rotate.getValue()) {
             this.rotation = RotationUtils.calculate(hitVec(pos, side));
-            if (RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), pos.relative(side))) {
+            if (RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos.relative(side))) {
                 // 在这个 tick 转头已经到达，无需继续设置转头
                 this.rotation = null;
             } else {

@@ -33,6 +33,7 @@ public enum Easing {
     SIGMOID(x -> 1 / (1 + (float) Math.exp(-x))),
     EASE_OUT_ELASTIC(x -> x == 0 ? 0 : x == 1 ? 1 : (float) (Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * ((2 * Math.PI) / 3)) * 0.5F + 1)),
     EASE_IN_BACK(x -> (1.70158F + 1.0F) * x * x * x - 1.70158F * x * x),
+    EASE_OUT_BACK(x -> 1 + (--x) * x * (2.70158F * x + 1.70158F)),
     DYNAMIC_ISLAND(x -> (float) (1 - Math.cos(x * Math.PI * (0.2 + 2.5 * Math.pow(x, 3))) * Math.exp(-x * 5)));
 
     private final Function<Float, Float> function;
@@ -41,6 +42,11 @@ public enum Easing {
         this.function = function;
     }
 
+    /**
+     * 获取该缓动类型对应的插值函数。
+     *
+     * @return 获取或计算得到的结果
+     */
     public Function<Float, Float> getFunction() {
         return function;
     }

@@ -23,6 +23,8 @@ public class MixinWindow {
         final InputStream epsilon_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_32x32.png");
         final InputStream table_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_16x16.png");
         final InputStream table_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_32x32.png");
+        final InputStream endfield_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/endfield_16x16.png");
+        final InputStream endfield_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/endfield_32x32.png");
 
         if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Epsilon)) {
             if (epsilon_16x16 != null && epsilon_32x32 != null) {
@@ -31,6 +33,10 @@ public class MixinWindow {
         } else if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Minecraft_1_8_9)) {
             if (table_16x16 != null && table_32x32 != null) {
                 return List.of(() -> table_16x16, () -> table_32x32);
+            }
+        } else if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Endfield)) {
+            if (endfield_16x16 != null && endfield_32x32 != null) {
+                return List.of(() -> endfield_16x16, () -> endfield_32x32);
             }
         }
 

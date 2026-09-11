@@ -12,10 +12,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -37,12 +33,17 @@ public class CaptureMarkESP {
             .withCull(false)
             .build();
 
-    private static final RenderType TARGET_ICON_LAYER = RenderType.create("epsilon_target_icon", RenderSetup.builder(TARGET_ICON_PIPELINE)
-            .withTexture("Sampler0", CAPTUREMARK_TEX)
-            .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-            .setOutputTarget(OutputTarget.MAIN_TARGET)
-            .createRenderSetup());
-
+    /**
+     * 为目标渲染旋转波形捕获标记。
+     *
+     * @param poseStack 渲染姿态栈
+     * @param target    目标实体
+     * @param espSize   特效尺寸
+     * @param rotSpeed  旋转速度
+     * @param waveSpeed 波形动画速度
+     * @param color1    第一种颜色
+     * @param color2    第二种颜色
+     */
     public static void render(PoseStack poseStack, LivingEntity target, double espSize, double rotSpeed, double waveSpeed, Color color1, Color color2) {
         double timeSeconds = System.nanoTime() * 1.0E-9;
         float rotation = (float) (-((timeSeconds * rotSpeed * 60.0) % 360.0));
@@ -63,20 +64,20 @@ public class CaptureMarkESP {
         poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(rotation));
 
-        Matrix4f matrix = poseStack.last().pose();
-        LuminImmediateRenderer.PosTexColorQuads builder = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, CAPTUREMARK_TEX);
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, CAPTUREMARK_TEX);
 
-        Color c1 = getColorForProgress(0, waveSpeed, color1, color2, timeSeconds);
+        Matrix4f matrix = poseStack.last().pose();
+
+        Color c1 = getColorForProgress(0f, waveSpeed, color1, color2, timeSeconds);
         Color c2 = getColorForProgress(0.25f, waveSpeed, color1, color2, timeSeconds);
         Color c3 = getColorForProgress(0.5f, waveSpeed, color1, color2, timeSeconds);
         Color c4 = getColorForProgress(0.75f, waveSpeed, color1, color2, timeSeconds);
 
-        builder.vertex(matrix, -size, -size, 0, 0, 0, c1.getRGB());
-        builder.vertex(matrix, -size, size, 0, 0, 1, c2.getRGB());
-        builder.vertex(matrix, size, size, 0, 1, 1, c3.getRGB());
-        builder.vertex(matrix, size, -size, 0, 1, 0, c4.getRGB());
-
-        builder.end();
+        renderer.vertex(matrix, -size, -size, 0, 0, 0, c1.getRGB());
+        renderer.vertex(matrix, -size, size, 0, 0, 1, c2.getRGB());
+        renderer.vertex(matrix, size, size, 0, 1, 1, c3.getRGB());
+        renderer.vertex(matrix, size, -size, 0, 1, 0, c4.getRGB());
+        renderer.end();
 
         poseStack.popPose();
     }

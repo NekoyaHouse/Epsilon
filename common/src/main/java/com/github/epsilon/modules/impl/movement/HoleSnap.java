@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.TimerManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -21,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
@@ -87,7 +86,7 @@ public class HoleSnap extends Module {
             Step.INSTANCE.setEnabled(false);
         }
 
-        Managers.TIMER.reset();
+        TimerManager.INSTANCE.reset();
         singleHole = null;
         targetHole = null;
     }
@@ -114,7 +113,7 @@ public class HoleSnap extends Module {
             return;
         }
 
-        Managers.TIMER.set(timer.getValue().floatValue());
+        TimerManager.INSTANCE.set(timer.getValue().floatValue());
 
         double yaw = Math.cos(Math.toRadians(getAngle(hole.middle) + 90.0f));
         double pitch = Math.sin(Math.toRadians(getAngle(hole.middle) + 90.0f));
@@ -125,7 +124,7 @@ public class HoleSnap extends Module {
                 event.setZ(0.0);
                 event.cancel();
                 toggle();
-            } else if (hasBlockCollision(mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
+            } else if (!mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
                 toggle();
             } else {
                 event.setX(0.0);
@@ -144,7 +143,7 @@ public class HoleSnap extends Module {
         double motionZ = getSpeed() * pitch;
         double distanceZ = hole.middle.z - mc.player.getZ();
 
-        if (hasBlockCollision(mc.player.getBoundingBox().move(motionX, 0.0, motionZ))) {
+        if (!mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(motionX, 0.0, motionZ))) {
             collisions++;
             if (collisionLimit.getValue() > 0 && collisions >= collisionLimit.getValue()) {
                 toggle();
@@ -156,7 +155,7 @@ public class HoleSnap extends Module {
 
         if (jumpTicks > 0) {
             jumpTicks--;
-        } else if (jump.getValue() && hasBlockCollision(mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
+        } else if (jump.getValue() && !mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
             jumpTicks = jumpCooldown.getValue();
             event.setY(0.42);
         }
@@ -246,10 +245,6 @@ public class HoleSnap extends Module {
             if (playerPos.equals(pos)) return true;
         }
         return false;
-    }
-
-    private boolean hasBlockCollision(AABB box) {
-        return !mc.level.noBlockCollision(mc.player, box);
     }
 
     private float getAngle(Vec3 pos) {

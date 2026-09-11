@@ -132,11 +132,11 @@ public class Particles extends Module {
     }
 
     private void renderParticleList(PoseStack poseStack, List<ParticleBase> list, Identifier texture) {
-        LuminImmediateRenderer.PosTexColorQuads buffer = LuminImmediateRenderer.beginPosTexColorQuads(PARTICLE_PIPELINE, texture);
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(PARTICLE_PIPELINE, texture);
         for (ParticleBase particle : list) {
-            particle.render(poseStack, buffer);
+            particle.render(poseStack, renderer);
         }
-        buffer.end();
+        renderer.end();
     }
 
     private Identifier textureForMode(Mode mode) {
@@ -209,7 +209,7 @@ public class Particles extends Module {
         }
 
         @Override
-        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer) {
+        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             if (trails.isEmpty()) return;
 
             float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
@@ -218,7 +218,7 @@ public class Particles extends Module {
             for (Trail trail : trails) {
                 Vec3 position = trail.interpolate(tickDelta);
                 int alpha = (int) (255.0f * ((float) age / (float) maxAge) * trail.animation(tickDelta));
-                drawBillboard(poseStack, buffer, position, particleSize, withAlpha(trail.color(), alpha));
+                drawBillboard(poseStack, renderer, position, particleSize, withAlpha(trail.color(), alpha));
             }
         }
     }
@@ -279,9 +279,9 @@ public class Particles extends Module {
             return false;
         }
 
-        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer) {
+        public void render(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer) {
             Color particleColor = withAlpha(resolveColor(age * 2), (int) (255.0f * ((float) age / (float) maxAge)));
-            drawBillboard(poseStack, buffer, interpolatePos(), size.getValue().floatValue(), particleColor);
+            drawBillboard(poseStack, renderer, interpolatePos(), size.getValue().floatValue(), particleColor);
         }
 
         protected Vec3 interpolatePos() {
@@ -293,7 +293,7 @@ public class Particles extends Module {
             return new Vec3(x, y, z);
         }
 
-        protected void drawBillboard(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer, Vec3 position, float particleSize, Color particleColor) {
+        protected void drawBillboard(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Vec3 position, float particleSize, Color particleColor) {
             Camera camera = mc.gameRenderer.mainCamera();
 
             poseStack.pushPose();
@@ -304,10 +304,10 @@ public class Particles extends Module {
             Matrix4f matrix = poseStack.last().pose();
             int argb = particleColor.getRGB();
 
-            buffer.vertex(matrix, 0.0f, -particleSize, 0.0f, 0.0f, 1.0f, argb);
-            buffer.vertex(matrix, -particleSize, -particleSize, 0.0f, 1.0f, 1.0f, argb);
-            buffer.vertex(matrix, -particleSize, 0.0f, 0.0f, 1.0f, 0.0f, argb);
-            buffer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, -particleSize, 0.0f, 0.0f, 1.0f, argb);
+            renderer.vertex(matrix, -particleSize, -particleSize, 0.0f, 1.0f, 1.0f, argb);
+            renderer.vertex(matrix, -particleSize, 0.0f, 0.0f, 1.0f, 0.0f, argb);
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb);
 
             poseStack.popPose();
         }

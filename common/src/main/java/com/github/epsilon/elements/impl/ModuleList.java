@@ -1,16 +1,17 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.modules.Category;
+import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
+import me.sofurry.ClInitNative;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
@@ -19,441 +20,439 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
+@ClInitNative
 public class ModuleList extends HudModule {
 
     public static final ModuleList INSTANCE = new ModuleList();
 
     private ModuleList() {
-        super("Module List", 0f, 2f, 96f, 20f);
+        super("Module List", 4.0f, 16.0f, 96.0f, 20.0f);
     }
 
-    private enum Style {
-        Compact,
-        Open
+    private enum DisplayMode {
+        Simple,
+        Normal
     }
 
-    private enum Mode {
-        LEFT_TAG,
-        RIGHT_TAG,
-        FRAME
+    private enum ColorMode {
+        Single,
+        Double,
+        Rainbow,
+        Fade
     }
 
-    private enum SortingMode {
-        LENGTH,
-        ALPHABET,
-        CATEGORY
-    }
+    private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
+    private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting lineWidth = doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));
+    private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
+    private final DoubleSetting fontSize = doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0);
+    private final BoolSetting textGlow = boolSetting("Text Glow", true);
+    private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
+    private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
+    private final DoubleSetting sliderSpeed = doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01);
+    private final BoolSetting background = boolSetting("Background", true, () -> mode.is(DisplayMode.Normal));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(0, 0, 0, 50), () -> mode.is(DisplayMode.Normal) && background.getValue());
+    private final BoolSetting drawShadow = boolSetting("Drop Shadow", true, () -> mode.is(DisplayMode.Normal));
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final EnumSetting<ColorMode> shadowColorMode = enumSetting("Shadow Color Mode", ColorMode.Single, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue());
+    private final DoubleSetting shadowGradientLength = doubleSetting("Shadow Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && (shadowColorMode.is(ColorMode.Double) || shadowColorMode.is(ColorMode.Fade)));
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(255, 255, 255, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && !shadowColorMode.is(ColorMode.Rainbow));
+    private final ColorSetting shadowColor2 = colorSetting("Shadow Color 2", new Color(255, 0, 0, 90), () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Double));
+    private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Single);
+    private final DoubleSetting doubleGradientLength = doubleSetting("Double Gradient Length", 100.0, 10.0, 1000.0, 10.0, () -> mode.is(DisplayMode.Normal) && (colorMode.is(ColorMode.Double) || colorMode.is(ColorMode.Fade)));
+    private final DoubleSetting rainbowSpeed = doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, this::usesRainbow);
+    private final DoubleSetting rainbowSpread = doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, this::usesRainbow);
+    private final DoubleSetting rainbowHueOffset = doubleSetting("Rainbow Hue Offset", 0.0, 0.0, 360.0, 1.0, this::usesRainbow);
+    private final DoubleSetting rainbowSaturation = doubleSetting("Rainbow Saturation", 0.5, 0.0, 1.0, 0.05, this::usesRainbow);
+    private final DoubleSetting rainbowBrightness = doubleSetting("Rainbow Brightness", 1.0, 0.1, 1.0, 0.05, this::usesRainbow);
+    private final IntSetting rainbowAlpha = intSetting("Rainbow Alpha", 255, 0, 255, 1, () -> colorMode.is(ColorMode.Rainbow));
+    private final IntSetting shadowRainbowAlpha = intSetting("Shadow Rainbow Alpha", 90, 0, 255, 1, () -> mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Rainbow));
+    private final BoolSetting blur = boolSetting("Blur", true, () -> mode.is(DisplayMode.Normal));
+    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 20, 1, () -> mode.is(DisplayMode.Normal) && blur.getValue());
+    private final ColorSetting themeColor1 = colorSetting("Theme Color 1", Color.WHITE, false, () -> !colorMode.is(ColorMode.Rainbow));
+    private final ColorSetting themeColor2 = colorSetting("Theme Color 2", Color.RED, false, () -> colorMode.is(ColorMode.Double));
 
-    private final EnumSetting<Style> style = enumSetting("Style", Style.Open);
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.LEFT_TAG, () -> style.is(Style.Compact));
-    private final EnumSetting<SortingMode> sortingMode = enumSetting("Sorting Mode", SortingMode.LENGTH);
-    private final BoolSetting showHidden = boolSetting("Show Hidden", false);
-    private final BoolSetting bindOnly = boolSetting("Bind Only", false, () -> !showHidden.getValue());
-    private final BoolSetting rainbow = boolSetting("Rainbow", true);
-    private final DoubleSetting rainbowLength = doubleSetting("Rainbow Length", 10.0, 1.0, 20.0, 0.5, rainbow::getValue);
-    private final DoubleSetting indexedHue = doubleSetting("Indexed Hue", 0.5, 0.0, 1.0, 0.05, rainbow::getValue);
-    private final DoubleSetting saturation = doubleSetting("Saturation", 0.5, 0.0, 1.0, 0.01, rainbow::getValue);
-    private final DoubleSetting brightness = doubleSetting("Brightness", 1.0, 0.0, 1.0, 0.01, rainbow::getValue);
-    private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.5, 0.05);
-    private final ColorSetting textColor = colorSetting("Text Color", new Color(208, 188, 255, 255));
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
-    private final ColorSetting infoColor = colorSetting("Info Color", new Color(255, 255, 255, 235));
-    private final ColorSetting bracketColor = colorSetting("Bracket Color", new Color(165, 165, 165, 225));
+    private static final int MAX_SEGMENTS = 64;
+    private static final float MIN_BOUNDS = 20.0f;
+    private static final int MODULE_ANIMATION_DURATION_MS = 200;
 
-    private final BoolSetting showOpenCategory = boolSetting("Show Category", false, () -> style.is(Style.Open));
-    private final BoolSetting showOpenIcon = boolSetting("Show Icon", true, () -> style.is(Style.Open));
-    private final DoubleSetting openTextScaleOffset = doubleSetting("Text Scale Offset", -0.2, -0.5, 0.5, 0.05, () -> style.is(Style.Open));
-    private final DoubleSetting openCornerRadius = doubleSetting("Corner Radius", 4.0, 0.0, 14.0, 0.5, () -> style.is(Style.Open));
-    private final BoolSetting drawOpenShadow = boolSetting("Drop Shadow", true, () -> style.is(Style.Open));
-    private final DoubleSetting openShadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, () -> style.is(Style.Open) && drawOpenShadow.getValue());
-    private final ColorSetting openShadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), () -> style.is(Style.Open) && drawOpenShadow.getValue());
-    private final BoolSetting openBackgroundBlur = boolSetting("Background Blur", false, () -> style.is(Style.Open));
-    private final IntSetting openBlurStrength = intSetting("Blur Strength", 5, 1, 16, 1, () -> style.is(Style.Open) && openBackgroundBlur.getValue());
+    private final Map<Module, ToggleAnimation> moduleAnimations = new HashMap<>();
+    private final Map<Module, Float> moduleYPositions = new HashMap<>();
+    private List<Module> lastSortedModules = new ArrayList<>();
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-
-    private final Map<Module, ModuleToggleFlag> toggleFlags = new HashMap<>();
-
-    private static final float MIN_BOUNDS = 20.0f;
-    private static final float OPEN_ROW_HEIGHT = 18.0f;
-    private static final float OPEN_ROW_SPACING = 2.0f;
-    private static final float OPEN_NAME_PADDING_START = 3.5f;
-    private static final float OPEN_NAME_PADDING_END = 5.0f;
-    private static final float OPEN_ICON_GAP = 2.0f;
-    private static final float OPEN_INFO_PADDING_START = 2.5f;
-    private static final float OPEN_INFO_PADDING_END = 3.5f;
 
     @Override
     public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
-        float s = scale.getValue().floatValue();
-        float textScale = style.is(Style.Open) ? Math.max(0.1f, s + openTextScaleOffset.getValue().floatValue()) : 0.72f * s;
-        List<RenderRow> rows = collectRows(textRenderer, textScale);
 
-        switch (style.getValue()) {
-            case Compact -> renderCompact(textRenderer, rows, s, textScale);
-            case Open -> renderOpen(textRenderer, rows, s, textScale);
-        }
-    }
-
-    private List<RenderRow> collectRows(TextRenderer textRenderer, float textScale) {
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<Module> modules = ModuleManager.INSTANCE.getModules();
         Set<Module> liveModules = new HashSet<>(modules);
-        toggleFlags.keySet().removeIf(module -> !liveModules.contains(module));
+        moduleAnimations.keySet().removeIf(module -> !liveModules.contains(module));
+        moduleYPositions.keySet().removeIf(module -> !liveModules.contains(module));
 
-        List<RenderRow> rows = new ArrayList<>();
         long now = System.currentTimeMillis();
         for (Module module : modules) {
-            boolean state = resolveState(module);
-            ModuleToggleFlag flag = toggleFlags.computeIfAbsent(module, ignored -> new ModuleToggleFlag(state));
-            float progress = flag.update(state, now);
-            if (progress <= 0.001f) continue;
-
-            ModuleLine line = ModuleLine.create(module, textRenderer, textScale, showOpenCategory.getValue() && style.is(Style.Open));
-            rows.add(new RenderRow(module, line, progress, 0.0f));
+            if (!isVisible(module)) continue;
+            moduleAnimations.computeIfAbsent(module, ignored -> new ToggleAnimation(now)).update(true, now);
         }
 
-        rows.sort(rowComparator());
-        return rows;
-    }
+        var iterator = moduleAnimations.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Module, ToggleAnimation> entry = iterator.next();
+            if (isVisible(entry.getKey())) continue;
 
-    private void renderCompact(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        UiTree.Scope scope = renderScope();
-        float lineHeight = textRenderer.getHeight(textScale) + 2.0f * s;
-        float paddingX = 2.0f * s;
-        float tagWidth = mode.is(Mode.FRAME) ? 0.0f : 2.0f * s;
-
-        List<RenderRow> sizedRows = new ArrayList<>(rows.size());
-        float maxWidth = MIN_BOUNDS;
-        float totalHeight = rows.isEmpty() ? MIN_BOUNDS : 0.0f;
-        for (RenderRow row : rows) {
-            float rowWidth = row.line.width + paddingX * 2.0f + tagWidth;
-            sizedRows.add(new RenderRow(row.module, row.line, row.progress, rowWidth));
-            maxWidth = Math.max(maxWidth, rowWidth);
-            totalHeight += lineHeight * row.progress;
-        }
-
-        setBounds(maxWidth, Math.max(totalHeight, MIN_BOUNDS));
-        if (sizedRows.isEmpty()) return;
-
-        boolean rightAligned = getHorizontalAnchor() == HorizontalAnchor.Right;
-        boolean bottomAligned = getVerticalAnchor() == VerticalAnchor.Bottom;
-        float currentY = bottomAligned ? this.y + this.height : this.y;
-        float timedHue = timedHue();
-
-        for (int i = 0; i < sizedRows.size(); i++) {
-            RenderRow row = sizedRows.get(i);
-            float visibleHeight = lineHeight * row.progress;
-            float rowY = bottomAligned ? currentY - visibleHeight : currentY;
-            float targetX = computeRowX(row.rowWidth);
-            float slideOffset = row.rowWidth * (1.0f - row.progress);
-            float rowX = rightAligned ? targetX + slideOffset : targetX - slideOffset;
-            Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
-
-            drawCompactRow(scope, textRenderer, row, rowX, rowY, visibleHeight, paddingX, tagWidth, textScale, accent);
-
-            if (bottomAligned) {
-                currentY -= visibleHeight;
-            } else {
-                currentY += visibleHeight;
+            float progress = entry.getValue().update(false, now);
+            if (progress <= 0.0f) {
+                iterator.remove();
+                moduleYPositions.remove(entry.getKey());
             }
         }
 
-    }
-
-    private void renderOpen(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        UiTree.Scope scope = renderScope();
-
-        float rowHeight = OPEN_ROW_HEIGHT * s;
-        float spacing = OPEN_ROW_SPACING * s;
-        float iconGap = OPEN_ICON_GAP * s;
-        float namePadStart = OPEN_NAME_PADDING_START * s;
-        float namePadEnd = OPEN_NAME_PADDING_END * s;
-        float infoPadStart = OPEN_INFO_PADDING_START * s;
-        float infoPadEnd = OPEN_INFO_PADDING_END * s;
-        float radius = openCornerRadius.getValue().floatValue() * s;
-
-        List<RenderRow> sizedRows = new ArrayList<>(rows.size());
-        float maxWidth = MIN_BOUNDS;
-        float totalHeight = rows.isEmpty() ? MIN_BOUNDS : 0.0f;
-        boolean first = true;
-        for (RenderRow row : rows) {
-            float infoBoxWidth = row.line.info.isEmpty() || !showOpenIcon.getValue() ? 0.0f : infoPadStart + row.line.infoWidth + infoPadEnd;
-            float nameBoxWidth = namePadStart + row.line.nameWidth + namePadEnd;
-            float rowWidth = nameBoxWidth;
-            if (showOpenIcon.getValue()) {
-                rowWidth += rowHeight + iconGap;
-                if (infoBoxWidth > 0.0f) {
-                    rowWidth += iconGap + infoBoxWidth;
-                }
-            }
-
-            RenderRow sizedRow = new RenderRow(row.module, row.line.withOpenWidths(nameBoxWidth, infoBoxWidth), row.progress, rowWidth);
-            sizedRows.add(sizedRow);
-            maxWidth = Math.max(maxWidth, rowWidth);
-            totalHeight += (rowHeight + (first ? 0.0f : spacing)) * row.progress;
-            first = false;
-        }
-
-        setBounds(maxWidth, Math.max(totalHeight, MIN_BOUNDS));
-        if (sizedRows.isEmpty()) return;
-
-        boolean bottomAligned = getVerticalAnchor() == VerticalAnchor.Bottom;
-        boolean iconOnLeft = getHorizontalAnchor() == HorizontalAnchor.Left;
-        float currentY = bottomAligned ? this.y + this.height : this.y;
-        float timedHue = timedHue();
-        boolean firstRow = true;
-
-        for (int i = 0; i < sizedRows.size(); i++) {
-            RenderRow row = sizedRows.get(i);
-            float rowStep = rowHeight * row.progress;
-            float spacingStep = firstRow ? 0.0f : spacing * row.progress;
-            if (bottomAligned) {
-                currentY -= spacingStep + rowStep;
-            } else {
-                currentY += spacingStep;
-            }
-            firstRow = false;
-
-            float rowX = computeRowX(row.rowWidth);
-            Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
-            drawOpenRow(scope, textRenderer, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
-
-            if (!bottomAligned) {
-                currentY += rowStep;
-            }
-        }
-
-    }
-
-    private Comparator<RenderRow> rowComparator() {
-        return switch (sortingMode.getValue()) {
-            case LENGTH -> Comparator.comparingDouble((RenderRow row) -> -row.line.width);
-            case ALPHABET -> Comparator.comparing(row -> row.module.getTranslatedName().toLowerCase(Locale.ROOT));
-            case CATEGORY -> Comparator
-                    .comparingInt((RenderRow row) -> categoryOrder(row.module.getCategory()))
-                    .thenComparing(row -> row.module.getTranslatedName().toLowerCase(Locale.ROOT));
-        };
-    }
-
-    private int categoryOrder(Category category) {
-        return category == null ? Integer.MAX_VALUE : category.ordinal();
-    }
-
-    private boolean resolveState(Module module) {
-        return module.isEnabled() && (showHidden.getValue() || (!module.isHidden() && (!bindOnly.getValue() || module.getKeyBind() != -1)));
-    }
-
-    private float computeRowX(float rowWidth) {
-        return switch (getHorizontalAnchor()) {
-            case Right -> this.x + this.width - rowWidth;
-            case Center -> this.x + (this.width - rowWidth) / 2.0f;
-            default -> this.x;
-        };
-    }
-
-    private void drawCompactRow(
-            UiTree.Scope scope,
-            TextRenderer textRenderer,
-            RenderRow row,
-            float rowX,
-            float rowY,
-            float rowHeight,
-            float paddingX,
-            float tagWidth,
-            float textScale,
-            Color accent
-    ) {
-        float backgroundX = mode.is(Mode.LEFT_TAG) ? rowX + tagWidth : rowX;
-        float backgroundWidth = row.line.width + paddingX * 2.0f;
-        Color rowBackground = withAlpha(backgroundColor.getValue(), row.progress);
-
-        scope.rect(backgroundX, rowY, backgroundWidth, rowHeight, rowBackground);
-
-        if (mode.is(Mode.LEFT_TAG)) {
-            scope.rect(rowX, rowY, tagWidth, rowHeight, withAlpha(accent, row.progress));
-        } else if (mode.is(Mode.RIGHT_TAG)) {
-            scope.rect(backgroundX + backgroundWidth, rowY, tagWidth, rowHeight, withAlpha(accent, row.progress));
-        }
-
-        float textX = backgroundX + paddingX;
-        float textY = rowY + Math.max(0.0f, (rowHeight - textRenderer.getHeight(textScale)) / 2.0f);
-        drawCompactLine(scope, row.line, textX, textY, textScale, withAlpha(accent, row.progress), row.progress);
-    }
-
-    private void drawOpenRow(
-            UiTree.Scope scope,
-            TextRenderer textRenderer,
-            RenderRow row,
-            float rowX,
-            float rowY,
-            float rowHeight,
-            float radius,
-            float iconGap,
-            boolean iconOnLeft,
-            float textScale,
-            Color accent
-    ) {
-        float alpha = Mth.clamp(row.progress, 0.0f, 1.0f);
-        float visibleHeight = rowHeight * alpha;
-        float textBoxX;
-        float iconBoxX;
-        boolean hasInfoBox = row.line.openInfoBoxWidth > 0.0f;
-
-        if (showOpenIcon.getValue()) {
-            if (iconOnLeft) {
-                iconBoxX = rowX;
-                textBoxX = rowX + rowHeight + iconGap;
-            } else {
-                iconBoxX = rowX + row.rowWidth - rowHeight;
-                textBoxX = hasInfoBox
-                        ? iconBoxX - iconGap - row.line.openInfoBoxWidth - iconGap - row.line.openNameBoxWidth
-                        : iconBoxX - iconGap - row.line.openNameBoxWidth;
-            }
-
-            drawOpenBox(scope, iconBoxX, rowY, rowHeight, visibleHeight, radius, alpha);
-
-            String iconChar = row.module.getCategory() == null ? "" : row.module.getCategory().icon;
-            if (!iconChar.isEmpty()) {
-                float iconScale = scale.getValue().floatValue();
-                float iconWidth = textRenderer.getWidth(iconChar, iconScale, StaticFontLoader.ICONS);
-                float iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS);
-                float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f;
-                float iconY = rowY + (visibleHeight - iconHeight) / 2.0f;
-                scope.text(iconChar, iconX, iconY, iconScale, withAlpha(accent, alpha * 0.82f), StaticFontLoader.ICONS);
-            }
-
-            if (hasInfoBox) {
-                float infoBoxX = iconOnLeft
-                        ? textBoxX + row.line.openNameBoxWidth + iconGap
-                        : iconBoxX - iconGap - row.line.openInfoBoxWidth;
-                drawOpenBox(scope, infoBoxX, rowY, row.line.openInfoBoxWidth, visibleHeight, radius, alpha);
-                float infoX = infoBoxX + (row.line.openInfoBoxWidth - row.line.infoWidth) / 2.0f;
-                float infoY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-                scope.text(row.line.info, infoX, infoY, textScale, withAlpha(infoColor.getValue(), alpha));
-            }
+        if (mode.is(DisplayMode.Simple)) {
+            renderSimple(textRenderer);
         } else {
-            textBoxX = rowX;
+            renderNormal(textRenderer);
+        }
+    }
+
+    private void renderSimple(TextRenderer textRenderer) {
+        float textScale = Math.max(0.1f, fontSize.getValue().floatValue() / 16.0f);
+        List<RenderEntry> entries = collectRenderEntries(textRenderer, textScale, showSuffix.getValue());
+        LayoutState layout = updateLayout(entries, textRenderer.getHeight(textScale) + 3.0f);
+
+        float boundsWidth = Math.max(MIN_BOUNDS, maxDisplayWidth(entries));
+        setBounds(boundsWidth, Math.max(MIN_BOUNDS, layout.height()));
+        if (entries.isEmpty()) return;
+
+        UiTree.Scope scope = renderScope();
+        boolean rightSide = this.x + this.width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f;
+
+        for (int i = 0; i < entries.size(); i++) {
+            RenderEntry entry = entries.get(i);
+            float animation = entry.animation();
+            if (animation <= 0.01f) continue;
+
+            float slideOffset = entry.displayWidth() * (1.0f - animation);
+            float textX = rightSide
+                    ? this.x + boundsWidth - entry.displayWidth() + slideOffset
+                    : this.x - slideOffset;
+            float textY = this.y + layout.renderY()[i];
+            Color color = withAlpha(resolveColor(i, 100L), animation);
+
+            drawModuleText(scope, entry, textX, textY, textScale, color, animation);
+        }
+    }
+
+    private void renderNormal(TextRenderer textRenderer) {
+        float textScale = Math.max(0.1f, fontSize.getValue().floatValue() / 16.0f);
+        float textHeight = textRenderer.getHeight(textScale);
+        float horizontalPadding = this.horizontalPadding.getValue().floatValue();
+        float lineHeight = textHeight + this.verticalPadding.getValue().floatValue() * 2.0f;
+
+        List<RenderEntry> entries = collectRenderEntries(textRenderer, textScale, showSuffix.getValue());
+        LayoutState layout = updateLayout(entries, lineHeight);
+        float maxTextWidth = maxDisplayWidth(entries);
+        float boundsWidth = Math.max(MIN_BOUNDS, maxTextWidth + horizontalPadding * 2.0f);
+        setBounds(boundsWidth, Math.max(MIN_BOUNDS, layout.height()));
+        if (entries.isEmpty()) return;
+
+        boolean rightSide = this.x + this.width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f;
+        float baseTextX = this.x + horizontalPadding;
+        long gradientStep = doubleGradientLength.getValue().longValue();
+        List<NormalRow> rows = new ArrayList<>();
+        int colorIndex = 0;
+
+        for (int i = 0; i < entries.size(); i++) {
+            RenderEntry entry = entries.get(i);
+            float animation = entry.animation();
+            if (animation <= 0.01f) continue;
+
+            float backgroundWidth = entry.displayWidth() + horizontalPadding * 2.0f;
+            float slideOffset = backgroundWidth * (1.0f - animation);
+            float textX = rightSide ? baseTextX + maxTextWidth - entry.displayWidth() + slideOffset : baseTextX - slideOffset;
+            float backgroundX = textX - horizontalPadding;
+            float backgroundY = this.y + layout.renderY()[i];
+            float backgroundHeight = lineHeight * animation;
+            Color startColor = rows.isEmpty() ? resolveColor(colorIndex, gradientStep) : rows.getLast().endColor();
+            Color endColor = resolveColor(++colorIndex, gradientStep);
+
+            rows.add(new NormalRow(entry, textX, backgroundX, backgroundY, backgroundWidth, backgroundHeight, startColor, endColor));
         }
 
-        drawOpenBox(scope, textBoxX, rowY, row.line.openNameBoxWidth, visibleHeight, radius, alpha);
-        float textX = textBoxX + (row.line.openNameBoxWidth - row.line.nameWidth) / 2.0f;
-        float textY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-        scope.text(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
-    }
+        List<SegmentBatch> segmentBatches = buildSegmentBatches(rows);
+        if (blur.getValue()) renderBlur(segmentBatches);
 
-    private void drawOpenBox(UiTree.Scope scope, float x, float y, float width, float height, float radius, float alpha) {
-        Color background = withAlpha(backgroundColor.getValue(), alpha);
-        if (openBackgroundBlur.getValue()) {
-            BlurShader.INSTANCE.render(x, y, width, height, radius, openBlurStrength.getValue());
+        UiTree.Scope scope = renderScope();
+        if (drawShadow.getValue()) renderShadow(scope, segmentBatches);
+
+        for (NormalRow row : rows) {
+            float animation = row.entry().animation();
+            if (background.getValue()) {
+                scope.rect(row.backgroundX(), row.backgroundY(), row.backgroundWidth(), row.backgroundHeight(), withAlpha(backgroundColor.getValue(), animation));
+            }
+
+            float textY = row.backgroundY() + (row.backgroundHeight() - textHeight) * 0.5f;
+            drawModuleText(scope, row.entry(), row.textX(), textY, textScale, withAlpha(row.startColor(), animation), withAlpha(row.endColor(), animation), animation);
         }
-        if (drawOpenShadow.getValue()) {
-            scope.shadow(x, y, width, height, radius, openShadowBlur.getValue().floatValue(), withAlpha(openShadowColor.getValue(), alpha));
+
+        float lineWidth = this.lineWidth.getValue().floatValue() * textScale;
+        for (int i = 0; i < rows.size(); i++) {
+            NormalRow row = rows.get(i);
+            float lineX = rightSide ? row.backgroundX() + row.backgroundWidth() : row.backgroundX() - lineWidth;
+            float lineBottom = row.backgroundY() + row.backgroundHeight();
+            if (i + 1 < rows.size()) {
+                lineBottom = Math.max(lineBottom, rows.get(i + 1).backgroundY());
+            }
+            float bottomAnimation = i + 1 < rows.size() ? rows.get(i + 1).entry().animation() : row.entry().animation();
+            scope.rectVerticalGradient(lineX, row.backgroundY(), lineWidth, Math.max(0.0f, lineBottom - row.backgroundY()), withAlpha(row.startColor(), row.entry().animation()), withAlpha(row.endColor(), bottomAnimation));
         }
-        scope.roundRect(x, y, width, height, radius, background);
     }
 
-    private void drawCompactLine(UiTree.Scope scope, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
-        scope.text(line.name, x, y, textScale, nameColor);
-        float cursorX = x + line.nameWidth;
+    private List<SegmentBatch> buildSegmentBatches(List<NormalRow> rows) {
+        List<SegmentBatch> batches = new ArrayList<>((rows.size() + MAX_SEGMENTS - 1) / MAX_SEGMENTS);
+        long gradientStep = shadowGradientLength.getValue().longValue();
+        for (int offset = 0; offset < rows.size(); offset += MAX_SEGMENTS) {
+            int count = Math.min(MAX_SEGMENTS, rows.size() - offset);
+            float[] segmentRects = new float[count * 4];
+            float[] segmentRadii = new float[count];
+            Color[] segmentColors = new Color[count];
+            float minX = Float.POSITIVE_INFINITY;
+            float minY = Float.POSITIVE_INFINITY;
+            float maxX = Float.NEGATIVE_INFINITY;
+            float maxY = Float.NEGATIVE_INFINITY;
 
-        if (line.info.isEmpty()) return;
+            for (int i = 0; i < count; i++) {
+                NormalRow row = rows.get(offset + i);
+                int index = i * 4;
+                segmentRects[index] = row.backgroundX();
+                segmentRects[index + 1] = row.backgroundY();
+                segmentRects[index + 2] = row.backgroundWidth();
+                segmentRects[index + 3] = row.backgroundHeight();
+                segmentColors[i] = resolveShadowColor(offset + i, gradientStep);
 
-        Color bracket = withAlpha(bracketColor.getValue(), alpha);
-        Color info = withAlpha(infoColor.getValue(), alpha);
+                minX = Math.min(minX, row.backgroundX());
+                minY = Math.min(minY, row.backgroundY());
+                maxX = Math.max(maxX, row.backgroundX() + row.backgroundWidth());
+                maxY = Math.max(maxY, row.backgroundY() + row.backgroundHeight());
+            }
 
-        scope.text(" [", cursorX, y, textScale, bracket);
-        cursorX += line.openBracketWidth;
-        scope.text(line.info, cursorX, y, textScale, info);
-        cursorX += line.infoWidth;
-        scope.text("]", cursorX, y, textScale, bracket);
+            if (maxX > minX && maxY > minY) {
+                batches.add(new SegmentBatch(minX, minY, maxX - minX, maxY - minY, segmentRects, segmentRadii, segmentColors, count));
+            }
+        }
+        return batches;
     }
 
-    private float timedHue() {
-        float lengthMs = Math.max(1.0f, rainbowLength.getValue().floatValue() * 1000.0f);
-        return (System.currentTimeMillis() % (long) lengthMs) / lengthMs;
+    private void renderBlur(List<SegmentBatch> batches) {
+        for (SegmentBatch batch : batches) {
+            BlurShader.INSTANCE.render(batch.x(), batch.y(), batch.width(), batch.height(), 0.0f, blurStrength.getValue(), batch.rects(), batch.radii(), batch.count());
+        }
     }
 
-    private Color rainbowColor(float timedHue, int index) {
-        float hue = timedHue + indexedHue.getValue().floatValue() * 0.05f * index;
-        int rgb = Color.HSBtoRGB(hue, saturation.getValue().floatValue(), brightness.getValue().floatValue());
+    private void renderShadow(UiTree.Scope scope, List<SegmentBatch> batches) {
+        float blurRadius = shadowBlur.getValue().floatValue();
+        Color color = shadowColor.getValue();
+        if (shadowColorMode.is(ColorMode.Rainbow)) {
+            color = new Color(color.getRed(), color.getGreen(), color.getBlue(), shadowRainbowAlpha.getValue());
+        }
+        for (SegmentBatch batch : batches) {
+            float[] segmentColors = new float[batch.count() * 3];
+            for (int i = 0; i < batch.count(); i++) {
+                Color segmentColor = batch.colors()[i];
+                int offset = i * 3;
+                segmentColors[offset] = segmentColor.getRed() / 255.0f;
+                segmentColors[offset + 1] = segmentColor.getGreen() / 255.0f;
+                segmentColors[offset + 2] = segmentColor.getBlue() / 255.0f;
+            }
+            scope.shadow(batch.x(), batch.y(), batch.width(), batch.height(), 0.0f, blurRadius, color, batch.rects(), batch.radii(), segmentColors, batch.count());
+        }
+    }
+
+    private List<RenderEntry> collectRenderEntries(TextRenderer textRenderer, float textScale, boolean showSuffix) {
+        List<RenderEntry> entries = new ArrayList<>();
+        for (Map.Entry<Module, ToggleAnimation> animationEntry : moduleAnimations.entrySet()) {
+            float animation = animationEntry.getValue().progress();
+            if (animation <= 0.001f) continue;
+
+            Module module = animationEntry.getKey();
+            String name = module.getTranslatedName();
+            String info = showSuffix ? normalizeInfo(module.getInfo()) : "";
+            float nameWidth = textRenderer.getWidth(name, textScale);
+            float suffixWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" " + info, textScale);
+            entries.add(new RenderEntry(module, name, info, nameWidth, nameWidth + suffixWidth, animation));
+        }
+
+        entries.sort(Comparator.comparingDouble(RenderEntry::displayWidth).reversed());
+
+        List<Module> sortedModules = new ArrayList<>(entries.size());
+        for (RenderEntry entry : entries) {
+            sortedModules.add(entry.module());
+        }
+        if (!sortedModules.equals(lastSortedModules)) {
+            moduleYPositions.clear();
+            lastSortedModules = sortedModules;
+        }
+        return entries;
+    }
+
+    private LayoutState updateLayout(List<RenderEntry> entries, float lineHeight) {
+        float[] renderY = new float[entries.size()];
+        float accumulatedY = 0.0f;
+        float speed = sliderSpeed.getValue().floatValue();
+
+        for (int i = 0; i < entries.size(); i++) {
+            RenderEntry entry = entries.get(i);
+            float targetY = accumulatedY;
+            float currentY = moduleYPositions.getOrDefault(entry.module(), targetY);
+            float difference = targetY - currentY;
+            currentY = Math.abs(difference) > 0.1f ? currentY + difference * speed : targetY;
+            moduleYPositions.put(entry.module(), currentY);
+            renderY[i] = currentY;
+
+            if (entry.animation() > 0.01f) {
+                accumulatedY += lineHeight * entry.animation();
+            }
+        }
+
+        return new LayoutState(renderY, accumulatedY);
+    }
+
+    private boolean isVisible(Module module) {
+        return module.isEnabled() && !module.isHidden() && !module.getName().isEmpty();
+    }
+
+    private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameColor, float animation) {
+        drawModuleText(scope, entry, x, y, textScale, nameColor, nameColor, animation);
+    }
+
+    private void drawModuleText(UiTree.Scope scope, RenderEntry entry, float x, float y, float textScale, Color nameStartColor, Color nameEndColor, float animation) {
+        float glowRadius = this.glowRadius.getValue().floatValue();
+        int glowIntensity = this.glowIntensity.getValue();
+        Color glowColor = ColorUtils.interpolateColor(nameStartColor, nameEndColor, 0.5f);
+        if (textGlow.getValue()) {
+            scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, glowColor);
+        }
+        scope.gradientText(entry.name, x, y, textScale, nameStartColor, nameEndColor);
+        if (!entry.info.isEmpty()) {
+            String text = " " + entry.info;
+            float textX = x + entry.nameWidth;
+            Color color = withAlpha(new Color(170, 170, 170), animation);
+            if (textGlow.getValue())
+                scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color);
+            scope.text(text, textX, y, textScale, color);
+        }
+    }
+
+    private Color resolveColor(int index, long offsetStep) {
+        return switch (colorMode.getValue()) {
+            case Rainbow -> rainbowColor(index, rainbowAlpha.getValue());
+            case Double -> animateColor(themeColor1.getValue(), themeColor2.getValue(), index * offsetStep);
+            case Fade -> animateColor(themeColor1.getValue(), darker(themeColor1.getValue()), index * offsetStep);
+            case Single -> themeColor1.getValue();
+        };
+    }
+
+    private Color resolveShadowColor(int index, long offsetStep) {
+        return switch (shadowColorMode.getValue()) {
+            case Rainbow -> rainbowColor(index, shadowRainbowAlpha.getValue());
+            case Double -> animateColor(shadowColor.getValue(), shadowColor2.getValue(), index * offsetStep);
+            case Fade -> animateColor(shadowColor.getValue(), darker(shadowColor.getValue()), index * offsetStep);
+            case Single -> shadowColor.getValue();
+        };
+    }
+
+    public Color getThemeColor(int index, long offsetStep) {
+        return resolveColor(index, offsetStep);
+    }
+
+    private boolean usesRainbow() {
+        return colorMode.is(ColorMode.Rainbow) || mode.is(DisplayMode.Normal) && drawShadow.getValue() && shadowColorMode.is(ColorMode.Rainbow);
+    }
+
+    private Color rainbowColor(int index, int alpha) {
+        double hueDegrees = System.currentTimeMillis() * 0.1 * rainbowSpeed.getValue() + rainbowHueOffset.getValue() + index * rainbowSpread.getValue();
+        int rgb = Color.HSBtoRGB((float) ((hueDegrees % 360.0) / 360.0), rainbowSaturation.getValue().floatValue(), rainbowBrightness.getValue().floatValue());
+        return new Color(rgb >>> 16 & 0xFF, rgb >>> 8 & 0xFF, rgb & 0xFF, Mth.clamp(alpha, 0, 255));
+    }
+
+    private Color animateColor(Color start, Color end, long offset) {
+        double progress = ((System.currentTimeMillis() + offset) % 4000L) / 2000.0;
+        if (progress > 1.0) {
+            progress = 1.0 - progress % 1.0;
+        }
+        return ColorUtils.interpolateColor(start, end, (float) progress);
+    }
+
+    private Color darker(Color color) {
+        float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
+        int rgb = Color.HSBtoRGB(hsb[0], hsb[1], hsb[2] * 0.6f);
         return new Color(rgb);
     }
 
-    private Color withAlpha(Color color, float alphaMultiplier) {
-        float multiplier = Mth.clamp(alphaMultiplier, 0.0f, 1.0f);
-        int alpha = Mth.clamp((int) (color.getAlpha() * multiplier), 0, 255);
+    private Color withAlpha(Color color, float multiplier) {
+        int alpha = Mth.clamp((int) (color.getAlpha() * Mth.clamp(multiplier, 0.0f, 1.0f)), 0, 255);
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
     }
 
-    private static class ModuleToggleFlag {
-        private boolean target;
-        private float startProgress;
-        private float progress;
-        private long lastChangeMs;
+    private float maxDisplayWidth(List<RenderEntry> entries) {
+        float width = 0.0f;
+        for (RenderEntry entry : entries) {
+            width = Math.max(width, entry.displayWidth());
+        }
+        return width;
+    }
 
-        private ModuleToggleFlag(boolean target) {
-            this.target = target;
-            this.progress = target ? 1.0f : 0.0f;
-            this.startProgress = progress;
-            this.lastChangeMs = System.currentTimeMillis();
+    private String normalizeInfo(String info) {
+        return info == null || info.isBlank() ? "" : info;
+    }
+
+    private static class ToggleAnimation {
+        private boolean target;
+        private float progress;
+        private long startedAt;
+
+        private ToggleAnimation(long now) {
+            target = true;
+            startedAt = now;
         }
 
         private float update(boolean target, long now) {
             if (this.target != target) {
+                long elapsed = Mth.clamp(now - startedAt, 0L, MODULE_ANIMATION_DURATION_MS);
                 this.target = target;
-                this.startProgress = progress;
-                this.lastChangeMs = now;
+                this.startedAt = now - (MODULE_ANIMATION_DURATION_MS - elapsed);
             }
 
-            float delta = Mth.clamp((now - lastChangeMs) / (float) 300L, 0.0f, 1.0f);
-            if (this.target) {
-                float eased = Easing.EASE_OUT_CUBIC.getFunction().apply(delta);
-                progress = startProgress + (1.0f - startProgress) * eased;
-            } else {
-                float eased = Easing.EASE_IN_CUBIC.getFunction().apply(delta);
-                progress = startProgress * (1.0f - eased);
-            }
+            float elapsed = Mth.clamp((now - startedAt) / (float) MODULE_ANIMATION_DURATION_MS, 0.0f, 1.0f);
+            float eased = Easing.EASE_IN_OUT_QUAD.getFunction().apply(elapsed);
+            progress = target ? eased : 1.0f - eased;
+            return progress;
+        }
 
-            if (delta >= 1.0f) {
-                progress = this.target ? 1.0f : 0.0f;
-                startProgress = progress;
-            }
-
+        private float progress() {
             return progress;
         }
     }
 
-    private record RenderRow(Module module, ModuleLine line, float progress, float rowWidth) {
+    private record RenderEntry(
+            Module module, String name, String info, float nameWidth, float displayWidth, float animation
+    ) {
     }
 
-    private record ModuleLine(String name, String info, float nameWidth, float openBracketWidth, float infoWidth,
-                              float width, float openNameBoxWidth, float openInfoBoxWidth) {
-        private ModuleLine(String name, String info, float nameWidth, float openBracketWidth, float infoWidth, float closeBracketWidth) {
-            this(name, info, nameWidth, openBracketWidth, infoWidth, nameWidth + (info.isEmpty() ? 0.0f : openBracketWidth + infoWidth + closeBracketWidth), 0.0f, 0.0f);
-        }
+    private record LayoutState(float[] renderY, float height) {
+    }
 
-        private ModuleLine withOpenWidths(float openNameBoxWidth, float openInfoBoxWidth) {
-            return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, width, openNameBoxWidth, openInfoBoxWidth);
-        }
+    private record NormalRow(
+            RenderEntry entry, float textX, float backgroundX, float backgroundY, float backgroundWidth,
+            float backgroundHeight, Color startColor, Color endColor
+    ) {
+    }
 
-        private static ModuleLine create(Module module, TextRenderer textRenderer, float textScale, boolean showCategory) {
-            String name = module.getTranslatedName();
-            if (showCategory && module.getCategory() != null) {
-                name += " [" + module.getCategory().getName() + "]";
-            }
-
-            String info = module.getInfo();
-            if (info == null || info.isBlank()) {
-                info = "";
-            }
-
-            float nameWidth = textRenderer.getWidth(name, textScale);
-            float openBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" [", textScale);
-            float infoWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(info, textScale);
-            float closeBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth("]", textScale);
-            return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, closeBracketWidth);
-        }
+    private record SegmentBatch(
+            float x, float y, float width, float height, float[] rects, float[] radii, Color[] colors, int count
+    ) {
     }
 
 }

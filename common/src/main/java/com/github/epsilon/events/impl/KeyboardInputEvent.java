@@ -31,19 +31,19 @@ public class KeyboardInputEvent {
     }
 
     public float getForward() {
-        return this.forward;
+        return forward;
     }
 
     public float getStrafe() {
-        return this.strafe;
+        return strafe;
     }
 
     public boolean isJump() {
-        return this.jump;
+        return jump;
     }
 
     public boolean isSneak() {
-        return this.sneak;
+        return sneak;
     }
 
     public void setForward(float forward) {

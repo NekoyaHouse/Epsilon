@@ -1,8 +1,7 @@
 package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.holders.TextureCacheHolder;
-import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.TranslationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -20,6 +19,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static com.github.epsilon.Constants.mc;
 
 public class EpsilonLanguageManager {
 
@@ -41,12 +42,12 @@ public class EpsilonLanguageManager {
             language = EpsilonLanguage.English;
         }
         selectedLanguage = language;
-        reload(Constants.mc.getResourceManager());
+        reload(mc.getResourceManager());
     }
 
     public void refreshCustomLanguage() {
         if (selectedLanguage.isCustom()) {
-            reload(Constants.mc.getResourceManager());
+            reload(mc.getResourceManager());
         }
     }
 
@@ -109,8 +110,7 @@ public class EpsilonLanguageManager {
     }
 
     private void refreshUi() {
-        TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
+        TranslationManager.INSTANCE.refresh();
     }
 
     private String resolveSelectedLanguageCode() {

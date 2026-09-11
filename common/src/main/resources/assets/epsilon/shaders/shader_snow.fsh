@@ -15,6 +15,7 @@ layout(std140) uniform ShaderParams {
     float GradientScale;
     float Octaves;
     vec2 Resolution;
+    float UseTargetColors;
 };
 
 layout(std140) uniform ShaderColors {
@@ -66,11 +67,11 @@ float glowShader() {
 
     for (float x = -quality; x < quality; x++) {
         for (float y = -quality; y < quality; y++) {
-            vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
-            alpha += alphaMask(currentColor.a) * glowFalloff(vec2(x, y), maxSample, divider);
+            vec2 offset = vec2(x + 0.5, y + 0.5);
+            vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * offset.x, texelSize.y * offset.y));
+            alpha += alphaMask(currentColor.a) * glowFalloff(offset, maxSample, divider);
         }
     }
-
     return alpha;
 }
 
@@ -80,15 +81,11 @@ void main() {
     vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
     vec3 finalColor = vec3(0.0);
     float c = smoothstep(1.0, 0.3, clamp(uv.y * 0.3 + 0.8, 0.0, 0.75));
-    c += snow(uv, 30.0) * 0.0;
-    c += snow(uv, 20.0) * 0.0;
-    c += snow(uv, 15.0) * 0.0;
     c += snow(uv, 10.0);
     c += snow(uv, 8.0);
     c += snow(uv, 6.0);
     c += snow(uv, 5.0);
-    finalColor = vec3(c) * Fill.rgb;
 
     float alpha = centerCol.a != 0.0 ? Fill.a : glowShader();
-    fragColor = vec4(finalColor, alpha);
+    fragColor = vec4(vec3(c) * Fill.rgb, alpha);
 }

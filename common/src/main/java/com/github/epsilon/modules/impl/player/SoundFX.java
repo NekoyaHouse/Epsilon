@@ -2,8 +2,8 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.AttackEntityEvent;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -57,7 +57,7 @@ public class SoundFX extends Module {
     }
 
     private void playSound(SoundKey key) {
-        Managers.SOUND.playSound(key, volume.getValue().floatValue() / 100.0f);
+        SoundManager.INSTANCE.playSound(key, volume.getValue().floatValue() / 100.0f);
     }
 
 }

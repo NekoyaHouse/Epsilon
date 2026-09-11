@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.BlockCollisionEvent;
-import com.github.epsilon.events.impl.DestroyBlockEvent;
+import com.github.epsilon.events.impl.DestroyedBlockEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -117,7 +117,7 @@ public class Phase extends Module {
     }
 
     @EventHandler
-    private void onDestroyBlock(DestroyBlockEvent event) {
+    private void onDestroyedBlock(DestroyedBlockEvent event) {
         clipTimer = afterBreak.getValue();
     }
 
@@ -166,7 +166,7 @@ public class Phase extends Module {
             }
 
             if (blockToBreak == null) return;
-            int bestTool = AutoTool.INSTANCE.getTool(blockToBreak);
+            int bestTool = AutoTool.INSTANCE.getBestTool(blockToBreak);
             if (bestTool == -1) return;
 
             InvUtils.swap(bestTool, true);

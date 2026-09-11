@@ -14,19 +14,19 @@ public class KeyPressEvent extends Cancellable {
     }
 
     public KeyEvent getKeyEvent() {
-        return this.keyEvent;
+        return keyEvent;
     }
 
     public int getAction() {
-        return this.action;
+        return action;
     }
 
     public int getKey() {
-        return this.keyEvent.key();
+        return keyEvent.key();
     }
 
     public int getModifiers() {
-        return this.keyEvent.modifiers();
+        return keyEvent.modifiers();
     }
 
 }

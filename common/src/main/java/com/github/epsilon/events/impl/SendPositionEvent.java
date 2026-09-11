@@ -21,27 +21,27 @@ public class SendPositionEvent extends Cancellable {
     }
 
     public double getX() {
-        return this.x;
+        return x;
     }
 
     public double getY() {
-        return this.y;
+        return y;
     }
 
     public double getZ() {
-        return this.z;
+        return z;
     }
 
     public float getYaw() {
-        return this.yaw;
+        return yaw;
     }
 
     public float getPitch() {
-        return this.pitch;
+        return pitch;
     }
 
     public boolean isOnGround() {
-        return this.onGround;
+        return onGround;
     }
 
     public void setX(double x) {

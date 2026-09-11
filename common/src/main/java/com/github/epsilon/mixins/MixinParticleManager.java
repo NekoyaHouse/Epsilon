@@ -15,62 +15,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ParticleEngine.class)
 public class MixinParticleManager {
+
     @Inject(method = "createParticle", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onCreateParticle(ParticleOptions particleOptions, double x, double y, double z, double velocityX, double velocityY, double velocityZ, CallbackInfoReturnable<Particle> cir) {
-        if (!shouldCancel(particleOptions)) {
-            return;
-        }
-        cir.setReturnValue(null);
-        cir.cancel();
+    private void onCreateParticle(ParticleOptions options, double x, double y, double z, double xa, double ya, double za, CallbackInfoReturnable<Particle> cir) {
+        if (shouldCancel(options)) cir.setReturnValue(null);
     }
 
     @Inject(method = "createTrackingEmitter(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/particles/ParticleOptions;I)V", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onCreateTrackingEmitter(Entity entity, ParticleOptions particleOptions, int lifetime, CallbackInfo ci) {
-        if (!shouldCancel(particleOptions)) {
-            return;
-        }
-        ci.cancel();
+    private void onCreateTrackingEmitter(Entity entity, ParticleOptions particle, int lifeTime, CallbackInfo ci) {
+        if (shouldCancel(particle)) ci.cancel();
     }
 
     private boolean shouldCancel(ParticleOptions particleOptions) {
-        if (particleOptions == null) {
-            return false;
-        }
-        if (particleOptions.getType() == ParticleTypes.TOTEM_OF_UNDYING
-                && MasEffects.INSTANCE.shouldHideVanillaTotemParticles()) {
+        if (particleOptions == null) return false;
+        var type = particleOptions.getType();
+        if (type == ParticleTypes.FLAME) return true; // LoyisaIsImposter
+        if (type == ParticleTypes.TOTEM_OF_UNDYING && MasEffects.INSTANCE.shouldHideVanillaTotemParticles())
             return true;
+        if (NoRender.INSTANCE.isEnabled()) {
+            if (NoRender.INSTANCE.weather.getValue() && type == ParticleTypes.RAIN) return true;
+            if (NoRender.INSTANCE.fireworkExplosions.getValue() && type == ParticleTypes.FIREWORK) return true;
         }
-        if (!NoRender.INSTANCE.isEnabled()) return false;
-
-        if (NoRender.INSTANCE.explosions.getValue()
-                && (particleOptions.getType() == ParticleTypes.EXPLOSION
-                || particleOptions.getType() == ParticleTypes.EXPLOSION_EMITTER
-                || particleOptions.getType() == ParticleTypes.POOF
-                || particleOptions.getType() == ParticleTypes.SMOKE
-                || particleOptions.getType() == ParticleTypes.LARGE_SMOKE
-                || particleOptions.getType() == ParticleTypes.CLOUD)) {
-            return true;
-        }
-
-        if (NoRender.INSTANCE.potionParticles.getValue()
-                && (particleOptions.getType() == ParticleTypes.EFFECT
-                || particleOptions.getType() == ParticleTypes.ENTITY_EFFECT
-                || particleOptions.getType() == ParticleTypes.INSTANT_EFFECT
-                || particleOptions.getType() == ParticleTypes.SPLASH)) {
-            return true;
-        }
-
-        if (NoRender.INSTANCE.fireworks.getValue()
-                && (particleOptions.getType() == ParticleTypes.FIREWORK || particleOptions.getType() == ParticleTypes.FLASH)) {
-            return true;
-        }
-
-        if (NoRender.INSTANCE.portal.getValue()
-                && (particleOptions.getType() == ParticleTypes.PORTAL || particleOptions.getType() == ParticleTypes.REVERSE_PORTAL)) {
-            return true;
-        }
-
-        return NoRender.INSTANCE.totems.getValue() && particleOptions.getType() == ParticleTypes.TOTEM_OF_UNDYING;
+        return false;
     }
 
 }

@@ -12,6 +12,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
+import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,12 +91,12 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
             float iconScale = ICON_SCALE;
             float iconW = textMetrics.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS);
             float iconH = textMetrics.textHeight(iconScale, StaticFontLoader.ICONS);
-            scope.text(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) * 0.5f - 1.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
+            scope.text(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) / 2.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
             if (hovered) {
                 String label = entry.labelSupplier.get();
                 float labelScale = 0.42f;
                 float labelW = textMetrics.textWidth(label, labelScale);
-                float labelX = Math.max(x + 2.0f, Math.min(iconX + (ICON_SIZE - labelW) * 0.5f, x + width - labelW - 2.0f));
+                float labelX = Mth.clamp(iconX + (ICON_SIZE - labelW) * 0.5f, x + 2.0f, x + width - labelW - 2.0f);
                 scope.text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED);
             }
         }

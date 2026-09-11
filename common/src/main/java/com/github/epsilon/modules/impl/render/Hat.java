@@ -11,6 +11,7 @@ import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -51,6 +52,7 @@ public class Hat extends Module {
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_cone"))
             .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
             .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_FAN)
             .build();
 
@@ -71,8 +73,6 @@ public class Hat extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (nullCheck()) return;
-
         if (this.lastSize != this.size.getValue() || this.lastPoints != this.points.getValue()) {
             this.lastSize = this.size.getValue();
             this.lastPoints = this.points.getValue();

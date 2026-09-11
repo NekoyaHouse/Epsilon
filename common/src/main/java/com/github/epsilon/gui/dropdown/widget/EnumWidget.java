@@ -1,11 +1,13 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -18,14 +20,14 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
 
     private static final float FIELD_HEIGHT = 14.0f;
     private static final float FIELD_RADIUS = 5.0f;
-    private static final float FIELD_TEXT_SCALE = 0.50f;
+    private static final float FIELD_TEXT_SCALE = 0.6f;
     private static final float FIELD_TEXT_PADDING_X = 6.0f;
     private static final float FIELD_ARROW_SIZE = 3.0f;
     private static final float LIST_GAP_Y = 3.0f;
     private static final float LIST_PADDING_Y = 2.0f;
     private static final float OPTION_HEIGHT = 12.0f;
     private static final float OPTION_GAP = 1.0f;
-    private static final float OPTION_TEXT_SCALE = 0.48f;
+    private static final float OPTION_TEXT_SCALE = 0.55f;
 
     private final Animation expandAnim = new Animation(Easing.DECELERATE, DropdownTheme.ANIM_EXPAND);
     private final Animation hoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
@@ -80,7 +82,8 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (expanded && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             expanded = false;
-            Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
         return false;
@@ -134,7 +137,10 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if ((button == GLFW.GLFW_MOUSE_BUTTON_RIGHT || button == GLFW.GLFW_MOUSE_BUTTON_LEFT)
                 && getHiddenModeCount() > 0) {
             expanded = !expanded;
-            Managers.SOUND.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(expanded
+                    ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                    : ReisaDropdownCompanion.Action.PANEL_CLOSE);
             return true;
         }
         return expanded;
@@ -145,11 +151,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if (mode != null) {
             setting.setMode(mode.name());
             expanded = false;
-            Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         expanded = false;
-        Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+        SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
         return false;
     }
 

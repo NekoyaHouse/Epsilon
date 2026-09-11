@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class MD3Theme {
 
-    public static Color SHADOW = new Color(0, 0, 0, 56);
+    public static Color SHADOW = new Color(0, 0, 0, 96);
 
     public static Color SURFACE = new Color(20, 18, 24, 238);
     public static Color SURFACE_DIM = new Color(15, 13, 19, 232);
@@ -49,8 +49,12 @@ public class MD3Theme {
     public static final int SECTION_RADIUS = 13;
     public static final int CARD_RADIUS = 9;
     public static final int CHIP_RADIUS = 999;
-    public static final int PANEL_SHADOW_ALPHA = 44;
-    public static final int POPUP_SHADOW_ALPHA = 68;
+    public static final float PANEL_SHADOW_BLUR = 24.0f;
+    public static final int PANEL_SHADOW_ALPHA = 96;
+    public static final float POPUP_SHADOW_BLUR = 14.0f;
+    public static final int POPUP_SHADOW_ALPHA = 112;
+    public static final float FLOATING_LABEL_SHADOW_BLUR = 12.0f;
+    public static final int FLOATING_LABEL_SHADOW_ALPHA = 96;
 
     public static final float OUTER_PADDING = 5.0f;
     public static final float SECTION_GAP = 3.0f;
@@ -275,7 +279,7 @@ public class MD3Theme {
             Color textSecondaryColor = color("#CAC4D0", 255);
             Color textMutedColor = color("#938F99", 255);
             return new ThemePalette(
-                    new Color(0, 0, 0, 56),
+                    new Color(0, 0, 0, 96),
                     surfaceColor,
                     surfaceDimColor,
                     lowColor,
@@ -319,7 +323,7 @@ public class MD3Theme {
             Color textSecondaryColor = color("#49454F", 255);
             Color textMutedColor = color("#79747E", 255);
             return new ThemePalette(
-                    new Color(0, 0, 0, 36),
+                    new Color(0, 0, 0, 80),
                     surfaceColor,
                     surfaceDimColor,
                     lowColor,

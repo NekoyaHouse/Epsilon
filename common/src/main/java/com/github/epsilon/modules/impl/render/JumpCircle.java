@@ -96,25 +96,23 @@ public class JumpCircle extends Module {
         if (circles.isEmpty()) return;
 
         PoseStack poseStack = event.getPoseStack();
-        LuminImmediateRenderer.PosTexColorQuads buffer = LuminImmediateRenderer.beginPosTexColorQuads(
-                JUMP_CIRCLE_PIPELINE,
-                mode.is(Mode.Portal) ? BUBBLE_TEXTURE : CIRCLE_TEXTURE
-        );
+        Identifier texture = mode.is(Mode.Portal) ? BUBBLE_TEXTURE : CIRCLE_TEXTURE;
+        LuminImmediateRenderer.PosTexColorQuads renderer = LuminImmediateRenderer.beginPosTexColorQuads(JUMP_CIRCLE_PIPELINE, texture);
 
         Collections.reverse(circles);
         for (Circle circle : circles) {
-            renderCircle(poseStack, buffer, circle);
+            renderCircle(poseStack, renderer, circle);
         }
         Collections.reverse(circles);
 
-        buffer.end();
+        renderer.end();
     }
 
     private boolean shouldTrack(Player player) {
         return player != null && player.isAlive() && (!onlySelf.getValue() || player == mc.player);
     }
 
-    private void renderCircle(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer, Circle circle) {
+    private void renderCircle(PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads renderer, Circle circle) {
         float colorAnim = (float) (circle.timer.getMs()) / 6000f;
         float sizeAnim = circleScale.getValue().floatValue() - (float) Math.pow(1 - ((circle.timer.getMs() * (easeOut.getValue() ? 2f : 1f)) / 5000f), 4);
 
@@ -129,10 +127,10 @@ public class JumpCircle extends Module {
         float scale = sizeAnim * 2.0f;
         Matrix4f matrix = poseStack.last().pose();
 
-        buffer.vertex(matrix, -sizeAnim, -sizeAnim + scale, 0.0f, 0.0f, 1.0f, applyOpacity(syncColor(270), 1.0f - colorAnim).getRGB());
-        buffer.vertex(matrix, -sizeAnim + scale, -sizeAnim + scale, 0.0f, 1.0f, 1.0f, applyOpacity(syncColor(0), 1.0f - colorAnim).getRGB());
-        buffer.vertex(matrix, -sizeAnim + scale, -sizeAnim, 0.0f, 1.0f, 0.0f, applyOpacity(syncColor(180), 1.0f - colorAnim).getRGB());
-        buffer.vertex(matrix, -sizeAnim, -sizeAnim, 0.0f, 0.0f, 0.0f, applyOpacity(syncColor(90), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim, -sizeAnim + scale, 0.0f, 0.0f, 1.0f, applyOpacity(syncColor(270), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim + scale, 0.0f, 1.0f, 1.0f, applyOpacity(syncColor(0), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim, 0.0f, 1.0f, 0.0f, applyOpacity(syncColor(180), 1.0f - colorAnim).getRGB());
+        renderer.vertex(matrix, -sizeAnim, -sizeAnim, 0.0f, 0.0f, 0.0f, applyOpacity(syncColor(90), 1.0f - colorAnim).getRGB());
 
         poseStack.popPose();
     }
