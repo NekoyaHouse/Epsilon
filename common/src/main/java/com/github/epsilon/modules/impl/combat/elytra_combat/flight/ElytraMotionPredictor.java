@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight;
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.path.VoxelCollisionCache;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -135,9 +136,15 @@ public final class ElytraMotionPredictor {
             }
 
             Vec3 delta = points.get(nextPoint).subtract(position);
-            float yaw = yawTo(delta);
-            float pitch = pitchTo(delta);
-            Vec3 nextVelocity = nextFallFlyingMovement(velocity, yaw, pitch, gravity);
+            // 必须使用 input 模式实际执行的旋转求解，而不是简单看向路径点：
+            // 两者的 pitch 会明显不同，后者会把爬升轨迹误判为安全。
+            Rot2f rotations = ElytraDirectionSolver.solve(velocity, gravity, delta);
+            Vec3 nextVelocity = nextFallFlyingMovement(
+                    velocity,
+                    rotations.getYaw(),
+                    rotations.getPitch(),
+                    gravity
+            );
             Vec3 nextPosition = position.add(nextVelocity);
 
             SweepResult sweep = checkSweep(grid, profile, position, nextPosition, noExtraObstacles);

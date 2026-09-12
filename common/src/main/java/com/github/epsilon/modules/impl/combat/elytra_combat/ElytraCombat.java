@@ -26,6 +26,7 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDirecti
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent;
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner;
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig;
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.PredictorMode;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetMotionTracker;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot;
@@ -302,7 +303,17 @@ public class ElytraCombat extends Module {
         if (!isEnabled() || this.controlInput == null || !this.controlInput.hasDirectVelocity()) {
             return;
         }
-        event.setMovement(this.controlInput.directVelocity());
+
+        Vec3 directVelocity = this.controlInput.directVelocity();
+        if (this.mc.player == null || !LocalFlightAvoidance.isSegmentClear(
+                this.mc.player,
+                this.mc.player.position(),
+                this.mc.player.position().add(directVelocity)
+        )) {
+            // 直接速度不安全时保留原版滑翔结果，由 solveSafe 选择的旋转接管本 tick。
+            return;
+        }
+        event.setMovement(directVelocity);
     }
 
     @EventHandler
@@ -411,7 +422,7 @@ public class ElytraCombat extends Module {
             return null;
         }
 
-        Rot2f rotations = ElytraDirectionSolver.solve(player, velocity);
+        Rot2f rotations = ElytraDirectionSolver.solveSafe(player, velocity);
         DirectionInput direction = directionInput(Mth.wrapDegrees(rotations.getYaw() - player.getYRot()));
         Vec3 direct = this.controlMode.is(ControlMode.DirectVelocity) ? velocity : null;
         return new ElytraCombatInput(

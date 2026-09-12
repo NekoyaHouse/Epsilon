@@ -39,6 +39,8 @@ public final class ElytraPathNavigator {
     private static final double RESULT_MAX_TARGET_DISTANCE_SQR = 64.0;
     private static final double AVOIDANCE_CLEARANCE_WIDTH = 1.2;
     private static final double AVOIDANCE_CLEARANCE_HEIGHT = 0.8;
+    // 航点过远会让滑翔惯性切过拐角，限制前视距离以便靠近障碍时及时重算。
+    private static final double MAX_PATH_LOOKAHEAD = 6.0;
     private static final List<Vec3> AVOIDANCE_DIRECTIONS = createAvoidanceDirections();
     private final String workerThreadName;
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
@@ -458,10 +460,11 @@ public final class ElytraPathNavigator {
                     anchor,
                     grid,
                     paddedProfile,
-                    extraBlocked
+                    extraBlocked,
+                    MAX_PATH_LOOKAHEAD
             );
             if (next == anchor) {
-                next = findNextPathPoint(rawPoints, anchor, grid, profile, extraBlocked);
+                next = findNextPathPoint(rawPoints, anchor, grid, profile, extraBlocked, MAX_PATH_LOOKAHEAD);
             }
             if (next == anchor) {
                 return null;
@@ -478,20 +481,26 @@ public final class ElytraPathNavigator {
             int anchor,
             VoxelCollisionCache grid,
             ElytraMotionPredictor.PlayerCollisionProfile profile,
-            Set<Long> extraBlocked
+            Set<Long> extraBlocked,
+            double maxLookahead
     ) {
         int next = points.size() - 1;
-        while (next > anchor
-                && !ElytraMotionPredictor.isSweepClear(
-                grid,
-                profile,
-                points.get(anchor),
-                points.get(next),
-                extraBlocked
-        )) {
+        Vec3 anchorPoint = points.get(anchor);
+        while (next > anchor) {
+            Vec3 candidate = points.get(next);
+            if (anchorPoint.distanceTo(candidate) <= maxLookahead
+                    && ElytraMotionPredictor.isSweepClear(
+                    grid,
+                    profile,
+                    anchorPoint,
+                    candidate,
+                    extraBlocked
+            )) {
+                return next;
+            }
             next--;
         }
-        return next;
+        return anchor;
     }
 
     private static PathPlan findAvoidancePath(
