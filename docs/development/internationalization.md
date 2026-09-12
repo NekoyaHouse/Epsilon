@@ -13,6 +13,16 @@
 Module/HUD 的 Setting、SettingGroup 和 Enum 选项使用所属组件 key 的子 key。名称通过 `toLowerCase()`
 处理，空格会保留。
 
+嵌套 SettingGroup 的 key 逐级拼接在父分组之下，即 `{module key}.{parent group}.{child group}`；
+同名子分组位于不同父分组时互不冲突。Setting 自身的 key 不随所属分组变化，仍然直接挂在模块 key 下：
+
+```text
+epsilon.modules.auto weapon.weapon                 -> 父分组 "Weapon"
+epsilon.modules.auto weapon.weapon.enchants        -> 子分组 "Enchants"
+epsilon.modules.auto weapon.weapon.enchants.sword  -> 孙分组 "Sword"
+epsilon.modules.auto weapon.min level              -> 位于任意分组中的 Setting
+```
+
 静态 UI 文案集中在 `EpsilonTranslations`。`EpsilonTranslateComponent.create(prefix, suffix)` 自动添加
 `epsilon.` 前缀；任意 owner 使用 `DefaultTranslateComponent.create(fullKey)`。未命中的 key 在
 `ClientSetting.i18nFallback` 打开时按最后一段生成可读名称，关闭时直接显示原始 key。

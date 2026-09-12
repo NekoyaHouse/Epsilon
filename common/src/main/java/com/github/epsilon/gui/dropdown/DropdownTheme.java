@@ -17,6 +17,10 @@ public class DropdownTheme {
 
     public static final float GROUP_HEADER_HEIGHT = 18.0f;
     public static final float GROUP_INSET = 4.0f;
+    public static final float GROUP_NEST_INSET = 4.0f;
+    public static final float GROUP_CARD_RADIUS = 8.0f;
+    public static final float GROUP_CARD_MIN_WIDTH = 42.0f;
+    public static final int GROUP_DEPTH_LIMIT = 3;
     public static final float GROUP_HEADER_TEXT_SCALE = 0.52f;
     public static final float GROUP_COUNT_CHIP_HEIGHT = 11.0f;
     public static final float GROUP_COUNT_CHIP_PADDING = 6.0f;
@@ -160,14 +164,6 @@ public class DropdownTheme {
         return new Color(0, 0, 0, 50);
     }
 
-    public static Color groupBackground() {
-        return MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 160);
-    }
-
-    public static Color groupBackgroundHover() {
-        return MD3Theme.SURFACE_CONTAINER;
-    }
-
     public static Color groupText() {
         return MD3Theme.TEXT_PRIMARY;
     }
@@ -182,6 +178,50 @@ public class DropdownTheme {
 
     public static Color groupChevron(float hoverProgress) {
         return MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress);
+    }
+
+    /**
+     * 展开分组的整块卡片背景；层级越深表面色越浅，用于说明 Setting 属于该分组。
+     */
+    public static Color groupCardBackground(int depth) {
+        float ratio = depthRatio(depth);
+        return MD3Theme.withAlpha(MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_LOW, MD3Theme.SURFACE_CONTAINER_HIGH, ratio * 0.65f), 200);
+    }
+
+    /**
+     * 分组卡片描边；层级越深越明显，但受 {@link #GROUP_DEPTH_LIMIT} 限制。
+     */
+    public static Color groupCardOutline(int depth) {
+        return MD3Theme.withAlpha(MD3Theme.OUTLINE, 32 + 10 * Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT));
+    }
+
+    /**
+     * 分组标题行的悬浮叠加层。
+     */
+    public static Color groupHeaderHover(float hoverProgress) {
+        return MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, MD3Theme.isLightTheme() ? 10 : 14);
+    }
+
+    /**
+     * 分组卡片圆角：折叠时保持胶囊样式，展开后过渡到卡片圆角。
+     */
+    public static float groupCardRadius(float expandProgress) {
+        float progress = Math.max(0.0f, Math.min(1.0f, expandProgress));
+        return BUTTON_RADIUS + (GROUP_CARD_RADIUS - BUTTON_RADIUS) * progress;
+    }
+
+    /**
+     * 嵌套层级缩进；达到 {@link #GROUP_DEPTH_LIMIT} 后不再增加，并在宽度不足时收敛。
+     */
+    public static float groupNestInset(int depth, float availableWidth) {
+        float limit = Math.max(0.0f, (availableWidth - GROUP_CARD_MIN_WIDTH) * 0.5f);
+        int clampedDepth = Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT);
+        return Math.min(GROUP_NEST_INSET * clampedDepth, limit);
+    }
+
+    private static float depthRatio(int depth) {
+        int clampedDepth = Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT);
+        return clampedDepth / (float) GROUP_DEPTH_LIMIT;
     }
 
     public static Color groupDivider() {

@@ -329,8 +329,10 @@
           "scoreboard": "计分板"
         },
         "anti cheat": "反作弊",
-        "appearance": "外观",
-        "uzawa reisa": "宇泽玲纱",
+        "appearance": {
+          "_value": "外观",
+          "uzawa reisa": "宇泽玲纱"
+        },
         "resources": "资源",
         "notification": "通知",
         "via general": "Via 通用",

@@ -46,6 +46,24 @@ DropdownScreen 用 `scene.batch(UiLayer.CONTENT)` 提交所有面板，弹窗单
 最后 `scene.flush()`。存在 painter order 的 background、content、floating 和 popup pass 必须使用
 显式 layer 或相对 layer。
 
+## Setting 分组渲染
+
+`SettingLayoutPlanner` 把显式 SettingGroup 规划成 section 树：`Section.elements()` 按声明顺序保留
+「直接 Setting」与「子分组」的交错关系，`Section.children()` 只是过滤后的子分组视图。GUI 只消费
+section 树，不推断分组结构。
+
+- Dropdown 的 `SettingSectionRenderer` 统一服务 `SettingsContent` 与 `ModuleButton`：绘制坐标使用调用
+  方 scope 的局部坐标，命中测试使用 `局部坐标 + hitOffset` 的绝对坐标，控件的绝对位置缓存因此可直接
+  参与命中。
+- 展开的分组绘制整块卡片背景，覆盖组头与子内容（`DropdownTheme.groupCardBackground`），组头悬浮层叠
+  在卡片之上；嵌套层级通过 `DropdownTheme.groupNestInset` 递增缩进，表面色随层级变浅，达到
+  `GROUP_DEPTH_LIMIT` 后不再增加缩进与色差，并在宽度不足时自动收敛。
+- Panel 的 `SettingListController` 递归绘制同样的卡片：`GROUP_NEST_INSET` 控制每层缩进，`groupSurface`
+  与 `groupOutline` 控制嵌套配色，顶部卡片保持原有外观。
+- 组头的数量徽标使用 `Section.totalSettingCount()`，即自身与所有子孙分组的 Setting 总数。
+- 父分组折叠时子孙不绘制、不参与命中与按键分发；折叠任意层级的分组会递归 blur 该子树内的文本、滑条与
+  颜色输入。
+
 ## Popup
 
 Popup 由 `PanelPopupHost` 统一管理，使用 `UiLayer.POPUP`；可滚动内容进入 `UiContentBuffer`，
