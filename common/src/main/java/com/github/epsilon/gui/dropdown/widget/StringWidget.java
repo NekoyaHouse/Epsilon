@@ -11,7 +11,12 @@ import java.util.Objects;
 
 public class StringWidget extends SettingWidget<StringSetting> {
 
-    private final DropdownTextField inputField = new DropdownTextField(100);
+    /**
+     * 与 Panel 的 {@code StringSettingRow} 保持一致；过短会把 URL、字体路径一类的长值截断后写回配置。
+     */
+    private static final int MAX_LENGTH = 256;
+
+    private final DropdownTextField inputField = new DropdownTextField(MAX_LENGTH);
 
     public StringWidget(StringSetting setting) {
         super(setting);

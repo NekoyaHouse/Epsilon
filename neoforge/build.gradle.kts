@@ -42,15 +42,18 @@ dependencies {
     implementation(jarJar("org.bytedeco:javacpp:1.5.10")!!)
     implementation(jarJar("org.bytedeco:javacv:1.5.10")!!)
     implementation(jarJar("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    // JavaCPP 的 JNI 桥按平台随 jar 分发：视频能力需要 jnijavacpp 才能加载下载得到的 FFmpeg 原生库。
     runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(jarJar("org.bytedeco:javacpp:1.5.10:macosx-arm64")!!)
     // FFmpeg 原生库不再随 jar 分发，改为首次使用时下载到 ~/.epsilon/assets/ffmpeg/natives。
     // 开发环境仍保留在运行时类路径，便于本地调试。
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
+    runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:macosx-arm64")
 }
 
 // NeoForge 26.2 resolves Jar-in-Jar dependencies by group and artifact only;
-// classifiers are ignored. Give platform jars distinct identifiers so both
-// the Java API jar and the native Windows jar remain loadable at runtime.
+// classifiers are ignored. Give every platform jar a distinct identifier so the Java API jar and each
+// platform's JNI bridge stay loadable side by side at runtime.
 tasks.named<JarJar>("jarJar") {
     doLast {
         val metadataFile = outputDirectory.dir("META-INF/jarjar/metadata.json").get().asFile
@@ -75,6 +78,7 @@ tasks.named<JarJar>("jarJar") {
 
         val metadata = metadataLegacy
             .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+            .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-macosx-arm64.jar", "javacpp-macosx-arm64") }
         metadataFile.writeText(metadata)
     }
 }
@@ -92,6 +96,7 @@ fun fixJarJarMetadata(metadata: String): String {
     }
     return metadata
         .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
+        .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-macosx-arm64.jar", "javacpp-macosx-arm64") }
 }
 
 tasks.named<Jar>("jar") {

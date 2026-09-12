@@ -9,7 +9,12 @@ package com.github.epsilon.utils.client;
 public enum PlatformRequirement {
 
     ANY(""),
-    WINDOWS_X64("Windows x86_64");
+    WINDOWS_X64("Windows x86_64"),
+
+    /**
+     * 视频原生库（JavaCPP FFmpeg）支持的平台集合，与 {@code FFmpegNativePlatform} 保持一致。
+     */
+    WINDOWS_X64_OR_MACOS_ARM64("Windows x86_64 / macOS arm64");
 
     private final String displayName;
 
@@ -21,6 +26,7 @@ public enum PlatformRequirement {
         return switch (this) {
             case ANY -> true;
             case WINDOWS_X64 -> ClientPlatform.isWindowsX64();
+            case WINDOWS_X64_OR_MACOS_ARM64 -> ClientPlatform.isWindowsX64() || ClientPlatform.isMacosArm64();
         };
     }
 

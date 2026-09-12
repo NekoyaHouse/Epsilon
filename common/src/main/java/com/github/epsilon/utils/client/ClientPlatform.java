@@ -39,6 +39,10 @@ public final class ClientPlatform {
         return FAMILY == Family.WINDOWS && ARCHITECTURE.equals("x86_64");
     }
 
+    public static boolean isMacosArm64() {
+        return FAMILY == Family.MACOS && ARCHITECTURE.equals("arm64");
+    }
+
     /**
      * 返回用于界面展示的平台名称，例如 {@code Windows x86_64} 或 {@code macOS arm64}。
      */

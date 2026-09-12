@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl;
 
+import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform;
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
@@ -175,7 +176,7 @@ public class ClientSetting extends Module {
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
     public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue)
-            .restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64)
+            .restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64)
             .group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting(
@@ -198,7 +199,7 @@ public class ClientSetting extends Module {
     // Resources
     public final StringSetting resourceBaseUrl = stringSetting("Resource Base URL", AssetManager.DEFAULT_RESOURCE_BASE_URL).group(sgResources);
 
-    public final StringSetting ffmpegDownloadUrl = stringSetting("FFmpeg Download URL", AssetManager.DEFAULT_FFMPEG_URL).group(sgResources);
+    public final StringSetting ffmpegDownloadUrl = stringSetting("FFmpeg Download URL", FFmpegNativePlatform.currentOrDefault().defaultUrl()).group(sgResources);
 
     @SuppressWarnings("unused")
     private final ButtonSetting downloadAssets = buttonSetting("Download Assets", () -> AssetManager.INSTANCE.openDownloadScreen()).group(sgResources);
