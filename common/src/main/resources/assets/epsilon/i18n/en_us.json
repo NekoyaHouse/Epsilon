@@ -247,6 +247,18 @@
         "pitch40 auto firework": "Pitch40 Takeoff Firework",
         "pitch40 firework cooldown": "Pitch40 Firework Cooldown"
       },
+      "elytra grim acc": {
+        "_value": "Elytra Grim Acc",
+        "mode": {
+          "_value": "Mode",
+          "simulation": "Simulation",
+          "crashpackets": "Crash Packets"
+        },
+        "max accelerate velocity": "Max Accelerate Velocity",
+        "setback wait": "Setback Wait",
+        "fix old version velocity": "Fix Old Version Velocity",
+        "fix kick from lag": "Fix Kick From Lag"
+      },
       "player alarms": {
         "_value": "Player Alarms",
         "join_alert_text": "{name}{gamemode} joined the server!",

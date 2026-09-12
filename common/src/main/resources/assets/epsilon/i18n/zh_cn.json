@@ -247,6 +247,18 @@
         "pitch40 auto firework": "Pitch40 起飞烟花",
         "pitch40 firework cooldown": "Pitch40 烟花冷却"
       },
+      "elytra grim acc": {
+        "_value": "鞘翅 Grim 加速",
+        "mode": {
+          "_value": "模式",
+          "simulation": "模拟位移",
+          "crashpackets": "崩溃包"
+        },
+        "max accelerate velocity": "最大加速速度",
+        "setback wait": "拉回等待刻数",
+        "fix old version velocity": "修复旧版本速度",
+        "fix kick from lag": "卡区块保护"
+      },
       "player alarms": {
         "_value": "玩家警报",
         "join_alert_text": "{name}{gamemode} 加入了服务器！",

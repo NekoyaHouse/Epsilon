@@ -103,6 +103,7 @@ public class ModuleManager {
 
         // Movement
         addModule(ElytraFly.INSTANCE);
+        addModule(ElytraGrimAccelerate.INSTANCE);
         addModule(Dolphin.INSTANCE);
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);
