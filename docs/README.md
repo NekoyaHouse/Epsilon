@@ -34,7 +34,7 @@ docs/
 | EventBus、事件目录、Mixin | [事件与 Mixin](development/events-and-mixins.md) |
 | 配置目录、持久化、RotationManager | [配置与旋转](development/configuration-and-rotation.md) |
 | Lumin Graphics、GUI/HUD、2D/3D 渲染 | [渲染](development/rendering.md) |
-| 视频/玲纱/FFmpeg 按需下载与 Platform Only | [运行时资源下载](development/runtime-assets.md) |
+| 视频/玲纱/FFmpeg 按需下载与平台限定提示 | [运行时资源下载](development/runtime-assets.md) |
 | Screen 宿主、Dropdown、HUD 提交路径 | [GUI 架构](gui.md) |
 | `gui/lib` 声明式 UI 库的 API 与边界 | [GUI Library](gui-library.md) |
 | Addon 接入、异常隔离与调试 | [Addon 开发](addon-development.md) |

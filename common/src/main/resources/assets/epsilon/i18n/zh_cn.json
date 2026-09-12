@@ -207,8 +207,8 @@
         "open_folder_failed": "无法打开资源目录"
       },
       "platform": {
-        "badge": "Platform Only",
-        "title": "Platform Only",
+        "badge": "不支持",
+        "title": "不支持",
         "feature": "功能：%s",
         "requirement": "仅支持 %s",
         "current": "当前平台：%s",

@@ -87,7 +87,7 @@ public abstract class Setting<V> {
     }
 
     /**
-     * 返回可跨会话识别该设置的稳定 key，用于 Platform Only 提示去重。
+     * 返回可跨会话识别该设置的稳定 key，用于平台不支持提示去重。
      */
     public String getNoticeKey() {
         return translateComponent != null ? translateComponent.getFullKey() : name;

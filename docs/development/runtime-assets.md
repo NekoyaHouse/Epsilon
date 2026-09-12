@@ -46,13 +46,14 @@ FFmpeg 原生库解压到 `~/.epsilon/assets/ffmpeg/natives` 后，`AssetManager
 classpath 资源之后回退搜索该目录，因此**必须在任何 `org.bytedeco.ffmpeg` 类初始化之前调用**，
 否则 JavaCPP 会缓存不带该路径的平台属性并抛出 `UnsatisfiedLinkError`。
 
-## Platform Only
+## 平台限定提示
 
 视频背景与 SMTC 音乐岛仅支持 Windows x86_64。设置模型通过 `Setting.platformOnly(...)` 和
 `EnumSetting.restrictMode(...)` 声明平台要求：
 
 - Panel 的 `BoolSettingRow` / `EnumSettingRow` / `EnumSelectPopup`，以及 Dropdown 的
-  `BoolWidget` / `EnumWidget` 会为不满足要求的设置渲染 `Platform Only` 徽标并禁用交互。
+  `BoolWidget` / `EnumWidget` 会为不满足要求的设置渲染 `Unsupported` 徽标（`zh_cn` 为「不支持」）
+  并禁用交互，文案来自 `gui.platform.badge`。
 - 用户点击被禁用的开关或受限枚举项时，`PlatformNoticeScreen` 会弹出说明界面；
   同一功能的窗口未关闭时不会重复堆叠，关闭后可再次点击打开。
 - 运行时会静默回退（视频走经典着色器背景、音乐岛不显示），且不会改写用户已保存的配置值。

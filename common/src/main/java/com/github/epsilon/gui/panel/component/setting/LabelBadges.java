@@ -23,7 +23,7 @@ final class LabelBadges {
     }
 
     /**
-     * 在行尾控件左侧绘制 Platform Only 标记，用于标记当前平台不可用的设置。
+     * 在行尾控件左侧绘制 Unsupported 标记，用于标记当前平台不可用的设置。
      *
      * @param scope        行内 UI 作用域（坐标为行内局部坐标）
      * @param textRenderer 文本测量器

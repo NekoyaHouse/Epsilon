@@ -207,8 +207,8 @@
         "open_folder_failed": "Unable to open the asset folder"
       },
       "platform": {
-        "badge": "Platform Only",
-        "title": "Platform Only",
+        "badge": "Unsupported",
+        "title": "Unsupported",
         "feature": "Feature: %s",
         "requirement": "Requires %s",
         "current": "Current platform: %s",

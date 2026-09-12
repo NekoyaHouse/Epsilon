@@ -36,7 +36,7 @@ public class PlatformNoticeScreen extends EpsilonDialogScreen {
     private final PlatformRequirement requirement;
 
     private PlatformNoticeScreen(Screen parent, String noticeKey, String featureName, PlatformRequirement requirement) {
-        super(parent, Component.literal("Platform Only"));
+        super(parent, Component.literal(EpsilonTranslations.PlatformOnly.TITLE.getTranslatedName()));
         this.noticeKey = noticeKey;
         this.featureName = featureName;
         this.requirement = requirement;

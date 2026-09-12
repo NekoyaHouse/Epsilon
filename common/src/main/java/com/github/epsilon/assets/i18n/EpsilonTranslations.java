@@ -359,7 +359,7 @@ public class EpsilonTranslations {
     }
 
     /**
-     * Platform Only 提示相关文案。
+     * 平台不支持提示相关文案。
      */
     public static class PlatformOnly {
         public static final TranslateComponent BADGE = create("gui", "platform.badge");

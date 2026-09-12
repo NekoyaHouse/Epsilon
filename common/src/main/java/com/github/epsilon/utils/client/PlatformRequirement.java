@@ -3,7 +3,7 @@ package com.github.epsilon.utils.client;
 /**
  * 功能对运行平台的最低要求。
  * <p>
- * 设置项与枚举选项可以声明自己的平台要求，界面在要求不满足时会展示 Platform Only 标记
+ * 设置项与枚举选项可以声明自己的平台要求，界面在要求不满足时会展示 Unsupported 标记
  * 并阻止交互，运行时则静默回退且不改写用户保存的配置值。
  */
 public enum PlatformRequirement {

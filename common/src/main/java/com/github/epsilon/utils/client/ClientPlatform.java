@@ -6,7 +6,7 @@ import java.util.Locale;
  * 客户端运行平台的统一判定入口。
  * <p>
  * SMTC、视频原生库等能力只在 Windows x86_64 上可用，界面层需要拿到可读的平台名称
- * 用于展示 Platform Only 提示，因此所有 os.name / os.arch 判断都收敛到这里。
+ * 用于展示平台不支持提示，因此所有 os.name / os.arch 判断都收敛到这里。
  */
 public final class ClientPlatform {
 
