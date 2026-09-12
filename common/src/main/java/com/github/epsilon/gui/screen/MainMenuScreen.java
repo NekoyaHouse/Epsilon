@@ -528,8 +528,6 @@ public class MainMenuScreen extends Screen {
                 ? 0.0f
                 : now - reisaShutdownStartMs;
         float menuVisibility = 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS, 0.0f, 1.0f));
-        int buttonCount = entries.size();
-        int gapCount = Math.max(0, buttonCount - 1);
         float scale = resolutionScale(width, height);
         int layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale);
         int layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale);
@@ -538,32 +536,16 @@ public class MainMenuScreen extends Screen {
         float layoutMouseX = mouseX - layoutX;
         float layoutMouseY = mouseY - layoutY;
 
+        // LOGO 仍以左上角为锚点，整体等比放大，标题、副标题、强调线与间距一起缩放。
+        float logoScale = 1.5f;
         float titleX = Math.max(18.6f * scale, layoutWidth / 15.0f);
         float titleY = Math.max(12.4f * scale, titleX * 0.5f);
-        float titleScale = 3.658f * scale;
-        float subtitleScale = 0.961f * scale;
-        float titleSubtitleGap = 18.6f * scale;
-        float titleAccentGap = 9.3f * scale;
-        float titleAccentWidth = 105.4f * scale;
-        float titleAccentHeight = Math.max(1.6f, 2.79f * scale);
-
-        float rowInset = Math.clamp(21.7f * scale, layoutWidth / 12.0f, layoutWidth * 0.5f);
-        float availableRowWidth = Math.max(0.0f, layoutWidth - rowInset * 2.0f);
-        float minButtonWidth = 65.1f * scale;
-        float buttonGap = gapCount == 0 ? 0.0f : Math.clamp((availableRowWidth - buttonCount * minButtonWidth) / gapCount, 0.0f, 15.5f * scale);
-        float maxButtonWidth = Math.max(0.0f, (availableRowWidth - gapCount * buttonGap) / Math.max(1, buttonCount));
-        float buttonWidth = Math.min(173.6f * scale, maxButtonWidth);
-        float totalButtonsWidth = buttonCount * buttonWidth + gapCount * buttonGap;
-        float buttonsStartX = (layoutWidth - totalButtonsWidth) * 0.5f;
-        float buttonLineHeight = Math.max(2.0f, 3.1f * scale);
-        float buttonHitPaddingX = 12.4f * scale;
-        float buttonHitPaddingTop = 9.3f * scale;
-        float buttonHitHeight = 40.3f * scale;
-        float buttonRevealDistance = 27.9f * scale;
-        float preferredButtonTextScale = 1.395f * scale;
-        float buttonTextOffsetY = 8.525f * scale;
-        float targetButtonsY = layoutHeight - Math.min((layoutWidth + layoutHeight * 2.0f) / 25.0f, 83.7f * scale);
-        float buttonsY = Math.min(targetButtonsY, layoutHeight - buttonHitHeight + buttonHitPaddingTop);
+        float titleScale = 3.658f * logoScale * scale;
+        float subtitleScale = 0.961f * logoScale * scale;
+        float titleSubtitleGap = 18.6f * logoScale * scale;
+        float titleAccentGap = 9.3f * logoScale * scale;
+        float titleAccentWidth = 105.4f * logoScale * scale;
+        float titleAccentHeight = Math.max(1.6f, 2.79f * logoScale * scale);
 
         Color titleColor = applyAlpha(new Color(230, 224, 233), 0.96f * menuVisibility);
         Color subtitleColor = applyAlpha(new Color(202, 196, 208), 0.90f * menuVisibility);
@@ -574,6 +556,22 @@ public class MainMenuScreen extends Screen {
 
         float titleHeight = scene.scheduler().textMetrics().getHeight(titleScale, StaticFontLoader.JURA_LIGHT);
         float subtitleY = titleY + titleHeight + titleSubtitleGap;
+
+        // Classic 菜单入口在左下角纵向排列：文字在上、横条在下，与标题左对齐。
+        float buttonColumnX = titleX;
+        float buttonWidth = 230.0f * scale;
+        float buttonLineHeight = Math.max(2.0f, 3.875f * scale);
+        float buttonStride = 70.0f * scale;
+        float buttonHitPaddingX = 12.4f * scale;
+        float buttonHitPaddingTop = 12.4f * scale;
+        float buttonRevealDistance = 34.1f * scale;
+        float buttonHoverShiftX = 6.2f * scale;
+        float preferredButtonTextScale = 2.55f * scale;
+        float buttonTextHeight = scene.scheduler().textMetrics().getHeight(preferredButtonTextScale);
+        float buttonTextToLineGap = 5.0f * scale;
+        float buttonListHeight = Math.max(0, entries.size() - 1) * buttonStride
+                + buttonTextHeight + buttonTextToLineGap + buttonLineHeight;
+        float buttonsY = layoutHeight - 74.4f * scale - buttonListHeight;
 
         UiTree tree = UiTree.build(scope -> scope.pushAbsolute(layoutX, layoutY, content -> {
             if (!reisaShutdownTexturesPrewarmed) {
@@ -599,18 +597,18 @@ public class MainMenuScreen extends Screen {
                     continue;
                 }
 
-                float drawX = buttonsStartX + index * (buttonWidth + buttonGap);
-                float drawY = buttonsY + (1.0f - appear) * buttonRevealDistance;
+                float drawX = buttonColumnX - (1.0f - appear) * buttonRevealDistance;
+                float buttonY = buttonsY + index * buttonStride;
                 boolean hovered = entry.isHovered(layoutMouseX, layoutMouseY);
                 entry.hoverProgress = Mth.lerp(hovered ? 0.24f : 0.16f, entry.hoverProgress, hovered ? 1.0f : 0.0f);
 
                 float hover = entry.hoverProgress;
-                float buttonY = drawY - hover * 3.875f * scale;
+                float hoveredX = drawX + hover * buttonHoverShiftX;
                 entry.setBounds(
                         drawX - buttonHitPaddingX,
                         buttonY - buttonHitPaddingTop,
                         buttonWidth + buttonHitPaddingX * 2.0f,
-                        buttonHitHeight
+                        buttonStride
                 );
 
                 Color lineBase = applyAlpha(new Color(147, 143, 153), 0.70f * appear);
@@ -621,9 +619,10 @@ public class MainMenuScreen extends Screen {
                         hover * 0.68f
                 );
 
+                float lineY = buttonY + buttonTextHeight + buttonTextToLineGap;
                 content.layer(0, layer -> {
-                    layer.rect(drawX + 1.55f * scale, buttonY + 1.55f * scale, buttonWidth + scale * 0.775f, buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
-                    layer.rect(drawX, buttonY, buttonWidth, buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover));
+                    layer.rect(hoveredX + 1.55f * scale, lineY + 1.55f * scale, buttonWidth + scale * 0.775f, buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
+                    layer.rect(hoveredX, lineY, buttonWidth, buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover));
                 });
 
                 String label = localizedTitle(entry.title);
@@ -631,8 +630,7 @@ public class MainMenuScreen extends Screen {
                 float buttonTextScale = labelWidth > buttonWidth && labelWidth > 0.0f
                         ? preferredButtonTextScale * buttonWidth / labelWidth
                         : preferredButtonTextScale;
-                float textY = buttonY + buttonTextOffsetY;
-                content.layer(10, layer -> layer.text(label, drawX, textY, buttonTextScale, labelColor));
+                content.layer(10, layer -> layer.text(label, hoveredX, buttonY, buttonTextScale, labelColor));
             }
         }));
 
