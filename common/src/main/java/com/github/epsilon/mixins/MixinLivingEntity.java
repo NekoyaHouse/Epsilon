@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.FallFlyingEvent;
+import com.github.epsilon.events.impl.FallFlyingMovementEvent;
 import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
 import com.github.epsilon.modules.impl.player.InvManager;
@@ -9,6 +10,7 @@ import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandView;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.entity.LivingEntity;
@@ -68,6 +70,16 @@ public class MixinLivingEntity {
             return event.getPitch();
         }
         return original;
+    }
+
+    @ModifyReturnValue(method = "updateFallFlyingMovement", at = @At("RETURN"))
+    private Vec3 modifyFallFlyingMovement(Vec3 original) {
+        if ((Object) this != mc.player) {
+            return original;
+        }
+
+        FallFlyingMovementEvent event = EventBus.INSTANCE.post(new FallFlyingMovementEvent(original));
+        return event.getMovement();
     }
 
     @WrapOperation(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;noJumpDelay:I", opcode = Opcodes.PUTFIELD, ordinal = 1))

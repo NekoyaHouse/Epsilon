@@ -6,6 +6,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -69,6 +70,9 @@ public class SpearKill extends Module {
 
     @EventHandler
     public void onTick(PlayerTickEvent e) {
+        if (ElytraCombat.INSTANCE.isControllingCombat()) {
+            return;
+        }
         updateTarget();
 
         currentlyCharging = isUsingSpear();

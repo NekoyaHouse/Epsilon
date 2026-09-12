@@ -7,6 +7,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -73,6 +74,9 @@ public class MaceAura extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
+        if (ElytraCombat.INSTANCE.isControllingCombat()) {
+            return;
+        }
         target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 360.0f,

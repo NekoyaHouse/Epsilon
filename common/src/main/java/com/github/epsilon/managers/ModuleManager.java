@@ -12,9 +12,9 @@ import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
-import com.github.epsilon.modules.impl.movement.follower.Follower;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
 import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
@@ -57,6 +57,7 @@ public class ModuleManager {
         addModule(CrystalBlocker.INSTANCE);
         addModule(FeetTrap.INSTANCE);
         addModule(DoubleAnchor.INSTANCE);
+        addModule(ElytraCombat.INSTANCE);
         addModule(HoverTotem.INSTANCE);
         addModule(KillAura.INSTANCE);
         addModule(KeyPearl.INSTANCE);
@@ -102,7 +103,6 @@ public class ModuleManager {
 
         // Movement
         addModule(ElytraFly.INSTANCE);
-        addModule(Follower.INSTANCE);
         addModule(Dolphin.INSTANCE);
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);

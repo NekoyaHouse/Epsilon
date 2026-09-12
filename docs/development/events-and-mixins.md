@@ -44,12 +44,15 @@ EventBus 在某个监听器取消事件后立即停止调用后续监听器。
 | 网络 | `PacketEvent.Send/Receive`、`SendPositionEvent`、`AfterSendPositionEvent` |
 | 战斗/交互 | `AttackEntityEvent`、`AttackSlowDownEvent`、`AttackYawEvent`、`RightClickEvent`、`UseItemEvent`、`StartUseItemEvent`、`SwingHandEvent` |
 | 方块 | `BlockCollisionEvent`、`StartDestroyBlockEvent`、`DestroyBlockEvent`、`DestroyedBlockEvent`、`PlaceBlockEvent` |
-| 移动 | `MoveEvent`、`StrafeEvent`、`TravelEvent`、`JumpEvent`、`SlowdownEvent`、`FallFlyingEvent`、`FireworkRotationEvent` |
+| 移动 | `MoveEvent`、`StrafeEvent`、`TravelEvent`、`JumpEvent`、`SlowdownEvent`、`FallFlyingEvent`、`FallFlyingMovementEvent`、`FireworkRotationEvent` |
 | Raytrace | `RaytraceEvent`、`UseItemRaytraceEvent` |
 
 `Render2DEvent` 携带 Minecraft 26.2 的 `GuiGraphicsExtractor`。`Render2DEvent.Level` 与
 `Render2DEvent.HUD` 由 `MixinGuiRenderer` 在 `GuiRenderer.render` 头部发布，前者用于世界 2D 覆盖层，
 后者用于 HUD 与主界面。
+
+`FallFlyingMovementEvent` 在 `LivingEntity.updateFallFlyingMovement` 返回后发布。ElytraCombat 的
+Direct Velocity 模式通过该事件覆盖最终速度；默认 Input 模式不会修改原版结果。
 
 ## Mixin 配置
 

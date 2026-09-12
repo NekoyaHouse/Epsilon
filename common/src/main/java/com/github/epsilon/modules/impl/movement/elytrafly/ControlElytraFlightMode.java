@@ -5,8 +5,8 @@ import com.github.epsilon.events.impl.FireworkRotationEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
-import com.github.epsilon.modules.impl.movement.follower.Follower;
-import com.github.epsilon.modules.impl.movement.follower.FollowerInput;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombatInput;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Priority;
@@ -110,6 +110,9 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private void useTimedFirework() {
+        if (ElytraCombat.INSTANCE.isEnabled() && !ElytraCombat.INSTANCE.shouldUseFirework()) {
+            return;
+        }
         if (!elytraFly.useFireworks.getValue() || !timer.hasDelayed(elytraFly.boostDelay.getValue())) return;
         if (useFirework()) {
             hasFirstFirework = true;
@@ -122,9 +125,9 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcYaw() {
-        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
-        if (followerInput != null) {
-            return followerInput.yaw();
+        ElytraCombatInput combatInput = ElytraCombat.INSTANCE.getControlInput();
+        if (combatInput != null) {
+            return combatInput.yaw();
         }
 
         float yaw = mc.player.getYRot();
@@ -156,9 +159,9 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcPitch() {
-        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
-        if (followerInput != null) {
-            return applyCeilingPitchGuard(followerInput.pitch());
+        ElytraCombatInput combatInput = ElytraCombat.INSTANCE.getControlInput();
+        if (combatInput != null) {
+            return applyCeilingPitchGuard(combatInput.pitch());
         }
 
         float pitch = mc.player.getXRot();
@@ -203,9 +206,9 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private boolean hasMoveInput() {
-        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
-        if (followerInput != null) {
-            return followerInput.hasMoveInput();
+        ElytraCombatInput combatInput = ElytraCombat.INSTANCE.getControlInput();
+        if (combatInput != null) {
+            return combatInput.hasMoveInput();
         }
 
         return mc.options.keyUp.isDown()
