@@ -30,19 +30,32 @@ public class Follower extends Module {
 
     public enum Mode {
         Straight,
-        AStar
+        AStar,
+        HierarchicalAStar
     }
 
+    private final AStarFollowerNavigator aStarNavigator = new AStarFollowerNavigator();
+    private final HierarchicalAStarFollowerNavigator hierarchicalAStarNavigator =
+            new HierarchicalAStarFollowerNavigator(this.aStarNavigator);
     private final Map<Mode, FollowerNavigator> navigators = new EnumMap<>(Mode.class);
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Straight);
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.HierarchicalAStar, this::onModeChanged);
     private final DoubleSetting range = doubleSetting("Range", 96.0, 8.0, 256.0, 1.0);
     private final DoubleSetting stopDistance = doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5);
     private final BoolSetting ignoreInvisible = boolSetting("Ignore Invisible", true);
     private final IntSetting predictTicks = intSetting("Predict Ticks", 4, 0, 20, 1);
     private final DoubleSetting verticalDeadzone = doubleSetting("Vertical Deadzone", 1.5, 0.0, 12.0, 0.5);
-    private final IntSetting searchRadius = intSetting("Search Radius", 24, 6, 64, 1, () -> mode.is(Mode.AStar));
-    private final IntSetting maxNodes = intSetting("Max Nodes", 1200, 100, 6000, 100, () -> mode.is(Mode.AStar));
+    private final IntSetting searchRadius = intSetting("Search Radius", 24, 6, 64, 1, this::usesPathfinding);
+    private final IntSetting maxNodes = intSetting("Max Nodes", 1200, 100, 6000, 100, this::usesPathfinding);
+    private final IntSetting dataSize = intSetting(
+            "Data Size",
+            50,
+            25,
+            100,
+            5,
+            () -> mode.is(Mode.HierarchicalAStar),
+            this.hierarchicalAStarNavigator::setDataSize
+    ).applyWhenRelease();
     private final BoolSetting renderPath = boolSetting("Render Path", true);
     private final ColorSetting pathColor = colorSetting("Path Color", new Color(80, 220, 255, 210), () -> renderPath.getValue());
     private final DoubleSetting pathLineWidth = doubleSetting("Path Line Width", 2.5, 0.5, 8.0, 0.5, () -> renderPath.getValue());
@@ -54,11 +67,13 @@ public class Follower extends Module {
     private Follower() {
         super("Follower", Category.MOVEMENT);
         navigators.put(Mode.Straight, new StraightFollowerNavigator());
-        navigators.put(Mode.AStar, new AStarFollowerNavigator());
+        navigators.put(Mode.AStar, this.aStarNavigator);
+        navigators.put(Mode.HierarchicalAStar, this.hierarchicalAStarNavigator);
     }
 
     @Override
     protected void onDisable() {
+        this.hierarchicalAStarNavigator.stop();
         clearControl();
     }
 
@@ -77,6 +92,7 @@ public class Follower extends Module {
     @EventHandler(priority = EventPriority.HIGH)
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !canControlElytraFly()) {
+            this.hierarchicalAStarNavigator.stop();
             clearControl();
             return;
         }
@@ -104,6 +120,9 @@ public class Follower extends Module {
         }
 
         Vec3 targetPos = predictedTargetPos(target);
+        if (mode.is(Mode.HierarchicalAStar)) {
+            this.hierarchicalAStarNavigator.setDataSize(dataSize.getValue());
+        }
         FollowerConfig config = new FollowerConfig(
                 stopDistance.getValue(),
                 verticalDeadzone.getValue(),
@@ -137,6 +156,16 @@ public class Follower extends Module {
 
     private boolean canControlElytraFly() {
         return ElytraFly.INSTANCE.isEnabled() && ElytraFly.INSTANCE.mode.is(ElytraFlightModes.Control);
+    }
+
+    private boolean usesPathfinding() {
+        return this.mode.is(Mode.AStar) || this.mode.is(Mode.HierarchicalAStar);
+    }
+
+    private void onModeChanged(Mode newMode) {
+        if (newMode != Mode.HierarchicalAStar) {
+            this.hierarchicalAStarNavigator.stop();
+        }
     }
 
     private Vec3 predictedTargetPos(LivingEntity target) {

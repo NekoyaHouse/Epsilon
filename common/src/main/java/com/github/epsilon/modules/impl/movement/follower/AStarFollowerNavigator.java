@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.movement.follower;
 
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -14,6 +15,11 @@ public class AStarFollowerNavigator implements FollowerNavigator {
     private static final double VERTICAL_CLEARANCE = 0.10;
     private static final double INITIAL_COLLISION_EPSILON = 1.0E-4;
     private static final double DETOUR_RETREAT_DISTANCE = 1.25;
+    private static final double WALL_CLEARANCE_WIDTH = 1.2;
+    private static final double WALL_CLEARANCE_HEIGHT = 0.8;
+    private static final double WALL_CLEARANCE_PENALTY = 8.0;
+    private static final int FLIGHT_PREDICTION_TICKS = 10;
+    private static final double WAYPOINT_REACHED_SQR = 0.75 * 0.75;
     private static final List<Direction> NEIGHBORS = createNeighbors();
 
     @Override
@@ -24,17 +30,29 @@ public class AStarFollowerNavigator implements FollowerNavigator {
             if (player.position().distanceTo(targetPos) <= config.stopDistance()) {
                 return new FollowerPath(player.position(), List.of(player.position()));
             }
-            return new FollowerPath(limitedTarget, List.of(player.position(), limitedTarget));
+            FollowerPath direct = new FollowerPath(limitedTarget, List.of(player.position(), limitedTarget));
+            if (isFlightPathSafe(player, direct.points())) {
+                return direct;
+            }
         }
 
         Vec3 escape = findLocalEscape(player, limitedTarget);
         if (escape != null) {
-            return new FollowerPath(escape, List.of(player.position(), escape));
+            FollowerPath escapePath = new FollowerPath(escape, List.of(player.position(), escape));
+            if (isFlightPathSafe(player, escapePath.points())) {
+                return escapePath;
+            }
         }
 
         Vec3 detour = findVisibleDetour(player, limitedTarget, config.searchRadius());
         if (detour != null) {
-            return new FollowerPath(detour, List.of(player.position(), detour, limitedTarget));
+            FollowerPath detourPath = new FollowerPath(
+                    detour,
+                    List.of(player.position(), detour, limitedTarget)
+            );
+            if (isFlightPathSafe(player, detourPath.points())) {
+                return detourPath;
+            }
         }
 
         BlockPos start = BlockPos.containing(player.position());
@@ -42,12 +60,14 @@ public class AStarFollowerNavigator implements FollowerNavigator {
         List<BlockPos> path = findPath(player, start, goal, config);
 
         if (path.size() > 1) {
-            return createPath(player, path);
+            FollowerPath created = createPath(player, path);
+            if (created.points().size() > 1 && isFlightPathSafe(player, created.points())) {
+                return created;
+            }
         }
-        if (path.size() == 1) {
-            return new FollowerPath(player.position(), List.of(player.position()));
-        }
-        return new FollowerPath(player.position(), List.of(player.position()));
+
+        FollowerPath avoidance = findSafeLocalAvoidance(player, limitedTarget, config.searchRadius());
+        return avoidance != null ? avoidance : stopPath(player);
     }
 
     private List<BlockPos> findPath(LocalPlayer player, BlockPos start, BlockPos goal, FollowerConfig config) {
@@ -58,7 +78,6 @@ public class AStarFollowerNavigator implements FollowerNavigator {
         Set<BlockPos> closed = new HashSet<>();
 
         Node startNode = new Node(start, 0.0, heuristic(start, goal));
-        Node bestNode = startNode;
         open.add(startNode);
         gScore.put(start, 0.0);
 
@@ -68,10 +87,6 @@ public class AStarFollowerNavigator implements FollowerNavigator {
             if (!closed.add(current.pos())) continue;
 
             visited++;
-            if (current.hScore() < bestNode.hScore()) {
-                bestNode = current;
-            }
-
             Vec3 currentPoint = Vec3.atBottomCenterOf(current.pos());
             boolean canStop = (current.pos().equals(goal)
                     || current.pos().distSqr(goal) <= config.stopDistance() * config.stopDistance())
@@ -86,11 +101,18 @@ public class AStarFollowerNavigator implements FollowerNavigator {
                 if (start.distSqr(next) > config.searchRadius() * config.searchRadius()) continue;
                 if (!occupancy.computeIfAbsent(next, pos -> canOccupy(player, pos))) continue;
 
-                double tentativeG = current.gScore() + direction.cost();
+                if (!isSegmentClear(player, currentPoint, Vec3.atBottomCenterOf(next))) {
+                    continue;
+                }
+
+                double edgeCost = direction.cost();
+                if (!isPaddedSegmentClear(player, currentPoint, Vec3.atBottomCenterOf(next))) {
+                    edgeCost += WALL_CLEARANCE_PENALTY;
+                }
+
+                double tentativeG = current.gScore() + edgeCost;
                 double previousG = gScore.getOrDefault(next, Double.MAX_VALUE);
                 if (tentativeG >= previousG) continue;
-                if (!isSegmentClear(player, Vec3.atBottomCenterOf(current.pos()), Vec3.atBottomCenterOf(next)))
-                    continue;
 
                 cameFrom.put(next, current.pos());
                 gScore.put(next, tentativeG);
@@ -99,12 +121,10 @@ public class AStarFollowerNavigator implements FollowerNavigator {
             }
         }
 
-        if (!bestNode.pos().equals(start)) {
-            return reconstructPath(cameFrom, bestNode.pos());
-        }
         return List.of();
     }
 
+    @SuppressWarnings("deprecation")
     private boolean canOccupy(LocalPlayer player, BlockPos pos) {
         if (!player.level().isInWorldBounds(pos) || !player.level().hasChunkAt(pos)) {
             return false;
@@ -114,25 +134,34 @@ public class AStarFollowerNavigator implements FollowerNavigator {
     }
 
     private boolean canOccupy(LocalPlayer player, Vec3 feet) {
+        return canOccupy(player, feet, 0.0, 0.0);
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean canOccupy(LocalPlayer player, Vec3 feet, double extraWidth, double extraHeight) {
         BlockPos pos = BlockPos.containing(feet);
         if (!player.level().isInWorldBounds(pos) || !player.level().hasChunkAt(pos)) {
             return false;
         }
 
-        AABB box = collisionBox(player, feet);
+        AABB box = collisionBox(player, feet, extraWidth, extraHeight);
         return hasLoadedChunks(player, box)
                 && player.level().noBlockCollision(player, box)
                 && player.level().noBorderCollision(player, box);
     }
 
     private AABB collisionBox(LocalPlayer player, Vec3 feet) {
-        double halfWidth = player.getBbWidth() * 0.5 + HORIZONTAL_CLEARANCE;
+        return collisionBox(player, feet, 0.0, 0.0);
+    }
+
+    private AABB collisionBox(LocalPlayer player, Vec3 feet, double extraWidth, double extraHeight) {
+        double halfWidth = player.getBbWidth() * 0.5 + HORIZONTAL_CLEARANCE + extraWidth * 0.5;
         return new AABB(
                 feet.x - halfWidth,
-                feet.y - VERTICAL_CLEARANCE,
+                feet.y - VERTICAL_CLEARANCE - extraHeight * 0.5,
                 feet.z - halfWidth,
                 feet.x + halfWidth,
-                feet.y + player.getBbHeight() + VERTICAL_CLEARANCE,
+                feet.y + player.getBbHeight() + VERTICAL_CLEARANCE + extraHeight * 0.5,
                 feet.z + halfWidth
         );
     }
@@ -141,8 +170,27 @@ public class AStarFollowerNavigator implements FollowerNavigator {
         return isBoxSweepClear(player, collisionBox(player, from), to.subtract(from));
     }
 
+    private boolean isPaddedSegmentClear(LocalPlayer player, Vec3 from, Vec3 to) {
+        return isBoxSweepClear(
+                player,
+                collisionBox(player, from, WALL_CLEARANCE_WIDTH, WALL_CLEARANCE_HEIGHT),
+                to.subtract(from)
+        );
+    }
+
     private boolean isInitialSegmentClear(LocalPlayer player, Vec3 to) {
         AABB box = player.getBoundingBox().deflate(INITIAL_COLLISION_EPSILON);
+        return isBoxSweepClear(player, box, to.subtract(player.position()));
+    }
+
+    private boolean isInitialSegmentClearPadded(LocalPlayer player, Vec3 to) {
+        AABB box = player.getBoundingBox()
+                .deflate(INITIAL_COLLISION_EPSILON)
+                .inflate(
+                        WALL_CLEARANCE_WIDTH * 0.5,
+                        WALL_CLEARANCE_HEIGHT * 0.5,
+                        WALL_CLEARANCE_WIDTH * 0.5
+                );
         return isBoxSweepClear(player, box, to.subtract(player.position()));
     }
 
@@ -272,12 +320,12 @@ public class AStarFollowerNavigator implements FollowerNavigator {
 
         int anchor = 0;
         while (anchor < rawPoints.size() - 1) {
-            int next = rawPoints.size() - 1;
-            while (next > anchor && !isPathSegmentClear(player, rawPoints, anchor, next)) {
-                next--;
+            int next = findNextPathPoint(player, rawPoints, anchor, true);
+            if (next == anchor) {
+                next = findNextPathPoint(player, rawPoints, anchor, false);
             }
             if (next == anchor) {
-                return new FollowerPath(playerPos, List.of(playerPos));
+                return stopPath(player);
             }
             points.add(rawPoints.get(next));
             anchor = next;
@@ -286,11 +334,145 @@ public class AStarFollowerNavigator implements FollowerNavigator {
         return new FollowerPath(points.get(1), List.copyOf(points));
     }
 
-    private boolean isPathSegmentClear(LocalPlayer player, List<Vec3> points, int anchor, int next) {
-        if (anchor == 0) {
-            return isInitialSegmentClear(player, points.get(next));
+    private int findNextPathPoint(LocalPlayer player, List<Vec3> points, int anchor, boolean padded) {
+        int next = points.size() - 1;
+        while (next > anchor && !isPathSegmentClear(player, points, anchor, next, padded)) {
+            next--;
         }
-        return isSegmentClear(player, points.get(anchor), points.get(next));
+        return next;
+    }
+
+    private boolean isPathSegmentClear(LocalPlayer player, List<Vec3> points, int anchor, int next, boolean padded) {
+        if (anchor == 0) {
+            return padded
+                    ? isInitialSegmentClearPadded(player, points.get(next))
+                    : isInitialSegmentClear(player, points.get(next));
+        }
+        return padded
+                ? isPaddedSegmentClear(player, points.get(anchor), points.get(next))
+                : isSegmentClear(player, points.get(anchor), points.get(next));
+    }
+
+    private boolean isFlightPathSafe(LocalPlayer player, List<Vec3> points) {
+        if (points.size() < 2) {
+            return true;
+        }
+
+        Vec3 position = player.position();
+        Vec3 velocity = player.getDeltaMovement();
+        double gravity = effectiveGravity(player);
+        int nextPoint = 1;
+
+        for (int tick = 0; tick < FLIGHT_PREDICTION_TICKS; tick++) {
+            while (nextPoint < points.size()
+                    && position.distanceToSqr(points.get(nextPoint)) <= WAYPOINT_REACHED_SQR) {
+                nextPoint++;
+            }
+            if (nextPoint >= points.size()) {
+                return true;
+            }
+
+            Vec3 delta = points.get(nextPoint).subtract(position);
+            Vec3 nextVelocity = FlightTrajectoryValidator.nextFallFlyingMovement(
+                    velocity,
+                    FlightTrajectoryValidator.yawTo(delta),
+                    FlightTrajectoryValidator.pitchTo(delta),
+                    gravity
+            );
+            Vec3 nextPosition = position.add(nextVelocity);
+            boolean clear = tick == 0
+                    ? isInitialSegmentClear(player, nextPosition)
+                    : isSegmentClear(player, position, nextPosition);
+            if (!clear) {
+                return false;
+            }
+
+            position = nextPosition;
+            velocity = nextVelocity;
+        }
+        return true;
+    }
+
+    private double effectiveGravity(LocalPlayer player) {
+        if (player.getDeltaMovement().y <= 0.0 && player.hasEffect(MobEffects.SLOW_FALLING)) {
+            return Math.min(player.getGravity(), 0.01);
+        }
+        return player.getGravity();
+    }
+
+    private FollowerPath findSafeLocalAvoidance(LocalPlayer player, Vec3 target, int searchRadius) {
+        Vec3 playerPos = player.position();
+        Vec3 toTarget = target.subtract(playerPos);
+        double targetDistance = toTarget.length();
+        if (targetDistance < 0.001) {
+            return null;
+        }
+
+        Vec3 targetDirection = toTarget.scale(1.0 / targetDistance);
+        Vec3 velocityDirection = player.getDeltaMovement().lengthSqr() > 0.000001
+                ? player.getDeltaMovement().normalize()
+                : targetDirection;
+        int primaryDistance = Math.clamp(
+                (int) Math.round(player.getDeltaMovement().length() * 4.0 + 3.0),
+                3,
+                Math.max(3, Math.min(8, searchRadius))
+        );
+        int[] distances = {primaryDistance, Math.max(2, primaryDistance / 2), 2};
+
+        FollowerPath bestPaddedPath = null;
+        double bestPaddedScore = Double.NEGATIVE_INFINITY;
+        FollowerPath bestNormalPath = null;
+        double bestNormalScore = Double.NEGATIVE_INFINITY;
+        for (Direction direction : NEIGHBORS) {
+            Vec3 unit = new Vec3(direction.x(), direction.y(), direction.z()).normalize();
+            double targetAlignment = unit.dot(targetDirection);
+            double velocityAlignment = unit.dot(velocityDirection);
+            for (int distance : distances) {
+                if (distance > searchRadius) {
+                    continue;
+                }
+
+                Vec3 candidate = playerPos.add(unit.scale(distance));
+                if (!canOccupy(player, candidate)) {
+                    continue;
+                }
+
+                FollowerPath candidatePath = new FollowerPath(
+                        candidate,
+                        List.of(playerPos, candidate)
+                );
+                if (!isFlightPathSafe(player, candidatePath.points())) {
+                    continue;
+                }
+
+                boolean paddedClear = canOccupy(
+                        player,
+                        candidate,
+                        WALL_CLEARANCE_WIDTH,
+                        WALL_CLEARANCE_HEIGHT
+                ) && isInitialSegmentClearPadded(player, candidate);
+                double progress = targetDistance - candidate.distanceTo(target);
+                double score = progress
+                        + targetAlignment * 2.0
+                        + velocityAlignment * 0.5
+                        + (paddedClear ? 3.0 : 0.0)
+                        - distance * 0.05;
+                if (paddedClear) {
+                    if (score > bestPaddedScore) {
+                        bestPaddedScore = score;
+                        bestPaddedPath = candidatePath;
+                    }
+                } else if (score > bestNormalScore) {
+                    bestNormalScore = score;
+                    bestNormalPath = candidatePath;
+                }
+            }
+        }
+        return bestPaddedPath != null ? bestPaddedPath : bestNormalPath;
+    }
+
+    private FollowerPath stopPath(LocalPlayer player) {
+        return new FollowerPath(player.position(), List.of(player.position()));
     }
 
     private static List<Direction> createNeighbors() {

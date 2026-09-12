@@ -1640,7 +1640,8 @@
         "mode": {
           "_value": "模式",
           "straight": "直线",
-          "astar": "A* 避障"
+          "astar": "A* 避障",
+          "hierarchicalastar": "分层 A*"
         },
         "range": "范围",
         "stop distance": "停止距离",
@@ -1649,6 +1650,7 @@
         "vertical deadzone": "垂直死区",
         "search radius": "搜索半径",
         "max nodes": "最大节点数",
+        "data size": "数据范围",
         "render path": "渲染路径",
         "path color": "路径颜色",
         "path line width": "路径线宽"
