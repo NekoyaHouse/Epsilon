@@ -72,6 +72,8 @@ scissor 通过 `LuminRenderSystem.toFramebufferScissor(...)` 转换；布局、�
 ## 字体和主题
 
 `StaticFontLoader.defaultFont()` 解析默认/自定义字体，`TtfFontLoader` 负责 glyph atlas 与每帧上传预算。
+缺字由 `TtfFontLoader.getFallbackGlyph(int)` 的“口”字形占位框顶上（占位字形同样写入 atlas），
+真实字形上传后自动换回；空白与控制字符不画占位框。
 绘制与测量必须使用相同 font loader 和 scale。主题由 `MD3Theme` 生成调色板，业务代码通过
 `EpsilonUiTheme.INSTANCE` 以 `UiTheme` 接口访问，不得在控件中维护独立颜色表或 renderer。
 

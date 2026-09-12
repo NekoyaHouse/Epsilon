@@ -186,8 +186,13 @@ public class TtfTextRenderer implements ITextRenderer {
 
             GlyphDescriptor glyph = fontLoader.getGlyph(codepoint);
             if (glyph == null) {
+                // 字形尚未上传（或字体缺失该字形）时用口字形占位框顶上；占位字形同样写入 atlas，
+                // complete 保持 false，真实字形上传推进 glyphRevision 后会重建布局换回真实字形。
                 complete = false;
-                continue;
+                glyph = hasNoInk(codepoint) ? null : fontLoader.getFallbackGlyph(codepoint);
+                if (glyph == null) {
+                    continue;
+                }
             }
 
             float x1 = xOffset + glyph.xOffset() * scaledFont;
@@ -211,6 +216,15 @@ public class TtfTextRenderer implements ITextRenderer {
         }
 
         return new TextLayout(runs, glyphCount, maxLine, complete, revision, atlasRevision);
+    }
+
+    /** 空白、控制、格式与代理码位本身没有墨迹，缺字时不画占位框。 */
+    private static boolean hasNoInk(int codepoint) {
+        int type = Character.getType(codepoint);
+        return Character.isWhitespace(codepoint)
+                || type == Character.CONTROL
+                || type == Character.FORMAT
+                || type == Character.SURROGATE;
     }
 
     private void emitLayout(TextLayout layout, float x, float y, float scale, int argb, float blurRadius) {

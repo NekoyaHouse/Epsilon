@@ -98,6 +98,14 @@ texture/view；GPU 资源只由创建它们的渲染线程释放。
 - `TtfFontLoader` 以 atlas 批量渲染字形：`requestChars`/`prepareChars` 提交请求，
   `drainReadyGlyphs` 在渲染线程按预算上传；`TtfFontLoader.beginRenderFrame()` 每帧重置预算，
   预算由 `ClientSetting.fontGlyphsPerFrame` 映射到 `TtfFontLoader.setMaxGlyphUploadsPerFrame(...)`。
+- 缺字（字形尚未上传或字体根本没有该字形）由 `TtfFontLoader.getFallbackGlyph(int)` 提供“口”字形占位框：
+  首次调用时按字体 ascent 程序化生成 SDF/alpha 位图并写入 atlas，之后所有缺字复用同一个 atlas 单元；
+  占位框 advance 与 `getAdvance(int)` 一致，所以真实字形上传后布局不跳动。`TtfTextRenderer.buildLayout`
+  在 `getGlyph` 为 null 时用它顶上，并保持布局 `complete = false`，字形到达推进 `glyphRevision` 后重建；
+  空白、控制、格式与代理码位没有墨迹，不画占位框。占位框 SDF 极性必须与 `TtfFontFile.generateGlyph`
+  一致：那里的 `onEdgeValue` 是 byte 128（即 -128），使 `pixelDistScale` 为负，墨迹落在 128 以下、
+  外部落在 128 以上，着色器按 `1 - r` 解释该纹理。`EpsilonFontGlyph` 缺字仍返回 null 交给原版字体兜底，
+  不画占位框，避免盖掉原版能渲染的字符。
 - `StaticFontLoader.defaultFont()` 依据 `ClientSetting.font`（Default/Custom）解析字体；Custom 模式先按
   绝对/相对路径直接查找，相对路径再依次尝试工作目录和用户目录 `.epsilon/fonts/`，最后按文件名在系统
   字体目录中递归查找；路径不可读或字体无效时回退内置字体并记录日志。

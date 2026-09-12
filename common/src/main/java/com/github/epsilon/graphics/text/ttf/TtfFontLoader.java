@@ -42,6 +42,12 @@ public class TtfFontLoader implements IFontLoader {
 
     private TtfGlyphAtlas currentAtlas;
     private int atlasId = 0;
+    // 缺字占位字形（口字形方框）与 atlas 同生命周期：首次需要时生成并上传，之后所有缺字共用一个 atlas 单元。
+    private TtfGlyphAtlas fallbackAtlas;
+    private TtfGlyphAtlas.GlyphUV fallbackUv;
+    private int fallbackWidth;
+    private int fallbackHeight;
+    private int fallbackYOffset;
     // glyphRevision 驱动未完成布局重建，atlasRevision 驱动已释放 atlas 的布局失效。
     private long glyphRevision;
     private long atlasRevision;
@@ -219,17 +225,7 @@ public class TtfFontLoader implements IFontLoader {
             return;
         }
 
-        if (currentAtlas == null) {
-            createNewAtlas();
-        }
-
-        TtfGlyphAtlas.GlyphUV uv = currentAtlas.appendGlyph(glyph);
-
-        if (uv == null) {
-            createNewAtlas();
-            uv = currentAtlas.appendGlyph(glyph);
-        }
-
+        TtfGlyphAtlas.GlyphUV uv = appendToAtlas(glyph);
         if (uv != null) {
             GlyphDescriptor descriptor = new GlyphDescriptor(
                     currentAtlas, uv,
@@ -242,6 +238,62 @@ public class TtfFontLoader implements IFontLoader {
         }
 
         freeGlyph(glyph);
+    }
+
+    /**
+     * 返回缺字占位字形：字形尚未上传或字体根本没有该字形时使用。
+     * <p>
+     * 占位框尺寸固定，advance 取目标字符自身的步进宽度，与 {@link #getAdvance(int)}、文本测量保持一致，
+     * 因此真实字形上传后布局不会跳动。首次调用会按字体 metrics 生成位图并写入 atlas，必须在渲染线程调用；
+     * 空白字符没有墨迹，调用方应自行跳过。
+     */
+    public GlyphDescriptor getFallbackGlyph(int codepoint) {
+        if (!ensureFallbackGlyph()) {
+            return null;
+        }
+
+        int advance = getAdvance(codepoint);
+        return new GlyphDescriptor(fallbackAtlas, fallbackUv, fallbackWidth, fallbackHeight,
+                Math.floorDiv(advance - fallbackWidth, 2), fallbackYOffset, advance);
+    }
+
+    private boolean ensureFallbackGlyph() {
+        if (fallbackAtlas != null) {
+            return true;
+        }
+
+        TtfGlyph glyph = fontFile.generateFallbackGlyph();
+        try {
+            TtfGlyphAtlas.GlyphUV uv = appendToAtlas(glyph);
+            if (uv == null) {
+                return false;
+            }
+
+            fallbackAtlas = currentAtlas;
+            fallbackUv = uv;
+            fallbackWidth = glyph.width();
+            fallbackHeight = glyph.height();
+            fallbackYOffset = glyph.yOffset();
+            return true;
+        } finally {
+            // 占位字形由 MemoryUtil 分配，不是 stb 内存，不能交给 stbtt_FreeSDF 释放。
+            MemoryUtil.memFree(glyph.glyphData());
+            MemoryUtil.memFree(glyph.alphaData());
+        }
+    }
+
+    /** 写入当前 atlas，写不下时新开一张重试；返回 null 表示两张都写不下。 */
+    private TtfGlyphAtlas.GlyphUV appendToAtlas(TtfGlyph glyph) {
+        if (currentAtlas == null) {
+            createNewAtlas();
+        }
+
+        TtfGlyphAtlas.GlyphUV uv = currentAtlas.appendGlyph(glyph);
+        if (uv == null) {
+            createNewAtlas();
+            uv = currentAtlas.appendGlyph(glyph);
+        }
+        return uv;
     }
 
     private void createNewAtlas() {
@@ -272,6 +324,11 @@ public class TtfFontLoader implements IFontLoader {
         Arrays.fill(asciiGlyphMap, null);
         Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
         Arrays.fill(asciiPendingGlyphs, false);
+        fallbackAtlas = null;
+        fallbackUv = null;
+        fallbackWidth = 0;
+        fallbackHeight = 0;
+        fallbackYOffset = 0;
         for (CompletableFuture<TtfGlyph> future : pendingGlyphs.values()) {
             if (future.isDone() && !future.isCompletedExceptionally() && !future.isCancelled()) {
                 freeGlyph(future.join());

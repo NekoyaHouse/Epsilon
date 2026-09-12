@@ -23,6 +23,13 @@ public class TtfFontFile {
     public final int pixelAscent;
     public final int fontHeight;
 
+    /** 缺字占位框（口字形）的尺寸比例：高度取 ascent 的 2/3，宽度与笔画由高度推导。 */
+    private static final float FALLBACK_HEIGHT_RATIO = 2.0f / 3.0f;
+    private static final float FALLBACK_WIDTH_RATIO = 0.72f;
+    private static final float FALLBACK_STROKE_RATIO = 1.0f / 8.0f;
+    /** 占位框位图四周外扩的像素数，保住墨迹边缘之外的一圈 SDF 过渡带。 */
+    private static final int FALLBACK_PADDING = 2;
+
     public TtfFontFile(Identifier ttfFile, int totalHeight, int padding) {
         this(ResourceLocationUtils.loadResource(ttfFile), totalHeight, padding, ttfFile.toString());
     }
@@ -82,6 +89,8 @@ public class TtfFontFile {
     public synchronized TtfGlyph generateGlyph(int codepoint) {
         final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint);
 
+        // (byte) 128 溢出为 -128，于是 pixelDistScale 为负：墨迹落在 128 以下（暗），外部落在 128 以上（亮），
+        // 与 ttf_font_* 着色器的 1 - r 解释一致。改动这里的符号会让所有文字反相。
         byte onEdgeValue = (byte) 128;
         float pixelDistScale = (float) onEdgeValue / padding;
 
@@ -145,6 +154,74 @@ public class TtfFontFile {
 
             return new TtfGlyph(sdfPixels, alphaPixels, glyphWidth, glyphHeight, xOff.get(), yOff.get(), (int) (advance.get() * scale));
         }
+    }
+
+    /**
+     * 生成缺字占位字形：一个“口”字形方框，供字形尚未上传或字体缺失该字形时渲染。
+     * <p>
+     * 尺寸由字体 ascent 推导，与多数字体自带 {@code .notdef} 方框接近；位图四周外扩
+     * {@code FALLBACK_PADDING} 像素，让墨迹边缘外仍有 SDF 过渡带。
+     * <p>
+     * SDF 极性必须与 {@link #generateGlyph(int)} 保持一致：那里的 {@code onEdgeValue} 是 byte 128
+     * （即 -128），使 {@code pixelDistScale} 为负，于是墨迹（内部距离为正）落在 128 以下、
+     * 外部落在 128 以上；着色器按 {@code 1 - r} 解释该纹理，墨迹才是可见部分。
+     */
+    public TtfGlyph generateFallbackGlyph() {
+        int ascent = Math.max(pixelAscent, 1);
+        int boxHeight = Math.max(3, Math.round(ascent * FALLBACK_HEIGHT_RATIO));
+        int boxWidth = Math.max(3, Math.round(boxHeight * FALLBACK_WIDTH_RATIO));
+        // 笔画不能太细（缩放后会消失），也不能填满方框（环会退化成实心块）。
+        int stroke = Math.clamp(Math.round(boxHeight * FALLBACK_STROKE_RATIO), 1,
+                Math.max(1, (Math.min(boxWidth, boxHeight) - 1) / 2));
+
+        int bitmapWidth = boxWidth + FALLBACK_PADDING * 2;
+        int bitmapHeight = boxHeight + FALLBACK_PADDING * 2;
+        int xOffset = -FALLBACK_PADDING;
+        int yOffset = -boxHeight - FALLBACK_PADDING;
+
+        ByteBuffer sdfPixels = MemoryUtil.memAlloc(bitmapWidth * bitmapHeight);
+        ByteBuffer alphaPixels = MemoryUtil.memCalloc(bitmapWidth * bitmapHeight);
+
+        double halfWidth = boxWidth / 2.0;
+        double halfHeight = boxHeight / 2.0;
+        double centerX = halfWidth;
+        double centerY = -halfHeight;
+        double innerHalfWidth = Math.max(halfWidth - stroke, 0.0);
+        double innerHalfHeight = Math.max(halfHeight - stroke, 0.0);
+        double onEdgeValue = 128.0;
+        double pixelDistScale = -onEdgeValue / padding;
+
+        for (int row = 0; row < bitmapHeight; row++) {
+            double localY = yOffset + row + 0.5;
+            for (int column = 0; column < bitmapWidth; column++) {
+                double localX = xOffset + column + 0.5;
+                // ringDistance 是标准 SDF 约定（墨迹内为负），取负后才是 stb 在墨迹内为正的 min_dist。
+                double distance = ringDistance(localX - centerX, localY - centerY,
+                        halfWidth, halfHeight, innerHalfWidth, innerHalfHeight);
+                int index = row * bitmapWidth + column;
+                sdfPixels.put(index, (byte) (int) Math.clamp(onEdgeValue + pixelDistScale * -distance, 0.0, 255.0));
+                alphaPixels.put(index, (byte) (int) (Math.clamp(0.5 - distance, 0.0, 1.0) * 255.0));
+            }
+        }
+
+        // advance 只作兜底：TtfFontLoader 对外会换成目标字符自身的步进宽度。
+        return new TtfGlyph(sdfPixels, alphaPixels, bitmapWidth, bitmapHeight, xOffset, yOffset, boxWidth + stroke);
+    }
+
+    /** 矩形环（“口”字框）的有符号距离，墨迹内为负。 */
+    private static double ringDistance(double x, double y, double halfWidth, double halfHeight,
+                                       double innerHalfWidth, double innerHalfHeight) {
+        return Math.max(
+                boxDistance(x, y, halfWidth, halfHeight),
+                -boxDistance(x, y, innerHalfWidth, innerHalfHeight)
+        );
+    }
+
+    /** 矩形有符号距离，内部为负。 */
+    private static double boxDistance(double x, double y, double halfWidth, double halfHeight) {
+        double qx = Math.abs(x) - halfWidth;
+        double qy = Math.abs(y) - halfHeight;
+        return Math.hypot(Math.max(qx, 0.0), Math.max(qy, 0.0)) + Math.min(Math.max(qx, qy), 0.0);
     }
 
     public synchronized int getAdvance(char ch) {
