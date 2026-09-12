@@ -1,6 +1,6 @@
 # 运行时资源下载
 
-主菜单视频、玲纱立绘和 FFmpeg 原生库体积较大，不再随 mod jar 分发。它们在首次使用对应功能时
+主菜单视频、背景光效、玲纱立绘和 FFmpeg 原生库体积较大，不再随 mod jar 分发。它们在首次使用对应功能时
 由界面确认后下载到配置目录，缺少资源时功能静默降级，不会影响客户端启动。
 
 ## 缓存布局
@@ -10,19 +10,21 @@
 ```text
 ~/.epsilon/assets/
 ├── video/columbina.mp4          # 主菜单 Columbina 背景视频
+├── video/lighttrails.png        # 视频上叠加的流光效果
 ├── reisa/reisa_XX.png           # 玲纱立绘（00-18、99 共 20 张）
 ├── ffmpeg/natives/*.dll         # JavaCPP 需要的 FFmpeg 原生库
 └── .tmp/*.part                  # 下载中的临时文件
 ```
 
-`AssetManager` 提供三种资源的就绪判定：`isVideoReady()`、`isReisaReady()`、`isFfmpegReady()`。
+`AssetManager` 提供各资源的就绪判定：`isVideoReady()`、`isLightTrailsReady()`、`isReisaReady()`、
+`isFfmpegReady()`。
 下载先在 `.tmp` 写入 `.part` 文件，校验通过后再原子移动到目标位置，因此半包不会被判定为可用。
 
 ## 下载源
 
 | 设置 | 默认值 | 说明 |
 |---|---|---|
-| `Resource Base URL` | `https://github.com/NekoyaHouse/Epsilon-Resources/releases/download/assets-v1/` | 资源基础地址，客户端按 `${base}columbina.mp4`、`${base}reisa.zip` 拼接；资源托管在 [Epsilon-Resources](https://github.com/NekoyaHouse/Epsilon-Resources) |
+| `Resource Base URL` | `https://github.com/NekoyaHouse/Epsilon-Resources/releases/download/assets-v1/` | 资源基础地址，客户端按 `${base}columbina.mp4`、`${base}lighttrails.png`、`${base}reisa.zip` 拼接；资源托管在 [Epsilon-Resources](https://github.com/NekoyaHouse/Epsilon-Resources) |
 | `FFmpeg Download URL` | 阿里云 Maven 镜像的 `ffmpeg-6.1.1-1.5.10-windows-x86_64.jar` | JavaCPP 原生库压缩包，解压出 DLL 后删除原始 jar |
 
 设置位于 `Client Setting` 的 `Resources` 分组，另提供「下载资源」「清除资源缓存」「打开资源目录」
@@ -36,6 +38,7 @@
 校验规则：
 
 - 视频：文件头 64 字节内必须出现 `ftyp` box。
+- 背景光效：PNG 魔数校验；仅支持 Windows x86_64，与视频同属一组下载项，缺失时只跳过该叠层。
 - 玲纱：zip 内必须包含 `reisa_00` … `reisa_18`、`reisa_99` 共 20 张 PNG，且每张通过 PNG 魔数校验。
 - FFmpeg：jar 内必须包含 JavaCPP 需要的 `av*`/`jni*`/`sw*` DLL 集合。
 

@@ -167,6 +167,7 @@
       },
       "resource": {
         "video": "主菜单视频",
+        "light_trails": "主菜单背景光效",
         "reisa": "玲纱立绘",
         "ffmpeg": "FFmpeg 运行库",
         "title": "资源下载",

@@ -2,7 +2,6 @@ package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -51,8 +50,6 @@ public class MainMenuScreen extends Screen {
         BLACK_HOLE,
         MINECRAFT
     }
-
-    private static final Identifier COLUMBINA_LIGHT_TRAILS_TEXTURE = ResourceLocationUtils.getIdentifier("textures/lighttrails.png");
 
     private static final float MENU_REFERENCE_WIDTH = 1600.0f;
     private static final float MENU_REFERENCE_HEIGHT = 900.0f;
@@ -153,12 +150,16 @@ public class MainMenuScreen extends Screen {
                     } catch (Exception exception) {
                         Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception);
                     }
-                } else {
-                    assets.requestDownload(List.of(AssetManager.Asset.VIDEO, AssetManager.Asset.FFMPEG));
                 }
             } else {
                 VideoPlayer.resume();
             }
+            // 视频叠层光效可以独立缺失，缺失时补提示；已就绪或本会话已拒绝时不会重复弹窗。
+            assets.requestDownload(List.of(
+                    AssetManager.Asset.VIDEO,
+                    AssetManager.Asset.LIGHT_TRAILS,
+                    AssetManager.Asset.FFMPEG
+            ));
         } else if (!VideoPlayer.isStopped()) {
             VideoPlayer.stop();
         }
@@ -361,10 +362,13 @@ public class MainMenuScreen extends Screen {
         float finalU1 = u1;
         float finalV0 = v0;
         float finalV1 = v1;
+        Identifier lightTrails = AssetManager.INSTANCE.videoOverlayTexture();
         UiTree backgroundTree = UiTree.build(scope -> {
             scope.layer(0, layer -> {
                 layer.texture(texture, 0.0f, 0.0f, width, height, finalU0, finalV0, finalU1, finalV1, Color.WHITE, true);
-                layer.texture(COLUMBINA_LIGHT_TRAILS_TEXTURE, 0.0f, 0.0f, width, height, 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE, true);
+                if (lightTrails != null) {
+                    layer.texture(lightTrails, 0.0f, 0.0f, width, height, 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE, true);
+                }
             });
             scope.layer(1, layer -> {
                 layer.rectHorizontalGradient(width * 0.42f, 0.0f, width * 0.58f, height, new Color(14, 20, 45, 0), new Color(7, 11, 30, 150));

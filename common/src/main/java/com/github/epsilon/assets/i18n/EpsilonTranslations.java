@@ -113,6 +113,7 @@ public class EpsilonTranslations {
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
             Resources.VIDEO,
+            Resources.LIGHT_TRAILS,
             Resources.REISA,
             Resources.FFMPEG,
             Resources.TITLE,
@@ -327,6 +328,7 @@ public class EpsilonTranslations {
      */
     public static class Resources {
         public static final TranslateComponent VIDEO = create("gui", "resource.video");
+        public static final TranslateComponent LIGHT_TRAILS = create("gui", "resource.light_trails");
         public static final TranslateComponent REISA = create("gui", "resource.reisa");
         public static final TranslateComponent FFMPEG = create("gui", "resource.ffmpeg");
         public static final TranslateComponent TITLE = create("gui", "resource.title");

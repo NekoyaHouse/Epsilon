@@ -167,6 +167,7 @@
       },
       "resource": {
         "video": "Main Menu Video",
+        "light_trails": "Main Menu Light Trails",
         "reisa": "Reisa Artwork",
         "ffmpeg": "FFmpeg Runtime",
         "title": "Resource Download",

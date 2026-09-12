@@ -39,6 +39,7 @@ public class AssetManager {
             "https://maven.aliyun.com/repository/public/org/bytedeco/ffmpeg/6.1.1-1.5.10/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar";
 
     public static final String VIDEO_FILE_NAME = "columbina.mp4";
+    public static final String LIGHT_TRAILS_FILE_NAME = "lighttrails.png";
     public static final String REISA_ARCHIVE_NAME = "reisa.zip";
     public static final String FFMPEG_ARCHIVE_NAME = "ffmpeg-6.1.1-1.5.10-windows-x86_64.jar";
 
@@ -67,6 +68,7 @@ public class AssetManager {
     public enum Asset {
 
         VIDEO(VIDEO_FILE_NAME, 20_788_534L),
+        LIGHT_TRAILS(LIGHT_TRAILS_FILE_NAME, 3_681_336L),
         REISA(REISA_ARCHIVE_NAME, 8_825_221L),
         FFMPEG(FFMPEG_ARCHIVE_NAME, 24_461_014L);
 
@@ -90,7 +92,7 @@ public class AssetManager {
         }
 
         public boolean isVideoDependent() {
-            return this == VIDEO || this == FFMPEG;
+            return this == VIDEO || this == LIGHT_TRAILS || this == FFMPEG;
         }
 
     }
@@ -171,13 +173,14 @@ public class AssetManager {
     private final Path rootDir = ConfigManager.INSTANCE.getConfigDir().resolve("assets");
     private final Path videoDir = rootDir.resolve("video");
     private final Path videoFile = videoDir.resolve(VIDEO_FILE_NAME);
+    private final Path lightTrailsFile = videoDir.resolve(LIGHT_TRAILS_FILE_NAME);
     private final Path reisaDir = rootDir.resolve("reisa");
     private final Path ffmpegDir = rootDir.resolve("ffmpeg");
     private final Path ffmpegNativeDir = ffmpegDir.resolve("natives");
     private final Path tempDir = rootDir.resolve(".tmp");
 
     private final Set<Asset> declinedThisSession = EnumSet.noneOf(Asset.class);
-    private final Map<String, Identifier> reisaTextures = new HashMap<>();
+    private final Map<String, Identifier> registeredTextures = new HashMap<>();
 
     private volatile DownloadJob activeJob;
     private boolean legacyVideoChecked;
@@ -221,6 +224,7 @@ public class AssetManager {
     public boolean isReady(Asset asset) {
         return switch (asset) {
             case VIDEO -> isVideoReady();
+            case LIGHT_TRAILS -> isLightTrailsReady();
             case REISA -> isReisaReady();
             case FFMPEG -> isFfmpegReady();
         };
@@ -229,6 +233,10 @@ public class AssetManager {
     public boolean isVideoReady() {
         migrateLegacyVideo();
         return isFile(videoFile, MIN_VIDEO_BYTES);
+    }
+
+    public boolean isLightTrailsReady() {
+        return isFile(lightTrailsFile, MIN_IMAGE_BYTES);
     }
 
     public boolean isReisaReady() {
@@ -447,6 +455,7 @@ public class AssetManager {
     private void install(Asset asset, Path part) throws IOException {
         switch (asset) {
             case VIDEO -> installVideo(part);
+            case LIGHT_TRAILS -> installLightTrails(part);
             case REISA -> installReisa(part);
             case FFMPEG -> installFfmpeg(part);
         }
@@ -458,6 +467,15 @@ public class AssetManager {
         }
         Files.createDirectories(videoDir);
         moveReplacing(part, videoFile);
+    }
+
+    private void installLightTrails(Path part) throws IOException {
+        if (!isPng(part)) {
+            throw new IOException("Downloaded light trails overlay is not a valid PNG file");
+        }
+        Files.createDirectories(videoDir);
+        moveReplacing(part, lightTrailsFile);
+        releaseRegisteredTextures();
     }
 
     private void installReisa(Path archive) throws IOException {
@@ -492,7 +510,7 @@ public class AssetManager {
                 }
             }
         }
-        releaseReisaTextures();
+        releaseRegisteredTextures();
         reisaReadyCache = true;
     }
 
@@ -527,7 +545,7 @@ public class AssetManager {
     }
 
     // ------------------------------------------------------------------
-    // FFmpeg 与玲纱纹理
+    // FFmpeg、玲纱纹理与背景光效
     // ------------------------------------------------------------------
 
     /**
@@ -550,7 +568,27 @@ public class AssetManager {
         if (!isReisaReady()) {
             return null;
         }
-        Identifier existing = reisaTextures.get(suffix);
+        return pngTexture("reisa_" + suffix,
+                reisaDir.resolve("reisa_" + suffix + ".png"),
+                "textures/gui/galgame/reisa_" + suffix + ".png",
+                "Reisa " + suffix);
+    }
+
+    /**
+     * 返回主菜单视频叠层光效的纹理标识，未下载或不在渲染线程时返回 {@code null}。
+     */
+    public Identifier videoOverlayTexture() {
+        if (!isLightTrailsReady()) {
+            return null;
+        }
+        return pngTexture("lighttrails", lightTrailsFile, "textures/lighttrails.png", "Main menu light trails");
+    }
+
+    /**
+     * 把磁盘上的 PNG 惰性注册为动态纹理；纹理管理必须在渲染线程上进行。
+     */
+    private Identifier pngTexture(String key, Path file, String resourcePath, String label) {
+        Identifier existing = registeredTextures.get(key);
         if (existing != null) {
             return existing;
         }
@@ -558,24 +596,22 @@ public class AssetManager {
             return null;
         }
 
-        Path file = reisaDir.resolve("reisa_" + suffix + ".png");
         try (InputStream in = Files.newInputStream(file)) {
             NativeImage image = NativeImage.read(in);
-            DynamicTexture texture = new DynamicTexture(() -> "Epsilon Reisa " + suffix, image);
-            Identifier identifier = Identifier.fromNamespaceAndPath(
-                    "epsilon_assets", "textures/gui/galgame/reisa_" + suffix + ".png");
+            DynamicTexture texture = new DynamicTexture(() -> "Epsilon " + label, image);
+            Identifier identifier = Identifier.fromNamespaceAndPath("epsilon_assets", resourcePath);
             mc.getTextureManager().register(identifier, texture);
-            reisaTextures.put(suffix, identifier);
+            registeredTextures.put(key, identifier);
             return identifier;
         } catch (IOException e) {
-            Constants.LOGGER.warn("[AssetManager] Failed to load reisa_{} texture", suffix, e);
+            Constants.LOGGER.warn("[AssetManager] Failed to load {} texture from {}", label, file, e);
             return null;
         }
     }
 
-    public void releaseReisaTextures() {
-        Map<String, Identifier> registered = Map.copyOf(reisaTextures);
-        reisaTextures.clear();
+    public void releaseRegisteredTextures() {
+        Map<String, Identifier> registered = Map.copyOf(registeredTextures);
+        registeredTextures.clear();
         if (registered.isEmpty() || mc == null || !RenderSystem.isOnRenderThread()) {
             return;
         }
@@ -586,7 +622,7 @@ public class AssetManager {
      * 清空 {@code ~/.epsilon/assets}，下次使用时会重新走下载流程。
      */
     public void clearCache() {
-        releaseReisaTextures();
+        releaseRegisteredTextures();
         declinedThisSession.clear();
         reisaReadyCache = null;
         if (!Files.exists(rootDir)) {

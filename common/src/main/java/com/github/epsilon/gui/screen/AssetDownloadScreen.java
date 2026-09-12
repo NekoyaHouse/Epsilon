@@ -155,6 +155,7 @@ public class AssetDownloadScreen extends EpsilonDialogScreen {
     private static String label(AssetManager.Asset asset) {
         return switch (asset) {
             case VIDEO -> EpsilonTranslations.Resources.VIDEO.getTranslatedName();
+            case LIGHT_TRAILS -> EpsilonTranslations.Resources.LIGHT_TRAILS.getTranslatedName();
             case REISA -> EpsilonTranslations.Resources.REISA.getTranslatedName();
             case FFMPEG -> EpsilonTranslations.Resources.FFMPEG.getTranslatedName();
         };
