@@ -10,10 +10,12 @@ import net.minecraft.core.BlockPos;
  */
 public final class VoxelCollisionCache {
 
+    /** UNKNOWN 与 BLOCKED 都视为不可通行，只有明确采样的 FREE 允许通过。 */
     public static final byte UNKNOWN = 0;
     public static final byte FREE = 1;
     public static final byte BLOCKED = 2;
 
+    /** 查询结果哨兵值，避免额外分配可选对象。 */
     public static final long NO_BLOCK = Long.MIN_VALUE;
     public static final long OUTSIDE_WINDOW = Long.MAX_VALUE;
 
@@ -24,14 +26,17 @@ public final class VoxelCollisionCache {
     private final int mediumSide;
     private final int volume;
 
+    /** 细体素按世界坐标取模映射；positions 保存坐标标签，sampleVersions 防止旧样本覆盖新样本。 */
     private final byte[] states;
     private final long[] positions;
     private final long[] sampleVersions;
 
+    /** 5³ 粗粒度统计，用于快速判断大块区域是否全 FREE。 */
     private final short[] coarseValid;
     private final short[] coarseBlocked;
     private final long[] coarsePositions;
 
+    /** 每轴 2+2+1 的中间粒度统计，用于细粒度回退查询。 */
     private final short[] mediumValid;
     private final short[] mediumBlocked;
     private final long[] mediumPositions;
@@ -71,6 +76,7 @@ public final class VoxelCollisionCache {
     }
 
     public void setWindowOrigin(BlockPos origin, long sequence) {
+        // 只接受更新的窗口序号，防止迟到的旧批次把 origin 回退。
         if (sequence < this.windowSequence) {
             return;
         }
@@ -109,6 +115,7 @@ public final class VoxelCollisionCache {
         }
 
         int index = index(x, y, z, this.size);
+        // 同一个环形槽可能被新窗口复用，低序号样本不能覆盖高序号样本。
         if (sequence < this.sampleVersions[index]) {
             return;
         }
@@ -121,6 +128,7 @@ public final class VoxelCollisionCache {
         }
 
         if (previousState != UNKNOWN) {
+            // 状态变化时先撤销旧值对粗/中粒度计数的贡献。
             updateAggregates(previousPos, previousState, -1);
         }
 
@@ -149,6 +157,7 @@ public final class VoxelCollisionCache {
         }
 
         if (isCoarseVolumeFree(minX, minY, minZ, maxX, maxY, maxZ)) {
+            // 整块 5³ 已完整采样且无阻塞时可直接判定通过。
             return NO_BLOCK;
         }
         if (isMediumVolumeFree(minX, minY, minZ, maxX, maxY, maxZ)) {
@@ -183,6 +192,7 @@ public final class VoxelCollisionCache {
                     if (this.coarsePositions[index] != packedCell
                             || this.coarseValid[index] != COARSE_VOLUME
                             || this.coarseBlocked[index] != 0) {
+                        // 坐标标签不匹配、未采满或存在 BLOCKED，都不能走快速路径。
                         return false;
                     }
                 }
@@ -225,6 +235,7 @@ public final class VoxelCollisionCache {
         int x = BlockPos.getX(packedPos);
         int y = BlockPos.getY(packedPos);
         int z = BlockPos.getZ(packedPos);
+        // 粗粒度记录阻塞数，中粒度用于缩小回退范围。
         int blockedDelta = state == BLOCKED ? delta : 0;
 
         updateCoarseAggregate(x, y, z, delta, blockedDelta);
@@ -269,6 +280,7 @@ public final class VoxelCollisionCache {
     }
 
     private static int mediumCoordinate(int coordinate) {
+        // 5 格固定拆成 2/2/1 三段，避免 5 不能被 2 整除的歧义。
         int local = Math.floorMod(coordinate, COARSE_SIZE);
         int child = local < 2 ? 0 : local < 4 ? 1 : 2;
         return Math.floorDiv(coordinate, COARSE_SIZE) * 3 + child;

@@ -19,7 +19,9 @@ import java.util.List;
  */
 public final class ElytraDirectionSolver {
 
+    /** 安全解至少预演的 tick 数；短于该值的候选会被视为存在近期碰撞风险。 */
     private static final int TRAJECTORY_HORIZON_TICKS = 4;
+    /** 抬头保护探测距离与逃逸 pitch；与 ControlElytraFlightMode 保持一致。 */
     private static final double CEILING_PROBE_DISTANCE = 0.75;
     private static final double CEILING_PROBE_EPSILON = 1.0E-4;
     private static final float CEILING_ESCAPE_PITCH = 5.0f;
@@ -84,6 +86,7 @@ public final class ElytraDirectionSolver {
             return new Rot2f(0.0f, 0.0f);
         }
 
+        // yaw 直接取期望方向；pitch 先 5 度粗采样，再在最优区间二分细化。
         Vec3 desiredDirection = desiredVelocity.normalize();
         float yaw = (float) Math.toDegrees(Math.atan2(desiredDirection.z, desiredDirection.x)) - 90.0f;
         yaw = Mth.wrapDegrees(yaw);
@@ -120,6 +123,7 @@ public final class ElytraDirectionSolver {
             float yaw,
             float pitch
     ) {
+        // 比较的是“下一 tick 滑翔方程输出速度”的方向，而不是实体当前 look。
         Vec3 predicted = ElytraMotionPredictor.nextFallFlyingMovement(
                 movement,
                 yaw,
@@ -133,6 +137,7 @@ public final class ElytraDirectionSolver {
     }
 
     private static int trajectorySafeTicks(LocalPlayer player, float yaw, float pitch) {
+        // 用完整玩家 AABB 逐步推进滑翔方程；返回首次碰撞前的安全 tick 数。
         Vec3 position = player.position();
         Vec3 velocity = player.getDeltaMovement();
         double gravity = effectiveGravity(player);
@@ -187,6 +192,7 @@ public final class ElytraDirectionSolver {
     }
 
     private static double effectiveGravity(LocalPlayer player) {
+        // 与原版 LivingEntity.getEffectiveGravity 一致：下落且缓降时重力和 0.01 取小。
         if (player.getDeltaMovement().y <= 0.0 && player.hasEffect(MobEffects.SLOW_FALLING)) {
             return Math.min(player.getGravity(), 0.01);
         }
@@ -194,6 +200,7 @@ public final class ElytraDirectionSolver {
     }
 
     private static List<RotationOffset> createEscapeOffsets() {
+        // 候选按偏移代价排序：优先尝试最小偏航/俯仰修正，实在不行再大幅转向。
         float[] yawOffsets = {0.0f, 20.0f, -20.0f, 40.0f, -40.0f, 65.0f, -65.0f, 90.0f, -90.0f};
         float[] pitchOffsets = {0.0f, 15.0f, -15.0f, 30.0f, -30.0f, 50.0f, -50.0f, 75.0f, -75.0f};
         List<RotationOffset> offsets = new ArrayList<>(yawOffsets.length * pitchOffsets.length - 1);

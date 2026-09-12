@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class ElytraPathNavigator {
 
+    // 体素窗口与每 tick 采样预算；Data Size 必须是 5 的倍数。
     private static final int DEFAULT_DATA_SIZE = 50;
     private static final int MIN_DATA_SIZE = 25;
     private static final int MAX_DATA_SIZE = 100;
@@ -30,12 +31,14 @@ public final class ElytraPathNavigator {
     private static final int MAX_QUEUED_SAMPLE_BATCHES = 64;
     private static final int REFRESH_INTERVAL_TICKS = 20;
     private static final int LOCAL_SAMPLE_RADIUS = 7;
+    // 异步搜索节流与结果有效性检查：避免主线程等待，也避免复用过期路径。
     private static final long SEARCH_INTERVAL_NANOS = 50_000_000L;
     private static final long RESULT_MAX_AGE_NANOS = 150_000_000L;
     private static final double RESULT_MAX_START_DISTANCE_SQR = 25.0;
     private static final double RESULT_MAX_TARGET_DISTANCE_SQR = 64.0;
     private static final double PATH_LOOKAHEAD_DISTANCE = 3.0;
     private final String workerThreadName;
+    /** 主线程写入请求，工作线程只保留最新一份；采样批次则按序号顺序消费。 */
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
     private final ConcurrentLinkedQueue<SampleBatch> sampleBatches = new ConcurrentLinkedQueue<>();
     private final AtomicInteger queuedSampleBatches = new AtomicInteger();
@@ -45,6 +48,7 @@ public final class ElytraPathNavigator {
     private final Sampler sampler = new Sampler();
 
     private volatile boolean running;
+    /** 每次启停递增的代际号，旧线程退出后不会再处理新请求。 */
     private volatile long workerGeneration;
     private volatile Thread workerThread;
     private volatile VoxelCollisionCache workerGrid;
@@ -60,6 +64,7 @@ public final class ElytraPathNavigator {
     }
 
     public PathPlan getPath(LocalPlayer player, Vec3 targetPos, PathConfig config) {
+        // 客户端线程只做有界采样和提交请求；路径计算全部在工作线程完成。
         startWorker();
 
         int dataSize = normalizeDataSize(this.requestedDataSize.get());
@@ -74,6 +79,7 @@ public final class ElytraPathNavigator {
 
         SearchResult result = this.latestResult.get();
         if (isResultUsable(result, player.position(), targetPos, window)) {
+            // 消费结果时按玩家当前投影位置推进路径，避免朝身后节点飞。
             return advancePath(result.path(), player.position());
         }
 
@@ -98,6 +104,7 @@ public final class ElytraPathNavigator {
                     ? 0.0
                     : playerPos.subtract(from).dot(segment) / segmentLengthSqr;
             if (projection < 1.0) {
+                // 找到玩家当前所在航段，再从该段向前取固定前视距离的航点。
                 int next = i + 1;
                 Vec3 projected = from.add(segment.scale(Math.clamp(projection, 0.0, 1.0)));
                 double remaining = projected.distanceTo(points.get(next));
@@ -116,6 +123,7 @@ public final class ElytraPathNavigator {
     }
 
     public void setDataSize(int size) {
+        // 窗口尺寸变化会使旧体素和旧路径失效，全部清空等待重新采样。
         int normalized = normalizeDataSize(size);
         if (this.requestedDataSize.getAndSet(normalized) != normalized) {
             this.pendingRequest.set(null);
@@ -125,6 +133,7 @@ public final class ElytraPathNavigator {
     }
 
     public void stop() {
+        // 关闭运行标志并递增代际，随后清空队列、缓存和最新结果。
         this.running = false;
         this.workerGeneration++;
         this.pendingRequest.set(null);
@@ -145,6 +154,7 @@ public final class ElytraPathNavigator {
     }
 
     private void startWorker() {
+        // 同一时刻只允许一个 daemon 工作线程；重复调用直接复用。
         if (this.running && this.workerThread != null && this.workerThread.isAlive()) {
             return;
         }
@@ -163,6 +173,7 @@ public final class ElytraPathNavigator {
             PathConfig config,
             Sampler.WindowSnapshot window
     ) {
+        // 有效半径必须留在体素窗口内，否则 A* 查询会大量落到 OUTSIDE_WINDOW。
         int effectiveRadius = Math.max(6, Math.min(config.searchRadius(), window.size() / 2 - 1));
         this.pendingRequest.set(new SearchRequest(
                 window.epoch(),
@@ -185,6 +196,7 @@ public final class ElytraPathNavigator {
             Vec3 targetPos,
             Sampler.WindowSnapshot window
     ) {
+        // 结果必须来自当前窗口代际，且在时间/起点/目标偏移容差内才可使用。
         if (result == null || result.path() == null || result.epoch() != window.epoch()) {
             return false;
         }
@@ -205,6 +217,7 @@ public final class ElytraPathNavigator {
             try {
                 drainSampleBatches();
 
+                // 只处理最新请求：旧请求会被后续客户端 tick 覆盖，不排队等待。
                 SearchRequest request = this.pendingRequest.getAndSet(null);
                 if (request == null) {
                     waitForWork(10L);
@@ -270,6 +283,7 @@ public final class ElytraPathNavigator {
                 continue;
             }
 
+            // 窗口尺寸或代际变化时直接重建缓存，而不是逐格搬运。
             if (this.workerGrid == null
                     || batch.epoch() > this.workerEpoch
                     || batch.size() != this.workerGrid.size()) {
@@ -294,10 +308,12 @@ public final class ElytraPathNavigator {
         }
 
         if (request.playerPos().distanceTo(request.targetPos()) <= request.stopDistance()) {
+            // 已进入停止距离时返回单点路径，消费端会把它视为悬停。
             return result(request, stopPath(request));
         }
 
         Vec3 limitedTarget = limitTarget(request.playerPos(), request.targetPos(), request.searchRadius());
+        // A* 只能搜索当前体素窗口；超出窗口的目标先裁剪到窗口边界。
         BlockPos goal = grid.clampToWindow(BlockPos.containing(limitedTarget));
         ElytraMotionPredictor.PlayerCollisionProfile profile =
                 new ElytraMotionPredictor.PlayerCollisionProfile(request.playerWidth(), request.playerHeight());
@@ -311,12 +327,14 @@ public final class ElytraPathNavigator {
         );
         List<BlockPos> nodes = search.findPath();
         if (nodes.size() < 2) {
+            // 搜索没有任何可走节点时才返回停止路径。
             return result(request, stopPath(request));
         }
         return result(request, toPathPlan(request.playerPos(), nodes));
     }
 
     private static PathPlan toPathPlan(Vec3 playerPos, List<BlockPos> nodes) {
+        // 第一点用真实玩家位置，后续点使用 A* 节点中心，保持跨线程不可变。
         ArrayList<Vec3> points = new ArrayList<>(nodes.size());
         points.add(playerPos);
         for (int i = 1; i < nodes.size(); i++) {
@@ -386,6 +404,7 @@ public final class ElytraPathNavigator {
 
     private final class Sampler {
 
+        /** 采样器只允许在客户端线程访问；epoch 变化代表窗口或维度整体重建。 */
         private Level level;
         private int dataSize;
         private long epoch;
@@ -405,6 +424,7 @@ public final class ElytraPathNavigator {
         }
 
         private WindowSnapshot prepare(LocalPlayer player, int requestedSize, Vec3 targetPos, Vec3 pathAhead) {
+            // 维度、尺寸或外部 invalidate 变化时整窗重建。
             int size = normalizeDataSize(requestedSize);
             if (this.level != player.level() || this.dataSize != size || this.invalidated) {
                 reset(player.level(), player.blockPosition(), size);
@@ -413,6 +433,7 @@ public final class ElytraPathNavigator {
             updateWindow(player.blockPosition(), size);
             enqueueInitialBatch(size);
 
+            // 周期性刷新玩家、目标和当前路径前方的局部区域，优先保证近处体素新鲜。
             if (this.refreshTicks <= 0) {
                 enqueueNeighborhood(player.blockPosition(), LOCAL_SAMPLE_RADIUS);
                 enqueueNeighborhood(BlockPos.containing(targetPos), LOCAL_SAMPLE_RADIUS);
@@ -434,6 +455,7 @@ public final class ElytraPathNavigator {
         }
 
         private void reset(Level level, BlockPos playerPos, int size) {
+            // epoch 自增后，工作线程会丢弃所有旧窗口样本和旧路径结果。
             this.level = level;
             this.dataSize = size;
             this.epoch++;
@@ -478,6 +500,7 @@ public final class ElytraPathNavigator {
             int deltaY = Math.abs(newY - this.originY);
             int deltaZ = Math.abs(newZ - this.originZ);
             int exposedUpperBound = size * size * (deltaX + deltaY + deltaZ);
+            // 小范围滚动只给新增切片排样；位移过大或初始填充时直接重建队列。
             boolean rescheduleWindow = this.initialFillPending
                     || deltaX > size
                     || deltaY > size
@@ -522,6 +545,7 @@ public final class ElytraPathNavigator {
 
             int volume = size * size * size;
             int plane = size * size;
+            // 每 tick 最多排入 4096 个初始体素，避免开启模块时卡顿。
             int added = 0;
             while (this.initialFillCursor < volume
                     && added < MAX_SAMPLES_PER_TICK
@@ -582,6 +606,7 @@ public final class ElytraPathNavigator {
 
             long[] positions = new long[MAX_SAMPLES_PER_TICK];
             byte[] states = new byte[MAX_SAMPLES_PER_TICK];
+            // CollisionContext 让方块碰撞形状按当前玩家状态计算（例如潜行/飞行姿态）。
             CollisionContext context = CollisionContext.of(player);
             int count = 0;
 
@@ -622,6 +647,7 @@ public final class ElytraPathNavigator {
 
         @SuppressWarnings("deprecation")
         private byte sampleState(int x, int y, int z, CollisionContext context) {
+            // 未加载区块记 UNKNOWN，A* 会把它当作不可通行；世界边界外直接记 BLOCKED。
             BlockPos pos = new BlockPos(x, y, z);
             if (!this.level.isInWorldBounds(pos)) {
                 return VoxelCollisionCache.BLOCKED;
@@ -650,6 +676,7 @@ public final class ElytraPathNavigator {
         }
 
         private static int alignedWindowOrigin(int center, int size) {
+            // 窗口原点对齐到 5 的倍数，让 5³ 粗粒度统计保持稳定。
             int origin = center - size / 2;
             return Math.floorDiv(origin, DATA_SIZE_ALIGNMENT) * DATA_SIZE_ALIGNMENT;
         }
@@ -660,6 +687,7 @@ public final class ElytraPathNavigator {
 
     private static final class LongQueue {
 
+        /** 为方块采样设计的原始 long 环形队列，避免装箱和递归队列开销。 */
         private long[] values;
         private int head;
         private int size;

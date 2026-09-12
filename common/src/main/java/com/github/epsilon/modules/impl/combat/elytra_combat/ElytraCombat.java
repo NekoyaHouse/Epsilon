@@ -61,7 +61,9 @@ public class ElytraCombat extends Module {
     public static final ElytraCombat INSTANCE = new ElytraCombat();
 
     public enum ControlMode {
+        /** 通过 yaw/pitch 和 WASD 输入控制，兼容原版滑翔物理。 */
         Input,
+        /** 在 FallFlyingMovementEvent 中直接覆盖当 tick 速度，作为实验模式。 */
         DirectVelocity
     }
 
@@ -164,7 +166,9 @@ public class ElytraCombat extends Module {
     private final DoubleSetting renderWidth =
             doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, render::getValue).group(sgRender);
 
+    /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */
     private final Map<ElytraCombatMode, ElytraCombatBehavior> behaviors = new EnumMap<>(ElytraCombatMode.class);
+    /** 目标轨迹预测、命中包解析和飞行规划三个纯数据组件。 */
     private final TargetMotionTracker motionTracker = new TargetMotionTracker();
     private final CombatHitTracker hitTracker = new CombatHitTracker();
     private final FlightIntentPlanner flightPlanner = new FlightIntentPlanner();
@@ -173,6 +177,7 @@ public class ElytraCombat extends Module {
     private LivingEntity target;
     private ElytraCombatInput controlInput;
     private FlightIntent latestIntent = FlightIntent.idle(Vec3.ZERO);
+    /** 记录模块启用前的 ElytraFly 状态，关闭时只恢复被本模块改动过的部分。 */
     private boolean capturedElytraEnabled;
     private ElytraFlightModes capturedElytraMode;
     private boolean changedElytraControl;
@@ -189,6 +194,7 @@ public class ElytraCombat extends Module {
 
     @Override
     protected void onEnable() {
+        // 自动接管时先保存原 ElytraFly 状态，避免关闭模块后把用户设置覆盖掉。
         this.currentBehavior = this.behaviors.get(this.mode.getValue());
         this.capturedElytraEnabled = ElytraFly.INSTANCE.isEnabled();
         this.capturedElytraMode = ElytraFly.INSTANCE.mode.getValue();
@@ -209,6 +215,7 @@ public class ElytraCombat extends Module {
 
     @Override
     protected void onDisable() {
+        // 释放长矛蓄力、停止后台寻路线程，并恢复接管前的 ElytraFly 状态。
         CombatWeaponController.stopSpearUse();
         this.flightPlanner.stop();
         this.controlInput = null;
@@ -246,6 +253,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onPlayerTick(PlayerTickEvent.Pre event) {
+        // tick 顺序：刷新目标 → 更新预测快照 → 消费命中 → 行为状态机 → 限速 → 转控制输入。
         if (nullCheck() || !canControlFlight()) {
             clearControl();
             return;
@@ -290,6 +298,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onKeyboardInput(KeyboardInputEvent event) {
+        // 行为规划出的输入覆盖真实键盘，DirectVelocity 模式仍保留同一套 WASD 反馈。
         if (this.controlInput == null || !canControlFlight()) return;
         event.setForward(this.controlInput.forwardImpulse());
         event.setStrafe(this.controlInput.strafeImpulse());
@@ -300,6 +309,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onFallFlyingMovement(FallFlyingMovementEvent event) {
+        // 只有规划速度本身安全时才覆盖原版滑翔结果，否则保留 solveSafe 的旋转控制。
         if (!isEnabled() || this.controlInput == null || !this.controlInput.hasDirectVelocity()) {
             return;
         }
@@ -318,6 +328,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
+        // 只记录本地玩家对当前目标发起的攻击，行为状态机据此进入等待/脱战阶段。
         if (!isEnabled() || event.getPlayer() != this.mc.player || this.target == null) {
             return;
         }
@@ -329,6 +340,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
+        // 伤害包用于重锤确认，实体事件用于 kinetic 命中；传送包只清除旧轨迹。
         if (!isEnabled()) return;
         if (event.getPacket() instanceof ClientboundDamageEventPacket damage) {
             this.hitTracker.onDamagePacket(damage);
@@ -359,6 +371,7 @@ public class ElytraCombat extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
+        // 渲染 4 格期望方向，便于区分直飞、A* 航点和避障意图。
         if (!this.render.getValue() || this.controlInput == null || this.mc.player == null) return;
         Vec3 velocity = this.latestIntent.desiredVelocity();
         if (velocity.lengthSqr() < 1.0E-8) return;
@@ -379,6 +392,7 @@ public class ElytraCombat extends Module {
     }
 
     private void refreshTarget() {
+        // 目标死亡、换维度或超出追击范围时立即失效；动态目标模式每 tick 重新选择。
         if (this.target != null
                 && (!this.target.isAlive()
                 || this.target.level() != this.mc.level
@@ -405,6 +419,7 @@ public class ElytraCombat extends Module {
     }
 
     private FlightIntent clampIntent(FlightIntent intent) {
+        // 行为层可以返回任意长度向量，统一限制到 Max Flight Speed 后再交给飞控。
         Vec3 velocity = intent.desiredVelocity();
         double length = velocity.length();
         if (length < 1.0E-8) {
@@ -417,6 +432,7 @@ public class ElytraCombat extends Module {
     }
 
     private ElytraCombatInput toInput(net.minecraft.client.player.LocalPlayer player, FlightIntent intent) {
+        // 输入模式先反解下一 tick 速度对齐的旋转，再按 yaw 偏差映射到 8 个 WASD 扇区。
         Vec3 velocity = intent.desiredVelocity();
         if (velocity.lengthSqr() < 1.0E-8) {
             return null;
@@ -439,6 +455,7 @@ public class ElytraCombat extends Module {
     }
 
     private DirectionInput directionInput(float yawDelta) {
+        // 每个扇区覆盖 45 度，命中边界时向相邻方向同时按键以平滑转向。
         int sector = Math.floorMod(Math.round(yawDelta / 45.0f), 8);
         return switch (sector) {
             case 0 -> new DirectionInput(true, false, false, false);
@@ -453,6 +470,7 @@ public class ElytraCombat extends Module {
     }
 
     private void processHits() {
+        // 网络线程只入队，命中反馈在客户端 tick 中按顺序消费。
         CombatHitTracker.HitType hit;
         while ((hit = this.hitTracker.poll()) != null) {
             this.currentBehavior.onHit(hit);
@@ -463,6 +481,7 @@ public class ElytraCombat extends Module {
     }
 
     private boolean canControlFlight() {
+        // ElytraCombat 只接管 Control 模式；其他 ElytraFly 模式保持用户手动控制。
         return ElytraFly.INSTANCE.isEnabled() && ElytraFly.INSTANCE.mode.is(ElytraFlightModes.Control);
     }
 
@@ -476,6 +495,7 @@ public class ElytraCombat extends Module {
     }
 
     private void cycleMode() {
+        // 切换模式时立即重置行为状态和路径请求，避免沿用上个模式的速度/状态。
         ElytraCombatMode[] modes = this.mode.getModes();
         int next = Math.floorMod(this.mode.getModeIndex() + 1, modes.length);
         this.mode.setMode(modes[next]);
@@ -488,6 +508,7 @@ public class ElytraCombat extends Module {
     }
 
     private void resetState() {
+        // 模式切换或状态重置时同时清空轨迹、命中队列、寻路结果和当前输入。
         this.motionTracker.reset();
         this.hitTracker.clear();
         this.flightPlanner.reset();
@@ -499,6 +520,7 @@ public class ElytraCombat extends Module {
     }
 
     private void clearControl() {
+        // 失去目标或无法接管飞行时回到无输入状态，不保留过期路径。
         this.controlInput = null;
         this.latestIntent = FlightIntent.idle(Vec3.ZERO);
         this.target = null;
@@ -507,6 +529,7 @@ public class ElytraCombat extends Module {
     }
 
     private void setPathDataSize(int size) {
+        // Data Size 修改后由导航器重建体素窗口；需要 applyWhenRelease 防止拖动时反复重建。
         this.flightPlanner.setDataSize(size);
     }
 

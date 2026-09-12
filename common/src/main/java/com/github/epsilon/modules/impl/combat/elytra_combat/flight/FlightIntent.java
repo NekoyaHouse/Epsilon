@@ -15,6 +15,9 @@ public record FlightIntent(
         boolean useFirework
 ) {
 
+    /**
+     * 无飞行需求时的空意图；lookDirection 仅用于保持视角自然。
+     */
     public static FlightIntent idle(Vec3 lookDirection) {
         return new FlightIntent(Vec3.ZERO, lookDirection, false, false);
     }

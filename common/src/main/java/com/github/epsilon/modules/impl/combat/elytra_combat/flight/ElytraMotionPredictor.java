@@ -6,8 +6,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 26.2 滑翔运动方程工具。
  *
- * <p>基础 A* 只负责输出方块路径；这里保留 input 模式反解旋转所需的滑翔预测，
- * 不再从路径服务里执行轨迹校验、障碍重试或路径修正。</p>
+ * <p>基础 A* 只负责输出方块路径；这里保留 input 模式反解旋转和
+ * {@link ElytraDirectionSolver} 安全预演所需的下一 tick 滑翔速度计算。</p>
  */
 public final class ElytraMotionPredictor {
 
@@ -18,6 +18,7 @@ public final class ElytraMotionPredictor {
     }
 
     public static Vec3 nextFallFlyingMovement(Vec3 movement, float yaw, float pitch, double gravity) {
+        // 严格按 LivingEntity.updateFallFlyingMovement 的顺序复算：重力、转向修正、阻力。
         Vec3 lookAngle = calculateViewVector(pitch, yaw);
         double leanAngle = pitch * (Math.PI / 180.0);
         double lookHorizontalLength = Math.sqrt(lookAngle.x * lookAngle.x + lookAngle.z * lookAngle.z);

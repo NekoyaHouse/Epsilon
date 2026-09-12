@@ -22,9 +22,13 @@ import net.minecraft.world.phys.Vec3;
 public final class SpearBehavior implements ElytraCombatBehavior {
 
     private enum State {
+        /** 初始状态：尝试手持长矛并开始蓄力。 */
         NONE,
+        /** 远距离追击目标眼部预测位置。 */
         FOLLOW,
+        /** 进入长矛交战距离，处理冲锋和反向长矛。 */
         NEAR_FOLLOW,
+        /** 命中后反向拉开距离，等待 kinetic 冷却。 */
         PULL_OVER
     }
 
@@ -58,12 +62,14 @@ public final class SpearBehavior implements ElytraCombatBehavior {
 
         switch (this.state) {
             case NONE -> {
+                // 长矛命中依赖持续使用物品，未成功手持前停留在远程跟随。
                 if (CombatWeaponController.ensureSpearUse()) {
                     this.state = State.FOLLOW;
                 }
                 desired = followDirection(bot, targetPoint);
             }
             case FOLLOW -> {
+                // 进入交战距离后切换近身逻辑，准备蓄力完成后的冲锋。
                 if (distance <= bot.spearEngageRange.getValue()) {
                     this.state = State.NEAR_FOLLOW;
                     desired = nearFollowDirection(bot, target, targetPoint);
@@ -72,6 +78,7 @@ public final class SpearBehavior implements ElytraCombatBehavior {
                 }
             }
             case NEAR_FOLLOW -> {
+                // 目标脱离范围则回到普通追击，避免持续贴脸。
                 if (distance > bot.spearEngageRange.getValue()) {
                     this.state = State.FOLLOW;
                     desired = followDirection(bot, targetPoint);
@@ -80,6 +87,7 @@ public final class SpearBehavior implements ElytraCombatBehavior {
                 }
             }
             case PULL_OVER -> {
+                // 命中后水平反向、垂直取正，快速脱离对方长矛反击范围。
                 this.pullOverTicks++;
                 if (this.pullOverTicks > bot.spearPullOverTicks.getValue()) {
                     this.state = State.FOLLOW;
@@ -164,6 +172,7 @@ public final class SpearBehavior implements ElytraCombatBehavior {
         }
 
         Vec3 predicted = target.predictedPosition();
+        // 用目标眼部预测位置和视线方向构造一根虚拟长矛射线。
         Vec3 eye = predicted.add(0.0, player.getEyeHeight(player.getPose()), 0.0);
         Vec3 facing = player.getLookAngle().normalize();
         double reach = target.velocity().dot(facing);
@@ -175,6 +184,7 @@ public final class SpearBehavior implements ElytraCombatBehavior {
             return null;
         }
 
+        // 选取垂直于对方视线的水平侧移方向，优先能保持碰撞箱安全的一侧。
         Vec3 delta = target.position().subtract(bot.player().position());
         Vec3 horizontal = new Vec3(delta.x, 0.0, delta.z);
         if (horizontal.lengthSqr() < 1.0E-8) {

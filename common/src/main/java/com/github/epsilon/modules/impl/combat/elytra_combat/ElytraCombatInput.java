@@ -4,6 +4,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * ControlElytraFlightMode 消费的统一控制输入。
+ *
+ * <p>Input 模式使用 yaw/pitch 与 WASD 位；DirectVelocity 模式额外携带
+ * {@code directVelocity}，由 {@code FallFlyingMovementEvent} 覆盖当 tick 最终速度。</p>
  */
 public record ElytraCombatInput(
         boolean forward,

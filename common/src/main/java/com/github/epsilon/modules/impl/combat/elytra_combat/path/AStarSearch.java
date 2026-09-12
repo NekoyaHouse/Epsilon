@@ -22,7 +22,9 @@ import java.util.Set;
  */
 final class AStarSearch {
 
+    /** 缩小碰撞箱边界，避免正好落在方块边界时把相邻格误算进来。 */
     private static final double EPSILON = 1.0E-7;
+    /** 预生成的 26 个方向，避免每次扩展节点重复创建偏移数组。 */
     private static final int[][] NEIGHBORS = createNeighbors();
 
     private final VoxelCollisionCache grid;
@@ -49,6 +51,7 @@ final class AStarSearch {
     }
 
     List<BlockPos> findPath() {
+        // 标准 A* 数据结构：open 按 f 排序，closed 防止重复扩展。
         PriorityQueue<Node> open = new PriorityQueue<>(Node.COMPARATOR);
         Map<BlockPos, Double> gScores = new HashMap<>();
         Map<BlockPos, BlockPos> cameFrom = new HashMap<>();
@@ -58,6 +61,7 @@ final class AStarSearch {
         open.add(new Node(this.start, 0.0, heuristic(this.start)));
 
         int visited = 0;
+        // 目标格被遮挡或超出搜索限制时，用 bestPosition 返回离目标最近的已探索节点。
         BlockPos bestPosition = this.start;
         double bestHeuristic = heuristic(this.start);
         while (!open.isEmpty() && visited < this.maxNodes) {
@@ -77,6 +81,7 @@ final class AStarSearch {
 
             for (int[] offset : NEIGHBORS) {
                 BlockPos next = current.position().offset(offset[0], offset[1], offset[2]);
+                // 节点必须在体素窗口、搜索半径内，并且玩家碰撞箱可以通过。
                 if (closed.contains(next)
                         || !this.grid.isInWindow(next)
                         || !isInsideSearchRadius(next)
@@ -90,6 +95,7 @@ final class AStarSearch {
                     continue;
                 }
 
+                // 记录父节点并松弛 g 分数；启发式相同则优先靠近目标的节点。
                 cameFrom.put(next, current.position());
                 gScores.put(next, tentativeG);
                 open.add(new Node(next, tentativeG, heuristic(next)));
@@ -117,6 +123,7 @@ final class AStarSearch {
     }
 
     private boolean canOccupy(BlockPos pos) {
+        // 节点占用的定义：以该方块为脚底时，完整玩家 AABB 覆盖的体素全部为 FREE。
         int minX = (int) Math.floor(bodyMinX(pos));
         int minY = (int) Math.floor(bodyMinY(pos));
         int minZ = (int) Math.floor(bodyMinZ(pos));
@@ -128,18 +135,22 @@ final class AStarSearch {
     }
 
     private boolean isInsideSearchRadius(BlockPos pos) {
+        // 使用欧氏距离而非切比雪夫距离，与球形 Search Radius 的语义一致。
         return this.start.distSqr(pos) <= (long) this.searchRadius * this.searchRadius;
     }
 
     private double heuristic(BlockPos pos) {
+        // 三维欧氏距离，和 26 方向移动代价一致，因此是可采纳启发式。
         return Math.sqrt(this.goal.distSqr(pos));
     }
 
     private static double cost(int[] offset) {
+        // 对角移动代价为实际欧氏长度，保证不会低估路径成本。
         return Math.sqrt(offset[0] * offset[0] + offset[1] * offset[1] + offset[2] * offset[2]);
     }
 
     private static List<BlockPos> reconstructPath(Map<BlockPos, BlockPos> cameFrom, BlockPos end) {
+        // 从终点沿 cameFrom 回溯到起点，再反转为起 → 终顺序。
         ArrayList<BlockPos> path = new ArrayList<>();
         BlockPos current = end;
         while (current != null) {
@@ -191,6 +202,7 @@ final class AStarSearch {
 
     private record Node(BlockPos position, double gScore, double heuristic) {
 
+        // f = g + h；同 f 时优先 h 更小（即更接近目标）的节点。
         private static final Comparator<Node> COMPARATOR = Comparator
                 .comparingDouble(Node::fScore)
                 .thenComparingDouble(Node::heuristic);

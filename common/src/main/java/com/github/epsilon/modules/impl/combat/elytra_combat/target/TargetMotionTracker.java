@@ -16,6 +16,7 @@ import java.util.List;
  */
 public final class TargetMotionTracker {
 
+    // 分类阈值：20 tick 无位移视为 AFK，连续两段位移小于 0.75 视为慢速，转向超过 60 度视为绕圈。
     private static final int MAX_HISTORY = 30;
     private static final int AFK_TICKS = 20;
     private static final double SLOW_DISTANCE = 0.75;
@@ -35,6 +36,7 @@ public final class TargetMotionTracker {
 
     public TargetSnapshot update(LivingEntity target, int tick, PredictorMode mode, int ticksLater, int historyTicks) {
         if (target != this.trackedTarget || this.teleportPending) {
+            // 目标切换或传送后旧速度/相位不再可信，直接清空历史。
             this.trackedTarget = target;
             this.trackedTargetId = target.getId();
             this.teleportPending = false;
@@ -42,6 +44,7 @@ public final class TargetMotionTracker {
         }
 
         Vec3 position = target.position();
+        // 同一 tick 重复调用时覆盖最后一个样本，避免历史中出现重复时间戳。
         Sample newest = this.samples.peekLast();
         if (newest == null || newest.tick() != tick) {
             this.samples.addLast(new Sample(position, tick));
@@ -54,6 +57,7 @@ public final class TargetMotionTracker {
         }
 
         Vec3 predicted = predict(ticksLater, mode, historyTicks);
+        // supported 通过向下探测 0.04 格判断目标是否站在方块/实体上。
         return new TargetSnapshot(
                 target,
                 position,
@@ -76,6 +80,7 @@ public final class TargetMotionTracker {
     }
 
     public Vec3 knownDeltaMovement() {
+        // 使用最近两个不同 tick 的样本差计算速度，跳 tick 时按时间间隔归一化。
         if (this.samples.size() < 2) {
             return Vec3.ZERO;
         }
@@ -102,6 +107,7 @@ public final class TargetMotionTracker {
         }
 
         List<Sample> window = recentSamples(historyTicks);
+        // 样本不足或不需要外推时直接返回最新位置。
         if (window.size() < 2 || ticksLater <= 0) {
             return window.getLast().position();
         }
@@ -114,6 +120,7 @@ public final class TargetMotionTracker {
     }
 
     public TargetAction classify(int currentTick) {
+        // 分类只使用最近 3 个样本，避免旧轨迹干扰当前动作判断。
         if (this.samples.size() < 2) {
             return TargetAction.CIRCLING;
         }
@@ -141,6 +148,7 @@ public final class TargetMotionTracker {
 
         Vec3 ab = pos1.subtract(pos0);
         Vec3 bc = pos2.subtract(pos1);
+        // 两段位移夹角越大越接近绕圈；夹角小则再判断朝向/远离玩家。
         double denominator = ab.length() * bc.length();
         if (denominator < 1.0E-6) {
             return TargetAction.SLOW_SPEED;
@@ -248,6 +256,7 @@ public final class TargetMotionTracker {
     }
 
     private static double[] polynomial2(double[] t, double[] values) {
+        // 高斯消元拟合二次多项式；奇异矩阵退化为常量预测。
         double st0 = t.length;
         double st1 = 0.0;
         double st2 = 0.0;

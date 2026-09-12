@@ -15,12 +15,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public final class CombatHitTracker {
 
+    /** 行为层只需要区分重锤和长矛两类命中。 */
     public enum HitType {
         MACE,
         SPEAR
     }
 
     private final ConcurrentLinkedQueue<HitType> pendingHits = new ConcurrentLinkedQueue<>();
+    /** 网络线程只写 volatile 上下文，队列在客户端 tick 中消费。 */
     private volatile int localPlayerId = -1;
     private volatile int targetId = -1;
     private volatile int lastAttackTick = Integer.MIN_VALUE;
@@ -31,12 +33,14 @@ public final class CombatHitTracker {
     }
 
     public void markAttack(LivingEntity target, int tick) {
+        // 记录本地出手时间，供攻击后短时间内的包过滤使用。
         if (target != null && target.getId() == this.targetId) {
             this.lastAttackTick = tick;
         }
     }
 
     public void onDamagePacket(ClientboundDamageEventPacket packet) {
+        // 伤害目标必须是当前目标、来源必须是本地玩家，再检查 MACE_SMASH 类型。
         if (packet.entityId() != this.targetId || packet.sourceCauseId() != this.localPlayerId) {
             return;
         }
@@ -49,6 +53,7 @@ public final class CombatHitTracker {
     }
 
     public void onEntityStatusPacket(ClientboundEntityEventPacket packet) {
+        // KINETIC_HIT 的实体 id 在 accessor 中，命中本地玩家时才算长矛命中。
         if (packet.getEventId() != EntityEvent.KINETIC_HIT) {
             return;
         }
@@ -59,6 +64,7 @@ public final class CombatHitTracker {
     }
 
     public HitType poll() {
+        // 从网络线程队列取状态事件；调用方保证只在客户端 tick 消费。
         return this.pendingHits.poll();
     }
 

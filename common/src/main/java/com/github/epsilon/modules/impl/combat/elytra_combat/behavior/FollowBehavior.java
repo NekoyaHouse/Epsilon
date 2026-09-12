@@ -8,7 +8,10 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapsho
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 直接追击预测位置，目标落地时增加额外高度偏置。
+ * 直接追击目标预测位置。
+ *
+ * <p>目标落地或被方块支撑时把瞄准点抬高 {@code Follow Ground Height}，避免贴地飞行；
+ * 行为只生成期望速度，实际直飞、绕障或 A* 由 {@link FlightIntentPlanner} 决定。</p>
  */
 public final class FollowBehavior implements ElytraCombatBehavior {
 
@@ -29,6 +32,7 @@ public final class FollowBehavior implements ElytraCombatBehavior {
 
         Vec3 targetPoint = target.predictedPosition();
         if (target.onGround() || target.supported()) {
+            // 地面目标保留高度差，防止贴地追击时撞到台阶或地形。
             targetPoint = targetPoint.add(0.0, bot.followGroundHeight.getValue(), 0.0);
         }
 
@@ -42,6 +46,7 @@ public final class FollowBehavior implements ElytraCombatBehavior {
                 bot.controlMode.is(ElytraCombat.ControlMode.DirectVelocity),
                 true
         );
+        // 交给规划器决定直飞、基础 A* 或无路径时的局部避障。
         return planner.plan(bot.player(), raw, target.predictedPosition(), planConfig);
     }
 }

@@ -22,15 +22,18 @@ import java.util.List;
 /**
  * 重锤空袭状态机。
  *
- * <p>状态流转为 NONE -> PULL_UP -> FOLLOW -> WAIT_ATTACK。拉升阶段先检查头顶空间，
- * 攻击阶段只使用当前实体交互 reach，不执行 Slimefun 的 VClip/TP 扩展。</p>
+ * <p>状态流转为 NONE -> PULL_UP -> FOLLOW -> WAIT_ATTACK。</p>
  */
 public final class MaceBehavior implements ElytraCombatBehavior {
 
     private enum State {
+        /** 初始状态：根据当前高度差决定直接跟随还是先拉升。 */
         NONE,
+        /** 持续拉升到目标上方安全高度。 */
         PULL_UP,
+        /** 空中跟随或搜索地面目标的攻击落点。 */
         FOLLOW,
+        /** 攻击后短暂等待，避免同一 tick 连续触发。 */
         WAIT_ATTACK
     }
 
@@ -63,6 +66,7 @@ public final class MaceBehavior implements ElytraCombatBehavior {
 
         switch (this.state) {
             case NONE -> {
+                // 已经处于俯冲高度时无需再拉升，直接进入跟随段。
                 if (bot.player().fallDistance > 4.0
                         && bot.player().getY() > target.entity().getY() + 4.0) {
                     this.state = State.FOLLOW;
@@ -75,12 +79,14 @@ public final class MaceBehavior implements ElytraCombatBehavior {
                 if (this.pullUpStartTick <= 0) {
                     this.pullUpStartTick = tick;
                 }
+                // 头顶被挡时无法继续拉升，立即转入跟随避免持续顶头。
                 if (headBlocked(bot)) {
                     this.state = State.FOLLOW;
                     desired = followDirection(bot, targetPos, target);
                     break;
                 }
 
+                // 高度达到配置值，或拉升超时且已高于目标时，开始接近。
                 boolean mayFollow = bot.player().getY() >= target.entity().getY() + bot.maceHeight.getValue()
                         || (bot.player().getY() > target.entity().getY()
                         && tick - this.pullUpStartTick > bot.macePullUpTicks.getValue() + bot.maceHeight.getValue());
@@ -94,6 +100,7 @@ public final class MaceBehavior implements ElytraCombatBehavior {
                 }
             }
             case FOLLOW -> {
+                // 地面目标需要先找可攻击落点；空中目标直接追预测位置。
                 if (target.supported()) {
                     desired = groundApproach(bot, target);
                 } else if (bot.player().fallDistance < 1.0E-6 && bot.lastFallDistance > 1.0E-6) {
@@ -115,6 +122,7 @@ public final class MaceBehavior implements ElytraCombatBehavior {
                 }
             }
             case WAIT_ATTACK -> {
+                // 等待 2 tick 后重新判断目标是否仍在地面。
                 this.waitAttackTicks++;
                 desired = target.supported()
                         ? groundApproach(bot, target)
@@ -190,6 +198,7 @@ public final class MaceBehavior implements ElytraCombatBehavior {
     }
 
     private boolean canAttack(ElytraCombat bot, LivingEntity target) {
+        // 三个条件同时满足：实体 reach、重锤蓄力阈值、足够下落高度。
         if (!bot.player().isWithinEntityInteractionRange(target, 0.25)) {
             return false;
         }
@@ -235,6 +244,7 @@ public final class MaceBehavior implements ElytraCombatBehavior {
 
         for (BlockPos candidatePos : candidates) {
             Vec3 center = Vec3.atCenterOf(candidatePos);
+            // 候选点必须同时满足攻击距离、视线可达和玩家碰撞箱可站立。
             if (!bot.player().isWithinEntityInteractionRange(target.entity().getBoundingBox(), 0.5)
                     && center.distanceToSqr(targetEye) > bot.maceEngageRange.getValue() * bot.maceEngageRange.getValue()) {
                 continue;

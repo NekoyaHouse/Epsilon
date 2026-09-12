@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 public final class CombatWeaponController {
 
     private static final Minecraft mc = Minecraft.getInstance();
+    /** 26.2 全部长矛材质；识别 kinetic 组件时不依赖具体物品名硬编码延迟。 */
     private static final Set<Item> SPEARS = Set.of(
             Items.WOODEN_SPEAR,
             Items.STONE_SPEAR,
@@ -32,6 +33,7 @@ public final class CombatWeaponController {
             Items.DIAMOND_SPEAR,
             Items.NETHERITE_SPEAR
     );
+    /** 长矛蓄力期间的临时槽位状态，stopSpearUse 必须按相反顺序恢复。 */
     private static int spearSavedHotbarSlot = -1;
     private static boolean spearInventorySwapped;
 
@@ -64,6 +66,7 @@ public final class CombatWeaponController {
                 && target instanceof Player targetPlayer
                 && targetPlayer.isBlocking()
                 && targetPlayer.isUsingItem();
+        // 对方举盾时优先切斧破盾，否则切重锤；Selection 负责 finally 中恢复原槽位。
         Selection selection = selectMainHand(
                 shieldSwap
                         ? stack -> stack.getItem() instanceof net.minecraft.world.item.AxeItem
@@ -73,6 +76,7 @@ public final class CombatWeaponController {
             return false;
         }
         try {
+            // 只调用原生 attack，攻击距离使用本地实体交互 reach。
             mc.gameMode.attack(player, target);
             if (swingHand) {
                 player.swing(InteractionHand.MAIN_HAND);
@@ -100,11 +104,13 @@ public final class CombatWeaponController {
         if (spear.slot() == 40) {
             // 副手长矛无需切换槽位。
         } else if (spear.slot() < 9) {
+            // 热栏长矛直接切换选中槽，记录原槽位以便恢复。
             if (spear.slot() != player.getInventory().getSelectedSlot()) {
                 spearSavedHotbarSlot = player.getInventory().getSelectedSlot();
                 InvUtils.swap(spear.slot(), false);
             }
         } else {
+            // 背包内长矛需要与当前选中槽做 inventory swap。
             InvUtils.invSwap(spear.slot());
             spearInventorySwapped = true;
         }
@@ -127,6 +133,7 @@ public final class CombatWeaponController {
         }
 
         int maxDuration = weapon.computeDamageUseDuration();
+        // delayTicks 是最短蓄力；maxDuration 大于 0 时还要在超时前出手。
         return ticksUsed >= weapon.delayTicks() && (maxDuration <= 0 || ticksUsed < maxDuration);
     }
 
@@ -140,6 +147,7 @@ public final class CombatWeaponController {
     }
 
     public static void stopSpearUse() {
+        // 先松开物品，再按栈顺序恢复 inventory swap / hotbar。
         if (mc.player != null && isUsingSpear(mc.player)) {
             mc.gameMode.releaseUsingItem(mc.player);
         }
@@ -171,6 +179,7 @@ public final class CombatWeaponController {
 
         int hotbar = InvUtils.find(predicate, 0, 8).slot();
         if (hotbar != -1) {
+            // 热栏切换使用 silent swap，恢复动作延迟到 Selection.restore。
             InvUtils.swap(hotbar, true);
             return new Selection(true, true, InvUtils::swapBack);
         }
