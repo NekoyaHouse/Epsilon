@@ -1,6 +1,7 @@
 package com.github.epsilon.managers;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.screen.AssetDownloadScreen;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -17,6 +18,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.LongSupplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -35,13 +37,14 @@ public class AssetManager {
 
     public static final String DEFAULT_RESOURCE_BASE_URL =
             "https://github.com/NekoyaHouse/Epsilon-Resources/releases/download/assets-v1/";
-    public static final String DEFAULT_FFMPEG_URL =
-            "https://maven.aliyun.com/repository/public/org/bytedeco/ffmpeg/6.1.1-1.5.10/ffmpeg-6.1.1-1.5.10-windows-x86_64.jar";
 
     public static final String VIDEO_FILE_NAME = "columbina.mp4";
     public static final String LIGHT_TRAILS_FILE_NAME = "lighttrails.png";
     public static final String REISA_ARCHIVE_NAME = "reisa.zip";
-    public static final String FFMPEG_ARCHIVE_NAME = "ffmpeg-6.1.1-1.5.10-windows-x86_64.jar";
+    /**
+     * 下载时使用的中立临时名；真正的产物名与原生库清单由 {@link FFmpegNativePlatform} 按平台决定。
+     */
+    public static final String FFMPEG_ARCHIVE_NAME = "ffmpeg-natives.jar";
 
     private static final long MIN_VIDEO_BYTES = 1L << 20;
     private static final long MIN_IMAGE_BYTES = 4L << 10;
@@ -54,12 +57,6 @@ public class AssetManager {
             "10", "11", "12", "13", "14", "15", "16", "17", "18", "99"
     );
 
-    private static final List<String> FFMPEG_NATIVE_FILES = List.of(
-            "avcodec-60.dll", "avdevice-60.dll", "avfilter-9.dll", "avformat-60.dll", "avutil-58.dll",
-            "jniavcodec.dll", "jniavdevice.dll", "jniavfilter.dll", "jniavformat.dll", "jniavutil.dll",
-            "jniswresample.dll", "jniswscale.dll", "swresample-4.dll", "swscale-7.dll"
-    );
-
     private static final byte[] PNG_MAGIC = {(byte) 0x89, 'P', 'N', 'G'};
 
     /**
@@ -67,15 +64,15 @@ public class AssetManager {
      */
     public enum Asset {
 
-        VIDEO(VIDEO_FILE_NAME, 20_788_534L),
-        LIGHT_TRAILS(LIGHT_TRAILS_FILE_NAME, 3_681_336L),
-        REISA(REISA_ARCHIVE_NAME, 8_825_221L),
-        FFMPEG(FFMPEG_ARCHIVE_NAME, 24_461_014L);
+        VIDEO(VIDEO_FILE_NAME, () -> 20_788_534L),
+        LIGHT_TRAILS(LIGHT_TRAILS_FILE_NAME, () -> 3_681_336L),
+        REISA(REISA_ARCHIVE_NAME, () -> 8_825_221L),
+        FFMPEG(FFMPEG_ARCHIVE_NAME, () -> FFmpegNativePlatform.currentOrDefault().archiveBytes());
 
         private final String fileName;
-        private final long expectedBytes;
+        private final LongSupplier expectedBytes;
 
-        Asset(String fileName, long expectedBytes) {
+        Asset(String fileName, LongSupplier expectedBytes) {
             this.fileName = fileName;
             this.expectedBytes = expectedBytes;
         }
@@ -88,7 +85,7 @@ public class AssetManager {
          * 预估体积，仅用于下载界面的体积展示与整体进度估算。
          */
         public long expectedBytes() {
-            return expectedBytes;
+            return expectedBytes.getAsLong();
         }
 
         public boolean isVideoDependent() {
@@ -202,10 +199,10 @@ public class AssetManager {
     // ------------------------------------------------------------------
 
     /**
-     * 主菜单视频依赖 Windows x86_64 的 FFmpeg 原生库。
+     * 主菜单视频依赖 Windows x86_64 或 macOS arm64 的 FFmpeg 原生库。
      */
     public boolean isVideoSupported() {
-        return ClientPlatform.isWindowsX64();
+        return FFmpegNativePlatform.current() != null;
     }
 
     public boolean isAssetSupported(Asset asset) {
@@ -259,10 +256,11 @@ public class AssetManager {
     }
 
     public boolean isFfmpegReady() {
-        if (!isVideoSupported()) {
+        FFmpegNativePlatform platform = FFmpegNativePlatform.current();
+        if (platform == null) {
             return false;
         }
-        for (String name : FFMPEG_NATIVE_FILES) {
+        for (String name : platform.nativeFiles()) {
             if (!isFile(ffmpegNativeDir.resolve(name), MIN_NATIVE_BYTES)) {
                 return false;
             }
@@ -327,6 +325,7 @@ public class AssetManager {
             if (mc.gui.screen() instanceof AssetDownloadScreen) {
                 return;
             }
+            normalizeFfmpegDownloadUrl();
             mc.gui.setScreen(new AssetDownloadScreen(mc.gui.screen(), selected, declineOnClose));
         });
     }
@@ -515,8 +514,13 @@ public class AssetManager {
     }
 
     private void installFfmpeg(Path archive) throws IOException {
+        FFmpegNativePlatform platform = FFmpegNativePlatform.current();
+        if (platform == null) {
+            throw new IOException("FFmpeg natives are unsupported on " + ClientPlatform.displayName());
+        }
         Files.createDirectories(ffmpegNativeDir);
-        Set<String> required = Set.copyOf(FFMPEG_NATIVE_FILES);
+        List<String> nativeFiles = platform.nativeFiles();
+        Set<String> required = Set.copyOf(nativeFiles);
         Map<String, ZipEntry> entries = new LinkedHashMap<>();
         try (ZipFile zip = new ZipFile(archive.toFile())) {
             var iterator = zip.entries().asIterator();
@@ -530,7 +534,7 @@ public class AssetManager {
                     entries.put(name, entry);
                 }
             }
-            for (String name : FFMPEG_NATIVE_FILES) {
+            for (String name : nativeFiles) {
                 ZipEntry entry = entries.get(name);
                 if (entry == null) {
                     throw new IOException("ffmpeg archive is missing " + name);
@@ -679,10 +683,39 @@ public class AssetManager {
 
     private String urlFor(Asset asset) {
         if (asset == Asset.FFMPEG) {
-            String url = ClientSettingUrl.ffmpegUrl();
-            return url.isBlank() ? DEFAULT_FFMPEG_URL : url;
+            return ffmpegUrl();
         }
         return ClientSettingUrl.resourceBaseUrl() + asset.fileName();
+    }
+
+    /**
+     * 解析 FFmpeg 原生库下载地址。
+     * <p>
+     * 只有指向当前平台产物的 http(s) 地址才会覆盖默认值；空值、被截断的值以及旧版本或其它平台残留的
+     * 地址都会回退到当前平台的默认地址，避免下到与平台不匹配的原生库。
+     */
+    private static String ffmpegUrl() {
+        String url = ClientSettingUrl.ffmpegUrl();
+        return FFmpegNativePlatform.isUrlForCurrentPlatform(url)
+                ? url
+                : FFmpegNativePlatform.currentOrDefault().defaultUrl();
+    }
+
+    /**
+     * 把设置里不可用的 FFmpeg 下载地址修正为当前平台的默认地址。
+     * <p>
+     * 旧版本的输入框会把长地址截断后写回配置，切换平台也会残留另一平台的地址；这些值本来就会被
+     * {@link #ffmpegUrl()} 忽略，这里同步回设置项，避免界面显示与实际下载行为不一致。必须在客户端线程调用。
+     */
+    private void normalizeFfmpegDownloadUrl() {
+        String configured = ClientSettingUrl.ffmpegUrl();
+        String resolved = ffmpegUrl();
+        if (Objects.equals(configured, resolved)) {
+            return;
+        }
+        ClientSetting.INSTANCE.ffmpegDownloadUrl.setValue(resolved);
+        ConfigManager.INSTANCE.saveNow();
+        Constants.LOGGER.info("[AssetManager] FFmpeg download URL reset to {}", resolved);
     }
 
     private Path reisaFile(String suffix) {

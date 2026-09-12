@@ -12,7 +12,7 @@
 ├── video/columbina.mp4          # 主菜单 Columbina 背景视频
 ├── video/lighttrails.png        # 视频上叠加的流光效果
 ├── reisa/reisa_XX.png           # 玲纱立绘（00-18、99 共 20 张）
-├── ffmpeg/natives/*.dll         # JavaCPP 需要的 FFmpeg 原生库
+├── ffmpeg/natives/*             # JavaCPP 需要的 FFmpeg 原生库（Windows 为 *.dll，macOS 为 *.dylib）
 └── .tmp/*.part                  # 下载中的临时文件
 ```
 
@@ -25,7 +25,13 @@
 | 设置 | 默认值 | 说明 |
 |---|---|---|
 | `Resource Base URL` | `https://github.com/NekoyaHouse/Epsilon-Resources/releases/download/assets-v1/` | 资源基础地址，客户端按 `${base}columbina.mp4`、`${base}lighttrails.png`、`${base}reisa.zip` 拼接；资源托管在 [Epsilon-Resources](https://github.com/NekoyaHouse/Epsilon-Resources) |
-| `FFmpeg Download URL` | 阿里云 Maven 镜像的 `ffmpeg-6.1.1-1.5.10-windows-x86_64.jar` | JavaCPP 原生库压缩包，解压出 DLL 后删除原始 jar |
+| `FFmpeg Download URL` | 阿里云 Maven 镜像的 `ffmpeg-6.1.1-1.5.10-<platform>.jar` | JavaCPP 原生库压缩包，解压出原生库后删除原始 jar；默认值取自当前平台（`windows-x86_64` 或 `macosx-arm64`） |
+
+只有指向当前平台产物的 `http(s)` 地址才会作为自定义值使用（JavaCPP 产物名里带平台 classifier，
+因此本平台地址必然包含 `windows-x86_64` 或 `macosx-arm64`）。空值、被截断的值，以及旧版本或另一平台
+残留的地址都会回退到当前平台的默认地址：前者来自旧版本输入框的长度限制，后者会在切换平台后出现，
+直接沿用就会下到架构不匹配的产物。打开资源下载界面时 `AssetManager` 会把这类无效值改写成实际使用的
+平台默认地址并保存，避免设置界面与实际下载行为不一致。
 
 设置位于 `Client Setting` 的 `Resources` 分组，另提供「下载资源」「清除资源缓存」「打开资源目录」
 三个按钮。清除缓存会删除 `~/.epsilon/assets` 并注销已注册的玲纱纹理。
@@ -38,9 +44,10 @@
 校验规则：
 
 - 视频：文件头 64 字节内必须出现 `ftyp` box。
-- 背景光效：PNG 魔数校验；仅支持 Windows x86_64，与视频同属一组下载项，缺失时只跳过该叠层。
+- 背景光效：PNG 魔数校验；与视频同属一组下载项，平台不受支持时整组跳过，缺失时只跳过该叠层。
 - 玲纱：zip 内必须包含 `reisa_00` … `reisa_18`、`reisa_99` 共 20 张 PNG，且每张通过 PNG 魔数校验。
-- FFmpeg：jar 内必须包含 JavaCPP 需要的 `av*`/`jni*`/`sw*` DLL 集合。
+- FFmpeg：jar 内必须包含当前平台 `FFmpegNativePlatform` 列出的全部原生库——Windows 为
+  `av*`/`jni*`/`sw*` DLL，macOS 为同名的 `lib*.dylib`，缺一即判定失败并重新下载。
 
 ## FFmpeg 加载顺序
 
@@ -51,8 +58,9 @@ classpath 资源之后回退搜索该目录，因此**必须在任何 `org.byted
 
 ## 平台限定提示
 
-视频背景与 SMTC 音乐岛仅支持 Windows x86_64。设置模型通过 `Setting.platformOnly(...)` 和
-`EnumSetting.restrictMode(...)` 声明平台要求：
+视频背景（Columbina 主菜单、背景光效与 FFmpeg 原生库）支持 Windows x86_64 与 macOS arm64，
+对应 `PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64`；SMTC 音乐岛仍仅支持 Windows x86_64。
+设置模型通过 `Setting.platformOnly(...)` 和 `EnumSetting.restrictMode(...)` 声明平台要求：
 
 - Panel 的 `BoolSettingRow` / `EnumSettingRow` / `EnumSelectPopup`，以及 Dropdown 的
   `BoolWidget` / `EnumWidget` 会为不满足要求的设置渲染 `Unsupported` 徽标（`zh_cn` 为「不支持」）

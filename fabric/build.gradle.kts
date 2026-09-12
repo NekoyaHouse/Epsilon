@@ -14,10 +14,13 @@ dependencies {
     implementation(include("org.bytedeco:javacpp:1.5.10")!!)
     implementation(include("org.bytedeco:javacv:1.5.10")!!)
     implementation(include("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)
+    // JavaCPP 的 JNI 桥按平台随 jar 分发：视频能力需要 jnijavacpp 才能加载下载得到的 FFmpeg 原生库。
     runtimeOnly(include("org.bytedeco:javacpp:1.5.10:windows-x86_64")!!)
+    runtimeOnly(include("org.bytedeco:javacpp:1.5.10:macosx-arm64")!!)
     // FFmpeg 原生库不再随 jar 分发，改为首次使用时下载到 ~/.epsilon/assets/ffmpeg/natives。
     // 开发环境仍保留在运行时类路径，便于本地调试。
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
+    runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:macosx-arm64")
 }
 
 loom {
