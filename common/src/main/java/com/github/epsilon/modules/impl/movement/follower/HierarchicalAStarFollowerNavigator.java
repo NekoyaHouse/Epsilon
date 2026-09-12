@@ -19,7 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 使用滚动分层体素缓存和后台 A* 的 Follower 导航器。
+ * 使用滚动体素缓存和后台 A* 的 Follower 导航器。
+ *
+ * <p>支持普通 1 格步长和 5/2/1 层级步长两种搜索配置。</p>
  */
 public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
 
@@ -32,13 +34,17 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
     private static final int REFRESH_INTERVAL_TICKS = 20;
     private static final int LOCAL_SAMPLE_RADIUS = 7;
     private static final long SEARCH_INTERVAL_NANOS = 50_000_000L;
-    private static final long RESULT_MAX_AGE_NANOS = 250_000_000L;
-    private static final double RESULT_MAX_POSITION_SQR = 4.0;
+    private static final long RESULT_MAX_AGE_NANOS = 150_000_000L;
+    private static final double RESULT_MAX_START_DISTANCE_SQR = 25.0;
+    private static final double RESULT_MAX_TARGET_DISTANCE_SQR = 64.0;
     private static final double AVOIDANCE_CLEARANCE_WIDTH = 1.2;
     private static final double AVOIDANCE_CLEARANCE_HEIGHT = 0.8;
     private static final List<Vec3> AVOIDANCE_DIRECTIONS = createAvoidanceDirections();
+    private static final int[] HIERARCHICAL_STEPS = {5, 2, 1};
+    private static final int[] FINE_STEPS = {1};
 
-    private final AStarFollowerNavigator fallback;
+    private final int[] stepSizes;
+    private final String workerThreadName;
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
     private final ConcurrentLinkedQueue<SampleBatch> sampleBatches = new ConcurrentLinkedQueue<>();
     private final AtomicInteger queuedSampleBatches = new AtomicInteger();
@@ -53,8 +59,11 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
     private volatile HierarchicalVoxelGrid workerGrid;
     private volatile long workerEpoch = Long.MIN_VALUE;
 
-    public HierarchicalAStarFollowerNavigator(AStarFollowerNavigator fallback) {
-        this.fallback = fallback;
+    public HierarchicalAStarFollowerNavigator(boolean hierarchicalSteps) {
+        this.stepSizes = hierarchicalSteps ? HIERARCHICAL_STEPS : FINE_STEPS;
+        this.workerThreadName = hierarchicalSteps
+                ? "Epsilon-Follower-HierarchicalAStar"
+                : "Epsilon-Follower-AStar";
     }
 
     static int normalizeDataSize(int size) {
@@ -81,7 +90,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             return result.path();
         }
 
-        return this.fallback.getPath(player, target, targetPos, config);
+        return new FollowerPath(player.position(), List.of(player.position()));
     }
 
     public void setDataSize(int size) {
@@ -120,7 +129,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
 
         this.running = true;
         long generation = ++this.workerGeneration;
-        Thread thread = new Thread(() -> workerLoop(generation), "Epsilon-Follower-HierarchicalAStar");
+        Thread thread = new Thread(() -> workerLoop(generation), this.workerThreadName);
         thread.setDaemon(true);
         this.workerThread = thread;
         thread.start();
@@ -170,8 +179,8 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             return false;
         }
 
-        return result.startPos().distanceToSqr(playerPos) <= RESULT_MAX_POSITION_SQR
-                && result.targetPos().distanceToSqr(targetPos) <= RESULT_MAX_POSITION_SQR;
+        return result.startPos().distanceToSqr(playerPos) <= RESULT_MAX_START_DISTANCE_SQR
+                && result.targetPos().distanceToSqr(targetPos) <= RESULT_MAX_TARGET_DISTANCE_SQR;
     }
 
     private void workerLoop(long generation) {
@@ -327,7 +336,8 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                 request.searchRadius(),
                 request.maxNodes(),
                 request.stopDistance(),
-                noExtraBlocked
+                noExtraBlocked,
+                this.stepSizes
         );
         FollowerPath searched = createPath(
                 request.playerPos(),
@@ -374,7 +384,8 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     request.searchRadius(),
                     request.maxNodes(),
                     request.stopDistance(),
-                    extraBlocked
+                    extraBlocked,
+                    this.stepSizes
             );
             FollowerPath retryPath = createPath(
                     request.playerPos(),

@@ -18,7 +18,6 @@ import java.util.Set;
  */
 final class HierarchicalAStarSearch {
 
-    private static final int[] STEP_SIZES = {5, 2, 1};
     private static final List<StepDirection> DIRECTIONS = createDirections();
     private static final double WALL_CLEARANCE_WIDTH = 1.2;
     private static final double WALL_CLEARANCE_HEIGHT = 0.8;
@@ -34,6 +33,7 @@ final class HierarchicalAStarSearch {
     private final double stopDistance;
     private final Set<Long> extraBlocked;
     private final FlightTrajectoryValidator.PlayerCollisionProfile paddedProfile;
+    private final int[] stepSizes;
 
     HierarchicalAStarSearch(
             HierarchicalVoxelGrid grid,
@@ -43,7 +43,8 @@ final class HierarchicalAStarSearch {
             int searchRadius,
             int maxNodes,
             double stopDistance,
-            Set<Long> extraBlocked
+            Set<Long> extraBlocked,
+            int[] stepSizes
     ) {
         this.grid = grid;
         this.profile = profile;
@@ -54,6 +55,7 @@ final class HierarchicalAStarSearch {
         this.maxNodes = maxNodes;
         this.stopDistance = stopDistance;
         this.extraBlocked = extraBlocked;
+        this.stepSizes = stepSizes.clone();
         this.paddedProfile = new FlightTrajectoryValidator.PlayerCollisionProfile(
                 profile.width() + WALL_CLEARANCE_WIDTH,
                 profile.height() + WALL_CLEARANCE_HEIGHT
@@ -87,7 +89,7 @@ final class HierarchicalAStarSearch {
             }
 
             for (StepDirection direction : DIRECTIONS) {
-                for (int stepSize : STEP_SIZES) {
+                for (int stepSize : this.stepSizes) {
                     BlockPos next = direction.offset(currentPos, stepSize);
                     if (next.equals(currentPos)) {
                         continue;

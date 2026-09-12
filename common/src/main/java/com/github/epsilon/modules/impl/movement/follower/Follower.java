@@ -36,10 +36,10 @@ public class Follower extends Module {
 
     private final AStarFollowerNavigator aStarNavigator = new AStarFollowerNavigator();
     private final HierarchicalAStarFollowerNavigator hierarchicalAStarNavigator =
-            new HierarchicalAStarFollowerNavigator(this.aStarNavigator);
+            new HierarchicalAStarFollowerNavigator(true);
     private final Map<Mode, FollowerNavigator> navigators = new EnumMap<>(Mode.class);
 
-    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.HierarchicalAStar, this::onModeChanged);
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.AStar, this::onModeChanged);
     private final DoubleSetting range = doubleSetting("Range", 96.0, 8.0, 256.0, 1.0);
     private final DoubleSetting stopDistance = doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5);
     private final BoolSetting ignoreInvisible = boolSetting("Ignore Invisible", true);
@@ -53,8 +53,8 @@ public class Follower extends Module {
             25,
             100,
             5,
-            () -> mode.is(Mode.HierarchicalAStar),
-            this.hierarchicalAStarNavigator::setDataSize
+            this::usesPathfinding,
+            this::applyDataSize
     ).applyWhenRelease();
     private final BoolSetting renderPath = boolSetting("Render Path", true);
     private final ColorSetting pathColor = colorSetting("Path Color", new Color(80, 220, 255, 210), () -> renderPath.getValue());
@@ -73,6 +73,7 @@ public class Follower extends Module {
 
     @Override
     protected void onDisable() {
+        this.aStarNavigator.stop();
         this.hierarchicalAStarNavigator.stop();
         clearControl();
     }
@@ -92,6 +93,7 @@ public class Follower extends Module {
     @EventHandler(priority = EventPriority.HIGH)
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !canControlElytraFly()) {
+            this.aStarNavigator.stop();
             this.hierarchicalAStarNavigator.stop();
             clearControl();
             return;
@@ -120,8 +122,8 @@ public class Follower extends Module {
         }
 
         Vec3 targetPos = predictedTargetPos(target);
-        if (mode.is(Mode.HierarchicalAStar)) {
-            this.hierarchicalAStarNavigator.setDataSize(dataSize.getValue());
+        if (usesPathfinding()) {
+            applyDataSize(dataSize.getValue());
         }
         FollowerConfig config = new FollowerConfig(
                 stopDistance.getValue(),
@@ -163,9 +165,17 @@ public class Follower extends Module {
     }
 
     private void onModeChanged(Mode newMode) {
+        if (newMode != Mode.AStar) {
+            this.aStarNavigator.stop();
+        }
         if (newMode != Mode.HierarchicalAStar) {
             this.hierarchicalAStarNavigator.stop();
         }
+    }
+
+    private void applyDataSize(int size) {
+        this.aStarNavigator.setDataSize(size);
+        this.hierarchicalAStarNavigator.setDataSize(size);
     }
 
     private Vec3 predictedTargetPos(LivingEntity target) {
