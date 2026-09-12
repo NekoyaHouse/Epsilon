@@ -72,3 +72,19 @@ required by that license.
 
 The original code has been modified and adapted for Epsilon's module,
 setting, rotation, and event systems.
+
+## SlimefunHelper
+
+- Repository: [m1919810/SlimefunHelper](https://github.com/m1919810/SlimefunHelper)
+- Reference revision: `1.21.11`
+- License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+- Used in Epsilon: ElytraCombat target prediction, behavior state machines,
+  elytra direction solving, local flight evasion, and kinetic weapon handling.
+
+SlimefunHelper is distributed under CC0-1.0. Portions of its ElytraBot
+behavior and related flight-control ideas were studied and adapted for
+Epsilon's architecture, mappings, event bus, settings, and module lifecycle.
+CC0-1.0 does not require attribution; this notice is included voluntarily.
+
+License reference:
+https://creativecommons.org/publicdomain/zero/1.0/

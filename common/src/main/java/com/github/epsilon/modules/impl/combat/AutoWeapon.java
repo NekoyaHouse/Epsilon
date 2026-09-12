@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -93,6 +94,9 @@ public class AutoWeapon extends Module {
 
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
+        if (ElytraCombat.INSTANCE.isControllingCombat()) {
+            return;
+        }
         if (pauseOnEat.getValue() && PlayerUtils.isEating()) return;
         if (!canSwapByWeapon()) return;
         performSwap(event.getEntity());

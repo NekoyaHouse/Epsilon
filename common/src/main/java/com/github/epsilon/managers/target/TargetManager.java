@@ -113,7 +113,10 @@ public class TargetManager {
     private boolean isValidTarget(LivingEntity entity, TargetRequest request) {
         if (!entity.isAlive() || entity.isDeadOrDying()) return false;
         if (AntiBot.INSTANCE.isBot(entity)) return false;
-        if (isSameTeam(entity)) return false;
+        if (isSameTeam(entity)
+                && !(request.allowFriends() && entity instanceof Player player && FriendManager.INSTANCE.isFriend(player))) {
+            return false;
+        }
 
         double dist = RotationUtils.getEyeDistanceToEntity(entity);
         if (dist > request.range()) return false;
@@ -121,7 +124,7 @@ public class TargetManager {
         if (request.fov() < 360.0f && !RotationUtils.isInFov(entity, request.fov())) return false;
 
         if (entity instanceof Player player) {
-            if (FriendManager.INSTANCE.isFriend(player)) return false;
+            if (!request.allowFriends() && FriendManager.INSTANCE.isFriend(player)) return false;
             if (!request.player()) return false;
             if (entity.isInvisible() && !request.invisible()) return false;
         } else if (entity instanceof Villager) {

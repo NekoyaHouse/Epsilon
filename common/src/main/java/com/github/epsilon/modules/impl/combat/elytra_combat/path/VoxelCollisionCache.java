@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.movement.follower;
+package com.github.epsilon.modules.impl.combat.elytra_combat.path;
 
 import net.minecraft.core.BlockPos;
 
@@ -8,14 +8,14 @@ import net.minecraft.core.BlockPos;
  * <p>细体素使用世界坐标取模寻址；槽位同时保存坐标标签，因此滚动窗口复用槽位时，
  * 旧坐标不会被当成新坐标读取。</p>
  */
-final class HierarchicalVoxelGrid {
+public final class VoxelCollisionCache {
 
-    static final byte UNKNOWN = 0;
-    static final byte FREE = 1;
-    static final byte BLOCKED = 2;
+    public static final byte UNKNOWN = 0;
+    public static final byte FREE = 1;
+    public static final byte BLOCKED = 2;
 
-    static final long NO_BLOCK = Long.MIN_VALUE;
-    static final long OUTSIDE_WINDOW = Long.MAX_VALUE;
+    public static final long NO_BLOCK = Long.MIN_VALUE;
+    public static final long OUTSIDE_WINDOW = Long.MAX_VALUE;
 
     private static final int COARSE_SIZE = 5;
     private static final int COARSE_VOLUME = COARSE_SIZE * COARSE_SIZE * COARSE_SIZE;
@@ -41,7 +41,7 @@ final class HierarchicalVoxelGrid {
     private int originZ;
     private long windowSequence = Long.MIN_VALUE;
 
-    HierarchicalVoxelGrid(int size) {
+    public VoxelCollisionCache(int size) {
         if (size < COARSE_SIZE || size % COARSE_SIZE != 0) {
             throw new IllegalArgumentException("Voxel grid size must be a positive multiple of 5");
         }
@@ -66,11 +66,11 @@ final class HierarchicalVoxelGrid {
         this.mediumPositions = new long[mediumVolume];
     }
 
-    int size() {
+    public int size() {
         return this.size;
     }
 
-    void setWindowOrigin(BlockPos origin, long sequence) {
+    public void setWindowOrigin(BlockPos origin, long sequence) {
         if (sequence < this.windowSequence) {
             return;
         }
@@ -81,17 +81,17 @@ final class HierarchicalVoxelGrid {
         this.windowSequence = sequence;
     }
 
-    boolean isInWindow(BlockPos pos) {
+    public boolean isInWindow(BlockPos pos) {
         return isInWindow(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    boolean isInWindow(int x, int y, int z) {
+    public boolean isInWindow(int x, int y, int z) {
         return x >= this.originX && x < this.originX + this.size
                 && y >= this.originY && y < this.originY + this.size
                 && z >= this.originZ && z < this.originZ + this.size;
     }
 
-    BlockPos clampToWindow(BlockPos pos) {
+    public BlockPos clampToWindow(BlockPos pos) {
         int x = Math.clamp(pos.getX(), this.originX, this.originX + this.size - 1);
         int y = Math.clamp(pos.getY(), this.originY, this.originY + this.size - 1);
         int z = Math.clamp(pos.getZ(), this.originZ, this.originZ + this.size - 1);
@@ -100,7 +100,7 @@ final class HierarchicalVoxelGrid {
                 : new BlockPos(x, y, z);
     }
 
-    void applySample(long packedPos, byte state, long sequence) {
+    public void applySample(long packedPos, byte state, long sequence) {
         int x = BlockPos.getX(packedPos);
         int y = BlockPos.getY(packedPos);
         int z = BlockPos.getZ(packedPos);
@@ -136,7 +136,7 @@ final class HierarchicalVoxelGrid {
     /**
      * 返回查询体积内第一个非 FREE 体素；全部可通过时返回 {@link #NO_BLOCK}。
      */
-    long findBlockedInVolume(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+    public long findBlockedInVolume(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         if (minX > maxX || minY > maxY || minZ > maxZ) {
             return NO_BLOCK;
         }

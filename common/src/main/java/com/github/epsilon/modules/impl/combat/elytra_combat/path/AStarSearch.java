@@ -1,5 +1,6 @@
-package com.github.epsilon.modules.impl.movement.follower;
+package com.github.epsilon.modules.impl.combat.elytra_combat.path;
 
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
@@ -14,17 +15,18 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 /**
- * 在 1x1x1 节点图上优先尝试 5、2 格移动的 A*。
+ * 单层 1x1x1 节点 A*。层级搜索已移除，粗粒度缓存仅用于加速碰撞查询。
  */
-final class HierarchicalAStarSearch {
+final class AStarSearch {
 
+    private static final int STEP_SIZE = 1;
     private static final List<StepDirection> DIRECTIONS = createDirections();
     private static final double WALL_CLEARANCE_WIDTH = 1.2;
     private static final double WALL_CLEARANCE_HEIGHT = 0.8;
     private static final double WALL_CLEARANCE_PENALTY = 8.0;
 
-    private final HierarchicalVoxelGrid grid;
-    private final FlightTrajectoryValidator.PlayerCollisionProfile profile;
+    private final VoxelCollisionCache grid;
+    private final ElytraMotionPredictor.PlayerCollisionProfile profile;
     private final BlockPos start;
     private final BlockPos goal;
     private final Vec3 goalPoint;
@@ -32,19 +34,17 @@ final class HierarchicalAStarSearch {
     private final int maxNodes;
     private final double stopDistance;
     private final Set<Long> extraBlocked;
-    private final FlightTrajectoryValidator.PlayerCollisionProfile paddedProfile;
-    private final int[] stepSizes;
+    private final ElytraMotionPredictor.PlayerCollisionProfile paddedProfile;
 
-    HierarchicalAStarSearch(
-            HierarchicalVoxelGrid grid,
-            FlightTrajectoryValidator.PlayerCollisionProfile profile,
+    AStarSearch(
+            VoxelCollisionCache grid,
+            ElytraMotionPredictor.PlayerCollisionProfile profile,
             BlockPos start,
             BlockPos goal,
             int searchRadius,
             int maxNodes,
             double stopDistance,
-            Set<Long> extraBlocked,
-            int[] stepSizes
+            Set<Long> extraBlocked
     ) {
         this.grid = grid;
         this.profile = profile;
@@ -55,8 +55,7 @@ final class HierarchicalAStarSearch {
         this.maxNodes = maxNodes;
         this.stopDistance = stopDistance;
         this.extraBlocked = extraBlocked;
-        this.stepSizes = stepSizes.clone();
-        this.paddedProfile = new FlightTrajectoryValidator.PlayerCollisionProfile(
+        this.paddedProfile = new ElytraMotionPredictor.PlayerCollisionProfile(
                 profile.width() + WALL_CLEARANCE_WIDTH,
                 profile.height() + WALL_CLEARANCE_HEIGHT
         );
@@ -89,53 +88,51 @@ final class HierarchicalAStarSearch {
             }
 
             for (StepDirection direction : DIRECTIONS) {
-                for (int stepSize : this.stepSizes) {
-                    BlockPos next = direction.offset(currentPos, stepSize);
-                    if (next.equals(currentPos)) {
-                        continue;
-                    }
-
-                    long nextKey = next.asLong();
-                    if (closed.contains(nextKey)
-                            || this.start.distSqr(next) > (long) this.searchRadius * this.searchRadius
-                            || !this.grid.isInWindow(next)) {
-                        continue;
-                    }
-
-                    Vec3 currentPoint = Vec3.atBottomCenterOf(currentPos);
-                    Vec3 nextPoint = Vec3.atBottomCenterOf(next);
-                    if (!FlightTrajectoryValidator.isSweepClear(
-                            this.grid,
-                            this.profile,
-                            currentPoint,
-                            nextPoint,
-                            this.extraBlocked
-                    )) {
-                        continue;
-                    }
-
-                    double edgeCost = direction.cost(stepSize);
-                    if (!FlightTrajectoryValidator.isSweepClear(
-                            this.grid,
-                            this.paddedProfile,
-                            currentPoint,
-                            nextPoint,
-                            this.extraBlocked
-                    )) {
-                        edgeCost += WALL_CLEARANCE_PENALTY;
-                    }
-
-                    double tentativeG = current.gScore() + edgeCost;
-                    double previousG = gScores.getOrDefault(nextKey, Double.MAX_VALUE);
-                    if (tentativeG >= previousG) {
-                        continue;
-                    }
-
-                    cameFrom.put(nextKey, current.position());
-                    gScores.put(nextKey, tentativeG);
-                    open.add(new Node(nextKey, tentativeG, heuristic(next), stepSize));
-                    break;
+                int stepSize = STEP_SIZE;
+                BlockPos next = direction.offset(currentPos, stepSize);
+                if (next.equals(currentPos)) {
+                    continue;
                 }
+
+                long nextKey = next.asLong();
+                if (closed.contains(nextKey)
+                        || this.start.distSqr(next) > (long) this.searchRadius * this.searchRadius
+                        || !this.grid.isInWindow(next)) {
+                    continue;
+                }
+
+                Vec3 currentPoint = Vec3.atBottomCenterOf(currentPos);
+                Vec3 nextPoint = Vec3.atBottomCenterOf(next);
+                if (!ElytraMotionPredictor.isSweepClear(
+                        this.grid,
+                        this.profile,
+                        currentPoint,
+                        nextPoint,
+                        this.extraBlocked
+                )) {
+                    continue;
+                }
+
+                double edgeCost = direction.cost(stepSize);
+                if (!ElytraMotionPredictor.isSweepClear(
+                        this.grid,
+                        this.paddedProfile,
+                        currentPoint,
+                        nextPoint,
+                        this.extraBlocked
+                )) {
+                    edgeCost += WALL_CLEARANCE_PENALTY;
+                }
+
+                double tentativeG = current.gScore() + edgeCost;
+                double previousG = gScores.getOrDefault(nextKey, Double.MAX_VALUE);
+                if (tentativeG >= previousG) {
+                    continue;
+                }
+
+                cameFrom.put(nextKey, current.position());
+                gScores.put(nextKey, tentativeG);
+                open.add(new Node(nextKey, tentativeG, heuristic(next), stepSize));
             }
         }
 
@@ -147,7 +144,7 @@ final class HierarchicalAStarSearch {
             return false;
         }
 
-        return FlightTrajectoryValidator.isSweepClear(
+        return ElytraMotionPredictor.isSweepClear(
                 this.grid,
                 this.profile,
                 Vec3.atBottomCenterOf(current),

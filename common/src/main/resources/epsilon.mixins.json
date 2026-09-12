@@ -21,6 +21,7 @@
     "MixinChunkBorderRenderer",
     "MixinClientBrandRetriever",
     "MixinClientClockManager",
+    "MixinClientboundEntityEventPacket",
     "MixinClientLevel",
     "MixinClientPacketListener",
     "MixinCompassAngleState",

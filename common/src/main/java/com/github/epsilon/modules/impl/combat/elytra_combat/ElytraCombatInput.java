@@ -1,6 +1,11 @@
-package com.github.epsilon.modules.impl.movement.follower;
+package com.github.epsilon.modules.impl.combat.elytra_combat;
 
-public record FollowerInput(
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * ControlElytraFlightMode 消费的统一控制输入。
+ */
+public record ElytraCombatInput(
         boolean forward,
         boolean back,
         boolean left,
@@ -8,7 +13,8 @@ public record FollowerInput(
         boolean jump,
         boolean sneak,
         float yaw,
-        float pitch
+        float pitch,
+        Vec3 directVelocity
 ) {
 
     public float forwardImpulse() {
@@ -25,4 +31,7 @@ public record FollowerInput(
         return forward || back || left || right || jump || sneak;
     }
 
+    public boolean hasDirectVelocity() {
+        return directVelocity != null;
+    }
 }

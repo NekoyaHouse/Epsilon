@@ -1,10 +1,10 @@
-package com.github.epsilon.modules.impl.movement.follower;
+package com.github.epsilon.modules.impl.combat.elytra_combat.path;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -19,11 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 使用滚动体素缓存和后台 A* 的 Follower 导航器。
+ * ElytraCombat 的后台单层 A* 路径服务。
  *
- * <p>支持普通 1 格步长和 5/2/1 层级步长两种搜索配置。</p>
+ * <p>客户端线程只负责有界采样，碰撞层级、搜索、路径压缩和飞行校验均在专用工作线程执行。</p>
  */
-public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
+public final class ElytraPathNavigator {
 
     private static final int DEFAULT_DATA_SIZE = 50;
     private static final int MIN_DATA_SIZE = 25;
@@ -40,10 +40,6 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
     private static final double AVOIDANCE_CLEARANCE_WIDTH = 1.2;
     private static final double AVOIDANCE_CLEARANCE_HEIGHT = 0.8;
     private static final List<Vec3> AVOIDANCE_DIRECTIONS = createAvoidanceDirections();
-    private static final int[] HIERARCHICAL_STEPS = {5, 2, 1};
-    private static final int[] FINE_STEPS = {1};
-
-    private final int[] stepSizes;
     private final String workerThreadName;
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
     private final ConcurrentLinkedQueue<SampleBatch> sampleBatches = new ConcurrentLinkedQueue<>();
@@ -56,14 +52,11 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
     private volatile boolean running;
     private volatile long workerGeneration;
     private volatile Thread workerThread;
-    private volatile HierarchicalVoxelGrid workerGrid;
+    private volatile VoxelCollisionCache workerGrid;
     private volatile long workerEpoch = Long.MIN_VALUE;
 
-    public HierarchicalAStarFollowerNavigator(boolean hierarchicalSteps) {
-        this.stepSizes = hierarchicalSteps ? HIERARCHICAL_STEPS : FINE_STEPS;
-        this.workerThreadName = hierarchicalSteps
-                ? "Epsilon-Follower-HierarchicalAStar"
-                : "Epsilon-Follower-AStar";
+    public ElytraPathNavigator() {
+        this.workerThreadName = "Epsilon-ElytraCombat-AStar";
     }
 
     static int normalizeDataSize(int size) {
@@ -71,8 +64,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         return Math.round((float) clamped / DATA_SIZE_ALIGNMENT) * DATA_SIZE_ALIGNMENT;
     }
 
-    @Override
-    public FollowerPath getPath(LocalPlayer player, LivingEntity target, Vec3 targetPos, FollowerConfig config) {
+    public PathPlan getPath(LocalPlayer player, Vec3 targetPos, PathConfig config) {
         startWorker();
 
         int dataSize = normalizeDataSize(this.requestedDataSize.get());
@@ -90,7 +82,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             return result.path();
         }
 
-        return new FollowerPath(player.position(), List.of(player.position()));
+        return new PathPlan(player.position(), List.of(player.position()));
     }
 
     public void setDataSize(int size) {
@@ -138,7 +130,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
     private void submitSearch(
             LocalPlayer player,
             Vec3 targetPos,
-            FollowerConfig config,
+            PathConfig config,
             Sampler.WindowSnapshot window
     ) {
         int effectiveRadius = Math.max(6, Math.min(config.searchRadius(), window.size() / 2 - 1));
@@ -225,7 +217,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             } catch (InterruptedException interrupted) {
                 return;
             } catch (Throwable throwable) {
-                Constants.LOGGER.warn("Error in HierarchicalAStar worker loop", throwable);
+                Constants.LOGGER.warn("Error in ElytraCombat path worker loop", throwable);
                 try {
                     waitForWork(100L);
                 } catch (InterruptedException interrupted) {
@@ -258,7 +250,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             if (this.workerGrid == null
                     || batch.epoch() > this.workerEpoch
                     || batch.size() != this.workerGrid.size()) {
-                this.workerGrid = new HierarchicalVoxelGrid(batch.size());
+                this.workerGrid = new VoxelCollisionCache(batch.size());
                 this.workerEpoch = batch.epoch();
                 this.latestResult.set(null);
             }
@@ -272,18 +264,18 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         }
     }
 
-    private SearchResult evaluate(SearchRequest request, HierarchicalVoxelGrid grid) {
+    private SearchResult evaluate(SearchRequest request, VoxelCollisionCache grid) {
         BlockPos start = BlockPos.containing(request.playerPos());
         if (!grid.isInWindow(start)) {
             return null;
         }
 
-        FlightTrajectoryValidator.PlayerCollisionProfile profile =
-                new FlightTrajectoryValidator.PlayerCollisionProfile(request.playerWidth(), request.playerHeight());
+        ElytraMotionPredictor.PlayerCollisionProfile profile =
+                new ElytraMotionPredictor.PlayerCollisionProfile(request.playerWidth(), request.playerHeight());
         Set<Long> noExtraBlocked = Set.of();
 
         if (request.playerPos().distanceTo(request.targetPos()) <= request.stopDistance()) {
-            FollowerPath stopped = new FollowerPath(request.playerPos(), List.of(request.playerPos()));
+            PathPlan stopped = new PathPlan(request.playerPos(), List.of(request.playerPos()));
             return new SearchResult(
                     request.epoch(),
                     request.sequence(),
@@ -301,20 +293,20 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         }
 
         Attempt attempt = null;
-        if (FlightTrajectoryValidator.isSweepClear(
+        if (ElytraMotionPredictor.isSweepClear(
                 grid,
                 profile,
                 request.playerPos(),
                 limitedTarget,
                 noExtraBlocked
         )) {
-            FollowerPath directPath = new FollowerPath(
+            PathPlan directPath = new PathPlan(
                     limitedTarget,
                     List.of(request.playerPos(), limitedTarget)
             );
             attempt = new Attempt(
                     directPath,
-                    FlightTrajectoryValidator.validatePath(
+                    ElytraMotionPredictor.validatePath(
                             grid,
                             profile,
                             request.playerPos(),
@@ -328,7 +320,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             }
         }
 
-        HierarchicalAStarSearch search = new HierarchicalAStarSearch(
+        AStarSearch search = new AStarSearch(
                 grid,
                 profile,
                 start,
@@ -336,10 +328,9 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                 request.searchRadius(),
                 request.maxNodes(),
                 request.stopDistance(),
-                noExtraBlocked,
-                this.stepSizes
+                noExtraBlocked
         );
-        FollowerPath searched = createPath(
+        PathPlan searched = createPath(
                 request.playerPos(),
                 search.findPath(),
                 grid,
@@ -347,15 +338,15 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                 noExtraBlocked
         );
         if (searched == null) {
-            FollowerPath directPrefix = attempt != null ? safePrefix(attempt) : null;
+            PathPlan directPrefix = attempt != null ? safePrefix(attempt) : null;
             if (directPrefix != null) {
                 return result(request, directPrefix);
             }
-            FollowerPath avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
+            PathPlan avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
             return result(request, avoidance != null ? avoidance : stopPath(request));
         }
 
-        FlightTrajectoryValidator.ValidationResult validation = FlightTrajectoryValidator.validatePath(
+        ElytraMotionPredictor.ValidationResult validation = ElytraMotionPredictor.validatePath(
                 grid,
                 profile,
                 request.playerPos(),
@@ -371,12 +362,12 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         attempt = firstAttempt;
 
         long blockingBlock = validation.blockingBlock();
-        if (blockingBlock != HierarchicalVoxelGrid.NO_BLOCK
-                && blockingBlock != HierarchicalVoxelGrid.OUTSIDE_WINDOW) {
+        if (blockingBlock != VoxelCollisionCache.NO_BLOCK
+                && blockingBlock != VoxelCollisionCache.OUTSIDE_WINDOW) {
             Set<Long> extraBlocked = new HashSet<>();
             extraBlocked.add(blockingBlock);
 
-            HierarchicalAStarSearch retrySearch = new HierarchicalAStarSearch(
+            AStarSearch retrySearch = new AStarSearch(
                     grid,
                     profile,
                     start,
@@ -384,10 +375,9 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     request.searchRadius(),
                     request.maxNodes(),
                     request.stopDistance(),
-                    extraBlocked,
-                    this.stepSizes
+                    extraBlocked
             );
-            FollowerPath retryPath = createPath(
+            PathPlan retryPath = createPath(
                     request.playerPos(),
                     retrySearch.findPath(),
                     grid,
@@ -395,8 +385,8 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     extraBlocked
             );
             if (retryPath != null) {
-                FlightTrajectoryValidator.ValidationResult retryValidation =
-                        FlightTrajectoryValidator.validatePath(
+                ElytraMotionPredictor.ValidationResult retryValidation =
+                        ElytraMotionPredictor.validatePath(
                                 grid,
                                 profile,
                                 request.playerPos(),
@@ -408,40 +398,40 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     return result(request, retryPath);
                 }
                 Attempt retryAttempt = new Attempt(retryPath, retryValidation);
-                FollowerPath retryPrefix = safePrefix(retryAttempt);
+                PathPlan retryPrefix = safePrefix(retryAttempt);
                 if (retryPrefix != null) {
                     return result(request, retryPrefix);
                 }
             }
         }
 
-        FollowerPath safePrefix = safePrefix(attempt);
+        PathPlan safePrefix = safePrefix(attempt);
         if (safePrefix != null) {
             return result(request, safePrefix);
         }
-        FollowerPath avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
+        PathPlan avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
         return result(request, avoidance != null ? avoidance : stopPath(request));
     }
 
-    private static FollowerPath safePrefix(Attempt attempt) {
+    private static PathPlan safePrefix(Attempt attempt) {
         int lastSafeIndex = attempt.validation().lastSafePathIndex();
         if (lastSafeIndex < 1 || lastSafeIndex >= attempt.path().points().size()) {
             return null;
         }
 
         List<Vec3> points = List.copyOf(attempt.path().points().subList(0, lastSafeIndex + 1));
-        return new FollowerPath(points.get(1), points);
+        return new PathPlan(points.get(1), points);
     }
 
-    private static FollowerPath stopPath(SearchRequest request) {
-        return new FollowerPath(request.playerPos(), List.of(request.playerPos()));
+    private static PathPlan stopPath(SearchRequest request) {
+        return new PathPlan(request.playerPos(), List.of(request.playerPos()));
     }
 
-    private static FollowerPath createPath(
+    private static PathPlan createPath(
             Vec3 playerPos,
             List<BlockPos> nodes,
-            HierarchicalVoxelGrid grid,
-            FlightTrajectoryValidator.PlayerCollisionProfile profile,
+            VoxelCollisionCache grid,
+            ElytraMotionPredictor.PlayerCollisionProfile profile,
             Set<Long> extraBlocked
     ) {
         if (nodes.size() < 2) {
@@ -456,8 +446,8 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
 
         ArrayList<Vec3> points = new ArrayList<>();
         points.add(playerPos);
-        FlightTrajectoryValidator.PlayerCollisionProfile paddedProfile =
-                new FlightTrajectoryValidator.PlayerCollisionProfile(
+        ElytraMotionPredictor.PlayerCollisionProfile paddedProfile =
+                new ElytraMotionPredictor.PlayerCollisionProfile(
                         profile.width() + AVOIDANCE_CLEARANCE_WIDTH,
                         profile.height() + AVOIDANCE_CLEARANCE_HEIGHT
                 );
@@ -480,19 +470,19 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             anchor = next;
         }
 
-        return new FollowerPath(points.get(1), List.copyOf(points));
+        return new PathPlan(points.get(1), List.copyOf(points));
     }
 
     private static int findNextPathPoint(
             List<Vec3> points,
             int anchor,
-            HierarchicalVoxelGrid grid,
-            FlightTrajectoryValidator.PlayerCollisionProfile profile,
+            VoxelCollisionCache grid,
+            ElytraMotionPredictor.PlayerCollisionProfile profile,
             Set<Long> extraBlocked
     ) {
         int next = points.size() - 1;
         while (next > anchor
-                && !FlightTrajectoryValidator.isSweepClear(
+                && !ElytraMotionPredictor.isSweepClear(
                 grid,
                 profile,
                 points.get(anchor),
@@ -504,10 +494,10 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         return next;
     }
 
-    private static FollowerPath findAvoidancePath(
+    private static PathPlan findAvoidancePath(
             SearchRequest request,
-            HierarchicalVoxelGrid grid,
-            FlightTrajectoryValidator.PlayerCollisionProfile profile,
+            VoxelCollisionCache grid,
+            ElytraMotionPredictor.PlayerCollisionProfile profile,
             Vec3 goalPoint
     ) {
         Vec3 playerPos = request.playerPos();
@@ -523,15 +513,15 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                 : goalDirection;
         int primaryDistance = Math.clamp((int) Math.round(request.velocity().length() * 4.0 + 3.0), 3, 8);
         int[] distances = {primaryDistance, Math.max(2, primaryDistance / 2), 2};
-        FlightTrajectoryValidator.PlayerCollisionProfile paddedProfile =
-                new FlightTrajectoryValidator.PlayerCollisionProfile(
+        ElytraMotionPredictor.PlayerCollisionProfile paddedProfile =
+                new ElytraMotionPredictor.PlayerCollisionProfile(
                         profile.width() + AVOIDANCE_CLEARANCE_WIDTH,
                         profile.height() + AVOIDANCE_CLEARANCE_HEIGHT
                 );
 
-        FollowerPath bestPaddedPath = null;
+        PathPlan bestPaddedPath = null;
         double bestPaddedScore = Double.NEGATIVE_INFINITY;
-        FollowerPath bestNormalPath = null;
+        PathPlan bestNormalPath = null;
         double bestNormalScore = Double.NEGATIVE_INFINITY;
         Set<Long> noExtraBlocked = Set.of();
         for (Vec3 direction : AVOIDANCE_DIRECTIONS) {
@@ -544,7 +534,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
 
                 Vec3 candidate = playerPos.add(direction.scale(distance));
                 if (!grid.isInWindow(BlockPos.containing(candidate))
-                        || !FlightTrajectoryValidator.isSweepClear(
+                        || !ElytraMotionPredictor.isSweepClear(
                         grid,
                         profile,
                         playerPos,
@@ -554,11 +544,11 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     continue;
                 }
 
-                FollowerPath candidatePath = new FollowerPath(
+                PathPlan candidatePath = new PathPlan(
                         candidate,
                         List.of(playerPos, candidate)
                 );
-                if (!FlightTrajectoryValidator.validatePath(
+                if (!ElytraMotionPredictor.validatePath(
                         grid,
                         profile,
                         playerPos,
@@ -569,7 +559,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
                     continue;
                 }
 
-                boolean paddedClear = FlightTrajectoryValidator.isSweepClear(
+                boolean paddedClear = ElytraMotionPredictor.isSweepClear(
                         grid,
                         paddedProfile,
                         playerPos,
@@ -620,7 +610,7 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         return from.add(delta.normalize().scale(searchRadius));
     }
 
-    private static SearchResult result(SearchRequest request, FollowerPath path) {
+    private static SearchResult result(SearchRequest request, PathPlan path) {
         return new SearchResult(
                 request.epoch(),
                 request.sequence(),
@@ -664,11 +654,11 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
             long createdNanos,
             Vec3 startPos,
             Vec3 targetPos,
-            FollowerPath path
+            PathPlan path
     ) {
     }
 
-    private record Attempt(FollowerPath path, FlightTrajectoryValidator.ValidationResult validation) {
+    private record Attempt(PathPlan path, ElytraMotionPredictor.ValidationResult validation) {
     }
 
     private final class Sampler {
@@ -911,16 +901,16 @@ public class HierarchicalAStarFollowerNavigator implements FollowerNavigator {
         private byte sampleState(int x, int y, int z, CollisionContext context) {
             BlockPos pos = new BlockPos(x, y, z);
             if (!this.level.isInWorldBounds(pos)) {
-                return HierarchicalVoxelGrid.BLOCKED;
+                return VoxelCollisionCache.BLOCKED;
             }
             if (!this.level.hasChunkAt(pos)) {
-                return HierarchicalVoxelGrid.UNKNOWN;
+                return VoxelCollisionCache.UNKNOWN;
             }
 
             BlockState state = this.level.getBlockState(pos);
             return state.getCollisionShape(this.level, pos, context).isEmpty()
-                    ? HierarchicalVoxelGrid.FREE
-                    : HierarchicalVoxelGrid.BLOCKED;
+                    ? VoxelCollisionCache.FREE
+                    : VoxelCollisionCache.BLOCKED;
         }
 
         private boolean isInWindow(int x, int y, int z) {

@@ -1,5 +1,6 @@
-package com.github.epsilon.modules.impl.movement.follower;
+package com.github.epsilon.modules.impl.combat.elytra_combat.flight;
 
+import com.github.epsilon.modules.impl.combat.elytra_combat.path.VoxelCollisionCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -11,23 +12,23 @@ import java.util.Set;
 /**
  * 使用完整玩家碰撞箱和 26.2 滑翔运动方程校验路径。
  */
-final class FlightTrajectoryValidator {
+public final class ElytraMotionPredictor {
 
     private static final double HORIZONTAL_CLEARANCE = 0.18;
     private static final double VERTICAL_CLEARANCE = 0.10;
     private static final int MAX_PREDICTION_TICKS = 10;
     private static final double WAYPOINT_REACHED_SQR = 0.75 * 0.75;
 
-    private FlightTrajectoryValidator() {
+    private ElytraMotionPredictor() {
     }
 
-    record PlayerCollisionProfile(double width, double height) {
+    public record PlayerCollisionProfile(double width, double height) {
     }
 
-    record SweepResult(boolean safe, long blockingBlock) {
+    public record SweepResult(boolean safe, long blockingBlock) {
 
         static SweepResult passed() {
-            return new SweepResult(true, HierarchicalVoxelGrid.NO_BLOCK);
+            return new SweepResult(true, VoxelCollisionCache.NO_BLOCK);
         }
 
         static SweepResult blocked(long blockingBlock) {
@@ -35,10 +36,10 @@ final class FlightTrajectoryValidator {
         }
     }
 
-    record ValidationResult(boolean safe, int lastSafePathIndex, long blockingBlock) {
+    public record ValidationResult(boolean safe, int lastSafePathIndex, long blockingBlock) {
 
         static ValidationResult safe(int lastSafePathIndex) {
-            return new ValidationResult(true, lastSafePathIndex, HierarchicalVoxelGrid.NO_BLOCK);
+            return new ValidationResult(true, lastSafePathIndex, VoxelCollisionCache.NO_BLOCK);
         }
 
         static ValidationResult unsafe(int lastSafePathIndex, long blockingBlock) {
@@ -46,8 +47,8 @@ final class FlightTrajectoryValidator {
         }
     }
 
-    static boolean isSweepClear(
-            HierarchicalVoxelGrid grid,
+    public static boolean isSweepClear(
+            VoxelCollisionCache grid,
             PlayerCollisionProfile profile,
             Vec3 from,
             Vec3 to,
@@ -56,15 +57,15 @@ final class FlightTrajectoryValidator {
         return checkSweep(grid, profile, from, to, extraBlocked).safe();
     }
 
-    static SweepResult checkSweep(
-            HierarchicalVoxelGrid grid,
+    public static SweepResult checkSweep(
+            VoxelCollisionCache grid,
             PlayerCollisionProfile profile,
             Vec3 from,
             Vec3 to,
             Set<Long> extraBlocked
     ) {
         if (!from.isFinite() || !to.isFinite()) {
-            return SweepResult.blocked(HierarchicalVoxelGrid.OUTSIDE_WINDOW);
+            return SweepResult.blocked(VoxelCollisionCache.OUTSIDE_WINDOW);
         }
 
         double halfWidth = profile.width() * 0.5 + HORIZONTAL_CLEARANCE;
@@ -100,13 +101,13 @@ final class FlightTrajectoryValidator {
                 maxBlockY,
                 maxBlockZ
         );
-        return blockingBlock == HierarchicalVoxelGrid.NO_BLOCK
+        return blockingBlock == VoxelCollisionCache.NO_BLOCK
                 ? SweepResult.passed()
                 : SweepResult.blocked(blockingBlock);
     }
 
-    static ValidationResult validatePath(
-            HierarchicalVoxelGrid grid,
+    public static ValidationResult validatePath(
+            VoxelCollisionCache grid,
             PlayerCollisionProfile profile,
             Vec3 start,
             Vec3 initialVelocity,
@@ -151,7 +152,7 @@ final class FlightTrajectoryValidator {
         return ValidationResult.safe(lastSafePoint);
     }
 
-    static Vec3 nextFallFlyingMovement(Vec3 movement, float yaw, float pitch, double gravity) {
+    public static Vec3 nextFallFlyingMovement(Vec3 movement, float yaw, float pitch, double gravity) {
         Vec3 lookAngle = calculateViewVector(pitch, yaw);
         double leanAngle = pitch * (Math.PI / 180.0);
         double lookHorizontalLength = Math.sqrt(lookAngle.x * lookAngle.x + lookAngle.z * lookAngle.z);
@@ -198,11 +199,11 @@ final class FlightTrajectoryValidator {
         return new Vec3(yawSin * pitchCos, -pitchSin, yawCos * pitchCos);
     }
 
-    static float yawTo(Vec3 delta) {
+    public static float yawTo(Vec3 delta) {
         return Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(delta.z, delta.x)) - 90.0f);
     }
 
-    static float pitchTo(Vec3 delta) {
+    public static float pitchTo(Vec3 delta) {
         double horizontal = Math.max(0.001, delta.horizontalDistance());
         return Mth.clamp((float) -Math.toDegrees(Math.atan2(delta.y, horizontal)), -90.0f, 90.0f);
     }
