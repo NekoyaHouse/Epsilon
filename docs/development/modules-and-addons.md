@@ -68,12 +68,25 @@ private final IntSetting threshold = intSetting(
 
 相关能力：
 
-- `settingGroup(name)` 按名称忽略大小写复用分组。
-- `.group(group)` 仅指定 GUI 分组，不负责注册 Setting。
+- `settingGroup(name)` 在顶层按名称忽略大小写复用分组。
+- `SettingGroup.child(name)` 在父分组下按名称忽略大小写复用子分组，可以继续嵌套；子分组只属于创建它的
+  父分组，父子关系决定 GUI 缩进和翻译 key 层级。
+- `.group(group)` 仅指定 GUI 分组（可以是任意层级的子分组），不负责注册 Setting。
 - `.rootSetting()` 表示值由根配置单独持久化；当前 `ClientSetting.showWelcomeScreen`、`WorldTweaks`
   的雾与时间设置使用它。
 - `.applyWhenRelease()` 表示滑动或编辑结束后再应用昂贵更新。
 - `Setting.isAvailable()` 的语义由 dependency 决定；DSL 默认传入恒真的 dependency。
+
+嵌套分组示例；父分组内直接 Setting 与首次出现的子分组按声明顺序交错渲染：
+
+```java
+private final SettingGroup sgWeapon = settingGroup("Weapon");
+private final SettingGroup sgEnchants = sgWeapon.child("Enchants");
+private final SettingGroup sgSword = sgEnchants.child("Sword");
+
+private final BoolSetting autoSwitch = boolSetting("Auto Switch", true).group(sgWeapon);
+private final IntSetting minLevel = intSetting("Min Level", 1, 1, 5, 1).group(sgSword);
+```
 
 ## Addon
 

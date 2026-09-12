@@ -105,7 +105,7 @@ public class ClientSetting extends Module {
     private final SettingGroup sgTeams = settingGroup("Teams");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
-    private final SettingGroup sgReisa = settingGroup("Uzawa Reisa");
+    private final SettingGroup sgReisa = sgAppearance.child("Uzawa Reisa");
     private final SettingGroup sgNotification = settingGroup("Notification");
     private final SettingGroup sgResources = settingGroup("Resources");
 

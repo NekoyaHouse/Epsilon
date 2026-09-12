@@ -108,6 +108,9 @@ public class I18NFileGenerator {
         if (component != null) {
             I18NJson.addTranslation(root, component.getFullKey(), "");
         }
+        for (SettingGroup child : group.getChildren()) {
+            addSettingGroupKey(root, child);
+        }
     }
 
     private static void addSettingKey(JsonObject root, Setting<?> setting) {
