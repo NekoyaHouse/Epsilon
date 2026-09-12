@@ -58,6 +58,8 @@ final class AStarSearch {
         open.add(new Node(this.start, 0.0, heuristic(this.start)));
 
         int visited = 0;
+        BlockPos bestPosition = this.start;
+        double bestHeuristic = heuristic(this.start);
         while (!open.isEmpty() && visited < this.maxNodes) {
             Node current = open.poll();
             if (!closed.add(current.position())) {
@@ -67,6 +69,10 @@ final class AStarSearch {
 
             if (current.position().equals(this.goal)) {
                 return reconstructPath(cameFrom, current.position());
+            }
+            if (current.heuristic() < bestHeuristic) {
+                bestHeuristic = current.heuristic();
+                bestPosition = current.position();
             }
 
             for (int[] offset : NEIGHBORS) {
@@ -90,7 +96,9 @@ final class AStarSearch {
             }
         }
 
-        return List.of();
+        return bestPosition.equals(this.start)
+                ? List.of()
+                : reconstructPath(cameFrom, bestPosition);
     }
 
     private boolean canMove(BlockPos from, BlockPos to, int[] offset) {

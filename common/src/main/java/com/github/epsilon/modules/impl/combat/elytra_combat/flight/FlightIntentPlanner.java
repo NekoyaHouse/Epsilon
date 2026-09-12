@@ -6,6 +6,8 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.path.PathPlan;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.List;
+
 /**
  * 将行为层的期望速度转换为可执行飞行意图。
  *
@@ -17,6 +19,7 @@ public final class FlightIntentPlanner {
     private static final double LOCAL_PROBE_DISTANCE = 6.0;
 
     private final ElytraPathNavigator pathNavigator = new ElytraPathNavigator();
+    private Vec3 lastAvoidanceDirection;
 
     public FlightIntent plan(
             LocalPlayer player,
@@ -32,21 +35,12 @@ public final class FlightIntentPlanner {
         double probe = Math.clamp(desired.length() * 4.0, 4.0, LOCAL_PROBE_DISTANCE);
         Vec3 directEnd = player.position().add(desired.normalize().scale(probe));
         if (LocalFlightAvoidance.isSegmentClear(player, player.position(), directEnd)) {
+            this.lastAvoidanceDirection = null;
             return new FlightIntent(desired, desired.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
         }
 
-        Vec3 avoidance = LocalFlightAvoidance.findAvoidance(
-                player,
-                desired,
-                targetPoint,
-                probe
-        );
-        if (avoidance != null) {
-            return new FlightIntent(avoidance, avoidance.normalize(), rawIntent.directVelocity(), false);
-        }
-
         if (!config.pathfinding()) {
-            return FlightIntent.idle(player.getLookAngle());
+            return planAvoidance(player, desired, targetPoint, probe, rawIntent);
         }
 
         PathPlan path = this.pathNavigator.getPath(
@@ -54,23 +48,73 @@ public final class FlightIntentPlanner {
                 targetPoint,
                 new PathConfig(config.stopDistance(), config.searchRadius(), config.maxNodes())
         );
-        if (path.points().size() < 2 || player.position().distanceToSqr(path.nextPoint()) < 1.0E-4) {
-            return FlightIntent.idle(player.getLookAngle());
+        Vec3 waypoint = selectPathWaypoint(player, path);
+        if (waypoint != null) {
+            this.lastAvoidanceDirection = null;
+            Vec3 waypointVelocity = waypoint.subtract(player.position());
+            if (waypointVelocity.lengthSqr() >= 1.0E-8) {
+                waypointVelocity = waypointVelocity.normalize().scale(desired.length());
+                return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), false);
+            }
         }
 
-        Vec3 waypointVelocity = path.nextPoint().subtract(player.position());
-        if (waypointVelocity.lengthSqr() < 1.0E-8) {
+        return planAvoidance(player, desired, targetPoint, probe, rawIntent);
+    }
+
+    private FlightIntent planAvoidance(
+            LocalPlayer player,
+            Vec3 desired,
+            Vec3 targetPoint,
+            double probe,
+            FlightIntent rawIntent
+    ) {
+        Vec3 avoidance = LocalFlightAvoidance.findAvoidance(
+                player,
+                desired,
+                targetPoint,
+                probe,
+                this.lastAvoidanceDirection
+        );
+        if (avoidance == null) {
             return FlightIntent.idle(player.getLookAngle());
         }
-        waypointVelocity = waypointVelocity.normalize().scale(desired.length());
-        return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), false);
+        this.lastAvoidanceDirection = avoidance.normalize();
+        return new FlightIntent(avoidance, this.lastAvoidanceDirection, rawIntent.directVelocity(), false);
+    }
+
+    /**
+     * 从 A* 原始路径中选取当前仍能直线到达的航点；优先使用前视点，被阻挡时回退到更近的节点。
+     */
+    private static Vec3 selectPathWaypoint(LocalPlayer player, PathPlan path) {
+        List<Vec3> points = path.points();
+        if (points.size() < 2) {
+            return null;
+        }
+
+        Vec3 playerPos = player.position();
+        int index = points.indexOf(path.nextPoint());
+        if (index < 1) {
+            index = 1;
+        }
+        for (int i = index; i >= 1; i--) {
+            Vec3 candidate = points.get(i);
+            if (playerPos.distanceToSqr(candidate) < 1.0E-4) {
+                continue;
+            }
+            if (LocalFlightAvoidance.isSegmentClear(player, playerPos, candidate)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     public void reset() {
+        this.lastAvoidanceDirection = null;
         this.pathNavigator.stop();
     }
 
     public void stop() {
+        this.lastAvoidanceDirection = null;
         this.pathNavigator.stop();
     }
 

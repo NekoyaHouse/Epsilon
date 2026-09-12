@@ -34,6 +34,7 @@ public final class ElytraPathNavigator {
     private static final long RESULT_MAX_AGE_NANOS = 150_000_000L;
     private static final double RESULT_MAX_START_DISTANCE_SQR = 25.0;
     private static final double RESULT_MAX_TARGET_DISTANCE_SQR = 64.0;
+    private static final double PATH_LOOKAHEAD_DISTANCE = 3.0;
     private final String workerThreadName;
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
     private final ConcurrentLinkedQueue<SampleBatch> sampleBatches = new ConcurrentLinkedQueue<>();
@@ -97,7 +98,18 @@ public final class ElytraPathNavigator {
                     ? 0.0
                     : playerPos.subtract(from).dot(segment) / segmentLengthSqr;
             if (projection < 1.0) {
-                return new PathPlan(to, points);
+                int next = i + 1;
+                Vec3 projected = from.add(segment.scale(Math.clamp(projection, 0.0, 1.0)));
+                double remaining = projected.distanceTo(points.get(next));
+                while (next < points.size() - 1) {
+                    double step = points.get(next).distanceTo(points.get(next + 1));
+                    if (remaining + step > PATH_LOOKAHEAD_DISTANCE) {
+                        break;
+                    }
+                    remaining += step;
+                    next++;
+                }
+                return new PathPlan(points.get(next), points);
             }
         }
         return new PathPlan(playerPos, List.of(playerPos));

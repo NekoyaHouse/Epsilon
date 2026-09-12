@@ -24,6 +24,16 @@ public final class LocalFlightAvoidance {
             Vec3 targetPoint,
             double probeDistance
     ) {
+        return findAvoidance(player, desiredVelocity, targetPoint, probeDistance, null);
+    }
+
+    public static Vec3 findAvoidance(
+            LocalPlayer player,
+            Vec3 desiredVelocity,
+            Vec3 targetPoint,
+            double probeDistance,
+            Vec3 preferredDirection
+    ) {
         if (desiredVelocity.lengthSqr() < 1.0E-8) {
             return null;
         }
@@ -40,6 +50,9 @@ public final class LocalFlightAvoidance {
                 baseDirection.y,
                 Math.max(0.001, baseDirection.horizontalDistance())
         ));
+        Vec3 preferred = preferredDirection == null || preferredDirection.lengthSqr() < 1.0E-8
+                ? null
+                : preferredDirection.normalize();
 
         Vec3 best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
@@ -54,7 +67,11 @@ public final class LocalFlightAvoidance {
                 }
 
                 double alignment = direction.dot(targetDirection);
-                double score = alignment - Math.abs(yawOffset) * 0.002 - Math.abs(pitchOffset) * 0.001;
+                double continuity = preferred == null ? 0.0 : direction.dot(preferred);
+                double score = alignment
+                        + continuity * 0.75
+                        - Math.abs(yawOffset) * 0.002
+                        - Math.abs(pitchOffset) * 0.001;
                 if (score > bestScore) {
                     bestScore = score;
                     best = direction.scale(desiredVelocity.length());
