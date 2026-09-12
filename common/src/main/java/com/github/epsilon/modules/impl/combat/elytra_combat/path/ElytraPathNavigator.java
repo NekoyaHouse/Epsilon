@@ -4,16 +4,13 @@ import com.github.epsilon.Constants;
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * ElytraCombat 的后台单层 A* 路径服务。
  *
- * <p>客户端线程只负责有界采样，碰撞层级、搜索、路径压缩和飞行校验均在专用工作线程执行。</p>
+ * <p>客户端线程只负责有界采样；专用工作线程运行基础 A* 并输出原始方块路径。</p>
  */
 public final class ElytraPathNavigator {
 
@@ -37,11 +34,6 @@ public final class ElytraPathNavigator {
     private static final long RESULT_MAX_AGE_NANOS = 150_000_000L;
     private static final double RESULT_MAX_START_DISTANCE_SQR = 25.0;
     private static final double RESULT_MAX_TARGET_DISTANCE_SQR = 64.0;
-    private static final double AVOIDANCE_CLEARANCE_WIDTH = 1.2;
-    private static final double AVOIDANCE_CLEARANCE_HEIGHT = 0.8;
-    // 航点过远会让滑翔惯性切过拐角，限制前视距离以便靠近障碍时及时重算。
-    private static final double MAX_PATH_LOOKAHEAD = 6.0;
-    private static final List<Vec3> AVOIDANCE_DIRECTIONS = createAvoidanceDirections();
     private final String workerThreadName;
     private final AtomicInteger requestedDataSize = new AtomicInteger(DEFAULT_DATA_SIZE);
     private final ConcurrentLinkedQueue<SampleBatch> sampleBatches = new ConcurrentLinkedQueue<>();
@@ -81,10 +73,34 @@ public final class ElytraPathNavigator {
 
         SearchResult result = this.latestResult.get();
         if (isResultUsable(result, player.position(), targetPos, window)) {
-            return result.path();
+            return advancePath(result.path(), player.position());
         }
 
         return new PathPlan(player.position(), List.of(player.position()));
+    }
+
+    /**
+     * 返回原始 A* 路径中玩家所在航段之后的节点，避免复用旧结果时朝身后的节点飞。
+     */
+    private static PathPlan advancePath(PathPlan path, Vec3 playerPos) {
+        List<Vec3> points = path.points();
+        if (points.size() < 2) {
+            return new PathPlan(playerPos, List.of(playerPos));
+        }
+
+        for (int i = 0; i < points.size() - 1; i++) {
+            Vec3 from = points.get(i);
+            Vec3 to = points.get(i + 1);
+            Vec3 segment = to.subtract(from);
+            double segmentLengthSqr = segment.lengthSqr();
+            double projection = segmentLengthSqr < 1.0E-8
+                    ? 0.0
+                    : playerPos.subtract(from).dot(segment) / segmentLengthSqr;
+            if (projection < 1.0) {
+                return new PathPlan(to, points);
+            }
+        }
+        return new PathPlan(playerPos, List.of(playerPos));
     }
 
     public void setDataSize(int size) {
@@ -136,11 +152,6 @@ public final class ElytraPathNavigator {
             Sampler.WindowSnapshot window
     ) {
         int effectiveRadius = Math.max(6, Math.min(config.searchRadius(), window.size() / 2 - 1));
-        double gravity = player.getGravity();
-        if (player.getDeltaMovement().y <= 0.0 && player.hasEffect(MobEffects.SLOW_FALLING)) {
-            gravity = Math.min(gravity, 0.01);
-        }
-
         this.pendingRequest.set(new SearchRequest(
                 window.epoch(),
                 window.sequence(),
@@ -148,8 +159,6 @@ public final class ElytraPathNavigator {
                 window.origin(),
                 player.position(),
                 targetPos,
-                player.getDeltaMovement(),
-                gravity,
                 player.getBbWidth(),
                 player.getBbHeight(),
                 config.stopDistance(),
@@ -272,342 +281,40 @@ public final class ElytraPathNavigator {
             return null;
         }
 
-        ElytraMotionPredictor.PlayerCollisionProfile profile =
-                new ElytraMotionPredictor.PlayerCollisionProfile(request.playerWidth(), request.playerHeight());
-        Set<Long> noExtraBlocked = Set.of();
-
         if (request.playerPos().distanceTo(request.targetPos()) <= request.stopDistance()) {
-            PathPlan stopped = new PathPlan(request.playerPos(), List.of(request.playerPos()));
-            return new SearchResult(
-                    request.epoch(),
-                    request.sequence(),
-                    System.nanoTime(),
-                    request.playerPos(),
-                    request.targetPos(),
-                    stopped
-            );
+            return result(request, stopPath(request));
         }
 
         Vec3 limitedTarget = limitTarget(request.playerPos(), request.targetPos(), request.searchRadius());
         BlockPos goal = grid.clampToWindow(BlockPos.containing(limitedTarget));
-        if (!goal.equals(BlockPos.containing(limitedTarget))) {
-            limitedTarget = Vec3.atBottomCenterOf(goal);
-        }
-
-        Attempt attempt = null;
-        if (ElytraMotionPredictor.isSweepClear(
-                grid,
-                profile,
-                request.playerPos(),
-                limitedTarget,
-                noExtraBlocked
-        )) {
-            PathPlan directPath = new PathPlan(
-                    limitedTarget,
-                    List.of(request.playerPos(), limitedTarget)
-            );
-            attempt = new Attempt(
-                    directPath,
-                    ElytraMotionPredictor.validatePath(
-                            grid,
-                            profile,
-                            request.playerPos(),
-                            request.velocity(),
-                            directPath.points(),
-                            request.gravity()
-                    )
-            );
-            if (attempt.validation().safe()) {
-                return result(request, directPath);
-            }
-        }
-
+        ElytraMotionPredictor.PlayerCollisionProfile profile =
+                new ElytraMotionPredictor.PlayerCollisionProfile(request.playerWidth(), request.playerHeight());
         AStarSearch search = new AStarSearch(
                 grid,
                 profile,
                 start,
                 goal,
                 request.searchRadius(),
-                request.maxNodes(),
-                request.stopDistance(),
-                noExtraBlocked
+                request.maxNodes()
         );
-        PathPlan searched = createPath(
-                request.playerPos(),
-                search.findPath(),
-                grid,
-                profile,
-                noExtraBlocked
-        );
-        if (searched == null) {
-            PathPlan directPrefix = attempt != null ? safePrefix(attempt) : null;
-            if (directPrefix != null) {
-                return result(request, directPrefix);
-            }
-            PathPlan avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
-            return result(request, avoidance != null ? avoidance : stopPath(request));
+        List<BlockPos> nodes = search.findPath();
+        if (nodes.size() < 2) {
+            return result(request, stopPath(request));
         }
-
-        ElytraMotionPredictor.ValidationResult validation = ElytraMotionPredictor.validatePath(
-                grid,
-                profile,
-                request.playerPos(),
-                request.velocity(),
-                searched.points(),
-                request.gravity()
-        );
-        if (validation.safe()) {
-            return result(request, searched);
-        }
-
-        Attempt firstAttempt = new Attempt(searched, validation);
-        attempt = firstAttempt;
-
-        long blockingBlock = validation.blockingBlock();
-        if (blockingBlock != VoxelCollisionCache.NO_BLOCK
-                && blockingBlock != VoxelCollisionCache.OUTSIDE_WINDOW) {
-            Set<Long> extraBlocked = new HashSet<>();
-            extraBlocked.add(blockingBlock);
-
-            AStarSearch retrySearch = new AStarSearch(
-                    grid,
-                    profile,
-                    start,
-                    goal,
-                    request.searchRadius(),
-                    request.maxNodes(),
-                    request.stopDistance(),
-                    extraBlocked
-            );
-            PathPlan retryPath = createPath(
-                    request.playerPos(),
-                    retrySearch.findPath(),
-                    grid,
-                    profile,
-                    extraBlocked
-            );
-            if (retryPath != null) {
-                ElytraMotionPredictor.ValidationResult retryValidation =
-                        ElytraMotionPredictor.validatePath(
-                                grid,
-                                profile,
-                                request.playerPos(),
-                                request.velocity(),
-                                retryPath.points(),
-                                request.gravity()
-                        );
-                if (retryValidation.safe()) {
-                    return result(request, retryPath);
-                }
-                Attempt retryAttempt = new Attempt(retryPath, retryValidation);
-                PathPlan retryPrefix = safePrefix(retryAttempt);
-                if (retryPrefix != null) {
-                    return result(request, retryPrefix);
-                }
-            }
-        }
-
-        PathPlan safePrefix = safePrefix(attempt);
-        if (safePrefix != null) {
-            return result(request, safePrefix);
-        }
-        PathPlan avoidance = findAvoidancePath(request, grid, profile, limitedTarget);
-        return result(request, avoidance != null ? avoidance : stopPath(request));
+        return result(request, toPathPlan(request.playerPos(), nodes));
     }
 
-    private static PathPlan safePrefix(Attempt attempt) {
-        int lastSafeIndex = attempt.validation().lastSafePathIndex();
-        if (lastSafeIndex < 1 || lastSafeIndex >= attempt.path().points().size()) {
-            return null;
+    private static PathPlan toPathPlan(Vec3 playerPos, List<BlockPos> nodes) {
+        ArrayList<Vec3> points = new ArrayList<>(nodes.size());
+        points.add(playerPos);
+        for (int i = 1; i < nodes.size(); i++) {
+            points.add(Vec3.atBottomCenterOf(nodes.get(i)));
         }
-
-        List<Vec3> points = List.copyOf(attempt.path().points().subList(0, lastSafeIndex + 1));
-        return new PathPlan(points.get(1), points);
+        return new PathPlan(points.get(1), List.copyOf(points));
     }
 
     private static PathPlan stopPath(SearchRequest request) {
         return new PathPlan(request.playerPos(), List.of(request.playerPos()));
-    }
-
-    private static PathPlan createPath(
-            Vec3 playerPos,
-            List<BlockPos> nodes,
-            VoxelCollisionCache grid,
-            ElytraMotionPredictor.PlayerCollisionProfile profile,
-            Set<Long> extraBlocked
-    ) {
-        if (nodes.size() < 2) {
-            return null;
-        }
-
-        ArrayList<Vec3> rawPoints = new ArrayList<>(nodes.size());
-        rawPoints.add(playerPos);
-        for (int i = 1; i < nodes.size(); i++) {
-            rawPoints.add(Vec3.atBottomCenterOf(nodes.get(i)));
-        }
-
-        ArrayList<Vec3> points = new ArrayList<>();
-        points.add(playerPos);
-        ElytraMotionPredictor.PlayerCollisionProfile paddedProfile =
-                new ElytraMotionPredictor.PlayerCollisionProfile(
-                        profile.width() + AVOIDANCE_CLEARANCE_WIDTH,
-                        profile.height() + AVOIDANCE_CLEARANCE_HEIGHT
-                );
-        int anchor = 0;
-        while (anchor < rawPoints.size() - 1) {
-            int next = findNextPathPoint(
-                    rawPoints,
-                    anchor,
-                    grid,
-                    paddedProfile,
-                    extraBlocked,
-                    MAX_PATH_LOOKAHEAD
-            );
-            if (next == anchor) {
-                next = findNextPathPoint(rawPoints, anchor, grid, profile, extraBlocked, MAX_PATH_LOOKAHEAD);
-            }
-            if (next == anchor) {
-                return null;
-            }
-            points.add(rawPoints.get(next));
-            anchor = next;
-        }
-
-        return new PathPlan(points.get(1), List.copyOf(points));
-    }
-
-    private static int findNextPathPoint(
-            List<Vec3> points,
-            int anchor,
-            VoxelCollisionCache grid,
-            ElytraMotionPredictor.PlayerCollisionProfile profile,
-            Set<Long> extraBlocked,
-            double maxLookahead
-    ) {
-        int next = points.size() - 1;
-        Vec3 anchorPoint = points.get(anchor);
-        while (next > anchor) {
-            Vec3 candidate = points.get(next);
-            if (anchorPoint.distanceTo(candidate) <= maxLookahead
-                    && ElytraMotionPredictor.isSweepClear(
-                    grid,
-                    profile,
-                    anchorPoint,
-                    candidate,
-                    extraBlocked
-            )) {
-                return next;
-            }
-            next--;
-        }
-        return anchor;
-    }
-
-    private static PathPlan findAvoidancePath(
-            SearchRequest request,
-            VoxelCollisionCache grid,
-            ElytraMotionPredictor.PlayerCollisionProfile profile,
-            Vec3 goalPoint
-    ) {
-        Vec3 playerPos = request.playerPos();
-        Vec3 toGoal = goalPoint.subtract(playerPos);
-        double goalDistance = toGoal.length();
-        if (goalDistance < 0.001) {
-            return null;
-        }
-
-        Vec3 goalDirection = toGoal.scale(1.0 / goalDistance);
-        Vec3 velocityDirection = request.velocity().lengthSqr() > 0.000001
-                ? request.velocity().normalize()
-                : goalDirection;
-        int primaryDistance = Math.clamp((int) Math.round(request.velocity().length() * 4.0 + 3.0), 3, 8);
-        int[] distances = {primaryDistance, Math.max(2, primaryDistance / 2), 2};
-        ElytraMotionPredictor.PlayerCollisionProfile paddedProfile =
-                new ElytraMotionPredictor.PlayerCollisionProfile(
-                        profile.width() + AVOIDANCE_CLEARANCE_WIDTH,
-                        profile.height() + AVOIDANCE_CLEARANCE_HEIGHT
-                );
-
-        PathPlan bestPaddedPath = null;
-        double bestPaddedScore = Double.NEGATIVE_INFINITY;
-        PathPlan bestNormalPath = null;
-        double bestNormalScore = Double.NEGATIVE_INFINITY;
-        Set<Long> noExtraBlocked = Set.of();
-        for (Vec3 direction : AVOIDANCE_DIRECTIONS) {
-            double goalAlignment = direction.dot(goalDirection);
-            double velocityAlignment = direction.dot(velocityDirection);
-            for (int distance : distances) {
-                if (distance > request.searchRadius()) {
-                    continue;
-                }
-
-                Vec3 candidate = playerPos.add(direction.scale(distance));
-                if (!grid.isInWindow(BlockPos.containing(candidate))
-                        || !ElytraMotionPredictor.isSweepClear(
-                        grid,
-                        profile,
-                        playerPos,
-                        candidate,
-                        noExtraBlocked
-                )) {
-                    continue;
-                }
-
-                PathPlan candidatePath = new PathPlan(
-                        candidate,
-                        List.of(playerPos, candidate)
-                );
-                if (!ElytraMotionPredictor.validatePath(
-                        grid,
-                        profile,
-                        playerPos,
-                        request.velocity(),
-                        candidatePath.points(),
-                        request.gravity()
-                ).safe()) {
-                    continue;
-                }
-
-                boolean paddedClear = ElytraMotionPredictor.isSweepClear(
-                        grid,
-                        paddedProfile,
-                        playerPos,
-                        candidate,
-                        noExtraBlocked
-                );
-                double progress = goalDistance - candidate.distanceTo(goalPoint);
-                double score = progress
-                        + goalAlignment * 2.0
-                        + velocityAlignment * 0.5
-                        + (paddedClear ? 3.0 : 0.0)
-                        - distance * 0.05;
-                if (paddedClear) {
-                    if (score > bestPaddedScore) {
-                        bestPaddedScore = score;
-                        bestPaddedPath = candidatePath;
-                    }
-                } else if (score > bestNormalScore) {
-                    bestNormalScore = score;
-                    bestNormalPath = candidatePath;
-                }
-            }
-        }
-        return bestPaddedPath != null ? bestPaddedPath : bestNormalPath;
-    }
-
-    private static List<Vec3> createAvoidanceDirections() {
-        ArrayList<Vec3> directions = new ArrayList<>(26);
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
-                    if (x == 0 && y == 0 && z == 0) {
-                        continue;
-                    }
-                    directions.add(new Vec3(x, y, z).normalize());
-                }
-            }
-        }
-        return List.copyOf(directions);
     }
 
     private static Vec3 limitTarget(Vec3 from, Vec3 target, int searchRadius) {
@@ -647,8 +354,6 @@ public final class ElytraPathNavigator {
             BlockPos origin,
             Vec3 playerPos,
             Vec3 targetPos,
-            Vec3 velocity,
-            double gravity,
             float playerWidth,
             float playerHeight,
             double stopDistance,
@@ -665,9 +370,6 @@ public final class ElytraPathNavigator {
             Vec3 targetPos,
             PathPlan path
     ) {
-    }
-
-    private record Attempt(PathPlan path, ElytraMotionPredictor.ValidationResult validation) {
     }
 
     private final class Sampler {

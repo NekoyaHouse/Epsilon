@@ -6,8 +6,6 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.path.PathPlan;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
-
 /**
  * 将行为层的期望速度转换为可执行飞行意图。
  *
@@ -56,42 +54,16 @@ public final class FlightIntentPlanner {
                 targetPoint,
                 new PathConfig(config.stopDistance(), config.searchRadius(), config.maxNodes())
         );
-        Vec3 waypoint = selectWaypoint(player, path.points());
-        if (waypoint == null) {
+        if (path.points().size() < 2 || player.position().distanceToSqr(path.nextPoint()) < 1.0E-4) {
             return FlightIntent.idle(player.getLookAngle());
         }
 
-        Vec3 waypointVelocity = waypoint.subtract(player.position());
+        Vec3 waypointVelocity = path.nextPoint().subtract(player.position());
         if (waypointVelocity.lengthSqr() < 1.0E-8) {
             return FlightIntent.idle(player.getLookAngle());
         }
         waypointVelocity = waypointVelocity.normalize().scale(desired.length());
         return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), false);
-    }
-
-    /**
-     * 路径结果可能来自几 tick 前的位置。这里只选取当前碰撞箱仍能直线到达的近处
-     * 航点，避免复用旧起点时把“切角”方向指向天花板或墙体。
-     */
-    private static Vec3 selectWaypoint(LocalPlayer player, List<Vec3> points) {
-        if (points.size() < 2) {
-            return null;
-        }
-
-        Vec3 playerPos = player.position();
-        double maxDistanceSqr = LOCAL_PROBE_DISTANCE * LOCAL_PROBE_DISTANCE;
-        Vec3 selected = null;
-        for (int i = 1; i < points.size(); i++) {
-            Vec3 point = points.get(i);
-            double distanceSqr = playerPos.distanceToSqr(point);
-            if (distanceSqr < 1.0E-4 || distanceSqr > maxDistanceSqr) {
-                continue;
-            }
-            if (LocalFlightAvoidance.isSegmentClear(player, playerPos, point)) {
-                selected = point;
-            }
-        }
-        return selected;
     }
 
     public void reset() {
