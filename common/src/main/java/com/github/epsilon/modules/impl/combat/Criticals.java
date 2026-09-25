@@ -15,10 +15,51 @@ public class Criticals extends Module {
     private Criticals() {
         super("Criticals", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGHEST).handler(this::onClientTick);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.prepareSprintStop.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.LOWEST).handler(this::prepareSprintStop);
-        node(KeyboardInputEvent.class, NodeKey.of("managed.onKeyboardInput.keyboardinputevent")).phase(Phase.TRANSFORM).priority(EventPriority.LOWEST).handler(this::onKeyboardInput);
+        part(new ObservePart());
+        part(new DecidePart());
+        part(new TransformPart());
+    }
 
+    /**
+     * OBSERVE：统计用于触发暴击的离地 tick 数。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("observe.fall_ticks"))
+                    .phase(Phase.OBSERVE)
+                    .priority(EventPriority.HIGHEST)
+                    .handler(Criticals.this::onClientTick);
+        }
+    }
+
+    /**
+     * DECIDE：判定本 tick 是否需要中断疾跑。
+     * <p>
+     * 必须晚于 {@code observe.fall_ticks}（本模块内以 LOWEST 优先级表达），
+     * 因为它读取的就是同一 tick 刚更新完的 {@link #fallTicks}。
+     */
+    private final class DecidePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("decide.sprint_stop"))
+                    .phase(Phase.DECIDE)
+                    .priority(EventPriority.LOWEST)
+                    .handler(Criticals.this::prepareSprintStop);
+        }
+    }
+
+    /**
+     * TRANSFORM：在输入事件上取消疾跑标记，并同步本地按键状态。
+     */
+    private final class TransformPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(KeyboardInputEvent.class, NodeKey.of("transform.sprint_input"))
+                    .phase(Phase.TRANSFORM)
+                    .priority(EventPriority.LOWEST)
+                    .handler(Criticals.this::onKeyboardInput);
+        }
     }
 
     public int fallTicks;

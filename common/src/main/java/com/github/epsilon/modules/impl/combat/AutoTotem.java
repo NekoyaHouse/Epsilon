@@ -19,11 +19,38 @@ public class AutoTotem extends Module {
     private final DoubleSetting health = doubleSetting("Health", 16.0, 0.0, 36.0, 0.5);
     private final BoolSetting checkGapple = boolSetting("Check Gapple", true);
 
+    /** observe.totem_need 产出的源槽位，-1 表示本 tick 无需移动。 */
+    private int pendingSlot = -1;
+
     private AutoTotem() {
         super("Auto Totem", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：只判断是否需要图腾、以及图腾在哪个槽位，不做任何容器点击。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.totem_need"))
+                    .phase(Phase.OBSERVE)
+                    .handler(AutoTotem.this::observeTotemNeed);
+        }
+    }
+
+    /**
+     * COMMIT：把图腾换到副手需要点击容器槽位，属于外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.move_totem"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoTotem.this::commitMoveTotem);
+        }
     }
 
     @Override
@@ -31,7 +58,9 @@ public class AutoTotem extends Module {
         if (nullCheck()) return null;
         return String.valueOf(InvHelper.getItemCount(Items.TOTEM_OF_UNDYING));
     }
-    public void onTick(PlayerTickEvent.Pre event) {
+    private void observeTotemNeed(PlayerTickEvent.Pre event) {
+        pendingSlot = -1;
+
         if (nullCheck() || mc.gameMode == null) return;
 
         if (!shouldHoldTotem()) {
@@ -43,6 +72,16 @@ public class AutoTotem extends Module {
         }
 
         int slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING);
+        if (slot == -1) {
+            return;
+        }
+
+        pendingSlot = slot;
+    }
+
+    private void commitMoveTotem(PlayerTickEvent.Pre event) {
+        int slot = pendingSlot;
+        pendingSlot = -1;
         if (slot == -1) {
             return;
         }

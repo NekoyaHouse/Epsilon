@@ -24,8 +24,35 @@ public class AnchorBlast extends Module {
     private AnchorBlast() {
         super("Anchor Blast", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(com.github.epsilon.modules.orchestration.Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：只读取触发键的按下边沿，把“本 tick 是否新按下”固化为事实，不碰物品栏。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            // 本模块已有同名私有枚举 Phase（动作状态机），成员类型会遮蔽导入的 orchestration.Phase，
+            // 因此节点阶段必须写全限定名。
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.trigger_press"))
+                    .phase(com.github.epsilon.modules.orchestration.Phase.OBSERVE)
+                    .handler(AnchorBlast.this::observeTrigger);
+        }
+    }
+
+    /**
+     * COMMIT：放置、蓄能与引爆都会切换快捷栏槽位并调用 useItemOn，属于外部副作用，
+     * 因此整段状态机留在 COMMIT，只消费 {@code observe.trigger_press} 产出的按键事实。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.anchor_sequence"))
+                    .phase(com.github.epsilon.modules.orchestration.Phase.COMMIT)
+                    .handler(AnchorBlast.this::commitSequence);
+        }
     }
 
     private final KeybindSetting triggerKey = keybindSetting("Trigger Key", -1);
@@ -45,6 +72,9 @@ public class AnchorBlast extends Module {
     private int originalSlot = -1;
     private boolean wasKeyDown;
     private int cooldown;
+    /** observe.trigger_press 产出的按键事实：按键已绑定、本 tick 新按下。 */
+    private boolean keyBound;
+    private boolean newPress;
 
     @Override
     protected void onEnable() {
@@ -55,13 +85,19 @@ public class AnchorBlast extends Module {
     protected void onDisable() {
         resetState();
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void observeTrigger(PlayerTickEvent.Pre event) {
         int key = triggerKey.getValue();
-        if (key == -1) return;
+        keyBound = key != -1;
+        newPress = false;
+        if (!keyBound) return;
 
         boolean keyDown = KeybindUtils.isPressed(key);
-        boolean newPress = keyDown && !wasKeyDown;
+        newPress = keyDown && !wasKeyDown;
         wasKeyDown = keyDown;
+    }
+
+    private void commitSequence(PlayerTickEvent.Pre event) {
+        if (!keyBound) return;
 
         if (newPress) {
             if (SafeAnchor.INSTANCE.isActive() || DoubleAnchor.INSTANCE.isActive()) {

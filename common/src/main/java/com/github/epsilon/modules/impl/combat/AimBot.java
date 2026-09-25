@@ -28,11 +28,51 @@ public class AimBot extends Module {
     private AimBot() {
         super("Aim Bot", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
-        node(SendPositionEvent.class, NodeKey.of("managed.onSendPosition.sendpositionevent")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onSendPosition);
-        node(UseItemEvent.class, NodeKey.of("managed.onUseItem.useitemevent")).phase(Phase.COMMIT).priority(EventPriority.HIGH).handler(this::onUseItem);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+        part(new TickPart());
+        part(new OutboundRotationPart());
+        part(new RenderPart());
+    }
 
+    /**
+     * 每 tick 更新目标与期望角度；只写模块私有状态，不修改玩家朝向。
+     */
+    private final class TickPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("decide.aim_target"))
+                    .phase(Phase.DECIDE)
+                    .handler(AimBot.this::onPlayerTick);
+        }
+    }
+
+    /**
+     * BowAim 模式下把静默旋转写入出站事件字段。
+     * <p>
+     * 这两个事件是发包前的最后修改点，因此属于 TRANSFORM 而不是 COMMIT：它们不发包、不改世界。
+     */
+    private final class OutboundRotationPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(SendPositionEvent.class, NodeKey.of("transform.send_position"))
+                    .phase(Phase.TRANSFORM).priority(EventPriority.HIGH)
+                    .handler(AimBot.this::onSendPosition);
+
+            node(UseItemEvent.class, NodeKey.of("transform.use_item"))
+                    .phase(Phase.TRANSFORM).priority(EventPriority.HIGH)
+                    .handler(AimBot.this::onUseItem);
+        }
+    }
+
+    /**
+     * RENDER：只影响客户端显示角度，让本地视角跟随静默旋转。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.client_rotation"))
+                    .phase(Phase.RENDER)
+                    .handler(AimBot.this::onRender3D);
+        }
     }
 
     private enum Mode {

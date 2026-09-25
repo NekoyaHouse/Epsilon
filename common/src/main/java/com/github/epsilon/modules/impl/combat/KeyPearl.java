@@ -31,10 +31,36 @@ public class KeyPearl extends Module {
     private KeyPearl() {
         super("Key Pearl", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(KeyPressEvent.class, NodeKey.of("managed.onKeyPress.keypressevent")).phase(Phase.OBSERVE).priority(0).handler(this::onKeyPress);
-        node(MousePressEvent.class, NodeKey.of("managed.onMousePress.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMousePress);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：键鼠事件只用来刷新按键状态，两个事件都没有可修改的字段。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(KeyPressEvent.class, NodeKey.of("observe.key_press"))
+                    .phase(Phase.OBSERVE)
+                    .handler(KeyPearl.this::onKeyPress);
+
+            node(MousePressEvent.class, NodeKey.of("observe.mouse_press"))
+                    .phase(Phase.OBSERVE)
+                    .handler(KeyPearl.this::onMousePress);
+        }
+    }
+
+    /**
+     * COMMIT：tick 内会恢复槽位、切换物品栏并真正使用末影珍珠，全部属于外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.throw_pearl"))
+                    .phase(Phase.COMMIT)
+                    .handler(KeyPearl.this::onTick);
+        }
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", InputConstants.UNKNOWN.getValue());

@@ -37,8 +37,32 @@ public class MaceAura extends Module {
     private MaceAura() {
         super("Mace Aura", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new DecidePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * DECIDE：只解析主目标并写入模块字段，不写旋转、不发包。
+     */
+    private final class DecidePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("decide.target"))
+                    .phase(Phase.DECIDE)
+                    .handler(MaceAura.this::decideTarget);
+        }
+    }
+
+    /**
+     * COMMIT：提交旋转请求、攻击并发送位移包，全部属于外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.mace_attack"))
+                    .phase(Phase.COMMIT)
+                    .handler(MaceAura.this::commitAttack);
+        }
     }
 
     private enum AttackMode {
@@ -75,7 +99,7 @@ public class MaceAura extends Module {
     protected void onDisable() {
         target = null;
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void decideTarget(PlayerTickEvent.Pre event) {
         if (ElytraCombat.INSTANCE.isControllingCombat()) {
             return;
         }
@@ -92,7 +116,13 @@ public class MaceAura extends Module {
                 true,
                 64
         ));
+    }
 
+    private void commitAttack(PlayerTickEvent.Pre event) {
+        // DECIDE 可能因 ElytraCombat 接管而被跳过，这里必须重新校验，否则会沿用上一 tick 的旧目标。
+        if (ElytraCombat.INSTANCE.isControllingCombat()) {
+            return;
+        }
         if (target == null) {
             return;
         }

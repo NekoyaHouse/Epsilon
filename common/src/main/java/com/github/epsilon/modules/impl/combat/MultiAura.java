@@ -23,8 +23,19 @@ public class MultiAura extends Module {
     private MultiAura() {
         super("Multi Aura", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：整个 tick 都会直接攻击目标并挥手，属于外部副作用，不能放在 OBSERVE。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.attack"))
+                    .phase(Phase.COMMIT)
+                    .handler(MultiAura.this::onTick);
+        }
     }
 
     private final DoubleSetting range = doubleSetting("Range", 5.0, 1.0, 6.0, 0.05);

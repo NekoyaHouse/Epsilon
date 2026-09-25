@@ -1143,30 +1143,46 @@ if (decision != null) {
 
 当前已经实现：
 
-- `NodeKey`
-- `NodeRef`
-- `NodeBuilder`
-- `Phase`
-- `ModulePart`
-- `ModuleDeclaration`
-- `ModuleOrchestrator`
-- `DispatchPlan`
-- `ModuleDispatchMode`
-- Legacy Adapter
-- CapabilityKey 和 CapabilityRegistry
-- Mining 协议数据类型
-- Combat Module 的 Managed 节点迁移
-- ZealotCrystalPlus 的 Observe、Decide、Commit、Render Part 拆分
+- `NodeKey`、`NodeRef`、`NodeBuilder`、`Phase`、`ModuleDeclaration`
+- `ModulePart`、`ModuleContext`、`FrameTrace`
+- `ModuleOrchestrator`、`DispatchPlan`、`ModuleDispatchMode`
+- Legacy Adapter（`ModuleManager` 会把 `COMBAT` 分类下的 `LEGACY` 模块交给它兜底转换）
+- `CapabilityKey` 与 `CapabilityRegistry`
+- Mining 协议数据类型（已声明，尚未接入裁决器）
+- `COMBAT` 分类全部模块的 Managed 节点迁移：语义化 `NodeKey`、与副作用一致的 `Phase`、
+  显式跨阶段依赖，且不再存在 `@EventHandler` 双重订阅
+- `ZealotCrystalPlus` 的多文件拆分：父 Module 持有 Setting 与运行时状态，其余按 Part 与工具类拆到
+  `modules/impl/combat/zealot_crystal_plus/`
+
+参考实现：
+
+```text
+modules/impl/combat/AimBot.java                     单文件 + 多 Part
+modules/impl/combat/zealot_crystal_plus/
+  ZealotCrystalPlus.java     Module、Setting、运行时状态、worker 线程
+  ZealotPartBase.java        Part 共同基类（解析节点、访问父 Module）
+  ZealotSettingsPart.java    节点图声明（键、阶段、依赖）
+  ZealotObservePart.java     OBSERVE：快照、计时、水晶与位置采集
+  ZealotDecidePart.java      DECIDE：候选评分、旋转请求、有效性校验
+  ZealotCommitPart.java      COMMIT：放置、破坏、换手、包观察触发的动作
+  ZealotRenderPart.java      RENDER：预测框与伤害文本
+  ZealotSnapshot.java        不可变数据契约
+  ZealotDamage.java          爆炸伤害估算与抗性方块缓存
+  ZealotMath.java            纯数学、几何与缓动
+  ZealotState.java           运行时状态（跨线程字段 volatile）
+  ZealotRenderState.java     渲染状态机
+  ZealotOptions.java         配置枚举
+```
 
 后续仍需要继续完善：
 
-- 完整的 ModuleContext 帧内 Snapshot 和 Intent 存储；
-- 能力请求的统一裁决器；
+- 完整的 ModuleContext 帧内 Snapshot 和 Intent 存储（`publish` / `values` 目前仍是空实现）；
+- 能力请求的统一裁决器，以及 `MiningCapability` 的实际提供者与消费者；
 - pending 启停队列；
 - COMMIT revision 和幂等提交基础设施；
-- Part 独立持久化实现；
+- Part 独立持久化实现（当前 Part 只共享父 Module 的配置）；
 - 完整 trace 和调试界面；
-- 跨模块 contract 的标准注册流程；
+- 跨模块 contract 的标准注册流程（当前 combat 模块之间仍有 `INSTANCE` 直读）；
 - 更严格的线程访问检查。
 
 新增功能必须遵循本文的阶段和依赖模型，不应通过注册顺序、静态字段或隐式 EventPriority 恢复旧式跨模块耦合。

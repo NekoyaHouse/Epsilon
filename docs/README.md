@@ -12,7 +12,8 @@ docs/
 ├── gui-library.md
 ├── architecture/
 │   ├── overview.md
-│   └── lifecycle-and-components.md
+│   ├── lifecycle-and-components.md
+│   └── module-orchestration-design.md
 └── development/
     ├── build-and-versioning.md
     ├── modules-and-addons.md
@@ -29,6 +30,7 @@ docs/
 |---|---|
 | 项目定位、仓库结构、分层与 `common` 包 | [架构总览](architecture/overview.md) |
 | 启动顺序、Manager 与核心组件 | [生命周期与核心组件](architecture/lifecycle-and-components.md) |
+| Module Orchestrator 的节点图、阶段与 Part 规范 | [模块编排设计](architecture/module-orchestration-design.md) |
 | 版本来源、Gradle 约定、构建命令 | [构建与版本](development/build-and-versioning.md) |
 | Module、Setting DSL、Addon 注册 | [模块与 Addon](development/modules-and-addons.md) |
 | EventBus、事件目录、Mixin | [事件与 Mixin](development/events-and-mixins.md) |

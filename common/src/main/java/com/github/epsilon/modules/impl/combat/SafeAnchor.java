@@ -47,10 +47,55 @@ public class SafeAnchor extends Module {
     private SafeAnchor() {
         super("Safe Anchor", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
-
+        part(new TriggerPart());
+        part(new SequencePart());
+        part(new RenderPart());
     }
+
+    /**
+     * OBSERVE：读取触发键边沿并启动新序列。
+     * <p>这一段只读取 {@code mc} 与键位，只写模块私有状态（wasKeyDown、stage、原始槽位/朝向、
+     * 冷却计时器），既不切换物品栏也不发包，因此保持在 OBSERVE。
+     */
+    private final class TriggerPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            triggerNode = node(PlayerTickEvent.Pre.class, NodeKey.of("observe.trigger"))
+                    .phase(Phase.OBSERVE)
+                    .handler(SafeAnchor.this::observeTrigger);
+        }
+    }
+
+    /**
+     * COMMIT：推进锚点序列状态机。
+     * <p>循环体把「超时/锚点校验/提交旋转」和「放置锚点、放盾、充能、引爆」按轮次交错执行，
+     * 且同一次 tick 内 {@code cooldownMs == 0} 时会连续执行多轮，拆成两个节点会改变迭代语义，
+     * 所以整段保留在一个 COMMIT 节点内。
+     */
+    private final class SequencePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.sequence"))
+                    .phase(Phase.COMMIT)
+                    .after(triggerNode)
+                    .handler(SafeAnchor.this::commitSequence);
+        }
+    }
+
+    /**
+     * RENDER：只向 {@code Render3DScheduler} 提交高亮盒，不修改任何游戏状态。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.overlay"))
+                    .phase(Phase.RENDER)
+                    .handler(SafeAnchor.this::onRender3D);
+        }
+    }
+
+    /** OBSERVE 节点引用：COMMIT 节点需要显式声明跨阶段依赖。 */
+    private NodeRef<PlayerTickEvent.Pre> triggerNode;
 
     private enum Mode {Assist, Auto}
 
@@ -147,7 +192,10 @@ public class SafeAnchor extends Module {
     protected void onDisable() {
         resetState();
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+    /**
+     * OBSERVE：检测触发键边沿并在需要时启动新序列（只写模块私有状态）。
+     */
+    private void observeTrigger(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gui.screen() != null) return;
 
         int key = triggerKey.getValue();
@@ -170,6 +218,17 @@ public class SafeAnchor extends Module {
             stage = Stage.PLACE_ANCHOR;
             scheduleCooldown(anchorPlaceMinDelay, anchorPlaceMaxDelay);
         }
+    }
+
+    /**
+     * COMMIT：推进锚点状态机，执行放置、放盾、充能与引爆。
+     * <p>本段整体是原 {@code onTick} 的后半段，OBSERVE 段先执行、本段后执行，
+     * 单模块内的语句顺序与原来完全一致。
+     */
+    private void commitSequence(PlayerTickEvent.Pre event) {
+        // 节点是独立调用的：OBSERVE 段因守卫提前返回时本段必须同样跳过，
+        // 否则会在玩家为空、界面打开或触发键未绑定的情况下推进状态机。
+        if (nullCheck() || mc.gui.screen() != null || triggerKey.getValue() == -1) return;
 
         if (stage == Stage.IDLE) return;
 

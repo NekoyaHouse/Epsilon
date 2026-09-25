@@ -185,19 +185,102 @@ public class ElytraCombat extends Module {
     private ElytraCombat() {
         super("Elytra Combat", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onPlayerTick);
-        node(KeyboardInputEvent.class, NodeKey.of("managed.onKeyboardInput.keyboardinputevent")).phase(Phase.TRANSFORM).priority(EventPriority.HIGH).handler(this::onKeyboardInput);
-        node(FallFlyingMovementEvent.class, NodeKey.of("managed.onFallFlyingMovement.fallflyingmovementevent")).phase(Phase.TRANSFORM).priority(EventPriority.HIGHEST).handler(this::onFallFlyingMovement);
-        node(AttackEntityEvent.class, NodeKey.of("managed.onAttackEntity.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttackEntity);
-        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(0).handler(this::onPacketReceive);
-        node(KeyPressEvent.class, NodeKey.of("managed.onKeyPress.keypressevent")).phase(Phase.OBSERVE).priority(0).handler(this::onKeyPress);
-        node(MousePressEvent.class, NodeKey.of("managed.onMousePress.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMousePress);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+        part(new FlightPart());
+        part(new TransformPart());
+        part(new AttackPart());
+        part(new ObservePart());
+        part(new ModeSwitchPart());
+        part(new RenderPart());
 
         this.behaviors.put(ElytraCombatMode.Follow, new FollowBehavior());
         this.behaviors.put(ElytraCombatMode.Mace, new MaceBehavior());
         this.behaviors.put(ElytraCombatMode.Spear, new SpearBehavior());
         this.currentBehavior = this.behaviors.get(ElytraCombatMode.Follow);
+    }
+
+    /**
+     * DECIDE：刷新目标、更新预测快照并运行行为状态机，产出本 tick 的 {@code controlInput}。
+     * <p>
+     * 本节点不发送网络包、不攻击、不切换物品栏，只写模块私有状态。
+     */
+    private final class FlightPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("decide.flight_plan"))
+                    .phase(Phase.DECIDE)
+                    .priority(EventPriority.HIGH)
+                    .handler(ElytraCombat.this::onPlayerTick);
+        }
+    }
+
+    /**
+     * TRANSFORM：用规划结果覆盖键盘输入与滑翔速度，不产生世界副作用。
+     */
+    private final class TransformPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(KeyboardInputEvent.class, NodeKey.of("transform.keyboard_input"))
+                    .phase(Phase.TRANSFORM)
+                    .priority(EventPriority.HIGH)
+                    .handler(ElytraCombat.this::onKeyboardInput);
+
+            node(FallFlyingMovementEvent.class, NodeKey.of("transform.fall_flying_movement"))
+                    .phase(Phase.TRANSFORM)
+                    .priority(EventPriority.HIGHEST)
+                    .handler(ElytraCombat.this::onFallFlyingMovement);
+        }
+    }
+
+    /**
+     * COMMIT：记录本地对当前目标的攻击，并据此推进行为状态机。
+     */
+    private final class AttackPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(AttackEntityEvent.class, NodeKey.of("commit.attack"))
+                    .phase(Phase.COMMIT)
+                    .handler(ElytraCombat.this::onAttackEntity);
+        }
+    }
+
+    /**
+     * OBSERVE：网络包只用于喂给命中与运动追踪器，不做任何回包。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PacketEvent.Receive.class, NodeKey.of("observe.packet"))
+                    .phase(Phase.OBSERVE)
+                    .handler(ElytraCombat.this::onPacketReceive);
+        }
+    }
+
+    /**
+     * DECIDE：模式切换按键只改变本模块内部模式，不涉及世界状态。
+     */
+    private final class ModeSwitchPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(KeyPressEvent.class, NodeKey.of("decide.mode_key"))
+                    .phase(Phase.DECIDE)
+                    .handler(ElytraCombat.this::onKeyPress);
+
+            node(MousePressEvent.class, NodeKey.of("decide.mode_mouse"))
+                    .phase(Phase.DECIDE)
+                    .handler(ElytraCombat.this::onMousePress);
+        }
+    }
+
+    /**
+     * RENDER：只提交期望方向线段。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.flight_vector"))
+                    .phase(Phase.RENDER)
+                    .handler(ElytraCombat.this::onRender3D);
+        }
     }
 
     @Override

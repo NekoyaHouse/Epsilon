@@ -27,9 +27,34 @@ public class SilentAim extends Module {
     private SilentAim() {
         super("Silent Aim", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
-        node(SwingHandEvent.class, NodeKey.of("managed.onSwingHand.swinghandevent")).phase(Phase.OBSERVE).priority(0).handler(this::onSwingHand);
+        part(new CommitPart());
+        part(new TransformPart());
+    }
 
+    /**
+     * COMMIT：先向 RotationManager 写入静默旋转，再按该旋转的命中结果直接攻击。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.silent_attack"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(SilentAim.this::onTick);
+        }
+    }
+
+    /**
+     * TRANSFORM：挥手事件没有外部副作用，这里只取消原版挥手并记录待处理的静默重定向。
+     */
+    private final class TransformPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(SwingHandEvent.class, NodeKey.of("transform.swing_redirect"))
+                    .phase(Phase.TRANSFORM)
+
+                    .handler(SilentAim.this::onSwingHand);
+        }
     }
 
     private final BoolSetting weaponOnly = boolSetting("Weapon Only", false);

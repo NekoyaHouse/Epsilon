@@ -37,9 +37,34 @@ public class FeetTrap extends Module {
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+        part(new RotationPart());
+        part(new PlacePart());
+    }
 
+    /**
+     * COMMIT：把计算好的旋转写入 RotationManager，属于"应用已经裁决的旋转"，不是只读观察。
+     */
+    private final class RotationPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.apply_rotation"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(FeetTrap.this::onPlayerTick);
+        }
+    }
+
+    /**
+     * COMMIT：整个 client tick 都会切换物品栏并放置方块。
+     */
+    private final class PlacePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("commit.place_surround"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(FeetTrap.this::onClientTick);
+        }
     }
 
     private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true);

@@ -22,8 +22,21 @@ public class SafeCrystal extends Module {
     private SafeCrystal() {
         super("Safe Crystal", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：整个 tick 都是副作用——破坏走 {@code gameMode.attack}，放置走 {@code gameMode.useItemOn}；
+     * 准星、距离、视线等检查紧贴动作之前，属于提交前的重新校验，不存在可提前到 OBSERVE 的独立事实快照。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.crystal_action"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(SafeCrystal.this::onTick);
+        }
     }
 
     private final BoolSetting autoBreak = boolSetting("Auto Break", true);

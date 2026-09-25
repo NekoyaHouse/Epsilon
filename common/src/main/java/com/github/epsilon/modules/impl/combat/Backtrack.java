@@ -41,13 +41,81 @@ public class Backtrack extends Module {
     private Backtrack() {
         super("Backtrack", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(AttackEntityEvent.class, NodeKey.of("managed.onAttack.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttack);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onTick);
-        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(EventPriority.LOWEST).handler(this::onPacketReceive);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
-        node(GameLeftEvent.class, NodeKey.of("managed.onGameLeft.gameleftevent")).phase(Phase.CLEANUP).priority(0).handler(this::onGameLeft);
-        node(LevelUpdateEvent.class, NodeKey.of("managed.onLevelUpdate.levelupdateevent")).phase(Phase.OBSERVE).priority(0).handler(this::onLevelUpdate);
+        part(new AttackPart());
+        part(new TickPart());
+        part(new ObservePart());
+        part(new RenderPart());
+        part(new CleanupPart());
+    }
 
+    /**
+     * COMMIT：攻击事件会更新目标，并立即重放被延迟的服务端包。
+     */
+    private final class AttackPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(AttackEntityEvent.class, NodeKey.of("commit.attack"))
+                    .phase(Phase.COMMIT)
+                    .handler(Backtrack.this::onAttack);
+        }
+    }
+
+    /**
+     * COMMIT：本 tick 的状态机既读取目标，也会释放并重放延迟包，属于外部副作用，
+     * 不能放进 OBSERVE。整体迁移而不是拆分，是为了保持延迟队列的判定顺序不变。
+     */
+    private final class TickPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("commit.tick"))
+                    .phase(Phase.COMMIT)
+                    .priority(EventPriority.HIGH)
+                    .handler(Backtrack.this::onTick);
+        }
+    }
+
+    /**
+     * OBSERVE：入站包只做记录与取消，不主动发包。
+     * <p>
+     * 必须晚于本模块的 tick 动作（LOWEST），保证同一 tick 内状态机先确定
+     * {@code backtracking} 再决定是否拦截该包。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PacketEvent.Receive.class, NodeKey.of("observe.packet"))
+                    .phase(Phase.OBSERVE)
+                    .priority(EventPriority.LOWEST)
+                    .handler(Backtrack.this::onPacketReceive);
+
+            node(LevelUpdateEvent.class, NodeKey.of("observe.level_update"))
+                    .phase(Phase.OBSERVE)
+                    .handler(Backtrack.this::onLevelUpdate);
+        }
+    }
+
+    /**
+     * RENDER：只提交预测框，不改变任何延迟状态。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.tracked_box"))
+                    .phase(Phase.RENDER)
+                    .handler(Backtrack.this::onRender3D);
+        }
+    }
+
+    /**
+     * CLEANUP：离开世界时必须把队列中的包全部放行，避免玩家卡在半延迟状态。
+     */
+    private final class CleanupPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(GameLeftEvent.class, NodeKey.of("cleanup.game_left"))
+                    .phase(Phase.CLEANUP)
+                    .handler(Backtrack.this::onGameLeft);
+        }
     }
 
     private enum TargetMode {

@@ -16,6 +16,7 @@ import com.github.epsilon.modules.orchestration.ModuleDispatchMode;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
+import com.github.epsilon.modules.impl.combat.zealot_crystal_plus.ZealotCrystalPlus;
 import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.player.*;

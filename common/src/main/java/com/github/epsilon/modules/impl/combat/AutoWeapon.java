@@ -35,9 +35,23 @@ public class AutoWeapon extends Module {
     private AutoWeapon() {
         super("Auto Weapon", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(AttackEntityEvent.class, NodeKey.of("managed.onAttackEntity.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttackEntity);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：两个节点都会切换物品栏——攻击实体时换到目标武器，延迟结束后换回原槽位。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(AttackEntityEvent.class, NodeKey.of("commit.attack_swap"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoWeapon.this::onAttackEntity);
+
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.swap_back"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoWeapon.this::onTick);
+        }
     }
 
     private enum Mode {

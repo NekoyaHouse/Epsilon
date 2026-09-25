@@ -38,11 +38,73 @@ public class MyModule extends Module {
 `Module.setEnabled(true)` 会先订阅事件、发送通知，再调用 `onEnable()`；禁用时先取消订阅、发送通知，
 再调用 `onDisable()`。
 
+上面的 `@EventHandler` 写法是 **Legacy 模式**（`ModuleDispatchMode.LEGACY`）：`setEnabled` 会把模块
+订阅到 `EventBus`。新建的本体模块应改用下面的 Module Orchestrator，`COMBAT` 分类下的模块已全部迁移。
+
 `Module.resetCustomState()`、`saveCustomState()`、`loadCustomState(JsonObject)` 用于 Setting 之外的持久化
 状态。`setDefaultEnabled()` 和 `setDefaultHidden()` 同时影响 `reset()` 行为；普通模块默认 disabled、hidden。
 
 键位默认值为 `-1`。`Module.BindMode.Toggle` 在按下时切换，`Hold` 在按下时启用、松开时禁用。鼠标键由
 `KeybindUtils` 编码：26.3 起键盘保存 SDL 扫描码，鼠标键保存 SDL 编号（左 1、中 2、右 3）。
+
+## Module Orchestrator
+
+声明式节点图的完整设计见 [Module Orchestrator 设计](../architecture/module-orchestration-design.md)；
+本节只给出写模块时的落地约定。
+
+模块在构造函数里设置 `setDispatchMode(ModuleDispatchMode.MANAGED)`，然后把行为拆成若干 `ModulePart`：
+
+```java
+private MyModule() {
+    super("My Module", Category.COMBAT);
+    setDispatchMode(ModuleDispatchMode.MANAGED);
+    part(new TickPart());
+    part(new CommitPart());
+}
+
+/** DECIDE：只读取状态并算出本 tick 的意图，不产生副作用。 */
+private final class TickPart implements ModulePart {
+    @Override
+    public void declare(ModuleDeclaration declaration) {
+        node(PlayerTickEvent.Pre.class, NodeKey.of("decide.target"))
+                .phase(Phase.DECIDE)
+                .handler(MyModule.this::decideTarget);
+    }
+}
+```
+
+约定：
+
+- **NodeKey 表达业务含义**，用点号分组，前缀只能是 `observe` / `decide` / `transform` / `commit` /
+  `render` / `cleanup` 之一；不要用方法名或事件类名当身份。
+- **阶段必须与真实副作用一致**：`OBSERVE` 只读；`DECIDE` 只产出决策；`TRANSFORM` 只改事件字段；
+  `COMMIT` 才允许发包、攻击、放置、切换物品栏、写 `RotationManager`；`RENDER` 只提交渲染命令；
+  `CLEANUP` 负责离开世界后的恢复。把攻击写在 `OBSERVE` 里是迁移前最常见的错误。
+- **priority 只用于同阶段稳定排序**，语义是数值越大越先执行，沿用 `EventPriority` 的整数
+  （`HIGHEST=200`、`MEDIUM=0`、`LOWEST=-200`）。默认 `MEDIUM` 时省略 `.priority(...)`。
+- **`NodeRef` 依赖不能跨事件类型**：`before` / `after` 只在同一事件类型的 `DispatchPlan` 内解析，
+  跨事件顺序由阶段语义保证。需要保存节点引用时让 Part 自己持有 `NodeRef`。
+- **一个业务行为只能有一个入口**：Managed 模块不得再写 `@EventHandler`，也不得调用
+  `EventBus.INSTANCE.subscribe(this)`。`ModuleManager` 只会把 `MANAGED` 模块交给
+  `ModuleOrchestrator.register(...)`，`COMBAT` 分类下的 `LEGACY` 模块会被 `LegacyAdapter` 兜底转换。
+- **跨线程状态必须 volatile**：`OBSERVE` 在主线程把不可变快照交给 worker，worker 只写回结果字段；
+  worker 不得读取 Setting、世界或玩家。
+
+拆分参考实现：
+
+- 中等规模模块：`modules/impl/combat/AimBot.java`（单文件、多 Part）。
+- 大型模块：`modules/impl/combat/zealot_crystal_plus/`（父 Module 持有 Setting 与状态，Part 分文件，
+  不可变快照集中在 `ZealotSnapshot`，纯计算在 `ZealotDamage` / `ZealotMath`）。
+
+本地校验（沙箱内无外网、无法运行 Gradle 时）：
+
+```shell
+pwsh -File scripts/dev/compile-check.ps1 -Target common
+pwsh -File scripts/dev/orch-verify.ps1 -Task all
+```
+
+`orch-verify.ps1` 会重新编译整个 `common` 并校验调度契约与所有 combat 模块的节点图不变量
+（键唯一、依赖存在、无环、阶段与 priority 稳定、事件类型与处理器一致）。
 
 ## Setting DSL
 

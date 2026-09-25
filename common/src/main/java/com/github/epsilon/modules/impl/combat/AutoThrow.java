@@ -34,10 +34,45 @@ public class AutoThrow extends Module {
     private AutoThrow() {
         super("Auto Throw", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
-
+        part(new ThrowDecisionPart());
+        part(new ThrowCommitPart());
     }
+
+    /**
+     * DECIDE：确认可投掷条件、选择目标，并把投掷旋转作为意图提交给 RotationManager 仲裁。
+     * <p>{@code RotationManager.setRotations} 只是带优先级的旋转请求，不是最终朝向也不发包，
+     * 因此与目标选择同属 DECIDE；真正切换物品栏、置位投掷状态由 COMMIT 完成。
+     */
+    private final class ThrowDecisionPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            decisionNode = node(ClientTickEvent.Pre.class, NodeKey.of("decide.throw_target"))
+                    .phase(Phase.DECIDE)
+                    .handler(AutoThrow.this::decideThrowTarget);
+        }
+    }
+
+    /**
+     * COMMIT：把决策落到物品栏（必要时换到可投掷槽位）并执行投掷。
+     * <p>两个节点分属 ClientTick 与 PlayerTick 两个事件计划，跨事件的决策只能靠
+     * {@link #pendingThrowSlot} 与 {@link #shouldThrow} 传递。
+     */
+    private final class ThrowCommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("commit.arm_throw"))
+                    .phase(Phase.COMMIT)
+                    .after(decisionNode)
+                    .handler(AutoThrow.this::armThrow);
+
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.throw_item"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoThrow.this::onPlayerTick);
+        }
+    }
+
+    /** DECIDE 节点引用：COMMIT 节点需要显式声明跨阶段依赖。 */
+    private NodeRef<ClientTickEvent.Pre> decisionNode;
 
     private final DoubleSetting minRange = doubleSetting("Min Range", 3.0, 0.0, 10.0, 0.1);
     private final DoubleSetting maxRange = doubleSetting("Max Range", 8.0, 2.0, 16.0, 0.1);
@@ -49,6 +84,12 @@ public class AutoThrow extends Module {
     private final TimerUtils timer = new TimerUtils();
     private boolean shouldThrow;
     private int lastSlot;
+
+    /** {@link #pendingThrowSlot} 的“本 tick 没有待提交动作”哨兵值；合法槽位范围是 -1..8。 */
+    private static final int NO_PENDING_THROW = Integer.MIN_VALUE;
+
+    /** DECIDE 节点发布的待提交投掷槽位；COMMIT 节点只消费，不重新推导。 */
+    private int pendingThrowSlot = NO_PENDING_THROW;
 
     private LivingEntity currentTarget;
 
@@ -62,19 +103,25 @@ public class AutoThrow extends Module {
         timer.reset();
         shouldThrow = false;
         lastSlot = -1;
+        pendingThrowSlot = NO_PENDING_THROW;
         currentTarget = null;
     }
 
     @Override
     protected void onDisable() {
         shouldThrow = false;
+        pendingThrowSlot = NO_PENDING_THROW;
         currentTarget = null;
         if (!nullCheck() && lastSlot != -1) {
             mc.player.getInventory().setSelectedSlot(lastSlot);
             lastSlot = -1;
         }
     }
-    private void onClientTick(ClientTickEvent.Pre event) {
+    /**
+     * DECIDE：搜索目标、提交旋转意图并做命中校验；通过后把投掷槽位发布给 COMMIT 节点。
+     * <p>“是否已经可以投掷”只在 COMMIT 阶段落到物品栏，因此这里不产生任何外部副作用。
+     */
+    private void decideThrowTarget(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         int slot = getThrowSlot();
         if (mc.player.getMainHandItem().is(Items.SNOWBALL)
@@ -128,21 +175,39 @@ public class AutoThrow extends Module {
                 HitResult hit = RaytraceUtils.raytrace(rotation, maxRange);
                 if (hit.getType() != HitResult.Type.ENTITY) return;
 
-                // 准备槽位与投掷状态
-                ItemStack off = mc.player.getOffhandItem();
-                ItemStack main = mc.player.getMainHandItem();
-                if (!isThrowable(off) && !isThrowable(main)) {
-                    lastSlot = mc.player.getInventory().getSelectedSlot();
-                    mc.player.getInventory().setSelectedSlot(slot);
-                }
-
-                shouldThrow = true;
-                timer.reset();
+                pendingThrowSlot = slot;
             } else {
                 currentTarget = null;
             }
         }
     }
+
+    /**
+     * COMMIT：按 DECIDE 发布的槽位准备投掷。
+     * <p>边界正好落在原 {@code onClientTick} 的“准备槽位与投掷状态”一段：
+     * OBSERVE/DECIDE 在前、COMMIT 在后，单模块内的语句顺序与原实现完全一致。
+     */
+    private void armThrow(ClientTickEvent.Pre event) {
+        if (pendingThrowSlot == NO_PENDING_THROW) return;
+
+        int slot = pendingThrowSlot;
+        pendingThrowSlot = NO_PENDING_THROW;
+
+        // 准备槽位与投掷状态
+        ItemStack off = mc.player.getOffhandItem();
+        ItemStack main = mc.player.getMainHandItem();
+        if (!isThrowable(off) && !isThrowable(main)) {
+            lastSlot = mc.player.getInventory().getSelectedSlot();
+            mc.player.getInventory().setSelectedSlot(slot);
+        }
+
+        shouldThrow = true;
+        timer.reset();
+    }
+    /**
+     * COMMIT：真正投掷（{@code useItem} 会发包）并恢复原槽位。
+     * <p>无论是否投掷都只改物品栏与模块状态，属于同一次提交，因此不拆分。
+     */
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (shouldThrow && canWork()) {
             boolean used = false;

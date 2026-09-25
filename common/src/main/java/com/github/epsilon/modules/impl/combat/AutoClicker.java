@@ -50,8 +50,20 @@ public class AutoClicker extends Module {
     private AutoClicker() {
         super("Auto Clicker", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：整个 tick 都是副作用——{@code KeyMapping.click} 会触发攻击/使用，
+     * {@link #applyJitter} 还会直接改写玩家朝向，因此不存在可拆分的只读阶段。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.click"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoClicker.this::onTick);
+        }
     }
 
     @Override

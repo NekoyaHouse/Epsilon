@@ -25,8 +25,23 @@ public class SpearKill extends Module {
     private SpearKill() {
         super("Spear Kill", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.class, NodeKey.of("managed.onTick.playertickevent")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：整个 tick 都会改写玩家移动状态（{@code setDeltaMovement}、{@code setSprinting}）与朝向。
+     * <p>
+     * 事件必须是 {@link PlayerTickEvent.Pre}：{@code PlayerTickEvent} 基类从未被投递，
+     * 只有 {@code Pre} / {@code Post} 会被 {@code MixinLocalPlayer} 发出，而事件总线按运行时精确
+     * class 分发，因此声明基类会让节点永远不执行。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.lunge"))
+                    .phase(Phase.COMMIT)
+                    .handler(SpearKill.this::onTick);
+        }
     }
 
     private enum LungeMode {
@@ -70,7 +85,7 @@ public class SpearKill extends Module {
         aboveTargetPos = null;
         firstPhase = false;
     }
-    public void onTick(PlayerTickEvent e) {
+    public void onTick(PlayerTickEvent.Pre e) {
         if (ElytraCombat.INSTANCE.isControllingCombat()) {
             return;
         }

@@ -46,9 +46,50 @@ public class KillAura extends Module {
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+        part(new DecidePart());
+        part(new CommitPart());
+        part(new RenderPart());
+    }
+
+    /**
+     * DECIDE：筛选与排序目标、计算并提交旋转请求、累计可攻击次数。
+     * <p>
+     * 这里不攻击任何人：{@code attacks} 只是一个计数器，真正的攻击在 {@code commit.attack}。
+     */
+    private final class DecidePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(ClientTickEvent.Pre.class, NodeKey.of("decide.target"))
+                    .phase(Phase.DECIDE)
+                    .handler(KillAura.this::onClientTick);
+        }
+    }
+
+    /**
+     * COMMIT：消耗 {@code attacks} 计数并对准星目标发起真实攻击。
+     * <p>
+     * 与 {@code decide.target} 同属一次 tick 的 Deciding → Commit 顺序，因此本帧新累计的
+     * 攻击次数会在同一帧内被执行。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.attack"))
+                    .phase(Phase.COMMIT)
+                    .handler(KillAura.this::onPlayerTick);
+        }
+    }
+
+    /**
+     * RENDER：只绘制 Deobf ESP。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.deobf"))
+                    .phase(Phase.RENDER)
+                    .handler(KillAura.this::onRender3D);
+        }
     }
 
     private enum Mode {

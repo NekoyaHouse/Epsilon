@@ -3,7 +3,11 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.orchestration.*;
+import com.github.epsilon.modules.orchestration.ModuleDeclaration;
+import com.github.epsilon.modules.orchestration.ModuleDispatchMode;
+import com.github.epsilon.modules.orchestration.ModulePart;
+import com.github.epsilon.modules.orchestration.NodeKey;
+import com.github.epsilon.modules.orchestration.Phase;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -24,8 +28,19 @@ public class DoubleAnchor extends Module {
     private DoubleAnchor() {
         super("Double Anchor", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(com.github.epsilon.modules.orchestration.Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new CommitPart());
+    }
 
+    /**
+     * COMMIT：整个状态机都会切换物品栏并调用 {@code useItemOn}，属于外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.anchor_cycle"))
+                    .phase(Phase.COMMIT)
+                    .handler(DoubleAnchor.this::onTick);
+        }
     }
 
     private final KeybindSetting triggerKey = keybindSetting("Trigger Key", -1);
@@ -33,7 +48,8 @@ public class DoubleAnchor extends Module {
     private final IntSetting placeCps = intSetting("Place CPS", 10, 1, 30, 1);
     private final IntSetting chargeCps = intSetting("Charge CPS", 10, 1, 30, 1);
 
-    private enum Phase {
+    /** 起爆状态机的内部阶段；与编排层的 {@link com.github.epsilon.modules.orchestration.Phase} 无关。 */
+    private enum AnchorPhase {
         IDLE,
         PLACE_ANCHOR,
         CHARGE,
@@ -43,7 +59,7 @@ public class DoubleAnchor extends Module {
         CLEANUP
     }
 
-    private Phase phase = Phase.IDLE;
+    private AnchorPhase phase = AnchorPhase.IDLE;
     private int originalSlot = -1;
     private boolean wasKeyDown;
     private int cooldown;
@@ -66,15 +82,15 @@ public class DoubleAnchor extends Module {
         wasKeyDown = keyDown;
 
         if (newPress) {
-            if (phase != Phase.IDLE && originalSlot >= 0) {
+            if (phase != AnchorPhase.IDLE && originalSlot >= 0) {
                 mc.player.getInventory().setSelectedSlot(originalSlot);
             }
             originalSlot = mc.player.getInventory().getSelectedSlot();
             cooldown = 0;
-            phase = Phase.PLACE_ANCHOR;
+            phase = AnchorPhase.PLACE_ANCHOR;
         }
 
-        if (phase == Phase.IDLE) return;
+        if (phase == AnchorPhase.IDLE) return;
 
         if (cooldown > 0) {
             cooldown--;
@@ -98,7 +114,7 @@ public class DoubleAnchor extends Module {
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
 
         if (mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) {
-            phase = Phase.CHARGE;
+            phase = AnchorPhase.CHARGE;
             return;
         }
 
@@ -113,7 +129,7 @@ public class DoubleAnchor extends Module {
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(placeCps.getValue());
 
-        phase = Phase.CHARGE;
+        phase = AnchorPhase.CHARGE;
     }
 
     private void doCharge() {
@@ -132,7 +148,7 @@ public class DoubleAnchor extends Module {
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(chargeCps.getValue());
 
-        phase = Phase.AIRPLACE;
+        phase = AnchorPhase.AIRPLACE;
     }
 
     private void doAirplace() {
@@ -152,7 +168,7 @@ public class DoubleAnchor extends Module {
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
 
-        phase = Phase.CHARGE_2;
+        phase = AnchorPhase.CHARGE_2;
     }
 
     private void doCharge2() {
@@ -171,7 +187,7 @@ public class DoubleAnchor extends Module {
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(chargeCps.getValue());
 
-        phase = Phase.DETONATE;
+        phase = AnchorPhase.DETONATE;
     }
 
     private void doDetonate() {
@@ -184,7 +200,7 @@ public class DoubleAnchor extends Module {
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
 
-        phase = Phase.CLEANUP;
+        phase = AnchorPhase.CLEANUP;
     }
 
     private void doCleanup() {
@@ -220,14 +236,14 @@ public class DoubleAnchor extends Module {
     }
 
     private void resetState() {
-        phase = Phase.IDLE;
+        phase = AnchorPhase.IDLE;
         originalSlot = -1;
         wasKeyDown = false;
         cooldown = 0;
     }
 
     public boolean isActive() {
-        return isEnabled() && phase != Phase.IDLE;
+        return isEnabled() && phase != AnchorPhase.IDLE;
     }
 
 

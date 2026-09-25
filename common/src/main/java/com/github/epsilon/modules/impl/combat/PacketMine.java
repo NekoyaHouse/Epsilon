@@ -41,9 +41,32 @@ public class PacketMine extends Module {
     private PacketMine() {
         super("Packet Mine", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(StartDestroyBlockEvent.class, NodeKey.of("managed.onStartBreakingBlock.startdestroyblockevent")).phase(Phase.COMMIT).priority(0).handler(this::onStartBreakingBlock);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender);
+        part(new MiningPart());
+        part(new RenderPart());
+    }
 
+    /**
+     * COMMIT：拦截原版破坏并改用发包方式挖掘，属于外部副作用。
+     */
+    private final class MiningPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(StartDestroyBlockEvent.class, NodeKey.of("commit.start_breaking"))
+                    .phase(Phase.COMMIT)
+                    .handler(PacketMine.this::onStartBreakingBlock);
+        }
+    }
+
+    /**
+     * RENDER：只绘制挖掘进度与预测框。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.progress"))
+                    .phase(Phase.RENDER)
+                    .handler(PacketMine.this::onRender);
+        }
     }
 
     private enum SwitchMode {

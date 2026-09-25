@@ -41,9 +41,37 @@ public class CrystalAura extends Module {
     private CrystalAura() {
         super("Crystal Aura", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
-        node(RightClickEvent.class, NodeKey.of("managed.onClick.rightclickevent")).phase(Phase.COMMIT).priority(0).handler(this::onClick);
+        part(new CommitPart());
+        part(new TransformPart());
+    }
 
+    /**
+     * COMMIT：tick 内会放置与破坏水晶、切换物品栏并模拟点击，全部是外部副作用。
+     * <p>
+     * {@code onTick} 同时被 {@link AutoHitCrystal} 直接调用（传入 {@code null}），
+     * 因此不能再按"只读段/动作段"拆成两个节点，否则外部调用只会执行一半逻辑。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.crystal_action"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(CrystalAura.this::onTick);
+        }
+    }
+
+    /**
+     * TRANSFORM：只取消原版右键使用，属于对输入事件取消状态的修改，本身不产生外部副作用。
+     */
+    private final class TransformPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(RightClickEvent.class, NodeKey.of("transform.cancel_use"))
+                    .phase(Phase.TRANSFORM)
+
+                    .handler(CrystalAura.this::onClick);
+        }
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", InputConstants.UNKNOWN.getValue());

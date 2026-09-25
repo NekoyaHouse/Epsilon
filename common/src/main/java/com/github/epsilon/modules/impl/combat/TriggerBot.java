@@ -36,19 +36,55 @@ public class TriggerBot extends Module {
     private final DoubleSetting critFallDistance = doubleSetting("Crit Fall Distance", 0.0, 0.0, 1.0, 0.05);
 
     private int delay;
+    private Entity pendingTarget;
 
     private TriggerBot() {
         super("Trigger Bot", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new TickPart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：解析准星目标并维护攻击延迟，只读世界状态与模块私有字段。
+     */
+    private final class TickPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.crosshair_target"))
+                    .phase(Phase.OBSERVE)
+
+                    .handler(TriggerBot.this::observeCrosshair);
+        }
+    }
+
+    /**
+     * COMMIT：攻击 OBSERVE 确认过的目标。
+     * <p>
+     * 同一事件内 OBSERVE 阶段先于 COMMIT 阶段，因此拆分后两段的执行顺序与原 onTick 完全一致。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.attack"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(TriggerBot.this::commitAttack);
+        }
     }
 
     @Override
     protected void onDisable() {
         delay = 0;
+        pendingTarget = null;
     }
-    public void onTick(PlayerTickEvent.Pre event) {
+
+    /**
+     * 原 onTick 前半段：目标解析与出手判定，不产生外部副作用。
+     */
+    private void observeCrosshair(PlayerTickEvent.Pre event) {
+        pendingTarget = null;
+
         if (nullCheck() || mc.gui.screen() != null) return;
 
         if (mc.player.isUsingItem() || mc.player.isBlocking()) {
@@ -64,6 +100,17 @@ public class TriggerBot extends Module {
                 return;
             }
         }
+
+        pendingTarget = target;
+    }
+
+    /**
+     * 原 onTick 后半段：延迟判定通过后执行攻击。
+     */
+    private void commitAttack(PlayerTickEvent.Pre event) {
+        Entity target = pendingTarget;
+        pendingTarget = null;
+        if (target == null) return;
 
         mc.gameMode.attack(mc.player, target);
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND);

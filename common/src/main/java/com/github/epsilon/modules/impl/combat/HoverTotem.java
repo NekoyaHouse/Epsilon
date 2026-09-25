@@ -20,8 +20,34 @@ public class HoverTotem extends Module {
     private HoverTotem() {
         super("Hover Totem", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：只在背包界面里解析悬停格与目标槽位，并推进点击间隔倒计时。
+     * <p>
+     * 切换快捷栏槽位与容器点击都是副作用，这里一个都不做。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.hover_slot"))
+                    .phase(Phase.OBSERVE)
+                    .handler(HoverTotem.this::observeHoverSlot);
+        }
+    }
+
+    /**
+     * COMMIT：切换选中槽位与交换容器槽位都是外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.swap_totem"))
+                    .phase(Phase.COMMIT)
+                    .handler(HoverTotem.this::commitSwapTotem);
+        }
     }
 
     private final DoubleSetting delay = doubleSetting("Delay", 0.0, 0.0, 20.0, 0.1);
@@ -33,6 +59,10 @@ public class HoverTotem extends Module {
     private int clock;
     private final Random random = new Random();
     private int currentDelay;
+    /** observe.hover_slot 产出的槽位事实：-1 表示本 tick 不执行该动作。 */
+    private int pendingAutoSwitchSlot = -1;
+    private int pendingSwapSlotIndex = -1;
+    private int pendingSwapTarget = -1;
 
     @Override
     protected void onEnable() {
@@ -53,13 +83,17 @@ public class HoverTotem extends Module {
 
         return (int) Math.ceil(totalDelay);
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void observeHoverSlot(PlayerTickEvent.Pre event) {
+        this.pendingAutoSwitchSlot = -1;
+        this.pendingSwapSlotIndex = -1;
+        this.pendingSwapTarget = -1;
+
         if (mc.gui.screen() instanceof InventoryScreen inv) {
             Slot hoveredSlot = inv.hoveredSlot;
 
             if (this.autoSwitch.getValue()) {
                 int slotValue = this.slot.getValue().intValue();
-                mc.player.getInventory().setSelectedSlot(slotValue - 1);
+                this.pendingAutoSwitchSlot = slotValue - 1;
             }
 
             if (hoveredSlot != null) {
@@ -77,17 +111,15 @@ public class HoverTotem extends Module {
                             --this.clock;
                             return;
                         }
-                        ClickSlotUtils.swap(mc.player.containerMenu.containerId, slotIndex, totem);
-                        this.currentDelay = this.getRandomDelay();
-                        this.clock = this.currentDelay;
+                        this.pendingSwapSlotIndex = slotIndex;
+                        this.pendingSwapTarget = totem;
                     } else if (!mc.player.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
                         if (this.clock > 0) {
                             --this.clock;
                             return;
                         }
-                        ClickSlotUtils.swap(mc.player.containerMenu.containerId, slotIndex, 40);
-                        this.currentDelay = this.getRandomDelay();
-                        this.clock = this.currentDelay;
+                        this.pendingSwapSlotIndex = slotIndex;
+                        this.pendingSwapTarget = 40;
                     }
                 }
             }
@@ -95,6 +127,22 @@ public class HoverTotem extends Module {
             this.currentDelay = this.getRandomDelay();
             this.clock = this.currentDelay;
         }
+    }
+
+    private void commitSwapTotem(PlayerTickEvent.Pre event) {
+        if (this.pendingAutoSwitchSlot >= 0) {
+            mc.player.getInventory().setSelectedSlot(this.pendingAutoSwitchSlot);
+        }
+
+        if (this.pendingSwapTarget < 0) {
+            return;
+        }
+
+        ClickSlotUtils.swap(mc.player.containerMenu.containerId, this.pendingSwapSlotIndex, this.pendingSwapTarget);
+        this.currentDelay = this.getRandomDelay();
+        this.clock = this.currentDelay;
+        this.pendingSwapSlotIndex = -1;
+        this.pendingSwapTarget = -1;
     }
 
 }

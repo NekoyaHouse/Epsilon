@@ -38,9 +38,49 @@ public class AutoHitCrystal extends Module {
     private AutoHitCrystal() {
         super("Auto Hit Crystal", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
-        node(RightClickEvent.class, NodeKey.of("managed.onClick.rightclickevent")).phase(Phase.COMMIT).priority(0).handler(this::onClick);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender);
+        part(new DecidePart());
+        part(new CommitPart());
+        part(new RenderPart());
+    }
+
+    /**
+     * DECIDE：只读取按键、准星与手持物品，判定本 tick 是否进入激活流程；随机数与物品栏切换都留给 COMMIT。
+     */
+    private final class DecidePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("decide.activate"))
+                    .phase(Phase.DECIDE)
+                    .handler(AutoHitCrystal.this::decideActivate);
+        }
+    }
+
+    /**
+     * COMMIT：切换物品栏、放置黑曜石并推进水晶流程；右键节点只负责换水晶与拦截使用键。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.place_crystal"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoHitCrystal.this::commitAction);
+
+            node(RightClickEvent.class, NodeKey.of("commit.right_click"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoHitCrystal.this::onClick);
+        }
+    }
+
+    /**
+     * RENDER：只提交放置位置的淡出方框，不产生世界副作用。
+     */
+    private final class RenderPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.place_box"))
+                    .phase(Phase.RENDER)
+                    .handler(AutoHitCrystal.this::onRender);
+        }
     }
 
     private void onRender(Render3DEvent event) {
@@ -83,100 +123,116 @@ public class AutoHitCrystal extends Module {
     private boolean active;
     private boolean crystalling;
 
+    /**
+     * DECIDE 通过全部校验后置位；两个节点在同一 tick 内按阶段顺序执行，COMMIT 据此决定是否继续。
+     */
+    private boolean activatedThisTick;
+
     private final List<RenderBox> renderBoxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
         resetState();
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+
+    private void decideActivate(PlayerTickEvent.Pre event) {
+        this.activatedThisTick = false;
         if (mc.gui.screen() != null) return;
 
         if (this.switchClock > 0) --this.switchClock;
         if (this.placeClock > 0) --this.placeClock;
 
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());
-        if (pressed) {
-            HitResult hitResult = mc.hitResult;
-            if (hitResult instanceof BlockHitResult hitResult2) {
-                if (hitResult.getType() == HitResult.Type.BLOCK && !this.active && !mc.level.getBlockState(hitResult2.getBlockPos()).canBeReplaced() && this.checkPlace.getValue()) {
-                    return;
-                }
-            }
+        if (!pressed) {
+            this.resetState();
+            return;
+        }
 
-            var mainHandStack = mc.player.getMainHandItem();
-            if (!(mainHandStack.is(ItemTags.SWORDS) ||
-                    (this.workWithTotem.getValue() && mainHandStack.is(Items.TOTEM_OF_UNDYING)) ||
-                    (this.workWithCrystal.getValue() && mainHandStack.is(Items.END_CRYSTAL)) ||
-                    (this.workWithPickaxe.getValue() && mainHandStack.is(ItemTags.PICKAXES)) ||
-                    this.active)) {
+        HitResult hitResult = mc.hitResult;
+        if (hitResult instanceof BlockHitResult hitResult2) {
+            if (hitResult.getType() == HitResult.Type.BLOCK && !this.active && !mc.level.getBlockState(hitResult2.getBlockPos()).canBeReplaced() && this.checkPlace.getValue()) {
                 return;
+            }
+        }
 
+        var mainHandStack = mc.player.getMainHandItem();
+        if (!(mainHandStack.is(ItemTags.SWORDS) ||
+                (this.workWithTotem.getValue() && mainHandStack.is(Items.TOTEM_OF_UNDYING)) ||
+                (this.workWithCrystal.getValue() && mainHandStack.is(Items.END_CRYSTAL)) ||
+                (this.workWithPickaxe.getValue() && mainHandStack.is(ItemTags.PICKAXES)) ||
+                this.active)) {
+            return;
+
+        }
+
+        this.active = true;
+        this.activatedThisTick = true;
+    }
+
+    private void commitAction(PlayerTickEvent.Pre event) {
+        if (!this.activatedThisTick) return;
+
+        // 与 DECIDE 属于同一 tick，mc.hitResult 不会在两者之间重新计算，这里重新读取以保持方法自洽。
+        HitResult hitResult = mc.hitResult;
+
+        if (!this.crystalling && hitResult instanceof BlockHitResult hit) {
+            if (hit.getType() == HitResult.Type.MISS) {
+                return;
             }
 
-            this.active = true;
+            BlockPos renderPos = hit.getBlockPos().relative(hit.getDirection());
+            BlockState hitState = mc.level.getBlockState(hit.getBlockPos());
 
-            if (!this.crystalling && hitResult instanceof BlockHitResult hit) {
-                if (hit.getType() == HitResult.Type.MISS) {
+            if (hitState.is(Blocks.BEDROCK) || hitState.is(Blocks.OBSIDIAN)) {
+                this.active = true;
+                this.crystalling = true;
+            } else if (!mc.level.getBlockState(renderPos).is(Blocks.OBSIDIAN)) {
+                BlockState state = mc.level.getBlockState(hit.getBlockPos());
+                if (state.is(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0) {
                     return;
                 }
 
-                BlockPos renderPos = hit.getBlockPos().relative(hit.getDirection());
-                BlockState hitState = mc.level.getBlockState(hit.getBlockPos());
+                mc.options.keyUse.setDown(false);
 
-                if (hitState.is(Blocks.BEDROCK) || hitState.is(Blocks.OBSIDIAN)) {
-                    this.active = true;
-                    this.crystalling = true;
-                } else if (!mc.level.getBlockState(renderPos).is(Blocks.OBSIDIAN)) {
-                    BlockState state = mc.level.getBlockState(hit.getBlockPos());
-                    if (state.is(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0) {
-                        return;
-                    }
-
-                    mc.options.keyUse.setDown(false);
-
-                    if (!mc.player.isHolding(Items.OBSIDIAN)) {
-                        if (this.switchClock > 0) {
-                            return;
-                        }
-                        if (MathUtils.getRandom(1, 100) <= this.switchChance.getValue().intValue()) {
-                            this.switchClock = this.switchDelay.getValue().intValue();
-                            selectItemFromHotbar(Items.OBSIDIAN);
-                        }
-                    }
-
-                    if (mc.player.isHolding(Items.OBSIDIAN)) {
-                        if (this.placeClock > 0) {
-                            return;
-                        }
-
-                        if (MathUtils.getRandom(1, 100) <= this.placeChance.getValue().intValue()) {
-                            placeBlock(hit, renderPos);
-                            this.placeClock = this.placeDelay.getValue().intValue();
-                            this.crystalling = true;
-                        }
-                    }
-                }
-            }
-
-            if (this.crystalling) {
-                if (!mc.player.isHolding(Items.END_CRYSTAL)) {
+                if (!mc.player.isHolding(Items.OBSIDIAN)) {
                     if (this.switchClock > 0) {
                         return;
                     }
                     if (MathUtils.getRandom(1, 100) <= this.switchChance.getValue().intValue()) {
-                        if (selectItemFromHotbar(Items.END_CRYSTAL)) {
-                            this.switchClock = this.switchDelay.getValue().intValue();
-                        }
+                        this.switchClock = this.switchDelay.getValue().intValue();
+                        selectItemFromHotbar(Items.OBSIDIAN);
                     }
                 }
 
-                if (mc.player.isHolding(Items.END_CRYSTAL) && !CrystalAura.INSTANCE.isEnabled()) {
-                    CrystalAura.INSTANCE.onTick(null);
+                if (mc.player.isHolding(Items.OBSIDIAN)) {
+                    if (this.placeClock > 0) {
+                        return;
+                    }
+
+                    if (MathUtils.getRandom(1, 100) <= this.placeChance.getValue().intValue()) {
+                        placeBlock(hit, renderPos);
+                        this.placeClock = this.placeDelay.getValue().intValue();
+                        this.crystalling = true;
+                    }
                 }
             }
-        } else {
-            this.resetState();
+        }
+
+        if (this.crystalling) {
+            if (!mc.player.isHolding(Items.END_CRYSTAL)) {
+                if (this.switchClock > 0) {
+                    return;
+                }
+                if (MathUtils.getRandom(1, 100) <= this.switchChance.getValue().intValue()) {
+                    if (selectItemFromHotbar(Items.END_CRYSTAL)) {
+                        this.switchClock = this.switchDelay.getValue().intValue();
+                    }
+                }
+            }
+
+            if (mc.player.isHolding(Items.END_CRYSTAL) && !CrystalAura.INSTANCE.isEnabled()) {
+                CrystalAura.INSTANCE.onTick(null);
+            }
         }
     }
     private void onClick(RightClickEvent event) {

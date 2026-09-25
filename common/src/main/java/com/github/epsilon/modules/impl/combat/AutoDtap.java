@@ -29,9 +29,35 @@ public class AutoDtap extends Module {
     private AutoDtap() {
         super("Auto Dtap", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(MousePressEvent.class, NodeKey.of("managed.onMouse.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMouse);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：只记录右键按下这一事实，事件本身不被修改。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(MousePressEvent.class, NodeKey.of("observe.right_click"))
+                    .phase(Phase.OBSERVE)
+
+                    .handler(AutoDtap.this::onMouse);
+        }
+    }
+
+    /**
+     * COMMIT：状态机会切换物品栏（{@code InvUtils.swap}）并直接调用 {@code gameMode.useItemOn}，
+     * 读取与提交在同一步骤内交织，没有可独立拆出的只读阶段。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.dtap_sequence"))
+                    .phase(Phase.COMMIT)
+
+                    .handler(AutoDtap.this::onTick);
+        }
     }
 
     private final BoolSetting swapBack = boolSetting("SwapBack", true);

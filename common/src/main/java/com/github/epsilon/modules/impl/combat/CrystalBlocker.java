@@ -36,8 +36,34 @@ public class CrystalBlocker extends Module {
     private CrystalBlocker() {
         super("Crystal Blocker", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：扫描水晶、推算放置点并校验可放置，只产出放置方案。
+     * <p>
+     * 归还槽位与旋转都是副作用，因此这里只做倒计时与方案计算，不碰物品栏和旋转管理器。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.place_plan"))
+                    .phase(Phase.OBSERVE)
+                    .handler(CrystalBlocker.this::observePlacePlan);
+        }
+    }
+
+    /**
+     * COMMIT：归还槽位、应用旋转并放置黑曜石都是外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.place_block"))
+                    .phase(Phase.COMMIT)
+                    .handler(CrystalBlocker.this::commitPlaceBlock);
+        }
     }
 
     private final DoubleSetting range = doubleSetting("Range", 4.0, 1.0, 6.0, 0.1);
@@ -51,6 +77,9 @@ public class CrystalBlocker extends Module {
     private boolean waitingSwapBack = false;
     private int swapBackTicks = 0;
     private int savedOldSlot = -1;
+    /** observe.place_plan 产出的放置方案，只在同一 tick 的 commit.place_block 中消费。 */
+    private BlockPos pendingPlacePos;
+    private FindItemResult pendingObsidian;
 
     public enum RotateMode {
         None, Normal, Silent
@@ -59,19 +88,15 @@ public class CrystalBlocker extends Module {
     public enum SwitchMode {
         Visible, Silent
     }
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void observePlacePlan(PlayerTickEvent.Pre event) {
+        pendingPlacePos = null;
         if (!mc.player.onGround()) return;
 
         if (waitingSwapBack) {
             if (swapBackTicks > 0) {
                 swapBackTicks--;
-                if (swapBackTicks > 0) return;
             }
-            if (savedOldSlot >= 0) {
-                mc.player.getInventory().setSelectedSlot(savedOldSlot);
-            }
-            waitingSwapBack = false;
-            savedOldSlot = -1;
+            // 归还槽位是物品栏副作用，交给 commit.place_block 执行，这里只推进倒计时。
             return;
         }
 
@@ -124,6 +149,27 @@ public class CrystalBlocker extends Module {
         FindItemResult obsidian = InvUtils.findInHotbar(Items.OBSIDIAN);
         if (!obsidian.found()) return;
 
+        // 5. 旋转与放置属于副作用，固化方案后由 commit.place_block 执行
+        pendingPlacePos = placePos;
+        pendingObsidian = obsidian;
+    }
+
+    private void commitPlaceBlock(PlayerTickEvent.Pre event) {
+        // 与 OBSERVE 保持同一前置条件：腾空时既不归还槽位也不放置。
+        if (!mc.player.onGround()) return;
+
+        if (waitingSwapBack && swapBackTicks <= 0) {
+            if (savedOldSlot >= 0) {
+                mc.player.getInventory().setSelectedSlot(savedOldSlot);
+            }
+            waitingSwapBack = false;
+            savedOldSlot = -1;
+            return;
+        }
+
+        BlockPos placePos = pendingPlacePos;
+        if (placePos == null) return;
+
         // 5. Rotation and placement
         Rot2f rot = RotationUtils.calculate(mc.player.getEyePosition(), Vec3.atCenterOf(placePos));
         boolean readyToPlace = true;
@@ -144,7 +190,7 @@ public class CrystalBlocker extends Module {
         }
 
         if (readyToPlace && timer <= 0) {
-            placeBlock(placePos, obsidian);
+            placeBlock(placePos, pendingObsidian);
             timer = delay.getValue();
         }
     }

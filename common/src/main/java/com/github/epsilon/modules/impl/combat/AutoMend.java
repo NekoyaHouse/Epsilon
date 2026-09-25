@@ -22,8 +22,32 @@ public class AutoMend extends Module {
     private AutoMend() {
         super("Auto Mend", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onClientTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+        part(new ObservePart());
+        part(new CommitPart());
+    }
 
+    /**
+     * OBSERVE：只查找经验瓶所在槽位，不切换物品栏、不使用物品。
+     */
+    private final class ObservePart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.bottle"))
+                    .phase(Phase.OBSERVE)
+                    .handler(AutoMend.this::observeBottle);
+        }
+    }
+
+    /**
+     * COMMIT：换手持瓶、使用经验瓶与回切槽位都是外部副作用。
+     */
+    private final class CommitPart implements ModulePart {
+        @Override
+        public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.use_bottle"))
+                    .phase(Phase.COMMIT)
+                    .handler(AutoMend.this::commitUseBottle);
+        }
     }
 
     private enum SwitchMode {
@@ -35,6 +59,8 @@ public class AutoMend extends Module {
     private final BoolSetting swingHand = boolSetting("Swing Hand", false);
 
     private boolean shouldSwapBack;
+    /** observe.bottle 产出的槽位事实，只在同一 tick 的 commit.use_bottle 中消费。 */
+    private FindItemResult bottle;
 
     @Override
     protected void onEnable() {
@@ -47,9 +73,13 @@ public class AutoMend extends Module {
             InvUtils.swapBack();
         }
     }
-    private void onClientTick(PlayerTickEvent.Pre event) {
-        FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
-        if (!result.found()) return;
+    private void observeBottle(PlayerTickEvent.Pre event) {
+        bottle = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
+    }
+
+    private void commitUseBottle(PlayerTickEvent.Pre event) {
+        FindItemResult result = bottle;
+        if (result == null || !result.found()) return;
 
         RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), 90), 180, Priority.High);
 
