@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
@@ -8,6 +7,7 @@ import com.github.epsilon.managers.FriendManager;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.settings.impl.*;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -40,6 +40,14 @@ public class Backtrack extends Module {
 
     private Backtrack() {
         super("Backtrack", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(AttackEntityEvent.class, NodeKey.of("managed.onAttack.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttack);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onTick);
+        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(EventPriority.LOWEST).handler(this::onPacketReceive);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+        node(GameLeftEvent.class, NodeKey.of("managed.onGameLeft.gameleftevent")).phase(Phase.CLEANUP).priority(0).handler(this::onGameLeft);
+        node(LevelUpdateEvent.class, NodeKey.of("managed.onLevelUpdate.levelupdateevent")).phase(Phase.OBSERVE).priority(0).handler(this::onLevelUpdate);
+
     }
 
     private enum TargetMode {
@@ -108,8 +116,6 @@ public class Backtrack extends Module {
         }
         handlePackets(pending);
     }
-
-    @EventHandler
     private void onAttack(AttackEntityEvent event) {
         long now = System.currentTimeMillis();
         synchronized (packetLock) {
@@ -121,8 +127,6 @@ public class Backtrack extends Module {
             processTarget(living, now);
         }
     }
-
-    @EventHandler(priority = EventPriority.HIGH)
     private void onTick(ClientTickEvent.Pre event) {
         if (nullCheck()) {
             clearWithoutReplay();
@@ -162,8 +166,6 @@ public class Backtrack extends Module {
         }
         handlePackets(pending);
     }
-
-    @EventHandler(priority = EventPriority.LOWEST)
     private void onPacketReceive(PacketEvent.Receive event) {
         Packet<?> packet = event.getPacket();
         List<Packet<? super ClientPacketListener>> pending = List.of();
@@ -204,8 +206,6 @@ public class Backtrack extends Module {
 
         schedulePackets(pending);
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
         AABB box;
         synchronized (packetLock) {
@@ -215,13 +215,9 @@ public class Backtrack extends Module {
         Render3DScheduler.INSTANCE.addFilledBox(box, sideColor.getValue());
         Render3DScheduler.INSTANCE.addOutlineBox(box, outlineColor.getValue(), 1.5f);
     }
-
-    @EventHandler
     private void onGameLeft(GameLeftEvent event) {
         clearWithoutReplay();
     }
-
-    @EventHandler
     private void onLevelUpdate(LevelUpdateEvent event) {
         clearWithoutReplay();
     }

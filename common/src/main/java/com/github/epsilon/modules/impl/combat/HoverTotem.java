@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.ClickSlotUtils;
@@ -19,6 +19,9 @@ public class HoverTotem extends Module {
 
     private HoverTotem() {
         super("Hover Totem", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final DoubleSetting delay = doubleSetting("Delay", 0.0, 0.0, 20.0, 0.1);
@@ -50,8 +53,6 @@ public class HoverTotem extends Module {
 
         return (int) Math.ceil(totalDelay);
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (mc.gui.screen() instanceof InventoryScreen inv) {
             Slot hoveredSlot = inv.hoveredSlot;

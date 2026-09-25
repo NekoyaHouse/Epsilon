@@ -74,6 +74,7 @@ public class Module implements SettingHost {
     public final ModuleId moduleId() { return moduleId; }
     public final ModuleDeclaration declaration() { return declaration; }
     public final ModuleDispatchMode dispatchMode() { return dispatchMode; }
+    public final ModuleDispatchMode getDispatchMode() { return dispatchMode; }
     protected final void setDispatchMode(ModuleDispatchMode mode) { this.dispatchMode = mode; }
 
     public void initI18n(TranslateComponent moduleComponent) {

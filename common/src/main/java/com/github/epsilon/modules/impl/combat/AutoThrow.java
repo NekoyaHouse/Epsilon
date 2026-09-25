@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
@@ -8,6 +7,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -33,6 +33,10 @@ public class AutoThrow extends Module {
 
     private AutoThrow() {
         super("Auto Throw", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
+
     }
 
     private final DoubleSetting minRange = doubleSetting("Min Range", 3.0, 0.0, 10.0, 0.1);
@@ -70,8 +74,6 @@ public class AutoThrow extends Module {
             lastSlot = -1;
         }
     }
-
-    @EventHandler
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         int slot = getThrowSlot();
@@ -141,8 +143,6 @@ public class AutoThrow extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (shouldThrow && canWork()) {
             boolean used = false;

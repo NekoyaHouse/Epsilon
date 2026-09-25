@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
@@ -9,6 +8,7 @@ import com.github.epsilon.events.impl.UseItemEvent;
 import com.github.epsilon.managers.FriendManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -27,6 +27,12 @@ public class AimBot extends Module {
 
     private AimBot() {
         super("Aim Bot", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
+        node(SendPositionEvent.class, NodeKey.of("managed.onSendPosition.sendpositionevent")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onSendPosition);
+        node(UseItemEvent.class, NodeKey.of("managed.onUseItem.useitemevent")).phase(Phase.COMMIT).priority(EventPriority.HIGH).handler(this::onUseItem);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+
     }
 
     private enum Mode {
@@ -66,32 +72,24 @@ public class AimBot extends Module {
         aimTicks = 0;
         visibleTime.reset();
     }
-
-    @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         switch (mode.getValue()) {
             case AimAssist -> updateAimAssist();
             case BowAim -> updateBowAim();
         }
     }
-
-    @EventHandler(priority = EventPriority.HIGH)
     private void onSendPosition(SendPositionEvent event) {
         if (mode.is(Mode.BowAim) && isUsingBow() && !Float.isNaN(rotationYaw) && !Float.isNaN(rotationPitch)) {
             event.setYaw(rotationYaw);
             event.setPitch(rotationPitch);
         }
     }
-
-    @EventHandler(priority = EventPriority.HIGH)
     private void onUseItem(UseItemEvent event) {
         if (mode.is(Mode.BowAim) && isUsingBow() && !Float.isNaN(rotationYaw) && !Float.isNaN(rotationPitch)) {
             event.setYaw(rotationYaw);
             event.setPitch(rotationPitch);
         }
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (mode.is(Mode.AimAssist)) {
             if (!Float.isNaN(rotationYaw)) {

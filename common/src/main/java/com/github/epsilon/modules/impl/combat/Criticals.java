@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 
 public class Criticals extends Module {
@@ -14,6 +14,11 @@ public class Criticals extends Module {
 
     private Criticals() {
         super("Criticals", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGHEST).handler(this::onClientTick);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.prepareSprintStop.clienttickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.LOWEST).handler(this::prepareSprintStop);
+        node(KeyboardInputEvent.class, NodeKey.of("managed.onKeyboardInput.keyboardinputevent")).phase(Phase.TRANSFORM).priority(EventPriority.LOWEST).handler(this::onKeyboardInput);
+
     }
 
     public int fallTicks;
@@ -24,8 +29,6 @@ public class Criticals extends Module {
         fallTicks = 0;
         stopSprinting = false;
     }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck() || !canCrit() || mc.player.fallDistance >= 1.0f) {
             fallTicks = 0;
@@ -33,8 +36,6 @@ public class Criticals extends Module {
             fallTicks++;
         }
     }
-
-    @EventHandler(priority = EventPriority.LOWEST)
     private void prepareSprintStop(ClientTickEvent.Pre event) {
         stopSprinting = !nullCheck()
                 && fallTicks > 0
@@ -43,8 +44,6 @@ public class Criticals extends Module {
                 && KillAura.INSTANCE.target != null
                 && Velocity.INSTANCE.attackQueue == 0;
     }
-
-    @EventHandler(priority = EventPriority.LOWEST)
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (!stopSprinting) return;
         stopSprinting = false;

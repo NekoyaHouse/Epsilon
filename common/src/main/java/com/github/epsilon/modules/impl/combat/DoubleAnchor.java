@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -23,6 +23,9 @@ public class DoubleAnchor extends Module {
 
     private DoubleAnchor() {
         super("Double Anchor", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(com.github.epsilon.modules.orchestration.Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final KeybindSetting triggerKey = keybindSetting("Trigger Key", -1);
@@ -54,8 +57,6 @@ public class DoubleAnchor extends Module {
     protected void onDisable() {
         resetState();
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         int key = triggerKey.getValue();
         if (key == -1) return;

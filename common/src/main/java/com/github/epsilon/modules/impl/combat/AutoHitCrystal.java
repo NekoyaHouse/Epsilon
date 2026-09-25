@@ -1,14 +1,12 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
@@ -39,31 +37,28 @@ public class AutoHitCrystal extends Module {
 
     private AutoHitCrystal() {
         super("Auto Hit Crystal", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
-                event -> {
-                    if (!render.getValue() || renderBoxes.isEmpty()) return;
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        node(RightClickEvent.class, NodeKey.of("managed.onClick.rightclickevent")).phase(Phase.COMMIT).priority(0).handler(this::onClick);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender);
+    }
 
-                    long time = System.currentTimeMillis();
-                    long fadeTime = this.fadeTime.getValue().longValue();
-
-                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
-
-                    for (RenderBox box : renderBoxes) {
-                        long age = time - box.startTime();
-                        float progress = Mth.clamp((float) age / fadeTime, 0.0f, 1.0f);
-                        float alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f);
-
-                        Color sideColor = box.sideColor();
-                        Color lineColor = box.lineColor();
-
-                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
-                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
-
-                        Render3DScheduler.INSTANCE.addFilledBox(box.aabb, side);
-                        Render3DScheduler.INSTANCE.addOutlineBox(box.aabb, line);
-                    }
-                }
-        ));
+    private void onRender(Render3DEvent event) {
+        if (!render.getValue() || renderBoxes.isEmpty()) return;
+        long time = System.currentTimeMillis();
+        long fadeTime = this.fadeTime.getValue().longValue();
+        renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
+        for (RenderBox box : renderBoxes) {
+            long age = time - box.startTime();
+            float progress = Mth.clamp((float) age / fadeTime, 0.0f, 1.0f);
+            float alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f);
+            Color sideColor = box.sideColor();
+            Color lineColor = box.lineColor();
+            Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
+            Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
+            Render3DScheduler.INSTANCE.addFilledBox(box.aabb, side);
+            Render3DScheduler.INSTANCE.addOutlineBox(box.aabb, line);
+        }
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", InputConstants.UNKNOWN.getValue());
@@ -94,8 +89,6 @@ public class AutoHitCrystal extends Module {
     protected void onEnable() {
         resetState();
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (mc.gui.screen() != null) return;
 
@@ -186,8 +179,6 @@ public class AutoHitCrystal extends Module {
             this.resetState();
         }
     }
-
-    @EventHandler
     private void onClick(RightClickEvent event) {
         if (nullCheck() || !this.active) return;
 

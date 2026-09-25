@@ -1,14 +1,14 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat;
 
-import com.github.epsilon.Constants;
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
+import com.github.epsilon.Constants;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.ElytraCombatBehavior;
 import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.FollowBehavior;
 import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.MaceBehavior;
@@ -184,6 +184,16 @@ public class ElytraCombat extends Module {
 
     private ElytraCombat() {
         super("Elytra Combat", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(EventPriority.HIGH).handler(this::onPlayerTick);
+        node(KeyboardInputEvent.class, NodeKey.of("managed.onKeyboardInput.keyboardinputevent")).phase(Phase.TRANSFORM).priority(EventPriority.HIGH).handler(this::onKeyboardInput);
+        node(FallFlyingMovementEvent.class, NodeKey.of("managed.onFallFlyingMovement.fallflyingmovementevent")).phase(Phase.TRANSFORM).priority(EventPriority.HIGHEST).handler(this::onFallFlyingMovement);
+        node(AttackEntityEvent.class, NodeKey.of("managed.onAttackEntity.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttackEntity);
+        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(0).handler(this::onPacketReceive);
+        node(KeyPressEvent.class, NodeKey.of("managed.onKeyPress.keypressevent")).phase(Phase.OBSERVE).priority(0).handler(this::onKeyPress);
+        node(MousePressEvent.class, NodeKey.of("managed.onMousePress.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMousePress);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+
         this.behaviors.put(ElytraCombatMode.Follow, new FollowBehavior());
         this.behaviors.put(ElytraCombatMode.Mace, new MaceBehavior());
         this.behaviors.put(ElytraCombatMode.Spear, new SpearBehavior());
@@ -248,8 +258,6 @@ public class ElytraCombat extends Module {
     public Vec3 playerLook() {
         return this.mc.player == null ? Vec3.ZERO : this.mc.player.getLookAngle();
     }
-
-    @EventHandler(priority = EventPriority.HIGH)
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         // tick 顺序：刷新目标 → 更新预测快照 → 消费命中 → 行为状态机 → 限速 → 转控制输入。
         if (nullCheck() || !canControlFlight()) {
@@ -293,8 +301,6 @@ public class ElytraCombat extends Module {
         this.controlInput = toInput(this.mc.player, this.latestIntent);
         this.lastFallDistance = this.mc.player.fallDistance;
     }
-
-    @EventHandler(priority = EventPriority.HIGH)
     private void onKeyboardInput(KeyboardInputEvent event) {
         // 行为规划出的输入覆盖真实键盘，DirectVelocity 模式仍保留同一套 WASD 反馈。
         if (this.controlInput == null || !canControlFlight()) return;
@@ -304,8 +310,6 @@ public class ElytraCombat extends Module {
         event.setSneak(this.controlInput.sneak());
         event.setSprint(false);
     }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
     private void onFallFlyingMovement(FallFlyingMovementEvent event) {
         // 只有规划速度本身安全时才覆盖原版滑翔结果，否则保留 solveSafe 的旋转控制。
         if (!isEnabled() || this.controlInput == null || !this.controlInput.hasDirectVelocity()) {
@@ -323,8 +327,6 @@ public class ElytraCombat extends Module {
         }
         event.setMovement(directVelocity);
     }
-
-    @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
         // 只记录本地玩家对当前目标发起的攻击，行为状态机据此进入等待/脱战阶段。
         if (!isEnabled() || event.getPlayer() != this.mc.player || this.target == null) {
@@ -335,8 +337,6 @@ public class ElytraCombat extends Module {
             this.currentBehavior.onAttack(this.target);
         }
     }
-
-    @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         // 伤害包用于重锤确认，实体事件用于 kinetic 命中；传送包只清除旧轨迹。
         if (!isEnabled()) return;
@@ -350,24 +350,18 @@ public class ElytraCombat extends Module {
             this.motionTracker.noteTeleport(sync.id());
         }
     }
-
-    @EventHandler
     private void onKeyPress(KeyPressEvent event) {
         if (!isEnabled() || event.getAction() != InputConstants.PRESS) return;
         if (this.switchModeKey.getValue() == event.getKey()) {
             cycleMode();
         }
     }
-
-    @EventHandler
     private void onMousePress(MousePressEvent event) {
         if (!isEnabled() || event.getAction() != InputConstants.PRESS) return;
         if (this.switchModeKey.getValue() == KeybindUtils.encodeMouseButton(event.getButton())) {
             cycleMode();
         }
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
         // 渲染 4 格期望方向，便于区分直飞、A* 航点和避障意图。
         if (!this.render.getValue() || this.controlInput == null || this.mc.player == null) return;

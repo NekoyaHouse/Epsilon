@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.ChatUtils;
@@ -36,6 +36,10 @@ public class FeetTrap extends Module {
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+
     }
 
     private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true);
@@ -68,15 +72,11 @@ public class FeetTrap extends Module {
         startY = mc.player.getY();
         startZ = mc.player.getZ();
     }
-
-    @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (rotation != null && rotate.getValue()) {
             RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue().doubleValue());
         }
     }
-
-    @EventHandler
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
         if (!timer.passedMillise(placeDelay.getValue())) return;

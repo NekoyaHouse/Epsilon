@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -34,6 +34,10 @@ public class AutoWeapon extends Module {
 
     private AutoWeapon() {
         super("Auto Weapon", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(AttackEntityEvent.class, NodeKey.of("managed.onAttackEntity.attackentityevent")).phase(Phase.COMMIT).priority(0).handler(this::onAttackEntity);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private enum Mode {
@@ -91,8 +95,6 @@ public class AutoWeapon extends Module {
         backTimer.reset();
         awaitingBack = false;
     }
-
-    @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
         if (ElytraCombat.INSTANCE.isControllingCombat()) {
             return;
@@ -120,8 +122,6 @@ public class AutoWeapon extends Module {
 
         awaitingBack = swapBack.getValue();
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (!awaitingBack) return;
         if (backTimer.passedMillise(swapBackDelay.getValue())) {

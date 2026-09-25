@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.FindItemResult;
@@ -21,6 +21,9 @@ public class AutoMend extends Module {
 
     private AutoMend() {
         super("Auto Mend", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onClientTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+
     }
 
     private enum SwitchMode {
@@ -44,8 +47,6 @@ public class AutoMend extends Module {
             InvUtils.swapBack();
         }
     }
-
-    @EventHandler
     private void onClientTick(PlayerTickEvent.Pre event) {
         FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
         if (!result.found()) return;

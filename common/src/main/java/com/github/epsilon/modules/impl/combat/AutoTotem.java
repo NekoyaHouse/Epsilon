@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.ClickSlotUtils;
@@ -21,6 +21,9 @@ public class AutoTotem extends Module {
 
     private AutoTotem() {
         super("Auto Totem", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     @Override
@@ -28,8 +31,6 @@ public class AutoTotem extends Module {
         if (nullCheck()) return null;
         return String.valueOf(InvHelper.getItemCount(Items.TOTEM_OF_UNDYING));
     }
-
-    @EventHandler
     public void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gameMode == null) return;
 

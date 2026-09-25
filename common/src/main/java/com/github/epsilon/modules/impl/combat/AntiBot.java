@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.ModuleDispatchMode;
 import net.minecraft.world.entity.Entity;
 
 public class AntiBot extends Module {
@@ -10,6 +11,7 @@ public class AntiBot extends Module {
 
     private AntiBot() {
         super("Anti Bot", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
     }
 
     public boolean isBot(Entity entity) {

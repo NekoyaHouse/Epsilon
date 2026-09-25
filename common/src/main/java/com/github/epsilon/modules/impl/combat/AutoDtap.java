@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
@@ -28,6 +28,10 @@ public class AutoDtap extends Module {
 
     private AutoDtap() {
         super("Auto Dtap", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(MousePressEvent.class, NodeKey.of("managed.onMouse.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMouse);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final BoolSetting swapBack = boolSetting("SwapBack", true);
@@ -51,15 +55,11 @@ public class AutoDtap extends Module {
     protected void onDisable() {
         resetState();
     }
-
-    @EventHandler
     private void onMouse(MousePressEvent event) {
         if (event.getButton() == InputConstants.MOUSE_BUTTON_RIGHT && event.getAction() == InputConstants.PRESS) {
             rightClicked = true;
         }
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (step != 0) {
             while (mc.options.keyUse.consumeClick()) {

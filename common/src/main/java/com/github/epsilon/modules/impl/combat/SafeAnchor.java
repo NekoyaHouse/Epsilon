@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
@@ -8,6 +7,7 @@ import com.github.epsilon.managers.ExtrapolationManager;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -46,6 +46,10 @@ public class SafeAnchor extends Module {
 
     private SafeAnchor() {
         super("Safe Anchor", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+
     }
 
     private enum Mode {Assist, Auto}
@@ -143,8 +147,6 @@ public class SafeAnchor extends Module {
     protected void onDisable() {
         resetState();
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gui.screen() != null) return;
 
@@ -1047,8 +1049,6 @@ public class SafeAnchor extends Module {
         return mc.hitResult instanceof BlockHitResult blockHit
                 && blockHit.getBlockPos().equals(currentAnchorPos);
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
         long time = System.currentTimeMillis();
         renderBoxes.removeIf(box -> time - box.startTime() > 1000);

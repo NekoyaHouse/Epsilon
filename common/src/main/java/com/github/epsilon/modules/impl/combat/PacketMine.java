@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
@@ -40,6 +40,10 @@ public class PacketMine extends Module {
 
     private PacketMine() {
         super("Packet Mine", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(StartDestroyBlockEvent.class, NodeKey.of("managed.onStartBreakingBlock.startdestroyblockevent")).phase(Phase.COMMIT).priority(0).handler(this::onStartBreakingBlock);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender);
+
     }
 
     private enum SwitchMode {
@@ -148,8 +152,6 @@ public class PacketMine extends Module {
             secondHasSwitch = false;
         }
     }
-
-    @EventHandler
     private void onStartBreakingBlock(StartDestroyBlockEvent event) {
         if (!canBreak(event.getBlockPos())) return;
         event.cancel();
@@ -204,8 +206,6 @@ public class PacketMine extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onRender(Render3DEvent event) {
         long now = System.currentTimeMillis();
         double fadeDelta = (now - fadeLastTime) / 1000d;

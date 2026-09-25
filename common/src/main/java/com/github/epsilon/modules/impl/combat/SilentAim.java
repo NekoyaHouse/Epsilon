@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SwingHandEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
@@ -8,6 +7,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -26,6 +26,10 @@ public class SilentAim extends Module {
 
     private SilentAim() {
         super("Silent Aim", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        node(SwingHandEvent.class, NodeKey.of("managed.onSwingHand.swinghandevent")).phase(Phase.OBSERVE).priority(0).handler(this::onSwingHand);
+
     }
 
     private final BoolSetting weaponOnly = boolSetting("Weapon Only", false);
@@ -39,8 +43,6 @@ public class SilentAim extends Module {
 
     private boolean redirecting;
     private LivingEntity target;
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !redirecting) return;
 
@@ -59,8 +61,6 @@ public class SilentAim extends Module {
             redirecting = false;
         }
     }
-
-    @EventHandler
     private void onSwingHand(SwingHandEvent event) {
         if (redirecting) return;
 

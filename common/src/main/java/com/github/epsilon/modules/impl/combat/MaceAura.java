@@ -1,12 +1,12 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -36,6 +36,9 @@ public class MaceAura extends Module {
 
     private MaceAura() {
         super("Mace Aura", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private enum AttackMode {
@@ -72,8 +75,6 @@ public class MaceAura extends Module {
     protected void onDisable() {
         target = null;
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (ElytraCombat.INSTANCE.isControllingCombat()) {
             return;

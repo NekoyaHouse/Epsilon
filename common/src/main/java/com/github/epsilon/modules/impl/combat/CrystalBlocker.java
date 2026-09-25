@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -35,6 +35,9 @@ public class CrystalBlocker extends Module {
 
     private CrystalBlocker() {
         super("Crystal Blocker", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final DoubleSetting range = doubleSetting("Range", 4.0, 1.0, 6.0, 0.1);
@@ -56,8 +59,6 @@ public class CrystalBlocker extends Module {
     public enum SwitchMode {
         Visible, Silent
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (!mc.player.onGround()) return;
 

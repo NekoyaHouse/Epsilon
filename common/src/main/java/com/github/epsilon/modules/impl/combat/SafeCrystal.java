@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.PlayerUtils;
@@ -21,6 +21,9 @@ public class SafeCrystal extends Module {
 
     private SafeCrystal() {
         super("Safe Crystal", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final BoolSetting autoBreak = boolSetting("Auto Break", true);
@@ -51,8 +54,6 @@ public class SafeCrystal extends Module {
         if (autoPlace.getValue()) return "Place";
         return "None";
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (autoBreak.getValue()) {
             handleAutoCrystalBreak();

@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -24,6 +24,9 @@ public class SpearKill extends Module {
 
     private SpearKill() {
         super("Spear Kill", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.class, NodeKey.of("managed.onTick.playertickevent")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private enum LungeMode {
@@ -67,8 +70,6 @@ public class SpearKill extends Module {
         aboveTargetPos = null;
         firstPhase = false;
     }
-
-    @EventHandler
     public void onTick(PlayerTickEvent e) {
         if (ElytraCombat.INSTANCE.isControllingCombat()) {
             return;

@@ -1,8 +1,5 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
@@ -11,6 +8,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.modules.impl.movement.Velocity;
@@ -47,15 +45,10 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
-            DeobfESP.render(
-                    event.getPoseStack(),
-                    deobfSize.getValue().floatValue(),
-                    deobfSpins.getValue().floatValue(),
-                    deobfWobble.getValue().floatValue(),
-                    deobfFlyHeight.getValue().floatValue()
-            );
-        }));
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(ClientTickEvent.Pre.class, NodeKey.of("managed.onClientTick.clienttickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onClientTick);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onPlayerTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onPlayerTick);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
     }
 
     private enum Mode {
@@ -154,8 +147,6 @@ public class KillAura extends Module {
         resetState();
         DeobfESP.retainRisingEffects();
     }
-
-    @EventHandler
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
 
@@ -250,8 +241,6 @@ public class KillAura extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         while (attacks > 0) {
@@ -271,9 +260,14 @@ public class KillAura extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
+        DeobfESP.render(
+                event.getPoseStack(),
+                deobfSize.getValue().floatValue(),
+                deobfSpins.getValue().floatValue(),
+                deobfWobble.getValue().floatValue(),
+                deobfFlyHeight.getValue().floatValue()
+        );
         if (target != null && Velocity.INSTANCE.attackQueue <= 0) {
             HitResult hitResult = RotationManager.INSTANCE.getHitResult();
             if (!hitSelect.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {

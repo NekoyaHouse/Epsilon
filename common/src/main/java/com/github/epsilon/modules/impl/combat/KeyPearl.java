@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyPressEvent;
 import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
@@ -9,6 +8,7 @@ import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.modules.impl.movement.NoSlowdown;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -30,6 +30,11 @@ public class KeyPearl extends Module {
 
     private KeyPearl() {
         super("Key Pearl", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(KeyPressEvent.class, NodeKey.of("managed.onKeyPress.keypressevent")).phase(Phase.OBSERVE).priority(0).handler(this::onKeyPress);
+        node(MousePressEvent.class, NodeKey.of("managed.onMousePress.mousepressevent")).phase(Phase.TRANSFORM).priority(0).handler(this::onMousePress);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", InputConstants.UNKNOWN.getValue());
@@ -54,8 +59,6 @@ public class KeyPearl extends Module {
         resetState();
         pressed = false;
     }
-
-    @EventHandler
     private void onKeyPress(KeyPressEvent event) {
         if (event.getKey() == activateKey.getValue()) {
             if (event.getAction() == InputConstants.RELEASE) {
@@ -65,8 +68,6 @@ public class KeyPearl extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onMousePress(MousePressEvent event) {
         if (KeybindUtils.encodeMouseButton(event.getButton()) == activateKey.getValue()) {
             if (event.getAction() == InputConstants.RELEASE) {
@@ -76,8 +77,6 @@ public class KeyPearl extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (mc.gui.screen() != null) {
             pressed = false;

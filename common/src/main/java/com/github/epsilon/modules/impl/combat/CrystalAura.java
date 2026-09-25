@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
@@ -40,6 +40,10 @@ public class CrystalAura extends Module {
 
     private CrystalAura() {
         super("Crystal Aura", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        node(RightClickEvent.class, NodeKey.of("managed.onClick.rightclickevent")).phase(Phase.COMMIT).priority(0).handler(this::onClick);
+
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", InputConstants.UNKNOWN.getValue());
@@ -76,8 +80,6 @@ public class CrystalAura extends Module {
         resetClocks();
         crystalling = false;
     }
-
-    @EventHandler
     public void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gui.screen() != null) return;
 
@@ -176,8 +178,6 @@ public class CrystalAura extends Module {
             }
         }
     }
-
-    @EventHandler
     public void onClick(RightClickEvent event) {
         if (nullCheck()) return;
         if (!mc.mouseHandler.isRightPressed()) return;

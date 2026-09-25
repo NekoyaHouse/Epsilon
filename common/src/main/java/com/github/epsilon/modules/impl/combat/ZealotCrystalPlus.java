@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render2DEvent;
@@ -14,6 +13,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
@@ -70,6 +70,12 @@ public class ZealotCrystalPlus extends Module {
 
     private ZealotCrystalPlus() {
         super("Zealot Crystal+", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(0).handler(this::onPacketReceive);
+        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
+        node(Render2DEvent.Level.class, NodeKey.of("managed.onRender2D.render2devent_level")).phase(Phase.RENDER).priority(0).handler(this::onRender2D);
+
         workerThread.setDaemon(true);
         workerThread.start();
     }
@@ -250,8 +256,6 @@ public class ZealotCrystalPlus extends Module {
         resetRenderState();
         signalWorker();
     }
-
-    @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         updateTimeouts();
         updateExplosionSamples();
@@ -285,8 +289,6 @@ public class ZealotCrystalPlus extends Module {
             }
         }
     }
-
-    @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (nullCheck() || !isEnabled()) return;
 
@@ -297,8 +299,6 @@ public class ZealotCrystalPlus extends Module {
             handleExplosionPacket(soundPacket);
         }
     }
-
-    @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (nullCheck()) return;
 
@@ -333,8 +333,6 @@ public class ZealotCrystalPlus extends Module {
 
         renderLastRenderedPos = renderPos;
     }
-
-    @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
         if (nullCheck() || renderPrevPos == null || renderCurrentPos == null) return;
         if (!renderTargetDamage.getValue() && !renderSelfDamage.getValue()) return;

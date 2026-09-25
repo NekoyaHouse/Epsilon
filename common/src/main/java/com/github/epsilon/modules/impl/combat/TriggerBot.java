@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.*;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.math.MathUtils;
@@ -39,14 +39,15 @@ public class TriggerBot extends Module {
 
     private TriggerBot() {
         super("Trigger Bot", Category.COMBAT);
+        setDispatchMode(ModuleDispatchMode.MANAGED);
+        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
+
     }
 
     @Override
     protected void onDisable() {
         delay = 0;
     }
-
-    @EventHandler
     public void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gui.screen() != null) return;
 
