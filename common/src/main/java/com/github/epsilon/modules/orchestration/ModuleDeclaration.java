@@ -11,7 +11,7 @@ public final class ModuleDeclaration {
 
     public ModuleDeclaration(ModuleId owner) { this.owner = Objects.requireNonNull(owner); }
     public ModuleId owner() { return owner; }
-    public List<NodeDefinition<?>> nodes() { return List.copyOf(nodes); }
+    public List<NodeRef<?>> nodes() { return List.copyOf(nodes); }
     public List<ModulePart> parts() { return List.copyOf(parts); }
 
     public <E> NodeBuilder<E> node(NodeKey key) {

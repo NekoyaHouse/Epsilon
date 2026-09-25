@@ -71,10 +71,10 @@ public class ZealotCrystalPlus extends Module {
     private ZealotCrystalPlus() {
         super("Zealot Crystal+", Category.COMBAT);
         setDispatchMode(ModuleDispatchMode.MANAGED);
-        node(PlayerTickEvent.Pre.class, NodeKey.of("managed.onTick.playertickevent_pre")).phase(Phase.OBSERVE).priority(0).handler(this::onTick);
-        node(PacketEvent.Receive.class, NodeKey.of("managed.onPacketReceive.packetevent_receive")).phase(Phase.OBSERVE).priority(0).handler(this::onPacketReceive);
-        node(Render3DEvent.class, NodeKey.of("managed.onRender3D.render3devent")).phase(Phase.RENDER).priority(0).handler(this::onRender3D);
-        node(Render2DEvent.Level.class, NodeKey.of("managed.onRender2D.render2devent_level")).phase(Phase.RENDER).priority(0).handler(this::onRender2D);
+        part(new ObservePart());
+        part(new DecidePart());
+        part(new CommitPart());
+        part(new RenderPart());
 
         workerThread.setDaemon(true);
         workerThread.start();
@@ -237,6 +237,71 @@ public class ZealotCrystalPlus extends Module {
         signalWorker();
     }
 
+    private final class ObservePart implements ModulePart {
+        @Override public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("observe.snapshot"))
+                    .phase(Phase.OBSERVE).handler(ZealotCrystalPlus.this::observeSnapshot);
+            node(PacketEvent.Receive.class, NodeKey.of("observe.packet"))
+                    .phase(Phase.OBSERVE).handler(ZealotCrystalPlus.this::onPacketReceive);
+        }
+    }
+
+    private final class DecidePart implements ModulePart {
+        @Override public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("decide.plan"))
+                    .phase(Phase.DECIDE).after(nodeRef("observe.snapshot")).handler(ZealotCrystalPlus.this::decidePlan);
+        }
+    }
+
+    private final class CommitPart implements ModulePart {
+        @Override public void declare(ModuleDeclaration declaration) {
+            node(PlayerTickEvent.Pre.class, NodeKey.of("commit.action"))
+                    .phase(Phase.COMMIT).after(nodeRef("decide.plan")).handler(ZealotCrystalPlus.this::commitAction);
+        }
+    }
+
+    private final class RenderPart implements ModulePart {
+        @Override public void declare(ModuleDeclaration declaration) {
+            node(Render3DEvent.class, NodeKey.of("render.world"))
+                    .phase(Phase.RENDER).handler(ZealotCrystalPlus.this::onRender3D);
+            node(Render2DEvent.Level.class, NodeKey.of("render.hud"))
+                    .phase(Phase.RENDER).handler(ZealotCrystalPlus.this::onRender2D);
+        }
+    }
+
+    private <E> NodeRef<E> nodeRef(String suffix) {
+        for (NodeRef<?> node : declaration().nodes()) {
+            if (node.key().value().equals(suffix)) return castNode(node);
+        }
+        throw new IllegalStateException("Missing Zealot node: " + suffix);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E> NodeRef<E> castNode(Object node) { return (NodeRef<E>) node; }
+
+    private void observeSnapshot(PlayerTickEvent.Pre event) {
+        updateTimeouts();
+        updateExplosionSamples();
+        captureSnapshotIfNeeded();
+    }
+
+    private void decidePlan(PlayerTickEvent.Pre event) {
+        if (isEatingPaused()) return;
+        AsyncResult result = asyncResult;
+        PlaceInfo prePlace = getValidPlaceInfo(cachedRotationPlaceInfo, false);
+        target = resolveCurrentTarget(result, prePlace);
+        if (preRotation.getValue()) prepareRotation(getValidBreakPlan(cachedRotationBreakPlan), prePlace);
+    }
+
+    private void commitAction(PlayerTickEvent.Pre event) {
+        if (isEatingPaused()) return;
+        BreakPlan actionBreak = getActionBreakPlan();
+        boolean acted = breakMode.getValue() != BreakMode.Off && breakTimer.passedMillise(breakDelay.getValue()) && actionBreak != null && breakDirect(actionBreak);
+        PlaceInfo actionPlace = getActionPlaceInfo();
+        if (!acted && placeMode.getValue() != PlaceMode.Off && placeTimer.passedMillise(placeDelay.getValue()) && actionPlace != null && shouldAttemptPlace(actionPlace)) acted = placeDirect(actionPlace, false);
+        if (!acted && System.currentTimeMillis() - lastActiveTime > 250L) deactivateRenderTarget();
+    }
+
     @Override
     protected void onDisable() {
         placedPosMap.clear();
@@ -257,37 +322,9 @@ public class ZealotCrystalPlus extends Module {
         signalWorker();
     }
     private void onTick(PlayerTickEvent.Pre event) {
-        updateTimeouts();
-        updateExplosionSamples();
-        if (isEatingPaused()) return;
-
-        SnapshotData snapshot = captureSnapshotIfNeeded();
-        AsyncResult result = asyncResult;
-        BreakPlan preBreak = getValidBreakPlan(cachedRotationBreakPlan);
-        PlaceInfo prePlace = getValidPlaceInfo(cachedRotationPlaceInfo, false);
-        target = resolveCurrentTarget(result, prePlace);
-
-        boolean prioritizeBreak = preRotation.getValue() && shouldPrioritizeBreak(preBreak);
-        if (preRotation.getValue()) {
-            prepareRotation(preBreak, prePlace);
-        }
-
-        boolean acted = false;
-        BreakPlan actionBreak = getActionBreakPlan();
-        if (breakMode.getValue() != BreakMode.Off && breakTimer.passedMillise(breakDelay.getValue()) && actionBreak != null) {
-            acted = breakDirect(actionBreak);
-        }
-
-        PlaceInfo actionPlace = getActionPlaceInfo();
-        if (!acted && !prioritizeBreak && placeMode.getValue() != PlaceMode.Off && placeTimer.passedMillise(placeDelay.getValue()) && actionPlace != null && shouldAttemptPlace(actionPlace)) {
-            acted = placeDirect(actionPlace, false);
-        }
-
-        if (!acted && (snapshot == null || (preBreak == null && prePlace == null && actionBreak == null && actionPlace == null))) {
-            if (System.currentTimeMillis() - lastActiveTime > 250L) {
-                deactivateRenderTarget();
-            }
-        }
+        observeSnapshot(event);
+        decidePlan(event);
+        commitAction(event);
     }
     private void onPacketReceive(PacketEvent.Receive event) {
         if (nullCheck() || !isEnabled()) return;

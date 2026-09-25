@@ -27,7 +27,8 @@ public final class ModuleOrchestrator {
         Map<Class<?>, List<NodeDefinition<?>>> grouped = new LinkedHashMap<>();
         Set<NodeRef<?>> all = Collections.newSetFromMap(new IdentityHashMap<>());
         Map<String, NodeRef<?>> keys = new HashMap<>();
-        for (ModuleDeclaration declaration : declarations.values()) for (NodeDefinition<?> node : declaration.nodes()) {
+        for (ModuleDeclaration declaration : declarations.values()) for (NodeRef<?> ref : declaration.nodes()) {
+            NodeDefinition<?> node = (NodeDefinition<?>) ref;
             String identity = declaration.owner().value() + "." + node.key().value();
             if (keys.putIfAbsent(identity, node) != null) throw new OrchestrationException("Duplicate node: " + identity);
             all.add(node); grouped.computeIfAbsent(node.eventType(), ignored -> new ArrayList<>()).add(node);
