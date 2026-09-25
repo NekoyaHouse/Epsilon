@@ -6,6 +6,7 @@ import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.SettingHost;
+import com.github.epsilon.modules.orchestration.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 
@@ -35,6 +36,10 @@ public class Module implements SettingHost {
 
     private boolean defaultEnabled = false;
 
+    private final ModuleId moduleId;
+    private final ModuleDeclaration declaration;
+    private ModuleDispatchMode dispatchMode = ModuleDispatchMode.LEGACY;
+
     public final List<Setting<?>> settings = new ArrayList<>();
     public final List<SettingGroup> settingGroups = new ArrayList<>();
 
@@ -45,8 +50,31 @@ public class Module implements SettingHost {
     public Module(String name, Category category) {
         this.name = name;
         this.category = category;
+        this.moduleId = ModuleId.of(name.toLowerCase().replace(' ', '_'));
+        this.declaration = new ModuleDeclaration(moduleId);
         mc = Minecraft.getInstance();
     }
+
+    protected final NodeBuilder<com.github.epsilon.events.impl.PlayerTickEvent.Pre> node(NodeKey key) {
+        return node(com.github.epsilon.events.impl.PlayerTickEvent.Pre.class, key);
+    }
+
+    protected final <E> NodeBuilder<E> node(Class<E> eventType, NodeKey key) {
+        return declaration.node(eventType, key);
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <E> NodeBuilder<E> nodeUnchecked(Class<?> eventType, NodeKey key) {
+        return (NodeBuilder<E>) declaration.node(eventType, key);
+    }
+
+    public final void setDispatchModeForAdapter() { this.dispatchMode = ModuleDispatchMode.LEGACY_ADAPTER; }
+
+    protected final void part(ModulePart part) { declaration.part(part); }
+    public final ModuleId moduleId() { return moduleId; }
+    public final ModuleDeclaration declaration() { return declaration; }
+    public final ModuleDispatchMode dispatchMode() { return dispatchMode; }
+    protected final void setDispatchMode(ModuleDispatchMode mode) { this.dispatchMode = mode; }
 
     public void initI18n(TranslateComponent moduleComponent) {
         this.translateComponent = moduleComponent;
@@ -90,14 +118,15 @@ public class Module implements SettingHost {
     public void setEnabled(boolean enabled) {
         if (this.enabled != enabled) {
             this.enabled = enabled;
+            ModuleOrchestrator.INSTANCE.setEnabled(moduleId, enabled);
             if (enabled) {
-                EventBus.INSTANCE.subscribe(this);
+                if (dispatchMode == ModuleDispatchMode.LEGACY) EventBus.INSTANCE.subscribe(this);
                 if (!nullCheck()) {
                     NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), true);
                 }
                 onEnable();
             } else {
-                EventBus.INSTANCE.unsubscribe(this);
+                if (dispatchMode == ModuleDispatchMode.LEGACY) EventBus.INSTANCE.unsubscribe(this);
                 if (!nullCheck()) {
                     NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), false);
                 }

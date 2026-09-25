@@ -10,6 +10,7 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.orchestration.LegacyAdapter;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
@@ -171,6 +172,7 @@ public class ModuleManager {
     private void addModule(Module module) {
         modules.add(module);
         module.initI18n(EpsilonTranslateComponent.create("modules", module.getName().toLowerCase()));
+        LegacyAdapter.adapt(module);
     }
 
     public List<Module> getModules() {

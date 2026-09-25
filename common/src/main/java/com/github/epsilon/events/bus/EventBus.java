@@ -1,5 +1,7 @@
 package com.github.epsilon.events.bus;
 
+import com.github.epsilon.modules.orchestration.ModuleOrchestrator;
+
 import com.github.epsilon.events.bus.listeners.IListener;
 import com.github.epsilon.events.bus.listeners.LambdaListener;
 
@@ -34,6 +36,7 @@ public class EventBus {
     }
 
     public <T> T post(T event) {
+        ModuleOrchestrator.INSTANCE.dispatch(event);
         List<IListener> listeners = listenerMap.get(event.getClass());
 
         if (listeners != null) {
