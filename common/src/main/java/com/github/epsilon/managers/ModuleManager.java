@@ -172,7 +172,9 @@ public class ModuleManager {
     private void addModule(Module module) {
         modules.add(module);
         module.initI18n(EpsilonTranslateComponent.create("modules", module.getName().toLowerCase()));
-        LegacyAdapter.adapt(module);
+        if (module.getCategory() == com.github.epsilon.modules.Category.COMBAT) {
+            LegacyAdapter.adapt(module);
+        }
     }
 
     public List<Module> getModules() {

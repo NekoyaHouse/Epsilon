@@ -48,7 +48,7 @@ public final class ModuleOrchestrator {
         List<NodeDefinition<E>> ordered = new ArrayList<>();
         while (ordered.size() < nodes.size()) {
             NodeDefinition<E> best = nodes.stream().filter(n -> !ordered.contains(n) && indegree.get(n) == 0)
-                    .min(Comparator.<NodeDefinition<E>>comparingInt(n -> n.phase().ordinal()).thenComparingInt(n -> n.priority())).orElse(null);
+                    .min(Comparator.<NodeDefinition<E>>comparingInt(n -> n.phase().ordinal()).thenComparing(Comparator.comparingInt((NodeDefinition<E> n) -> n.priority()).reversed())).orElse(null);
             if (best == null) throw new OrchestrationException("Dependency cycle in event " + type.getName());
             ordered.add(best); for (NodeRef<?> out : edges.get(best)) indegree.computeIfPresent(out, (k, v) -> v - 1);
         }

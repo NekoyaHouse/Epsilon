@@ -16,8 +16,8 @@ public final class LegacyAdapter {
                 EventHandler annotation = method.getAnnotation(EventHandler.class);
                 if (annotation == null || method.getParameterCount() != 1 || method.getReturnType() != void.class) continue;
                 Class<?> eventType = method.getParameterTypes()[0];
-                NodeKey key = NodeKey.of("legacy." + module.moduleId().value() + "." + method.getName());
-                NodeBuilder<Object> builder = module.nodeUnchecked(eventType, key).phase(Phase.OBSERVE).priority(annotation.priority());
+                NodeKey key = NodeKey.of("legacy." + module.moduleId().value() + "." + method.getName() + "." + eventType.getName().replace('.', '_'));
+                NodeBuilder<Object> builder = module.nodeUnchecked(eventType, key).phase(phaseFor(eventType)).priority(annotation.priority());
                 builder.handler((event, context) -> {
                     try {
                         method.setAccessible(true);
@@ -29,5 +29,14 @@ public final class LegacyAdapter {
             }
         }
         ModuleOrchestrator.INSTANCE.register(module);
+    }
+
+    private static Phase phaseFor(Class<?> eventType) {
+        String name = eventType.getSimpleName();
+        if (name.contains("Render")) return Phase.RENDER;
+        if (name.contains("Destroy") || name.contains("Attack") || name.contains("UseItem")) return Phase.COMMIT;
+        if (name.contains("Move") || name.contains("Rotation") || name.contains("Strafe")) return Phase.TRANSFORM;
+        if (name.contains("Post") || name.contains("Left") || name.contains("Respawn")) return Phase.CLEANUP;
+        return Phase.OBSERVE;
     }
 }
