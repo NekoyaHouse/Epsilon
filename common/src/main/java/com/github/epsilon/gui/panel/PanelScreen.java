@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel;
 
+import com.github.epsilon.gui.utils.GuiCacheSignature;
+import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiRect;
@@ -60,6 +62,16 @@ public class PanelScreen extends Screen {
     private IMEPreeditOverlay preeditOverlay;
 
     private LuminRenderSystem.LuminRenderTarget renderTarget;
+    private boolean frameDirty = true;
+    private boolean animatedLastFrame;
+    private boolean popupWasActive;
+    private int cachedMouseX = Integer.MIN_VALUE;
+    private int cachedMouseY = Integer.MIN_VALUE;
+    private long cachedSignature = Long.MIN_VALUE;
+    private int lastTargetWidth = -1;
+    private int lastTargetHeight = -1;
+    private float lastScaledWidth = -1.0f;
+    private float lastScaledHeight = -1.0f;
 
     private PanelScreen() {
         super(Component.literal("PanelGui"));
@@ -81,10 +93,64 @@ public class PanelScreen extends Screen {
         final var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight());
+            frameDirty = true;
         }
-        renderTarget.clear();
-        renderTarget.resize(window.getWidth(), window.getHeight());
+        float scaledWidth = LuminRenderSystem.getScaledWidth();
+        float scaledHeight = LuminRenderSystem.getScaledHeight();
+        // resize 会丢弃旧内容，GUI 缩放变化会改变全部坐标，必须重绘。
+        if (window.getWidth() != lastTargetWidth || window.getHeight() != lastTargetHeight
+                || scaledWidth != lastScaledWidth || scaledHeight != lastScaledHeight) {
+            frameDirty = true;
+            lastTargetWidth = window.getWidth();
+            lastTargetHeight = window.getHeight();
+            lastScaledWidth = scaledWidth;
+            lastScaledHeight = scaledHeight;
+        }
 
+        boolean popupActive = popupHost.getActivePopup() != null;
+        long signature = GuiCacheSignature.compute();
+        // 没有输入、动画、popup、鼠标移动和外部状态变化时，复用上一帧的渲染目标，
+        // 阴影、圆角矩形与文字都不再提交给 GPU。
+        boolean redraw = !ClientSetting.INSTANCE.panelCache.getValue()
+                || frameDirty
+                || animatedLastFrame
+                || popupActive
+                || popupWasActive
+                || mouseX != cachedMouseX
+                || mouseY != cachedMouseY
+                || signature != cachedSignature;
+        if (redraw) {
+            Animation.consumeActive();
+            renderTarget.clear();
+            renderTarget.resize(window.getWidth(), window.getHeight());
+            renderFrameContent(guiGraphics, mouseX, mouseY, partialTick);
+            frameDirty = false;
+            cachedMouseX = mouseX;
+            cachedMouseY = mouseY;
+            cachedSignature = signature;
+            animatedLastFrame = Animation.consumeActive();
+        }
+        popupWasActive = popupActive;
+
+        LuminRenderSystem.setActiveTarget(null);
+        int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (preeditOverlay != null) {
+            this.preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
+            guiGraphics.setPreeditOverlay(this.preeditOverlay);
+        }
+        guiGraphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
+    }
+
+    /**
+     * 使整帧缓存失效。所有输入入口和结构性变化都必须调用。
+     */
+    private void markFrameDirty() {
+        frameDirty = true;
+    }
+
+    private void renderFrameContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         LuminRenderSystem.setActiveTarget(renderTarget);
         scene.beginFrame();
 
@@ -162,15 +228,6 @@ public class PanelScreen extends Screen {
         flushQueuedContentBuffers();
         scene.clear();
         renderPopup(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
-
-        LuminRenderSystem.setActiveTarget(null);
-
-        if (preeditOverlay != null) {
-            this.preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
-            guiGraphics.setPreeditOverlay(this.preeditOverlay);
-        }
-        guiGraphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
-        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void drawChrome(PanelLayout.Layout layout) {
@@ -219,6 +276,7 @@ public class PanelScreen extends Screen {
     }
 
     public PanelScreen openClientSettings() {
+        markFrameDirty();
         state.setClientSettingMode(true);
         state.setClientSettingTab(PanelState.ClientSettingTab.GENERAL);
         dirtyState.markAllDirty();
@@ -227,6 +285,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        markFrameDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         double mouseX = epsilonEvent.x();
         double mouseY = epsilonEvent.y();
@@ -267,6 +326,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        markFrameDirty();
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
@@ -293,6 +353,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        markFrameDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         if (inputRouter.routeMouseReleased(epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
@@ -303,6 +364,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+        markFrameDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
@@ -315,6 +377,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        markFrameDirty();
         if (inputRouter.routeKeyPressed(event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
@@ -328,6 +391,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        markFrameDirty();
         if (inputRouter.routeCharTyped(event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
@@ -337,6 +401,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean preeditUpdated(PreeditEvent event) {
+        markFrameDirty();
         this.preeditOverlay = event != null ? new IMEPreeditOverlay(event, this.font, 10) : null;
         return true;
     }
@@ -349,6 +414,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public void removed() {
+        markFrameDirty();
         super.removed();
         popupHost.close();
         moduleListPanel.resetTransientState();

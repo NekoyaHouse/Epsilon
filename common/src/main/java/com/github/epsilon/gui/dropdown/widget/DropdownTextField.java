@@ -244,6 +244,7 @@ public class DropdownTextField {
     }
 
     private void drawCaret(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float textScale) {
+        com.github.epsilon.utils.render.animation.Animation.markActive();
         if (System.currentTimeMillis() % 1000 > 500) {
             scope.rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY);
         }

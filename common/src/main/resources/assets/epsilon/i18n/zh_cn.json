@@ -361,6 +361,7 @@
         "render scale": "界面缩放",
         "i18n fallback": "无国际化自动生成",
         "font anti aliasing": "字体抗锯齿",
+        "ui shadows": "界面阴影",
         "font": {
           "_value": "字体",
           "default": "默认",
@@ -371,6 +372,8 @@
         "replace minecraft font": "替换 Minecraft 字体",
         "close gui on outside": "点击空白关闭 GUI",
         "dropdown hints": "瀑布式提示词",
+        "dropdown cache": "瀑布式缓存",
+        "panel cache": "面板缓存",
         "rotation mode": {
           "_value": "转头模式",
           "silent": "静默",

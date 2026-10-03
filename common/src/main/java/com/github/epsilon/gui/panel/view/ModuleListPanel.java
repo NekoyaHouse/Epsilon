@@ -127,12 +127,11 @@ public class ModuleListPanel implements AutoCloseable {
                     selectionAnimation.run(state.getSelectedModule() == module ? 1.0f : 0.0f);
                     toggleAnimation.run(module.isEnabled() ? 1.0f : 0.0f);
                     toggleHoverAnimation.run(row.getToggleBounds().contains(mouseX, mouseY) ? 1.0f : 0.0f);
-                    boolean marqueeActive = row.hasOverflowingKeybind(textRenderer);
+                    // 跑马灯由 UiContentBuffer 逐帧驱动，不再算作需要整体重建的动画。
                     contentState.noteAnimation(!hoverAnimation.isFinished()
                             || !selectionAnimation.isFinished()
                             || !toggleAnimation.isFinished()
-                            || !toggleHoverAnimation.isFinished()
-                            || marqueeActive);
+                            || !toggleHoverAnimation.isFinished());
                     content.pushAbsolute(row.getBounds(), rowScope ->
                             row.buildUi(rowScope, textRenderer, hoverAnimation.getValue(), selectionAnimation.getValue(),
                                     toggleAnimation.getValue(), toggleHoverAnimation.getValue()));

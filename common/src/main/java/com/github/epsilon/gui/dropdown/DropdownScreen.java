@@ -23,6 +23,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
+import com.github.epsilon.gui.utils.GuiCacheSignature;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -58,6 +59,18 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
     private final Set<String> visiblePanelIds = new HashSet<>();
 
     private LuminRenderSystem.LuminRenderTarget renderTarget;
+    // 面板、阴影、搜索框与 popup 的离屏缓存；背景层（遮罩 + Reisa）每帧重绘在 renderTarget 里。
+    private LuminRenderSystem.LuminRenderTarget panelTarget;
+    private boolean panelsDirty = true;
+    private boolean animatedLastFrame;
+    private boolean popupWasActive;
+    private int cachedMouseX = Integer.MIN_VALUE;
+    private int cachedMouseY = Integer.MIN_VALUE;
+    private long cachedSignature = Long.MIN_VALUE;
+    private int lastTargetWidth = -1;
+    private int lastTargetHeight = -1;
+    private float lastScaledWidth = -1.0f;
+    private float lastScaledHeight = -1.0f;
     private IMEPreeditOverlay preeditOverlay;
     private boolean initialized;
     private int sessionId;
@@ -72,6 +85,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     protected void init() {
+        markPanelsDirty();
         super.init();
         sessionId++;
         if (ClientSetting.INSTANCE.showReisaInDropdown.getValue() && !AssetManager.INSTANCE.isReisaReady()) {
@@ -101,15 +115,28 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.getWidth(), window.getHeight());
         }
+        if (panelTarget == null) {
+            panelTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui-panels", window.getWidth(), window.getHeight());
+            panelsDirty = true;
+        }
+        float scaledWidth = LuminRenderSystem.getScaledWidth();
+        float scaledHeight = LuminRenderSystem.getScaledHeight();
+        // resize 会丢弃旧内容，GUI 缩放变化也会改变所有坐标，两种情况都必须重绘缓存。
+        if (window.getWidth() != lastTargetWidth || window.getHeight() != lastTargetHeight
+                || scaledWidth != lastScaledWidth || scaledHeight != lastScaledHeight) {
+            panelsDirty = true;
+            lastTargetWidth = window.getWidth();
+            lastTargetHeight = window.getHeight();
+            lastScaledWidth = scaledWidth;
+            lastScaledHeight = scaledHeight;
+        }
         renderTarget.resize(window.getWidth(), window.getHeight());
+        panelTarget.resize(window.getWidth(), window.getHeight());
         renderTarget.clear();
-        LuminRenderSystem.setActiveTarget(renderTarget);
-        scene.beginFrame();
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick);
-        scene.clear();
 
         LuminRenderSystem.setActiveTarget(null);
         if (preeditOverlay != null) {
@@ -117,26 +144,29 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
             graphics.setPreeditOverlay(preeditOverlay);
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        graphics.blit(panelTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
         popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
+    /**
+     * 使面板缓存失效。所有输入入口和结构性变化都必须调用，否则缓存会显示过期画面。
+     */
+    private void markPanelsDirty() {
+        panelsDirty = true;
+    }
+
     private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        // 清除上一帧遗留的活动旗标，帧末读取后决定下一帧是否继续重绘缓存。
+        Animation.consumeActive();
         scrimAnim.run(1.0f);
-        dropdownBatch = scene.batch(UiLayer.CONTENT);
-        dropdownLayer = -10;
         popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
         updatePanelHeightLimits();
         updateVisiblePanelIds();
         beginPanelFrames();
 
-        beginDropdownLayer();
-        Color scrim = DropdownTheme.scrim();
-        float scrimAlpha = scrimAnim.getValue();
-        dropdownScope.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
-        flushDropdownLayer();
-
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
-        boolean popupHovered = popupHost.getActivePopup() != null && popupHost.getActivePopup().getBounds().contains(mouseX, mouseY);
+        boolean popupActive = popupHost.getActivePopup() != null;
+        boolean popupHovered = popupActive && popupHost.getActivePopup().getBounds().contains(mouseX, mouseY);
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
@@ -154,6 +184,18 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
             }
         }
 
+        // 背景层：遮罩与 Reisa 每帧重绘，Reisa 的浮动不会让面板缓存失效。
+        LuminRenderSystem.setActiveTarget(renderTarget);
+        scene.beginFrame();
+        dropdownBatch = scene.batch(UiLayer.CONTENT);
+        dropdownLayer = -10;
+
+        beginDropdownLayer();
+        Color scrim = DropdownTheme.scrim();
+        float scrimAlpha = scrimAnim.getValue();
+        dropdownScope.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        flushDropdownLayer();
+
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(sessionId);
             beginDropdownLayer();
@@ -167,6 +209,25 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
             );
             flushDropdownLayer();
         }
+        scene.flush();
+        scene.clear();
+
+        // 面板层：仅在需要时重绘到离屏缓存。popup 有自己的光标与动画，激活期间始终重绘。
+        long signature = GuiCacheSignature.compute();
+        boolean redraw = !ClientSetting.INSTANCE.dropdownCache.getValue()
+                || panelsDirty
+                || animatedLastFrame
+                || popupActive
+                || popupWasActive
+                || mouseX != cachedMouseX
+                || mouseY != cachedMouseY
+                || signature != cachedSignature;
+        if (redraw) {
+            LuminRenderSystem.setActiveTarget(panelTarget);
+            panelTarget.clear();
+            scene.beginFrame();
+            dropdownBatch = scene.batch(UiLayer.CONTENT);
+            dropdownLayer = -10;
 
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
@@ -206,10 +267,19 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
             panel.setPosition(panel.getX(), origY);
         }
 
-        drawSearch(backgroundMouseX, backgroundMouseY);
-        popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
-        scene.flush();
-        popupHost.flush();
+            drawSearch(backgroundMouseX, backgroundMouseY);
+            popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
+            scene.flush();
+            popupHost.flush();
+            scene.clear();
+
+            panelsDirty = false;
+            cachedMouseX = mouseX;
+            cachedMouseY = mouseY;
+            cachedSignature = signature;
+        }
+        popupWasActive = popupActive;
+        animatedLastFrame = Animation.consumeActive();
     }
 
     private void drawSearch(int mouseX, int mouseY) {
@@ -291,6 +361,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        markPanelsDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
@@ -337,6 +408,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        markPanelsDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
@@ -360,6 +432,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+        markPanelsDirty();
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
@@ -384,6 +457,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        markPanelsDirty();
         double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
@@ -403,6 +477,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        markPanelsDirty();
         if (popupHost.keyPressed(event)) {
             react(event.isEscape() ? ReisaDropdownCompanion.Action.CANCEL : ReisaDropdownCompanion.Action.CONFIRM);
             return true;
@@ -454,6 +529,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        markPanelsDirty();
         if (popupHost.charTyped(event)) {
             react(ReisaDropdownCompanion.Action.TYPING);
             return true;
@@ -483,12 +559,14 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean preeditUpdated(PreeditEvent event) {
+        markPanelsDirty();
         this.preeditOverlay = event != null ? new IMEPreeditOverlay(event, this.font, 10) : null;
         return true;
     }
 
     @Override
     public void removed() {
+        markPanelsDirty();
         super.removed();
         popupHost.close();
         searchField.clear();
@@ -532,6 +610,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
     }
 
     private void handleMainPanelAction(String panelId) {
+        markPanelsDirty();
         if ("__collapse_all__".equals(panelId)) {
             for (DropdownPanel panel : panels) {
                 if (!"main".equals(panel.getId())) {
@@ -642,6 +721,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
+        markPanelsDirty();
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
@@ -652,6 +732,7 @@ public class DropdownScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public void openStringListSettingPopup(StringListSetting setting) {
+        markPanelsDirty();
         UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)

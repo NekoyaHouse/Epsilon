@@ -213,3 +213,20 @@ Minecraft 输入事件应由 Screen 转换或路由到具体 Panel/Dropdown 控�
 ```
 
 更完整的帧顺序、HUD 提交和 WorldToScreen 说明见 [渲染文档](development/rendering.md)。
+
+## 跑马灯与缓存内容
+
+`scope.marqueeText(..., clip, overflow)` 只记录文本、裁剪区和溢出宽度。`UiContentBuffer` 把这些记录与
+主内容一起缓存，在每帧 flush 时用 `marqueePhase()` 计算偏移并写入独立的附加层。因此跑马灯不会让
+`UiInvalidationState` 持续处于需要重建的状态；调用方不要再为跑马灯调用 `noteAnimation(true)`。
+
+## 离屏缓存与批次合并
+
+- `DropdownScreen` 把遮罩与 Reisa 每帧绘制到 `dropdown-gui`，面板、阴影、搜索框与 popup 绘制到
+  `dropdown-gui-panels`，仅在输入、动画、鼠标移动、popup 或外部状态签名变化时重绘（设置 `Dropdown Cache`）。
+- `PanelScreen` 在同样条件均未触发时整帧复用上一帧渲染目标（设置 `Panel Cache`）。
+- 失效信号：所有输入入口调用 `markPanelsDirty()`/`markFrameDirty()`；`Animation` 在推进时设置全局活动旗标，
+  非 `Animation` 驱动的时变内容（平滑滚动、光标闪烁、跑马灯）必须调用 `Animation.markActive()`，否则缓存会冻结画面；
+  外部状态由 `GuiCacheSignature` 覆盖。新增时变内容时必须遵守这一约定。
+- `Render2DScheduler` 规划批次时，完全落在 scissor 内的命令会去掉 scissor，以便与同类命令合批。
+- `ClientSetting.uiShadows` 关闭后阴影命令在入队时丢弃。

@@ -536,7 +536,22 @@ public class UiTree {
         }
 
         public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, UiRect clip) {
-            nodes.add(new MarqueeTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveRect(clip)));
+            marqueeText(text, x, y, scale, color, fontLoader, clip, 0.0f);
+        }
+
+        /**
+         * 跑马灯文本，滚动偏移不在构建期写死，而是在每帧 flush 时按时间计算。
+         * <p>
+         * 这样缓存内容无需因为跑马灯而每帧重建。
+         *
+         * @param overflow 文本超出裁剪区的宽度；大于 0 时才会往复滚动
+         */
+        public void marqueeText(String text, float x, float y, float scale, Color color, UiRect clip, float overflow) {
+            marqueeText(text, x, y, scale, color, null, clip, overflow);
+        }
+
+        public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, UiRect clip, float overflow) {
+            nodes.add(new MarqueeTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveRect(clip), Math.max(0.0f, overflow)));
         }
 
         public void texture(Render2DTexture texture, float x, float y, float width, float height,
@@ -1291,7 +1306,7 @@ public class UiTree {
     }
 
     public record MarqueeTextNode(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader,
-                                  UiRect clip) implements UiNode {
+                                  UiRect clip, float overflow) implements UiNode {
     }
 
     public record TextureNode(

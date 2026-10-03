@@ -172,12 +172,12 @@ public class LuminUiRenderer {
             return;
         }
         if (node instanceof UiTree.MarqueeTextNode(
-                String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, UiRect clip
+                String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, UiRect clip, float overflow
         )) {
             if (target.buffer() != null) {
-                target.buffer().addMarqueeText(new UiContentBuffer.MarqueeTextDraw(text, x, y, scale, color, fontLoader, clip));
+                target.buffer().addMarqueeText(new UiContentBuffer.MarqueeTextDraw(text, x, y, scale, color, fontLoader, clip, overflow));
             } else {
-                layer.addText(text, x, y, scale, color, fontLoader);
+                layer.addText(text, x - overflow * UiContentBuffer.marqueePhase(), y, scale, color, fontLoader);
             }
             return;
         }

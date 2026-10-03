@@ -2,6 +2,27 @@ package com.github.epsilon.utils.render.animation;
 
 public class Animation {
 
+    /**
+     * 本帧是否有动画仍在推进。离屏缓存的 GUI 用它判断下一帧是否必须重绘。
+     */
+    private static boolean anyActive;
+
+    /**
+     * 标记存在随时间变化、但不是 {@link Animation} 的内容（如光标闪烁），让缓存 GUI 继续逐帧重绘。
+     */
+    public static void markActive() {
+        anyActive = true;
+    }
+
+    /**
+     * 读取并清除活动旗标。
+     */
+    public static boolean consumeActive() {
+        boolean value = anyActive;
+        anyActive = false;
+        return value;
+    }
+
     private final Easing easing;
     private long duration;
     private long millis;
@@ -53,6 +74,9 @@ public class Animation {
 
         if (Float.isNaN(value) || !Float.isFinite(value)) {
             this.value = destinationValue;
+        }
+        if (!this.finished) {
+            anyActive = true;
         }
     }
 
