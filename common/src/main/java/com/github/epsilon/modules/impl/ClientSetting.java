@@ -137,6 +137,11 @@ public class ClientSetting extends Module {
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
 
+    /**
+     * 关闭后所有 Lumin 2D 阴影命令在入队时直接丢弃，省掉 SHADOW pipeline 的大面积模糊片元开销。
+     */
+    public final BoolSetting uiShadows = boolSetting("UI Shadows", true).group(sgGeneral);
+
     public final EnumSetting<FontMode> font = enumSetting("Font", FontMode.Default).group(sgGeneral);
 
     public final StringSetting customFont = stringSetting("Custom Font", "", () -> font.is(FontMode.Custom)).group(sgGeneral).applyWhenRelease();
@@ -146,6 +151,16 @@ public class ClientSetting extends Module {
     public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", true).group(sgGeneral);
 
     public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
+
+    /**
+     * Dropdown 面板与阴影渲染到离屏缓存，仅在输入、动画或状态变化时重绘；Reisa 与遮罩每帧单独绘制。
+     */
+    public final BoolSetting dropdownCache = boolSetting("Dropdown Cache", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
+
+    /**
+     * Panel 在无输入、无动画、鼠标未移动时跳过整帧重绘，直接复用上一帧的渲染目标。
+     */
+    public final BoolSetting panelCache = boolSetting("Panel Cache", true, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
 
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
 

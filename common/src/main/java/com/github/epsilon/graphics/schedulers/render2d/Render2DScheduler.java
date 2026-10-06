@@ -363,6 +363,9 @@ public class Render2DScheduler implements AutoCloseable {
 
         public void addShadow(float x, float y, float width, float height, float topLeft, float topRight,
                               float bottomRight, float bottomLeft, float blurRadius, Color color) {
+            if (!ClientSetting.INSTANCE.uiShadows.getValue()) {
+                return;
+            }
             scheduler.add(new Render2DCommand.Shadow(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor,
                     topLeft, topRight, bottomRight, bottomLeft, blurRadius, color));
@@ -392,6 +395,9 @@ public class Render2DScheduler implements AutoCloseable {
                               float topLeft, float topRight, float bottomRight, float bottomLeft,
                               float blurRadius, Color color,
                               float[] segmentRects, float[] segmentRadii, float[] segmentColors, int segmentCount) {
+            if (!ClientSetting.INSTANCE.uiShadows.getValue()) {
+                return;
+            }
             scheduler.add(new Render2DCommand.SegmentedShadow(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor,
                     topLeft, topRight, bottomRight, bottomLeft, blurRadius, color,
@@ -805,11 +811,34 @@ public class Render2DScheduler implements AutoCloseable {
         private BatchPlanner() {
         }
 
+        /**
+         * 完全落在 scissor 内的命令不需要裁剪，去掉 scissor 后可与无 scissor 的同类命令合批，减少 draw call。
+         * <p>
+         * 边界使用 ordering bounds（含模糊/旋转扩展）再外扩 2 个 GUI 像素，覆盖字形抗锯齿溢出。
+         */
+        private static Render2DScissor effectiveScissor(Render2DCommand command) {
+            Render2DScissor scissor = command.scissor();
+            if (scissor == null) {
+                return null;
+            }
+            Render2DBounds bounds = command.orderingBounds();
+            float pad = 2.0f;
+            LuminRenderSystem.ScissorRect rect = LuminRenderSystem.toFramebufferScissor(
+                    bounds.x() - pad, bounds.y() - pad, bounds.width() + pad * 2.0f, bounds.height() + pad * 2.0f);
+            boolean contained = rect.width() > 0 && rect.height() > 0
+                    && rect.x() >= scissor.x()
+                    && rect.y() >= scissor.y()
+                    && rect.x() + rect.width() <= scissor.x() + scissor.width()
+                    && rect.y() + rect.height() <= scissor.y() + scissor.height();
+            return contained ? null : scissor;
+        }
+
         private static List<BatchGroup> plan(List<Render2DCommand> commands) {
             Map<BatchKey, BatchGroup> groups = new LinkedHashMap<>();
             for (Render2DCommand command : commands) {
-                BatchKey key = new BatchKey(command.kind(), command.scissor());
-                groups.computeIfAbsent(key, ignored -> new BatchGroup(command.kind(), command.scissor())).add(command);
+                Render2DScissor scissor = effectiveScissor(command);
+                BatchKey key = new BatchKey(command.kind(), scissor);
+                groups.computeIfAbsent(key, ignored -> new BatchGroup(command.kind(), scissor)).add(command);
             }
 
             List<BatchGroup> result = new ArrayList<>(groups.values());

@@ -106,8 +106,8 @@ public class ModuleRow {
             scope.text(keybindText, clipRight - keyWidth, keyY, keyScale, keyColor);
         } else {
             float overflow = keyWidth - clipWidth;
-            float scrollOffset = -overflow * marqueePhase();
-            scope.marqueeText(keybindText, clipX + scrollOffset, keyY, keyScale, keyColor, keybindClip);
+            // 滚动偏移由 UiContentBuffer 在 flush 时按时间计算，行内容本身可以长期缓存。
+            scope.marqueeText(keybindText, clipX, keyY, keyScale, keyColor, keybindClip, overflow);
         }
     }
 
@@ -117,22 +117,6 @@ public class ModuleRow {
         return keyWidth > KEYBIND_CLIP_WIDTH + 0.5f;
     }
 
-    private static float marqueePhase() {
-        long period = 5000L;
-        long pause = 800L;
-        long t = System.currentTimeMillis() % period;
-        long travel = (period - pause * 2L) / 2L;
-        if (t < pause) {
-            return 0.0f;
-        }
-        if (t < pause + travel) {
-            return (t - pause) / (float) travel;
-        }
-        if (t < pause + travel + pause) {
-            return 1.0f;
-        }
-        return 1.0f - (t - pause - travel - pause) / (float) travel;
-    }
 
     private String formatKeybind(int keyCode) {
         return KeybindUtils.format(keyCode).toUpperCase();

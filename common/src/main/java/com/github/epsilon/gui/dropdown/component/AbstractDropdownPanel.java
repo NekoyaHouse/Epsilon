@@ -391,6 +391,8 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
             scroll = targetScroll;
         } else {
             scroll = Mth.lerp(SCROLL_SMOOTHING, scroll, targetScroll);
+            // 平滑滚动不走 Animation，需要显式告知离屏缓存继续逐帧重绘。
+            com.github.epsilon.utils.render.animation.Animation.markActive();
         }
     }
 
