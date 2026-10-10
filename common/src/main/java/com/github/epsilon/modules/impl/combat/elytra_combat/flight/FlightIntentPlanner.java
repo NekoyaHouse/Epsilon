@@ -38,9 +38,7 @@ public class FlightIntentPlanner {
         double probe = Math.clamp(desired.length() * 4.0, 4.0, LOCAL_PROBE_DISTANCE);
         Vec3 directEnd = player.position().add(desired.normalize().scale(probe));
         if (LocalFlightAvoidance.isSegmentClear(player, player.position(), directEnd)) {
-            // 短距离直线已验证安全，直接保留行为层的期望速度。
-            // 注意不要在这里清空 lastAvoidanceDirection：否则下次进入避障时又失去左右偏好，
-            // 会在障碍边界上逐 tick 左右摇摆（转头抽风）。
+            // 保留避障方向偏好，使再次进入避障时的选择连续。
             ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "direct");
             return new FlightIntent(desired, desired.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
         }
@@ -61,8 +59,7 @@ public class FlightIntentPlanner {
             if (waypointVelocity.lengthSqr() >= 1.0E-8) {
                 waypointVelocity = waypointVelocity.normalize().scale(desired.length());
                 ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "waypoint " + vec(waypointVelocity));
-                // 不在这里剥夺烟花：绕障/寻路时正是最需要推进的时候（撞上障碍后滑翔速度归零，
-                // 没有烟花就只能贴着障碍低速磨），是否放由 Allow Firework 与行为层意愿决定。
+                // 保留行为层的烟花意图，交给飞控控制使用时机。
                 return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
             }
         }
@@ -86,19 +83,15 @@ public class FlightIntentPlanner {
                 this.lastAvoidanceDirection
         );
         if (avoidance == null) {
-            // 局部避障的所有候选都被挡时不要交还全零意图：那会让 controlInput 变成 null、旋转退回
-            // "无请求"分支，玩家在目标旁边彻底失去控制（日志里的 avoidance none + intent 全零）。
-            // 这里保留行为层的期望方向，交给 ElytraDirectionSolver 的安全预演与逃逸搜索去挑一个能飞的解。
+            // 局部避障无解时保留期望方向，由方向求解器继续搜索安全逃逸解。
             ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", "none -> keep desired");
             return new FlightIntent(desired, desired.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
         }
         this.lastAvoidanceDirection = avoidance.normalize();
         ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", vec(avoidance));
-        // 同上：避障阶段保留烟花意愿，否则撞上障碍后没有推进，只能低速贴着障碍飞。
         return new FlightIntent(avoidance, this.lastAvoidanceDirection, rawIntent.directVelocity(), rawIntent.useFirework());
     }
 
-    /** 调试用的向量格式化。 */
     private static String vec(Vec3 value) {
         return value == null ? "null"
                 : "(" + ElytraDebug.fmt(value.x) + "," + ElytraDebug.fmt(value.y) + "," + ElytraDebug.fmt(value.z) + ")";

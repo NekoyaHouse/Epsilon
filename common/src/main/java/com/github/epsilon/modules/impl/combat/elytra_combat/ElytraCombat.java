@@ -71,7 +71,7 @@ public class ElytraCombat extends Module {
             enumSetting("Mode", ElytraCombatMode.Follow, this::onModeChanged).group(sgGeneral);
     private final KeybindSetting switchModeKey =
             keybindSetting("Switch Mode Key", -1).group(sgGeneral);
-    /** 调试输出开关：按决策点把判定结果打到聊天栏，用于定位转头抽风。 */
+    /** 战斗决策调试输出开关。 */
     public final BoolSetting debug =
             boolSetting("Debug", false, value -> {
                 ElytraDebug.enabled = value;
@@ -158,7 +158,7 @@ public class ElytraCombat extends Module {
             enumSetting("Control Mode", ControlMode.Input).group(sgFlight);
     public final DoubleSetting maxFlightSpeed =
             doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight);
-    /** 每 tick 允许的最大转向角度（度）；360 表示不限制。用于抑制寻路方向抖动导致的转头抽风。 */
+    /** 每 tick 最大转向角度（度）；360 表示不限速。 */
     public final DoubleSetting maxTurnSpeed =
             doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight);
     private final BoolSetting allowFirework =
@@ -246,10 +246,7 @@ public class ElytraCombat extends Module {
         return this.controlInput;
     }
 
-    /**
-     * 行为层本 tick 的意图抬升量（未截断前），供飞控的抬头保护做探测距离使用；
-     * 用意图而不是实际速度可以避免抬头保护与拉升互相反馈造成抖动。
-     */
+    /** 本 tick 未截断的意图抬升量，用于飞控的头顶碰撞探测。 */
     public double getCombatIntendedClimb() {
         return this.latestIntent.desiredVelocity().y;
     }
@@ -258,12 +255,7 @@ public class ElytraCombat extends Module {
         return isEnabled() && this.currentBehavior != null;
     }
 
-    /**
-     * 本 tick 是否真的由 ElytraCombat 在驾驶（已选中目标并产出控制输入）。
-     *
-     * <p>飞控用它决定要不要服从本模块的烟花意图：模块开着但待机（没目标、没接管）时不应干预
-     * ElytraFly 自己的烟花时机，否则一开模块就完全放不出烟花。</p>
-     */
+    /** 已选中目标并产出飞行输入时返回 true；待机时不接管 ElytraFly 的烟花决策。 */
     public boolean isDrivingFlight() {
         return isEnabled() && this.controlInput != null;
     }
@@ -371,11 +363,7 @@ public class ElytraCombat extends Module {
             return;
         }
 
-        // 静默旋转下，服务端按"我们发出去的旋转"模拟滑翔，而原版本地复算用的是真实（相机）旋转，
-        // 两边不一致：本地看起来姿态毫无作用（表现为绕圈）。这里用同一个滑翔方程、按请求的旋转
-        // 复算一遍——结果与服务端将模拟出的速度一致，因此既不产生无法复现的移动，也不触发 AC。
-        // 事件在 setDeltaMovement 之前发布，此时玩家速度仍是本 tick 的输入速度。
-        // 非静默模式（Snap 等）真实旋转已经等于请求旋转，复算结果与原版一致，可无条件执行。
+        // 事件发生在速度写入前，按托管旋转复算滑翔速度，使本地与服务端朝向一致。
         if (this.mc.player == null || this.mc.level == null) {
             return;
         }
@@ -489,14 +477,7 @@ public class ElytraCombat extends Module {
     /** 方向变化小于该角度时视为抖动，直接沿用上一 tick 的方向。 */
     private static final float TURN_DEAD_ZONE_DEGREES = 3.0f;
 
-    /**
-     * 长矛瞄准允许的俯仰偏差（度）。
-     *
-     * <p>kinetic 的判定射线就是视线，俯仰偏差会一比一变成脱靶距离，而判定半径只有约 0.6 格
-     * （碰撞箱半宽 0.3 + hitboxMargin 0.3）：8° 在 3 格上是 0.42 格还勉强够，到 5 格就是 0.70 格
-     * 直接脱靶。默认 35° 是给"取升力/加速度"留的空间，对长矛太松，这里收到 3°（3 格 0.16 格、
-     * 5 格 0.26 格），几乎把视线钉在目标中心上。</p>
-     */
+    /** 长矛瞄准的最大俯仰偏差（度），用于限制 kinetic 射线的脱靶距离。 */
     private static final float SPEAR_PITCH_DEVIATION_LIMIT = 3.0f;
 
     private FlightIntent clampIntent(FlightIntent intent) {
@@ -512,14 +493,7 @@ public class ElytraCombat extends Module {
         return new FlightIntent(clamped, clamped.normalize(), intent.directVelocity(), intent.useFirework());
     }
 
-    /**
-     * 抑制寻路方向抖动：小角度变化直接沿用上一 tick 的方向（死区），大角度变化按
-     * {@code Max Turn Speed} 限速。
-     *
-     * <p>寻路的航点选择、A* 重算和局部避障会在判定边界上逐 tick 改变主意，方向随之横跳；而
-     * ElytraFly 的旋转请求是瞬时生效（速度 360）的，于是表现为"转头卡住 + 抽风"。这里在意图层
-     * 把方向变化率限住，旋转自然跟着变平滑，不需要改动 ElytraFly 的旋转链路。</p>
-     */
+    /** 用死区和 {@code Max Turn Speed} 限制飞行意图的方向变化。 */
     private FlightIntent stabilizeIntent(FlightIntent next) {
         Vec3 previous = this.latestIntent.desiredVelocity();
         Vec3 desired = next.desiredVelocity();
@@ -527,11 +501,7 @@ public class ElytraCombat extends Module {
             return next;
         }
 
-        // 长矛直接忽略 Max Turn Speed：实测同一场景下 360（不限速）命中 2/3，45 只有 1/6，
-        // 且 45 的 rotation.degenerate 是 360 的 2.5 倍。原因是 kinetic 判定射线就是视线，
-        // 目标一旦移到侧方，意图层限速会让方向滞后、射线跟着偏出目标；而滑翔速度的转向本来
-        // 就受物理限制（水平只有约 10%/tick），意图层再限一次只会雪上加霜。
-        // 3 度死区仍然保留：它处理的是微抖，与转向速度无关。
+        // 长矛瞄准跳过转向限速以跟随目标，仍保留微小变化的死区。
         double limit = this.maxTurnSpeed.getValue();
         boolean unlimited = limit >= 360.0 || this.mode.is(ElytraCombatMode.Spear);
 
@@ -563,7 +533,6 @@ public class ElytraCombat extends Module {
         float pitchDelta = nextPitch - previousPitch;
         if (Math.abs(Mth.wrapDegrees(yaw - previousYaw)) < TURN_DEAD_ZONE_DEGREES
                 && Math.abs(pitchDelta) < TURN_DEAD_ZONE_DEGREES) {
-            // 死区：方向几乎没变，沿用上一 tick，避免微抖动被瞬时转头放大。
             return new FlightIntent(
                     previousDirection.scale(desired.length()),
                     previousDirection,
@@ -582,7 +551,6 @@ public class ElytraCombat extends Module {
         );
     }
 
-    /** 调试用的向量格式化。 */
     private static String fmt(Vec3 value) {
         return value == null ? "null"
                 : "(" + ElytraDebug.fmt(value.x) + "," + ElytraDebug.fmt(value.y) + "," + ElytraDebug.fmt(value.z) + ")";
@@ -595,7 +563,6 @@ public class ElytraCombat extends Module {
             return null;
         }
 
-        // Spear 模式收紧俯仰容差：长矛的命中判定沿视线扫掠，俯仰偏差直接等于脱靶。
         float pitchTolerance = this.mode.is(ElytraCombatMode.Spear)
                 ? SPEAR_PITCH_DEVIATION_LIMIT
                 : ElytraDirectionSolver.DEFAULT_PITCH_DEVIATION_LIMIT;
@@ -637,7 +604,6 @@ public class ElytraCombat extends Module {
         };
     }
 
-    /** 调试用：把 WASD 扇区输入转成可读文本。 */
     private static String describe(DirectionInput input) {
         StringBuilder builder = new StringBuilder();
         if (input.forward()) builder.append('W');

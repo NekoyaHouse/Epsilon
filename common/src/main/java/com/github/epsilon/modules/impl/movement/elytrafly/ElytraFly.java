@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class ElytraFly extends Module {
 
-    /** 启动停疾跑后，压制 AutoSprint 强制疾跑的 tick 数（覆盖启动后的两三个客户端 tick 即可）。 */
+    /** 启用后压制 AutoSprint 的 tick 数。 */
     private static final int SPRINT_SUPPRESS_TICKS = 3;
 
     public static final ElytraFly INSTANCE = new ElytraFly();
@@ -80,7 +80,6 @@ public class ElytraFly extends Module {
 
     private ElytraFlightModes activeModeType;
     private Float pitch40YawOverride;
-    /** 启动时停疾跑后，压制 AutoSprint 强制疾跑的剩余 tick 数。 */
     private int sprintSuppressTicks;
 
     @Override
@@ -97,11 +96,7 @@ public class ElytraFly extends Module {
         getMode(activeModeType).onDisable();
     }
 
-    /**
-     * 启动时停一次疾跑：直接清掉疾跑状态并松开疾跑键。
-     * AutoSprint 每个客户端 tick 都会把疾跑键按回去，所以同时开一个短暂的压制窗口，
-     * 否则这次停止会在下一 tick 被撤销（见 {@link com.github.epsilon.modules.impl.movement.AutoSprint}）。
-     */
+    /** 停止疾跑，并短暂压制 AutoSprint。 */
     private void stopSprintOnce() {
         if (mc.player == null) return;
 
@@ -218,7 +213,6 @@ public class ElytraFly extends Module {
     @EventHandler
     private void onMousePress(MousePressEvent event) {
         if (mc.gui.screen() != null) return;
-        // 只有开启 No Eat 时才拦截右键，其余情况允许正常进食/使用物品。
         if (!noEat.getValue()) return;
         if (event.getButton() == InputConstants.MOUSE_BUTTON_RIGHT && event.getAction() == InputConstants.PRESS && getActiveMode().shouldCancelRightClick()) {
             event.cancel();

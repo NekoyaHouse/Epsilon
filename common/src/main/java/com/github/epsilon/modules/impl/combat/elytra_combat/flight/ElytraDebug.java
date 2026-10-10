@@ -2,23 +2,15 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.flight;
 
 import com.github.epsilon.utils.player.ChatUtils;
 
-/**
- * ElytraCombat 的调试输出。
- *
- * <p>用 {@link ChatUtils#addChatMessage(String)} 按决策点打印标签，用于在游戏内定位
- * "转头抽风"这类问题：观察是决策层在摇摆，还是旋转链路被别处覆盖。</p>
- *
- * <p>默认关闭；开启后每 tick 会打印多行，建议只在复现问题的短时间内打开。</p>
- */
+/** ElytraCombat 决策调试输出，默认关闭，同一标签按时间节流。 */
 public final class ElytraDebug {
 
-    /** 全局开关；默认关闭，避免刷屏。 */
     public static boolean enabled = false;
 
-    /** 同一标签的最小重复间隔（毫秒），避免逐 tick 打印刷爆聊天栏。 */
+    /** 同一标签的最小重复间隔（毫秒）。 */
     private static final long THROTTLE_MS = 200L;
 
-    /** 标签槽位：每个决策点一个，用来判断"变化"而不是"每秒打印"。 */
+    /** 各决策点独立保存标签与输出时间。 */
     private static final int SLOTS = 32;
     private static final String[] LAST_LABELS = new String[SLOTS];
     private static final long[] LAST_TIMES = new long[SLOTS];
@@ -27,11 +19,10 @@ public final class ElytraDebug {
     }
 
     /**
-     * 打印一个决策点。只有标签发生变化（或超过节流间隔）时才真正输出，
-     * 这样聊天栏里出现的每一行都代表一次真实的决策切换。
+     * 输出决策标签；内容变化或超过节流间隔时打印。
      *
-     * @param slot 决策点固定槽位，见调用处的常量
-     * @param tag  决策点名称
+     * @param slot 决策点槽位
+     * @param tag 决策点名称
      * @param detail 附加数据
      */
     public static void log(int slot, String tag, Object detail) {
@@ -49,7 +40,7 @@ public final class ElytraDebug {
         ChatUtils.addChatMessage("[ElytraCombat] " + label);
     }
 
-    /** 重置缓存的标签，避免下次开启时把旧标签当成"没变化"而漏印。 */
+    /** 清空标签与节流时间。 */
     public static void reset() {
         for (int i = 0; i < SLOTS; i++) {
             LAST_LABELS[i] = null;
@@ -57,7 +48,6 @@ public final class ElytraDebug {
         }
     }
 
-    // ===== 决策点槽位 =====
     public static final int SLOT_MODE = 0;
     public static final int SLOT_TARGET = 1;
     public static final int SLOT_ACTION = 2;
@@ -75,7 +65,6 @@ public final class ElytraDebug {
     /** Spear 命中 / 脱战事件；与逐 tick 的状态摘要分开，避免互相覆盖标签。 */
     public static final int SLOT_SPEAR_HIT = 14;
 
-    /** 浮点数统一按 2 位小数输出，便于肉眼比对。 */
     public static String fmt(double value) {
         return String.format("%.2f", value);
     }
