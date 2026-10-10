@@ -59,6 +59,7 @@ public class ModuleManager {
         addModule(ElytraCombat.INSTANCE);
         addModule(HoverTotem.INSTANCE);
         addModule(KillAura.INSTANCE);
+        addModule(SpearAura.INSTANCE);
         addModule(KeyPearl.INSTANCE);
         addModule(MaceAura.INSTANCE);
         addModule(MultiAura.INSTANCE);

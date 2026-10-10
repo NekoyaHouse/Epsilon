@@ -44,6 +44,13 @@ public class MyModule extends Module {
 键位默认值为 `-1`。`Module.BindMode.Toggle` 在按下时切换，`Hold` 在按下时启用、松开时禁用。鼠标键由
 `KeybindUtils` 编码：26.3 起键盘保存 SDL 扫描码，鼠标键保存 SDL 编号（左 1、中 2、右 3）。
 
+## 长矛与鞘翅战斗
+
+- `SpearAura.INSTANCE` 在 `ModuleManager.initModules()` 注册。主手持矛时自动蓄力；目标距离、相对速度与射线校验通过后请求现有 `RotationManager.INSTANCE` 瞄准，可选择按瞄准方向移动。网络线程只记录本地玩家的 kinetic 命中，主线程延迟一 tick 尝试重锤补刀，再等待命中冷却；禁用时释放自动蓄力按键并清空 pending 状态。
+- `ElytraCombat` 的重锤行为负责接近、俯冲和拉升，长矛行为负责蓄力窗口、冲锋及命中或打空后的脱战。飞行规划保留避障方向偏好，方向求解器限制意图俯仰偏差并复用安全逃逸解；`Max Turn Speed` 限制飞行意图转向，长矛近身瞄准使用更小的俯仰容差。`Debug` 默认关闭，可观察行为、轨迹与烟花决策。
+- `ElytraFly` 提供 Control、Pitch40、NCP 三种模式。NCP 直接接管滑翔位移，可配置起飞、升降、限速和阻力；禁用或切换模式时释放临时计时器加速。Control 支持甲飞进食时临时装备鞘翅并恢复胸甲，`No Eat` 可拦截右键使用；烟花在低动量时缩短补发间隔，并仅在 ElytraCombat 实际驾驶时服从战斗意图。
+- ElytraFly 启用时停止疾跑并短暂压制 AutoSprint。三个模块继续使用本体已有的全局转头模式，不引入模块级转头选项或新的 RotationManager 协议。
+
 ## Setting DSL
 
 `Module` 与 `EpsilonAddon` 都实现 `SettingHost`，共享同一套 DSL，也都支持适用类型的 `onChanged` 重载。

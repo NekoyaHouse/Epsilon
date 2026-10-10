@@ -54,7 +54,7 @@ public class ElytraCombat extends Module {
          */
         Input,
         /**
-         * 在 FallFlyingMovementEvent 中直接覆盖当 tick 速度，作为实验模式。
+         * 在 FallFlyingMovementEvent 中直接覆盖当 tick 速度，作为低反模式。
          */
         DirectVelocity
     }
@@ -71,6 +71,12 @@ public class ElytraCombat extends Module {
             enumSetting("Mode", ElytraCombatMode.Follow, this::onModeChanged).group(sgGeneral);
     private final KeybindSetting switchModeKey =
             keybindSetting("Switch Mode Key", -1).group(sgGeneral);
+    /** 调试输出开关：按决策点把判定结果打到聊天栏，用于定位转头抽风。 */
+    public final BoolSetting debug =
+            boolSetting("Debug", false, value -> {
+                ElytraDebug.enabled = value;
+                ElytraDebug.reset();
+            }).group(sgGeneral);
     public final IntSetting targetRange = intSetting("Target Range", 80, 8, 256, 1).group(sgGeneral);
     public final BoolSetting dynamicTarget = boolSetting("Dynamic Target", false).group(sgGeneral);
     private final BoolSetting onlyWhenNoWASD = boolSetting("Only When No WASD", false).group(sgGeneral);
@@ -93,11 +99,15 @@ public class ElytraCombat extends Module {
     public final DoubleSetting stopDistance = doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).group(sgFollow);
     public final DoubleSetting followGroundHeight =
             doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).group(sgFollow);
-    private final BoolSetting pathfinding = boolSetting("Pathfinding", true).group(sgFollow);
-    private final IntSetting searchRadius = intSetting("Search Radius", 24, 6, 64, 1, pathfinding::getValue).group(sgFollow);
-    private final IntSetting maxNodes = intSetting("Max Nodes", 1200, 100, 6000, 100, pathfinding::getValue).group(sgFollow);
+    private final BoolSetting pathfinding =
+            boolSetting("Pathfinding", true).group(sgFollow);
+    private final IntSetting searchRadius = intSetting("Search Radius", 24, 6, 64, 1,
+            pathfinding::getValue).group(sgFollow);
+    private final IntSetting maxNodes = intSetting("Max Nodes", 1200, 100, 6000, 100,
+            pathfinding::getValue).group(sgFollow);
     private final IntSetting dataSize = intSetting(
-            "Data Size", 50, 25, 100, 5, pathfinding::getValue, this::setPathDataSize
+            "Data Size", 50, 25, 100, 5,
+            pathfinding::getValue, this::setPathDataSize
     ).applyWhenRelease().group(sgFollow);
 
     public final DoubleSetting maceEngageRange =
@@ -148,6 +158,9 @@ public class ElytraCombat extends Module {
             enumSetting("Control Mode", ControlMode.Input).group(sgFlight);
     public final DoubleSetting maxFlightSpeed =
             doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight);
+    /** 每 tick 允许的最大转向角度（度）；360 表示不限制。用于抑制寻路方向抖动导致的转头抽风。 */
+    public final DoubleSetting maxTurnSpeed =
+            doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight);
     private final BoolSetting allowFirework =
             boolSetting("Allow Firework", true).group(sgFlight);
 
@@ -233,10 +246,31 @@ public class ElytraCombat extends Module {
         return this.controlInput;
     }
 
+    /**
+     * 行为层本 tick 的意图抬升量（未截断前），供飞控的抬头保护做探测距离使用；
+     * 用意图而不是实际速度可以避免抬头保护与拉升互相反馈造成抖动。
+     */
+    public double getCombatIntendedClimb() {
+        return this.latestIntent.desiredVelocity().y;
+    }
+
     public boolean isControllingCombat() {
         return isEnabled() && this.currentBehavior != null;
     }
 
+    /**
+     * 本 tick 是否真的由 ElytraCombat 在驾驶（已选中目标并产出控制输入）。
+     *
+     * <p>飞控用它决定要不要服从本模块的烟花意图：模块开着但待机（没目标、没接管）时不应干预
+     * ElytraFly 自己的烟花时机，否则一开模块就完全放不出烟花。</p>
+     */
+    public boolean isDrivingFlight() {
+        return isEnabled() && this.controlInput != null;
+    }
+
+    /**
+     * 当前是否允许使用烟花；时机完全交给 ElytraFly 的烟花逻辑（Use Fireworks / Boost Delay）。
+     */
     public boolean shouldUseFirework() {
         return this.allowFirework.getValue() && this.latestIntent.useFirework();
     }
@@ -274,6 +308,12 @@ public class ElytraCombat extends Module {
                 this.predictTicks.getValue(),
                 this.predictionHistory.getValue()
         );
+        ElytraDebug.log(ElytraDebug.SLOT_TARGET, "target",
+                this.target.getName().getString()
+                        + " action=" + snapshot.action()
+                        + " support=" + snapshot.supported()
+                        + " spear=" + snapshot.usingSpear()
+                        + " d=" + ElytraDebug.fmt(this.mc.player.distanceTo(this.target)));
         this.hitTracker.setContext(this.mc.player, this.target);
         processHits();
 
@@ -289,9 +329,15 @@ public class ElytraCombat extends Module {
                 this.flightPlanner,
                 planConfig
         );
-        this.latestIntent = clampIntent(intent);
+        FlightIntent rawIntent = intent;
+        this.latestIntent = stabilizeIntent(clampIntent(intent));
         this.controlInput = toInput(this.mc.player, this.latestIntent);
         this.lastFallDistance = this.mc.player.fallDistance;
+
+        ElytraDebug.log(ElytraDebug.SLOT_INTENT, "intent",
+                "raw=" + fmt(rawIntent.desiredVelocity())
+                        + " out=" + fmt(this.latestIntent.desiredVelocity())
+                        + " move=" + (this.controlInput != null && this.controlInput.hasMoveInput()));
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -307,21 +353,45 @@ public class ElytraCombat extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onFallFlyingMovement(FallFlyingMovementEvent event) {
-        // 只有规划速度本身安全时才覆盖原版滑翔结果，否则保留 solveSafe 的旋转控制。
-        if (!isEnabled() || this.controlInput == null || !this.controlInput.hasDirectVelocity()) {
+        if (!isEnabled() || this.controlInput == null) {
             return;
         }
 
-        Vec3 directVelocity = this.controlInput.directVelocity();
-        if (this.mc.player == null || !LocalFlightAvoidance.isSegmentClear(
-                this.mc.player,
-                this.mc.player.position(),
-                this.mc.player.position().add(directVelocity)
-        )) {
-            // 直接速度不安全时保留原版滑翔结果，由 solveSafe 选择的旋转接管本 tick。
+        if (this.controlInput.hasDirectVelocity()) {
+            Vec3 directVelocity = this.controlInput.directVelocity();
+            if (this.mc.player == null || !LocalFlightAvoidance.isSegmentClear(
+                    this.mc.player,
+                    this.mc.player.position(),
+                    this.mc.player.position().add(directVelocity)
+            )) {
+                // 直接速度不安全时保留原版滑翔结果，由 solveSafe 选择的旋转接管本 tick。
+                return;
+            }
+            event.setMovement(directVelocity);
             return;
         }
-        event.setMovement(directVelocity);
+
+        // 静默旋转下，服务端按"我们发出去的旋转"模拟滑翔，而原版本地复算用的是真实（相机）旋转，
+        // 两边不一致：本地看起来姿态毫无作用（表现为绕圈）。这里用同一个滑翔方程、按请求的旋转
+        // 复算一遍——结果与服务端将模拟出的速度一致，因此既不产生无法复现的移动，也不触发 AC。
+        // 事件在 setDeltaMovement 之前发布，此时玩家速度仍是本 tick 的输入速度。
+        // 非静默模式（Snap 等）真实旋转已经等于请求旋转，复算结果与原版一致，可无条件执行。
+        if (this.mc.player == null || this.mc.level == null) {
+            return;
+        }
+        Vec3 input = this.mc.player.getDeltaMovement();
+        Vec3 corrected = ElytraMotionPredictor.nextFallFlyingMovement(
+                input,
+                this.controlInput.yaw(),
+                this.controlInput.pitch(),
+                ElytraDirectionSolver.effectiveGravity(this.mc.player)
+        );
+        ElytraDebug.log(ElytraDebug.SLOT_ROTATION, "rotation.physics",
+                "real=(" + ElytraDebug.fmt(this.mc.player.getYRot()) + "," + ElytraDebug.fmt(this.mc.player.getXRot()) + ")"
+                        + " req=(" + ElytraDebug.fmt(this.controlInput.yaw()) + "," + ElytraDebug.fmt(this.controlInput.pitch()) + ")"
+                        + " vanillaVy=" + ElytraDebug.fmt(event.getMovement().y)
+                        + " fixedVy=" + ElytraDebug.fmt(corrected.y));
+        event.setMovement(corrected);
     }
 
     @EventHandler
@@ -416,6 +486,19 @@ public class ElytraCombat extends Module {
         }
     }
 
+    /** 方向变化小于该角度时视为抖动，直接沿用上一 tick 的方向。 */
+    private static final float TURN_DEAD_ZONE_DEGREES = 3.0f;
+
+    /**
+     * 长矛瞄准允许的俯仰偏差（度）。
+     *
+     * <p>kinetic 的判定射线就是视线，俯仰偏差会一比一变成脱靶距离，而判定半径只有约 0.6 格
+     * （碰撞箱半宽 0.3 + hitboxMargin 0.3）：8° 在 3 格上是 0.42 格还勉强够，到 5 格就是 0.70 格
+     * 直接脱靶。默认 35° 是给"取升力/加速度"留的空间，对长矛太松，这里收到 3°（3 格 0.16 格、
+     * 5 格 0.26 格），几乎把视线钉在目标中心上。</p>
+     */
+    private static final float SPEAR_PITCH_DEVIATION_LIMIT = 3.0f;
+
     private FlightIntent clampIntent(FlightIntent intent) {
         // 行为层可以返回任意长度向量，统一限制到 Max Flight Speed 后再交给飞控。
         Vec3 velocity = intent.desiredVelocity();
@@ -429,6 +512,82 @@ public class ElytraCombat extends Module {
         return new FlightIntent(clamped, clamped.normalize(), intent.directVelocity(), intent.useFirework());
     }
 
+    /**
+     * 抑制寻路方向抖动：小角度变化直接沿用上一 tick 的方向（死区），大角度变化按
+     * {@code Max Turn Speed} 限速。
+     *
+     * <p>寻路的航点选择、A* 重算和局部避障会在判定边界上逐 tick 改变主意，方向随之横跳；而
+     * ElytraFly 的旋转请求是瞬时生效（速度 360）的，于是表现为"转头卡住 + 抽风"。这里在意图层
+     * 把方向变化率限住，旋转自然跟着变平滑，不需要改动 ElytraFly 的旋转链路。</p>
+     */
+    private FlightIntent stabilizeIntent(FlightIntent next) {
+        Vec3 previous = this.latestIntent.desiredVelocity();
+        Vec3 desired = next.desiredVelocity();
+        if (previous.lengthSqr() < 1.0E-8 || desired.lengthSqr() < 1.0E-8) {
+            return next;
+        }
+
+        // 长矛直接忽略 Max Turn Speed：实测同一场景下 360（不限速）命中 2/3，45 只有 1/6，
+        // 且 45 的 rotation.degenerate 是 360 的 2.5 倍。原因是 kinetic 判定射线就是视线，
+        // 目标一旦移到侧方，意图层限速会让方向滞后、射线跟着偏出目标；而滑翔速度的转向本来
+        // 就受物理限制（水平只有约 10%/tick），意图层再限一次只会雪上加霜。
+        // 3 度死区仍然保留：它处理的是微抖，与转向速度无关。
+        double limit = this.maxTurnSpeed.getValue();
+        boolean unlimited = limit >= 360.0 || this.mode.is(ElytraCombatMode.Spear);
+
+        Vec3 previousDirection = previous.normalize();
+        Vec3 nextDirection = desired.normalize();
+        float previousYaw = (float) Math.toDegrees(Math.atan2(-previousDirection.x, previousDirection.z));
+        float previousPitch = (float) -Math.toDegrees(Math.atan2(
+                previousDirection.y,
+                Math.max(1.0E-4, previousDirection.horizontalDistance())
+        ));
+
+        // 目标方向接近垂直时 yaw 没有意义，保持上一 tick 的 yaw，只允许俯仰变化。
+        float yaw;
+        if (nextDirection.horizontalDistance() < 1.0E-3) {
+            yaw = previousYaw;
+        } else {
+            float nextYaw = (float) Math.toDegrees(Math.atan2(-nextDirection.x, nextDirection.z));
+            yaw = unlimited ? nextYaw : previousYaw + Mth.clamp(
+                    Mth.wrapDegrees(nextYaw - previousYaw),
+                    (float) -limit,
+                    (float) limit
+            );
+        }
+
+        float nextPitch = (float) -Math.toDegrees(Math.atan2(
+                nextDirection.y,
+                Math.max(1.0E-4, nextDirection.horizontalDistance())
+        ));
+        float pitchDelta = nextPitch - previousPitch;
+        if (Math.abs(Mth.wrapDegrees(yaw - previousYaw)) < TURN_DEAD_ZONE_DEGREES
+                && Math.abs(pitchDelta) < TURN_DEAD_ZONE_DEGREES) {
+            // 死区：方向几乎没变，沿用上一 tick，避免微抖动被瞬时转头放大。
+            return new FlightIntent(
+                    previousDirection.scale(desired.length()),
+                    previousDirection,
+                    next.directVelocity(),
+                    next.useFirework()
+            );
+        }
+
+        float pitch = unlimited ? nextPitch : previousPitch + Mth.clamp(pitchDelta, (float) -limit, (float) limit);
+        Vec3 direction = this.mc.player.calculateViewVector(pitch, yaw).normalize();
+        return new FlightIntent(
+                direction.scale(desired.length()),
+                direction,
+                next.directVelocity(),
+                next.useFirework()
+        );
+    }
+
+    /** 调试用的向量格式化。 */
+    private static String fmt(Vec3 value) {
+        return value == null ? "null"
+                : "(" + ElytraDebug.fmt(value.x) + "," + ElytraDebug.fmt(value.y) + "," + ElytraDebug.fmt(value.z) + ")";
+    }
+
     private ElytraCombatInput toInput(net.minecraft.client.player.LocalPlayer player, FlightIntent intent) {
         // 输入模式先反解下一 tick 速度对齐的旋转，再按 yaw 偏差映射到 8 个 WASD 扇区。
         Vec3 velocity = intent.desiredVelocity();
@@ -436,9 +595,20 @@ public class ElytraCombat extends Module {
             return null;
         }
 
-        Rot2f rotations = ElytraDirectionSolver.solveSafe(player, velocity);
-        DirectionInput direction = directionInput(Mth.wrapDegrees(rotations.getYaw() - player.getYRot()));
+        // Spear 模式收紧俯仰容差：长矛的命中判定沿视线扫掠，俯仰偏差直接等于脱靶。
+        float pitchTolerance = this.mode.is(ElytraCombatMode.Spear)
+                ? SPEAR_PITCH_DEVIATION_LIMIT
+                : ElytraDirectionSolver.DEFAULT_PITCH_DEVIATION_LIMIT;
+        Rot2f rotations = ElytraDirectionSolver.solveSafe(player, velocity, pitchTolerance);
+        ElytraDirectionSolver.rememberPitch(rotations.getPitch());
+        float yawDelta = Mth.wrapDegrees(rotations.getYaw() - player.getYRot());
+        DirectionInput direction = directionInput(yawDelta);
         Vec3 direct = this.controlMode.is(ControlMode.DirectVelocity) ? velocity : null;
+        ElytraDebug.log(ElytraDebug.SLOT_INTENT, "input",
+                describe(direction)
+                        + " dYaw=" + ElytraDebug.fmt(yawDelta)
+                        + " jump=" + (velocity.y > 0.0)
+                        + " sneak=" + (velocity.y < 0.0));
         return new ElytraCombatInput(
                 direction.forward(),
                 direction.back(),
@@ -467,6 +637,15 @@ public class ElytraCombat extends Module {
         };
     }
 
+    /** 调试用：把 WASD 扇区输入转成可读文本。 */
+    private static String describe(DirectionInput input) {
+        StringBuilder builder = new StringBuilder();
+        if (input.forward()) builder.append('W');
+        if (input.back()) builder.append('S');
+        if (input.left()) builder.append('A');
+        if (input.right()) builder.append('D');
+        return builder.isEmpty() ? "-" : builder.toString();
+    }
     private void processHits() {
         // 网络线程只入队，命中反馈在客户端 tick 中按顺序消费。
         CombatHitTracker.HitType hit;
@@ -510,6 +689,7 @@ public class ElytraCombat extends Module {
         this.motionTracker.reset();
         this.hitTracker.clear();
         this.flightPlanner.reset();
+        ElytraDirectionSolver.resetEscape();
         this.controlInput = null;
         this.latestIntent = FlightIntent.idle(Vec3.ZERO);
         if (this.currentBehavior != null) {
@@ -523,6 +703,7 @@ public class ElytraCombat extends Module {
         this.latestIntent = FlightIntent.idle(Vec3.ZERO);
         this.target = null;
         this.flightPlanner.reset();
+        ElytraDirectionSolver.resetEscape();
         this.currentBehavior.reset();
     }
 
