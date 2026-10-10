@@ -226,7 +226,8 @@
         "mode": {
           "_value": "模式",
           "control": "控制",
-          "pitch40": "Pitch 40"
+          "pitch40": "Pitch 40",
+          "ncp": "NCP"
         },
         "swap mode": {
           "_value": "切换模式",
@@ -234,6 +235,7 @@
           "invswitch": "背包切换"
         },
         "armored": "穿甲",
+        "no eat": "禁止进食",
         "unbreaking": "无限耐久",
         "unbreaking delay": "无限耐久延迟",
         "no sprint": "禁止疾跑",
@@ -246,7 +248,18 @@
         "pitch40 auto takeoff": "Pitch40 自动起飞",
         "pitch40 takeoff target height": "Pitch40 起飞目标高度",
         "pitch40 auto firework": "Pitch40 起飞烟花",
-        "pitch40 firework cooldown": "Pitch40 烟花冷却"
+        "pitch40 firework cooldown": "Pitch40 烟花冷却",
+        "ncp instant fly": "NCP 瞬间起飞",
+        "ncp up pitch": "NCP 上升俯仰",
+        "ncp up factor": "NCP 上升系数",
+        "ncp down factor": "NCP 下降系数",
+        "ncp speed": "NCP 速度",
+        "ncp down speed": "NCP 下降速度",
+        "ncp timer": "NCP 变速",
+        "ncp speed limit": "NCP 限制速度",
+        "ncp max speed": "NCP 最大速度",
+        "ncp no drag": "NCP 无阻力",
+        "ncp timeout": "NCP 触发间隔"
       },
       "elytra grim acc": {
         "_value": "鞘翅 Grim 加速",
@@ -1720,11 +1733,13 @@
           "directvelocity": "直接速度"
         },
         "max flight speed": "最大飞行速度",
+        "max turn speed": "最大转向速度",
         "allow firework": "允许烟花",
         "render": "渲染",
         "render vector": "渲染速度向量",
         "render color": "渲染颜色",
-        "render width": "渲染线宽"
+        "render width": "渲染线宽",
+        "debug": "调试输出"
       },
       "dolphin": "海豚",
       "auto sprint": "自动疾跑",
@@ -2723,6 +2738,67 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
+      },
+      "spear aura": {
+        "_value": "长矛光环",
+        "range": "范围",
+        "fov": "视野角度",
+        "auto charge": "自动蓄力",
+        "move": "移动",
+        "rotation speed": "旋转速度",
+        "rotation priority": {
+          "_value": "旋转优先级",
+          "lowest": "最低",
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "highest": "最高"
+        },
+        "players": "玩家",
+        "mobs": "怪物",
+        "animals": "动物",
+        "villagers": "村民",
+        "invisible": "隐身",
+        "mace": "重锤",
+        "mace swap mode": {
+          "_value": "重锤切换模式",
+          "normal": "普通",
+          "silent": "静默",
+          "invswitch": "背包切换"
+        },
+        "esp": "ESP",
+        "esp mode": {
+          "_value": "ESP模式",
+          "capturemark": "捕捉标记",
+          "circle": "圆形",
+          "firefly": "萤火虫"
+        },
+        "esp main": "ESP主色",
+        "esp second": "ESP副色",
+        "esp size": "ESP大小",
+        "rot speed": "旋转速度",
+        "wave speed": "波动速度",
+        "side color": "侧面颜色",
+        "line color": "线条颜色",
+        "circle radius": "圆形半径",
+        "circle alpha factor": "圆形透明度系数",
+        "firefly color mode": {
+          "_value": "萤火虫颜色模式",
+          "solid": "纯色",
+          "blend": "混合",
+          "rainbow": "彩虹"
+        },
+        "firefly color": "萤火虫颜色",
+        "firefly color 2": "萤火虫颜色2",
+        "firefly color mix": "萤火虫颜色混合",
+        "firefly color speed": "萤火虫颜色速度",
+        "firefly rainbow speed": "萤火虫彩虹速度",
+        "firefly rainbow saturation": "萤火虫彩虹饱和度",
+        "firefly rainbow brightness": "萤火虫彩虹亮度",
+        "firefly length": "萤火虫长度",
+        "firefly factor": "萤火虫因子",
+        "firefly shaking": "萤火虫抖动",
+        "firefly amplitude": "萤火虫振幅"
       }
     },
     "elements": {

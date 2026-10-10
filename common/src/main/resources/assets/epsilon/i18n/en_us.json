@@ -226,7 +226,8 @@
         "mode": {
           "_value": "Mode",
           "control": "Control",
-          "pitch40": "Pitch 40"
+          "pitch40": "Pitch 40",
+          "ncp": "NCP"
         },
         "swap mode": {
           "_value": "Swap Mode",
@@ -234,6 +235,7 @@
           "invswitch": "Inv Switch"
         },
         "armored": "Armored",
+        "no eat": "No Eat",
         "unbreaking": "Unbreaking",
         "unbreaking delay": "Unbreaking Delay",
         "no sprint": "No Sprint",
@@ -246,7 +248,18 @@
         "pitch40 auto takeoff": "Pitch40 Auto Takeoff",
         "pitch40 takeoff target height": "Pitch40 Takeoff Target Height",
         "pitch40 auto firework": "Pitch40 Takeoff Firework",
-        "pitch40 firework cooldown": "Pitch40 Firework Cooldown"
+        "pitch40 firework cooldown": "Pitch40 Firework Cooldown",
+        "ncp instant fly": "NCP Instant Fly",
+        "ncp up pitch": "NCP Up Pitch",
+        "ncp up factor": "NCP Up Factor",
+        "ncp down factor": "NCP Down Factor",
+        "ncp speed": "NCP Speed",
+        "ncp down speed": "NCP Down Speed",
+        "ncp timer": "NCP Timer",
+        "ncp speed limit": "NCP Speed Limit",
+        "ncp max speed": "NCP Max Speed",
+        "ncp no drag": "NCP No Drag",
+        "ncp timeout": "NCP Timeout"
       },
       "elytra grim acc": {
         "_value": "Elytra Grim Acc",
@@ -1720,11 +1733,13 @@
           "directvelocity": "Direct Velocity"
         },
         "max flight speed": "Max Flight Speed",
+        "max turn speed": "Max Turn Speed",
         "allow firework": "Allow Firework",
         "render": "Render",
         "render vector": "Render Vector",
         "render color": "Render Color",
-        "render width": "Render Width"
+        "render width": "Render Width",
+        "debug": "Debug"
       },
       "dolphin": "Dolphin",
       "auto sprint": "Auto Sprint",
@@ -2723,6 +2738,67 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
+      },
+      "spear aura": {
+        "_value": "Spear Aura",
+        "range": "Range",
+        "fov": "FOV",
+        "auto charge": "Auto Charge",
+        "move": "Move",
+        "rotation speed": "Rotation Speed",
+        "rotation priority": {
+          "_value": "Rotation Priority",
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        },
+        "players": "Players",
+        "mobs": "Mobs",
+        "animals": "Animals",
+        "villagers": "Villagers",
+        "invisible": "Invisible",
+        "mace": "Mace",
+        "mace swap mode": {
+          "_value": "Mace Swap Mode",
+          "normal": "Normal",
+          "silent": "Silent",
+          "invswitch": "Inv Switch"
+        },
+        "esp": "ESP",
+        "esp mode": {
+          "_value": "ESP Mode",
+          "capturemark": "Capture Mark",
+          "circle": "Circle",
+          "firefly": "Firefly"
+        },
+        "esp main": "ESP Main Color",
+        "esp second": "ESP Second Color",
+        "esp size": "ESP Size",
+        "rot speed": "Rot Speed",
+        "wave speed": "Wave Speed",
+        "side color": "Side Color",
+        "line color": "Line Color",
+        "circle radius": "Circle Radius",
+        "circle alpha factor": "Circle Alpha Factor",
+        "firefly color mode": {
+          "_value": "Firefly Color Mode",
+          "solid": "Solid",
+          "blend": "Blend",
+          "rainbow": "Rainbow"
+        },
+        "firefly color": "Firefly Color",
+        "firefly color 2": "Firefly Color 2",
+        "firefly color mix": "Firefly Color Mix",
+        "firefly color speed": "Firefly Color Speed",
+        "firefly rainbow speed": "Firefly Rainbow Speed",
+        "firefly rainbow saturation": "Firefly Rainbow Saturation",
+        "firefly rainbow brightness": "Firefly Rainbow Brightness",
+        "firefly length": "Firefly Length",
+        "firefly factor": "Firefly Factor",
+        "firefly shaking": "Firefly Shaking",
+        "firefly amplitude": "Firefly Amplitude"
       }
     },
     "elements": {
