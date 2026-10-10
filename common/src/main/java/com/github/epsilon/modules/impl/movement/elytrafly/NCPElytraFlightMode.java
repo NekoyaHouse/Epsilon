@@ -10,10 +10,6 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * 移植自 NullPoint 的鞘翅飞行模式。
- * 在 {@link TravelEvent} 中接管速度与位移，不提交托管旋转请求。
- */
 public class NCPElytraFlightMode extends ElytraFlightMode {
 
     /** 起飞时的 tick 长度倍率，0.3 对应约 3.33 倍速。 */
