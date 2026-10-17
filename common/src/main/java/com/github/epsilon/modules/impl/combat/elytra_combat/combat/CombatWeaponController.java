@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat;
 
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.player.InvUtils;
@@ -8,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -42,6 +42,11 @@ public class CombatWeaponController {
      */
     private static int spearSavedHotbarSlot = -1;
     private static boolean spearInventorySwapped;
+    /** 上次伤害窗口过期后的重新起手 tick，用于保证最短蓄力时间。 */
+    private static int lastSpearRestartTick = Integer.MIN_VALUE;
+    private static int spearRestartCount;
+    /** 本模块是否按住右键；原版会在右键释放时中断物品使用。 */
+    private static boolean spearKeyHeld;
 
     private CombatWeaponController() {
     }
@@ -99,7 +104,21 @@ public class CombatWeaponController {
             return false;
         }
         if (isUsingSpear(player)) {
-            return true;
+            if (!isSpearWindowExpired(player)) {
+                holdSpearKey();
+                return true;
+            }
+            // 首次判定单独处理，避免 tickCount - Integer.MIN_VALUE 溢出。
+            int tick = player.tickCount;
+            boolean restartedRecently = lastSpearRestartTick != Integer.MIN_VALUE
+                    && tick - lastSpearRestartTick < Math.max(1, spearReadyTicks());
+            if (restartedRecently) {
+                return true;
+            }
+            lastSpearRestartTick = tick;
+            ElytraDebug.log(ElytraDebug.SLOT_SPEAR_HIT, "spear.expired",
+                    "window over ticks=" + player.getTicksUsingItem() + " -> restart");
+            stopSpearUse();
         }
 
         FindItemResult spear = InvUtils.find(CombatWeaponController::isSpearItem);
@@ -120,9 +139,23 @@ public class CombatWeaponController {
             InvUtils.invSwap(spear.slot());
             spearInventorySwapped = true;
         }
-        InteractionResult result = mc.gameMode.useItem(player, spear.getHand());
-        // 长矛需要持续蓄力，保留当前手持；行为状态机在 pull-over 时统一调用 stopSpearUse。
-        return result.consumesAction() || isUsingSpear(player);
+        mc.gameMode.useItem(player, spear.getHand());
+        spearRestartCount++;
+        // KINETIC_WEAPON 的 CONSUME 返回值不代表成功起手，必须检查实际使用状态。
+        boolean using = isUsingSpear(player);
+        if (using) {
+            holdSpearKey();
+        }
+        return using;
+    }
+
+    /** 是否已超过 kinetic 伤害窗口；没有伤害条件时不作过期处理。 */
+    private static boolean isSpearWindowExpired(LocalPlayer player) {
+        KineticWeapon weapon = player.getUseItem().get(DataComponents.KINETIC_WEAPON);
+        if (weapon == null || weapon.damageConditions().isEmpty()) {
+            return false;
+        }
+        return player.getTicksUsingItem() >= weapon.computeDamageUseDuration();
     }
 
     public static boolean canUseSpearAttack() {
@@ -152,11 +185,33 @@ public class CombatWeaponController {
         return weapon != null ? Math.max(1, weapon.delayTicks()) : 8;
     }
 
+    /** 当前长矛伤害窗口上界（tick）；未在使用长矛或缺少组件时返回 0。 */
+    public static int spearDamageWindowTicks() {
+        LocalPlayer player = mc.player;
+        if (player == null || !isUsingSpear(player)) {
+            return 0;
+        }
+        KineticWeapon weapon = player.getUseItem().get(DataComponents.KINETIC_WEAPON);
+        return weapon != null ? weapon.computeDamageUseDuration() : 0;
+    }
+
+    public static int spearRestartCount() {
+        return spearRestartCount;
+    }
+
+    /** 手中物品是否仍与本次蓄力物品一致，与原版继续使用物品的判据相同。 */
+    public static boolean isSpearChargeConsistent() {
+        LocalPlayer player = mc.player;
+        return player != null && isUsingSpear(player)
+                && ItemStack.isSameItem(player.getItemInHand(player.getUsedItemHand()), player.getUseItem());
+    }
+
     public static void stopSpearUse() {
-        // 先松开物品，再按栈顺序恢复 inventory swap / hotbar。
+        // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
         if (mc.player != null && isUsingSpear(mc.player)) {
             mc.gameMode.releaseUsingItem(mc.player);
         }
+        releaseSpearKey();
         if (spearInventorySwapped) {
             InvUtils.invSwapBack();
             spearInventorySwapped = false;
@@ -164,6 +219,26 @@ public class CombatWeaponController {
         if (spearSavedHotbarSlot >= 0) {
             InvUtils.swap(spearSavedHotbarSlot, false);
             spearSavedHotbarSlot = -1;
+        }
+    }
+
+    /** 仅接管未被玩家按住的右键，以维持长矛蓄力。 */
+    private static void holdSpearKey() {
+        if (spearKeyHeld || mc.options == null || mc.options.keyUse.isDown()) {
+            return;
+        }
+        mc.options.keyUse.setDown(true);
+        spearKeyHeld = true;
+    }
+
+    /** 只松开由本模块按住的右键；玩家自己按着的不处理。 */
+    private static void releaseSpearKey() {
+        if (!spearKeyHeld) {
+            return;
+        }
+        spearKeyHeld = false;
+        if (mc.options != null) {
+            mc.options.keyUse.setDown(false);
         }
     }
 

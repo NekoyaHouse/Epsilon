@@ -38,8 +38,8 @@ public class FlightIntentPlanner {
         double probe = Math.clamp(desired.length() * 4.0, 4.0, LOCAL_PROBE_DISTANCE);
         Vec3 directEnd = player.position().add(desired.normalize().scale(probe));
         if (LocalFlightAvoidance.isSegmentClear(player, player.position(), directEnd)) {
-            // 短距离直线已验证安全，直接保留行为层的期望速度。
-            this.lastAvoidanceDirection = null;
+            // 保留避障方向偏好，使再次进入避障时的选择连续。
+            ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "direct");
             return new FlightIntent(desired, desired.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
         }
 
@@ -55,11 +55,12 @@ public class FlightIntentPlanner {
         // 从原始 A* 路径选择当前仍能直线到达的最近航点。
         Vec3 waypoint = selectPathWaypoint(player, path);
         if (waypoint != null) {
-            this.lastAvoidanceDirection = null;
             Vec3 waypointVelocity = waypoint.subtract(player.position());
             if (waypointVelocity.lengthSqr() >= 1.0E-8) {
                 waypointVelocity = waypointVelocity.normalize().scale(desired.length());
-                return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), false);
+                ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "waypoint " + vec(waypointVelocity));
+                // 保留行为层的烟花意图，交给飞控控制使用时机。
+                return new FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
             }
         }
 
@@ -82,10 +83,18 @@ public class FlightIntentPlanner {
                 this.lastAvoidanceDirection
         );
         if (avoidance == null) {
-            return FlightIntent.idle(player.getLookAngle());
+            // 局部避障无解时保留期望方向，由方向求解器继续搜索安全逃逸解。
+            ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", "none -> keep desired");
+            return new FlightIntent(desired, desired.normalize(), rawIntent.directVelocity(), rawIntent.useFirework());
         }
         this.lastAvoidanceDirection = avoidance.normalize();
-        return new FlightIntent(avoidance, this.lastAvoidanceDirection, rawIntent.directVelocity(), false);
+        ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", vec(avoidance));
+        return new FlightIntent(avoidance, this.lastAvoidanceDirection, rawIntent.directVelocity(), rawIntent.useFirework());
+    }
+
+    private static String vec(Vec3 value) {
+        return value == null ? "null"
+                : "(" + ElytraDebug.fmt(value.x) + "," + ElytraDebug.fmt(value.y) + "," + ElytraDebug.fmt(value.z) + ")";
     }
 
     /**

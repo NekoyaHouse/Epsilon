@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.player.InvManager;
 
 public class AutoSprint extends Module {
@@ -25,6 +26,9 @@ public class AutoSprint extends Module {
     @EventHandler(priority = EventPriority.LOWEST)
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
+        // ElytraFly 启动时会停一次疾跑，这段时间内不要立刻把疾跑键按回去。
+        if (ElytraFly.INSTANCE.isSprintSuppressed()) return;
+
         boolean sprintTransition = InvManager.INSTANCE.isEnabled() && InvManager.INSTANCE.isSprintTransitionPending();
         if (sprintTransition) return;
 
