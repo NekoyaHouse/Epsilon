@@ -2,22 +2,14 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
-import com.github.epsilon.events.impl.ClientTickEvent;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
-import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor;
 import com.github.epsilon.managers.rotation.RotationManager;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.ColorSetting;
-import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
@@ -44,24 +36,36 @@ import net.minecraft.world.phys.Vec3;
 import java.awt.*;
 import java.util.List;
 
-/** 长矛自动蓄力与瞄准，kinetic 命中后延迟一 tick 尝试重锤补刀。 */
+/**
+ * 长矛自动蓄力与瞄准，kinetic 命中后延迟一 tick 尝试重锤补刀。
+ */
 public class SpearAura extends Module {
 
     public static final SpearAura INSTANCE = new SpearAura();
 
-    /** 与目标小于 3 格时不再转头/移动，避免贴脸转头。 */
+    /**
+     * 与目标小于 3 格时不再转头/移动，避免贴脸转头。
+     */
     private static final double SPEAR_MIN_TRACK_DISTANCE = 3.0;
 
-    /** 重锤补刀只在摔落高度大于 3 格时触发。 */
+    /**
+     * 重锤补刀只在摔落高度大于 3 格时触发。
+     */
     private static final double MACE_MIN_FALL_DISTANCE = 3.0;
 
-    /** 命中后停止瞄准/移动的 tick 数，覆盖目标无敌帧。 */
+    /**
+     * 命中后停止瞄准/移动的 tick 数，覆盖目标无敌帧。
+     */
     private static final int HIT_PAUSE_TICKS = 10;
 
-    /** kinetic 伤害所需的最小相对速度，单位米/秒。 */
+    /**
+     * kinetic 伤害所需的最小相对速度，单位米/秒。
+     */
     private static final double SPEAR_MIN_RELATIVE_SPEED = 4.6;
 
-    /** 补发左键点击的最大等待 tick 数。 */
+    /**
+     * 补发左键点击的最大等待 tick 数。
+     */
     private static final int ATTACK_CLICK_RETRY_TICKS = 10;
 
     private static final int MAX_TARGETS = 64;
@@ -76,7 +80,9 @@ public class SpearAura extends Module {
         InvSwitch
     }
 
-    /** 目标 ESP 样式；DeobfESP 由 KillAura 全局驱动，不在此重复渲染。 */
+    /**
+     * 目标 ESP 样式；DeobfESP 由 KillAura 全局驱动，不在此重复渲染。
+     */
     private enum ESPMode {
         CaptureMark,
         Circle,
@@ -126,24 +132,38 @@ public class SpearAura extends Module {
     public LivingEntity target;
     private List<LivingEntity> targets;
 
-    /** 本 tick 生效的静默瞄准角度；非 null 表示正在瞄准，移动按它结算。 */
+    /**
+     * 本 tick 生效的静默瞄准角度；非 null 表示正在瞄准，移动按它结算。
+     */
     private Rot2f aimRotations;
-    /** 本 tick 是否允许在没有输入时模拟按 W 沿瞄准方向前进。 */
+    /**
+     * 本 tick 是否允许在没有输入时模拟按 W 沿瞄准方向前进。
+     */
     private boolean forceForward;
     private boolean aimActive;
 
-    /** 长矛 kinetic 命中包来自网络线程，先转成客户端 tick 消费的状态。 */
+    /**
+     * 长矛 kinetic 命中包来自网络线程，先转成客户端 tick 消费的状态。
+     */
     private volatile boolean spearHitPending;
     private volatile int localPlayerId = -1;
-    /** 长矛命中后延迟 1 tick 再补重锤，避免和 kinetic 命中同一 tick 处理。 */
+    /**
+     * 长矛命中后延迟 1 tick 再补重锤，避免和 kinetic 命中同一 tick 处理。
+     */
     private int spearMaceDelay;
-    /** 命中后暂停瞄准/移动，等待目标无敌帧结束。 */
+    /**
+     * 命中后暂停瞄准/移动，等待目标无敌帧结束。
+     */
     private int hitPauseTicks;
 
     private boolean autoChargeWanted;
-    /** 本模块是否替玩家按住了右键；只有本字段为 true 时才允许松开按键。 */
+    /**
+     * 本模块是否替玩家按住了右键；只有本字段为 true 时才允许松开按键。
+     */
     private boolean autoChargeKeyHeld;
-    /** 蓄力期间被原版消耗的左键点击，使用状态结束后补发；0 表示无待补点击。 */
+    /**
+     * 蓄力期间被原版消耗的左键点击，使用状态结束后补发；0 表示无待补点击。
+     */
     private int pendingAttackClick;
 
     @Override
@@ -230,7 +250,9 @@ public class SpearAura extends Module {
         );
     }
 
-    /** 沿托管旋转方向移动，直接使用原始 WASD 输入，避免与 MovementFix 重复旋转。 */
+    /**
+     * 沿托管旋转方向移动，直接使用原始 WASD 输入，避免与 MovementFix 重复旋转。
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (nullCheck()) return;
@@ -407,7 +429,8 @@ public class SpearAura extends Module {
      * Normal 保留切换结果，Silent 只静默切换快捷栏，InvSwitch 通过容器交换从背包取物。
      */
     private void attackWithMace(Entity entity) {
-        if (!mace.getValue() || mc.player.fallDistance <= MACE_MIN_FALL_DISTANCE || entity == null || !entity.isAlive()) return;
+        if (!mace.getValue() || mc.player.fallDistance <= MACE_MIN_FALL_DISTANCE || entity == null || !entity.isAlive())
+            return;
 
         FindItemResult maceResult = findMace();
         if (!maceResult.found()) return;
@@ -449,7 +472,9 @@ public class SpearAura extends Module {
         return mc.player != null && mc.player.isUsingItem() && mc.player.getUseItem().is(ItemTags.SPEARS);
     }
 
-    /** 沿眼部到目标方向投影双方速度差，单位米/秒。 */
+    /**
+     * 沿眼部到目标方向投影双方速度差，单位米/秒。
+     */
     private double getRelativeSpeedTo(Entity entity) {
         Rot2f look = RotationUtils.getRotationsToEntity(entity);
         Vec3 direction = Vec3.directionFromRotation(look.getPitch(), look.getYaw());

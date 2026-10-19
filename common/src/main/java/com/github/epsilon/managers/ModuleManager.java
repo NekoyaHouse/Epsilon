@@ -159,6 +159,7 @@ public class ModuleManager {
         addModule(Particles.INSTANCE);
         addModule(PopChams.INSTANCE);
         addModule(Shaders.INSTANCE);
+        addModule(Skeleton.INSTANCE);
         addModule(SneakTweak.INSTANCE);
         addModule(TitleReplace.INSTANCE);
         addModule(TotemAnimation.INSTANCE);

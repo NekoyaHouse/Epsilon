@@ -33,9 +33,13 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     private static final int EAT_CLIMB_TICK = 20;
     private static final int EAT_CLIMB_TICKS = 5;
     private static final float EAT_CLIMB_PITCH = -45f;
-    /** 动量不足的总速度阈值（格/tick），含垂直分量。 */
+    /**
+     * 动量不足的总速度阈值（格/tick），含垂直分量。
+     */
     private static final double LOW_MOMENTUM_SPEED = 0.4;
-    /** 低动量时的最短烟花补发间隔（tick）。 */
+    /**
+     * 低动量时的最短烟花补发间隔（tick）。
+     */
     private static final int LOW_MOMENTUM_BOOST_INTERVAL_TICKS = 4;
 
     private boolean hasFirstFirework;

@@ -9,7 +9,6 @@ public class LuminBindGroupLayouts {
     public static final BindGroupLayout GLITCH_DATA = uniform("GlitchData");
     public static final BindGroupLayout SEGMENTED_SHADOW = uniform("SegmentedShadowUniforms");
     public static final BindGroupLayout GLSL_SANDBOX_INFO = uniform("GlslSandboxInfo");
-    public static final BindGroupLayout FXAA_INFO = uniform("FxaaInfo");
     public static final BindGroupLayout FILTER_COLOR = uniform("FilterColor");
     public static final BindGroupLayout CUSTOM_SKY = uniform("CustomSky");
     public static final BindGroupLayout BLUR = uniform("BlurUniforms");

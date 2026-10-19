@@ -1995,7 +1995,14 @@
         "squid": "Squid",
         "blood": "Blood"
       },
-      "anti alias": "Anti Alias",
+      "anti alias": {
+        "_value": "Anti Alias",
+        "samples": {
+          "_value": "Samples",
+          "x4": "4x (SSAA)",
+          "x16": "16x (SSAA)"
+        }
+      },
       "aspect ratio": {
         "_value": "Aspect Ratio",
         "ratio": "Ratio"
@@ -2455,6 +2462,16 @@
           "drop": "Drop",
           "fly": "Fly"
         }
+      },
+      "skeleton": {
+        "_value": "Skeleton",
+        "friends": "Friends",
+        "self": "Self",
+        "invisibles": "Invisibles",
+        "distance": "Distance",
+        "line width": "Line Width",
+        "color": "Color",
+        "friend color": "Friend Color"
       },
       "pop chams": {
         "_value": "Pop Chams",

@@ -35,19 +35,31 @@ public class ElytraDirectionSolver {
      */
     private static final double ESCAPE_KEEP_ANGLE = 30.0;
 
-    /** 上次安全逃逸旋转；仍安全时复用，避免等价解之间切换。 */
+    /**
+     * 上次安全逃逸旋转；仍安全时复用，避免等价解之间切换。
+     */
     private static Rot2f lastEscapeRotation;
 
-    /** 上次提交的俯仰角，用于目标函数近似等价时保持连续性。 */
+    /**
+     * 上次提交的俯仰角，用于目标函数近似等价时保持连续性。
+     */
     private static float lastSolvedPitch = Float.NaN;
 
-    /** 俯仰连续性判断的贴合度容差。 */
+    /**
+     * 俯仰连续性判断的贴合度容差。
+     */
     private static final double PITCH_CONTINUITY_EPSILON = 0.05;
-    /** 求解俯仰相对意图俯仰的默认最大偏差（度）。 */
+    /**
+     * 求解俯仰相对意图俯仰的默认最大偏差（度）。
+     */
     public static final float DEFAULT_PITCH_DEVIATION_LIMIT = 35.0f;
-    /** 精确瞄准容差上限；不超过此值时跳过旧俯仰复用。 */
+    /**
+     * 精确瞄准容差上限；不超过此值时跳过旧俯仰复用。
+     */
     private static final float PRECISE_PITCH_TOLERANCE = 5.0f;
-    /** 速度对齐的预演 tick 数，与安全预演视野一致。 */
+    /**
+     * 速度对齐的预演 tick 数，与安全预演视野一致。
+     */
     private static final int ALIGNMENT_HORIZON_TICKS = 4;
 
     private ElytraDirectionSolver() {
@@ -137,7 +149,9 @@ public class ElytraDirectionSolver {
         return fallback;
     }
 
-    /** 将求解俯仰限制在意图俯仰的允许偏差内。 */
+    /**
+     * 将求解俯仰限制在意图俯仰的允许偏差内。
+     */
     private static Rot2f applyIntentPitchLimit(Rot2f base, Vec3 desiredVelocity, boolean ceilingEscape, float pitchDeviationLimit) {
         float desiredPitch = intentPitch(desiredVelocity, ceilingEscape);
         float limited = Mth.clamp(
@@ -155,12 +169,16 @@ public class ElytraDirectionSolver {
         return new Rot2f(base.getYaw(), limited);
     }
 
-    /** 意图方向本身的俯仰角（已按抬头保护上调）。 */
+    /**
+     * 意图方向本身的俯仰角（已按抬头保护上调）。
+     */
     private static float intentPitch(Vec3 desiredVelocity, boolean ceilingEscape) {
         return applyCeilingEscape(pitchOf(desiredVelocity.normalize()), ceilingEscape);
     }
 
-    /** 速度对齐结果非正时采用意图俯仰，避免沿用反向姿态。 */
+    /**
+     * 速度对齐结果非正时采用意图俯仰，避免沿用反向姿态。
+     */
     private static Rot2f applyDegenerateFallback(LocalPlayer player, Rot2f base, Vec3 desiredVelocity, boolean ceilingEscape) {
         Vec3 desiredDirection = desiredVelocity.normalize();
         double alignment = velocityAlignment(
@@ -373,7 +391,9 @@ public class ElytraDirectionSolver {
         return TRAJECTORY_HORIZON_TICKS;
     }
 
-    /** 使用意图抬升量探测头顶碰撞，避免实际升速与俯仰修正形成反馈振荡。 */
+    /**
+     * 使用意图抬升量探测头顶碰撞，避免实际升速与俯仰修正形成反馈振荡。
+     */
     private static boolean shouldAvoidCeilingLift(LocalPlayer player, double intendedClimb) {
         if (!player.isFallFlying()) {
             return false;

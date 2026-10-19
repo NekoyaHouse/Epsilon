@@ -1995,7 +1995,14 @@
         "squid": "鱿鱼",
         "blood": "血液"
       },
-      "anti alias": "抗锯齿",
+      "anti alias": {
+        "_value": "抗锯齿",
+        "samples": {
+          "_value": "采样数",
+          "x4": "4x（超采样）",
+          "x16": "16x（超采样）"
+        }
+      },
       "aspect ratio": {
         "_value": "画面比例",
         "ratio": "比例"
@@ -2455,6 +2462,16 @@
           "drop": "下落",
           "fly": "漂浮"
         }
+      },
+      "skeleton": {
+        "_value": "玩家骨架",
+        "friends": "显示好友",
+        "self": "显示自身",
+        "invisibles": "显示隐身玩家",
+        "distance": "渲染距离",
+        "line width": "线宽",
+        "color": "骨架颜色",
+        "friend color": "好友颜色"
       },
       "pop chams": {
         "_value": "死亡透视",

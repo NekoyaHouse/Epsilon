@@ -6,8 +6,11 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.modules.impl.render.AntiAlias;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.renderpearl.api.pipeline.*;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -19,6 +22,7 @@ import org.joml.Vector3f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -28,14 +32,14 @@ public class Render3DScheduler {
 
     private static final RenderPipeline FILLED_BOX_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filled_box"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withDepthStencilState(Optional.empty())
             .withCull(false)
             .build();
 
     private static final RenderPipeline LINES_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/lines"))
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withDepthStencilState(Optional.empty())
             .withCull(false)
             .build();
 
@@ -128,8 +132,12 @@ public class Render3DScheduler {
 
         try {
             flushBlur();
-            flushFilled();
-            flushLines(stack);
+            if (!filledBoxes.isEmpty() || !filledSides.isEmpty() || !outlineBoxes.isEmpty() || !sideOutlines.isEmpty() || !lines.isEmpty()) {
+                AntiAlias.INSTANCE.render(() -> {
+                    flushFilled();
+                    flushLines(stack);
+                });
+            }
         } finally {
             clear();
         }

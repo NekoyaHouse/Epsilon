@@ -71,7 +71,9 @@ public class ElytraCombat extends Module {
             enumSetting("Mode", ElytraCombatMode.Follow, this::onModeChanged).group(sgGeneral);
     private final KeybindSetting switchModeKey =
             keybindSetting("Switch Mode Key", -1).group(sgGeneral);
-    /** 战斗决策调试输出开关。 */
+    /**
+     * 战斗决策调试输出开关。
+     */
     public final BoolSetting debug =
             boolSetting("Debug", false, value -> {
                 ElytraDebug.enabled = value;
@@ -158,7 +160,9 @@ public class ElytraCombat extends Module {
             enumSetting("Control Mode", ControlMode.Input).group(sgFlight);
     public final DoubleSetting maxFlightSpeed =
             doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight);
-    /** 每 tick 最大转向角度（度）；360 表示不限速。 */
+    /**
+     * 每 tick 最大转向角度（度）；360 表示不限速。
+     */
     public final DoubleSetting maxTurnSpeed =
             doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight);
     private final BoolSetting allowFirework =
@@ -246,7 +250,9 @@ public class ElytraCombat extends Module {
         return this.controlInput;
     }
 
-    /** 本 tick 未截断的意图抬升量，用于飞控的头顶碰撞探测。 */
+    /**
+     * 本 tick 未截断的意图抬升量，用于飞控的头顶碰撞探测。
+     */
     public double getCombatIntendedClimb() {
         return this.latestIntent.desiredVelocity().y;
     }
@@ -255,7 +261,9 @@ public class ElytraCombat extends Module {
         return isEnabled() && this.currentBehavior != null;
     }
 
-    /** 已选中目标并产出飞行输入时返回 true；待机时不接管 ElytraFly 的烟花决策。 */
+    /**
+     * 已选中目标并产出飞行输入时返回 true；待机时不接管 ElytraFly 的烟花决策。
+     */
     public boolean isDrivingFlight() {
         return isEnabled() && this.controlInput != null;
     }
@@ -474,10 +482,14 @@ public class ElytraCombat extends Module {
         }
     }
 
-    /** 方向变化小于该角度时视为抖动，直接沿用上一 tick 的方向。 */
+    /**
+     * 方向变化小于该角度时视为抖动，直接沿用上一 tick 的方向。
+     */
     private static final float TURN_DEAD_ZONE_DEGREES = 3.0f;
 
-    /** 长矛瞄准的最大俯仰偏差（度），用于限制 kinetic 射线的脱靶距离。 */
+    /**
+     * 长矛瞄准的最大俯仰偏差（度），用于限制 kinetic 射线的脱靶距离。
+     */
     private static final float SPEAR_PITCH_DEVIATION_LIMIT = 3.0f;
 
     private FlightIntent clampIntent(FlightIntent intent) {
@@ -493,7 +505,9 @@ public class ElytraCombat extends Module {
         return new FlightIntent(clamped, clamped.normalize(), intent.directVelocity(), intent.useFirework());
     }
 
-    /** 用死区和 {@code Max Turn Speed} 限制飞行意图的方向变化。 */
+    /**
+     * 用死区和 {@code Max Turn Speed} 限制飞行意图的方向变化。
+     */
     private FlightIntent stabilizeIntent(FlightIntent next) {
         Vec3 previous = this.latestIntent.desiredVelocity();
         Vec3 desired = next.desiredVelocity();
@@ -612,6 +626,7 @@ public class ElytraCombat extends Module {
         if (input.right()) builder.append('D');
         return builder.isEmpty() ? "-" : builder.toString();
     }
+
     private void processHits() {
         // 网络线程只入队，命中反馈在客户端 tick 中按顺序消费。
         CombatHitTracker.HitType hit;

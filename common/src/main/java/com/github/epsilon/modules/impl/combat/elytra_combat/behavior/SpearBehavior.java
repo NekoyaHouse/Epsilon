@@ -3,11 +3,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.behavior;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker;
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance;
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetAction;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot;
 import net.minecraft.util.Mth;
@@ -45,18 +41,26 @@ public class SpearBehavior implements ElytraCombatBehavior {
     private State state = State.NONE;
     private int pullOverTicks;
     private boolean lunging;
-    /** 冲锋条件已连续成立的 tick 数；超过窗口仍未收到 KINETIC_HIT 就判定这一趟打空。 */
+    /**
+     * 冲锋条件已连续成立的 tick 数；超过窗口仍未收到 KINETIC_HIT 就判定这一趟打空。
+     */
     private int lungeTicks;
     private String lastTrace;
 
-    /** 冲锋未收到 KINETIC_HIT 时判定打空的最大连续 tick 数。 */
+    /**
+     * 冲锋未收到 KINETIC_HIT 时判定打空的最大连续 tick 数。
+     */
     private static final int LUNGE_MISS_TICKS = 10;
 
-    /** 水平预测过渡区间（格）：近端使用当前位置，远端使用预测位置，中间线性插值。 */
+    /**
+     * 水平预测过渡区间（格）：近端使用当前位置，远端使用预测位置，中间线性插值。
+     */
     private static final double AIM_PREDICTION_NEAR = 3.0;
     private static final double AIM_PREDICTION_FAR = 9.0;
 
-    /** 沿瞄准方向的相对速度下限（格/秒）；低于此值时脱战重整。 */
+    /**
+     * 沿瞄准方向的相对速度下限（格/秒）；低于此值时脱战重整。
+     */
     private static final double SPEAR_MIN_RELATIVE_SPEED = 5.6;
 
     @Override
@@ -86,9 +90,9 @@ public class SpearBehavior implements ElytraCombatBehavior {
         double aimDistance = bot.player().getEyePosition().distanceTo(predicted);
         double blend = bot.spearUsePredictor.getValue()
                 ? Mth.clamp(
-                        (aimDistance - AIM_PREDICTION_NEAR) / (AIM_PREDICTION_FAR - AIM_PREDICTION_NEAR),
-                        0.0,
-                        1.0)
+                (aimDistance - AIM_PREDICTION_NEAR) / (AIM_PREDICTION_FAR - AIM_PREDICTION_NEAR),
+                0.0,
+                1.0)
                 : 0.0;
         Vec3 aimBase = target.position().lerp(predicted, blend);
         Vec3 targetPoint = new Vec3(
@@ -204,14 +208,22 @@ public class SpearBehavior implements ElytraCombatBehavior {
         return ensureMinimumLength(targetPoint.subtract(bot.player().getEyePosition()), 6.0);
     }
 
-    /** 脱战时的水平脱离量（格/tick）。 */
+    /**
+     * 脱战时的水平脱离量（格/tick）。
+     */
     private static final double PULL_OVER_HORIZONTAL = 3.5;
-    /** 脱战时的爬升量（格/tick）。 */
+    /**
+     * 脱战时的爬升量（格/tick）。
+     */
     private static final double PULL_OVER_CLIMB = 1.5;
-    /** 配置的脱战 tick 用完后，仍贴在交战距离内时允许额外延长的最大 tick 数。 */
+    /**
+     * 配置的脱战 tick 用完后，仍贴在交战距离内时允许额外延长的最大 tick 数。
+     */
     private static final int PULL_OVER_EXTRA_TICKS = 8;
 
-    /** 以固定水平速度远离目标并小幅爬升，避免近身时方向退化为垂直。 */
+    /**
+     * 以固定水平速度远离目标并小幅爬升，避免近身时方向退化为垂直。
+     */
     private Vec3 pullOverDirection(ElytraCombat bot, Vec3 targetPoint) {
         Vec3 delta = targetPoint.subtract(bot.player().position());
         Vec3 horizontal = new Vec3(-delta.x, 0.0, -delta.z);
@@ -226,7 +238,9 @@ public class SpearBehavior implements ElytraCombatBehavior {
         return horizontal.normalize().scale(PULL_OVER_HORIZONTAL).add(0.0, PULL_OVER_CLIMB, 0.0);
     }
 
-    /** 沿瞄准方向投影双方速度差，单位格/秒。 */
+    /**
+     * 沿瞄准方向投影双方速度差，单位格/秒。
+     */
     private static double relativeSpeed(ElytraCombat bot, TargetSnapshot target, Vec3 targetPoint) {
         Vec3 aimDirection = targetPoint.subtract(bot.player().getEyePosition());
         if (aimDirection.lengthSqr() < 1.0E-8) {
@@ -261,18 +275,20 @@ public class SpearBehavior implements ElytraCombatBehavior {
         return look;
     }
 
-    /** 决策摘要发生变化时输出，蓄力进度按区间量化。 */
+    /**
+     * 决策摘要发生变化时输出，蓄力进度按区间量化。
+     */
     private void traceSpearState(ElytraCombat bot, TargetSnapshot target) {
         boolean using = CombatWeaponController.isUsingSpear(bot.player());
         boolean ready = CombatWeaponController.canUseSpearAttack();
         boolean aggressive = target.action() != TargetAction.AFK && target.action() != TargetAction.SLOW_SPEED;
         String charge = using && !ready
                 ? " charge=" + bot.player().getTicksUsingItem() / 5 * 5
-                        + "/" + CombatWeaponController.spearReadyTicks()
-                        + "/" + CombatWeaponController.spearDamageWindowTicks()
-                        + " hold=" + CombatWeaponController.isSpearChargeConsistent()
-                        + " hand=" + bot.player().getUsedItemHand()
-                        + " restarts=" + CombatWeaponController.spearRestartCount() / 20 * 20
+                + "/" + CombatWeaponController.spearReadyTicks()
+                + "/" + CombatWeaponController.spearDamageWindowTicks()
+                + " hold=" + CombatWeaponController.isSpearChargeConsistent()
+                + " hand=" + bot.player().getUsedItemHand()
+                + " restarts=" + CombatWeaponController.spearRestartCount() / 20 * 20
                 : "";
         String summary = this.state.name()
                 + " action=" + target.action()

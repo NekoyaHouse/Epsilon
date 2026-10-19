@@ -12,17 +12,25 @@ import net.minecraft.world.phys.Vec3;
 
 public class NCPElytraFlightMode extends ElytraFlightMode {
 
-    /** 起飞时的 tick 长度倍率，0.3 对应约 3.33 倍速。 */
+    /**
+     * 起飞时的 tick 长度倍率，0.3 对应约 3.33 倍速。
+     */
     private static final float TIMER_BOOST = 0.3f;
-    /** 悬停时的微小下降速度，乘以 DownFactor。 */
+    /**
+     * 悬停时的微小下降速度，乘以 DownFactor。
+     */
     private static final double HOVER_Y = -0.00000000000003;
-    /** 预置计时器经过时间，使首次起飞无需等待。 */
+    /**
+     * 预置计时器经过时间，使首次起飞无需等待。
+     */
     private static final long TIMER_ARMED_MS = 917813L;
 
     private boolean hasElytra;
     private boolean hasTouchedGround;
     private boolean shouldJump;
-    /** 是否由本模式设置了临时变速，只有设置过才负责还原。 */
+    /**
+     * 是否由本模式设置了临时变速，只有设置过才负责还原。
+     */
     private boolean timerBoosted;
     private final TimerUtils instantFlyTimer = new TimerUtils();
     private final TimerUtils strictTimer = new TimerUtils();
@@ -64,7 +72,7 @@ public class NCPElytraFlightMode extends ElytraFlightMode {
         FindItemResult elytra = InvUtils.find(Items.ELYTRA);
         hasElytra = canGlide(elytra.found());
 
-                // 仅释放本模式设置的临时变速。
+        // 仅释放本模式设置的临时变速。
         if (strictTimer.passedMillise(1500L) && !strictTimer.passedMillise(2000L)
                 || timerBoosted && mc.player.isFallFlying() && TimerManager.INSTANCE.get() == TIMER_BOOST) {
             releaseTimerBoost();
@@ -97,7 +105,9 @@ public class NCPElytraFlightMode extends ElytraFlightMode {
         strictTimer.reset();
     }
 
-    /** 未滑翔时临时换上鞘翅触发滑翔，再恢复胸甲；已装备鞘翅时直接起飞。 */
+    /**
+     * 未滑翔时临时换上鞘翅触发滑翔，再恢复胸甲；已装备鞘翅时直接起飞。
+     */
     private void updateArmoredGlide(FindItemResult elytra) {
         if (!canGlide(elytra.found())) return;
 
@@ -198,7 +208,9 @@ public class NCPElytraFlightMode extends ElytraFlightMode {
         TimerManager.INSTANCE.reset();
     }
 
-    /** 按真实移动按键与插值朝向计算水平速度。 */
+    /**
+     * 按真实移动按键与插值朝向计算水平速度。
+     */
     private double[] directionSpeed(double speed) {
         float forward = (mc.options.keyUp.isDown() ? 1.0f : 0.0f) - (mc.options.keyDown.isDown() ? 1.0f : 0.0f);
         float side = (mc.options.keyLeft.isDown() ? 1.0f : 0.0f) - (mc.options.keyRight.isDown() ? 1.0f : 0.0f);

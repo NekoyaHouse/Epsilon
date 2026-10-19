@@ -42,10 +42,14 @@ public class CombatWeaponController {
      */
     private static int spearSavedHotbarSlot = -1;
     private static boolean spearInventorySwapped;
-    /** 上次伤害窗口过期后的重新起手 tick，用于保证最短蓄力时间。 */
+    /**
+     * 上次伤害窗口过期后的重新起手 tick，用于保证最短蓄力时间。
+     */
     private static int lastSpearRestartTick = Integer.MIN_VALUE;
     private static int spearRestartCount;
-    /** 本模块是否按住右键；原版会在右键释放时中断物品使用。 */
+    /**
+     * 本模块是否按住右键；原版会在右键释放时中断物品使用。
+     */
     private static boolean spearKeyHeld;
 
     private CombatWeaponController() {
@@ -149,7 +153,9 @@ public class CombatWeaponController {
         return using;
     }
 
-    /** 是否已超过 kinetic 伤害窗口；没有伤害条件时不作过期处理。 */
+    /**
+     * 是否已超过 kinetic 伤害窗口；没有伤害条件时不作过期处理。
+     */
     private static boolean isSpearWindowExpired(LocalPlayer player) {
         KineticWeapon weapon = player.getUseItem().get(DataComponents.KINETIC_WEAPON);
         if (weapon == null || weapon.damageConditions().isEmpty()) {
@@ -185,7 +191,9 @@ public class CombatWeaponController {
         return weapon != null ? Math.max(1, weapon.delayTicks()) : 8;
     }
 
-    /** 当前长矛伤害窗口上界（tick）；未在使用长矛或缺少组件时返回 0。 */
+    /**
+     * 当前长矛伤害窗口上界（tick）；未在使用长矛或缺少组件时返回 0。
+     */
     public static int spearDamageWindowTicks() {
         LocalPlayer player = mc.player;
         if (player == null || !isUsingSpear(player)) {
@@ -199,7 +207,9 @@ public class CombatWeaponController {
         return spearRestartCount;
     }
 
-    /** 手中物品是否仍与本次蓄力物品一致，与原版继续使用物品的判据相同。 */
+    /**
+     * 手中物品是否仍与本次蓄力物品一致，与原版继续使用物品的判据相同。
+     */
     public static boolean isSpearChargeConsistent() {
         LocalPlayer player = mc.player;
         return player != null && isUsingSpear(player)
@@ -222,7 +232,9 @@ public class CombatWeaponController {
         }
     }
 
-    /** 仅接管未被玩家按住的右键，以维持长矛蓄力。 */
+    /**
+     * 仅接管未被玩家按住的右键，以维持长矛蓄力。
+     */
     private static void holdSpearKey() {
         if (spearKeyHeld || mc.options == null || mc.options.keyUse.isDown()) {
             return;
@@ -231,7 +243,9 @@ public class CombatWeaponController {
         spearKeyHeld = true;
     }
 
-    /** 只松开由本模块按住的右键；玩家自己按着的不处理。 */
+    /**
+     * 只松开由本模块按住的右键；玩家自己按着的不处理。
+     */
     private static void releaseSpearKey() {
         if (!spearKeyHeld) {
             return;

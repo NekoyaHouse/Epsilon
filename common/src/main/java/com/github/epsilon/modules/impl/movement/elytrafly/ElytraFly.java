@@ -15,7 +15,9 @@ import java.util.Map;
 
 public class ElytraFly extends Module {
 
-    /** 启用后压制 AutoSprint 的 tick 数。 */
+    /**
+     * 启用后压制 AutoSprint 的 tick 数。
+     */
     private static final int SPRINT_SUPPRESS_TICKS = 3;
 
     public static final ElytraFly INSTANCE = new ElytraFly();
@@ -96,7 +98,9 @@ public class ElytraFly extends Module {
         getMode(activeModeType).onDisable();
     }
 
-    /** 停止疾跑，并短暂压制 AutoSprint。 */
+    /**
+     * 停止疾跑，并短暂压制 AutoSprint。
+     */
     private void stopSprintOnce() {
         if (mc.player == null) return;
 
@@ -105,7 +109,9 @@ public class ElytraFly extends Module {
         mc.options.keySprint.setDown(false);
     }
 
-    /** AutoSprint 是否应当暂停强制疾跑。 */
+    /**
+     * AutoSprint 是否应当暂停强制疾跑。
+     */
     public boolean isSprintSuppressed() {
         return sprintSuppressTicks > 0;
     }

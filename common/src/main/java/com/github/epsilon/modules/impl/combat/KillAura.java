@@ -85,6 +85,7 @@ public class KillAura extends Module {
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
     private final BoolSetting hitSelect = boolSetting("Hit Select", true);
+    private final BoolSetting throughWalls = boolSetting("Through Walls", false);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
     private final IntSetting switchDelay = intSetting("Switch Delay", 100, 0, 500, 1, () -> targetMode.is(TargetMode.Switch));

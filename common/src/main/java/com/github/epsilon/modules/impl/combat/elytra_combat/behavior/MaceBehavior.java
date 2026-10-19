@@ -2,11 +2,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.behavior;
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig;
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance;
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -45,25 +41,41 @@ public class MaceBehavior implements ElytraCombatBehavior {
 
     private State state = State.NONE;
     private int pullUpStartTick;
-    /** 头顶受阻的连续 tick 数，用于抑制状态在边界上逐 tick 互抢。 */
+    /**
+     * 头顶受阻的连续 tick 数，用于抑制状态在边界上逐 tick 互抢。
+     */
     private int headBlockedTicks;
-    /** 已选中的地面落点；有效期间保持不变。 */
+    /**
+     * 已选中的地面落点；有效期间保持不变。
+     */
     private BlockPos lastGroundCandidate;
-    /** 俯冲攻击后的改出剩余 tick 数。 */
+    /**
+     * 俯冲攻击后的改出剩余 tick 数。
+     */
     private int recoveryTicks;
-    /** 本次俯冲进入攻击距离后还剩几个下压 tick；归零说明这一趟打空了。 */
+    /**
+     * 本次俯冲进入攻击距离后还剩几个下压 tick；归零说明这一趟打空了。
+     */
     private int strikeTicks;
 
-    /** 探测条件必须连续成立这么多 tick 才允许切换状态，避免拉升与下压互相抢转向。 */
+    /**
+     * 探测条件必须连续成立这么多 tick 才允许切换状态，避免拉升与下压互相抢转向。
+     */
     private static final int PROBE_LATCH_TICKS = 3;
 
-    /** 进入攻击距离后等待 KillAura 出手的下压窗口（tick）。 */
+    /**
+     * 进入攻击距离后等待 KillAura 出手的下压窗口（tick）。
+     */
     private static final int STRIKE_TICKS = 4;
 
-    /** 未进入攻击距离时，判定俯冲打空的高度带（格）。 */
+    /**
+     * 未进入攻击距离时，判定俯冲打空的高度带（格）。
+     */
     private static final double MISS_ALTITUDE_BAND = 3.0;
 
-    /** 拉升目标高度的到达容差（格）。 */
+    /**
+     * 拉升目标高度的到达容差（格）。
+     */
     private static final double PULL_UP_ARRIVE_TOLERANCE = 2.0;
 
     @Override
@@ -176,7 +188,9 @@ public class MaceBehavior implements ElytraCombatBehavior {
         return planner.plan(bot.player(), raw, target.predictedPosition(), planConfig);
     }
 
-    /** 监听本地攻击事件进入拉升；滑翔时不能依赖猛击伤害包或 fallDistance 归零。 */
+    /**
+     * 监听本地攻击事件进入拉升；滑翔时不能依赖猛击伤害包或 fallDistance 归零。
+     */
     @Override
     public void onAttack(LivingEntity target) {
         beginRecoveryPullUp("attack");
@@ -245,12 +259,16 @@ public class MaceBehavior implements ElytraCombatBehavior {
         return blocked;
     }
 
-    /** 进入攻击距离后保持配置高度，攻击由 KillAura 负责。 */
+    /**
+     * 进入攻击距离后保持配置高度，攻击由 KillAura 负责。
+     */
     private Vec3 followOrHold(ElytraCombat bot, Vec3 targetPos, TargetSnapshot target) {
         return pullUp(bot, targetPos, target);
     }
 
-    /** 保持下压窗口等待 KillAura 出手；窗口结束仍未攻击则改出并重新拉升。 */
+    /**
+     * 保持下压窗口等待 KillAura 出手；窗口结束仍未攻击则改出并重新拉升。
+     */
     private Vec3 strikeOrReapproach(ElytraCombat bot, Vec3 targetPos, TargetSnapshot target, int tick) {
         if (inAttackRange(bot, target)) {
             if (this.strikeTicks <= 0) {
@@ -284,7 +302,9 @@ public class MaceBehavior implements ElytraCombatBehavior {
         return bot.player().isWithinEntityInteractionRange(target.entity().getBoundingBox(), 0.5);
     }
 
-    /** 俯冲攻击后先沿当前水平航向爬升，再转向目标上方。 */
+    /**
+     * 俯冲攻击后先沿当前水平航向爬升，再转向目标上方。
+     */
     private Vec3 recover(ElytraCombat bot, Vec3 targetPos, TargetSnapshot target) {
         LocalPlayer player = bot.player();
         Vec3 velocity = player.getDeltaMovement();
@@ -377,7 +397,9 @@ public class MaceBehavior implements ElytraCombatBehavior {
         return vector.length() < minimum ? vector.normalize().scale(minimum) : vector;
     }
 
-    /** 俯冲攻击后的改出阶段：持续 tick 数、水平速度与抬升分量。 */
+    /**
+     * 俯冲攻击后的改出阶段：持续 tick 数、水平速度与抬升分量。
+     */
     private static final int RECOVERY_TICKS = 5;
     private static final double RECOVERY_HORIZONTAL_SPEED = 6.0;
     private static final double RECOVERY_CLIMB = 8.0;
