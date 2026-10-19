@@ -41,11 +41,6 @@ public class Chams extends Module {
 
     private final ThreadLocal<Boolean> submittingPlayer = ThreadLocal.withInitial(() -> false);
 
-    /**
-     * 26.3 把实体提交使用的 alwaysOnTop 相位合并进了 alwaysOnTopGizmos，
-     * 而 {@code LevelRenderer} 只在本帧存在 always-on-top gizmo 时才执行该相位。
-     * 这里记录本帧是否有几何被重定向到该相位，供 MixinLevelRenderer 放行，避免实体提交被整帧丢弃。
-     */
     private boolean hasAlwaysOnTopSubmits;
 
     private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
@@ -95,11 +90,6 @@ public class Chams extends Module {
         this.hasAlwaysOnTopSubmits = false;
     }
 
-    /**
-     * GUI 的实体预览（库存、锻造台）直接把渲染状态交给
-     * {@code EntityRenderDispatcher.submit}，不经过 {@code extractEntity}，
-     * 因此渲染状态上没有附带实体；这种情况按“非 Chams 目标”处理，避免 NPE。
-     */
     public boolean isValidEntity(Entity entity) {
         if (entity == null) {
             return false;
