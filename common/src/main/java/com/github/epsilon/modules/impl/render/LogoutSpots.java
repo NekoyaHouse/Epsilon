@@ -184,6 +184,7 @@ public class LogoutSpots extends Module {
 
         private LogoutPlayer(Player player) {
             super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
+            setId(player.getId());
 
             float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             walkPosition = player.walkAnimation.position(tickDelta);

@@ -152,6 +152,7 @@ public class LandRenderer {
         watermarkSegments = List.of(
                 new WatermarkSegment(IconChars.AUTO_AWESOME, Constants.NAME, IslandPalette.ACCENT_ALT, IslandPalette.ACCENT_ALT, true),
                 new WatermarkSegment(IconChars.PERSON, playerName, IslandPalette.TEXT_PRIMARY, IslandPalette.TEXT_PRIMARY, false),
+                new WatermarkSegment(IconChars.GROUPS, Integer.toString(getPlayerCount()), IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
                 new WatermarkSegment(IconChars.PUBLIC, serverAddress, IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
                 new WatermarkSegment(IconChars.NETWORK_PING, latencyText, latencyColor, latencyColor, false),
                 new WatermarkSegment(IconChars.SPEED, mc.getFps() + " FPS", IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false)
@@ -169,6 +170,18 @@ public class LandRenderer {
             }
         }
         watermarkWidth = HORIZONTAL_PADDING * 2f + contentWidth;
+    }
+
+    private static int getPlayerCount() {
+        ClientPacketListener connection = mc.getConnection();
+        if (connection != null) {
+            int listed = connection.getListedOnlinePlayers().size();
+            if (listed > 0) return listed;
+
+            int online = connection.getOnlinePlayers().size();
+            if (online > 0) return online;
+        }
+        return mc.level == null ? 0 : mc.level.players().size();
     }
 
     private static int getLatency() {
@@ -236,6 +249,14 @@ public class LandRenderer {
     public void syncPosition(float x, float y) {
         this.x = x;
         this.y = y;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
     }
 
     public float getWidth() {

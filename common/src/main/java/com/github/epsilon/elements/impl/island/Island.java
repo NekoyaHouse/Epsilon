@@ -4,7 +4,11 @@ import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.island.instance.LandController;
 import com.github.epsilon.elements.impl.island.instance.impl.*;
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern;
+import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.shaders.OverlayAntiAlias;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.modules.impl.player.Timer;
@@ -38,6 +42,10 @@ public class Island extends HudModule {
     private final BoolSetting timerBalance = boolSetting("Timer Balance", true);
     private final BoolSetting tabList = boolSetting("Tab List", true);
     private final BoolSetting music = boolSetting("Music", true).platformOnly(PlatformRequirement.WINDOWS_X64);
+    private final BoolSetting traces = boolSetting("Traces", true);
+    private final DoubleSetting traceRange = doubleSetting("Trace Range", 128.0, 8.0, 256.0, 1.0, traces::getValue);
+    private final DoubleSetting traceWidth = doubleSetting("Trace Width", 1.5, 0.5, 5.0, 0.25, traces::getValue);
+    private final ColorSetting traceColor = colorSetting("Trace Color", new Color(111, 224, 211, 180), traces::getValue);
     public final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 50));
     public final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
     public final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
@@ -61,6 +69,7 @@ public class Island extends HudModule {
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     private final LandRenderer landRenderer = new LandRenderer(LandController.INSTANCE, 48.0f, 48.0f);
+    private RectRenderer rectRenderer;
 
     private LivingEntity target;
 
@@ -77,7 +86,29 @@ public class Island extends HudModule {
         LandController.INSTANCE.removeInstances(TabListInstance.class);
         LandController.INSTANCE.removeInstances(MusicInstance.class);
         SmtcService.INSTANCE.stop();
+        if (rectRenderer != null) rectRenderer.clear();
         target = null;
+    }
+
+    @EventHandler
+    private void onRender2D(Render2DEvent.Level event) {
+        if (!traces.getValue() || nullCheck() || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
+            if (rectRenderer != null) rectRenderer.clear();
+            return;
+        }
+
+        if (rectRenderer == null) {
+            rectRenderer = RectRenderer.create();
+        }
+        rectRenderer.clear();
+        int traceCount = TracesRenderer.render(
+                rectRenderer,
+                landRenderer.getX(), landRenderer.getY(), landRenderer.getWidth(), landRenderer.getHeight(),
+                traceRange.getValue(), traceWidth.getValue().floatValue(), traceColor.getValue()
+        );
+        if (traceCount > 0) {
+            OverlayAntiAlias.INSTANCE.render(4, rectRenderer::drawAndClear);
+        }
     }
 
     @Override

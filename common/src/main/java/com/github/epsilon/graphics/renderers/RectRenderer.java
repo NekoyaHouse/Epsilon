@@ -41,6 +41,26 @@ public class RectRenderer implements IRenderer {
         addRectGradient(x, y, width, height, color, color, color, color);
     }
 
+    public void addLine(float x1, float y1, float x2, float y2, float width, Color color) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = (float) Math.sqrt(dx * dx + dy * dy);
+        if (!Float.isFinite(length) || length <= 0.001f || color == null) return;
+
+        float halfWidth = width / 2.0f;
+        float normalX = -dy / length * halfWidth;
+        float normalY = dx / length * halfWidth;
+
+        buffer.ensureCapacity(currentOffset + RECT_BYTES);
+        buffer.tryMap();
+
+        int argb = ARGB.toABGR(color.getRGB());
+        addVertex(x1 + normalX, y1 + normalY, argb);
+        addVertex(x1 - normalX, y1 - normalY, argb);
+        addVertex(x2 - normalX, y2 - normalY, argb);
+        addVertex(x2 + normalX, y2 + normalY, argb);
+    }
+
     public void addOutline(float x, float y, float width, float height, float outline, Color color) {
         float sideHeight = height - outline * 2.0f;
         addRect(x, y, width, outline, color);
