@@ -329,6 +329,11 @@ public class LuminImmediateRenderer {
                     return;
                 }
 
+                RenderPipeline pipeline = this.pipeline;
+                if (depthView == null && pipeline != null && pipeline.getDepthStencilState() != null) {
+                    return;
+                }
+
                 GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
                         RenderSystem.getModelViewMatrixCopy(),
                         new Vector4f(1, 1, 1, 1),
@@ -343,7 +348,7 @@ public class LuminImmediateRenderer {
                         colorView, Optional.empty(),
                         depthView, OptionalDouble.empty())
                 ) {
-                    pass.setPipeline(RenderSystem.getCompiledPipeline(this.pipeline));
+                    pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
                     RenderSystem.bindDefaultUniforms(pass);
                     pass.setUniform("DynamicTransforms", dynamicUniforms);
                     pass.setVertexBuffer(0, this.ringBuffer.getGpuBuffer().slice());

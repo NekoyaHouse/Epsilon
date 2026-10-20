@@ -345,7 +345,7 @@ public class LuminRenderSystem {
         public void clear() {
             var encoder = RenderSystem.getDevice().createCommandEncoder();
             if (useDepth) {
-                encoder.clearColorAndDepthTextures(colorTexture.getTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), depthTexture, 1.0);
+                encoder.clearColorAndDepthTextures(colorTexture.getTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), depthTexture, 0.0);
             } else {
                 encoder.clearColorTexture(colorTexture.getTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f));
             }

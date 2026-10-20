@@ -334,6 +334,10 @@ public class AssetManager {
         declinedThisSession.addAll(assets);
     }
 
+    public void clearDeclined(Collection<Asset> assets) {
+        declinedThisSession.removeAll(assets);
+    }
+
     public boolean isDeclinedThisSession(Asset asset) {
         return declinedThisSession.contains(asset);
     }

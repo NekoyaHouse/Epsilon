@@ -187,6 +187,10 @@
         },
         "hint": "资源在首次使用时下载到 ~/.epsilon/assets，下载地址可在「客户端设置 - 资源」中修改。",
         "downloading": "正在下载",
+        "job": {
+          "preparing": "准备下载…",
+          "details": "查看下载 →"
+        },
         "failed": {
           "_value": "下载失败：%s",
           "title": "下载失败"

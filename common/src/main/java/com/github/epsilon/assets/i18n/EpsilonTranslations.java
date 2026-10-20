@@ -129,6 +129,8 @@ public class EpsilonTranslations {
             Resources.BUTTON_STOP,
             Resources.HINT,
             Resources.DOWNLOADING,
+            Resources.JOB_PREPARING,
+            Resources.JOB_DETAILS,
             Resources.FAILED,
             Resources.DOWNLOAD_SUCCESS_TITLE,
             Resources.DOWNLOAD_SUCCESS_MESSAGE,
@@ -344,6 +346,8 @@ public class EpsilonTranslations {
         public static final TranslateComponent BUTTON_STOP = create("gui", "resource.button.stop");
         public static final TranslateComponent HINT = create("gui", "resource.hint");
         public static final TranslateComponent DOWNLOADING = create("gui", "resource.downloading");
+        public static final TranslateComponent JOB_PREPARING = create("gui", "resource.job.preparing");
+        public static final TranslateComponent JOB_DETAILS = create("gui", "resource.job.details");
         public static final TranslateComponent FAILED = create("gui", "resource.failed");
         public static final TranslateComponent DOWNLOAD_SUCCESS_TITLE = create("gui", "resource.success.title");
         public static final TranslateComponent DOWNLOAD_SUCCESS_MESSAGE = create("gui", "resource.success.message");

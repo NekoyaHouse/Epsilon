@@ -175,7 +175,16 @@ public class ClientSetting extends Module {
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
-    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue)
+    public final EnumSetting<MainMenuStyle> mainMenuStyle = enumSetting("MainMenu Style", MainMenuStyle.Columbina, useMainMenu::getValue, style -> {
+        if (style == MainMenuStyle.Columbina) {
+            // 重新启用时允许下次进入主菜单再次提示下载缺失资源
+            AssetManager.INSTANCE.clearDeclined(List.of(
+                    AssetManager.Asset.VIDEO,
+                    AssetManager.Asset.LIGHT_TRAILS,
+                    AssetManager.Asset.FFMPEG
+            ));
+        }
+    })
             .restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64)
             .group(sgAppearance);
 

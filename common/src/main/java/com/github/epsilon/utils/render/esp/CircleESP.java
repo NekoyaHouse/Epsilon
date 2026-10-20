@@ -51,12 +51,11 @@ public class CircleESP {
      *
      * @param poseStack   渲染姿态栈
      * @param target      目标实体
-     * @param radius      爆炸或特效半径
      * @param sideColor   填充面颜色
      * @param lineColor   轮廓线颜色
      * @param alphaFactor 透明度系数
      */
-    public static void render(PoseStack poseStack, LivingEntity target, float radius, Color sideColor, Color lineColor, float alphaFactor) {
+    public static void render(PoseStack poseStack, LivingEntity target, Color sideColor, Color lineColor, float alphaFactor) {
         boolean canSee = mc.player.hasLineOfSight(target);
 
         float ticks = (float) (System.currentTimeMillis() % 1000000) * 0.004f;
@@ -75,6 +74,8 @@ public class CircleESP {
 
         RenderPipeline triPipeline = canSee ? TRIANGLE_STRIP_PIPELINE : TRIANGLE_STRIP_NO_DEPTH_PIPELINE;
         LuminImmediateRenderer.PosColorTriangleStrip triBuilder = LuminImmediateRenderer.beginPosColorTriangleStrip(triPipeline);
+
+        float radius = (float) (((target.getBoundingBox().maxX - target.getBoundingBox().minX) + (target.getBoundingBox().maxZ - target.getBoundingBox().minZ)) * 0.5);
 
         for (float i = 0; i <= (Math.PI * 2); i += ((float) Math.PI * 2) / 64.F) {
             float vecX = (float) (radius * Math.cos(i));

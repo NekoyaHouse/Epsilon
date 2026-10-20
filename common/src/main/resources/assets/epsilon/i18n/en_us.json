@@ -187,6 +187,10 @@
         },
         "hint": "Resources are downloaded on demand to ~/.epsilon/assets. The address can be changed in Client Setting - Resources.",
         "downloading": "Downloading",
+        "job": {
+          "preparing": "Preparing download…",
+          "details": "View downloads →"
+        },
         "failed": {
           "_value": "Download failed: %s",
           "title": "Download Failed"

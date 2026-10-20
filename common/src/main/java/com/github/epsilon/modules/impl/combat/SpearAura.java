@@ -9,6 +9,7 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.render.AntiAlias;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
@@ -114,7 +115,6 @@ public class SpearAura extends Module {
     private final DoubleSetting waveSpeed = doubleSetting("Wave Speed", 3.0, 0.5, 10.0, 0.1, () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
     private final ColorSetting sideColor = colorSetting("Side Color", Color.WHITE, false, () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 255, 255, 233), () -> esp.getValue() && espMode.is(ESPMode.Circle));
-    private final DoubleSetting circleRadius = doubleSetting("Circle Radius", 0.75, 0.1, 2.0, 0.05, () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final DoubleSetting circleAlphaFactor = doubleSetting("Circle Alpha Factor", 1.0, 0.0, 2.0, 0.05, () -> esp.getValue() && espMode.is(ESPMode.Circle));
     private final EnumSetting<FireflyESP.ColorMode> fireflyColorMode = enumSetting("Firefly Color Mode", FireflyESP.ColorMode.Blend, () -> esp.getValue() && espMode.is(ESPMode.Firefly));
     private final ColorSetting fireflyColor = colorSetting("Firefly Color", new Color(149, 149, 149, 255), () -> esp.getValue() && espMode.is(ESPMode.Firefly));
@@ -277,41 +277,42 @@ public class SpearAura extends Module {
 
         PoseStack stack = event.getPoseStack();
 
-        switch (espMode.getValue()) {
-            case CaptureMark -> CaptureMarkESP.render(
-                    stack,
-                    target,
-                    espSize.getValue(),
-                    espRotSpeed.getValue(),
-                    waveSpeed.getValue(),
-                    espColor1.getValue(),
-                    espColor2.getValue()
-            );
-            case Circle -> CircleESP.render(
-                    stack,
-                    target,
-                    circleRadius.getValue().floatValue(),
-                    sideColor.getValue(),
-                    lineColor.getValue(),
-                    circleAlphaFactor.getValue().floatValue()
-            );
-            case Firefly -> FireflyESP.render(
-                    stack,
-                    target,
-                    fireflyLength.getValue(),
-                    fireflyFactor.getValue(),
-                    fireflyShaking.getValue(),
-                    fireflyAmplitude.getValue(),
-                    fireflyColor.getValue(),
-                    fireflyColorMode.getValue(),
-                    fireflyColor2.getValue(),
-                    fireflyColorMix.getValue(),
-                    fireflyColorSpeed.getValue(),
-                    fireflyRainbowSpeed.getValue(),
-                    fireflyRainbowSaturation.getValue(),
-                    fireflyRainbowBrightness.getValue()
-            );
-        }
+        AntiAlias.INSTANCE.render(() -> {
+            switch (espMode.getValue()) {
+                case CaptureMark -> CaptureMarkESP.render(
+                        stack,
+                        target,
+                        espSize.getValue(),
+                        espRotSpeed.getValue(),
+                        waveSpeed.getValue(),
+                        espColor1.getValue(),
+                        espColor2.getValue()
+                );
+                case Circle -> CircleESP.render(
+                        stack,
+                        target,
+                        sideColor.getValue(),
+                        lineColor.getValue(),
+                        circleAlphaFactor.getValue().floatValue()
+                );
+                case Firefly -> FireflyESP.render(
+                        stack,
+                        target,
+                        fireflyLength.getValue(),
+                        fireflyFactor.getValue(),
+                        fireflyShaking.getValue(),
+                        fireflyAmplitude.getValue(),
+                        fireflyColor.getValue(),
+                        fireflyColorMode.getValue(),
+                        fireflyColor2.getValue(),
+                        fireflyColorMix.getValue(),
+                        fireflyColorSpeed.getValue(),
+                        fireflyRainbowSpeed.getValue(),
+                        fireflyRainbowSaturation.getValue(),
+                        fireflyRainbowBrightness.getValue()
+                );
+            }
+        });
     }
 
     @EventHandler

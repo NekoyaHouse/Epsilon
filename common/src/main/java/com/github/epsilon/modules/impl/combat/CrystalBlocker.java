@@ -181,4 +181,5 @@ public class CrystalBlocker extends Module {
             InvUtils.invSwapBack();
         }
     }
+
 }

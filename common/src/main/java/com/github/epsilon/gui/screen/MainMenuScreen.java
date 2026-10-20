@@ -54,6 +54,13 @@ public class MainMenuScreen extends Screen {
 
     private static final float MENU_REFERENCE_WIDTH = 1600.0f;
     private static final float MENU_REFERENCE_HEIGHT = 900.0f;
+    private static final long COLUMBINA_TITLE_DELAY_MS = 80L;
+    private static final long COLUMBINA_TITLE_DURATION_MS = 680L;
+    private static final long COLUMBINA_MENU_DELAY_MS = 190L;
+    private static final long COLUMBINA_ITEM_STAGGER_MS = 78L;
+    private static final long COLUMBINA_ITEM_DURATION_MS = 560L;
+    private static final float COLUMBINA_ITEM_ENTER_OFFSET = 28.0f;
+    private static final float COLUMBINA_ITEM_ENTER_RISE = 10.0f;
     private static final float REISA_ASPECT_RATIO = 710.0f / 1280.0f;
     private static final int REISA_PAGE_SLICES = 12;
     private static final long REISA_ENTRANCE_DURATION_MS = 900L;
@@ -143,26 +150,14 @@ public class MainMenuScreen extends Screen {
         super.init();
         AssetManager assets = AssetManager.INSTANCE;
         boolean columbinaStyle = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
+        updateBackgroundVideo();
         if (columbinaStyle && assets.isVideoSupported()) {
-            if (VideoPlayer.isStopped()) {
-                if (assets.isVideoReady() && assets.isFfmpegReady()) {
-                    try {
-                        VideoManager.INSTANCE.loadBackground();
-                    } catch (Exception exception) {
-                        Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception);
-                    }
-                }
-            } else {
-                VideoPlayer.resume();
-            }
             // 视频叠层光效可以独立缺失，缺失时补提示；已就绪或本会话已拒绝时不会重复弹窗。
             assets.requestDownload(List.of(
                     AssetManager.Asset.VIDEO,
                     AssetManager.Asset.LIGHT_TRAILS,
                     AssetManager.Asset.FFMPEG
             ));
-        } else if (!VideoPlayer.isStopped()) {
-            VideoPlayer.stop();
         }
         requestReisaAssetsIfNeeded();
         if (!initialized) {
@@ -176,6 +171,42 @@ public class MainMenuScreen extends Screen {
         }
         if (reisaGreetingQueued) {
             startReisaGreeting();
+        }
+    }
+
+    private void updateBackgroundVideo() {
+        AssetManager assets = AssetManager.INSTANCE;
+        boolean columbinaStyle = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
+        if (!columbinaStyle || !assets.isVideoSupported()) {
+            if (columbinaStyle) {
+                ClientSetting.INSTANCE.mainMenuStyle.setValue(ClientSetting.MainMenuStyle.Classic);
+            }
+            if (!VideoPlayer.isStopped()) {
+                VideoPlayer.stop();
+            }
+            return;
+        }
+        if (!VideoPlayer.isStopped()) {
+            VideoPlayer.resume();
+            return;
+        }
+
+        AssetManager.DownloadJob downloadJob = assets.activeJob();
+        if (downloadJob != null && downloadJob.isRunning()) return;
+
+        boolean videoReady = assets.isVideoReady();
+        boolean ffmpegReady = assets.isFfmpegReady();
+        if (videoReady && ffmpegReady) {
+            try {
+                VideoManager.INSTANCE.loadBackground();
+            } catch (Exception exception) {
+                Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception);
+            }
+            if (VideoPlayer.isStopped()) {
+                ClientSetting.INSTANCE.mainMenuStyle.setValue(ClientSetting.MainMenuStyle.Classic);
+            }
+        } else if ((!videoReady && assets.isDeclinedThisSession(AssetManager.Asset.VIDEO)) || (!ffmpegReady && assets.isDeclinedThisSession(AssetManager.Asset.FFMPEG))) {
+            ClientSetting.INSTANCE.mainMenuStyle.setValue(ClientSetting.MainMenuStyle.Classic);
         }
     }
 
@@ -260,6 +291,7 @@ public class MainMenuScreen extends Screen {
             }
             return;
         }
+        updateBackgroundVideo();
         if (reisaGreetingStartMs < 0L) return;
 
         long now = Util.getMillis();
@@ -395,28 +427,35 @@ public class MainMenuScreen extends Screen {
         float layoutMouseX = mouseX - layoutX;
         float layoutMouseY = mouseY - layoutY;
         float menuCenterCorrectionX = (width - layoutWidth) * 0.2f;
-        float intro = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp((now - introStartMs) / 850.0f, 0.0f, 1.0f));
+        long introElapsed = Math.max(0L, now - introStartMs);
+        float titleProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(
+                (introElapsed - COLUMBINA_TITLE_DELAY_MS) / (float) COLUMBINA_TITLE_DURATION_MS, 0.0f, 1.0f));
+        float subtitleProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(
+                (introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (float) (COLUMBINA_TITLE_DURATION_MS - 70L), 0.0f, 1.0f));
         float shutdownElapsed = reisaShutdownStartMs < 0L ? 0.0f : now - reisaShutdownStartMs;
         float exit = Easing.EASE_IN_OUT_CUBIC.getFunction().apply(Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS, 0.0f, 1.0f));
         float menuVisibility = 1.0f - exit;
-        float visibility = intro * menuVisibility;
+        float titleVisibility = titleProgress * menuVisibility;
+        float subtitleVisibility = subtitleProgress * menuVisibility;
 
         float rightMargin = Math.max(46.5f * scale, layoutWidth * 0.055f);
         float menuWidth = Mth.clamp(layoutWidth * 0.25f, 294.5f * scale, 418.5f * scale);
         float restingMenuX = layoutWidth - rightMargin - menuWidth - menuCenterCorrectionX;
-        float menuX = restingMenuX + (1.0f - intro) * 43.4f * scale + exit * 34.1f * scale;
+        float menuX = restingMenuX + exit * 34.1f * scale;
         float titleCenterX = restingMenuX + menuWidth * 0.53f;
         float titleScale = 8.6025f * scale;
         float titleWidth = scene.scheduler().textMetrics().getWidth(clientName, titleScale, StaticFontLoader.CINZEL_DECORATIVE);
         float titleHeight = scene.scheduler().textMetrics().getHeight(titleScale, StaticFontLoader.CINZEL_DECORATIVE);
-        float titleX = titleCenterX - titleWidth * 0.5f + (1.0f - intro) * 31.0f * scale + exit * 27.9f * scale;
-        float titleY = Math.max(37.2f * scale, layoutHeight * 0.095f);
+        float titleX = titleCenterX - titleWidth * 0.5f + (1.0f - titleProgress) * 18.6f * scale + exit * 27.9f * scale;
+        float titleBaseY = Math.max(37.2f * scale, layoutHeight * 0.095f);
+        float titleY = titleBaseY + (1.0f - titleProgress) * 4.65f * scale;
         float subtitleScale = 1.705f * scale;
         String subtitle = "COLUMBINA / " + Constants.VERSION;
         float subtitleWidth = scene.scheduler().textMetrics().getWidth(subtitle, subtitleScale);
-        float subtitleX = titleCenterX - subtitleWidth * 0.5f + (1.0f - intro) * 31.0f * scale + exit * 27.9f * scale;
-        float subtitleY = titleY + titleHeight - 6.2f * scale;
-        float menuTop = Math.max(layoutHeight * 0.315f, subtitleY + 52.7f * scale);
+        float subtitleX = titleCenterX - subtitleWidth * 0.5f + (1.0f - subtitleProgress) * 18.6f * scale + exit * 27.9f * scale;
+        float subtitleBaseY = titleBaseY + titleHeight - 6.2f * scale;
+        float subtitleY = subtitleBaseY + (1.0f - subtitleProgress) * 4.65f * scale;
+        float menuTop = Math.max(layoutHeight * 0.315f, subtitleBaseY + 52.7f * scale);
         float footerReserve = 52.7f * scale;
         float availableRows = Math.max(1.0f, layoutHeight - menuTop - footerReserve);
         float rowStride = Math.min(80.6f * scale, availableRows / entries.size());
@@ -436,14 +475,14 @@ public class MainMenuScreen extends Screen {
                 }
             }
 
-            Color titleStart = applyAlpha(new Color(158, 181, 222), visibility * 0.98f);
-            Color titleEnd = applyAlpha(new Color(242, 247, 255), visibility);
-            Color titleOuterGlow = applyAlpha(new Color(112, 158, 235), visibility * 0.66f);
-            Color titleInnerGlow = applyAlpha(new Color(205, 226, 255), visibility * 0.90f);
-            Color subtitleStart = applyAlpha(new Color(180, 198, 226), visibility * 0.92f);
-            Color subtitleEnd = applyAlpha(new Color(224, 233, 246), visibility * 0.96f);
-            Color subtitleGlow = applyAlpha(new Color(184, 207, 239), visibility * 0.52f);
-            Color secondary = applyAlpha(new Color(178, 197, 224), visibility * 0.88f);
+            Color titleStart = applyAlpha(new Color(158, 181, 222), titleVisibility * 0.98f);
+            Color titleEnd = applyAlpha(new Color(242, 247, 255), titleVisibility);
+            Color titleOuterGlow = applyAlpha(new Color(112, 158, 235), titleVisibility * 0.66f);
+            Color titleInnerGlow = applyAlpha(new Color(205, 226, 255), titleVisibility * 0.90f);
+            Color subtitleStart = applyAlpha(new Color(180, 198, 226), subtitleVisibility * 0.92f);
+            Color subtitleEnd = applyAlpha(new Color(224, 233, 246), subtitleVisibility * 0.96f);
+            Color subtitleGlow = applyAlpha(new Color(184, 207, 239), subtitleVisibility * 0.52f);
+            Color secondary = applyAlpha(new Color(178, 197, 224), subtitleVisibility * 0.88f);
 
             content.layer(-50, layer -> {
                 layer.blurredText(clientName, titleX, titleY, titleScale, titleOuterGlow, titleScale * 2.0f, 3, StaticFontLoader.CINZEL_DECORATIVE);
@@ -455,55 +494,66 @@ public class MainMenuScreen extends Screen {
 
             for (int index = 0; index < entries.size(); index++) {
                 MenuEntry entry = entries.get(index);
-                float staged = Mth.clamp((intro - index * 0.065f) / 0.62f, 0.0f, 1.0f);
-                float appear = Easing.EASE_OUT_CUBIC.getFunction().apply(staged);
-                float rowY = menuTop + index * rowStride;
+                long itemDelay = COLUMBINA_MENU_DELAY_MS + index * COLUMBINA_ITEM_STAGGER_MS;
+                float itemProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(
+                        (introElapsed - itemDelay) / (float) COLUMBINA_ITEM_DURATION_MS, 0.0f, 1.0f));
+                float itemVisibility = itemProgress * menuVisibility;
+                float rowY = menuTop + index * rowStride + (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_RISE * scale;
                 float[] offsets = {-31.0f, 57.35f, 90.0f, 80.0f, 48.0f, -15.0f};
-                float rowX = menuX + menuWidth * 0.20f + offsets[index] * scale + (1.0f - appear) * 27.9f * scale;
-                entry.setBounds(rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale);
+                float rowX = menuX + menuWidth * 0.20f + offsets[index] * scale
+                        + (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_OFFSET * scale;
+                if (itemProgress <= 0.001f || menuVisibility <= 0.001f) {
+                    entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
+                } else {
+                    entry.setBounds(rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale);
+                }
                 boolean hovered = entry.isHovered(layoutMouseX, layoutMouseY);
                 entry.hoverProgress = Mth.lerp(hovered ? 0.26f : 0.16f, entry.hoverProgress, hovered ? 1.0f : 0.0f);
                 float hover = entry.hoverProgress;
+                float animatedRowX = rowX + hover * 7.75f * scale;
                 Color labelStart = MD3Theme.lerp(
-                        applyAlpha(new Color(226, 234, 247), appear * visibility * 0.96f),
-                        applyAlpha(new Color(243, 247, 255), appear * visibility), hover);
+                        applyAlpha(new Color(226, 234, 247), itemVisibility * 0.96f),
+                        applyAlpha(new Color(243, 247, 255), itemVisibility), hover);
                 Color labelEnd = MD3Theme.lerp(
-                        applyAlpha(new Color(177, 199, 232), appear * visibility * 0.94f),
-                        applyAlpha(new Color(213, 226, 246), appear * visibility * 0.98f), hover);
+                        applyAlpha(new Color(177, 199, 232), itemVisibility * 0.94f),
+                        applyAlpha(new Color(213, 226, 246), itemVisibility * 0.98f), hover);
                 Color numberStart = MD3Theme.lerp(
-                        applyAlpha(new Color(202, 216, 238), appear * visibility * 0.88f),
-                        applyAlpha(new Color(232, 240, 252), appear * visibility * 0.96f), hover);
+                        applyAlpha(new Color(202, 216, 238), itemVisibility * 0.88f),
+                        applyAlpha(new Color(232, 240, 252), itemVisibility * 0.96f), hover);
                 Color numberEnd = MD3Theme.lerp(
-                        applyAlpha(new Color(151, 177, 216), appear * visibility * 0.86f),
-                        applyAlpha(new Color(195, 216, 242), appear * visibility * 0.94f), hover);
+                        applyAlpha(new Color(151, 177, 216), itemVisibility * 0.86f),
+                        applyAlpha(new Color(195, 216, 242), itemVisibility * 0.94f), hover);
                 Color labelGlow = MD3Theme.lerp(
-                        applyAlpha(new Color(163, 196, 241), appear * visibility * 0.8f),
-                        applyAlpha(new Color(205, 225, 252), appear * visibility * 1.0f), hover);
+                        applyAlpha(new Color(163, 196, 241), itemVisibility * 0.50f),
+                        applyAlpha(new Color(205, 225, 252), itemVisibility * 0.76f), hover);
                 Color numberGlow = MD3Theme.lerp(
-                        applyAlpha(new Color(146, 181, 231), appear * visibility * 0.42f),
-                        applyAlpha(new Color(191, 215, 247), appear * visibility * 0.64f), hover);
-                Color numberShadow = applyAlpha(new Color(3, 7, 20), appear * visibility * (0.48f + hover * 0.06f));
+                        applyAlpha(new Color(146, 181, 231), itemVisibility * 0.34f),
+                        applyAlpha(new Color(191, 215, 247), itemVisibility * 0.56f), hover);
+                Color numberShadow = applyAlpha(new Color(3, 7, 20), itemVisibility * (0.30f + hover * 0.06f));
                 float labelScale = (2.976f + hover * 0.124f) * scale;
                 float textHeight = scene.scheduler().textMetrics().getHeight(labelScale);
                 float textY = rowY + (rowHeight - textHeight) * 0.5f;
                 float numberScale = (1.829f + hover * 0.0775f) * scale;
                 float numberHeight = scene.scheduler().textMetrics().getHeight(numberScale);
                 float numberY = rowY + (rowHeight - numberHeight) * 0.5f;
-                float numberShadowOffset = 6.2f * scale;
-                float numberShadowBlur = 8.9125f * scale;
+                float numberShadowBlur = 4.65f * scale;
 
                 String numberLabel = "0" + (index + 1);
+                String labelText = localizedTitle(entry.title);
+                float labelX = animatedRowX + 46.5f * scale;
+                float labelWidth = scene.scheduler().textMetrics().getWidth(labelText, labelScale);
                 content.layer(-50, layer -> {
-                    layer.blurredText(numberLabel, rowX - numberShadowOffset, numberY, numberScale, numberShadowBlur, 2, numberShadow);
-                    layer.blurredText(numberLabel, rowX + numberShadowOffset, numberY, numberScale, numberShadowBlur, 2, numberShadow);
-                    layer.blurredText(numberLabel, rowX, numberY - numberShadowOffset, numberScale, numberShadowBlur, 2, numberShadow);
-                    layer.blurredText(numberLabel, rowX, numberY + numberShadowOffset, numberScale, numberShadowBlur, 2, numberShadow);
-                    layer.blurredText(numberLabel, rowX, numberY, numberScale, numberShadowBlur, 2, numberShadow);
-                    layer.blurredText(numberLabel, rowX, numberY, numberScale, numberScale * 1.15f, 2, numberGlow);
-                    layer.gradientText(numberLabel, rowX, numberY, numberScale, numberStart, numberEnd);
-                    String labelText = localizedTitle(entry.title);
-                    layer.blurredText(labelText, rowX + 46.5f * scale, textY, labelScale, labelScale * 1.8f, 2, labelGlow);
-                    layer.gradientText(labelText, rowX + 46.5f * scale, textY, labelScale, labelStart, labelEnd);
+                    layer.blurredText(numberLabel, animatedRowX, numberY + 1.55f * scale, numberScale, numberShadowBlur, 1, numberShadow);
+                    layer.blurredText(numberLabel, animatedRowX, numberY, numberScale, numberScale * 0.85f, 1, numberGlow);
+                    layer.gradientText(numberLabel, animatedRowX, numberY, numberScale, numberStart, numberEnd);
+                    layer.blurredText(labelText, labelX, textY, labelScale, labelScale * 1.35f, 1, labelGlow);
+                    layer.gradientText(labelText, labelX, textY, labelScale, labelStart, labelEnd);
+                    if (hover > 0.001f) {
+                        layer.roundRect(labelX, rowY + rowHeight - 2.3f * scale,
+                                labelWidth * (0.18f + hover * 0.28f), Math.max(1.0f, 1.55f * scale),
+                                Math.max(0.8f, 0.78f * scale),
+                                applyAlpha(new Color(210, 229, 255), itemVisibility * hover * 0.78f));
+                    }
                 });
             }
 
@@ -1004,9 +1054,9 @@ public class MainMenuScreen extends Screen {
             float scale = resolutionScale(width, height);
             int layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale);
             int layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale);
-            boolean columbia = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
-            float layoutX = columbia ? width - layoutWidth : (width - layoutWidth) * 0.5f;
-            float layoutY = columbia ? height - layoutHeight : (height - layoutHeight) * 0.5f;
+            boolean columbinaStyle = ClientSetting.INSTANCE.mainMenuStyle.is(ClientSetting.MainMenuStyle.Columbina);
+            float layoutX = columbinaStyle ? width - layoutWidth : (width - layoutWidth) * 0.5f;
+            float layoutY = columbinaStyle ? height - layoutHeight : (height - layoutHeight) * 0.5f;
             for (MenuEntry entry : entries) {
                 if (entry.isHovered(epsilonEvent.x() - layoutX, epsilonEvent.y() - layoutY)) {
                     entry.action.run();
