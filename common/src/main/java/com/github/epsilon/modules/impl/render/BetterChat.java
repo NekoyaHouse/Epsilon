@@ -30,6 +30,21 @@ public class BetterChat extends Module {
         setDefaultEnabled(true);
     }
 
+    public final BoolSetting combineDuplicates = boolSetting("Combine Duplicates", true);
+    public final BoolSetting keepDraft = boolSetting("Keep Draft", true);
+    public final BoolSetting quickCharacters = boolSetting("Quick Characters", true);
+    public final com.github.epsilon.settings.impl.StringSetting characters = stringSetting("Characters", "♂♀★✓→←");
+    private String draft = "";
+    public String getDraft() { return draft; }
+    public void setDraft(String text) { draft = text; }
+    @EventHandler private void clearDraft(com.github.epsilon.events.impl.GameLeftEvent event) { clearTransientChat(); }
+    @EventHandler private void changeWorld(com.github.epsilon.events.impl.LevelUpdateEvent event) { clearTransientChat(); }
+    private void clearTransientChat() {
+        draft = "";
+        if (mc.gui != null && mc.gui.hud != null && mc.gui.hud.getChat() instanceof ChatComponentAccessor accessor)
+            accessor.epsilon$resetCombine();
+    }
+
     private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(16, 17, 20, 150));
     private final ColorSetting inputBackgroundColor = colorSetting("Input Background Color", new Color(16, 17, 20, 185));
     private final DoubleSetting chatRadius = doubleSetting("Chat Radius", 4.5, 0.0, 12.0, 0.5);
@@ -69,6 +84,7 @@ public class BetterChat extends Module {
     @Override
     protected void onDisable() {
         resetAnimations();
+        clearTransientChat();
     }
 
     @EventHandler

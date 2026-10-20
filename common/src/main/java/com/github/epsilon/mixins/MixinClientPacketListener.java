@@ -35,11 +35,33 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         super(minecraft, connection, commonListenerCookie);
     }
 
+    @Inject(method = "handleEntityEvent", at = @At("RETURN"))
+    private void epsilon$totem(ClientboundEntityEventPacket packet, CallbackInfo ci) {
+        if (packet.getEventId() == net.minecraft.world.entity.EntityEvent.PROTECTED_FROM_DEATH && minecraft.level != null) {
+            var entity = packet.getEntity(minecraft.level);
+            if (entity != null) EventBus.INSTANCE.post(new com.github.epsilon.events.impl.TotemPopEvent(entity));
+        }
+    }
+
+    @Inject(method = "handleContainerContent", at = @At("RETURN"))
+    private void epsilon$containerContent(ClientboundContainerSetContentPacket packet, CallbackInfo ci) {
+        if (minecraft.player != null) EventBus.INSTANCE.post(new com.github.epsilon.events.impl.ContainerContentEvent(
+                packet.containerId(), packet.stateId(), true, -1,
+                packet.items().stream().map(net.minecraft.world.item.ItemStack::copy).toList(), packet.carriedItem().copy()));
+    }
+    @Inject(method = "handleContainerSetSlot", at = @At("RETURN"))
+    private void epsilon$containerSlot(ClientboundContainerSetSlotPacket packet, CallbackInfo ci) {
+        if (minecraft.player != null) EventBus.INSTANCE.post(new com.github.epsilon.events.impl.ContainerContentEvent(
+                packet.getContainerId(), packet.getStateId(), false, packet.getSlot(),
+                java.util.List.of(packet.getItem().copy()), net.minecraft.world.item.ItemStack.EMPTY));
+    }
+
     @Inject(method = "handleLogin", at = @At("TAIL"))
     private void onHandleLoginTail(ClientboundLoginPacket packet, CallbackInfo ci, @Share("worldNotNull") LocalBooleanRef worldNotNull) {
         if (worldNotNull.get()) {
             EventBus.INSTANCE.post(new GameLeftEvent());
         }
+        com.github.epsilon.features.DisconnectGuard.joined();
         EventBus.INSTANCE.post(new GameJoinedEvent());
     }
 

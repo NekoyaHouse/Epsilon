@@ -88,3 +88,20 @@ CC0-1.0 does not require attribution; this notice is included voluntarily.
 
 License reference:
 https://creativecommons.org/publicdomain/zero/1.0/
+
+
+## SlimefunHelper (A–D convenience features)
+
+- Source: user-supplied `SlimefunHelper-26.x-multiversion(1).zip`.
+- Author/package: matl114 / `me.matl114`.
+- License in the supplied source: CC0 1.0 Universal, reproduced in
+  [licenses/SlimefunHelper-CC0.txt](licenses/SlimefunHelper-CC0.txt).
+- Behaviour adapted: ChatCombine / ChatTools, ChestHistory, BindCommand /
+  EventCommand, AutoReconnect / AutoLogout. Implementation uses Epsilon's
+  Module, EventBus, Setting, GUI, translation and storage conventions.
+- Source locations: `src/main/java/me/matl114/hacks/modules/chat/`,
+  `modules/inv/ChestHistory.java`, `modules/task/`, and `modules/extra/`.
+- No SlimefunHelper framework, stubs or external map classes are bundled.
+
+The Epsilon distribution remains under GPL-3.0-only. Existing notices and
+licenses remain applicable to their respective components.

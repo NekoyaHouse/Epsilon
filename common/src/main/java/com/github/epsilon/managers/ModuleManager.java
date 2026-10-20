@@ -72,6 +72,11 @@ public class ModuleManager {
         addModule(ZealotCrystalPlus.INSTANCE);
 
         // Player
+        addModule(ChestHistory.INSTANCE);
+        addModule(BindCommand.INSTANCE);
+        addModule(EventCommand.INSTANCE);
+        addModule(AutoReconnect.INSTANCE);
+        addModule(AutoLogout.INSTANCE);
         addModule(AutoArmor.INSTANCE);
         addModule(AutoFirework.INSTANCE);
         addModule(AutoKouZi.INSTANCE);

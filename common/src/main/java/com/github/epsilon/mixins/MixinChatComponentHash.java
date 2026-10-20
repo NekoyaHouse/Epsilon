@@ -68,6 +68,51 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
 
     @Unique
     private boolean epsilon$chatScissorPushed;
+    @Unique private final Map<GuiMessage, Component> epsilon$originals = new java.util.IdentityHashMap<>();
+    @Unique private final Map<GuiMessage, Integer> epsilon$counts = new java.util.IdentityHashMap<>();
+    @Unique private boolean epsilon$combined;
+    @Unique private boolean epsilon$hashDispatch;
+    @Override public void epsilon$resetCombine() {
+        epsilon$originals.clear(); epsilon$counts.clear(); epsilon$combined = false;
+    }
+
+    @org.spongepowered.asm.mixin.injection.ModifyVariable(method = "addMessageToQueue", at = @At("HEAD"), argsOnly = true)
+    private GuiMessage epsilon$combine(GuiMessage incoming) {
+        epsilon$combined = false;
+        epsilon$originals.keySet().removeIf(m -> !allMessages.contains(m));
+        epsilon$counts.keySet().retainAll(epsilon$originals.keySet());
+        if (epsilon$hashDispatch || !BetterChat.INSTANCE.isEnabled() || !BetterChat.INSTANCE.combineDuplicates.getValue()) return incoming;
+        if (!visibleMessageFilter.test(incoming)) return incoming;
+        int count = 1;
+        Component content = incoming.content();
+        // Compare full Components (styles/click events included), never hashes or rendered fragments.
+        for (GuiMessage previous : new java.util.ArrayList<>(allMessages.subList(0, Math.min(100, allMessages.size())))) {
+            if (epsilon$originals.containsKey(previous) && previous.source().equals(incoming.source()) && java.util.Objects.equals(previous.tag(), incoming.tag())
+                    && epsilon$originals.getOrDefault(previous, previous.content()).equals(content)) {
+                count += epsilon$counts.getOrDefault(previous, 1);
+                allMessages.remove(previous);
+                epsilon$originals.remove(previous); epsilon$counts.remove(previous);
+                epsilon$combined = true;
+            }
+        }
+        if (!epsilon$combined) {
+            epsilon$originals.put(incoming, content.copy()); epsilon$counts.put(incoming, 1);
+            return incoming;
+        }
+        GuiMessage result = new GuiMessage(incoming.addedTime(), content.copy().append(
+                Component.literal(" [×" + count + "]").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                incoming.signature(), incoming.source(), incoming.tag());
+        epsilon$originals.put(result, content.copy()); epsilon$counts.put(result, count);
+        return result;
+    }
+    @Inject(method = "addMessageToQueue", at = @At("RETURN"))
+    private void epsilon$refreshCombined(CallbackInfo ci) {
+        if (epsilon$combined) { epsilon$combined = false; refreshTrimmedMessages(); }
+    }
+    @Inject(method = "clearMessages", at = @At("HEAD"))
+    private void epsilon$clearCombine(CallbackInfo ci) {
+        epsilon$originals.clear(); epsilon$counts.clear(); epsilon$hashedMessages.clear();
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void initHashedMessages(Minecraft minecraft, CallbackInfo ci) {
@@ -115,33 +160,36 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
 
     @Override
     public void epsilon$addClientSystemMessage(Component message, int hash) {
-        GuiMessage guiMessage = new GuiMessage(
-                this.minecraft.gui.hud.getGuiTicks(),
-                message,
-                null,
-                GuiMessageSource.SYSTEM_CLIENT,
-                GuiMessageTag.systemSinglePlayer()
-        );
-        if (!this.visibleMessageFilter.test(guiMessage)) {
-            return;
-        }
-
-        GuiMessage previous = this.epsilon$hashedMessages.put(hash, guiMessage);
-
-        if (previous != null) {
-            int previousIndex = this.allMessages.indexOf(previous);
-            if (previousIndex != -1) {
-                this.allMessages.remove(previousIndex);
-                this.logChatMessage(guiMessage);
-                this.addMessageToQueue(guiMessage);
-                this.refreshTrimmedMessages();
-                this.epsilon$pruneMissingHashedMessages();
+        epsilon$hashDispatch = true;
+        try {
+            GuiMessage guiMessage = new GuiMessage(
+                    this.minecraft.gui.hud.getGuiTicks(),
+                    message,
+                    null,
+                    GuiMessageSource.SYSTEM_CLIENT,
+                    GuiMessageTag.systemSinglePlayer()
+            );
+            if (!this.visibleMessageFilter.test(guiMessage)) {
                 return;
             }
-        }
-
-        this.epsilon$addHashedMessage(message, null, GuiMessageSource.SYSTEM_CLIENT, GuiMessageTag.systemSinglePlayer(), hash);
-        this.epsilon$pruneMissingHashedMessages();
+    
+            GuiMessage previous = this.epsilon$hashedMessages.put(hash, guiMessage);
+    
+            if (previous != null) {
+                int previousIndex = this.allMessages.indexOf(previous);
+                if (previousIndex != -1) {
+                    this.allMessages.remove(previousIndex);
+                    this.logChatMessage(guiMessage);
+                    this.addMessageToQueue(guiMessage);
+                    this.refreshTrimmedMessages();
+                    this.epsilon$pruneMissingHashedMessages();
+                    return;
+                }
+            }
+    
+            this.epsilon$addHashedMessage(message, null, GuiMessageSource.SYSTEM_CLIENT, GuiMessageTag.systemSinglePlayer(), hash);
+            this.epsilon$pruneMissingHashedMessages();
+        } finally { epsilon$hashDispatch = false; }
     }
 
     @Unique

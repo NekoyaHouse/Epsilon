@@ -330,7 +330,12 @@
         "gamemode volume": "Volume",
         "gamemode pitch": "Pitch",
         "gamemode sound": "Sound",
-        "gamemode chat message": "Alert"
+        "gamemode chat message": "Alert",
+        "response": {
+          "_value": "Response",
+          "alertonly": "Alert Only",
+          "disconnect": "Disconnect"
+        }
       },
       "client setting": {
         "_value": "Client Setting",
@@ -2016,7 +2021,11 @@
         "blur strength": "Blur Strength",
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color"
+        "shadow color": "Shadow Color",
+        "combine duplicates": "Combine Duplicates",
+        "keep draft": "Keep Draft",
+        "quick characters": "Quick Characters",
+        "characters": "Characters"
       },
       "better scoreboard": {
         "_value": "Better Scoreboard",
@@ -2816,6 +2825,56 @@
         "firefly factor": "Firefly Factor",
         "firefly shaking": "Firefly Shaking",
         "firefly amplitude": "Firefly Amplitude"
+      },
+      "chest history": {
+        "_value": "Chest History",
+        "maximum records": "Maximum Records",
+        "all servers": "All Servers",
+        "search": "Search",
+        "browse": "Browse",
+        "clear server": "Clear Server",
+        "clear all": "Clear All"
+      },
+      "bind command": {
+        "_value": "Bind Command",
+        "trigger": "Trigger",
+        "action": "Action",
+        "bindings": "Bindings",
+        "cooldown": "Cooldown"
+      },
+      "event command": {
+        "_value": "Event Command",
+        "totem action": "Totem Action",
+        "death action": "Death Action",
+        "enter action": "Enter Action",
+        "leave action": "Leave Action",
+        "world action": "World Action",
+        "timer action": "Timer Action",
+        "period seconds": "Period Seconds",
+        "cooldown": "Cooldown"
+      },
+      "auto reconnect": {
+        "_value": "Auto Reconnect",
+        "delay seconds": "Delay Seconds",
+        "maximum attempts": "Maximum Attempts",
+        "cancel reconnect": "Cancel Reconnect"
+      },
+      "auto logout": {
+        "_value": "Auto Logout",
+        "response": {
+          "_value": "Response",
+          "alertonly": "Alert Only",
+          "disconnect": "Disconnect"
+        },
+        "low health": "Low Health",
+        "minimum health": "Minimum Health",
+        "low totems": "Low Totems",
+        "minimum totems": "Minimum Totems",
+        "low height": "Low Height",
+        "minimum height": "Minimum Height",
+        "strangers": "Strangers",
+        "stranger range": "Stranger Range",
+        "grace seconds": "Grace Seconds"
       }
     },
     "elements": {
@@ -3139,6 +3198,21 @@
       "translation": {
         "packet_error": "An error occurred while translating a packet! See more details in the logs!"
       }
+    },
+    "features": {
+      "search": "Search items, containers, positions…",
+      "back": "Back",
+      "last_observed": "Last received contents — saved history, not live inventory",
+      "unknown_position": "Unknown position / server menu",
+      "empty_contents": "The last received contents were empty.",
+      "save_failed": "Could not save history; changes remain in memory",
+      "load_failed": "Could not read history. Original file retained; recording paused.",
+      "unsupported_action": "Unsupported client action. Use client:toggle:<module>, client:enable:<module>, client:disable:<module> or client:copy-position.",
+      "low_health": "Low health",
+      "low_totems": "Low remaining totems",
+      "low_height": "Below configured height",
+      "stranger": "Unknown player nearby",
+      "safety_logout": "Epsilon safety logout"
     }
   }
 }

@@ -330,7 +330,12 @@
         "gamemode volume": "音量",
         "gamemode pitch": "音高",
         "gamemode sound": "音效",
-        "gamemode chat message": "警报"
+        "gamemode chat message": "警报",
+        "response": {
+          "_value": "进入／上线时的动作",
+          "alertonly": "仅提醒",
+          "disconnect": "安全离线（禁止自动重连）"
+        }
       },
       "client setting": {
         "_value": "客户端设置",
@@ -2016,7 +2021,11 @@
         "blur strength": "模糊强度",
         "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色"
+        "shadow color": "阴影颜色",
+        "combine duplicates": "合并重复消息",
+        "keep draft": "保留未发送草稿",
+        "quick characters": "特殊字符快捷按钮",
+        "characters": "特殊字符列表"
       },
       "better scoreboard": {
         "_value": "计分板美化",
@@ -2816,6 +2825,56 @@
         "firefly factor": "萤火虫因子",
         "firefly shaking": "萤火虫抖动",
         "firefly amplitude": "萤火虫振幅"
+      },
+      "chest history": {
+        "_value": "容器历史",
+        "maximum records": "最大记录数量",
+        "all servers": "显示所有服务器",
+        "search": "物品筛选",
+        "browse": "搜索与查看记录",
+        "clear server": "清除此服务器记录",
+        "clear all": "清除全部记录"
+      },
+      "bind command": {
+        "_value": "快捷指令",
+        "trigger": "执行按键",
+        "action": "执行内容",
+        "bindings": "额外按键与动作",
+        "cooldown": "冷却时间（毫秒）"
+      },
+      "event command": {
+        "_value": "事件指令",
+        "totem action": "图腾触发动作",
+        "death action": "死亡动作",
+        "enter action": "玩家进入加载范围动作",
+        "leave action": "玩家离开加载范围动作",
+        "world action": "进入世界动作",
+        "timer action": "定时动作",
+        "period seconds": "定时间隔（秒）",
+        "cooldown": "同类事件冷却（毫秒）"
+      },
+      "auto reconnect": {
+        "_value": "自动重连",
+        "delay seconds": "重连延迟（秒）",
+        "maximum attempts": "最大重试次数",
+        "cancel reconnect": "取消待执行重连"
+      },
+      "auto logout": {
+        "_value": "自动离线",
+        "response": {
+          "_value": "触发后的动作",
+          "alertonly": "仅提醒",
+          "disconnect": "安全离线（禁止自动重连）"
+        },
+        "low health": "生命值条件",
+        "minimum health": "生命值阈值",
+        "low totems": "剩余图腾条件",
+        "minimum totems": "图腾数量阈值",
+        "low height": "高度条件",
+        "minimum height": "高度阈值",
+        "strangers": "附近陌生玩家条件",
+        "stranger range": "陌生玩家距离",
+        "grace seconds": "进入世界保护时间（秒）"
       }
     },
     "elements": {
@@ -3139,6 +3198,21 @@
       "translation": {
         "packet_error": "转译数据包时发生错误！请在日志中查看更多详细信息！"
       }
+    },
+    "features": {
+      "search": "搜索物品、容器、坐标…",
+      "back": "返回",
+      "last_observed": "最后收到的内容：保存的历史记录，并非实时库存",
+      "unknown_position": "位置未确认／服务器菜单",
+      "empty_contents": "最后收到的容器内容为空。",
+      "save_failed": "历史记录保存失败；更改仍保留于内存",
+      "load_failed": "无法读取历史记录。原文件已保留，暂停记录。",
+      "unsupported_action": "不支持此客户端动作。可用 client:toggle:<模块>、client:enable:<模块>、client:disable:<模块> 或 client:copy-position。",
+      "low_health": "生命值过低",
+      "low_totems": "剩余图腾不足",
+      "low_height": "低于设定高度",
+      "stranger": "附近出现非好友玩家",
+      "safety_logout": "Epsilon 安全离线"
     }
   }
 }

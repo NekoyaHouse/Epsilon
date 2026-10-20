@@ -41,6 +41,17 @@ public class PlayerAlarms extends Module {
     private final SettingGroup sgLeaveRD = settingGroup("Leave Render Distance");
     private final SettingGroup sgGamemode = settingGroup("Gamemode Change");
 
+    private final EnumSetting<AutoLogout.Response> response = enumSetting("Response", AutoLogout.Response.AlertOnly);
+
+    public void safetyAlert(String reason) {
+        if (!isEnabled() || alertMode.is(AlertMode.Chat) || alertMode.is(AlertMode.Both)) ChatUtils.addChatMessage(reason);
+        if (isEnabled() && !alertMode.is(AlertMode.Chat)) NotificationManager.INSTANCE.notifyHud(reason, "", NotificationMode.Info, reason.hashCode());
+    }
+    private long epsilon$generation;
+    @EventHandler private void epsilon$left(com.github.epsilon.events.impl.GameLeftEvent e) { onEnable(); }
+    @EventHandler private void epsilon$world(com.github.epsilon.events.impl.LevelUpdateEvent e) { onEnable(); }
+    @Override protected void onDisable() { onEnable(); }
+
     private enum AlertMode {
         Chat,
         Notification,
@@ -119,6 +130,7 @@ public class PlayerAlarms extends Module {
 
     @Override
     protected void onEnable() {
+        epsilon$generation++;
         playersInRender.clear();
         gamemodeCache.clear();
         alarmedJoinPlayers.clear();
@@ -207,6 +219,19 @@ public class PlayerAlarms extends Module {
 
     @EventHandler
     private void onReceivePacket(PacketEvent.Receive event) {
+        if (!(event.getPacket() instanceof ClientboundPlayerInfoUpdatePacket)
+                && !(event.getPacket() instanceof ClientboundPlayerInfoRemovePacket)) return;
+        Object connection = mc.getConnection();
+        Object level = mc.level;
+        long generation = epsilon$generation;
+        var packet = event.getPacket();
+        mc.execute(() -> {
+            if (isEnabled() && !event.isCancelled() && !nullCheck() && connection == mc.getConnection() && level == mc.level && generation == epsilon$generation)
+                handlePlayerPacket(new PacketEvent.Receive(packet));
+        });
+    }
+
+    private void handlePlayerPacket(PacketEvent.Receive event) {
         if (nullCheck()) return;
 
         // Player Join
@@ -311,6 +336,9 @@ public class PlayerAlarms extends Module {
     }
 
     private void sendAlert(boolean enabled, TranslateComponent template, String playerName, UUID playerId, ChatFormatting color) {
+        if (response.is(AutoLogout.Response.Disconnect) && (template == EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT
+                || template == EpsilonTranslations.PlayerAlarms.ENTER_RD_ALERT_TEXT)) AutoLogout.disconnectSafely(
+                com.github.epsilon.features.FeatureText.get("safety_logout") + ": " + playerName);
         if (!enabled) return;
         AlertMode mode = alertMode.getValue();
         // Build full message

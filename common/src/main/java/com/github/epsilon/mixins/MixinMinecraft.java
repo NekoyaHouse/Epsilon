@@ -92,6 +92,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
     private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
+        com.github.epsilon.features.DisconnectGuard.disconnecting();
         if (level != null) {
             EventBus.INSTANCE.post(new GameLeftEvent());
         }
@@ -151,6 +152,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
+        com.github.epsilon.modules.impl.player.ChestHistory.INSTANCE.saveHistory();
         SmtcService.INSTANCE.stop();
         VideoPlayer.stop();
         LuminRenderSystem.destroyAll();

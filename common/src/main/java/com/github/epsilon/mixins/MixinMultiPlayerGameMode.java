@@ -23,6 +23,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MultiPlayerGameMode.class)
 public class MixinMultiPlayerGameMode {
 
+    @Inject(method = "useItemOn", at = @At("RETURN"))
+    private void epsilon$blockInteraction(net.minecraft.client.player.LocalPlayer player, InteractionHand hand,
+            net.minecraft.world.phys.BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
+        if (cir.getReturnValue().consumesAction()) EventBus.INSTANCE.post(new BlockInteractionEvent(hit.getBlockPos().immutable()));
+    }
+
     @Unique
     private float epsilon$oldYaw;
 

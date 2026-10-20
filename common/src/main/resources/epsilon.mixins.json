@@ -80,7 +80,9 @@
     "MixinVisGraph",
     "MixinWalkAnimationState",
     "MixinWebBlock",
-    "MixinWindow"
+    "MixinWindow",
+    "MixinReconnectLifecycle",
+    "MixinPauseScreenLogout"
   ],
   "injectors": {
     "defaultRequire": 1
