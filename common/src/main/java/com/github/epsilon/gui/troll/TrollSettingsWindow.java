@@ -19,6 +19,8 @@ import java.util.Map;
 
 public class TrollSettingsWindow extends TrollWindow {
 
+    private static final float GROUP_INSET = 4.0f;
+
     private final Module module;
     private final Map<Setting<?>, TrollSettingRow> rows = new IdentityHashMap<>();
     private final TrollSettingRow bindRow;
@@ -48,27 +50,42 @@ public class TrollSettingsWindow extends TrollWindow {
         float width = Math.max(120.0f, metrics.getWidth(module.getTranslatedName(), TrollTheme.TEXT_SCALE) + 12.0f);
         for (Entry entry : entries) {
             width = Math.max(width, (entry.row != null ? entry.row.minimumWidth(metrics)
-                    : metrics.getWidth(entry.section.title(), TrollTheme.TEXT_SCALE) + 16.0f) + entry.depth * 5.0f + TrollTheme.xMargin() * 2.0f);
+                    : metrics.getWidth(entry.section.title(), TrollTheme.TEXT_SCALE) + 20.0f) + entry.depth * 10.0f + TrollTheme.xMargin() * 2.0f);
         }
         headerHeight = TrollTheme.headerHeight(metrics);
-        float step = TrollTheme.rowHeight(metrics) + TrollTheme.yMargin();
-        float contentHeight = entries.size() * step + TrollTheme.yMargin();
+        float rowHeight = TrollTheme.rowHeight(metrics);
+        float rowGap = TrollTheme.yMargin();
+        float contentHeight = rowGap;
+        for (Entry entry : entries) {
+            contentHeight += rowHeight + rowGap + (entry.leadingGroupInsets + entry.closingGroups.size()) * GROUP_INSET;
+        }
         size(Math.min(Math.min(width, 260.0f), screenWidth), Math.min(Math.min(headerHeight + contentHeight, 200.0f), screenHeight), screenWidth, screenHeight);
         scrollPosition = scroll.update(Math.max(0.0f, contentHeight - viewport.height()));
-        for (int i = 0; i < entries.size(); i++) {
-            Entry entry = entries.get(i);
+        float cursor = viewport.y() + rowGap - scrollPosition;
+        for (Entry entry : entries) {
+            cursor += entry.leadingGroupInsets * GROUP_INSET;
             float inset = Math.min(entry.depth * 5.0f, viewport.width() * 0.25f);
-            entry.bounds = new UiRect(viewport.x() + inset, viewport.y() + TrollTheme.yMargin() + i * step - scrollPosition, viewport.width() - inset, TrollTheme.rowHeight(metrics));
+            entry.bounds = new UiRect(viewport.x() + inset, cursor, viewport.width() - inset * 2.0f, rowHeight);
+            entry.groupBounds = entry.bounds;
             if (entry.row != null) entry.row.layout(entry.bounds);
+            cursor += rowHeight;
+            for (Entry group : entry.closingGroups) {
+                cursor += GROUP_INSET;
+                group.groupBounds = new UiRect(group.bounds.x(), group.bounds.y(), group.bounds.width(), cursor - group.bounds.y());
+            }
+            cursor += rowGap;
         }
     }
 
     private void append(SettingLayoutPlanner.Section section, int depth) {
+        Entry header = null;
         if (section.hasHeader()) {
-            entries.add(new Entry(null, section, depth));
+            header = new Entry(null, section, depth);
+            entries.add(header);
             if (section.isCollapsed()) return;
             depth++;
         }
+        int firstChild = entries.size();
         for (SettingLayoutPlanner.Section.Element element : section.elements()) {
             switch (element) {
                 case SettingLayoutPlanner.Section.SettingElement leaf -> {
@@ -77,6 +94,10 @@ public class TrollSettingsWindow extends TrollWindow {
                 }
                 case SettingLayoutPlanner.Section.GroupElement group -> append(group.section(), depth);
             }
+        }
+        if (header != null && entries.size() > firstChild) {
+            entries.get(firstChild).leadingGroupInsets++;
+            entries.getLast().closingGroups.add(header);
         }
     }
 
@@ -88,12 +109,16 @@ public class TrollSettingsWindow extends TrollWindow {
                 if (entry.row != null) {
                     entry.row.draw(content, metrics, mouseX, mouseY);
                 } else {
-                    content.rect(1, entry.bounds.x(), entry.bounds.y(), entry.bounds.width(), entry.bounds.height(),
-                            new Color(255, 255, 255, entry.bounds.contains(mouseX, mouseY) ? 32 : 12));
+                    content.rect(1, entry.bounds.x(), entry.bounds.y(), entry.bounds.width(), entry.bounds.height(), new Color(255, 255, 255, entry.bounds.contains(mouseX, mouseY) ? 32 : 12));
                     String label = (entry.section.isCollapsed() ? "+ " : "- ") + entry.section.title();
-                    content.text(3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width() - 4.0f),
-                            entry.bounds.x() + 2.0f, entry.bounds.y() + 1.5f, TrollTheme.TEXT_SCALE, TrollTheme.text());
+                    content.text(3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width() - 12.0f), entry.bounds.x() + 6.0f, entry.bounds.y() + 1.5f, TrollTheme.TEXT_SCALE, TrollTheme.text());
                 }
+            }
+            for (Entry entry : entries) {
+                if (entry.section == null) continue;
+                UiRect card = entry.groupBounds.inset(0.4f);
+                Color outline = TrollTheme.alpha(TrollTheme.primary(), 255);
+                content.rectOutline(5, card.x(), card.y(), card.width(), card.height(), 0.8f, outline);
             }
         });
     }
@@ -163,7 +188,10 @@ public class TrollSettingsWindow extends TrollWindow {
         private final TrollSettingRow row;
         private final SettingLayoutPlanner.Section section;
         private final int depth;
+        private final List<Entry> closingGroups = new ArrayList<>();
+        private int leadingGroupInsets;
         private UiRect bounds;
+        private UiRect groupBounds;
 
         private Entry(TrollSettingRow row, SettingLayoutPlanner.Section section, int depth) {
             this.row = row;
