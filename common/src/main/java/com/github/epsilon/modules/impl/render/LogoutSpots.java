@@ -17,6 +17,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.utils.render.SkeletonRenderer;
 import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.base.Suppliers;
@@ -51,6 +52,7 @@ public class LogoutSpots extends Module {
 
     private enum RenderMode {
         Model,
+        Skeleton,
         Box
     }
 
@@ -113,23 +115,31 @@ public class LogoutSpots extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (renderMode.is(RenderMode.Box)) {
-            for (LogoutPlayer player : logoutCache.values()) {
-                Render3DScheduler.INSTANCE.addFilledBox(player.getBoundingBox(), sideColor.getValue());
-                Render3DScheduler.INSTANCE.addOutlineBox(player.getBoundingBox(), lineColor.getValue());
-            }
-        } else {
-            boolean batching = false;
-            for (LogoutPlayer player : logoutCache.values()) {
-                if (!batching) {
-                    WireframeEntityRenderer.beginBatch(event.getPoseStack());
-                    batching = true;
+        switch (renderMode.getValue()) {
+            case Model -> {
+                boolean batching = false;
+                for (LogoutPlayer player : logoutCache.values()) {
+                    if (!batching) {
+                        WireframeEntityRenderer.beginBatch(event.getPoseStack());
+                        batching = true;
+                    }
+                    player.render(event.getPoseStack());
                 }
-                player.render(event.getPoseStack());
-            }
 
-            if (batching) {
-                WireframeEntityRenderer.endBatch();
+                if (batching) {
+                    WireframeEntityRenderer.endBatch();
+                }
+            }
+            case Skeleton -> {
+                for (LogoutPlayer player : logoutCache.values()) {
+                    SkeletonRenderer.render(player, lineColor.getValue(), 2.0f);
+                }
+            }
+            case Box -> {
+                for (LogoutPlayer player : logoutCache.values()) {
+                    Render3DScheduler.INSTANCE.addFilledBox(player.getBoundingBox(), sideColor.getValue());
+                    Render3DScheduler.INSTANCE.addOutlineBox(player.getBoundingBox(), lineColor.getValue());
+                }
             }
         }
     }

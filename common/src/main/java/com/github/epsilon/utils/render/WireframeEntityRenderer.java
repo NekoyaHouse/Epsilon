@@ -2,6 +2,7 @@ package com.github.epsilon.utils.render;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
+import com.github.epsilon.modules.impl.render.AntiAlias;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.renderpearl.api.pipeline.*;
@@ -67,7 +68,7 @@ public class WireframeEntityRenderer {
     }
 
     public static void endBatch() {
-        if (isBatching()) endDraw();
+        if (isBatching()) AntiAlias.INSTANCE.render(WireframeEntityRenderer::endDraw);
     }
 
     public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
@@ -90,14 +91,14 @@ public class WireframeEntityRenderer {
         WireframeEntityRenderer.lineColor = lineColor;
         WireframeEntityRenderer.lineWidth = lineWidth;
 
-        float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTick = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-        offsetX = Mth.lerp(tickDelta, entity.xOld, entity.getX());
-        offsetY = Mth.lerp(tickDelta, entity.yOld, entity.getY());
-        offsetZ = Mth.lerp(tickDelta, entity.zOld, entity.getZ());
+        offsetX = Mth.lerp(partialTick, entity.xOld, entity.getX());
+        offsetY = Mth.lerp(partialTick, entity.yOld, entity.getY());
+        offsetZ = Mth.lerp(partialTick, entity.zOld, entity.getZ());
 
         EntityRenderer renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
-        EntityRenderState state = renderer.createRenderState(entity, tickDelta);
+        EntityRenderState state = renderer.createRenderState(entity, partialTick);
 
         Vec3 renderOffset = renderer.getRenderOffset(state);
         offsetX += renderOffset.x;

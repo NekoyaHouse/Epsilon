@@ -18,10 +18,12 @@ import static com.github.epsilon.Constants.mc;
 
 public class SkeletonRenderer {
 
-    public static void render(AbstractClientPlayer player, float partialTick, Color color, float lineWidth) {
+    public static void render(AbstractClientPlayer player, Color color, float lineWidth) {
         var dispatcher = mc.getEntityRenderDispatcher();
-        var renderer = dispatcher.getRenderer(player);
-        if (!(renderer.createRenderState(player, partialTick) instanceof AvatarRenderState state)) return;
+        float partialTick = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+
+        if (!(dispatcher.getRenderer(player).createRenderState(player, partialTick) instanceof AvatarRenderState state))
+            return;
         AvatarRenderer<?> avatarRenderer = dispatcher.getRenderer(state);
 
         Vec3 origin = new Vec3(state.x, state.y, state.z).add(avatarRenderer.getRenderOffset(state));

@@ -31,8 +31,6 @@ public class Skeleton extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        float partialTick = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-
         for (var player : mc.level.players()) {
             if (!player.isAlive() || player.isSpectator()) continue;
             if (player.isInvisible() && !invisibles.getValue()) continue;
@@ -44,7 +42,7 @@ public class Skeleton extends Module {
             boolean friend = player != mc.player && (FriendManager.INSTANCE.isFriend(player) || TargetManager.INSTANCE.isSameTeam(player));
             if (friend && !friends.getValue()) continue;
 
-            SkeletonRenderer.render(player, partialTick, friend ? friendColor.getValue() : color.getValue(), lineWidth.getValue().floatValue());
+            SkeletonRenderer.render(player, friend ? friendColor.getValue() : color.getValue(), lineWidth.getValue().floatValue());
         }
     }
 
