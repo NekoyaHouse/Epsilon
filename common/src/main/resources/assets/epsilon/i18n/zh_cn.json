@@ -961,6 +961,7 @@
         "pause on eat": "进食时暂停",
         "pause on scaffold": "搭路时暂停",
         "hit select": "攻击筛选",
+        "through walls": "穿墙",
         "mode": {
           "_value": "模式",
           "onepointeight": "1.8",
@@ -982,6 +983,7 @@
         "search range": "搜索范围",
         "aim range": "瞄准范围",
         "fov": "视野角度",
+        "rotate": "转头",
         "rotation speed": "旋转速度",
         "rotation priority": {
           "_value": "旋转优先级",
@@ -1025,7 +1027,6 @@
         "wave speed": "波动速度",
         "side color": "侧面颜色",
         "line color": "线条颜色",
-        "circle radius": "圆形半径",
         "circle alpha factor": "圆形透明度系数",
         "firefly color mode": {
           "_value": "萤火虫颜色模式",
