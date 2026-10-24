@@ -961,6 +961,7 @@
         "pause on eat": "Pause On Eat",
         "pause on scaffold": "Pause On Scaffold",
         "hit select": "Hit Select",
+        "through walls": "Through Walls",
         "mode": {
           "_value": "Mode",
           "onepointeight": "1.8",
@@ -982,6 +983,7 @@
         "search range": "Search Range",
         "aim range": "Aim Range",
         "fov": "FOV",
+        "rotate": "Rotate",
         "rotation speed": "Rotation Speed",
         "rotation priority": {
           "_value": "Rotation Priority",
@@ -1025,7 +1027,6 @@
         "wave speed": "Wave Speed",
         "side color": "Side Color",
         "line color": "Line Color",
-        "circle radius": "Circle Radius",
         "circle alpha factor": "Circle Alpha Factor",
         "firefly color mode": {
           "_value": "Firefly Color Mode",
