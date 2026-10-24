@@ -1582,6 +1582,7 @@
         "pause on eat": "进食时暂停",
         "pause on killaura": "KillAura 运行时暂停",
         "pause on scaffold": "搭路时暂停",
+        "stop sprinting": "停止疾跑",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
         "offhand item": {
