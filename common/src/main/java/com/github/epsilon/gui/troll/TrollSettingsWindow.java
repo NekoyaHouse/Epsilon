@@ -118,7 +118,7 @@ public class TrollSettingsWindow extends TrollWindow {
                 if (entry.section == null) continue;
                 UiRect card = entry.groupBounds.inset(0.4f);
                 Color outline = TrollTheme.alpha(TrollTheme.primary(), 255);
-                content.rectOutline(5, card.x(), card.y(), card.width(), card.height(), 0.8f, outline);
+                content.rectOutline(5, card.x(), card.y(), card.width(), card.height(), 0.5f, outline);
             }
         });
     }
