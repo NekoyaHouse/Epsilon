@@ -2001,6 +2001,11 @@
       },
       "anti alias": {
         "_value": "Anti Alias",
+        "mode": {
+          "_value": "Mode",
+          "fxaa": "FXAA",
+          "ssaa": "SSAA"
+        },
         "samples": {
           "_value": "Samples",
           "x4": "4x (SSAA)",

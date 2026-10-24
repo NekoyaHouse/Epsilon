@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.shaders.FXAAShader;
 import com.github.epsilon.graphics.shaders.MotionBlurShader;
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -53,6 +54,7 @@ public class LuminRenderSystem {
 
     public static void destroyAll() {
         guiProjectionMatrixBuffer.close();
+        FXAAShader.INSTANCE.close();
         MotionBlurShader.INSTANCE.close();
         OverlayAntiAlias.INSTANCE.close();
         ShaderUniforms.closeAll();

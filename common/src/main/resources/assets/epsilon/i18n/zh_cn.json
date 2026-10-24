@@ -2001,6 +2001,11 @@
       },
       "anti alias": {
         "_value": "抗锯齿",
+        "mode": {
+          "_value": "模式",
+          "fxaa": "FXAA",
+          "ssaa": "SSAA"
+        },
         "samples": {
           "_value": "采样数",
           "x4": "4x（超采样）",
