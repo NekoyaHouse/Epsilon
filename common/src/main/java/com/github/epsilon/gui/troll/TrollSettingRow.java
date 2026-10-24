@@ -25,7 +25,11 @@ import java.util.Objects;
 
 public class TrollSettingRow {
 
-    public enum ModuleAction {TOGGLE, BIND, HIDDEN}
+    public enum ModuleAction {
+        TOGGLE,
+        BIND,
+        HIDDEN
+    }
 
     private final Setting<?> setting;
     private final Module module;
@@ -40,6 +44,7 @@ public class TrollSettingRow {
     private boolean enumDragged;
     private double dragStartX;
     private Double pendingNumber;
+    private int pendingEnumIndex = -1;
 
     public TrollSettingRow(Setting<?> setting) {
         this.setting = setting;
@@ -69,16 +74,24 @@ public class TrollSettingRow {
     }
 
     private String valueText() {
+        return valueText(false);
+    }
+
+    private String displayValueText() {
+        return valueText(true);
+    }
+
+    private String valueText(boolean previewEnum) {
         if (listening) return EpsilonTranslations.TrollGui.LISTENING.getTranslatedName();
         if (action == ModuleAction.BIND) {
-            return KeybindUtils.format(module.getKeyBind()) + " (" + (module.getBindMode() == Module.BindMode.Hold
-                    ? EpsilonTranslations.Keybind.HOLD : EpsilonTranslations.Keybind.TOGGLE).getTranslatedName() + ")";
+            return KeybindUtils.format(module.getKeyBind()) + " (" + (module.getBindMode() == Module.BindMode.Hold ? EpsilonTranslations.Keybind.HOLD : EpsilonTranslations.Keybind.TOGGLE).getTranslatedName() + ")";
         }
         return switch (setting) {
             case KeybindSetting keybind -> KeybindUtils.format(keybind.getValue());
             case IntSetting number -> Integer.toString((int) Math.round(numberValue()));
             case DoubleSetting number -> formatNumber(numberValue());
-            case EnumSetting<?> mode -> mode.getTranslatedValue();
+            case EnumSetting<?> mode ->
+                    previewEnum && pendingEnumIndex >= 0 && pendingEnumIndex < mode.getModes().length ? mode.getTranslatedValueByIndex(pendingEnumIndex) : mode.getTranslatedValue();
             case StringSetting text -> text.getValue();
             case StringListSetting list ->
                     list.getValue().size() + " " + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
@@ -90,48 +103,41 @@ public class TrollSettingRow {
 
     public float minimumWidth(TextRenderer metrics) {
         if (setting instanceof ColorSetting) {
-            return Math.max(80.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE)
-                    + metrics.getHeight(TrollTheme.TEXT_SCALE) + 26.0f);
+            return Math.max(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getHeight(TrollTheme.TEXT_SCALE) + 39.0f);
         }
-        return Math.max(80.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE)
-                + metrics.getWidth(valueText(), TrollTheme.VALUE_SCALE) + 16.0f);
+        return Math.max(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getWidth(valueText(), TrollTheme.VALUE_SCALE) + 24.0f);
     }
 
     public void draw(UiTree.Scope scope, TextRenderer metrics, int mouseX, int mouseY) {
         float h = scope.animate(hover, bounds.contains(mouseX, mouseY));
         float p = scope.animate(progress, target());
         scope.rect(1, bounds.x(), bounds.y(), bounds.width(), bounds.height(), new Color(0, 0, 0, 40));
-        if (p > 0.001f)
+        if (p > 0.001f) {
             scope.rect(1, bounds.x(), bounds.y(), bounds.width() * p, bounds.height(), TrollTheme.primary());
+        }
         int hoverAlpha = ClientSetting.INSTANCE.trollHoverAlpha.getValue();
         scope.rect(2, bounds.x(), bounds.y(), bounds.width(), bounds.height(), new Color(255, 255, 255, (int) (hoverAlpha * h)));
         if (isEditing()) {
-            scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(),
-                    bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));
+            scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));
             return;
         }
-        String value = valueText();
-        float valueWidth = setting instanceof ColorSetting
-                ? metrics.getHeight(TrollTheme.TEXT_SCALE) + 6.0f
-                : Math.min(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width() * 0.48f);
+        String value = displayValueText();
+        float valueWidth = setting instanceof ColorSetting ? metrics.getHeight(TrollTheme.TEXT_SCALE) + 9.0f : Math.min(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width() * 0.48f);
         float scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - (dragging ? 0.1f : 0.0f));
         Color text = setting != null && !setting.isPlatformSupported() ? TrollTheme.alpha(TrollTheme.text(), 110) : TrollTheme.text();
-        scope.text(3, TrollTheme.trim(label(), metrics, scale, bounds.width() - valueWidth - 7.0f),
-                bounds.x() + 2.0f + h * 2.0f, bounds.y() + 1.5f, scale, text);
+        scope.text(3, TrollTheme.trim(label(), metrics, scale, bounds.width() - valueWidth - 10.5f), bounds.x() + 3.0f + h * 3.0f, bounds.y() + 2.25f, scale, text);
         if (setting instanceof ColorSetting color) {
             drawColorSwatch(scope, metrics, color.getValue());
             return;
         }
-        scope.text(3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth),
-                bounds.right() - valueWidth - 2.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 2.0f,
-                TrollTheme.VALUE_SCALE, text);
+        scope.text(3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth), bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, text);
     }
 
     private void drawColorSwatch(UiTree.Scope scope, TextRenderer metrics, Color color) {
         float size = metrics.getHeight(TrollTheme.TEXT_SCALE);
-        float x = bounds.right() - size - 4.0f;
+        float x = bounds.right() - size - 6.0f;
         float y = bounds.y() + (bounds.height() - size) / 2.0f;
-        scope.rect(3, x - 1.0f, y - 1.0f, size + 2.0f, size + 2.0f, new Color(0, 0, 0, 80));
+        scope.rect(3, x - 1.5f, y - 1.5f, size + 3.0f, size + 3.0f, new Color(0, 0, 0, 80));
         scope.rect(4, x, y, size, size, color);
     }
 
@@ -189,8 +195,9 @@ public class TrollSettingRow {
         if (!dragging || event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
         if (setting instanceof EnumSetting<?> mode) {
             enumDragged |= Math.abs(event.x() - dragStartX) > 2.0;
-            if (enumDragged)
-                setMode(mode, Math.clamp((int) ((event.x() - bounds.x()) / bounds.width() * mode.getModes().length), 0, mode.getModes().length - 1));
+            if (enumDragged) {
+                pendingEnumIndex = Math.clamp((int) ((event.x() - bounds.x()) / bounds.width() * mode.getModes().length), 0, mode.getModes().length - 1);
+            }
         } else {
             updateNumber(event.x(), event.modifiers());
         }
@@ -205,16 +212,23 @@ public class TrollSettingRow {
             pendingNumber = null;
             applyNumber(value);
         }
-        if (setting instanceof EnumSetting<?> mode && !enumDragged && bounds.contains(event.x(), event.y())) {
-            setMode(mode, (mode.getModeIndex() + 1) % mode.getModes().length);
+        if (setting instanceof EnumSetting<?> mode) {
+            int pending = pendingEnumIndex;
+            pendingEnumIndex = -1;
+            if (enumDragged) {
+                if (pending >= 0) setMode(mode, pending);
+            } else if (bounds.contains(event.x(), event.y())) {
+                setMode(mode, (mode.getModeIndex() + 1) % mode.getModes().length);
+            }
         }
     }
 
     public boolean keyPressed(KeyEvent event) {
         if (listening) {
             listening = false;
-            if (!event.isEscape())
+            if (!event.isEscape()) {
                 setBind(event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE ? KeybindUtils.NONE : event.key());
+            }
             return true;
         }
         if (!isEditing()) return false;
@@ -246,6 +260,7 @@ public class TrollSettingRow {
     public void resetInput() {
         listening = false;
         dragging = false;
+        pendingEnumIndex = -1;
         if (pendingNumber != null) {
             double value = pendingNumber;
             pendingNumber = null;
@@ -278,7 +293,6 @@ public class TrollSettingRow {
                 double value = Double.parseDouble(text);
                 if (Double.isFinite(value)) applyNumber(Math.clamp(value, minimum(), maximum()));
             } catch (NumberFormatException exception) {
-                // 输入期间允许小数点和负号；未完成的数字保持原值。
                 Constants.LOGGER.debug("Troll GUI 数值输入无效: {} = {}", setting.getName(), text, exception);
             }
         }
@@ -350,7 +364,8 @@ public class TrollSettingRow {
                     (float) Math.clamp((numberValue() - minimum()) / Math.max(1.0, maximum() - minimum()), 0.0, 1.0);
             case DoubleSetting value ->
                     (float) Math.clamp((numberValue() - minimum()) / Math.max(0.000001, maximum() - minimum()), 0.0, 1.0);
-            case EnumSetting<?> value -> value.getModeIndex() / (float) Math.max(1, value.getModes().length - 1);
+            case EnumSetting<?> value ->
+                    (pendingEnumIndex >= 0 ? pendingEnumIndex : value.getModeIndex()) / (float) Math.max(1, value.getModes().length - 1);
             case StringSetting value -> isEditing() ? 0.0f : 1.0f;
             case ColorSetting value -> 0.0f;
             case null, default -> 0.0f;

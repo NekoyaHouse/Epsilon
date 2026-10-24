@@ -542,19 +542,10 @@ public class InvManager extends Module {
         }
     }
 
-    /**
-     * Silent 操作过渡期间（等待停疾跑或等待背包关闭同步）需要阻止玩家重新进入疾跑；
-     * 关闭 Stop Sprinting 后不再产生等待停疾跑的状态，也就不再阻止疾跑。
-     */
     public boolean isSprintTransitionPending() {
         return shouldStopSprinting() && actionState != ActionState.IDLE;
     }
 
-    /**
-     * Silent 模式在操作背包前是否需要先停疾跑。
-     * 默认先发停疾跑包并等待服务端同步，避免服务端仍认为玩家在疾跑时处理容器操作；
-     * 关闭 Stop Sprinting 时跳过这段等待。
-     */
     private boolean shouldStopSprinting() {
         return mode.is(Mode.Silent) && stopSprinting.getValue();
     }

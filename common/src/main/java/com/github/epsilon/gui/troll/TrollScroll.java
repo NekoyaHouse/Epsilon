@@ -18,7 +18,7 @@ public class TrollScroll {
             position += (target - position) * (1.0f - (float) Math.exp(-elapsed * 2.5f));
             velocity += (target - position) * elapsed;
         }
-        position = Math.clamp(position, -24.0f, maximum + 24.0f);
+        position = Math.clamp(position, -36.0f, maximum + 36.0f);
         if (Math.abs(velocity) < 0.01f && Math.abs(position - Math.clamp(position, 0.0f, maximum)) < 0.1f) {
             position = Math.clamp(position, 0.0f, maximum);
         }
@@ -26,7 +26,7 @@ public class TrollScroll {
     }
 
     public void scroll(double amount) {
-        velocity -= (float) amount * 24.0f;
+        velocity -= (float) amount * 36.0f;
     }
 
     public void stop() {

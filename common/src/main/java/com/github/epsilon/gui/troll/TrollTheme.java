@@ -11,8 +11,8 @@ import java.awt.*;
 
 public class TrollTheme {
 
-    public static final float TEXT_SCALE = 0.65f;
-    public static final float VALUE_SCALE = 0.49f;
+    public static final float TEXT_SCALE = 0.975f;
+    public static final float VALUE_SCALE = 0.735f;
 
     private TrollTheme() {
     }
@@ -34,11 +34,11 @@ public class TrollTheme {
     }
 
     public static float rowHeight(TextRenderer metrics) {
-        return metrics.getHeight(TEXT_SCALE) + 3.0f;
+        return metrics.getHeight(TEXT_SCALE) + 4.5f;
     }
 
     public static float headerHeight(TextRenderer metrics) {
-        return metrics.getHeight(TEXT_SCALE) + 6.0f;
+        return metrics.getHeight(TEXT_SCALE) + 9.0f;
     }
 
     public static Color alpha(Color color, int alpha) {
@@ -52,7 +52,7 @@ public class TrollTheme {
         if (titleBar) {
             scope.rect(bounds.x(), bounds.y(), bounds.width(), headerHeight, primary());
         }
-        scope.text(3, trim(title, metrics, TEXT_SCALE, bounds.width() - 6.0f), bounds.x() + 3.0f, bounds.y() + 3.0f, TEXT_SCALE, text());
+        scope.text(3, trim(title, metrics, TEXT_SCALE, bounds.width() - 9.0f), bounds.x() + 4.5f, bounds.y() + 4.5f, TEXT_SCALE, text());
         if (ClientSetting.INSTANCE.trollWindowOutline.getValue()) {
             scope.rectOutline(4, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0.5f, alpha(primary(), 255));
         }

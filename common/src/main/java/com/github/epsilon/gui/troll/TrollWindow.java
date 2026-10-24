@@ -9,7 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 public abstract class TrollWindow {
 
     protected final TrollScroll scroll = new TrollScroll();
-    protected UiRect bounds = new UiRect(0, 0, 120, 200);
+    protected UiRect bounds = new UiRect(0, 0, 180, 300);
     protected UiRect viewport = bounds;
     protected float headerHeight;
     protected float scrollPosition;
@@ -26,8 +26,16 @@ public abstract class TrollWindow {
     }
 
     public void size(float width, float height, float screenWidth, float screenHeight) {
-        bounds = new UiRect(Math.clamp(bounds.x(), 0.0f, Math.max(0.0f, screenWidth - width)), Math.clamp(bounds.y(), 0.0f, Math.max(0.0f, screenHeight - height)), width, height);
+        float maxX = Math.max(0.0f, screenWidth - width);
+        float maxY = allowHeaderOnly()
+                ? Math.max(0.0f, screenHeight - Math.min(height, headerHeight))
+                : Math.max(0.0f, screenHeight - height);
+        bounds = new UiRect(Math.clamp(bounds.x(), 0.0f, maxX), Math.clamp(bounds.y(), 0.0f, maxY), width, height);
         viewport = new UiRect(bounds.x() + TrollTheme.xMargin(), bounds.y() + headerHeight, Math.max(1.0f, width - TrollTheme.xMargin() * 2.0f), Math.max(0.0f, height - headerHeight));
+    }
+
+    protected boolean allowHeaderOnly() {
+        return false;
     }
 
     public boolean mouseClicked(MouseButtonEvent event) {

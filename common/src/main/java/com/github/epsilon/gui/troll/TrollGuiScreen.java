@@ -60,34 +60,66 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     private float pendingFrameHeight;
 
     private TrollGuiScreen() {
-        super(Component.literal("TrollHack"));
+        super(Component.literal("TrollGui"));
     }
 
     @Override
     protected void init() {
         super.init();
-        if (categories.isEmpty()) {
-            float x = 0.0f;
-            float y = 0.0f;
+        if (categories.isEmpty()) placeCategories();
+        layoutWindows();
+    }
+
+    private void placeCategories() {
+        TextRenderer metrics = textMetrics.get();
+        float gap = 3.0f;
+        float headerHeight = TrollTheme.headerHeight(metrics);
+        float width = screenWidth();
+        float height = screenHeight();
+
+        List<Category> types = new ArrayList<>();
+        types.add(null);
+        types.addAll(List.of(Category.values()));
+
+        List<List<TrollCategoryWindow>> rows = new ArrayList<>();
+        List<TrollCategoryWindow> currentRow = new ArrayList<>();
+        float currentRowWidth = 0.0f;
+        for (Category category : types) {
+            TrollCategoryWindow window = new TrollCategoryWindow(category);
+            window.layout(metrics, width, height);
+            categories.add(window);
+            float windowWidth = window.bounds.width();
+            if (!currentRow.isEmpty() && currentRowWidth + gap + windowWidth > width) {
+                rows.add(currentRow);
+                currentRow = new ArrayList<>();
+                currentRowWidth = 0.0f;
+            }
+            if (!currentRow.isEmpty()) currentRowWidth += gap;
+            currentRow.add(window);
+            currentRowWidth += windowWidth;
+        }
+        rows.add(currentRow);
+
+        float nextTop = 0.0f;
+        boolean cascaded = false;
+        for (List<TrollCategoryWindow> row : rows) {
             float rowHeight = 0.0f;
-            List<Category> types = new ArrayList<>();
-            types.add(null);
-            types.addAll(List.of(Category.values()));
-            for (Category category : types) {
-                TrollCategoryWindow window = new TrollCategoryWindow(category);
-                window.layout(textMetrics.get(), screenWidth(), screenHeight());
-                if (x > 0.0f && x + window.bounds.width() > screenWidth()) {
-                    x = 0.0f;
-                    y += rowHeight + 2.0f;
-                    rowHeight = 0.0f;
-                }
-                window.position(x, Math.clamp(screenHeight() - window.bounds.height(), 0.0f, y));
-                categories.add(window);
-                x += window.bounds.width() + 2.0f;
-                rowHeight = Math.max(rowHeight, window.bounds.height());
+            for (TrollCategoryWindow window : row) rowHeight = Math.max(rowHeight, window.bounds.height());
+            float top = cascaded ? nextTop : Math.clamp(height - rowHeight, 0.0f, nextTop);
+            float x = 0.0f;
+            for (TrollCategoryWindow window : row) {
+                window.position(x, cascaded ? top : Math.clamp(height - window.bounds.height(), 0.0f, nextTop));
+                x += window.bounds.width() + gap;
+            }
+            float stacked = top + rowHeight + gap;
+            if (stacked + headerHeight <= height) {
+                cascaded = false;
+                nextTop = stacked;
+            } else {
+                cascaded = true;
+                nextTop = top + headerHeight + gap;
             }
         }
-        layoutWindows();
     }
 
     private float screenWidth() {
@@ -127,8 +159,8 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         pendingScene = frame;
         pendingFrameWidth = screenWidth();
         pendingFrameHeight = screenHeight();
-        pendingWindowBlurStrength = ClientSetting.INSTANCE.trollBackgroundBlur.getValue().floatValue() * 15.0f;
-        pendingFullscreenBlurStrength = ClientSetting.INSTANCE.trollBlur.getValue() ? Math.max(1.0f, pendingWindowBlurStrength) : 0.0f;
+        pendingWindowBlurStrength = ClientSetting.INSTANCE.trollBackgroundBlur.getValue().floatValue() * 22.5f;
+        pendingFullscreenBlurStrength = ClientSetting.INSTANCE.trollBlur.getValue() ? Math.max(1.5f, pendingWindowBlurStrength) : 0.0f;
         try {
             graphics.blurBeforeThisStratum();
             pendingBackground = frame.batch(UiLayer.BACKGROUND);
@@ -344,7 +376,7 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public boolean preeditUpdated(PreeditEvent event) {
-        preeditOverlay = event == null ? null : new IMEPreeditOverlay(event, font, 10);
+        preeditOverlay = event == null ? null : new IMEPreeditOverlay(event, font, 15);
         return true;
     }
 

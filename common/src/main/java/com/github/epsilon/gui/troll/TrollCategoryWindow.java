@@ -36,13 +36,13 @@ public class TrollCategoryWindow extends TrollWindow {
             order = Comparator.comparing(Module::isEnabled).reversed().thenComparing(order);
         }
         visibleModules = ModuleManager.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).sorted(order).toList();
-        float width = Math.max(80.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 20.0f);
+        float width = Math.max(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f);
         for (Module module : visibleModules) {
             TrollSettingRow row = rows.computeIfAbsent(module, value -> new TrollSettingRow(value, TrollSettingRow.ModuleAction.TOGGLE));
             width = Math.max(width, row.minimumWidth(metrics) + TrollTheme.xMargin() * 2.0f);
         }
         headerHeight = TrollTheme.headerHeight(metrics);
-        size(Math.min(Math.min(width, 200.0f), screenWidth), Math.min(400.0f, screenHeight), screenWidth, screenHeight);
+        size(Math.min(Math.min(width, 300.0f), screenWidth), Math.min(600.0f, screenHeight), screenWidth, screenHeight);
         float step = TrollTheme.rowHeight(metrics) + TrollTheme.yMargin();
         scrollPosition = scroll.update(Math.max(0.0f, visibleModules.size() * step + TrollTheme.yMargin() - viewport.height()));
         float y = viewport.y() + TrollTheme.yMargin() - scrollPosition;
@@ -50,6 +50,11 @@ public class TrollCategoryWindow extends TrollWindow {
             rows.get(module).layout(new UiRect(viewport.x(), y, viewport.width(), TrollTheme.rowHeight(metrics)));
             y += step;
         }
+    }
+
+    @Override
+    protected boolean allowHeaderOnly() {
+        return true;
     }
 
     @Override
