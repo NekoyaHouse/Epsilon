@@ -7,19 +7,26 @@ import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.modules.impl.player.NoRotate;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.SneakTweak;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.CommonListenerCookie;
+import net.minecraft.core.particles.ExplosionParticleInfo;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -111,6 +118,33 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         if (packet != null && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noEntity(packet.getType()) && NoRender.INSTANCE.dropSpawnPacket.getValue()) {
             ci.cancel();
         }
+    }
+
+    /**
+     * 客户端所有爆炸粒子（爆炸云与方块碎屑）都由 {@code ClientboundExplodePacket} 触发，
+     * 拦截这两个调用即可移除全部爆炸粒子，不影响烟花等其它来源的粒子。
+     */
+    @WrapOperation(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
+    private void hookExplosionParticle(ClientLevel level, ParticleOptions particle, double x, double y, double z, double xa, double ya, double za, Operation<Void> original) {
+        if (shouldHideExplosion()) {
+            return;
+        }
+        original.call(level, particle, x, y, z, xa, ya, za);
+    }
+
+    /**
+     * 拦截爆炸包附带的方块碎屑粒子。
+     */
+    @WrapOperation(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;trackExplosionEffects(Lnet/minecraft/world/phys/Vec3;FILnet/minecraft/util/random/WeightedList;)V"))
+    private void hookExplosionBlockParticles(ClientLevel level, Vec3 center, float radius, int blockCount, WeightedList<ExplosionParticleInfo> blockParticles, Operation<Void> original) {
+        if (shouldHideExplosion()) {
+            return;
+        }
+        original.call(level, center, radius, blockCount, blockParticles);
+    }
+
+    private static boolean shouldHideExplosion() {
+        return NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.explosions.getValue();
     }
 
 }

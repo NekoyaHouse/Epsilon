@@ -53,6 +53,7 @@ public class NoRender extends Module {
     public final BoolSetting mapMarkers = boolSetting("Map Markers", false);
     public final BoolSetting mapContents = boolSetting("Map Contents", false);
     public final BoolSetting bannerRender = boolSetting("Banners", false);
+    public final BoolSetting explosions = boolSetting("Explosions", false);
     public final BoolSetting fireworkExplosions = boolSetting("Firework Explosions", false);
     public final BoolSetting barrierInvis = boolSetting("Barrier Invisibility", false);
     public final BoolSetting textureRotations = boolSetting("Texture Rotations", false, _ -> mc.levelExtractor.allChanged());
