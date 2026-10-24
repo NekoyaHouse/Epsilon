@@ -7,12 +7,14 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.modules.impl.render.ACSpoof;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.*;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
@@ -456,6 +458,19 @@ public class TabListInstance extends LandInstance {
 
     private List<TextSegment> mergeSegments(List<TextSegment> raw, float scale, TextRenderer renderer) {
         if (raw.isEmpty()) return List.of();
+
+        if (ACSpoof.INSTANCE.isEnabled()) {
+            FormattedCharSequence original = FormattedCharSequence.composite(raw.stream().map(segment -> FormattedCharSequence.forward(segment.text(), Style.EMPTY.withColor(segment.color().getRGB()))).toList());
+            FormattedCharSequence replacement = ACSpoof.INSTANCE.text(original, TEXT_DEFAULT.getRGB());
+            if (replacement != original) {
+                List<TextSegment> spoofed = new ArrayList<>();
+                replacement.accept((index, style, codePoint) -> {
+                    spoofed.add(new TextSegment(new String(Character.toChars(codePoint)), resolveStyleColor(style, TEXT_DEFAULT), 0f));
+                    return true;
+                });
+                raw = spoofed;
+            }
+        }
 
         List<TextSegment> merged = new ArrayList<>();
         StringBuilder builder = new StringBuilder();

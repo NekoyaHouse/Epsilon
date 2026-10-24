@@ -127,6 +127,7 @@ public class ModuleManager {
         addModule(Velocity.INSTANCE);
 
         // Render
+        addModule(ACSpoof.INSTANCE);
         addModule(KillEffect.INSTANCE);
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);

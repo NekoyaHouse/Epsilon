@@ -165,8 +165,7 @@ public class NoSlowdown extends Module {
 
     private void cancel(SlowdownEvent event) {
         event.setSlowdown(false);
-        if (!mc.player.horizontalCollision && mc.player.input.hasForwardImpulse())
-            mc.player.setSprinting(true);
+        if (!mc.player.horizontalCollision && mc.player.input.hasForwardImpulse()) mc.player.setSprinting(true);
     }
 
     private void grimBlink(SlowdownEvent event) {

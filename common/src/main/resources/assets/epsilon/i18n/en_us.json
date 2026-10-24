@@ -2826,7 +2826,8 @@
         "firefly factor": "Firefly Factor",
         "firefly shaking": "Firefly Shaking",
         "firefly amplitude": "Firefly Amplitude"
-      }
+      },
+      "ac spoof": "AC Spoof"
     },
     "elements": {
       "player info": {
