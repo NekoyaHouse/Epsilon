@@ -66,6 +66,7 @@ public class InvManager extends Module {
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
+    private final BoolSetting stopSprinting = boolSetting("Stop Sprinting", true, () -> mode.is(Mode.Silent));
     private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
     private final EnumSetting<OffhandItemMode> offhandItem = enumSetting("Offhand Item", OffhandItemMode.None);
@@ -480,7 +481,7 @@ public class InvManager extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSprintTick(ClientTickEvent.Pre event) {
-        if (!nullCheck() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+        if (!nullCheck() && shouldStopSprinting() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
             mc.player.setSprinting(false);
             if (!mc.player.wasSprinting) {
                 actionState = ActionState.READY_TO_EXECUTE;
@@ -541,12 +542,28 @@ public class InvManager extends Module {
         }
     }
 
+    /**
+     * Silent 操作过渡期间（等待停疾跑或等待背包关闭同步）需要阻止玩家重新进入疾跑；
+     * 关闭 Stop Sprinting 后不再产生等待停疾跑的状态，也就不再阻止疾跑。
+     */
     public boolean isSprintTransitionPending() {
-        return mode.is(Mode.Silent) && actionState != ActionState.IDLE;
+        return shouldStopSprinting() && actionState != ActionState.IDLE;
+    }
+
+    /**
+     * Silent 模式在操作背包前是否需要先停疾跑。
+     * 默认先发停疾跑包并等待服务端同步，避免服务端仍认为玩家在疾跑时处理容器操作；
+     * 关闭 Stop Sprinting 时跳过这段等待。
+     */
+    private boolean shouldStopSprinting() {
+        return mode.is(Mode.Silent) && stopSprinting.getValue();
     }
 
     public boolean prepareInventoryAction() {
-        if (!mode.is(Mode.Silent)) {
+        if (!shouldStopSprinting()) {
+            if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+                actionState = ActionState.IDLE;
+            }
             return true;
         }
         if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
