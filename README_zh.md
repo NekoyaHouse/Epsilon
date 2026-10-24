@@ -32,8 +32,6 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 详见 [渲染系统文档](common/src/main/java/com/github/epsilon/graphics/README_zh.md)
 
-基于 Lumin 的声明式 UI 层见 [Epsilon GUI Library 文档](docs/gui-library.md)。
-
 ## ⚙️ 构建与运行
 
 ```bash

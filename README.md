@@ -32,8 +32,6 @@ The Lumin rendering system provides custom render pipelines for:
 
 See [Lumin Graphics README](common/src/main/java/com/github/epsilon/graphics/README.md) for details.
 
-The declarative UI layer built on Lumin is documented in the [Epsilon GUI Library Guide](docs/gui-library.md).
-
 ## ⚙️ Build & Run
 
 ```bash
