@@ -3,9 +3,13 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.troll.TrollGuiScreen;
 import com.github.epsilon.utils.render.EpsilonGuiRenderer;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.GuiRenderer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import org.spongepowered.asm.mixin.Final;
@@ -36,6 +40,14 @@ public class MixinGuiRenderer {
 
     @Unique
     private EpsilonGuiRenderer epsilon$guiRenderer;
+
+    @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;processBlurEffect()V"))
+    private void renderTrollBackgroundBlur(GameRenderer renderer, Operation<Void> original) {
+        if (((GuiRenderer) (Object) this).getClass() == GuiRenderer.class && mc != null && mc.gui.screen() instanceof TrollGuiScreen screen && screen.renderBackgroundBlur()) {
+            return;
+        }
+        original.call(renderer);
+    }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRenderHead(CallbackInfo ci) {

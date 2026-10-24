@@ -5,8 +5,6 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyPressEvent;
 import com.github.epsilon.events.impl.MousePressEvent;
-import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
@@ -189,10 +187,7 @@ public class ModuleManager {
 
         ClientSetting cs = ClientSetting.INSTANCE;
         if (keyCode == cs.guiKeybind.getValue() && action == InputConstants.PRESS) {
-            mc.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
-                case Panel -> PanelScreen.INSTANCE;
-                case Dropdown -> DropdownScreen.INSTANCE;
-            });
+            mc.gui.setScreen(cs.getGuiScreen());
         }
 
         dispatchKeyBind(keyCode, action);

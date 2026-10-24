@@ -219,6 +219,18 @@
         "current": "Current platform: %s",
         "hint": "This feature is unavailable on the current platform.",
         "confirm": "Got it"
+      },
+      "troll": {
+        "keybind": "Keybind",
+        "listening": "Press a key...",
+        "color_picker": "Color Picker",
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue",
+        "alpha": "Alpha",
+        "okay": "Okay",
+        "cancel": "Cancel",
+        "apply": "Apply"
       }
     },
     "modules": {
@@ -361,7 +373,8 @@
         "gui mode": {
           "_value": "Gui Mode",
           "dropdown": "Drop Down",
-          "panel": "Panel"
+          "panel": "Panel",
+          "trollhack": "TrollHack"
         },
         "module sort": {
           "_value": "Module Sort",
@@ -709,7 +722,19 @@
           "auto": "Auto",
           "enabled": "Enabled",
           "disabled": "Disabled"
-        }
+        },
+        "troll gui": "TrollHack GUI",
+        "troll blur": "Fullscreen Blur",
+        "troll background": "Dim Background",
+        "troll background blur": "Window Blur",
+        "troll window outline": "Window Outline",
+        "troll title bar": "Title Bar",
+        "troll x margin": "Horizontal Padding",
+        "troll y margin": "Row Spacing",
+        "troll primary color": "Primary Color",
+        "troll background color": "Window Background",
+        "troll text color": "Text Color",
+        "troll hover alpha": "Hover Opacity"
       },
       "aim bot": {
         "_value": "Aim Bot",

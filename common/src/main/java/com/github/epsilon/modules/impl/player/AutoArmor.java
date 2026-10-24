@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.troll.TrollGuiScreen;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
@@ -80,6 +81,7 @@ public class AutoArmor extends Module {
                         && !(mc.gui.screen() instanceof ChatScreen)
                         && !(mc.gui.screen() instanceof PanelScreen)
                         && !(mc.gui.screen() instanceof DropdownScreen)
+                        && !(mc.gui.screen() instanceof TrollGuiScreen)
                         && !(mc.gui.screen() instanceof HudEditorScreen)
         ) {
             return;
