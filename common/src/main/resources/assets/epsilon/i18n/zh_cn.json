@@ -219,6 +219,18 @@
         "current": "当前平台：%s",
         "hint": "该功能在当前平台上不可用。",
         "confirm": "知道了"
+      },
+      "troll": {
+        "keybind": "按键绑定",
+        "listening": "请按下按键…",
+        "color_picker": "颜色选择器",
+        "red": "红色",
+        "green": "绿色",
+        "blue": "蓝色",
+        "alpha": "透明度",
+        "okay": "确定",
+        "cancel": "取消",
+        "apply": "应用"
       }
     },
     "modules": {
@@ -361,7 +373,8 @@
         "gui mode": {
           "_value": "GUI 模式",
           "dropdown": "瀑布式",
-          "panel": "单窗口式"
+          "panel": "单窗口式",
+          "trollhack": "TrollHack"
         },
         "module sort": {
           "_value": "模块排序",
@@ -709,7 +722,19 @@
           "auto": "自动",
           "enabled": "启用",
           "disabled": "禁用"
-        }
+        },
+        "troll gui": "TrollHack 界面",
+        "troll blur": "全屏模糊",
+        "troll background": "背景遮罩",
+        "troll background blur": "窗口模糊",
+        "troll window outline": "窗口边框",
+        "troll title bar": "标题栏",
+        "troll x margin": "横向内边距",
+        "troll y margin": "行间距",
+        "troll primary color": "主色",
+        "troll background color": "窗口背景",
+        "troll text color": "文字颜色",
+        "troll hover alpha": "悬停不透明度"
       },
       "aim bot": {
         "_value": "瞄准辅助",
@@ -1557,6 +1582,7 @@
         "pause on eat": "进食时暂停",
         "pause on killaura": "KillAura 运行时暂停",
         "pause on scaffold": "搭路时暂停",
+        "stop sprinting": "停止疾跑",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
         "offhand item": {

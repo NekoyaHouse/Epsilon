@@ -112,6 +112,16 @@ public class EpsilonTranslations {
             Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
+            TrollGui.KEYBIND,
+            TrollGui.LISTENING,
+            TrollGui.COLOR_PICKER,
+            TrollGui.RED,
+            TrollGui.GREEN,
+            TrollGui.BLUE,
+            TrollGui.ALPHA,
+            TrollGui.OKAY,
+            TrollGui.CANCEL,
+            TrollGui.APPLY,
             Resources.VIDEO,
             Resources.LIGHT_TRAILS,
             Resources.REISA,
@@ -322,6 +332,25 @@ public class EpsilonTranslations {
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
 
         private Gui() {
+        }
+    }
+
+    /**
+     * TrollHack GUI 的绑定与调色板文案。
+     */
+    public static class TrollGui {
+        public static final TranslateComponent KEYBIND = create("gui", "troll.keybind");
+        public static final TranslateComponent LISTENING = create("gui", "troll.listening");
+        public static final TranslateComponent COLOR_PICKER = create("gui", "troll.color_picker");
+        public static final TranslateComponent RED = create("gui", "troll.red");
+        public static final TranslateComponent GREEN = create("gui", "troll.green");
+        public static final TranslateComponent BLUE = create("gui", "troll.blue");
+        public static final TranslateComponent ALPHA = create("gui", "troll.alpha");
+        public static final TranslateComponent OKAY = create("gui", "troll.okay");
+        public static final TranslateComponent CANCEL = create("gui", "troll.cancel");
+        public static final TranslateComponent APPLY = create("gui", "troll.apply");
+
+        private TrollGui() {
         }
     }
 

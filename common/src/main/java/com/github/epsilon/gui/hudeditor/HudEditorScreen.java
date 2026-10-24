@@ -5,7 +5,6 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
@@ -15,7 +14,6 @@ import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
-import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
@@ -632,10 +630,7 @@ public class HudEditorScreen extends Screen implements ListSettingPopupScreen {
         IMEFocusHelper.forceDeactivate();
         super.onClose();
 
-        minecraft.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
-            case Panel -> PanelScreen.INSTANCE;
-            case Dropdown -> DropdownScreen.INSTANCE;
-        });
+        minecraft.gui.setScreen(ClientSetting.INSTANCE.getGuiScreen());
     }
 
     @Override

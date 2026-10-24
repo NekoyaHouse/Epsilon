@@ -6,11 +6,9 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.video.VideoPlayer;
-import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
-import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.accounts.AccountsScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
@@ -135,10 +133,7 @@ public class MainMenuScreen extends Screen {
             this.minecraft.gui.setScreen(screen);
         }));
         entries.add(new MenuEntry("Accounts", () -> minecraft.gui.setScreen(AccountsScreen.INSTANCE)));
-        entries.add(new MenuEntry("GUI", () -> minecraft.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
-            case Panel -> PanelScreen.INSTANCE;
-            case Dropdown -> DropdownScreen.INSTANCE;
-        })));
+        entries.add(new MenuEntry("GUI", () -> minecraft.gui.setScreen(ClientSetting.INSTANCE.getGuiScreen())));
         entries.add(new MenuEntry("Options", () -> minecraft.gui.setScreen(new OptionsScreen(this, minecraft.options))));
         entries.add(new MenuEntry("Quit", () -> {
             if (!requestShutdown()) minecraft.stop();

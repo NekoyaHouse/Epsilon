@@ -92,14 +92,12 @@ public class Render2DScheduler implements AutoCloseable {
         }
 
         flushBatchGroups(FrameBatchPlanner.plan(commandStore.planBatches()));
-        rendererPool.clear();
     }
 
     public void flushLayer(int layer) {
         LayerBucket bucket = commandStore.layer(layer);
         if (bucket != null) {
             flushLayer(bucket);
-            rendererPool.clear();
         }
     }
 
@@ -991,8 +989,14 @@ public class Render2DScheduler implements AutoCloseable {
     private static final class RendererPool implements AutoCloseable {
         private final Map<Render2DCommandKind, Deque<RendererBundle>> available = new Object2ObjectOpenHashMap<>();
         private final List<RendererBundle> used = new ArrayList<>();
+        private long frameId = Long.MIN_VALUE;
 
         private RendererBundle acquire(Render2DCommandKind kind, Render2DScissor scissor) {
+            long currentFrameId = LuminRenderSystem.getRenderFrameId();
+            if (frameId != currentFrameId) {
+                clear();
+                frameId = currentFrameId;
+            }
             Deque<RendererBundle> bundles = available.computeIfAbsent(kind, ignored -> new ArrayDeque<>());
             RendererBundle bundle = bundles.pollFirst();
             if (bundle == null) {

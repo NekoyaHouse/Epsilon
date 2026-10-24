@@ -66,6 +66,7 @@ public class InvManager extends Module {
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
     private final BoolSetting pauseOnKillAura = boolSetting("Pause On KillAura", true);
     private final BoolSetting pauseOnScaffold = boolSetting("Pause On Scaffold", true);
+    private final BoolSetting stopSprinting = boolSetting("Stop Sprinting", true, () -> mode.is(Mode.Silent));
     private final IntSetting minDelay = intSetting("Min Delay", 95, 0, 1000, 50);
     private final IntSetting maxDelay = intSetting("Max Delay", 135, 0, 1000, 50);
     private final EnumSetting<OffhandItemMode> offhandItem = enumSetting("Offhand Item", OffhandItemMode.None);
@@ -480,7 +481,7 @@ public class InvManager extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSprintTick(ClientTickEvent.Pre event) {
-        if (!nullCheck() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+        if (!nullCheck() && shouldStopSprinting() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
             mc.player.setSprinting(false);
             if (!mc.player.wasSprinting) {
                 actionState = ActionState.READY_TO_EXECUTE;
@@ -542,11 +543,18 @@ public class InvManager extends Module {
     }
 
     public boolean isSprintTransitionPending() {
-        return mode.is(Mode.Silent) && actionState != ActionState.IDLE;
+        return shouldStopSprinting() && actionState != ActionState.IDLE;
+    }
+
+    private boolean shouldStopSprinting() {
+        return mode.is(Mode.Silent) && stopSprinting.getValue();
     }
 
     public boolean prepareInventoryAction() {
-        if (!mode.is(Mode.Silent)) {
+        if (!shouldStopSprinting()) {
+            if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
+                actionState = ActionState.IDLE;
+            }
             return true;
         }
         if (actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
