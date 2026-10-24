@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
@@ -22,6 +23,7 @@ import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -49,10 +51,13 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     private TrollWindow capturedWindow;
     private LuminRenderSystem.LuminRenderTarget renderTarget;
     private IMEPreeditOverlay preeditOverlay;
-    private List<UiRect> pendingBlurRegions = List.of();
-    private float pendingBlurStrength;
-    private float pendingBlurWidth;
-    private float pendingBlurHeight;
+    private final List<WindowPass> pendingWindows = new ArrayList<>();
+    private UiScene pendingScene;
+    private UiRenderBatch pendingBackground;
+    private float pendingWindowBlurStrength;
+    private float pendingFullscreenBlurStrength;
+    private float pendingFrameWidth;
+    private float pendingFrameHeight;
 
     private TrollGuiScreen() {
         super(Component.literal("TrollHack"));
@@ -107,6 +112,7 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        endPendingFrame();
         var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("troll-gui", window.getWidth(), window.getHeight());
@@ -116,14 +122,18 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         int mx = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int my = LuminRenderSystem.toEpsilonMouseY(mouseY);
         layoutWindows();
-        queueBackgroundBlur(graphics);
         UiScene frame = scene.get();
         frame.beginFrame();
-        LuminRenderSystem.LuminRenderTarget previousTarget = LuminRenderSystem.getActiveTarget();
-        LuminRenderSystem.setActiveTarget(renderTarget);
+        pendingScene = frame;
+        pendingFrameWidth = screenWidth();
+        pendingFrameHeight = screenHeight();
+        pendingWindowBlurStrength = ClientSetting.INSTANCE.trollBackgroundBlur.getValue().floatValue() * 15.0f;
+        pendingFullscreenBlurStrength = ClientSetting.INSTANCE.trollBlur.getValue() ? Math.max(1.0f, pendingWindowBlurStrength) : 0.0f;
         try {
+            graphics.blurBeforeThisStratum();
+            pendingBackground = frame.batch(UiLayer.BACKGROUND);
             if (ClientSetting.INSTANCE.trollBackground.getValue()) {
-                frame.submit(UiLayer.BACKGROUND, UiTree.build(scope -> scope.rect(0, 0, screenWidth(), screenHeight(), new Color(0, 0, 0, 144))));
+                pendingBackground.render(UiTree.build(scope -> scope.rect(0, 0, pendingFrameWidth, pendingFrameHeight, new Color(0, 0, 0, 144))));
             }
             boolean modal = settingsWindow != null || colorPicker != null || popupHost.getActivePopup() != null;
             TrollCategoryWindow hovered = modal ? null : hoveredCategory(mx, my);
@@ -131,23 +141,22 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
                 TrollCategoryWindow category = categories.get(i);
                 int hoverX = hovered == category ? mx : Integer.MIN_VALUE;
                 int hoverY = hovered == category ? my : Integer.MIN_VALUE;
-                // 每个窗口占用独立的相对层段，后置窗口的底色必须遮住先前窗口的文本。
-                frame.submit(UiLayer.CONTENT, i * 8, UiTree.build(scope -> category.draw(scope, textMetrics.get(), hoverX, hoverY)));
+                queueWindow(frame, UiLayer.CONTENT, i * 8, category.bounds, UiTree.build(scope -> category.draw(scope, textMetrics.get(), hoverX, hoverY)));
             }
             if (settingsWindow != null) {
                 boolean blocked = colorPicker != null || popupHost.getActivePopup() != null;
-                frame.submit(UiLayer.FLOATING, UiTree.build(scope -> settingsWindow.draw(scope, textMetrics.get(), blocked ? Integer.MIN_VALUE : mx, blocked ? Integer.MIN_VALUE : my)));
+                queueWindow(frame, UiLayer.FLOATING, 0, settingsWindow.bounds, UiTree.build(scope -> settingsWindow.draw(scope, textMetrics.get(), blocked ? Integer.MIN_VALUE : mx, blocked ? Integer.MIN_VALUE : my)));
             }
             if (colorPicker != null)
-                frame.submit(UiLayer.POPUP, UiTree.build(scope -> colorPicker.draw(scope, textMetrics.get(), mx, my)));
-            popupHost.render(graphics, frame.batch(UiLayer.OVERLAY), mx, my, partialTick);
-        } finally {
-            try {
-                frame.endFrame();
-                popupHost.flush();
-            } finally {
-                LuminRenderSystem.setActiveTarget(previousTarget);
+                queueWindow(frame, UiLayer.POPUP, 0, colorPicker.bounds, UiTree.build(scope -> colorPicker.draw(scope, textMetrics.get(), mx, my)));
+            UiRenderBatch popupBatch = frame.batch(UiLayer.OVERLAY);
+            popupHost.render(graphics, popupBatch, mx, my, partialTick);
+            if (popupHost.getActivePopup() != null) {
+                pendingWindows.add(new WindowPass(popupHost.getActivePopup().getBounds(), popupBatch, true));
             }
+        } catch (RuntimeException | Error exception) {
+            endPendingFrame();
+            throw exception;
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
         popupHost.extractOverlay(graphics, mx, my, partialTick);
@@ -157,52 +166,57 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         }
     }
 
-    private void queueBackgroundBlur(GuiGraphicsExtractor graphics) {
-        pendingBlurRegions = List.of();
-        pendingBlurStrength = ClientSetting.INSTANCE.trollBackgroundBlur.getValue().floatValue() * 15.0f;
-        pendingBlurWidth = screenWidth();
-        pendingBlurHeight = screenHeight();
-        if (ClientSetting.INSTANCE.trollBlur.getValue()) {
-            pendingBlurStrength = Math.max(1.0f, pendingBlurStrength);
-            pendingBlurRegions = List.of(new UiRect(0, 0, pendingBlurWidth, pendingBlurHeight));
-        } else if (pendingBlurStrength > 0.0f) {
-            List<UiRect> regions = new ArrayList<>();
-            for (TrollCategoryWindow category : categories) regions.add(category.bounds);
-            if (settingsWindow != null) regions.add(settingsWindow.bounds);
-            if (colorPicker != null) regions.add(colorPicker.bounds);
-            pendingBlurRegions = List.copyOf(regions);
-        }
-        // 提取阶段只记录区域；原版会先绘制世界、全景及先前的 GUI stratum，再执行模糊。
-        if (!pendingBlurRegions.isEmpty()) graphics.blurBeforeThisStratum();
+    private void queueWindow(UiScene frame, UiLayer layer, int relativeLayer, UiRect bounds, UiTree tree) {
+        UiRenderBatch batch = frame.batch(layer, relativeLayer);
+        batch.render(tree);
+        pendingWindows.add(new WindowPass(bounds, batch, false));
     }
 
-    /**
-     * 在 GuiRenderer 的模糊提交点采样本帧主目标；不得在 Screen 提取阶段调用。
-     *
-     * @return 是否消费了本帧的 TrollHack 模糊请求
-     */
-    public boolean renderBackgroundBlur() {
-        List<UiRect> regions = pendingBlurRegions;
-        pendingBlurRegions = List.of();
-        if (regions.isEmpty()) return false;
+    public boolean renderPendingFrame() {
+        if (pendingScene == null) return false;
 
-        float[] rects = new float[regions.size() * 4];
-        for (int i = 0; i < regions.size(); i++) {
-            UiRect bounds = regions.get(i);
-            rects[i * 4] = bounds.x();
-            rects[i * 4 + 1] = bounds.y();
-            rects[i * 4 + 2] = bounds.width();
-            rects[i * 4 + 3] = bounds.height();
-        }
         LuminRenderSystem.LuminRenderTarget previousTarget = LuminRenderSystem.getActiveTarget();
-        LuminRenderSystem.setActiveTarget(null);
+        var previousProjection = RenderSystem.getProjectionMatrixBuffer();
+        var previousProjectionType = RenderSystem.getProjectionType();
         try {
-            // 一次采样并合并窗口遮罩，避免重叠窗口重复模糊同一区域。
-            BlurShader.INSTANCE.render(0, 0, pendingBlurWidth, pendingBlurHeight, 0.0f, pendingBlurStrength, rects, null, regions.size());
+            var mainTarget = minecraft.gameRenderer.mainRenderTarget();
+            var source = mainTarget.getColorTexture();
+            if (source == null || renderTarget == null || mainTarget.width != renderTarget.width() || mainTarget.height != renderTarget.height()) {
+                return true;
+            }
+            RenderSystem.getDevice().createCommandEncoder().copyTextureToTexture(source, renderTarget.colorTexture(), 0, 0, 0, 0, 0, mainTarget.width, mainTarget.height);
+            LuminRenderSystem.setActiveTarget(renderTarget);
+            if (pendingFullscreenBlurStrength > 0.0f) {
+                BlurShader.INSTANCE.render(renderTarget, 0, 0, pendingFrameWidth, pendingFrameHeight, 0.0f, pendingFullscreenBlurStrength);
+            }
+            pendingBackground.flushAndClear();
+            for (WindowPass pass : pendingWindows) {
+                if (pendingWindowBlurStrength > 0.0f) {
+                    BlurShader.INSTANCE.render(renderTarget, pass.bounds.x(), pass.bounds.y(), pass.bounds.width(), pass.bounds.height(), 0.0f, pendingWindowBlurStrength);
+                }
+                pass.batch.flushAndClear();
+                if (pass.popup) popupHost.flush();
+            }
         } finally {
-            LuminRenderSystem.setActiveTarget(previousTarget);
+            try {
+                endPendingFrame();
+            } finally {
+                LuminRenderSystem.setActiveTarget(previousTarget);
+                RenderSystem.setProjectionMatrix(previousProjection, previousProjectionType);
+            }
         }
         return true;
+    }
+
+    private void endPendingFrame() {
+        UiScene frame = pendingScene;
+        pendingScene = null;
+        pendingBackground = null;
+        pendingWindows.clear();
+        if (frame != null) {
+            frame.clear();
+            frame.endFrame();
+        }
     }
 
     private TrollCategoryWindow hoveredCategory(double mouseX, double mouseY) {
@@ -346,8 +360,7 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
     @Override
     public void removed() {
-        pendingBlurRegions = List.of();
-        pendingBlurStrength = 0.0f;
+        endPendingFrame();
         popupHost.close();
         if (colorPicker != null) colorPicker.cancel();
         colorPicker = null;
@@ -367,6 +380,9 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private record WindowPass(UiRect bounds, UiRenderBatch batch, boolean popup) {
     }
 
 }

@@ -42,8 +42,8 @@ public class MixinGuiRenderer {
     private EpsilonGuiRenderer epsilon$guiRenderer;
 
     @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;processBlurEffect()V"))
-    private void renderTrollBackgroundBlur(GameRenderer renderer, Operation<Void> original) {
-        if (((GuiRenderer) (Object) this).getClass() == GuiRenderer.class && mc != null && mc.gui.screen() instanceof TrollGuiScreen screen && screen.renderBackgroundBlur()) {
+    private void onDraw(GameRenderer renderer, Operation<Void> original) {
+        if (((GuiRenderer) (Object) this).getClass() == GuiRenderer.class && mc != null && mc.gui.screen() instanceof TrollGuiScreen screen && screen.renderPendingFrame()) {
             return;
         }
         original.call(renderer);
