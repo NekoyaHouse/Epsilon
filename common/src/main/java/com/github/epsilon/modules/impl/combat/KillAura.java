@@ -48,15 +48,13 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
-            DeobfESP.render(
-                    event.getPoseStack(),
-                    deobfSize.getValue().floatValue(),
-                    deobfSpins.getValue().floatValue(),
-                    deobfWobble.getValue().floatValue(),
-                    deobfFlyHeight.getValue().floatValue()
-            );
-        }));
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> DeobfESP.render(
+                event.getPoseStack(),
+                deobfSize.getValue().floatValue(),
+                deobfSpins.getValue().floatValue(),
+                deobfWobble.getValue().floatValue(),
+                deobfFlyHeight.getValue().floatValue()
+        )));
     }
 
     private enum Mode {
@@ -225,21 +223,23 @@ public class KillAura extends Module {
 
         target = targets.get(targetIndex);
 
-        // 开启穿墙后不再要求目标与视线之间没有方块，因此遮挡判定和旋转视线校验都要跳过
         boolean ignoreWalls = throughWalls.getValue();
 
         if (rotate.getValue()) {
             Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
 
-            if (!ignoreWalls && RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
+            if (!ignoreWalls && RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK)
+                return;
 
             if (ignoreWalls) {
-                // 穿墙时射线必然被方块拦截，让平滑旋转按视线校验只会让随机偏移反复失效
                 RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(), rotationPriority.getValue());
             } else {
-                RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(),
+                RotationManager.INSTANCE.setRotations(
+                        calculate,
+                        rotationSpeed.getValue(),
                         rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target,
-                        rotationPriority.getValue());
+                        rotationPriority.getValue()
+                );
             }
         }
 
@@ -285,15 +285,6 @@ public class KillAura extends Module {
         }
     }
 
-    /**
-     * 解析本次允许攻击的实体。
-     * <p>
-     * 未开启穿墙时沿用准星命中结果；开启穿墙后准星（或静默旋转的命中结果）会被方块挡住，
-     * 因此直接攻击当前锁定的目标。关闭转头时准星完全由玩家控制，只接受本次筛选出的目标，
-     * 避免误打目标以外的实体。
-     *
-     * @return 允许攻击的实体，没有则返回 {@code null}
-     */
     private Entity getAttackEntity() {
         if (throughWalls.getValue()) {
             if (target == null || !target.isAlive() || target.isDeadOrDying()) return null;
@@ -306,6 +297,7 @@ public class KillAura extends Module {
         if (!entity.isAlive()) return null;
 
         if (!rotate.getValue() && (targets == null || !targets.contains(entity))) return null;
+
         return entity;
     }
 

@@ -21,11 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 自动挖掘：在无政府服务器的水晶战斗中，拆掉敌人用来阻挡爆炸射线的坑、卡位方块与脚下支撑。
