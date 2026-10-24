@@ -188,6 +188,9 @@ public class EpsilonTranslations {
             Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
             Notifications.KEY_FRIEND_ADDED,
             Notifications.KEY_FRIEND_REMOVED,
+            AutoMine.PACKET_MINE_REQUIRED,
+            AutoMine.PACKET_MINE_ENABLED,
+            AutoMine.PACKET_MINE_DISABLED,
             Notifications.PREVIEW_TITLE,
             Notifications.PREVIEW_MESSAGE,
             Via.BASE_CANCEL,
@@ -461,6 +464,18 @@ public class EpsilonTranslations {
         public static final TranslateComponent KEY_FRIEND_REMOVED = create("notification", "key_friend_removed");
 
         private Notifications() {
+        }
+    }
+
+    /**
+     * Auto Mine 依赖 Packet Mine 时的提示文案。
+     */
+    public static class AutoMine {
+        public static final TranslateComponent PACKET_MINE_REQUIRED = create("modules.auto mine", "packet_mine_required");
+        public static final TranslateComponent PACKET_MINE_ENABLED = create("modules.auto mine", "packet_mine_enabled");
+        public static final TranslateComponent PACKET_MINE_DISABLED = create("modules.auto mine", "packet_mine_disabled");
+
+        private AutoMine() {
         }
     }
 

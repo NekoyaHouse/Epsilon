@@ -853,6 +853,51 @@
         },
         "swing hand": "Swing Hand"
       },
+      "auto mine": {
+        "_value": "Auto Mine",
+        "packet_mine_required": "Packet Mine must be enabled first",
+        "packet_mine_enabled": "Packet Mine has been enabled automatically",
+        "packet_mine_disabled": "Packet Mine is disabled, Auto Mine is paused",
+        "general": "General",
+        "targets": "Targets",
+        "feet settings": "Feet Settings",
+        "box settings": "Box Settings",
+        "range": "Range",
+        "order": {
+          "_value": "Order",
+          "distance": "Distance",
+          "health": "Health",
+          "hole": "Hole"
+        },
+        "invisible": "Invisible",
+        "friends": "Friends",
+        "switch delay": "Switch Delay",
+        "auto packet mine": "Auto Packet Mine",
+        "box": "Box",
+        "head": "Head",
+        "feet": "Feet",
+        "head mode": {
+          "_value": "Head Mode",
+          "inside": "Inside",
+          "above": "Above",
+          "both": "Both"
+        },
+        "feet mode": {
+          "_value": "Feet Mode",
+          "below": "Below",
+          "inside": "Inside",
+          "both": "Both"
+        },
+        "feet logic": {
+          "_value": "Feet Logic",
+          "first": "First",
+          "normal": "Normal",
+          "last": "Last"
+        },
+        "only on ground": "Only On Ground",
+        "box corners": "Box Corners",
+        "box head level": "Box Head Level"
+      },
       "auto throw": {
         "_value": "Auto Throw",
         "min range": "Min Range",
@@ -986,6 +1031,7 @@
         "pause on eat": "Pause On Eat",
         "pause on scaffold": "Pause On Scaffold",
         "hit select": "Hit Select",
+        "through walls": "Through Walls",
         "mode": {
           "_value": "Mode",
           "onepointeight": "1.8",
@@ -1007,6 +1053,7 @@
         "search range": "Search Range",
         "aim range": "Aim Range",
         "fov": "FOV",
+        "rotate": "Rotate",
         "rotation speed": "Rotation Speed",
         "rotation priority": {
           "_value": "Rotation Priority",
@@ -1050,7 +1097,6 @@
         "wave speed": "Wave Speed",
         "side color": "Side Color",
         "line color": "Line Color",
-        "circle radius": "Circle Radius",
         "circle alpha factor": "Circle Alpha Factor",
         "firefly color mode": {
           "_value": "Firefly Color Mode",

@@ -48,15 +48,13 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
-            DeobfESP.render(
-                    event.getPoseStack(),
-                    deobfSize.getValue().floatValue(),
-                    deobfSpins.getValue().floatValue(),
-                    deobfWobble.getValue().floatValue(),
-                    deobfFlyHeight.getValue().floatValue()
-            );
-        }));
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> DeobfESP.render(
+                event.getPoseStack(),
+                deobfSize.getValue().floatValue(),
+                deobfSpins.getValue().floatValue(),
+                deobfWobble.getValue().floatValue(),
+                deobfFlyHeight.getValue().floatValue()
+        )));
     }
 
     private enum Mode {
@@ -94,8 +92,9 @@ public class KillAura extends Module {
     public final DoubleSetting searchRange = doubleSetting("Search Range", 4.0, 1.0, 6.0, 0.1);
     public final DoubleSetting aimRange = doubleSetting("Aim Range", 3.0, 1.0, 6.0, 0.1);
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
-    private final EnumSetting<Priority> rotationPriority = enumSetting("Rotation Priority", Priority.High);
+    private final BoolSetting rotate = boolSetting("Rotate", true);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, rotate::getValue);
+    private final EnumSetting<Priority> rotationPriority = enumSetting("Rotation Priority", Priority.High, rotate::getValue);
     private final IntSetting cps = intSetting("CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
 
     private final BoolSetting players = boolSetting("Players", true);
@@ -224,12 +223,27 @@ public class KillAura extends Module {
 
         target = targets.get(targetIndex);
 
-        Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
-        if (RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK) return;
-        RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(), rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target, rotationPriority.getValue());
+        boolean ignoreWalls = throughWalls.getValue();
 
-        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
-        if (hitSelect.getValue() && hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
+        if (rotate.getValue()) {
+            Rot2f calculate = RotationUtils.calculate(target, true, aimRange.getValue());
+
+            if (!ignoreWalls && RaytraceUtils.raytrace(calculate, aimRange.getValue()).getType() == HitResult.Type.BLOCK)
+                return;
+
+            if (ignoreWalls) {
+                RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.getValue(), rotationPriority.getValue());
+            } else {
+                RotationManager.INSTANCE.setRotations(
+                        calculate,
+                        rotationSpeed.getValue(),
+                        rotation -> RaytraceUtils.raytrace(rotation, 3.0f) instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == target,
+                        rotationPriority.getValue()
+                );
+            }
+        }
+
+        if (hitSelect.getValue() && getAttackEntity() instanceof Player player && !AntiBot.INSTANCE.isBot(player) && !TargetManager.INSTANCE.isSameTeam(player) && velocity.attackQueue <= 0) {
             ClientPacketListener connection = mc.getConnection();
             PlayerInfo localPlayerInfo = connection == null ? null : connection.getPlayerInfo(mc.player.getUUID());
             int latencyTicks = localPlayerInfo == null ? 0 : localPlayerInfo.getLatency() / 50;
@@ -254,30 +268,43 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
-        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         while (attacks > 0) {
             attacks--;
             if (pauseOnEat.getValue() && PlayerUtils.isEating() || NoSlowdown.INSTANCE.isWorking()) return;
-            if (hitResult instanceof EntityHitResult entityHitResult) {
-                Entity entity = entityHitResult.getEntity();
-                if (!entity.isAlive()) return;
 
-                mc.gameMode.attack(mc.player, entity);
+            Entity entity = getAttackEntity();
+            if (entity == null) return;
 
-                if (espMode.is(ESPMode.Deobf)) DeobfESP.markHit(entity);
+            mc.gameMode.attack(mc.player, entity);
 
-                if (swingHand.getValue()) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-                }
+            if (espMode.is(ESPMode.Deobf)) DeobfESP.markHit(entity);
+
+            if (swingHand.getValue()) {
+                PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
             }
         }
+    }
+
+    private Entity getAttackEntity() {
+        if (throughWalls.getValue()) {
+            if (target == null || !target.isAlive() || target.isDeadOrDying()) return null;
+            return RotationUtils.getEyeDistanceToEntity(target) <= aimRange.getValue() ? target : null;
+        }
+
+        if (!(RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult)) return null;
+
+        Entity entity = entityHitResult.getEntity();
+        if (!entity.isAlive()) return null;
+
+        if (!rotate.getValue() && (targets == null || !targets.contains(entity))) return null;
+
+        return entity;
     }
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (target != null && Velocity.INSTANCE.attackQueue <= 0) {
-            HitResult hitResult = RotationManager.INSTANCE.getHitResult();
-            if (!hitSelect.getValue() || !(hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player)) {
+            if (!hitSelect.getValue() || !(getAttackEntity() instanceof Player)) {
                 switch (mode.getValue()) {
                     case OnePointNinePlus -> {
                         if (attacks == 0 && mc.player.getAttackStrengthScale(0.5f) >= 1.0f) {
