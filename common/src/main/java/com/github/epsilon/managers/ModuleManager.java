@@ -48,6 +48,7 @@ public class ModuleManager {
         addModule(AutoDtap.INSTANCE);
         addModule(AutoHitCrystal.INSTANCE);
         addModule(AutoMend.INSTANCE);
+        addModule(AutoMine.INSTANCE);
         addModule(AutoThrow.INSTANCE);
         addModule(AutoTotem.INSTANCE);
         addModule(AutoWeapon.INSTANCE);

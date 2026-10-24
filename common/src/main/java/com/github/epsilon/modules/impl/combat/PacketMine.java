@@ -165,6 +165,33 @@ public class PacketMine extends Module {
         return !state.isAir() && !state.canBeReplaced();
     }
 
+    /**
+     * 返回当前的距离上限，供依赖 Packet Mine 的模块筛选可达方块。
+     *
+     * @return 距离上限
+     */
+    public int getRange() {
+        return range.getValue();
+    }
+
+    /**
+     * 判断是否还有尚未被破坏的挖掘目标。
+     * <p>
+     * 依赖本模块的自动挖掘逻辑据此等待当前方块完成，避免重复调用 {@link #mine(BlockPos)} 重置进度。
+     *
+     * @return 存在未完成目标时返回 {@code true}
+     */
+    public boolean isBusy() {
+        if (!isEnabled() || mc.level == null) return false;
+        return isPendingBreak(targetPos) || isPendingBreak(secondPos);
+    }
+
+    private boolean isPendingBreak(BlockPos pos) {
+        if (pos == null || !mc.level.isLoaded(pos)) return false;
+        BlockState state = mc.level.getBlockState(pos);
+        return !state.isAir() && !state.canBeReplaced();
+    }
+
     public void mine(BlockPos pos) {
         mineTimer.reset();
         maxBreaksCount = 0;
