@@ -164,6 +164,7 @@ public class Scaffold extends Module {
             Blocks.SCAFFOLDING
     ));
     private final BoolSetting toggleOnTeleport = boolSetting("Toggle On Teleport", false);
+    private final BoolSetting selfRescue = boolSetting("Self Rescue", true);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
@@ -242,51 +243,54 @@ public class Scaffold extends Module {
 
         getBlockInfo();
 
-        boolean reachable = true;
-        if (mc.player.getDeltaMovement().y < -0.1 && blockPos != null) {
-            FallingPlayer fallingPlayer = new FallingPlayer(mc.player).calculate(2);
-            if (blockPos.getY() > fallingPlayer.getY()) {
-                reachable = false;
-            }
-        }
-        double strength = mc.player.getDeltaMovement().horizontal().length();
-        if (strength >= 1.5) {
-            NotificationManager.INSTANCE.warning(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName(), this.hashCode());
-        }
-        if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
-            emergencyPlacementActive = true;
-            event.cancel();
-
-            rotateCount++;
-            if (blockPos == null) return;
-            Rot2f rotation = getRotation(blockPos, direction);
-            RotationManager.INSTANCE.rotations = rotation;
-            RotationManager.INSTANCE.setActive(true);
-
-            mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
-
-            swap();
-
-            InteractionHand hand = blockResult.getHand();
-
-            InteractionResult result = mc.gameMode.useItemOn(
-                    mc.player,
-                    hand,
-                    new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false)
-            );
-            if (result.consumesAction()) {
-                if (swingHand.getValue()) {
-                    PlayerUtils.swingHand(hand);
-                }
-                if (render.getValue()) {
-                    renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+        if (selfRescue.getValue()) {
+            boolean reachable = true;
+            if (mc.player.getDeltaMovement().y < -0.1 && blockPos != null) {
+                FallingPlayer fallingPlayer = new FallingPlayer(mc.player).calculate(2);
+                if (blockPos.getY() > fallingPlayer.getY()) {
+                    reachable = false;
                 }
             }
+            double strength = mc.player.getDeltaMovement().horizontal().length();
+            if (strength >= 1.5) {
+                NotificationManager.INSTANCE.warning(this.getTranslatedName(), EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName(), this.hashCode());
+            }
+            if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
+                emergencyPlacementActive = true;
+                event.cancel();
 
-            swapBack();
-            return;
-        } else {
-            rotateCount = 0;
+                rotateCount++;
+                if (blockPos == null) return;
+                Rot2f rotation = getRotation(blockPos, direction);
+                RotationManager.INSTANCE.rotations = rotation;
+                RotationManager.INSTANCE.setActive(true);
+
+                // 代替 sendPosition()
+                mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
+
+                swap();
+
+                InteractionHand hand = blockResult.getHand();
+
+                InteractionResult result = mc.gameMode.useItemOn(
+                        mc.player,
+                        hand,
+                        new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false)
+                );
+                if (result.consumesAction()) {
+                    if (swingHand.getValue()) {
+                        PlayerUtils.swingHand(hand);
+                    }
+                    if (render.getValue()) {
+                        renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                    }
+                }
+
+                swapBack();
+                return;
+            } else {
+                rotateCount = 0;
+            }
         }
 
         switch (mode.getValue()) {
