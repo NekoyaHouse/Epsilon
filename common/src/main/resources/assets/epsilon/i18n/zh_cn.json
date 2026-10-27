@@ -756,7 +756,10 @@
         "ignore walls": "无视墙壁",
         "reaction time": "反应时间",
         "ignore invis": "无视隐身",
-        "predict ticks": "预测刻数"
+        "predict ticks": "预测刻数",
+        "bow fov": "弓瞄准视野",
+        "bow range": "弓瞄准距离",
+        "bow smooth": "弓瞄平滑"
       },
       "anchor blast": {
         "_value": "重生锚爆破",
