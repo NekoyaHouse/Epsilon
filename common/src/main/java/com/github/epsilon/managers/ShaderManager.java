@@ -28,6 +28,8 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
+import org.joml.Matrix4fStack;
+import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 
 import java.awt.*;
@@ -227,7 +229,7 @@ public class ShaderManager {
         encoder.clearColorAndDepthTextures(chestTarget.getColorTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), chestTarget.getDepthTexture(), 1.0);
     }
 
-    public void processChestOutlineTarget(RenderTarget mainTarget) {
+    public void processChestOutlineTarget(RenderTarget mainTarget, Matrix4fc modelViewMatrix) {
         if (!capturedChests) {
             preparedChests = false;
             return;
@@ -240,12 +242,19 @@ public class ShaderManager {
             return;
         }
 
+        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
+        modelViewStack.mul(modelViewMatrix);
+
         try (FeatureRenderDispatcher.PreparedFrame frame = mc.gameRenderer.featureRenderDispatcher().prepareFrame(chestOutlineStorage)) {
             renderOutlinePass("epsilon_chest_outline", chestTarget, frame);
         }
 
         processOutlineTarget(chestTarget, Shaders.INSTANCE.chestShader);
         chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView(), mainTarget.getDepthTextureView());
+
+        modelViewStack.popMatrix();
+
     }
 
     private void renderOutlinePass(String name, RenderTarget target, FeatureRenderDispatcher.PreparedFrame frame) {

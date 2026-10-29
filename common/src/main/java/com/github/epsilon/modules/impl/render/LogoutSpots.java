@@ -12,7 +12,6 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.combat.AntiBot;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -81,7 +80,8 @@ public class LogoutSpots extends Module {
                 for (Entry entry : packet.entries()) {
                     Player player = logoutCache.get(entry.profileId());
                     if (player == null) continue;
-                    if (ignoreBots.getValue() && AntiBot.INSTANCE.isBot(player)) continue;
+                    if (ignoreBots.getValue() && !mc.getConnection().getOnlinePlayerIds().contains(player.getUUID()))
+                        continue;
                     if (notifications.getValue()) {
                         ChatUtils.addChatMessage(player.getName().getString() + " logged back at  X: " + (int) player.getX() + " Y: " + (int) player.getY() + " Z: " + (int) player.getZ());
                     }
@@ -95,7 +95,8 @@ public class LogoutSpots extends Module {
             for (UUID uuid : profileIds) {
                 Player player = playerCache.get(uuid);
                 if (player == null) continue;
-                if (ignoreBots.getValue() && AntiBot.INSTANCE.isBot(player)) continue;
+                if (ignoreBots.getValue() && !mc.getConnection().getOnlinePlayerIds().contains(player.getUUID()))
+                    continue;
                 if (notifications.getValue()) {
                     ChatUtils.addChatMessage(player.getName().getString() + " logged out at  X: " + (int) player.getX() + " Y: " + (int) player.getY() + " Z: " + (int) player.getZ());
                 }

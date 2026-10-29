@@ -68,7 +68,6 @@ public class MixinGameRenderer {
     private void processShadersOutline(CameraRenderState cameraState, PlayerRenderState playerState, OptionsRenderState optionsState, boolean consistentDepthRequired, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
-            ShaderManager.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
             ShaderManager.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
         }
     }
