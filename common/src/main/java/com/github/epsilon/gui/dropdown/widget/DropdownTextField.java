@@ -167,6 +167,10 @@ public class DropdownTextField {
         return text;
     }
 
+    public int getCursorIndex() {
+        return Math.clamp(cursor, 0, text.length());
+    }
+
     public void setText(String text) {
         this.text = clamp(text == null ? "" : text);
         cursor = Math.min(cursor, this.text.length());
