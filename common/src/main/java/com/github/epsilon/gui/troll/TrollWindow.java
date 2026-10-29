@@ -30,18 +30,12 @@ public abstract class TrollWindow {
 
     public abstract void draw(UiTree.Scope scope, TextRenderer metrics, int mouseX, int mouseY);
 
-    /**
-     * 从标题栏高度展开窗口；对应 TrollHack-Luna 的 OUT_QUART 300ms 打开动画。
-     */
     public void startOpenAnimation() {
         openAnimation.setValue(0.0f);
         openAnimation.reset();
         openAnimation.run(1.0f);
     }
 
-    /**
-     * 推进并返回窗口展开进度。
-     */
     public float getOpenProgress() {
         openAnimation.run(1.0f);
         return openAnimation.getValue();

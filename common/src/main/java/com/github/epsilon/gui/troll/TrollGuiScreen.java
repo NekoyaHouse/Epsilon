@@ -153,7 +153,6 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
             }
         }
 
-        // Config/Friend 是固定入口窗口，放到右上角，避免被分类窗口的初始级联遮住。
         if (friendWindow != null) {
             friendWindow.position(Math.max(0.0f, width - friendWindow.bounds.width() - gap), gap);
         }
@@ -249,7 +248,14 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
             UiRenderBatch popupBatch = frame.batch(UiLayer.OVERLAY);
             popupHost.render(graphics, popupBatch, mx, my, partialTick);
             if (popupHost.getActivePopup() != null) {
-                pendingWindows.add(new WindowPass(popupHost.getActivePopup().getBounds(), popupBatch, true));
+                pendingWindows.add(new WindowPass(
+                        popupHost.getActivePopup().getBounds(),
+                        popupBatch,
+                        true,
+                        null,
+                        null,
+                        0
+                ));
             }
         } catch (RuntimeException | Error exception) {
             endPendingFrame();
@@ -264,27 +270,24 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     }
 
     private void queueWindow(UiScene frame, UiLayer layer, int relativeLayer, UiRect bounds, UiTree tree) {
-        UiRenderBatch batch = frame.batch(layer, relativeLayer);
-        batch.render(tree);
-        pendingWindows.add(new WindowPass(bounds, batch, false));
+        queueWindow(frame, layer, relativeLayer, bounds, tree, null, null, 0);
     }
 
-    /**
-     * 绘制窗口的打开状态：整体随 GUI 从底部上滑，单个窗口从标题栏向下展开。
-     */
-    private void renderAnimatedWindow(UiScene frame, UiLayer layer, int relativeLayer,
-                                      TrollWindow window, int mouseX, int mouseY) {
+    private void queueWindow(UiScene frame, UiLayer layer, int relativeLayer, UiRect bounds, UiTree tree, float[] blurRects, float[] blurRadii, int blurSegmentCount) {
+        UiRenderBatch batch = frame.batch(layer, relativeLayer);
+        batch.render(tree);
+        pendingWindows.add(new WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount));
+    }
+
+    private void renderAnimatedWindow(UiScene frame, UiLayer layer, int relativeLayer, TrollWindow window, int mouseX, int mouseY) {
         float windowProgress = window.getOpenProgress();
         float fullHeight = window.bounds.height();
-        float revealHeight = window.headerHeight
-                + Math.max(0.0f, fullHeight - window.headerHeight) * windowProgress;
+        float revealHeight = window.headerHeight + Math.max(0.0f, fullHeight - window.headerHeight) * windowProgress;
         if (revealHeight <= 0.01f) return;
 
         UiRect clip = new UiRect(window.bounds.x(), window.bounds.y(), window.bounds.width(), revealHeight);
-        UiRect passBounds = new UiRect(window.bounds.x(), window.bounds.y() + guiOpenOffsetY,
-                window.bounds.width(), revealHeight);
-        UiTree tree = UiTree.build(scope -> scope.pushAbsolute(0.0f, guiOpenOffsetY, translated ->
-                translated.scissor(clip, content -> window.draw(content, textMetrics.get(), mouseX, mouseY))));
+        UiRect passBounds = new UiRect(window.bounds.x(), window.bounds.y() + guiOpenOffsetY, window.bounds.width(), revealHeight);
+        UiTree tree = UiTree.build(scope -> scope.pushAbsolute(0.0f, guiOpenOffsetY, translated -> translated.scissor(clip, content -> window.draw(content, textMetrics.get(), mouseX, mouseY))));
         queueWindow(frame, layer, relativeLayer, passBounds, tree);
     }
 
@@ -300,22 +303,25 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         float top = Math.min(friendToggleBounds.y(), configToggleBounds.y());
         float right = Math.max(friendToggleBounds.right(), configToggleBounds.right());
         float bottom = Math.max(friendToggleBounds.bottom(), configToggleBounds.bottom());
-        queueWindow(frame, UiLayer.FLOATING, -90, new UiRect(left, top, right - left, bottom - top), tree);
+        float[] blurRects = {
+                friendToggleBounds.x(), friendToggleBounds.y(), friendToggleBounds.width(), friendToggleBounds.height(),
+                configToggleBounds.x(), configToggleBounds.y(), configToggleBounds.width(), configToggleBounds.height()
+        };
+        float[] blurRadii = {
+                friendToggleBounds.width() * 0.5f,
+                configToggleBounds.width() * 0.5f
+        };
+        queueWindow(frame, UiLayer.FLOATING, -90, new UiRect(left, top, right - left, bottom - top), tree, blurRects, blurRadii, 2);
     }
 
-    private void drawToggleButton(UiTree.Scope scope, UiRect bounds, String icon, boolean active,
-                                  int mouseX, int mouseY, Animation hoverAnimation) {
+    private void drawToggleButton(UiTree.Scope scope, UiRect bounds, String icon, boolean active, int mouseX, int mouseY, Animation hoverAnimation) {
         float hover = scope.animate(hoverAnimation, bounds.contains(mouseX, mouseY));
         float radius = bounds.width() * 0.5f;
         int backgroundAlpha = active ? (int) (205 + 50 * hover) : (int) (120 + 40 * hover);
         Color background = active
                 ? TrollTheme.alpha(TrollTheme.primary(), backgroundAlpha)
                 : new Color(0, 0, 0, backgroundAlpha);
-        Color outline = TrollTheme.alpha(TrollTheme.primary(), active ? 255 : (int) (105 + 90 * hover));
-        scope.shadow(bounds.x(), bounds.y(), bounds.width(), bounds.height(), radius, 10.0f,
-                TrollTheme.alpha(TrollTheme.primary(), active ? 45 : 20));
         scope.roundRect(2, bounds.x(), bounds.y(), bounds.width(), bounds.height(), radius, background);
-        scope.rectOutline(3, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0.9f, outline);
         TextRenderer metrics = textMetrics.get();
         float iconScale = 0.92f;
         float iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS);
@@ -348,7 +354,14 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
             pendingBackground.flushAndClear();
             for (WindowPass pass : pendingWindows) {
                 if (pendingWindowBlurStrength > 0.0f) {
-                    BlurShader.INSTANCE.render(renderTarget, pass.bounds.x(), pass.bounds.y(), pass.bounds.width(), pass.bounds.height(), 0.0f, pendingWindowBlurStrength);
+                    if (pass.blurSegmentCount > 0) {
+                        BlurShader.INSTANCE.render(renderTarget, pass.bounds.x(), pass.bounds.y(),
+                                pass.bounds.width(), pass.bounds.height(), 0.0f, 0.0f, 0.0f, 0.0f,
+                                pendingWindowBlurStrength, pass.blurRects, pass.blurRadii, pass.blurSegmentCount);
+                    } else {
+                        BlurShader.INSTANCE.render(renderTarget, pass.bounds.x(), pass.bounds.y(),
+                                pass.bounds.width(), pass.bounds.height(), 0.0f, pendingWindowBlurStrength);
+                    }
                 }
                 pass.batch.flushAndClear();
                 if (pass.popup) popupHost.flush();
@@ -603,7 +616,10 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         return false;
     }
 
-    private record WindowPass(UiRect bounds, UiRenderBatch batch, boolean popup) {
+    private record WindowPass(
+            UiRect bounds, UiRenderBatch batch, boolean popup,
+            float[] blurRects, float[] blurRadii, int blurSegmentCount
+    ) {
     }
 
 }

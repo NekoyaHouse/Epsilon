@@ -158,9 +158,6 @@ public class TrollSettingsWindow extends TrollWindow {
         for (TrollSettingRow row : allRows()) row.mouseReleased(event);
     }
 
-    /**
-     * 二级面板展开时重置所有 Setting 行的填充动画。
-     */
     public void startSettingAnimations() {
         for (TrollSettingRow row : allRows()) row.startOpenAnimation();
     }
