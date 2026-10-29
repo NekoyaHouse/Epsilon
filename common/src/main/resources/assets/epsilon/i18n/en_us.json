@@ -756,7 +756,10 @@
         "ignore walls": "Ignore Walls",
         "reaction time": "Reaction Time",
         "ignore invis": "Ignore Invis",
-        "predict ticks": "Predict Ticks"
+        "predict ticks": "Predict Ticks",
+        "bow fov": "Bow FOV",
+        "bow range": "Bow Range",
+        "bow smooth": "Bow Smooth"
       },
       "anchor blast": {
         "_value": "Anchor Blast",
