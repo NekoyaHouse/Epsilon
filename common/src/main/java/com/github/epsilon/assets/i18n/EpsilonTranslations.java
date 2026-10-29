@@ -112,6 +112,7 @@ public class EpsilonTranslations {
             Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
+            TrollGui.CLIENT,
             TrollGui.KEYBIND,
             TrollGui.LISTENING,
             TrollGui.COLOR_PICKER,
@@ -339,6 +340,7 @@ public class EpsilonTranslations {
      * TrollHack GUI 的绑定与调色板文案。
      */
     public static class TrollGui {
+        public static final TranslateComponent CLIENT = create("gui", "troll.client");
         public static final TranslateComponent KEYBIND = create("gui", "troll.keybind");
         public static final TranslateComponent LISTENING = create("gui", "troll.listening");
         public static final TranslateComponent COLOR_PICKER = create("gui", "troll.color_picker");

@@ -3,7 +3,11 @@ package com.github.epsilon.gui.troll;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.utils.render.animation.Animation;
+import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 
 public abstract class TrollWindow {
@@ -13,13 +17,35 @@ public abstract class TrollWindow {
     protected UiRect viewport = bounds;
     protected float headerHeight;
     protected float scrollPosition;
+    private final Animation openAnimation = new Animation(Easing.EASE_OUT_QUART, 300L);
     private boolean dragging;
     private double dragOffsetX;
     private double dragOffsetY;
 
+    protected TrollWindow() {
+        openAnimation.setStartValue(0.0f);
+    }
+
     public abstract void layout(TextRenderer metrics, float screenWidth, float screenHeight);
 
     public abstract void draw(UiTree.Scope scope, TextRenderer metrics, int mouseX, int mouseY);
+
+    /**
+     * 从标题栏高度展开窗口；对应 TrollHack-Luna 的 OUT_QUART 300ms 打开动画。
+     */
+    public void startOpenAnimation() {
+        openAnimation.setValue(0.0f);
+        openAnimation.reset();
+        openAnimation.run(1.0f);
+    }
+
+    /**
+     * 推进并返回窗口展开进度。
+     */
+    public float getOpenProgress() {
+        openAnimation.run(1.0f);
+        return openAnimation.getValue();
+    }
 
     public void position(float x, float y) {
         bounds = new UiRect(x, y, bounds.width(), bounds.height());
@@ -40,6 +66,7 @@ public abstract class TrollWindow {
 
     public boolean mouseClicked(MouseButtonEvent event) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && bounds.contains(event.x(), event.y()) && event.y() < bounds.y() + headerHeight) {
+            blurInput();
             dragging = true;
             dragOffsetX = event.x() - bounds.x();
             dragOffsetY = event.y() - bounds.y();
@@ -58,9 +85,27 @@ public abstract class TrollWindow {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) dragging = false;
     }
 
+    public boolean keyPressed(KeyEvent event) {
+        return false;
+    }
+
+    public boolean charTyped(CharacterEvent event) {
+        return false;
+    }
+
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (!viewport.contains(mouseX, mouseY)) return false;
+        scroll.scroll(amount);
+        return true;
+    }
+
+    public void blurInput() {
+    }
+
     public void resetInput() {
         dragging = false;
         scroll.stop();
+        blurInput();
     }
 
 }

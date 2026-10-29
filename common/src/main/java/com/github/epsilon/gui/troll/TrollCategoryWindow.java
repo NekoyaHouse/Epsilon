@@ -26,7 +26,7 @@ public class TrollCategoryWindow extends TrollWindow {
     }
 
     private String title() {
-        return category == null ? EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName() : category.getName();
+        return category == null ? EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() : category.getName();
     }
 
     @Override

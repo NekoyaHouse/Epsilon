@@ -8,7 +8,7 @@ import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.screen.PlatformNoticeScreen;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.impl.GuiSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -64,6 +64,12 @@ public class TrollSettingRow {
         this.bounds = bounds;
     }
 
+    public void startOpenAnimation() {
+        progress.setValue(0.0f);
+        progress.reset();
+        progress.run(target());
+    }
+
     public String label() {
         if (setting != null) return setting.getDisplayName();
         return switch (action) {
@@ -115,7 +121,7 @@ public class TrollSettingRow {
         if (p > 0.001f) {
             scope.rect(1, bounds.x(), bounds.y(), bounds.width() * p, bounds.height(), TrollTheme.primary());
         }
-        int hoverAlpha = ClientSetting.INSTANCE.trollHoverAlpha.getValue();
+        int hoverAlpha = GuiSetting.INSTANCE.hoverAlpha.getValue();
         scope.rect(2, bounds.x(), bounds.y(), bounds.width(), bounds.height(), new Color(255, 255, 255, (int) (hoverAlpha * h)));
         if (isEditing()) {
             scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));

@@ -3,6 +3,8 @@ package com.github.epsilon.gui.troll;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.graphics.text.IconChars;
+import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
@@ -17,10 +19,12 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.managers.ConfigManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.impl.GuiSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.StringListSetting;
+import com.github.epsilon.utils.render.animation.Animation;
+import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,10 +46,24 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
     public static final TrollGuiScreen INSTANCE = new TrollGuiScreen();
 
+    private static final float TOGGLE_SIZE = 30.0f;
+    private static final float TOGGLE_GAP = 8.0f;
+    private static final float TOGGLE_MARGIN = 10.0f;
+
     private final Supplier<TextRenderer> textMetrics = Suppliers.memoize(TextRenderer::create);
     private final Supplier<UiScene> scene = Suppliers.memoize(() -> new UiScene(EpsilonUiTheme.INSTANCE));
-    private final List<TrollCategoryWindow> categories = new ArrayList<>();
+    private final List<TrollWindow> windows = new ArrayList<>();
     private final PanelPopupHost popupHost = new PanelPopupHost();
+    private final Animation guiOpenAnimation = new Animation(Easing.EASE_OUT_CUBIC, 400L);
+    private final Animation friendToggleHover = new Animation(Easing.EASE_OUT_CUBIC, 120L);
+    private final Animation configToggleHover = new Animation(Easing.EASE_OUT_CUBIC, 120L);
+    private TrollFriendWindow friendWindow;
+    private TrollConfigWindow configWindow;
+    private boolean friendWindowOpen;
+    private boolean configWindowOpen;
+    private boolean guiAnimationStarted;
+    private UiRect friendToggleBounds = new UiRect(0.0f, 0.0f, 0.0f, 0.0f);
+    private UiRect configToggleBounds = new UiRect(0.0f, 0.0f, 0.0f, 0.0f);
     private TrollSettingsWindow settingsWindow;
     private TrollColorPicker colorPicker;
     private TrollWindow capturedWindow;
@@ -56,38 +74,52 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     private UiRenderBatch pendingBackground;
     private float pendingWindowBlurStrength;
     private float pendingFullscreenBlurStrength;
+    private float guiOpenOffsetY;
     private float pendingFrameWidth;
     private float pendingFrameHeight;
 
     private TrollGuiScreen() {
         super(Component.literal("TrollGui"));
+        guiOpenAnimation.setStartValue(0.0f);
+        friendToggleHover.setStartValue(0.0f);
+        configToggleHover.setStartValue(0.0f);
     }
 
     @Override
     protected void init() {
         super.init();
-        if (categories.isEmpty()) placeCategories();
+        if (windows.isEmpty()) placeWindows();
         layoutWindows();
+        if (!guiAnimationStarted) {
+            guiAnimationStarted = true;
+            guiOpenAnimation.setValue(0.0f);
+            guiOpenAnimation.reset();
+            guiOpenAnimation.run(1.0f);
+            for (TrollWindow window : windows) window.startOpenAnimation();
+        }
     }
 
-    private void placeCategories() {
+    private void placeWindows() {
         TextRenderer metrics = textMetrics.get();
         float gap = 3.0f;
         float headerHeight = TrollTheme.headerHeight(metrics);
         float width = screenWidth();
         float height = screenHeight();
 
-        List<Category> types = new ArrayList<>();
-        types.add(null);
-        types.addAll(List.of(Category.values()));
+        List<TrollWindow> types = new ArrayList<>();
+        types.add(new TrollCategoryWindow(null));
+        for (Category category : Category.values()) types.add(new TrollCategoryWindow(category));
+        types.add(new TrollFriendWindow());
+        types.add(new TrollConfigWindow(popupHost));
 
-        List<List<TrollCategoryWindow>> rows = new ArrayList<>();
-        List<TrollCategoryWindow> currentRow = new ArrayList<>();
+        List<List<TrollWindow>> rows = new ArrayList<>();
+        List<TrollWindow> currentRow = new ArrayList<>();
         float currentRowWidth = 0.0f;
-        for (Category category : types) {
-            TrollCategoryWindow window = new TrollCategoryWindow(category);
+        for (TrollWindow window : types) {
             window.layout(metrics, width, height);
-            categories.add(window);
+            windows.add(window);
+            if (window instanceof TrollFriendWindow friend) friendWindow = friend;
+            if (window instanceof TrollConfigWindow config) configWindow = config;
             float windowWidth = window.bounds.width();
             if (!currentRow.isEmpty() && currentRowWidth + gap + windowWidth > width) {
                 rows.add(currentRow);
@@ -102,12 +134,12 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
         float nextTop = 0.0f;
         boolean cascaded = false;
-        for (List<TrollCategoryWindow> row : rows) {
+        for (List<TrollWindow> row : rows) {
             float rowHeight = 0.0f;
-            for (TrollCategoryWindow window : row) rowHeight = Math.max(rowHeight, window.bounds.height());
+            for (TrollWindow window : row) rowHeight = Math.max(rowHeight, window.bounds.height());
             float top = cascaded ? nextTop : Math.clamp(height - rowHeight, 0.0f, nextTop);
             float x = 0.0f;
-            for (TrollCategoryWindow window : row) {
+            for (TrollWindow window : row) {
                 window.position(x, cascaded ? top : Math.clamp(height - window.bounds.height(), 0.0f, nextTop));
                 x += window.bounds.width() + gap;
             }
@@ -120,6 +152,15 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
                 nextTop = top + headerHeight + gap;
             }
         }
+
+        // Config/Friend 是固定入口窗口，放到右上角，避免被分类窗口的初始级联遮住。
+        if (friendWindow != null) {
+            friendWindow.position(Math.max(0.0f, width - friendWindow.bounds.width() - gap), gap);
+        }
+        if (configWindow != null) {
+            float configY = gap + (friendWindow == null ? 0.0f : friendWindow.bounds.height() + gap);
+            configWindow.position(Math.max(0.0f, width - configWindow.bounds.width() - gap), configY);
+        }
     }
 
     private float screenWidth() {
@@ -131,10 +172,21 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     }
 
     private void layoutWindows() {
-        for (TrollCategoryWindow window : categories) window.layout(textMetrics.get(), screenWidth(), screenHeight());
+        for (TrollWindow window : windows) window.layout(textMetrics.get(), screenWidth(), screenHeight());
         if (settingsWindow != null) settingsWindow.layout(textMetrics.get(), screenWidth(), screenHeight());
         if (colorPicker != null) colorPicker.layout(textMetrics.get(), screenWidth(), screenHeight());
+        updateToggleBounds();
         popupHost.setOverlayBounds(new UiRect(0, 0, screenWidth(), screenHeight()));
+    }
+
+    private void updateToggleBounds() {
+        float screenWidth = screenWidth();
+        float screenHeight = screenHeight();
+        float y = Math.max(0.0f, screenHeight - TOGGLE_MARGIN - TOGGLE_SIZE);
+        float configX = Math.max(0.0f, screenWidth - TOGGLE_MARGIN - TOGGLE_SIZE);
+        float friendX = Math.max(0.0f, configX - TOGGLE_GAP - TOGGLE_SIZE);
+        friendToggleBounds = new UiRect(friendX, y, TOGGLE_SIZE, TOGGLE_SIZE);
+        configToggleBounds = new UiRect(configX, y, TOGGLE_SIZE, TOGGLE_SIZE);
     }
 
     @Override
@@ -154,33 +206,46 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         int mx = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int my = LuminRenderSystem.toEpsilonMouseY(mouseY);
         layoutWindows();
+        guiOpenAnimation.run(1.0f);
+        float openProgress = guiOpenAnimation.getValue();
+        guiOpenOffsetY = (1.0f - openProgress) * screenHeight();
         UiScene frame = scene.get();
         frame.beginFrame();
         pendingScene = frame;
         pendingFrameWidth = screenWidth();
         pendingFrameHeight = screenHeight();
-        pendingWindowBlurStrength = ClientSetting.INSTANCE.trollBackgroundBlur.getValue().floatValue() * 22.5f;
-        pendingFullscreenBlurStrength = ClientSetting.INSTANCE.trollBlur.getValue() ? Math.max(1.5f, pendingWindowBlurStrength) : 0.0f;
+        pendingWindowBlurStrength = GuiSetting.INSTANCE.blurStrength.getValue().floatValue() * openProgress;
+        pendingFullscreenBlurStrength = GuiSetting.INSTANCE.backgroundBlur.getValue()
+                ? Math.max(1.5f, GuiSetting.INSTANCE.blurStrength.getValue().floatValue()) * openProgress
+                : 0.0f;
         try {
             graphics.blurBeforeThisStratum();
             pendingBackground = frame.batch(UiLayer.BACKGROUND);
-            if (ClientSetting.INSTANCE.trollBackground.getValue()) {
-                pendingBackground.render(UiTree.build(scope -> scope.rect(0, 0, pendingFrameWidth, pendingFrameHeight, new Color(0, 0, 0, 144))));
+            if (GuiSetting.INSTANCE.background.getValue()) {
+                int backgroundAlpha = (int) Math.round(144.0f * openProgress);
+                pendingBackground.render(UiTree.build(scope -> scope.rect(0, 0, pendingFrameWidth, pendingFrameHeight,
+                        new Color(0, 0, 0, backgroundAlpha))));
             }
             boolean modal = settingsWindow != null || colorPicker != null || popupHost.getActivePopup() != null;
-            TrollCategoryWindow hovered = modal ? null : hoveredCategory(mx, my);
-            for (int i = 0; i < categories.size(); i++) {
-                TrollCategoryWindow category = categories.get(i);
-                int hoverX = hovered == category ? mx : Integer.MIN_VALUE;
-                int hoverY = hovered == category ? my : Integer.MIN_VALUE;
-                queueWindow(frame, UiLayer.CONTENT, i * 8, category.bounds, UiTree.build(scope -> category.draw(scope, textMetrics.get(), hoverX, hoverY)));
+            TrollWindow hovered = modal ? null : hoveredWindow(mx, my);
+            for (int i = 0; i < windows.size(); i++) {
+                TrollWindow trollWindow = windows.get(i);
+                if (!isWindowVisible(trollWindow)) continue;
+                int hoverX = hovered == trollWindow ? mx : Integer.MIN_VALUE;
+                int hoverY = hovered == trollWindow ? my : Integer.MIN_VALUE;
+                renderAnimatedWindow(frame, UiLayer.CONTENT, i * 8, trollWindow, hoverX, hoverY);
+            }
+            if (!modal) {
+                renderToggleButtons(frame, mx, my);
             }
             if (settingsWindow != null) {
                 boolean blocked = colorPicker != null || popupHost.getActivePopup() != null;
-                queueWindow(frame, UiLayer.FLOATING, 0, settingsWindow.bounds, UiTree.build(scope -> settingsWindow.draw(scope, textMetrics.get(), blocked ? Integer.MIN_VALUE : mx, blocked ? Integer.MIN_VALUE : my)));
+                renderAnimatedWindow(frame, UiLayer.FLOATING, 0, settingsWindow,
+                        blocked ? Integer.MIN_VALUE : mx, blocked ? Integer.MIN_VALUE : my);
             }
-            if (colorPicker != null)
-                queueWindow(frame, UiLayer.POPUP, 0, colorPicker.bounds, UiTree.build(scope -> colorPicker.draw(scope, textMetrics.get(), mx, my)));
+            if (colorPicker != null) {
+                renderAnimatedWindow(frame, UiLayer.POPUP, 0, colorPicker, mx, my);
+            }
             UiRenderBatch popupBatch = frame.batch(UiLayer.OVERLAY);
             popupHost.render(graphics, popupBatch, mx, my, partialTick);
             if (popupHost.getActivePopup() != null) {
@@ -202,6 +267,65 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         UiRenderBatch batch = frame.batch(layer, relativeLayer);
         batch.render(tree);
         pendingWindows.add(new WindowPass(bounds, batch, false));
+    }
+
+    /**
+     * 绘制窗口的打开状态：整体随 GUI 从底部上滑，单个窗口从标题栏向下展开。
+     */
+    private void renderAnimatedWindow(UiScene frame, UiLayer layer, int relativeLayer,
+                                      TrollWindow window, int mouseX, int mouseY) {
+        float windowProgress = window.getOpenProgress();
+        float fullHeight = window.bounds.height();
+        float revealHeight = window.headerHeight
+                + Math.max(0.0f, fullHeight - window.headerHeight) * windowProgress;
+        if (revealHeight <= 0.01f) return;
+
+        UiRect clip = new UiRect(window.bounds.x(), window.bounds.y(), window.bounds.width(), revealHeight);
+        UiRect passBounds = new UiRect(window.bounds.x(), window.bounds.y() + guiOpenOffsetY,
+                window.bounds.width(), revealHeight);
+        UiTree tree = UiTree.build(scope -> scope.pushAbsolute(0.0f, guiOpenOffsetY, translated ->
+                translated.scissor(clip, content -> window.draw(content, textMetrics.get(), mouseX, mouseY))));
+        queueWindow(frame, layer, relativeLayer, passBounds, tree);
+    }
+
+    private void renderToggleButtons(UiScene frame, int mouseX, int mouseY) {
+        if (friendToggleBounds.width() <= 0.0f || configToggleBounds.width() <= 0.0f) return;
+        UiTree tree = UiTree.build(scope -> {
+            drawToggleButton(scope, friendToggleBounds, IconChars.PEOPLE, friendWindowOpen,
+                    mouseX, mouseY, friendToggleHover);
+            drawToggleButton(scope, configToggleBounds, IconChars.SETTINGS, configWindowOpen,
+                    mouseX, mouseY, configToggleHover);
+        });
+        float left = Math.min(friendToggleBounds.x(), configToggleBounds.x());
+        float top = Math.min(friendToggleBounds.y(), configToggleBounds.y());
+        float right = Math.max(friendToggleBounds.right(), configToggleBounds.right());
+        float bottom = Math.max(friendToggleBounds.bottom(), configToggleBounds.bottom());
+        queueWindow(frame, UiLayer.FLOATING, -90, new UiRect(left, top, right - left, bottom - top), tree);
+    }
+
+    private void drawToggleButton(UiTree.Scope scope, UiRect bounds, String icon, boolean active,
+                                  int mouseX, int mouseY, Animation hoverAnimation) {
+        float hover = scope.animate(hoverAnimation, bounds.contains(mouseX, mouseY));
+        float radius = bounds.width() * 0.5f;
+        int backgroundAlpha = active ? (int) (205 + 50 * hover) : (int) (120 + 40 * hover);
+        Color background = active
+                ? TrollTheme.alpha(TrollTheme.primary(), backgroundAlpha)
+                : new Color(0, 0, 0, backgroundAlpha);
+        Color outline = TrollTheme.alpha(TrollTheme.primary(), active ? 255 : (int) (105 + 90 * hover));
+        scope.shadow(bounds.x(), bounds.y(), bounds.width(), bounds.height(), radius, 10.0f,
+                TrollTheme.alpha(TrollTheme.primary(), active ? 45 : 20));
+        scope.roundRect(2, bounds.x(), bounds.y(), bounds.width(), bounds.height(), radius, background);
+        scope.rectOutline(3, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0.9f, outline);
+        TextRenderer metrics = textMetrics.get();
+        float iconScale = 0.92f;
+        float iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS);
+        float iconHeight = metrics.getHeight(iconScale, StaticFontLoader.ICONS);
+        scope.text(4, icon,
+                bounds.centerX() - iconWidth * 0.5f,
+                bounds.centerY() - iconHeight * 0.5f,
+                iconScale,
+                active ? TrollTheme.text() : TrollTheme.alpha(TrollTheme.text(), 220),
+                StaticFontLoader.ICONS);
     }
 
     public boolean renderPendingFrame() {
@@ -251,23 +375,62 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         }
     }
 
-    private TrollCategoryWindow hoveredCategory(double mouseX, double mouseY) {
-        for (int i = categories.size() - 1; i >= 0; i--) {
-            if (categories.get(i).bounds.contains(mouseX, mouseY)) return categories.get(i);
+    private TrollWindow hoveredWindow(double mouseX, double mouseY) {
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            TrollWindow window = windows.get(i);
+            if (isWindowVisible(window) && window.bounds.contains(mouseX, mouseY)) return window;
         }
         return null;
     }
 
+    private boolean isWindowVisible(TrollWindow window) {
+        if (window == friendWindow && !friendWindowOpen) return false;
+        if (window == configWindow && !configWindowOpen) return false;
+        return true;
+    }
+
+    private void toggleFriendWindow() {
+        if (friendWindow == null) return;
+        friendWindowOpen = !friendWindowOpen;
+        if (friendWindowOpen) {
+            friendWindow.startOpenAnimation();
+            bringToFront(friendWindow);
+        } else {
+            friendWindow.resetInput();
+        }
+    }
+
+    private void toggleConfigWindow() {
+        if (configWindow == null) return;
+        configWindowOpen = !configWindowOpen;
+        if (configWindowOpen) {
+            configWindow.startOpenAnimation();
+            bringToFront(configWindow);
+        } else {
+            configWindow.resetInput();
+        }
+    }
+
+    private void bringToFront(TrollWindow window) {
+        windows.remove(window);
+        windows.add(window);
+    }
+
     public TrollSettingsWindow openSettings(Module module, double x, double y) {
+        for (TrollWindow window : windows) window.blurInput();
         closeSettings();
         settingsWindow = new TrollSettingsWindow(module, (float) x, (float) y);
+        settingsWindow.startOpenAnimation();
         layoutWindows();
+        settingsWindow.startSettingAnimations();
         return settingsWindow;
     }
 
     public void openColorPicker(ColorSetting setting, double x, double y) {
+        for (TrollWindow window : windows) window.blurInput();
         if (colorPicker != null) colorPicker.cancel();
         colorPicker = new TrollColorPicker(setting, (float) x, (float) y);
+        colorPicker.startOpenAnimation();
         colorPicker.layout(textMetrics.get(), screenWidth(), screenHeight());
     }
 
@@ -303,12 +466,25 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
             }
             return true;
         }
-        TrollCategoryWindow category = hoveredCategory(mouse.x(), mouse.y());
-        if (category != null) {
-            categories.remove(category);
-            categories.add(category);
-            capturedWindow = category;
-            category.mouseClicked(mouse);
+        if (friendToggleBounds.contains(mouse.x(), mouse.y())) {
+            for (TrollWindow window : windows) window.blurInput();
+            toggleFriendWindow();
+            return true;
+        }
+        if (configToggleBounds.contains(mouse.x(), mouse.y())) {
+            for (TrollWindow window : windows) window.blurInput();
+            toggleConfigWindow();
+            return true;
+        }
+        TrollWindow window = hoveredWindow(mouse.x(), mouse.y());
+        if (window != null) {
+            for (TrollWindow other : windows) {
+                if (other != window) other.blurInput();
+            }
+            windows.remove(window);
+            windows.add(window);
+            capturedWindow = window;
+            window.mouseClicked(mouse);
             return true;
         }
         return true;
@@ -341,8 +517,8 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         else if (settingsWindow != null) {
             if (settingsWindow.viewport.contains(mx, my)) settingsWindow.scroll.scroll(scrollY);
         } else {
-            TrollCategoryWindow category = hoveredCategory(mx, my);
-            if (category != null) category.scroll.scroll(scrollY);
+            TrollWindow window = hoveredWindow(mx, my);
+            if (window != null) window.mouseScrolled(mx, my, scrollY);
         }
         return true;
     }
@@ -364,6 +540,10 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
             if (!settingsWindow.keyPressed(event) && event.isEscape()) closeSettings();
             return true;
         }
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            TrollWindow window = windows.get(i);
+            if (isWindowVisible(window) && window.keyPressed(event)) return true;
+        }
         if (event.isEscape()) onClose();
         return true;
     }
@@ -371,7 +551,13 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (popupHost.getActivePopup() != null) return popupHost.charTyped(event);
-        return colorPicker == null && settingsWindow != null && settingsWindow.charTyped(event);
+        if (colorPicker != null) return false;
+        if (settingsWindow != null) return settingsWindow.charTyped(event);
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            TrollWindow window = windows.get(i);
+            if (isWindowVisible(window) && window.charTyped(event)) return true;
+        }
+        return false;
     }
 
     @Override
@@ -397,7 +583,10 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         if (colorPicker != null) colorPicker.cancel();
         colorPicker = null;
         closeSettings();
-        for (TrollCategoryWindow category : categories) category.resetInput();
+        for (TrollWindow window : windows) window.resetInput();
+        friendWindowOpen = false;
+        configWindowOpen = false;
+        guiAnimationStarted = false;
         capturedWindow = null;
         preeditOverlay = null;
         IMEFocusHelper.forceDeactivate();

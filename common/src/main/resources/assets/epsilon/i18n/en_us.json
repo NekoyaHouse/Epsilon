@@ -81,7 +81,6 @@
         "friend": "Friend",
         "config": "Config"
       },
-      "no_settings": "No Available Settings",
       "friend": {
         "empty": "No Friends Added",
         "input": {
@@ -147,6 +146,7 @@
           "drag": "Drag Headers to Move Panels"
         }
       },
+      "no_settings": "No Available Settings",
       "inspector": {
         "_value": "Inspector",
         "select": "Select an Element"
@@ -164,6 +164,19 @@
         "all": "All",
         "available": "Available",
         "selected_header": "Selected"
+      },
+      "troll": {
+        "client": "Client",
+        "keybind": "Keybind",
+        "listening": "Press a key...",
+        "color_picker": "Color Picker",
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue",
+        "alpha": "Alpha",
+        "okay": "Okay",
+        "cancel": "Cancel",
+        "apply": "Apply"
       },
       "resource": {
         "video": "Main Menu Video",
@@ -219,18 +232,6 @@
         "current": "Current platform: %s",
         "hint": "This feature is unavailable on the current platform.",
         "confirm": "Got it"
-      },
-      "troll": {
-        "keybind": "Keybind",
-        "listening": "Press a key...",
-        "color_picker": "Color Picker",
-        "red": "Red",
-        "green": "Green",
-        "blue": "Blue",
-        "alpha": "Alpha",
-        "okay": "Okay",
-        "cancel": "Cancel",
-        "apply": "Apply"
       }
     },
     "modules": {
@@ -276,18 +277,6 @@
         "ncp max speed": "NCP Max Speed",
         "ncp no drag": "NCP No Drag",
         "ncp timeout": "NCP Timeout"
-      },
-      "elytra grim acc": {
-        "_value": "Elytra Grim Acc",
-        "mode": {
-          "_value": "Mode",
-          "simulation": "Simulation",
-          "crashpackets": "Crash Packets"
-        },
-        "max accelerate velocity": "Max Accelerate Velocity",
-        "setback wait": "Setback Wait",
-        "fix old version velocity": "Fix Old Version Velocity",
-        "fix kick from lag": "Fix Kick From Lag"
       },
       "player alarms": {
         "_value": "Player Alarms",
@@ -362,12 +351,8 @@
           "_value": "Appearance",
           "uzawa reisa": "Uzawa Reisa"
         },
-        "resources": "Resources",
         "notification": "Notification",
-        "via general": "Via General",
-        "via bedrock": "Via Bedrock",
-        "via debug": "Via Debug",
-        "via visual": "Via Visual",
+        "resources": "Resources",
         "open hud editor": "Open HUD Editor",
         "gui keybind": "Gui Keybind",
         "gui mode": {
@@ -435,6 +420,7 @@
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "Sakura",
           "endfield": "Endfield"
         },
         "custom title": {
@@ -442,6 +428,7 @@
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "Sakura",
           "endfield": "Endfield"
         },
         "use mainmenu": "Use Main Menu",
@@ -461,7 +448,6 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "Show Welcome Screen",
-        "screen background": "Screen Background",
         "show reisa in dropdown": "Show Reisa In Dropdown",
         "show reisa on startup": "Show Reisa On Startup",
         "show reisa on shutdown": "Show Reisa On Shutdown",
@@ -476,265 +462,21 @@
         "animated chat prefix": "Animated Chat Prefix",
         "chat prefix color start": "Chat Prefix Color Start",
         "chat prefix color end": "Chat Prefix Color End",
-        "chat prefix gradient speed": "Chat Prefix Gradient Speed",
-        "multiplayer screen button orientation": {
-          "_value": "Multiplayer Screen Button Orientation",
-          "none": "None",
-          "lefttop": "Left Top",
-          "righttop": "Right Top",
-          "leftbottom": "Left Bottom",
-          "rightbottom": "Right Bottom"
-        },
-        "add server screen button orientation": {
-          "_value": "Add Server Screen Button Orientation",
-          "none": "None",
-          "lefttop": "Left Top",
-          "righttop": "Right Top",
-          "leftbottom": "Left Bottom",
-          "rightbottom": "Right Bottom"
-        },
-        "direct connect screen button orientation": {
-          "_value": "Direct Connect Screen Button Orientation",
-          "none": "None",
-          "lefttop": "Left Top",
-          "righttop": "Right Top",
-          "leftbottom": "Left Bottom",
-          "rightbottom": "Right Bottom"
-        },
-        "remove unavailable items from creative tab": {
-          "_value": "Filter Creative Tabs",
-          "vanillaandmodded": "Vanilla And Modded",
-          "vanillaonly": "Vanilla Only",
-          "off": "Off"
-        },
-        "save selected protocol version": "Save Selected Protocol Version",
-        "show classic loading progress in connect screen": "Classic Loading Progress",
-        "show advertised server version": "Show Advertised Server Version",
-        "packet translation error action": {
-          "_value": "Packet Error Handling",
-          "kick": "Kick",
-          "cancelandnotify": "Cancel And Notify",
-          "cancel": "Cancel"
-        },
-        "load skins and skulls in legacy versions": "Load Skins And Skulls In Legacy Versions",
-        "emulate inventory actions in alpha versions": "Emulate Inventory Actions In Alpha Versions",
-        "save scroll position in slot screens": "Save Scroll Position In Slot Screens",
-        "experimental block connections": "Experimental Block Connections",
-        "replace bedrock default port": "Replace Bedrock Default Port",
-        "bedrock experimental features": "Bedrock Experimental Features",
-        "verify session for online mode servers": "Verify Session For Online Mode Servers",
-        "queue config packets": "Queue Config Packets",
-        "print networking errors to logs": "Print Networking Errors To Logs",
-        "ignore fabric sync errors": "Ignore Fabric Sync Errors",
-        "hide modern jigsaw screen features": "Hide Modern Jigsaw Screen Features",
-        "filter non existing glyphs": "Filter Non Existing Glyphs",
-        "remove server description sanitize": {
-          "_value": "Remove Server Description Sanitize",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "do not create packet error crash reports": {
-          "_value": "Do Not Create Packet Error Crash Reports",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "disable sequencing": {
-          "_value": "Disable Sequencing",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "always tick client player": {
-          "_value": "Always Tick Client Player",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "execute inputs synchronously": {
-          "_value": "Execute Inputs Synchronously",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "legacy tab completions": {
-          "_value": "Legacy Tab Completions",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "legacy pane outlines": {
-          "_value": "Legacy Pane Outlines",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "emulate armor hud": {
-          "_value": "Emulate Armor HUD",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "hide modern command block screen features": {
-          "_value": "Hide Modern Command Block Screen Features",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "legacy crop outlines": {
-          "_value": "Legacy Crop Outlines",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "serverside block and item place sounds": {
-          "_value": "Server-Side Place Sounds",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "disable server pinging": {
-          "_value": "Disable Server Pinging",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "remove bubble pop sound": "Remove Bubble Pop Sound",
-        "hide empty bubble icons": "Hide Empty Bubble Icons",
-        "hide villager profession": "Hide Villager Profession",
-        "hide download terrain screen transition effects": {
-          "_value": "Hide Download Terrain Screen Transition Effects",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "lock blocking arm rotation": {
-          "_value": "Lock Blocking Arm Rotation",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "change body rotation interpolation": {
-          "_value": "Change Body Rotation Interpolation",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "potion enchantment glint": {
-          "_value": "Potion Enchantment Glint",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "disable secure chat warning": {
-          "_value": "Disable Secure Chat Warning",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "hide signature indicator": {
-          "_value": "Hide Signature Indicator",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "replace petrified oak slab": {
-          "_value": "Replace Petrified Oak Slab",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "hide furnace recipe book": {
-          "_value": "Hide Furnace Recipe Book",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "force unicode font for non ascii languages": {
-          "_value": "Force Unicode Font For Non ASCII Languages",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "sneak instantly": {
-          "_value": "Sneak Instantly",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "sideways backwards walking": {
-          "_value": "Sideways Backwards Walking",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "hide crafting recipe book": {
-          "_value": "Hide Crafting Recipe Book",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "always render crosshair": {
-          "_value": "Always Render Crosshair",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "swing hand on item use": {
-          "_value": "Swing Hand On Item Use",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "tilt item positions": {
-          "_value": "Tilt Item Positions",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "enable legacy tablist": {
-          "_value": "Enable Legacy Tablist",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "replace hurt sound with oof sound": {
-          "_value": "Replace Hurt Sound With OOF Sound",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "hide modern hud elements": {
-          "_value": "Hide Modern HUD Elements",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "replace creative inventory": {
-          "_value": "Replace Creative Inventory",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "old walking animation": {
-          "_value": "Old Walking Animation",
-          "auto": "Auto",
-          "enabled": "Enabled",
-          "disabled": "Disabled"
-        },
-        "troll gui": "TrollHack GUI",
-        "troll blur": "Fullscreen Blur",
-        "troll background": "Dim Background",
-        "troll background blur": "Window Blur",
-        "troll window outline": "Window Outline",
-        "troll title bar": "Title Bar",
-        "troll x margin": "Horizontal Padding",
-        "troll y margin": "Row Spacing",
-        "troll primary color": "Primary Color",
-        "troll background color": "Window Background",
-        "troll text color": "Text Color",
-        "troll hover alpha": "Hover Opacity"
+        "chat prefix gradient speed": "Chat Prefix Gradient Speed"
+      },
+      "gui setting": {
+        "_value": "Gui Setting",
+        "background": "Background",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "window outline": "Window Outline",
+        "title bar": "Title Bar",
+        "x margin": "X Margin",
+        "y margin": "Y Margin",
+        "primary color": "Primary Color",
+        "background color": "Background Color",
+        "text color": "Text Color",
+        "hover alpha": "Hover Alpha"
       },
       "aim bot": {
         "_value": "Aim Bot",
@@ -842,7 +584,7 @@
         "work with pickaxe": "Work With Pickaxe",
         "sword swap": "Sword Swap",
         "swing hand": "Swing Hand",
-        "render vector": "Render Vector",
+        "render": "Render",
         "fade time": "Fade Time",
         "side color": "Side Color",
         "line color": "Line Color"
@@ -976,6 +718,83 @@
         "place cps": "Place CPS",
         "charge cps": "Charge CPS"
       },
+      "elytra combat": {
+        "_value": "Elytra Combat",
+        "general": "General",
+        "target": "Target",
+        "follow": "Follow",
+        "mace": "Mace",
+        "spear": "Spear",
+        "flight": "Flight",
+        "render": "Render",
+        "mode": {
+          "_value": "Mode",
+          "follow": "Follow",
+          "mace": "Mace",
+          "spear": "Spear"
+        },
+        "switch mode key": "Switch Mode Key",
+        "debug": "Debug",
+        "target range": "Target Range",
+        "dynamic target": "Dynamic Target",
+        "only when no wasd": "Only When No WASD",
+        "auto control elytra": "Auto Control Elytra",
+        "players": "Players",
+        "mobs": "Mobs",
+        "animals": "Animals",
+        "villagers": "Villagers",
+        "ambient": "Ambient",
+        "water": "Water",
+        "others": "Others",
+        "invisible": "Invisible",
+        "follow friend": "Follow Friend",
+        "predictor": {
+          "_value": "Predictor",
+          "linear": "Linear",
+          "quadratic": "Quadratic",
+          "nv": "NV"
+        },
+        "predict ticks": "Predict Ticks",
+        "prediction history": "Prediction History",
+        "stop distance": "Stop Distance",
+        "follow ground height": "Follow Ground Height",
+        "pathfinding": "Pathfinding",
+        "search radius": "Search Radius",
+        "max nodes": "Max Nodes",
+        "data size": "Data Size",
+        "mace range": "Mace Range",
+        "mace height": "Mace Height",
+        "mace ground height": "Mace Ground Height",
+        "mace min follow height": "Mace Min Follow Height",
+        "mace y bias": "Mace Y Bias",
+        "mace pull up max ticks": "Mace Pull Up Max Ticks",
+        "mace use predictor": "Mace Use Predictor",
+        "mace attack threshold": "Mace Attack Threshold",
+        "mace swing hand": "Mace Swing Hand",
+        "mace anti shield": "Mace Anti Shield",
+        "mace smooth flight": "Mace Smooth Flight",
+        "mace angle optimize": "Mace Angle Optimize",
+        "mace down angle": "Mace Down Angle",
+        "spear range": "Spear Range",
+        "spear min range": "Spear Min Range",
+        "spear lunge strength": "Spear Lunge Strength",
+        "spear pull over ticks": "Spear Pull Over Ticks",
+        "spear use predictor": "Spear Use Predictor",
+        "spear anti spear": "Spear Anti Spear",
+        "spear anti extra distance": "Spear Anti Extra Distance",
+        "log spear hit": "Log Spear Hit",
+        "control mode": {
+          "_value": "Control Mode",
+          "input": "Input",
+          "directvelocity": "Direct Velocity"
+        },
+        "max flight speed": "Max Flight Speed",
+        "max turn speed": "Max Turn Speed",
+        "allow firework": "Allow Firework",
+        "render vector": "Render Vector",
+        "render color": "Render Color",
+        "render width": "Render Width"
+      },
       "hover totem": {
         "_value": "Hover Totem",
         "delay": "Delay",
@@ -989,6 +808,7 @@
         "pause on eat": "Pause On Eat",
         "pause on scaffold": "Pause On Scaffold",
         "hit select": "Hit Select",
+        "through walls": "Through Walls",
         "mode": {
           "_value": "Mode",
           "onepointeight": "1.8",
@@ -1053,7 +873,66 @@
         "wave speed": "Wave Speed",
         "side color": "Side Color",
         "line color": "Line Color",
-        "circle radius": "Circle Radius",
+        "circle alpha factor": "Circle Alpha Factor",
+        "firefly color mode": {
+          "_value": "Firefly Color Mode",
+          "solid": "Solid",
+          "blend": "Blend",
+          "rainbow": "Rainbow"
+        },
+        "firefly color": "Firefly Color",
+        "firefly color 2": "Firefly Color 2",
+        "firefly color mix": "Firefly Color Mix",
+        "firefly color speed": "Firefly Color Speed",
+        "firefly rainbow speed": "Firefly Rainbow Speed",
+        "firefly rainbow saturation": "Firefly Rainbow Saturation",
+        "firefly rainbow brightness": "Firefly Rainbow Brightness",
+        "firefly length": "Firefly Length",
+        "firefly factor": "Firefly Factor",
+        "firefly shaking": "Firefly Shaking",
+        "firefly amplitude": "Firefly Amplitude"
+      },
+      "spear aura": {
+        "_value": "Spear Aura",
+        "range": "Range",
+        "fov": "FOV",
+        "auto charge": "Auto Charge",
+        "move": "Move",
+        "rotation speed": "Rotation Speed",
+        "rotation priority": {
+          "_value": "Rotation Priority",
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        },
+        "players": "Players",
+        "mobs": "Mobs",
+        "animals": "Animals",
+        "villagers": "Villagers",
+        "invisible": "Invisible",
+        "mace": "Mace",
+        "mace swap mode": {
+          "_value": "Mace Swap Mode",
+          "normal": "Normal",
+          "silent": "Silent",
+          "invswitch": "Inv Switch"
+        },
+        "esp": "ESP",
+        "esp mode": {
+          "_value": "ESP Mode",
+          "capturemark": "Capture Mark",
+          "circle": "Circle",
+          "firefly": "Firefly"
+        },
+        "esp main": "ESP Main Color",
+        "esp second": "ESP Second Color",
+        "esp size": "ESP Size",
+        "rot speed": "Rot Speed",
+        "wave speed": "Wave Speed",
+        "side color": "Side Color",
+        "line color": "Line Color",
         "circle alpha factor": "Circle Alpha Factor",
         "firefly color mode": {
           "_value": "Firefly Color Mode",
@@ -1258,17 +1137,6 @@
         "villagers": "Villagers",
         "invisible": "Invisible"
       },
-      "super knockback": {
-        "_value": "Super Knockback",
-        "mode": {
-          "_value": "Mode",
-          "stopsprinting": "Stop Sprinting",
-          "backwards": "Backwards",
-          "noforwards": "No Forwards"
-        },
-        "delay": "Delay",
-        "hurt time": "Hurt Time"
-      },
       "trigger bot": {
         "_value": "Trigger Bot",
         "range": "Range",
@@ -1468,7 +1336,6 @@
         "ignore curse": "Ignore Binding Curse",
         "strict": "Strict"
       },
-      "auto crossbow release": "Auto Crossbow Release",
       "auto firework": {
         "_value": "Auto Firework",
         "activate key": "Activate Key",
@@ -1558,22 +1425,6 @@
         "playback": "Playback"
       },
       "ghost hand": "Ghost Hand",
-      "helper": {
-        "_value": "Helper",
-        "self extinguish": "Self Extinguish",
-        "extinguish fire": "Extinguish Fire",
-        "block lava": "Block Lava",
-        "block water": "Block Water",
-        "speed": "Speed",
-        "rotation priority": {
-          "_value": "Rotation Priority",
-          "lowest": "Lowest",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "highest": "Highest"
-        }
-      },
       "input disabler": "Input Disabler",
       "inv manager": {
         "_value": "Inv Manager",
@@ -1697,82 +1548,17 @@
           "xin_2b2t": "2b2t.xin"
         }
       },
-      "elytra combat": {
-        "_value": "Elytra Combat",
-        "general": "General",
+      "elytra grim acc": {
+        "_value": "Elytra Grim Acc",
         "mode": {
           "_value": "Mode",
-          "follow": "Follow",
-          "mace": "Mace",
-          "spear": "Spear"
+          "simulation": "Simulation",
+          "crashpackets": "Crash Packets"
         },
-        "switch mode key": "Switch Mode Key",
-        "target range": "Target Range",
-        "dynamic target": "Dynamic Target",
-        "only when no wasd": "Only When No WASD",
-        "auto control elytra": "Auto Control Elytra",
-        "target": "Target",
-        "players": "Players",
-        "mobs": "Mobs",
-        "animals": "Animals",
-        "villagers": "Villagers",
-        "ambient": "Ambient",
-        "water": "Water",
-        "others": "Others",
-        "invisible": "Invisible",
-        "follow friend": "Follow Friend",
-        "predictor": {
-          "_value": "Predictor",
-          "linear": "Linear",
-          "quadratic": "Quadratic",
-          "nv": "NV"
-        },
-        "predict ticks": "Predict Ticks",
-        "prediction history": "Prediction History",
-        "follow": "Follow",
-        "stop distance": "Stop Distance",
-        "follow ground height": "Follow Ground Height",
-        "pathfinding": "Pathfinding",
-        "search radius": "Search Radius",
-        "max nodes": "Max Nodes",
-        "data size": "Data Size",
-        "mace": "Mace",
-        "mace range": "Mace Range",
-        "mace height": "Mace Height",
-        "mace ground height": "Mace Ground Height",
-        "mace min follow height": "Mace Min Follow Height",
-        "mace y bias": "Mace Y Bias",
-        "mace pull up max ticks": "Mace Pull Up Max Ticks",
-        "mace use predictor": "Mace Use Predictor",
-        "mace attack threshold": "Mace Attack Threshold",
-        "mace swing hand": "Mace Swing Hand",
-        "mace anti shield": "Mace Anti Shield",
-        "mace smooth flight": "Mace Smooth Flight",
-        "mace angle optimize": "Mace Angle Optimize",
-        "mace down angle": "Mace Down Angle",
-        "spear": "Spear",
-        "spear range": "Spear Range",
-        "spear min range": "Spear Min Range",
-        "spear lunge strength": "Spear Lunge Strength",
-        "spear pull over ticks": "Spear Pull Over Ticks",
-        "spear use predictor": "Spear Use Predictor",
-        "spear anti spear": "Spear Anti Spear",
-        "spear anti extra distance": "Spear Anti Extra Distance",
-        "log spear hit": "Log Spear Hit",
-        "flight": "Flight",
-        "control mode": {
-          "_value": "Control Mode",
-          "input": "Input",
-          "directvelocity": "Direct Velocity"
-        },
-        "max flight speed": "Max Flight Speed",
-        "max turn speed": "Max Turn Speed",
-        "allow firework": "Allow Firework",
-        "render": "Render",
-        "render vector": "Render Vector",
-        "render color": "Render Color",
-        "render width": "Render Width",
-        "debug": "Debug"
+        "max accelerate velocity": "Max Accelerate Velocity",
+        "setback wait": "Setback Wait",
+        "fix old version velocity": "Fix Old Version Velocity",
+        "fix kick from lag": "Fix Kick From Lag"
       },
       "dolphin": "Dolphin",
       "auto sprint": "Auto Sprint",
@@ -1843,7 +1629,14 @@
         "color": "Color"
       },
       "jump reset": "Jump Reset",
-      "keep sprint": "Keep Sprint",
+      "keep sprint": {
+        "_value": "Keep Sprint",
+        "mode": {
+          "_value": "Mode",
+          "vanilla": "Vanilla",
+          "legit": "Legit"
+        }
+      },
       "movement fix": "Movement Fix",
       "no slowdown": {
         "_value": "No Slowdown",
@@ -1905,6 +1698,7 @@
         "_value": "Scaffold",
         "blacklisted blocks": "Blacklisted Blocks",
         "toggle on teleport": "Toggle On Teleport",
+        "self rescue": "Self Rescue",
         "mode": {
           "_value": "Mode",
           "tellybridge": "Telly Bridge",
@@ -2021,6 +1815,7 @@
         "delay ticks": "Delay Ticks",
         "jump reset": "Jump Reset"
       },
+      "ac spoof": "AC Spoof",
       "kill effect": {
         "_value": "Kill Effect",
         "lightning": "Lightning",
@@ -2105,9 +1900,15 @@
       },
       "chams": {
         "_value": "Chams",
-        "no depth": "No Depth",
         "players": "Players",
-        "chests": "Chests"
+        "self": "Self",
+        "friends": "Friends",
+        "crystals": "Crystals",
+        "chests": "Chests",
+        "creatures": "Creatures",
+        "monsters": "Monsters",
+        "ambients": "Ambient",
+        "others": "Others"
       },
       "crystal chams": {
         "_value": "Crystal Chams",
@@ -2350,6 +2151,7 @@
         "render mode": {
           "_value": "Render Mode",
           "model": "Model",
+          "skeleton": "Skeleton",
           "box": "Box"
         },
         "side color": "Side Color",
@@ -2501,16 +2303,6 @@
           "drop": "Drop",
           "fly": "Fly"
         }
-      },
-      "skeleton": {
-        "_value": "Skeleton",
-        "friends": "Friends",
-        "self": "Self",
-        "invisibles": "Invisibles",
-        "distance": "Distance",
-        "line width": "Line Width",
-        "color": "Color",
-        "friend color": "Friend Color"
       },
       "pop chams": {
         "_value": "Pop Chams",
@@ -2687,6 +2479,16 @@
         "chest smoke fill": "Chest Smoke Fill",
         "chest smoke fill 2": "Chest Smoke Fill 2"
       },
+      "skeleton": {
+        "_value": "Skeleton",
+        "friends": "Friends",
+        "self": "Self",
+        "invisibles": "Invisibles",
+        "distance": "Distance",
+        "line width": "Line Width",
+        "color": "Color",
+        "friend color": "Friend Color"
+      },
       "sneak tweak": {
         "_value": "Sneak Tweak",
         "smoothing": "Smoothing",
@@ -2794,69 +2596,7 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
-      },
-      "spear aura": {
-        "_value": "Spear Aura",
-        "range": "Range",
-        "fov": "FOV",
-        "auto charge": "Auto Charge",
-        "move": "Move",
-        "rotation speed": "Rotation Speed",
-        "rotation priority": {
-          "_value": "Rotation Priority",
-          "lowest": "Lowest",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "highest": "Highest"
-        },
-        "players": "Players",
-        "mobs": "Mobs",
-        "animals": "Animals",
-        "villagers": "Villagers",
-        "invisible": "Invisible",
-        "mace": "Mace",
-        "mace swap mode": {
-          "_value": "Mace Swap Mode",
-          "normal": "Normal",
-          "silent": "Silent",
-          "invswitch": "Inv Switch"
-        },
-        "esp": "ESP",
-        "esp mode": {
-          "_value": "ESP Mode",
-          "capturemark": "Capture Mark",
-          "circle": "Circle",
-          "firefly": "Firefly"
-        },
-        "esp main": "ESP Main Color",
-        "esp second": "ESP Second Color",
-        "esp size": "ESP Size",
-        "rot speed": "Rot Speed",
-        "wave speed": "Wave Speed",
-        "side color": "Side Color",
-        "line color": "Line Color",
-        "circle radius": "Circle Radius",
-        "circle alpha factor": "Circle Alpha Factor",
-        "firefly color mode": {
-          "_value": "Firefly Color Mode",
-          "solid": "Solid",
-          "blend": "Blend",
-          "rainbow": "Rainbow"
-        },
-        "firefly color": "Firefly Color",
-        "firefly color 2": "Firefly Color 2",
-        "firefly color mix": "Firefly Color Mix",
-        "firefly color speed": "Firefly Color Speed",
-        "firefly rainbow speed": "Firefly Rainbow Speed",
-        "firefly rainbow saturation": "Firefly Rainbow Saturation",
-        "firefly rainbow brightness": "Firefly Rainbow Brightness",
-        "firefly length": "Firefly Length",
-        "firefly factor": "Firefly Factor",
-        "firefly shaking": "Firefly Shaking",
-        "firefly amplitude": "Firefly Amplitude"
-      },
-      "ac spoof": "AC Spoof"
+      }
     },
     "elements": {
       "player info": {
