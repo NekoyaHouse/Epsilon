@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.impl.GuiSetting;
 
 import java.awt.*;
 
@@ -18,19 +18,19 @@ public class TrollTheme {
     }
 
     public static Color primary() {
-        return ClientSetting.INSTANCE.trollPrimaryColor.getValue();
+        return GuiSetting.INSTANCE.primaryColor.getValue();
     }
 
     public static Color text() {
-        return ClientSetting.INSTANCE.trollTextColor.getValue();
+        return GuiSetting.INSTANCE.textColor.getValue();
     }
 
     public static float xMargin() {
-        return ClientSetting.INSTANCE.trollXMargin.getValue().floatValue();
+        return GuiSetting.INSTANCE.xMargin.getValue().floatValue();
     }
 
     public static float yMargin() {
-        return ClientSetting.INSTANCE.trollYMargin.getValue().floatValue();
+        return GuiSetting.INSTANCE.yMargin.getValue().floatValue();
     }
 
     public static float rowHeight(TextRenderer metrics) {
@@ -46,14 +46,14 @@ public class TrollTheme {
     }
 
     public static void window(UiTree.Scope scope, UiRect bounds, float headerHeight, String title, TextRenderer metrics) {
-        boolean titleBar = ClientSetting.INSTANCE.trollTitleBar.getValue();
-        Color background = ClientSetting.INSTANCE.trollBackgroundColor.getValue();
+        boolean titleBar = GuiSetting.INSTANCE.titleBar.getValue();
+        Color background = GuiSetting.INSTANCE.backgroundColor.getValue();
         scope.rect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), background);
         if (titleBar) {
             scope.rect(bounds.x(), bounds.y(), bounds.width(), headerHeight, primary());
         }
         scope.text(3, trim(title, metrics, TEXT_SCALE, bounds.width() - 9.0f), bounds.x() + 4.5f, bounds.y() + 4.5f, TEXT_SCALE, text());
-        if (ClientSetting.INSTANCE.trollWindowOutline.getValue()) {
+        if (GuiSetting.INSTANCE.windowOutline.getValue()) {
             scope.rectOutline(4, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0.5f, alpha(primary(), 255));
         }
     }

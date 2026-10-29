@@ -9,6 +9,7 @@ import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.impl.GuiSetting;
 import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat;
 import com.github.epsilon.modules.impl.movement.*;
@@ -36,6 +37,7 @@ public class ModuleManager {
 
     public void initModules() {
         addModule(ClientSetting.INSTANCE);
+        addModule(GuiSetting.INSTANCE);
 
         // Combat
         addModule(AimBot.INSTANCE);

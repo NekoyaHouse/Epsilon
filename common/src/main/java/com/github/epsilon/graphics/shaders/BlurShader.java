@@ -87,7 +87,7 @@ public class BlurShader {
         render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0);
     }
 
-    private void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
+    public void render(LuminRenderSystem.LuminRenderTarget source, float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength, float[] segmentRects, float[] segmentRadii, int segmentCount) {
         this.ensureProgram();
 
         if (width <= 0.0f || height <= 0.0f) {

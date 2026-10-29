@@ -6,9 +6,10 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.screen.PlatformNoticeScreen;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.impl.GuiSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -64,6 +65,12 @@ public class TrollSettingRow {
         this.bounds = bounds;
     }
 
+    public void startOpenAnimation() {
+        progress.setValue(0.0f);
+        progress.reset();
+        progress.run(target());
+    }
+
     public String label() {
         if (setting != null) return setting.getDisplayName();
         return switch (action) {
@@ -115,10 +122,14 @@ public class TrollSettingRow {
         if (p > 0.001f) {
             scope.rect(1, bounds.x(), bounds.y(), bounds.width() * p, bounds.height(), TrollTheme.primary());
         }
-        int hoverAlpha = ClientSetting.INSTANCE.trollHoverAlpha.getValue();
+        int hoverAlpha = GuiSetting.INSTANCE.hoverAlpha.getValue();
         scope.rect(2, bounds.x(), bounds.y(), bounds.width(), bounds.height(), new Color(255, 255, 255, (int) (hoverAlpha * h)));
         if (isEditing()) {
-            scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));
+            if (setting instanceof IntSetting || setting instanceof DoubleSetting) {
+                drawNumericEditing(scope, metrics);
+            } else {
+                scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));
+            }
             return;
         }
         String value = displayValueText();
@@ -131,6 +142,31 @@ public class TrollSettingRow {
             return;
         }
         scope.text(3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth), bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, text);
+    }
+
+    private void drawNumericEditing(UiTree.Scope scope, TextRenderer metrics) {
+        String text = input.getText();
+        float labelScale = TrollTheme.TEXT_SCALE;
+        float valueScale = TrollTheme.VALUE_SCALE;
+        float textY = bounds.y() + 2.25f;
+        float valueWidth = Math.min(metrics.getWidth(text, valueScale), bounds.width() * 0.48f);
+        float valueX = bounds.right() - valueWidth - 3.0f;
+
+        scope.text(3, TrollTheme.trim(label(), metrics, labelScale,
+                        Math.max(1.0f, bounds.width() - valueWidth - 10.5f)),
+                bounds.x() + 3.0f, textY, labelScale, TrollTheme.text());
+        scope.text(3, TrollTheme.trim(text, metrics, valueScale, valueWidth),
+                valueX, bounds.bottom() - metrics.getHeight(valueScale) - 3.0f,
+                valueScale, TrollTheme.text());
+
+        int cursor = input.getCursorIndex();
+        float caretX = valueX + metrics.getWidth(text.substring(0, cursor), valueScale);
+        caretX = Math.min(caretX, bounds.right() - 3.0f);
+        float caretY = bounds.bottom() - metrics.getHeight(valueScale) - 3.0f;
+        if (System.currentTimeMillis() % 1000 > 500) {
+            scope.rect(4, caretX, caretY, 0.8f, metrics.getHeight(valueScale), TrollTheme.text());
+        }
+        IMEFocusHelper.updateCursorPos(caretX, caretY);
     }
 
     private void drawColorSwatch(UiTree.Scope scope, TextRenderer metrics, Color color) {

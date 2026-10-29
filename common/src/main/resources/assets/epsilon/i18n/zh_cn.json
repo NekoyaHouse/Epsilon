@@ -81,7 +81,6 @@
         "friend": "好友",
         "config": "配置"
       },
-      "no_settings": "无可用设置",
       "friend": {
         "empty": "未添加好友",
         "input": {
@@ -147,6 +146,7 @@
           "drag": "拖动标题移动面板"
         }
       },
+      "no_settings": "无可用设置",
       "inspector": {
         "_value": "检查器",
         "select": "选择一个元素"
@@ -164,6 +164,19 @@
         "all": "全部",
         "available": "可用",
         "selected_header": "已选"
+      },
+      "troll": {
+        "client": "客户端",
+        "keybind": "按键绑定",
+        "listening": "请按下按键…",
+        "color_picker": "颜色选择器",
+        "red": "红色",
+        "green": "绿色",
+        "blue": "蓝色",
+        "alpha": "透明度",
+        "okay": "确定",
+        "cancel": "取消",
+        "apply": "应用"
       },
       "resource": {
         "video": "主菜单视频",
@@ -219,18 +232,6 @@
         "current": "当前平台：%s",
         "hint": "该功能在当前平台上不可用。",
         "confirm": "知道了"
-      },
-      "troll": {
-        "keybind": "按键绑定",
-        "listening": "请按下按键…",
-        "color_picker": "颜色选择器",
-        "red": "红色",
-        "green": "绿色",
-        "blue": "蓝色",
-        "alpha": "透明度",
-        "okay": "确定",
-        "cancel": "取消",
-        "apply": "应用"
       }
     },
     "modules": {
@@ -276,18 +277,6 @@
         "ncp max speed": "NCP 最大速度",
         "ncp no drag": "NCP 无阻力",
         "ncp timeout": "NCP 触发间隔"
-      },
-      "elytra grim acc": {
-        "_value": "鞘翅 Grim 加速",
-        "mode": {
-          "_value": "模式",
-          "simulation": "模拟位移",
-          "crashpackets": "崩溃包"
-        },
-        "max accelerate velocity": "最大加速速度",
-        "setback wait": "拉回等待刻数",
-        "fix old version velocity": "修复旧版本速度",
-        "fix kick from lag": "卡区块保护"
       },
       "player alarms": {
         "_value": "玩家警报",
@@ -362,12 +351,8 @@
           "_value": "外观",
           "uzawa reisa": "宇泽玲纱"
         },
-        "resources": "资源",
         "notification": "通知",
-        "via general": "Via 通用",
-        "via bedrock": "Via Bedrock",
-        "via debug": "Via 调试",
-        "via visual": "Via 视觉",
+        "resources": "资源",
         "open hud editor": "打开 HUD 编辑器",
         "gui keybind": "GUI 按键绑定",
         "gui mode": {
@@ -435,6 +420,7 @@
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "樱花",
           "endfield": "终末地"
         },
         "custom title": {
@@ -442,6 +428,7 @@
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "樱花",
           "endfield": "终末地"
         },
         "use mainmenu": "自定义主菜单",
@@ -461,7 +448,6 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "启动时显示欢迎页",
-        "screen background": "屏幕背景",
         "show reisa in dropdown": "在瀑布式界面显示玲纱",
         "show reisa on startup": "启动游戏时显示玲纱",
         "show reisa on shutdown": "关闭游戏时显示玲纱",
@@ -476,265 +462,21 @@
         "animated chat prefix": "聊天前缀动画",
         "chat prefix color start": "聊天前缀起始颜色",
         "chat prefix color end": "聊天前缀结束颜色",
-        "chat prefix gradient speed": "聊天前缀渐变速度",
-        "multiplayer screen button orientation": {
-          "_value": "多人游戏屏幕按钮位置",
-          "none": "无",
-          "lefttop": "左上角",
-          "righttop": "右上角",
-          "leftbottom": "左下角",
-          "rightbottom": "右下角"
-        },
-        "add server screen button orientation": {
-          "_value": "添加服务器屏幕按钮位置",
-          "none": "无",
-          "lefttop": "左上角",
-          "righttop": "右上角",
-          "leftbottom": "左下角",
-          "rightbottom": "右下角"
-        },
-        "direct connect screen button orientation": {
-          "_value": "直接连接屏幕按钮位置",
-          "none": "无",
-          "lefttop": "左上角",
-          "righttop": "右上角",
-          "leftbottom": "左下角",
-          "rightbottom": "右下角"
-        },
-        "remove unavailable items from creative tab": {
-          "_value": "过滤创造模式标签页",
-          "vanillaandmodded": "原版和模组",
-          "vanillaonly": "仅原版",
-          "off": "关"
-        },
-        "save selected protocol version": "保存所选协议版本",
-        "show classic loading progress in connect screen": "经典加载进度条",
-        "show advertised server version": "显示连接所用版本和服务器版本",
-        "packet translation error action": {
-          "_value": "数据包错误处理",
-          "kick": "踢出",
-          "cancelandnotify": "取消并通知",
-          "cancel": "取消"
-        },
-        "load skins and skulls in legacy versions": "加载旧版本皮肤和头颅",
-        "emulate inventory actions in alpha versions": "模拟 Alpha 版本物品栏操作",
-        "save scroll position in slot screens": "在槽位屏幕中保存滚动位置",
-        "experimental block connections": "实验性方块连接",
-        "replace bedrock default port": "替换 Bedrock 默认端口",
-        "bedrock experimental features": "Bedrock 实验性功能",
-        "verify session for online mode servers": "验证在线模式服务器的会话",
-        "queue config packets": "排列配置数据包",
-        "print networking errors to logs": "将网络错误打印到日志中",
-        "ignore fabric sync errors": "忽略 Fabric 同步错误",
-        "hide modern jigsaw screen features": "隐藏新式拼图方块屏幕功能",
-        "filter non existing glyphs": "过滤不存在的字形",
-        "remove server description sanitize": {
-          "_value": "移除服务器描述清理",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "do not create packet error crash reports": {
-          "_value": "不创建数据包错误崩溃报告",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "disable sequencing": {
-          "_value": "禁用排序",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "always tick client player": {
-          "_value": "始终执行客户端玩家刻",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "execute inputs synchronously": {
-          "_value": "同步执行输入",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "legacy tab completions": {
-          "_value": "旧版 Tab 补全",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "legacy pane outlines": {
-          "_value": "旧版玻璃板轮廓",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "emulate armor hud": {
-          "_value": "模拟护甲 HUD",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "hide modern command block screen features": {
-          "_value": "隐藏新式命令方块屏幕功能",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "legacy crop outlines": {
-          "_value": "旧版农作物轮廓",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "serverside block and item place sounds": {
-          "_value": "服务端放置音效",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "disable server pinging": {
-          "_value": "禁用服务器 Ping",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "remove bubble pop sound": "去除气泡爆裂声",
-        "hide empty bubble icons": "隐藏空气泡图标",
-        "hide villager profession": "隐藏村民职业",
-        "hide download terrain screen transition effects": {
-          "_value": "隐藏下载地形屏幕过渡效果",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "lock blocking arm rotation": {
-          "_value": "格挡时锁定第三人称手臂旋转",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "change body rotation interpolation": {
-          "_value": "更改身体旋转插值",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "potion enchantment glint": {
-          "_value": "在药水上显示附魔光效",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "disable secure chat warning": {
-          "_value": "禁用安全聊天警告",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "hide signature indicator": {
-          "_value": "隐藏签名指示器",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "replace petrified oak slab": {
-          "_value": "替换石化橡木台阶纹理",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "hide furnace recipe book": {
-          "_value": "隐藏熔炉配方书",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "force unicode font for non ascii languages": {
-          "_value": "强制为非 ASCII 语言使用 Unicode 字体",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "sneak instantly": {
-          "_value": "瞬间潜行",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "sideways backwards walking": {
-          "_value": "侧身后退行走",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "hide crafting recipe book": {
-          "_value": "隐藏合成配方书",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "always render crosshair": {
-          "_value": "始终渲染十字准星",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "swing hand on item use": {
-          "_value": "使用物品时挥动手",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "tilt item positions": {
-          "_value": "倾斜物品位置",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "enable legacy tablist": {
-          "_value": "启用旧版 Tab 列表",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "replace hurt sound with oof sound": {
-          "_value": "将受伤音效替换为 OOF 音效",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "hide modern hud elements": {
-          "_value": "隐藏新式 HUD 元素",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "replace creative inventory": {
-          "_value": "替换创造模式物品栏",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "old walking animation": {
-          "_value": "旧版行走动画",
-          "auto": "自动",
-          "enabled": "启用",
-          "disabled": "禁用"
-        },
-        "troll gui": "TrollHack 界面",
-        "troll blur": "全屏模糊",
-        "troll background": "背景遮罩",
-        "troll background blur": "窗口模糊",
-        "troll window outline": "窗口边框",
-        "troll title bar": "标题栏",
-        "troll x margin": "横向内边距",
-        "troll y margin": "行间距",
-        "troll primary color": "主色",
-        "troll background color": "窗口背景",
-        "troll text color": "文字颜色",
-        "troll hover alpha": "悬停不透明度"
+        "chat prefix gradient speed": "聊天前缀渐变速度"
+      },
+      "gui setting": {
+        "_value": "界面设置",
+        "background": "背景遮罩",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "window outline": "窗口边框",
+        "title bar": "标题栏",
+        "x margin": "横向边距",
+        "y margin": "纵向边距",
+        "primary color": "主色",
+        "background color": "背景颜色",
+        "text color": "文字颜色",
+        "hover alpha": "悬停不透明度"
       },
       "aim bot": {
         "_value": "瞄准辅助",
@@ -842,7 +584,7 @@
         "work with pickaxe": "兼容镐子",
         "sword swap": "切剑",
         "swing hand": "挥手",
-        "render vector": "渲染速度向量",
+        "render": "渲染",
         "fade time": "淡出时间",
         "side color": "侧面颜色",
         "line color": "线条颜色"
@@ -976,6 +718,83 @@
         "place cps": "放置CPS",
         "charge cps": "充能CPS"
       },
+      "elytra combat": {
+        "_value": "鞘翅战斗",
+        "general": "通用",
+        "target": "目标",
+        "follow": "追人",
+        "mace": "重锤",
+        "spear": "长矛",
+        "flight": "飞行",
+        "render": "渲染",
+        "mode": {
+          "_value": "模式",
+          "follow": "追人",
+          "mace": "重锤",
+          "spear": "长矛"
+        },
+        "switch mode key": "切换模式按键",
+        "debug": "调试输出",
+        "target range": "目标范围",
+        "dynamic target": "动态换目标",
+        "only when no wasd": "仅在无移动输入时",
+        "auto control elytra": "自动控制鞘翅",
+        "players": "玩家",
+        "mobs": "怪物",
+        "animals": "动物",
+        "villagers": "村民",
+        "ambient": "环境生物",
+        "water": "水生生物",
+        "others": "其他生物",
+        "invisible": "隐身目标",
+        "follow friend": "跟随好友",
+        "predictor": {
+          "_value": "预测器",
+          "linear": "线性",
+          "quadratic": "二次",
+          "nv": "NV"
+        },
+        "predict ticks": "预测刻数",
+        "prediction history": "预测历史长度",
+        "stop distance": "停止距离",
+        "follow ground height": "地面目标跟随高度",
+        "pathfinding": "寻路",
+        "search radius": "搜索半径",
+        "max nodes": "最大节点数",
+        "data size": "数据范围",
+        "mace range": "重锤交战距离",
+        "mace height": "重锤拉升高度",
+        "mace ground height": "地面目标拉升高度",
+        "mace min follow height": "最小跟随高度",
+        "mace y bias": "重锤 Y 轴偏置",
+        "mace pull up max ticks": "最大拉升刻数",
+        "mace use predictor": "重锤使用预测",
+        "mace attack threshold": "重锤攻击阈值",
+        "mace swing hand": "重锤挥手",
+        "mace anti shield": "重锤反盾",
+        "mace smooth flight": "平滑飞行",
+        "mace angle optimize": "角度优化",
+        "mace down angle": "俯冲角度",
+        "spear range": "长矛交战距离",
+        "spear min range": "长矛最小距离",
+        "spear lunge strength": "长矛冲锋力度",
+        "spear pull over ticks": "长矛脱离刻数",
+        "spear use predictor": "长矛使用预测",
+        "spear anti spear": "长矛反制",
+        "spear anti extra distance": "反制额外距离",
+        "log spear hit": "记录长矛命中",
+        "control mode": {
+          "_value": "控制模式",
+          "input": "输入控制",
+          "directvelocity": "直接速度"
+        },
+        "max flight speed": "最大飞行速度",
+        "max turn speed": "最大转向速度",
+        "allow firework": "允许烟花",
+        "render vector": "渲染速度向量",
+        "render color": "渲染颜色",
+        "render width": "渲染线宽"
+      },
       "hover totem": {
         "_value": "悬空图腾",
         "delay": "延迟",
@@ -989,6 +808,7 @@
         "pause on eat": "进食时暂停",
         "pause on scaffold": "搭路时暂停",
         "hit select": "攻击筛选",
+        "through walls": "穿墙",
         "mode": {
           "_value": "模式",
           "onepointeight": "1.8",
@@ -1053,7 +873,66 @@
         "wave speed": "波动速度",
         "side color": "侧面颜色",
         "line color": "线条颜色",
-        "circle radius": "圆形半径",
+        "circle alpha factor": "圆形透明度系数",
+        "firefly color mode": {
+          "_value": "萤火虫颜色模式",
+          "solid": "纯色",
+          "blend": "混合",
+          "rainbow": "彩虹"
+        },
+        "firefly color": "萤火虫颜色",
+        "firefly color 2": "萤火虫颜色2",
+        "firefly color mix": "萤火虫颜色混合",
+        "firefly color speed": "萤火虫颜色速度",
+        "firefly rainbow speed": "萤火虫彩虹速度",
+        "firefly rainbow saturation": "萤火虫彩虹饱和度",
+        "firefly rainbow brightness": "萤火虫彩虹亮度",
+        "firefly length": "萤火虫长度",
+        "firefly factor": "萤火虫因子",
+        "firefly shaking": "萤火虫抖动",
+        "firefly amplitude": "萤火虫振幅"
+      },
+      "spear aura": {
+        "_value": "长矛光环",
+        "range": "范围",
+        "fov": "视野角度",
+        "auto charge": "自动蓄力",
+        "move": "移动",
+        "rotation speed": "旋转速度",
+        "rotation priority": {
+          "_value": "旋转优先级",
+          "lowest": "最低",
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "highest": "最高"
+        },
+        "players": "玩家",
+        "mobs": "怪物",
+        "animals": "动物",
+        "villagers": "村民",
+        "invisible": "隐身",
+        "mace": "重锤",
+        "mace swap mode": {
+          "_value": "重锤切换模式",
+          "normal": "普通",
+          "silent": "静默",
+          "invswitch": "背包切换"
+        },
+        "esp": "ESP",
+        "esp mode": {
+          "_value": "ESP模式",
+          "capturemark": "捕捉标记",
+          "circle": "圆形",
+          "firefly": "萤火虫"
+        },
+        "esp main": "ESP主色",
+        "esp second": "ESP副色",
+        "esp size": "ESP大小",
+        "rot speed": "旋转速度",
+        "wave speed": "波动速度",
+        "side color": "侧面颜色",
+        "line color": "线条颜色",
         "circle alpha factor": "圆形透明度系数",
         "firefly color mode": {
           "_value": "萤火虫颜色模式",
@@ -1258,17 +1137,6 @@
         "villagers": "村民",
         "invisible": "隐身"
       },
-      "super knockback": {
-        "_value": "超级击退",
-        "mode": {
-          "_value": "模式",
-          "stopsprinting": "停止疾跑",
-          "backwards": "后退",
-          "noforwards": "停止前进"
-        },
-        "delay": "延迟",
-        "hurt time": "受伤时间"
-      },
       "trigger bot": {
         "_value": "自动攻击",
         "range": "范围",
@@ -1468,7 +1336,6 @@
         "ignore curse": "忽略绑定诅咒",
         "strict": "严格模式"
       },
-      "auto crossbow release": "弩自动松手",
       "auto firework": {
         "_value": "自动烟花",
         "activate key": "激活按键",
@@ -1558,22 +1425,6 @@
         "playback": "回放"
       },
       "ghost hand": "幽灵手",
-      "helper": {
-        "_value": "辅助",
-        "self extinguish": "自动灭火",
-        "extinguish fire": "扑灭火焰",
-        "block lava": "阻挡岩浆",
-        "block water": "阻挡水流",
-        "speed": "速度",
-        "rotation priority": {
-          "_value": "旋转优先级",
-          "lowest": "最低",
-          "low": "低",
-          "medium": "中",
-          "high": "高",
-          "highest": "最高"
-        }
-      },
       "input disabler": "输入禁用器",
       "inv manager": {
         "_value": "背包管理",
@@ -1697,82 +1548,17 @@
           "xin_2b2t": "2b2t.xin"
         }
       },
-      "elytra combat": {
-        "_value": "鞘翅战斗",
-        "general": "通用",
+      "elytra grim acc": {
+        "_value": "鞘翅 Grim 加速",
         "mode": {
           "_value": "模式",
-          "follow": "追人",
-          "mace": "重锤",
-          "spear": "长矛"
+          "simulation": "模拟位移",
+          "crashpackets": "崩溃包"
         },
-        "switch mode key": "切换模式按键",
-        "target range": "目标范围",
-        "dynamic target": "动态换目标",
-        "only when no wasd": "仅在无移动输入时",
-        "auto control elytra": "自动控制鞘翅",
-        "target": "目标",
-        "players": "玩家",
-        "mobs": "怪物",
-        "animals": "动物",
-        "villagers": "村民",
-        "ambient": "环境生物",
-        "water": "水生生物",
-        "others": "其他生物",
-        "invisible": "隐身目标",
-        "follow friend": "跟随好友",
-        "predictor": {
-          "_value": "预测器",
-          "linear": "线性",
-          "quadratic": "二次",
-          "nv": "NV"
-        },
-        "predict ticks": "预测刻数",
-        "prediction history": "预测历史长度",
-        "follow": "追人",
-        "stop distance": "停止距离",
-        "follow ground height": "地面目标跟随高度",
-        "pathfinding": "寻路",
-        "search radius": "搜索半径",
-        "max nodes": "最大节点数",
-        "data size": "数据范围",
-        "mace": "重锤",
-        "mace range": "重锤交战距离",
-        "mace height": "重锤拉升高度",
-        "mace ground height": "地面目标拉升高度",
-        "mace min follow height": "最小跟随高度",
-        "mace y bias": "重锤 Y 轴偏置",
-        "mace pull up max ticks": "最大拉升刻数",
-        "mace use predictor": "重锤使用预测",
-        "mace attack threshold": "重锤攻击阈值",
-        "mace swing hand": "重锤挥手",
-        "mace anti shield": "重锤反盾",
-        "mace smooth flight": "平滑飞行",
-        "mace angle optimize": "角度优化",
-        "mace down angle": "俯冲角度",
-        "spear": "长矛",
-        "spear range": "长矛交战距离",
-        "spear min range": "长矛最小距离",
-        "spear lunge strength": "长矛冲锋力度",
-        "spear pull over ticks": "长矛脱离刻数",
-        "spear use predictor": "长矛使用预测",
-        "spear anti spear": "长矛反制",
-        "spear anti extra distance": "反制额外距离",
-        "log spear hit": "记录长矛命中",
-        "flight": "飞行",
-        "control mode": {
-          "_value": "控制模式",
-          "input": "输入控制",
-          "directvelocity": "直接速度"
-        },
-        "max flight speed": "最大飞行速度",
-        "max turn speed": "最大转向速度",
-        "allow firework": "允许烟花",
-        "render": "渲染",
-        "render vector": "渲染速度向量",
-        "render color": "渲染颜色",
-        "render width": "渲染线宽",
-        "debug": "调试输出"
+        "max accelerate velocity": "最大加速速度",
+        "setback wait": "拉回等待刻数",
+        "fix old version velocity": "修复旧版本速度",
+        "fix kick from lag": "卡区块保护"
       },
       "dolphin": "海豚",
       "auto sprint": "自动疾跑",
@@ -1843,7 +1629,14 @@
         "color": "颜色"
       },
       "jump reset": "跳跃重置",
-      "keep sprint": "保持疾跑",
+      "keep sprint": {
+        "_value": "保持疾跑",
+        "mode": {
+          "_value": "模式",
+          "vanilla": "原版",
+          "legit": "合法"
+        }
+      },
       "movement fix": "移动修复",
       "no slowdown": {
         "_value": "无减速",
@@ -1905,6 +1698,7 @@
         "_value": "自动搭路",
         "blacklisted blocks": "黑名单方块",
         "toggle on teleport": "传送时切换",
+        "self rescue": "自救",
         "mode": {
           "_value": "模式",
           "tellybridge": "Telly桥",
@@ -2021,6 +1815,7 @@
         "delay ticks": "延迟刻数",
         "jump reset": "跳跃重置"
       },
+      "ac spoof": "反作弊伪装",
       "kill effect": {
         "_value": "击杀特效",
         "lightning": "闪电",
@@ -2105,9 +1900,15 @@
       },
       "chams": {
         "_value": "透视模型",
-        "no depth": "无视深度",
         "players": "玩家",
-        "chests": "箱子"
+        "self": "自身",
+        "friends": "好友",
+        "crystals": "水晶",
+        "chests": "箱子",
+        "creatures": "生物",
+        "monsters": "怪物",
+        "ambients": "环境生物",
+        "others": "其他"
       },
       "crystal chams": {
         "_value": "水晶透视",
@@ -2350,6 +2151,7 @@
         "render mode": {
           "_value": "渲染模式",
           "model": "模型",
+          "skeleton": "骨架",
           "box": "方框"
         },
         "side color": "侧面颜色",
@@ -2501,16 +2303,6 @@
           "drop": "下落",
           "fly": "漂浮"
         }
-      },
-      "skeleton": {
-        "_value": "玩家骨架",
-        "friends": "显示好友",
-        "self": "显示自身",
-        "invisibles": "显示隐身玩家",
-        "distance": "渲染距离",
-        "line width": "线宽",
-        "color": "骨架颜色",
-        "friend color": "好友颜色"
       },
       "pop chams": {
         "_value": "死亡透视",
@@ -2687,6 +2479,16 @@
         "chest smoke fill": "箱子烟雾填充",
         "chest smoke fill 2": "箱子烟雾填充 2"
       },
+      "skeleton": {
+        "_value": "玩家骨架",
+        "friends": "显示好友",
+        "self": "显示自身",
+        "invisibles": "显示隐身玩家",
+        "distance": "渲染距离",
+        "line width": "线宽",
+        "color": "骨架颜色",
+        "friend color": "好友颜色"
+      },
       "sneak tweak": {
         "_value": "潜行优化",
         "smoothing": "平滑",
@@ -2794,69 +2596,7 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
-      },
-      "spear aura": {
-        "_value": "长矛光环",
-        "range": "范围",
-        "fov": "视野角度",
-        "auto charge": "自动蓄力",
-        "move": "移动",
-        "rotation speed": "旋转速度",
-        "rotation priority": {
-          "_value": "旋转优先级",
-          "lowest": "最低",
-          "low": "低",
-          "medium": "中",
-          "high": "高",
-          "highest": "最高"
-        },
-        "players": "玩家",
-        "mobs": "怪物",
-        "animals": "动物",
-        "villagers": "村民",
-        "invisible": "隐身",
-        "mace": "重锤",
-        "mace swap mode": {
-          "_value": "重锤切换模式",
-          "normal": "普通",
-          "silent": "静默",
-          "invswitch": "背包切换"
-        },
-        "esp": "ESP",
-        "esp mode": {
-          "_value": "ESP模式",
-          "capturemark": "捕捉标记",
-          "circle": "圆形",
-          "firefly": "萤火虫"
-        },
-        "esp main": "ESP主色",
-        "esp second": "ESP副色",
-        "esp size": "ESP大小",
-        "rot speed": "旋转速度",
-        "wave speed": "波动速度",
-        "side color": "侧面颜色",
-        "line color": "线条颜色",
-        "circle radius": "圆形半径",
-        "circle alpha factor": "圆形透明度系数",
-        "firefly color mode": {
-          "_value": "萤火虫颜色模式",
-          "solid": "纯色",
-          "blend": "混合",
-          "rainbow": "彩虹"
-        },
-        "firefly color": "萤火虫颜色",
-        "firefly color 2": "萤火虫颜色2",
-        "firefly color mix": "萤火虫颜色混合",
-        "firefly color speed": "萤火虫颜色速度",
-        "firefly rainbow speed": "萤火虫彩虹速度",
-        "firefly rainbow saturation": "萤火虫彩虹饱和度",
-        "firefly rainbow brightness": "萤火虫彩虹亮度",
-        "firefly length": "萤火虫长度",
-        "firefly factor": "萤火虫因子",
-        "firefly shaking": "萤火虫抖动",
-        "firefly amplitude": "萤火虫振幅"
-      },
-      "ac spoof": "反作弊伪装"
+      }
     },
     "elements": {
       "player info": {

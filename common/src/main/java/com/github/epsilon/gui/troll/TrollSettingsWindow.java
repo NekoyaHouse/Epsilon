@@ -89,8 +89,14 @@ public class TrollSettingsWindow extends TrollWindow {
         for (SettingLayoutPlanner.Section.Element element : section.elements()) {
             switch (element) {
                 case SettingLayoutPlanner.Section.SettingElement leaf -> {
-                    if (leaf.setting().isAvailable())
-                        entries.add(new Entry(rows.computeIfAbsent(leaf.setting(), TrollSettingRow::new), null, depth));
+                    if (leaf.setting().isAvailable()) {
+                        TrollSettingRow row = rows.computeIfAbsent(leaf.setting(), setting -> {
+                            TrollSettingRow created = new TrollSettingRow(setting);
+                            created.startOpenAnimation();
+                            return created;
+                        });
+                        entries.add(new Entry(row, null, depth));
+                    }
                 }
                 case SettingLayoutPlanner.Section.GroupElement group -> append(group.section(), depth);
             }
@@ -150,6 +156,10 @@ public class TrollSettingsWindow extends TrollWindow {
     public void mouseReleased(MouseButtonEvent event) {
         super.mouseReleased(event);
         for (TrollSettingRow row : allRows()) row.mouseReleased(event);
+    }
+
+    public void startSettingAnimations() {
+        for (TrollSettingRow row : allRows()) row.startOpenAnimation();
     }
 
     public boolean keyPressed(KeyEvent event) {
