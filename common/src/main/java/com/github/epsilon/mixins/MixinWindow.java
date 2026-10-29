@@ -21,6 +21,8 @@ public class MixinWindow {
     private List<IoSupplier<InputStream>> onSetIcon(IconSet instance, PackMetadataResources resources) throws IOException {
         final InputStream epsilon_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_16x16.png");
         final InputStream epsilon_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_32x32.png");
+        final InputStream sakura_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/sakura_16x16.png");
+        final InputStream sakura_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/sakura_32x32.png");
         final InputStream table_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_16x16.png");
         final InputStream table_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_32x32.png");
         final InputStream endfield_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/endfield_16x16.png");
@@ -29,6 +31,10 @@ public class MixinWindow {
         if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Epsilon)) {
             if (epsilon_16x16 != null && epsilon_32x32 != null) {
                 return List.of(() -> epsilon_16x16, () -> epsilon_32x32);
+            }
+        } else if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Sakura)) {
+            if (sakura_16x16 != null && sakura_32x32 != null) {
+                return List.of(() -> sakura_16x16, () -> sakura_32x32);
             }
         } else if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Minecraft_1_8_9)) {
             if (table_16x16 != null && table_32x32 != null) {

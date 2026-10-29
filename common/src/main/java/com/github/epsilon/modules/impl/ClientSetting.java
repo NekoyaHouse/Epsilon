@@ -83,6 +83,7 @@ public class ClientSetting extends Module {
         Vanilla,
         Minecraft_1_8_9,
         Epsilon,
+        Sakura,
         Endfield
     }
 
@@ -90,6 +91,7 @@ public class ClientSetting extends Module {
         Vanilla,
         Minecraft_1_8_9,
         Epsilon,
+        Sakura,
         Endfield
     }
 

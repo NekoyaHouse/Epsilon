@@ -81,6 +81,8 @@ public abstract class MixinMinecraft {
         ClientSetting.TitleMode mode = ClientSetting.INSTANCE.customTitle.getValue();
         if (mode == ClientSetting.TitleMode.Vanilla) {
             return title;
+        } else if (mode == ClientSetting.TitleMode.Sakura) {
+            return "桜";
         } else if (mode == ClientSetting.TitleMode.Minecraft_1_8_9) {
             return "Minecraft 1.8.9";
         } else if (mode == ClientSetting.TitleMode.Endfield) {
