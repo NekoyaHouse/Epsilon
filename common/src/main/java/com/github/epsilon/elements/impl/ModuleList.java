@@ -40,11 +40,14 @@ public class ModuleList extends HudModule {
     }
 
     private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
+    private final DoubleSetting lineSpacing = doubleSetting("Line Spacing", 3.0, 0.0, 12.0, 0.5, () -> mode.is(DisplayMode.Simple));
     private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting lineWidth = doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final BoolSetting showSuffix = boolSetting("Show Suffix", true);
     private final DoubleSetting fontSize = doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0);
+    private final BoolSetting textShadow = boolSetting("Text Shadow", true);
+    private final DoubleSetting textShadowDepth = doubleSetting("Text Shadow Depth", 1.0, 0.0, 5.0, 0.1, textShadow::getValue);
     private final BoolSetting textGlow = boolSetting("Text Glow", true);
     private final DoubleSetting glowRadius = doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, textGlow::getValue);
     private final IntSetting glowIntensity = intSetting("Glow Intensity", 2, 1, 5, 1, textGlow::getValue);
@@ -118,7 +121,7 @@ public class ModuleList extends HudModule {
     private void renderSimple(TextRenderer textRenderer) {
         float textScale = Math.max(0.1f, fontSize.getValue().floatValue() / 16.0f);
         List<RenderEntry> entries = collectRenderEntries(textRenderer, textScale, showSuffix.getValue());
-        LayoutState layout = updateLayout(entries, textRenderer.getHeight(textScale) + 3.0f);
+        LayoutState layout = updateLayout(entries, textRenderer.getHeight(textScale) + lineSpacing.getValue().floatValue());
 
         float boundsWidth = Math.max(MIN_BOUNDS, maxDisplayWidth(entries));
         setBounds(boundsWidth, Math.max(MIN_BOUNDS, layout.height()));
@@ -329,6 +332,10 @@ public class ModuleList extends HudModule {
         float glowRadius = this.glowRadius.getValue().floatValue();
         int glowIntensity = this.glowIntensity.getValue();
         Color glowColor = ColorUtils.interpolateColor(nameStartColor, nameEndColor, 0.5f);
+        float shadowOffset = textShadowDepth.getValue().floatValue() * Math.max(1.0f, textScale);
+        if (textShadow.getValue()) {
+            scope.text(entry.name, x + shadowOffset, y + shadowOffset, textScale, darken(glowColor, 0.5f));
+        }
         if (textGlow.getValue()) {
             scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, glowColor);
         }
@@ -337,6 +344,9 @@ public class ModuleList extends HudModule {
             String text = " " + entry.info;
             float textX = x + entry.nameWidth;
             Color color = withAlpha(new Color(170, 170, 170), animation);
+            if (textShadow.getValue()) {
+                scope.text(text, textX + shadowOffset, y + shadowOffset, textScale, darken(color, 0.5f));
+            }
             if (textGlow.getValue())
                 scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color);
             scope.text(text, textX, y, textScale, color);
@@ -387,6 +397,13 @@ public class ModuleList extends HudModule {
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
         int rgb = Color.HSBtoRGB(hsb[0], hsb[1], hsb[2] * 0.6f);
         return new Color(rgb);
+    }
+
+    private Color darken(Color color, float factor) {
+        int red = Mth.clamp((int) (color.getRed() * factor), 0, 255);
+        int green = Mth.clamp((int) (color.getGreen() * factor), 0, 255);
+        int blue = Mth.clamp((int) (color.getBlue() * factor), 0, 255);
+        return new Color(red, green, blue, color.getAlpha());
     }
 
     private Color withAlpha(Color color, float multiplier) {
