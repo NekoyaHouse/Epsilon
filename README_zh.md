@@ -30,7 +30,7 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 - 纹理渲染
 - 自定义顶点格式
 
-详见 [渲染系统文档](common/src/main/java/com/github/epsilon/graphics/README_zh.md)
+详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
 ## ⚙️ 构建与运行
 

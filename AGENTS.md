@@ -1,6 +1,6 @@
 # Epsilon 本体开发约束
 
-本文件只保存对仓库内开发工作的强制约束。项目说明见 [`README.md`](README.md) 与 [`README_zh.md`](README_zh.md)，Lumin 渲染系统说明见 [`common/src/main/java/com/github/epsilon/graphics/README.md`](common/src/main/java/com/github/epsilon/graphics/README.md)。遇到文档与源码不一致时，以当前源码、`gradle/libs.versions.toml` 和本地 Minecraft 参考源码为准，并在同一次修改中更新对应说明。
+本文件只保存对仓库内开发工作的强制约束。项目说明见 [`README.md`](README.md) 与 [`README_zh.md`](README_zh.md)，Lumin 渲染系统说明见 [`common/src/main/kotlin/com/github/epsilon/graphics/README.md`](common/src/main/kotlin/com/github/epsilon/graphics/README.md)。遇到文档与源码不一致时，以当前源码、`gradle/libs.versions.toml` 和本地 Minecraft 参考源码为准，并在同一次修改中更新对应说明。
 
 ## 开发前的强制检查
 
