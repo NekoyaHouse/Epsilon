@@ -82,6 +82,8 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - EventBus 按事件精确运行时 class 分发；不得假设父类型监听器会收到子类型事件。
 - 监听方法必须带 `@EventHandler`、返回 `void`，且只有一个非 primitive 参数。
 - EventBus 通过 `MethodHandles.privateLookupIn` 直接绑定 `@EventHandler` 方法，不需要为监听类注册 lambda factory 或包前缀；监听类不再受包名限制。
+- Kotlin 监听优先使用 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `EventBus.nonNullHandler`。
+- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.utils.NonNullContext`：监听器声明 `context(NonNullContext) (E) -> Unit`，内部用 `contextOf<NonNullContext>()` 或该文件提供的 `player`/`world`/`interaction`/`netHandler` 上下文属性读取，不得重复写 `mc.player!!` 或手写判空。
 - `Cancellable` 是类。使用 `cancel()`/`isCancelled()`，不存在 `setCancelled(boolean)`。
 - 有明确监听顺序时必须设置 priority，不得依赖跨对象的隐式注册顺序。
 - 修改 Minecraft 事件字段、构造参数或触发点前必须核对 `common/src/main/java/com/github/epsilon/events/impl/` 和当前版本参考源码。
@@ -128,6 +130,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - Java 25 / Kotlin、UTF-8，沿用相邻代码格式和命名；Kotlin 与 Java 共用 JDK 25 toolchain 与 JVM target 25。
 - Kotlin 源码目录固定：共享代码放 `common/src/main/kotlin`（loader 会重复编译），加载器专属代码放各自的 `src/main/kotlin`。
+- Kotlin 上下文参数使用 2.4 已稳定的 `context(...)` 语法；不得使用已废弃的 context receivers，也不需要为此添加 `-Xcontext-parameters` 等实验性编译参数。
 - 新增 Javadoc 与解释性注释使用中文；只对不明显的约束、线程或算法原因编写注释。
 - Logger 使用 `Constants.LOGGER`。
 - Minecraft 实例使用 `Constants.mc`；Module/HudModule 内优先使用继承的 `mc`。
