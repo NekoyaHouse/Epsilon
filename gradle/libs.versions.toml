@@ -11,6 +11,11 @@ fabric-loom = "1.15.5"
 neoforged-moddev = "2.0.147"
 buildconfig = "6.0.9"
 foojay-resolver-convention = "1.0.0"
+# Kotlin 运行时（stdlib / kotlinx）通过 jar-in-jar 随 Fabric 与 NeoForge 产物一起分发，
+# 因此这里的 kotlin 版本同时决定 Kotlin 编译器、kotlin-stdlib 与 kotlinx 库的可用语言特性。
+kotlin = "2.4.21"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.12.0"
 mixin = "0.8.5"
 mixinextras = "0.5.4"
 asm = "9.8"
@@ -23,6 +28,12 @@ iris-neoforge = "1.11.6+26.3-fabric"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
+# buildSrc 预编译脚本插件在 apply Kotlin 插件时需要 KGP 位于其类路径，版本与 kotlin 保持一致。
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "project-fabric-loader" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "project-fabric-api" }
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }

@@ -52,7 +52,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - `common/` 可以调用 Minecraft API，但不得导入 `net.fabricmc.*`、`net.neoforged.*` 或其他 ModLoader API。
 - 加载器专有功能必须放在 `fabric/` 或 `neoforge/`。共享能力应先在 `common/` 定义加载器无关的协议或数据结构，再由平台层接入。
-- 不得在三个子项目复制同一份共享实现；`multiloader-loader` 已复用 `common` 的 Java、生成源码和资源。
+- 不得在三个子项目复制同一份共享实现；`multiloader-loader` 已复用 `common` 的 Java、Kotlin、生成源码和资源。
 - Access Widener 只服务 Fabric，Access Transformer 只服务 NeoForge。共享代码需要额外访问权限时必须同时核验两个平台。
 - 不得在子项目脚本硬编码版本；版本统一来自 `gradle.properties` 和 `gradle/libs.versions.toml`。
 
@@ -125,8 +125,9 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## 代码规范
 
-- Java 25、UTF-8，沿用相邻代码格式和命名。
-- 新增 Javadoc 与解释性注释使用中文；只注释不明显的约束、线程或算法原因。
+- Java 25 / Kotlin、UTF-8，沿用相邻代码格式和命名；Kotlin 与 Java 共用 JDK 25 toolchain 与 JVM target 25。
+- Kotlin 源码目录固定：共享代码放 `common/src/main/kotlin`（loader 会重复编译），加载器专属代码放各自的 `src/main/kotlin`。
+- 新增 Javadoc 与解释性注释使用中文；只对不明显的约束、线程或算法原因编写注释。
 - Logger 使用 `Constants.LOGGER`。
 - Minecraft 实例使用 `Constants.mc`；Module/HudModule 内优先使用继承的 `mc`。
 - 不得吞异常。边界层隔离单个资源或子系统失败时，记录包含上下文的日志。

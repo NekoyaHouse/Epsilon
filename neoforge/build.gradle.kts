@@ -18,6 +18,13 @@ val sodiumNeoForgeOuterJar by configurations.creating {
     isCanBeConsumed = false
 }
 
+val kotlinRuntimeLibraries = listOf(
+    "org.jetbrains.kotlin:kotlin-stdlib:${libs.versions.kotlin.get()}",
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${libs.versions.kotlinx.coroutines.get()}",
+    "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:${libs.versions.kotlinx.serialization.get()}",
+    "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:${libs.versions.kotlinx.serialization.get()}",
+)
+
 val extractSodiumNeoForgeModJar by tasks.registering(Copy::class) {
     from({ zipTree(sodiumNeoForgeOuterJar.singleFile) }) {
         include("META-INF/jarjar/*-mod.jar")
@@ -49,6 +56,7 @@ dependencies {
     // 开发环境仍保留在运行时类路径，便于本地调试。
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:macosx-arm64")
+    kotlinRuntimeLibraries.forEach { implementation(jarJar(it)!!) }
 }
 
 // NeoForge 26.3 resolves Jar-in-Jar dependencies by group and artifact only;
