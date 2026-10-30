@@ -23,7 +23,7 @@ abstract class MixinIrisHandRenderer {
         at = [At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher\$PreparedFrame;close()V", ordinal = 0)],
         remap = true,
     )
-    private fun epsilon$renderOutlineBeforeFrameClose(frame: FeatureRenderDispatcher.PreparedFrame, original: Operation<Void>) {
+    private fun `epsilon$renderOutlineBeforeFrameClose`(frame: FeatureRenderDispatcher.PreparedFrame, original: Operation<Void>) {
         if (Shaders.isEnabled && Shaders.hands) {
             try {
                 ShaderManager.renderHandOutline(frame)
