@@ -17,6 +17,7 @@ import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.render.AntiAlias;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
 import com.github.epsilon.utils.render.esp.DeobfESP;
@@ -279,9 +280,7 @@ public class KillAura extends Module {
 
             if (espMode.is(ESPMode.Deobf)) DeobfESP.markHit(entity);
 
-            if (swingHand.getValue()) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-            }
+            SwingMode.of(swingHand.getValue()).attackSwing(InteractionHand.MAIN_HAND);
         }
     }
 

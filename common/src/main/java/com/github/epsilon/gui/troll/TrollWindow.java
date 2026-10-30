@@ -21,6 +21,10 @@ public abstract class TrollWindow {
     protected float headerHeight;
     protected float scrollPosition;
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_QUART, 300L);
+    private final Animation renderX = new Animation(Easing.EASE_OUT_CUBIC, 200L);
+    private final Animation renderY = new Animation(Easing.EASE_OUT_CUBIC, 200L);
+    private final Animation renderWidth = new Animation(Easing.EASE_OUT_CUBIC, 200L);
+    private final Animation renderHeight = new Animation(Easing.EASE_OUT_CUBIC, 200L);
     private float manualWidth = -1.0f;
     private float manualHeight = -1.0f;
     private boolean dragging;
@@ -44,11 +48,34 @@ public abstract class TrollWindow {
         openAnimation.setValue(0.0f);
         openAnimation.reset();
         openAnimation.run(1.0f);
+        forceRenderBounds();
+        onOpenAnimationStarted();
+    }
+
+    protected void onOpenAnimationStarted() {
     }
 
     public float getOpenProgress() {
         openAnimation.run(1.0f);
         return openAnimation.getValue();
+    }
+
+    /**
+     * 返回窗口位置和尺寸的渲染动画状态；实际 bounds 仍用于输入和布局。
+     */
+    public UiRect getRenderBounds() {
+        renderX.run(bounds.x());
+        renderY.run(bounds.y());
+        renderWidth.run(bounds.width());
+        renderHeight.run(bounds.height());
+        return new UiRect(renderX.getValue(), renderY.getValue(), renderWidth.getValue(), renderHeight.getValue());
+    }
+
+    private void forceRenderBounds() {
+        renderX.setValue(bounds.x());
+        renderY.setValue(bounds.y());
+        renderWidth.setValue(bounds.width());
+        renderHeight.setValue(bounds.height());
     }
 
     public void position(float x, float y) {

@@ -10,7 +10,7 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
@@ -115,7 +115,7 @@ public class ElytraSwap extends Module {
             if (!this.isSwinging) {
 
                 mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+                SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
                 this.isSwinging = true;
             }
 

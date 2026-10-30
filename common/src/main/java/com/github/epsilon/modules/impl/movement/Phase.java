@@ -14,7 +14,7 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.core.BlockPos;
@@ -171,7 +171,7 @@ public class Phase extends Module {
 
             InvUtils.swap(bestTool, true);
             mc.gameMode.continueDestroyBlock(blockToBreak, mc.player.getDirection());
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
             if (silent.getValue()) {
                 InvUtils.swapBack();
             }
@@ -231,9 +231,7 @@ public class Phase extends Module {
 
         mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
 
-        if (swingHand.getValue()) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-        }
+        SwingMode.of(swingHand.getValue()).interactSwing(InteractionHand.MAIN_HAND);
 
 
         if (swapMode.is(SwapMode.Silent)) {

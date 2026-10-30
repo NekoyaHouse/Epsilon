@@ -14,7 +14,7 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -197,9 +197,7 @@ public class MaceAura extends Module {
     private void attack() {
         if (target == null) return;
         mc.gameMode.attack(mc.player, target);
-        if (swingHand.getValue()) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-        }
+        SwingMode.of(swingHand.getValue()).attackSwing(InteractionHand.MAIN_HAND);
     }
 
 }

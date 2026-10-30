@@ -12,7 +12,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
@@ -196,7 +196,7 @@ public class Xray extends Module {
             BlockPos pos = toCheck.remove(toCheck.size() - 1 <= 1 ? 0 : ThreadLocalRandom.current().nextInt(0, toCheck.size() - 1));
             mc.gameMode.startDestroyBlock(displayBlock = pos, mc.player.getDirection());
             mc.gameMode.stopDestroyBlock();
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
             checked.add(new BlockMemory(pos));
             ++done;
         }

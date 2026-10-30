@@ -3,6 +3,8 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.FormattedCharSequence;
@@ -53,6 +55,36 @@ public class ACSpoof extends Module {
             }
             return true;
         };
+    }
+
+    public Component text(Component text, int color) {
+        if (!isEnabled()) return text;
+
+        FormattedCharSequence original = text.getVisualOrderText();
+        FormattedCharSequence replacement = text(original, color);
+        if (replacement == original) return text;
+
+        List<StyledCharacter> characters = new ArrayList<>();
+        replacement.accept((index, style, codePoint) -> {
+            characters.add(new StyledCharacter(style, codePoint));
+            return true;
+        });
+
+        MutableComponent result = Component.empty();
+        StringBuilder builder = new StringBuilder();
+        Style currentStyle = null;
+        for (StyledCharacter character : characters) {
+            if (currentStyle != null && !currentStyle.equals(character.style())) {
+                result.append(Component.literal(builder.toString()).withStyle(currentStyle));
+                builder.setLength(0);
+            }
+            currentStyle = character.style();
+            builder.appendCodePoint(character.codePoint());
+        }
+        if (!builder.isEmpty()) {
+            result.append(Component.literal(builder.toString()).withStyle(currentStyle == null ? Style.EMPTY : currentStyle));
+        }
+        return result;
     }
 
     private static boolean matches(List<StyledCharacter> characters, int start, int color) {

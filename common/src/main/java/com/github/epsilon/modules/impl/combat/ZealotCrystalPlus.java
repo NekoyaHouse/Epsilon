@@ -20,7 +20,7 @@ import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
@@ -1010,7 +1010,7 @@ public class ZealotCrystalPlus extends Module {
         InteractionResult result = mc.gameMode.useItemOn(mc.player, finalHand, hitResult);
         if (result.consumesAction()) {
             if (placeSwing.getValue()) {
-                doSwing(resolveSwingHand(true));
+                doSwing(resolveSwingHand(true), false);
             }
             placedPosMap.put(placeInfo.blockPos().asLong(), System.currentTimeMillis() + ownTimeout.getValue());
             placeTimer.reset();
@@ -1062,7 +1062,7 @@ public class ZealotCrystalPlus extends Module {
         }
 
         mc.gameMode.attack(mc.player, currentCrystal);
-        doSwing(resolveSwingHand(false));
+        doSwing(resolveSwingHand(false), true);
         breakTimer.reset();
         lastActiveTime = System.currentTimeMillis();
         attackedCrystalMap.put(currentCrystal.getId(), System.currentTimeMillis() + 1000L);
@@ -1544,13 +1544,9 @@ public class ZealotCrystalPlus extends Module {
         };
     }
 
-    private void doSwing(InteractionHand hand) {
-        switch (swingMode.getValue()) {
-            case Client -> PlayerUtils.swingHand(hand);
-            case Packet -> PlayerUtils.swingHand(hand);
-            case None -> {
-            }
-        }
+    private void doSwing(InteractionHand hand, boolean attacking) {
+        if (attacking) swingMode.getValue().attackSwing(hand);
+        else swingMode.getValue().interactSwing(hand);
     }
 
     private double getRotationSpeed() {
@@ -1884,12 +1880,6 @@ public class ZealotCrystalPlus extends Module {
     private enum RangeMode {
         Feet,
         Eyes
-    }
-
-    private enum SwingMode {
-        None,
-        Client,
-        Packet
     }
 
     private enum RenderPredictMode {

@@ -14,7 +14,7 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -276,7 +276,7 @@ public class SafeAnchor extends Module {
 
         InvUtils.swap(anchor.slot(), false);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, pendingAnchorHit);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
         currentAnchorPos = pendingAnchorPos;
         targetRotation = null;
         targetBlockPos = null;
@@ -934,7 +934,7 @@ public class SafeAnchor extends Module {
         );
         BlockHitResult hit = new BlockHitResult(hitVec, side, pos, false);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
     }
 
     private void setShiftState(boolean state) {

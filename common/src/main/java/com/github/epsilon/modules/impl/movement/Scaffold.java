@@ -19,7 +19,7 @@ import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FallingPlayer;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
@@ -278,9 +278,7 @@ public class Scaffold extends Module {
                         new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false)
                 );
                 if (result.consumesAction()) {
-                    if (swingHand.getValue()) {
-                        PlayerUtils.swingHand(hand);
-                    }
+                    SwingMode.of(swingHand.getValue()).interactSwing(hand);
                     if (render.getValue()) {
                         renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
                     }
@@ -411,9 +409,7 @@ public class Scaffold extends Module {
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
 
         if (result.consumesAction()) {
-            if (swingHand.getValue()) {
-                PlayerUtils.swingHand(hand);
-            }
+            SwingMode.of(swingHand.getValue()).interactSwing(hand);
 
             if (render.getValue()) {
                 renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));

@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -110,7 +110,7 @@ public class AnchorBlast extends Module {
 
         mc.player.getInventory().setSelectedSlot(anchorSlot);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(placeCps.getValue());
 
         phase = Phase.CHARGE;
@@ -129,7 +129,7 @@ public class AnchorBlast extends Module {
 
         mc.player.getInventory().setSelectedSlot(glowstoneSlot);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(chargeCps.getValue());
 
         phase = Phase.DETONATE;
@@ -143,7 +143,7 @@ public class AnchorBlast extends Module {
         int slot = detonateSlot.getValue() - 1;
         mc.player.getInventory().setSelectedSlot(slot);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
 
         phase = Phase.CLEANUP;
     }

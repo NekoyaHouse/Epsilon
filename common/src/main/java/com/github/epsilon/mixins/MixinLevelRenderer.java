@@ -31,8 +31,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.github.epsilon.Constants.mc;
-
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
 
@@ -49,13 +47,16 @@ public class MixinLevelRenderer {
         MotionBlur.INSTANCE.captureFrame(cameraState, modelViewMatrix);
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(modelViewMatrix);
+
         EventBus.INSTANCE.post(new Render3DEvent(poseStack));
         EventBus.INSTANCE.post(new AfterRender3DEvent());
+
         if (this.currentFrameRendersEntityOutline) {
-            ShaderManager.INSTANCE.processEntityOutlineTarget(((LevelRenderer) (Object) this).entityOutlineTarget, mc.gameRenderer.mainRenderTarget());
+            ShaderManager.INSTANCE.processEntityOutlineTarget(((LevelRenderer) (Object) this).entityOutlineTarget);
         }
+
         if (Shaders.INSTANCE.isEnabled()) {
-            ShaderManager.INSTANCE.processChestOutlineTarget(mc.gameRenderer.mainRenderTarget(), modelViewMatrix);
+            ShaderManager.INSTANCE.processChestOutlineTarget(modelViewMatrix);
         }
     }
 

@@ -9,7 +9,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -379,7 +379,7 @@ public class PacketMine extends Module {
                 }
             }, delay);
         }
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
         if (pos.equals(targetPos)) {
             started = true;
             progress = 0;
@@ -411,7 +411,7 @@ public class PacketMine extends Module {
             mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true, mc.player.horizontalCollision));
             mc.player.resetFallDistance();
         }
-        if (swing.getValue()) PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.of(swing.getValue()).attackSwing(InteractionHand.MAIN_HAND);
         mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, targetPos, RotationUtils.getDirection(targetPos), mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
         if (clientRemove.getValue() && targetPos != null && !isAir(targetPos)) {
             mc.gameMode.destroyBlock(targetPos);
@@ -423,9 +423,7 @@ public class PacketMine extends Module {
             mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true, mc.player.horizontalCollision));
             mc.player.resetFallDistance();
         }
-        if (swing.getValue()) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-        }
+        SwingMode.of(swing.getValue()).attackSwing(InteractionHand.MAIN_HAND);
         if (clientRemove.getValue() && secondPos != null && !isAir(secondPos)) {
             mc.gameMode.destroyBlock(secondPos);
         }

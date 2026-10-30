@@ -13,7 +13,7 @@ import com.github.epsilon.modules.impl.render.AntiAlias;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
 import com.github.epsilon.utils.render.esp.FireflyESP;
@@ -421,7 +421,7 @@ public class SpearAura extends Module {
 
     private void attackEntity(Entity entity) {
         mc.gameMode.attack(mc.player, entity);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
     }
 
     /**

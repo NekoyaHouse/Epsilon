@@ -37,11 +37,13 @@ public class TrollSettingRow {
     private final ModuleAction action;
     private final Animation progress = new Animation(Easing.EASE_OUT_QUART, 300L);
     private final Animation hover = new Animation(Easing.EASE_OUT_EXPO, 300L);
+    private final Animation click = new Animation(Easing.EASE_OUT_CUBIC, 300L);
     private UiRect bounds = new UiRect(0, 0, 0, 0);
     private DropdownTextField input;
     private String originalText;
     private boolean listening;
     private boolean dragging;
+    private boolean pressed;
     private boolean enumDragged;
     private double dragStartX;
     private Double pendingNumber;
@@ -117,6 +119,7 @@ public class TrollSettingRow {
 
     public void draw(UiTree.Scope scope, TextRenderer metrics, int mouseX, int mouseY) {
         float h = scope.animate(hover, bounds.contains(mouseX, mouseY));
+        float clicked = scope.animate(click, pressed);
         float p = scope.animate(progress, target());
         scope.rect(1, bounds.x(), bounds.y(), bounds.width(), bounds.height(), new Color(0, 0, 0, 40));
         if (p > 0.001f) {
@@ -134,7 +137,7 @@ public class TrollSettingRow {
         }
         String value = displayValueText();
         float valueWidth = setting instanceof ColorSetting ? metrics.getHeight(TrollTheme.TEXT_SCALE) + 9.0f : Math.min(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width() * 0.48f);
-        float scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - (dragging ? 0.1f : 0.0f));
+        float scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - clicked * 0.1f);
         Color text = setting != null && !setting.isPlatformSupported() ? TrollTheme.alpha(TrollTheme.text(), 110) : TrollTheme.text();
         scope.text(3, TrollTheme.trim(label(), metrics, scale, bounds.width() - valueWidth - 10.5f), bounds.x() + 3.0f + h * 3.0f, bounds.y() + 2.25f, scale, text);
         if (setting instanceof ColorSetting color) {
@@ -179,6 +182,7 @@ public class TrollSettingRow {
 
     public boolean mouseClicked(MouseButtonEvent event) {
         if (!bounds.contains(event.x(), event.y())) return false;
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) pressed = true;
         if (setting != null && !setting.isPlatformSupported()) {
             PlatformNoticeScreen.show(setting);
             return true;
@@ -241,7 +245,9 @@ public class TrollSettingRow {
     }
 
     public void mouseReleased(MouseButtonEvent event) {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !dragging) return;
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return;
+        pressed = false;
+        if (!dragging) return;
         dragging = false;
         if (pendingNumber != null) {
             double value = pendingNumber;
@@ -296,6 +302,7 @@ public class TrollSettingRow {
     public void resetInput() {
         listening = false;
         dragging = false;
+        pressed = false;
         pendingEnumIndex = -1;
         if (pendingNumber != null) {
             double value = pendingNumber;
