@@ -54,6 +54,9 @@ public class MixinLevelRenderer {
         if (this.currentFrameRendersEntityOutline) {
             ShaderManager.INSTANCE.processEntityOutlineTarget(((LevelRenderer) (Object) this).entityOutlineTarget, mc.gameRenderer.mainRenderTarget());
         }
+        if (Shaders.INSTANCE.isEnabled()) {
+            ShaderManager.INSTANCE.processChestOutlineTarget(mc.gameRenderer.mainRenderTarget(), modelViewMatrix);
+        }
     }
 
     @Inject(method = "render", at = @At("HEAD"))
@@ -61,11 +64,6 @@ public class MixinLevelRenderer {
         Chams.INSTANCE.resetAlwaysOnTopSubmits();
     }
 
-    /**
-     * Chams 把匹配实体的几何重定向到 alwaysOnTopGizmos 相位，但 26.3 的 frameHasAlwaysOnTopGizmos 只统计 gizmo：
-     * 相位里只有 Chams 提交时该 pass 会被跳过，实体因此完全不渲染。这里补上放行条件，
-     * 让 Chams 复用原版“清空深度后绘制”的 pass，consistentDepthRequired 时的深度回写也一并沿用。
-     */
     @ModifyReturnValue(method = "frameHasAlwaysOnTopGizmos", at = @At("RETURN"))
     private boolean forceAlwaysOnTopPassForChams(boolean original) {
         return original || Chams.INSTANCE.hasAlwaysOnTopSubmits();

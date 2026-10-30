@@ -165,6 +165,19 @@
         "available": "Available",
         "selected_header": "Selected"
       },
+      "troll": {
+        "client": "Client",
+        "keybind": "Keybind",
+        "listening": "Press a key...",
+        "color_picker": "Color Picker",
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue",
+        "alpha": "Alpha",
+        "okay": "Okay",
+        "cancel": "Cancel",
+        "apply": "Apply"
+      },
       "resource": {
         "video": "Main Menu Video",
         "light_trails": "Main Menu Light Trails",
@@ -390,7 +403,8 @@
         "gui mode": {
           "_value": "Gui Mode",
           "dropdown": "Drop Down",
-          "panel": "Panel"
+          "panel": "Panel",
+          "trollhack": "TrollHack"
         },
         "module sort": {
           "_value": "Module Sort",
@@ -451,6 +465,7 @@
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "Sakura",
           "endfield": "Endfield"
         },
         "custom title": {
@@ -458,6 +473,7 @@
           "vanilla": "Vanilla",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "Sakura",
           "endfield": "Endfield"
         },
         "use mainmenu": "Use Main Menu",
@@ -493,6 +509,20 @@
         "chat prefix color end": "Chat Prefix Color End",
         "chat prefix gradient speed": "Chat Prefix Gradient Speed"
       },
+      "gui setting": {
+        "_value": "Gui Setting",
+        "background": "Background",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "window outline": "Window Outline",
+        "title bar": "Title Bar",
+        "x margin": "X Margin",
+        "y margin": "Y Margin",
+        "primary color": "Primary Color",
+        "background color": "Background Color",
+        "text color": "Text Color",
+        "hover alpha": "Hover Alpha"
+      },
       "aim bot": {
         "_value": "Aim Bot",
         "mode": {
@@ -513,7 +543,10 @@
         "ignore walls": "Ignore Walls",
         "reaction time": "Reaction Time",
         "ignore invis": "Ignore Invis",
-        "predict ticks": "Predict Ticks"
+        "predict ticks": "Predict Ticks",
+        "bow fov": "Bow FOV",
+        "bow range": "Bow Range",
+        "bow smooth": "Bow Smooth"
       },
       "anchor blast": {
         "_value": "Anchor Blast",
@@ -596,7 +629,7 @@
         "work with pickaxe": "Work With Pickaxe",
         "sword swap": "Sword Swap",
         "swing hand": "Swing Hand",
-        "render": "",
+        "render": "Render",
         "fade time": "Fade Time",
         "side color": "Side Color",
         "line color": "Line Color"
@@ -1449,6 +1482,7 @@
         "pause on eat": "Pause On Eat",
         "pause on killaura": "Pause On KillAura",
         "pause on scaffold": "Pause On Scaffold",
+        "stop sprinting": "Stop Sprinting",
         "min delay": "Min Delay",
         "max delay": "Max Delay",
         "offhand item": {
@@ -1645,9 +1679,9 @@
       "keep sprint": {
         "_value": "Keep Sprint",
         "mode": {
-          "_value": "",
-          "vanilla": "",
-          "legit": ""
+          "_value": "Mode",
+          "vanilla": "Vanilla",
+          "legit": "Legit"
         }
       },
       "movement fix": "Movement Fix",
@@ -1711,6 +1745,7 @@
         "_value": "Scaffold",
         "blacklisted blocks": "Blacklisted Blocks",
         "toggle on teleport": "Toggle On Teleport",
+        "self rescue": "Self Rescue",
         "mode": {
           "_value": "Mode",
           "tellybridge": "Telly Bridge",
@@ -1913,14 +1948,14 @@
       "chams": {
         "_value": "Chams",
         "players": "Players",
-        "self": "",
-        "friends": "",
-        "crystals": "",
+        "self": "Self",
+        "friends": "Friends",
+        "crystals": "Crystals",
         "chests": "Chests",
-        "creatures": "",
-        "monsters": "",
-        "ambients": "",
-        "others": ""
+        "creatures": "Creatures",
+        "monsters": "Monsters",
+        "ambients": "Ambient",
+        "others": "Others"
       },
       "crystal chams": {
         "_value": "Crystal Chams",
@@ -2163,7 +2198,7 @@
         "render mode": {
           "_value": "Render Mode",
           "model": "Model",
-          "skeleton": "",
+          "skeleton": "Skeleton",
           "box": "Box"
         },
         "side color": "Side Color",
@@ -2739,11 +2774,14 @@
           "simple": "Simple",
           "normal": "Normal"
         },
+        "line spacing": "Line Spacing",
         "horizontal padding": "Horizontal Padding",
         "vertical padding": "Vertical Padding",
         "line width": "Line Width",
         "show suffix": "Show Suffix",
         "font size": "Font Size",
+        "text shadow": "Text Shadow",
+        "text shadow depth": "Text Shadow Depth",
         "text glow": "Text Glow",
         "glow radius": "Glow Radius",
         "glow intensity": "Glow Intensity",

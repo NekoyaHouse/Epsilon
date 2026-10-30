@@ -89,7 +89,7 @@ public class AccountsScreen extends Screen {
     private int focusedIndex = -1;
 
     private AddMode addMode = AddMode.NONE;
-    private final UiTextField field = new UiTextField(512);
+    private final UiTextField field = new UiTextField(8192);
     private boolean microsoftWaiting;
     private boolean microsoftError;
     private int microsoftSession;

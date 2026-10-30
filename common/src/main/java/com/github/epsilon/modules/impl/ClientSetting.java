@@ -11,6 +11,7 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.ConfirmDialogScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.troll.TrollGuiScreen;
 import com.github.epsilon.managers.AssetManager;
 import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.managers.TranslationManager;
@@ -47,7 +48,8 @@ public class ClientSetting extends Module {
 
     public enum GuiMode {
         Dropdown,
-        Panel
+        Panel,
+        TrollHack
     }
 
     public enum MainMenuStyle {
@@ -81,6 +83,7 @@ public class ClientSetting extends Module {
         Vanilla,
         Minecraft_1_8_9,
         Epsilon,
+        Sakura,
         Endfield
     }
 
@@ -88,6 +91,7 @@ public class ClientSetting extends Module {
         Vanilla,
         Minecraft_1_8_9,
         Epsilon,
+        Sakura,
         Endfield
     }
 
@@ -116,10 +120,7 @@ public class ClientSetting extends Module {
     // General
     public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", InputConstants.KEY_RSHIFT).group(sgGeneral);
 
-    public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> mc.gui.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
-        case Panel -> PanelScreen.INSTANCE;
-        case Dropdown -> DropdownScreen.INSTANCE;
-    })).group(sgGeneral);
+    public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> mc.gui.setScreen(getGuiScreen())).group(sgGeneral);
 
     public final EnumSetting<ModuleSort> moduleSort = enumSetting("Module Sort", ModuleSort.Name).group(sgGeneral);
 
@@ -258,6 +259,14 @@ public class ClientSetting extends Module {
     public final ColorSetting chatPrefixColorEnd = colorSetting("Chat Prefix Color End", new Color(150, 220, 255), animatedChatPrefix::getValue).group(sgNotification);
 
     public final DoubleSetting chatPrefixGradientSpeed = doubleSetting("Chat Prefix Gradient Speed", 0.5, 0.1, 1, 0.1, animatedChatPrefix::getValue).group(sgNotification);
+
+    public Screen getGuiScreen() {
+        return switch (guiMode.getValue()) {
+            case Dropdown -> DropdownScreen.INSTANCE;
+            case Panel -> PanelScreen.INSTANCE;
+            case TrollHack -> TrollGuiScreen.INSTANCE;
+        };
+    }
 
     public double getScale() {
         return renderScale.getValue();

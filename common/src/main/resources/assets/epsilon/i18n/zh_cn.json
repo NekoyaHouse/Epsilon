@@ -165,6 +165,19 @@
         "available": "可用",
         "selected_header": "已选"
       },
+      "troll": {
+        "client": "客户端",
+        "keybind": "按键绑定",
+        "listening": "请按下按键…",
+        "color_picker": "颜色选择器",
+        "red": "红色",
+        "green": "绿色",
+        "blue": "蓝色",
+        "alpha": "透明度",
+        "okay": "确定",
+        "cancel": "取消",
+        "apply": "应用"
+      },
       "resource": {
         "video": "主菜单视频",
         "light_trails": "主菜单背景光效",
@@ -390,7 +403,8 @@
         "gui mode": {
           "_value": "GUI 模式",
           "dropdown": "瀑布式",
-          "panel": "单窗口式"
+          "panel": "单窗口式",
+          "trollhack": "TrollHack"
         },
         "module sort": {
           "_value": "模块排序",
@@ -451,6 +465,7 @@
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "樱花",
           "endfield": "终末地"
         },
         "custom title": {
@@ -458,6 +473,7 @@
           "vanilla": "原版",
           "minecraft_1_8_9": "Minecraft 1.8.9",
           "epsilon": "Epsilon",
+          "sakura": "樱花",
           "endfield": "终末地"
         },
         "use mainmenu": "自定义主菜单",
@@ -493,6 +509,20 @@
         "chat prefix color end": "聊天前缀结束颜色",
         "chat prefix gradient speed": "聊天前缀渐变速度"
       },
+      "gui setting": {
+        "_value": "界面设置",
+        "background": "背景遮罩",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "window outline": "窗口边框",
+        "title bar": "标题栏",
+        "x margin": "横向边距",
+        "y margin": "纵向边距",
+        "primary color": "主色",
+        "background color": "背景颜色",
+        "text color": "文字颜色",
+        "hover alpha": "悬停不透明度"
+      },
       "aim bot": {
         "_value": "瞄准辅助",
         "mode": {
@@ -513,7 +543,10 @@
         "ignore walls": "无视墙壁",
         "reaction time": "反应时间",
         "ignore invis": "无视隐身",
-        "predict ticks": "预测刻数"
+        "predict ticks": "预测刻数",
+        "bow fov": "弓瞄准视野",
+        "bow range": "弓瞄准距离",
+        "bow smooth": "弓瞄平滑"
       },
       "anchor blast": {
         "_value": "重生锚爆破",
@@ -596,7 +629,7 @@
         "work with pickaxe": "兼容镐子",
         "sword swap": "切剑",
         "swing hand": "挥手",
-        "render": "",
+        "render": "渲染",
         "fade time": "淡出时间",
         "side color": "侧面颜色",
         "line color": "线条颜色"
@@ -1449,6 +1482,7 @@
         "pause on eat": "进食时暂停",
         "pause on killaura": "KillAura 运行时暂停",
         "pause on scaffold": "搭路时暂停",
+        "stop sprinting": "停止疾跑",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
         "offhand item": {
@@ -1645,9 +1679,9 @@
       "keep sprint": {
         "_value": "保持疾跑",
         "mode": {
-          "_value": "",
-          "vanilla": "",
-          "legit": ""
+          "_value": "模式",
+          "vanilla": "原版",
+          "legit": "合法"
         }
       },
       "movement fix": "移动修复",
@@ -1711,6 +1745,7 @@
         "_value": "自动搭路",
         "blacklisted blocks": "黑名单方块",
         "toggle on teleport": "传送时切换",
+        "self rescue": "自救",
         "mode": {
           "_value": "模式",
           "tellybridge": "Telly桥",
@@ -1913,14 +1948,14 @@
       "chams": {
         "_value": "透视模型",
         "players": "玩家",
-        "self": "",
-        "friends": "",
-        "crystals": "",
+        "self": "自身",
+        "friends": "好友",
+        "crystals": "水晶",
         "chests": "箱子",
-        "creatures": "",
-        "monsters": "",
-        "ambients": "",
-        "others": ""
+        "creatures": "生物",
+        "monsters": "怪物",
+        "ambients": "环境生物",
+        "others": "其他"
       },
       "crystal chams": {
         "_value": "水晶透视",
@@ -2163,7 +2198,7 @@
         "render mode": {
           "_value": "渲染模式",
           "model": "模型",
-          "skeleton": "",
+          "skeleton": "骨架",
           "box": "方框"
         },
         "side color": "侧面颜色",
@@ -2739,11 +2774,14 @@
           "simple": "简洁",
           "normal": "普通"
         },
+        "line spacing": "行间距",
         "horizontal padding": "左右内边距",
         "vertical padding": "上下内边距",
         "line width": "线宽",
         "show suffix": "显示后缀",
         "font size": "字体大小",
+        "text shadow": "文字阴影",
+        "text shadow depth": "文字阴影深度",
         "text glow": "文字辉光",
         "glow radius": "辉光半径",
         "glow intensity": "辉光强度",

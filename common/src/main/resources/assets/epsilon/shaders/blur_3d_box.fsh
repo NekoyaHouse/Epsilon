@@ -8,26 +8,38 @@ layout(std140) uniform BoxBlurUniforms {
 
 layout(location = 0) out vec4 fragColor;
 
-vec4 blur() {
-    #define TAU 6.28318530718
+const float TAU = 6.28318530718;
+const int DIRECTION_COUNT = 16;
+const int RING_COUNT = 5;
+const float SAMPLE_COUNT = float(1 + DIRECTION_COUNT * RING_COUNT);
 
+void main() {
     vec2 inputResolution = Params.xy;
-    float quality = Params.z;
-    vec2 radius = quality / inputResolution.xy;
-    vec2 uv = gl_FragCoord.xy / inputResolution.xy;
+    float quality = max(0.0, Params.z);
+    vec2 uv = gl_FragCoord.xy / inputResolution;
 
-    vec4 color = texture(InputSampler, uv);
-    float step = TAU / 16.0;
+    vec4 centerSample = texture(InputSampler, uv);
+    vec3 centerColor = centerSample.rgb;
 
-    for (float d = 0.0; d < TAU; d += step) {
-        for (float i = 0.2; i <= 1.0; i += 0.2) {
-            color += texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
+    if (quality <= 0.0) {
+        fragColor = vec4(centerColor, 1.0);
+        return;
+    }
+
+    vec2 radius = quality / inputResolution;
+    vec3 colorSum = centerColor;
+
+    for (int direction = 0; direction < DIRECTION_COUNT; direction++) {
+        float angle = TAU * float(direction) / float(DIRECTION_COUNT);
+        vec2 directionOffset = vec2(cos(angle), sin(angle)) * radius;
+
+        for (int ring = 1; ring <= RING_COUNT; ring++) {
+            float ringOffset = float(ring) / float(RING_COUNT);
+            vec4 sampleColor = texture(InputSampler, uv + directionOffset * ringOffset);
+            float signal = max(sampleColor.a, max(sampleColor.r, max(sampleColor.g, sampleColor.b)));
+            colorSum += signal > 1e-5 ? sampleColor.rgb : centerColor;
         }
     }
 
-    return color / 81.0;
-}
-
-void main() {
-    fragColor = vec4(blur().rgb, 1.0);
+    fragColor = vec4(colorSum / SAMPLE_COUNT, 1.0);
 }
