@@ -281,18 +281,13 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
 
     private void renderAnimatedWindow(UiScene frame, UiLayer layer, int relativeLayer, TrollWindow window, int mouseX, int mouseY) {
         float windowProgress = window.getOpenProgress();
-        UiRect renderBounds = window.getRenderBounds();
-        float revealHeight = window.headerHeight
-                + Math.max(0.0f, renderBounds.height() - window.headerHeight) * windowProgress;
+        float fullHeight = window.bounds.height();
+        float revealHeight = window.headerHeight + Math.max(0.0f, fullHeight - window.headerHeight) * windowProgress;
         if (revealHeight <= 0.01f) return;
 
-        UiRect clip = new UiRect(window.bounds.x(), window.bounds.y(), renderBounds.width(), revealHeight);
-        UiRect passBounds = new UiRect(renderBounds.x(), renderBounds.y() + guiOpenOffsetY,
-                renderBounds.width(), revealHeight);
-        float offsetX = renderBounds.x() - window.bounds.x();
-        float offsetY = renderBounds.y() - window.bounds.y() + guiOpenOffsetY;
-        UiTree tree = UiTree.build(scope -> scope.pushAbsolute(offsetX, offsetY, translated ->
-                translated.scissor(clip, content -> window.draw(content, textMetrics.get(), mouseX, mouseY))));
+        UiRect clip = new UiRect(window.bounds.x(), window.bounds.y(), window.bounds.width(), revealHeight);
+        UiRect passBounds = new UiRect(window.bounds.x(), window.bounds.y() + guiOpenOffsetY, window.bounds.width(), revealHeight);
+        UiTree tree = UiTree.build(scope -> scope.pushAbsolute(0.0f, guiOpenOffsetY, translated -> translated.scissor(clip, content -> window.draw(content, textMetrics.get(), mouseX, mouseY))));
         queueWindow(frame, layer, relativeLayer, passBounds, tree);
     }
 
