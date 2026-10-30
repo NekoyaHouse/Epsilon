@@ -275,7 +275,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private fun shouldSkipPlayer(candidate: Player): Boolean {
         if (candidate === player || !candidate.isAlive || candidate.isDeadOrDying) return true
         if (AntiBot.isBot(candidate)) return true
-        if (FriendManager.INSTANCE.isFriend(candidate)) return true
+        if (FriendManager.isFriend(candidate)) return true
         return false
     }
 

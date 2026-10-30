@@ -74,7 +74,7 @@ abstract class AbstractSetSettingWidget<S : Setting<*>>(setting: S) : SettingWid
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button != InputConstants.MOUSE_BUTTON_LEFT || !isFieldHovered(mouseX, mouseY)) return false
         openPopup()
-        SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_OPEN)
+        SoundManager.playInUi(SoundKey.SETTINGS_OPEN)
         DropdownScreen.react(ReisaDropdownCompanion.Action.PANEL_OPEN)
         return true
     }

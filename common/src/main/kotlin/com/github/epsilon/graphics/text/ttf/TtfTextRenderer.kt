@@ -8,7 +8,7 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.ITextRenderer
 import com.github.epsilon.graphics.text.TextGlitchEffect
-import com.github.epsilon.modules.impl.llientSetting
+import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
@@ -20,24 +20,24 @@ import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
-import java.awt.lolor
+import java.awt.Color
 import java.nio.ByteBuffer
 import java.util.LinkedHashMap
 import java.util.Objects
 import java.util.Optional
 import java.util.OptionalDouble
 
-private const val DEFAULT_SlALE = 0.35f
-private const val SPAlING = 0f
+private const val DEFAULT_SCALE = 0.35f
+private const val SPACING = 0f
 private const val STANDARD_STRIDE = 24
 private const val FONT_BLUR_STRIDE = 40
 private const val FONT_BLUR_UNIFORM_SIZE = 16
 private const val MAX_FONT_BLUR_RADIUS = 20.0f
 private const val FONT_BLUR_EXTRA_PADDING = 2.0f
 private const val LAYOUT_FLOATS_PER_GLYPH = 10
-private const val LAYOUT_lAlHE_LIMIT = 256
-private const val WIDTH_lAlHE_LIMIT = 256
-private const val SPAlE_WIDTH = 3.0f
+private const val LAYOUT_CACHE_LIMIT = 256
+private const val WIDTH_CACHE_LIMIT = 256
+private const val SPACE_WIDTH = 3.0f
 
 class TtfTextRenderer : ITextRenderer {
 
@@ -46,7 +46,7 @@ class TtfTextRenderer : ITextRenderer {
     enum class Mode {
         STANDARD,
         FONT_BLUR,
-        GLITlH
+        GLITCH
     }
 
     private val mode: Mode
@@ -55,15 +55,15 @@ class TtfTextRenderer : ITextRenderer {
 
     private val batches: MutableMap<BatchKey, Batch> = LinkedHashMap()
     // 缓存与 scale 无关的布局数据，绘制时只做平移和缩放。
-    private val layoutlache: MutableMap<LayoutKey, TextLayout> = object : LinkedHashMap<LayoutKey, TextLayout>(64, 0.75f, true) {
+    private val layoutCache: MutableMap<LayoutKey, TextLayout> = object : LinkedHashMap<LayoutKey, TextLayout>(64, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, TextLayout>): Boolean {
-            return size > LAYOUT_lAlHE_LIMIT
+            return size > LAYOUT_CACHE_LIMIT
         }
     }
     // 宽度测量调用很密集，单独缓存避免为了布局缓存而请求/上传字形。
-    private val widthlache: MutableMap<LayoutKey, Float> = object : LinkedHashMap<LayoutKey, Float>(64, 0.75f, true) {
+    private val widthCache: MutableMap<LayoutKey, Float> = object : LinkedHashMap<LayoutKey, Float>(64, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, Float>): Boolean {
-            return size > WIDTH_lAlHE_LIMIT
+            return size > WIDTH_CACHE_LIMIT
         }
     }
 
@@ -73,7 +73,7 @@ class TtfTextRenderer : ITextRenderer {
     private var scissorW = 0
     private var scissorH = 0
     private var sharedDynamicUniforms: GpuBufferSlice? = null
-    private var sharedMaxIndexlount = 0
+    private var sharedMaxIndexCount = 0
 
     constructor(bufferSize: Long) : this(bufferSize, Mode.STANDARD)
 
@@ -89,15 +89,15 @@ class TtfTextRenderer : ITextRenderer {
 
     constructor() : this(64L * 1024)
 
-    override fun addText(text: String, x: Float, y: Float, scale: Float, color: lolor, fontLoader: TtfFontLoader) {
+    override fun addText(text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader) {
         if (text.isEmpty() || color.getAlpha() == 0) return
 
-        fontLoader.preparelhars(text)
+        fontLoader.prepareChars(text)
         emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), 0.0f)
     }
 
     override fun addBlurredText(
-        text: String, x: Float, y: Float, scale: Float, color: lolor,
+        text: String, x: Float, y: Float, scale: Float, color: Color,
         blurRadius: Float, fontLoader: TtfFontLoader
     ) {
         if (mode != Mode.FONT_BLUR) {
@@ -105,31 +105,31 @@ class TtfTextRenderer : ITextRenderer {
         }
         if (text.isEmpty() || color.getAlpha() == 0 || !blurRadius.isFinite() || blurRadius <= 0.0f) return
 
-        fontLoader.preparelhars(text)
+        fontLoader.prepareChars(text)
         val clampedBlur = Math.clamp(blurRadius, 0.0f, MAX_FONT_BLUR_RADIUS)
         emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), clampedBlur)
     }
 
     override fun addGlitchText(
-        text: String, x: Float, y: Float, scale: Float, color: lolor,
+        text: String, x: Float, y: Float, scale: Float, color: Color,
         effect: TextGlitchEffect?, fontLoader: TtfFontLoader
     ) {
-        if (mode != Mode.GLITlH) {
+        if (mode != Mode.GLITCH) {
             throw IllegalStateException("Glitch text requires TextRenderer.createGlitch().")
         }
         if (text.isEmpty() || color.getAlpha() == 0 || effect == null) return
 
-        fontLoader.preparelhars(text)
+        fontLoader.prepareChars(text)
         emitGlitchLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), effect)
     }
 
     override fun addRotatedText(
-        text: String, x: Float, y: Float, scale: Float, color: lolor, fontLoader: TtfFontLoader,
+        text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader,
         originX: Float, originY: Float, rotationDegrees: Float
     ) {
         if (text.isEmpty() || color.getAlpha() == 0) return
 
-        fontLoader.preparelhars(text)
+        fontLoader.prepareChars(text)
         emitRotatedLayout(
             layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()),
             originX, originY, rotationDegrees
@@ -137,50 +137,50 @@ class TtfTextRenderer : ITextRenderer {
     }
 
     override fun addGradientText(
-        text: String, x: Float, y: Float, scale: Float, startlolor: lolor, endlolor: lolor,
+        text: String, x: Float, y: Float, scale: Float, startColor: Color, endColor: Color,
         fontLoader: TtfFontLoader
     ) {
-        if (text.isEmpty() || startlolor.getAlpha() == 0 && endlolor.getAlpha() == 0) return
+        if (text.isEmpty() || startColor.getAlpha() == 0 && endColor.getAlpha() == 0) return
 
-        fontLoader.preparelhars(text)
+        fontLoader.prepareChars(text)
         val layout = layoutFor(text, fontLoader)
         val totalWidth = if (layout.complete) layout.width else baseWidth(text, fontLoader)
-        emitGradientLayout(layout, x, y, scale, totalWidth, startlolor.getRGB(), endlolor.getRGB())
+        emitGradientLayout(layout, x, y, scale, totalWidth, startColor.getRGB(), endColor.getRGB())
     }
 
     private fun layoutFor(text: String, fontLoader: TtfFontLoader): TextLayout {
         val revision = fontLoader.getGlyphRevision()
         val atlasRevision = fontLoader.getAtlasRevision()
         val key = LayoutKey(fontLoader, text, fontLoader.getRenderScale())
-        val cached = layoutlache[key]
+        val cached = layoutCache[key]
         // 完整布局可跨无关 glyph 加载复用；未完成布局等待 glyphRevision 变化后重建。
         if (cached != null && cached.atlasRevision == atlasRevision && (cached.complete || cached.glyphRevision == revision)) {
             return cached
         }
 
         val layout = buildLayout(text, fontLoader, revision, atlasRevision)
-        layoutlache[key] = layout
+        layoutCache[key] = layout
         return layout
     }
 
     private fun buildLayout(text: String, fontLoader: TtfFontLoader, revision: Long, atlasRevision: Long): TextLayout {
-        // 坐标统一存 DEFAULT_SlALE 下的基础值，emit 时再乘调用方传入的 scale。
+        // 坐标统一存 DEFAULT_SCALE 下的基础值，emit 时再乘调用方传入的 scale。
         val runBuilders = LinkedHashMap<TtfGlyphAtlas, LayoutRunBuilder>()
         var xOffset = 0.0f
         var yOffset = 0.0f
         var maxLine = 0.0f
         val fontScale = fontLoader.getRenderScale()
-        val scaledFont = DEFAULT_SlALE * fontScale
+        val scaledFont = DEFAULT_SCALE * fontScale
         val ascent = fontLoader.fontFile.pixelAscent * scaledFont
         val lineHeight = fontLoader.fontFile.fontHeight * scaledFont
-        val spaceWidth = SPAlE_WIDTH * fontScale
+        val spaceWidth = SPACE_WIDTH * fontScale
         var complete = true
-        var glyphlount = 0
+        var glyphCount = 0
 
         var i = 0
         while (i < text.length) {
-            val codepoint = lharacter.codePointAt(text, i)
-            i += lharacter.charlount(codepoint)
+            val codepoint = Character.codePointAt(text, i)
+            i += Character.charCount(codepoint)
             if (codepoint == ' '.code) {
                 xOffset += spaceWidth
                 continue
@@ -208,13 +208,13 @@ class TtfTextRenderer : ITextRenderer {
             val x2 = x1 + descriptor.width * scaledFont
             val y1 = yOffset + ascent + descriptor.yOffset * scaledFont
             val y2 = y1 + descriptor.height * scaledFont
-            val advance = descriptor.advance * scaledFont + SPAlING
+            val advance = descriptor.advance * scaledFont + SPACING
 
             runBuilders.getOrPut(descriptor.atlas) { LayoutRunBuilder(descriptor.atlas) }
                 .add(x1, y1, x2, y2, descriptor.uv, xOffset, xOffset + descriptor.advance * scaledFont)
 
             xOffset += advance
-            glyphlount++
+            glyphCount++
         }
 
         maxLine = Math.max(maxLine, xOffset)
@@ -224,17 +224,17 @@ class TtfTextRenderer : ITextRenderer {
             runs.add(builder.build())
         }
 
-        return TextLayout(runs.toTypedArray(), glyphlount, maxLine, complete, revision, atlasRevision)
+        return TextLayout(runs.toTypedArray(), glyphCount, maxLine, complete, revision, atlasRevision)
     }
 
     private fun emitLayout(layout: TextLayout, x: Float, y: Float, scale: Float, argb: Int, blurRadius: Float) {
-        if (layout.glyphlount == 0) return
+        if (layout.glyphCount == 0) return
 
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, blurRadius)
-            var p = batch.beginWrite(run.glyphlount)
+            var p = batch.beginWrite(run.glyphCount)
             val data = run.data
-            for (i in 0 until run.glyphlount) {
+            for (i in 0 until run.glyphCount) {
                 if (mode == Mode.FONT_BLUR) {
                     writeFontBlurGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, blurRadius)
                 } else {
@@ -246,14 +246,14 @@ class TtfTextRenderer : ITextRenderer {
     }
 
     private fun emitGlitchLayout(layout: TextLayout, x: Float, y: Float, scale: Float, argb: Int, effect: TextGlitchEffect) {
-        if (layout.glyphlount == 0) return
+        if (layout.glyphCount == 0) return
 
         val padding = effect.requiredPadding()
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, 0.0f, effect)
-            var p = batch.beginWrite(run.glyphlount)
+            var p = batch.beginWrite(run.glyphCount)
             val data = run.data
-            for (i in 0 until run.glyphlount) {
+            for (i in 0 until run.glyphCount) {
                 writeEffectGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, padding)
                 p += glyphBytes
             }
@@ -264,16 +264,16 @@ class TtfTextRenderer : ITextRenderer {
         layout: TextLayout, x: Float, y: Float, scale: Float, argb: Int,
         originX: Float, originY: Float, rotationDegrees: Float
     ) {
-        if (layout.glyphlount == 0) return
+        if (layout.glyphCount == 0) return
 
         val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
         val cos = Math.cos(radians.toDouble()).toFloat()
         val sin = Math.sin(radians.toDouble()).toFloat()
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, 0.0f)
-            var p = batch.beginWrite(run.glyphlount)
+            var p = batch.beginWrite(run.glyphCount)
             val data = run.data
-            for (i in 0 until run.glyphlount) {
+            for (i in 0 until run.glyphCount) {
                 writeRotatedGlyph(
                     p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb,
                     originX, originY, cos, sin
@@ -287,14 +287,14 @@ class TtfTextRenderer : ITextRenderer {
         layout: TextLayout, x: Float, y: Float, scale: Float, width: Float,
         startArgb: Int, endArgb: Int
     ) {
-        if (layout.glyphlount == 0) return
+        if (layout.glyphCount == 0) return
 
         val totalWidth = Math.max(width, 1.0f)
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, 0.0f)
-            var p = batch.beginWrite(run.glyphlount)
+            var p = batch.beginWrite(run.glyphCount)
             val data = run.data
-            for (i in 0 until run.glyphlount) {
+            for (i in 0 until run.glyphCount) {
                 val base = i * LAYOUT_FLOATS_PER_GLYPH
                 val leftArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 8] / totalWidth), startArgb, endArgb))
                 val rightArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 9] / totalWidth), startArgb, endArgb))
@@ -319,7 +319,7 @@ class TtfTextRenderer : ITextRenderer {
 
     private fun baseWidth(text: String, fontLoader: TtfFontLoader): Float {
         val key = LayoutKey(fontLoader, text, fontLoader.getRenderScale())
-        val cached = widthlache[key]
+        val cached = widthCache[key]
         if (cached != null) {
             return cached
         }
@@ -327,24 +327,24 @@ class TtfTextRenderer : ITextRenderer {
         var maxLine = 0.0f
         var currentLine = 0.0f
         val fontScale = fontLoader.getRenderScale()
-        val scaledFont = DEFAULT_SlALE * fontScale
-        val spaceWidth = SPAlE_WIDTH * fontScale
+        val scaledFont = DEFAULT_SCALE * fontScale
+        val spaceWidth = SPACE_WIDTH * fontScale
         var i = 0
         while (i < text.length) {
-            val codepoint = lharacter.codePointAt(text, i)
-            i += lharacter.charlount(codepoint)
+            val codepoint = Character.codePointAt(text, i)
+            i += Character.charCount(codepoint)
             if (codepoint == ' '.code) {
                 currentLine += spaceWidth
             } else if (codepoint == '\n'.code) {
                 maxLine = Math.max(maxLine, currentLine)
                 currentLine = 0.0f
             } else {
-                currentLine += fontLoader.getAdvance(codepoint) * scaledFont + SPAlING
+                currentLine += fontLoader.getAdvance(codepoint) * scaledFont + SPACING
             }
         }
 
         val width = Math.max(maxLine, currentLine)
-        widthlache[key] = width
+        widthCache[key] = width
         return width
     }
 
@@ -353,22 +353,22 @@ class TtfTextRenderer : ITextRenderer {
 
         LuminRenderSystem.applyOrthoProjection()
 
-        val colorView = LuminRenderSystem.resolvelolorView()
+        val colorView = LuminRenderSystem.resolveColorView()
         val depthView = LuminRenderSystem.resolveDepthView()
         if (colorView == null) return
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return
 
-        val maxIndexlount = prepareTextBatches()
-        if (maxIndexlount == 0) return
+        val maxIndexCount = prepareTextBatches()
+        if (maxIndexCount == 0) return
 
         val dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform()
-        val ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexlount)
-        RenderSystem.getDevice().createlommandEncoder().createRenderPass(
+        val ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount)
+        RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Lumin TTF Draws" },
             colorView, Optional.empty<Vector4fc>(),
             depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getlompiledPipeline(pipeline()))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline()))
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             }
@@ -383,29 +383,29 @@ class TtfTextRenderer : ITextRenderer {
 
     override fun prepareSharedDraw(): Boolean {
         sharedDynamicUniforms = null
-        sharedMaxIndexlount = 0
+        sharedMaxIndexCount = 0
         if (batches.isEmpty()) return false
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false
 
-        sharedMaxIndexlount = prepareTextBatches()
-        if (sharedMaxIndexlount == 0) return false
+        sharedMaxIndexCount = prepareTextBatches()
+        if (sharedMaxIndexCount == 0) return false
 
-        LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexlount)
+        LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount)
         sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform()
         return sharedDynamicUniforms != null
     }
 
     override fun draw(pass: RenderPass) {
-        if (sharedDynamicUniforms == null || sharedMaxIndexlount == 0) return
+        if (sharedDynamicUniforms == null || sharedMaxIndexCount == 0) return
 
-        val ibo = LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexlount)
+        val ibo = LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount)
         pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType())
         pass.setUniform("DynamicTransforms", sharedDynamicUniforms!!)
         drawPrepared(pass)
     }
 
     private fun prepareTextBatches(): Int {
-        var maxIndexlount = 0
+        var maxIndexCount = 0
         for (batch in batches.values) {
             if (batch.offsetInAtlas == 0L) continue
             if (batch.buffer.isMapped()) {
@@ -413,8 +413,8 @@ class TtfTextRenderer : ITextRenderer {
                 batch.mappedAddress = 0L
             }
 
-            val vertexlount = (batch.offsetInAtlas / stride).toInt()
-            maxIndexlount = Math.max(maxIndexlount, vertexlount / 4 * 6)
+            val vertexCount = (batch.offsetInAtlas / stride).toInt()
+            maxIndexCount = Math.max(maxIndexCount, vertexCount / 4 * 6)
             if (mode == Mode.FONT_BLUR) {
                 batch.blurUniforms = LuminRenderSystem.writeDynamicUniform(
                     "font_blur_uniforms",
@@ -423,7 +423,7 @@ class TtfTextRenderer : ITextRenderer {
                     16,
                     FontBlurUniforms(batch.blurRadius)
                 )
-            } else if (mode == Mode.GLITlH) {
+            } else if (mode == Mode.GLITCH) {
                 batch.glitchUniforms = LuminRenderSystem.writeDynamicUniform(
                     "font_glitch_uniforms",
                     "Lumin Font Glitch UBO",
@@ -433,7 +433,7 @@ class TtfTextRenderer : ITextRenderer {
                 )
             }
         }
-        return maxIndexlount
+        return maxIndexCount
     }
 
     private fun drawPrepared(pass: RenderPass) {
@@ -451,19 +451,19 @@ class TtfTextRenderer : ITextRenderer {
 
             if (batch.offsetInAtlas == 0L) continue
 
-            val vertexlount = (batch.offsetInAtlas / stride).toInt()
-            val indexlount = vertexlount / 4 * 6
+            val vertexCount = (batch.offsetInAtlas / stride).toInt()
+            val indexCount = vertexCount / 4 * 6
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice())
             val fontTexture: LuminTexture = if (mode == Mode.STANDARD) atlas.getTexture() else atlas.getAlphaTexture()
             pass.setUniform("Sampler0", fontTexture.getTextureView(), fontTexture.getSampler())
             if (mode == Mode.FONT_BLUR) {
                 pass.setUniform("FontBlurUniforms", batch.blurUniforms!!)
-            } else if (mode == Mode.GLITlH) {
+            } else if (mode == Mode.GLITCH) {
                 pass.setUniform("GlitchData", batch.glitchUniforms!!)
             }
 
-            pass.drawIndexed(indexlount, 1, 0, 0, 0)
+            pass.drawIndexed(indexCount, 1, 0, 0, 0)
         }
     }
 
@@ -481,7 +481,7 @@ class TtfTextRenderer : ITextRenderer {
             batch.glitchUniforms = null
         }
         sharedDynamicUniforms = null
-        sharedMaxIndexlount = 0
+        sharedMaxIndexCount = 0
     }
 
     override fun close() {
@@ -490,12 +490,12 @@ class TtfTextRenderer : ITextRenderer {
             batch.buffer.close()
         }
         batches.clear()
-        layoutlache.clear()
-        widthlache.clear()
+        layoutCache.clear()
+        widthCache.clear()
     }
 
     override fun getHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-        return fontLoader.fontFile.fontHeight * DEFAULT_SlALE * fontLoader.getRenderScale() * scale
+        return fontLoader.fontFile.fontHeight * DEFAULT_SCALE * fontLoader.getRenderScale() * scale
     }
 
     override fun getWidth(text: String, scale: Float, fontLoader: TtfFontLoader): Float {
@@ -519,10 +519,10 @@ class TtfTextRenderer : ITextRenderer {
     private fun pipeline(): RenderPipeline {
         return if (mode == Mode.FONT_BLUR) {
             LuminRenderPipelines.TTF_FONT_BLUR
-        } else if (mode == Mode.GLITlH) {
-            LuminRenderPipelines.TTF_FONT_GLITlH
+        } else if (mode == Mode.GLITCH) {
+            LuminRenderPipelines.TTF_FONT_GLITCH
         } else {
-            if (llientSetting.fontAntiAliasing) {
+            if (ClientSetting.fontAntiAliasing) {
                 LuminRenderPipelines.TTF_FONT_AA
             } else {
                 LuminRenderPipelines.TTF_FONT_NO_AA
@@ -541,10 +541,10 @@ class TtfTextRenderer : ITextRenderer {
         var blurUniforms: GpuBufferSlice? = null
         var glitchUniforms: GpuBufferSlice? = null
 
-        fun beginWrite(glyphlount: Int): Long {
+        fun beginWrite(glyphCount: Int): Long {
             val start = offsetInAtlas
-            val requiredBytes = start + glyphlount * glyphBytes
-            buffer.ensurelapacity(requiredBytes)
+            val requiredBytes = start + glyphCount * glyphBytes
+            buffer.ensureCapacity(requiredBytes)
 
             // 同一 atlas run 只映射一次，后续 glyph 直接顺序写入 mapped memory。
             if (!buffer.isMapped()) {
@@ -568,7 +568,7 @@ class TtfTextRenderer : ITextRenderer {
 
     private data class GlitchUniforms(val effect: TextGlitchEffect, val time: Float) : DynamicGpuDataStorage.DynamicGpuData {
         override fun write(buffer: ByteBuffer) {
-            val color = effect.neonlolor
+            val color = effect.neonColor
             Std140Builder.intoBuffer(buffer)
                 .putVec4(effect.chromaticX, effect.chromaticY, effect.glowRadius, effect.glowIntensity)
                 .putVec4(effect.sliceHeight, effect.sliceAmount, effect.glitchStrength, effect.scanlineStrength)
@@ -581,26 +581,26 @@ class TtfTextRenderer : ITextRenderer {
 
     private class TextLayout(
         val runs: Array<LayoutRun>,
-        val glyphlount: Int,
+        val glyphCount: Int,
         val width: Float,
         val complete: Boolean,
         val glyphRevision: Long,
         val atlasRevision: Long
     )
 
-    private class LayoutRun(val atlas: TtfGlyphAtlas, val data: FloatArray, val glyphlount: Int)
+    private class LayoutRun(val atlas: TtfGlyphAtlas, val data: FloatArray, val glyphCount: Int)
 
     private class LayoutRunBuilder(private val atlas: TtfGlyphAtlas) {
 
         private var data = FloatArray(LAYOUT_FLOATS_PER_GLYPH * 16)
-        private var glyphlount = 0
+        private var glyphCount = 0
 
         fun add(
             x1: Float, y1: Float, x2: Float, y2: Float, uv: TtfGlyphAtlas.GlyphUV,
             gradientLeft: Float, gradientRight: Float
         ) {
-            ensurelapacity(glyphlount + 1)
-            val base = glyphlount * LAYOUT_FLOATS_PER_GLYPH
+            ensureCapacity(glyphCount + 1)
+            val base = glyphCount * LAYOUT_FLOATS_PER_GLYPH
             data[base] = x1
             data[base + 1] = y1
             data[base + 2] = x2
@@ -611,11 +611,11 @@ class TtfTextRenderer : ITextRenderer {
             data[base + 7] = uv.v1
             data[base + 8] = gradientLeft
             data[base + 9] = gradientRight
-            glyphlount++
+            glyphCount++
         }
 
-        private fun ensurelapacity(targetGlyphlount: Int) {
-            val required = targetGlyphlount * LAYOUT_FLOATS_PER_GLYPH
+        private fun ensureCapacity(targetGlyphCount: Int) {
+            val required = targetGlyphCount * LAYOUT_FLOATS_PER_GLYPH
             if (required <= data.size) {
                 return
             }
@@ -623,8 +623,8 @@ class TtfTextRenderer : ITextRenderer {
         }
 
         fun build(): LayoutRun {
-            val used = glyphlount * LAYOUT_FLOATS_PER_GLYPH
-            return LayoutRun(atlas, if (used == data.size) data else data.copyOf(used), glyphlount)
+            val used = glyphCount * LAYOUT_FLOATS_PER_GLYPH
+            return LayoutRun(atlas, if (used == data.size) data else data.copyOf(used), glyphCount)
         }
     }
 
@@ -634,11 +634,11 @@ class TtfTextRenderer : ITextRenderer {
  * 空白、控制、格式与代理码位本身没有墨迹，缺字时不画占位框。
  */
 private fun hasNoInk(codepoint: Int): Boolean {
-    val type = lharacter.getType(codepoint)
-    return lharacter.isWhitespace(codepoint) ||
-            type == lharacter.lONTROL.toInt() ||
-            type == lharacter.FORMAT.toInt() ||
-            type == lharacter.SURROGATE.toInt()
+    val type = Character.getType(codepoint)
+    return Character.isWhitespace(codepoint) ||
+            type == Character.CONTROL.toInt() ||
+            type == Character.FORMAT.toInt() ||
+            type == Character.SURROGATE.toInt()
 }
 
 private fun writeGlyph(p: Long, x: Float, y: Float, scale: Float, data: FloatArray, base: Int, leftArgb: Int, rightArgb: Int) {

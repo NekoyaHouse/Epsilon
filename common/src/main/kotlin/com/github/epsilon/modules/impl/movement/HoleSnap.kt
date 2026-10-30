@@ -88,7 +88,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                 return@nonNullListener
             }
 
-            TimerManager.INSTANCE.set(timer.toFloat())
+            TimerManager.set(timer.toFloat())
 
             val yaw = Math.cos(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
             val pitch = Math.sin(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
@@ -169,7 +169,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             Step.isEnabled = false
         }
 
-        TimerManager.INSTANCE.reset()
+        TimerManager.reset()
         singleHole = null
         targetHole = null
     }

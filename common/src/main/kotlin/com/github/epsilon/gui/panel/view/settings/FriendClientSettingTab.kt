@@ -61,7 +61,7 @@ class FriendClientSettingTab(
 
         val inputBounds = getInputBounds(bounds)
         val listViewport = getListViewport(bounds)
-        val friends = FriendManager.INSTANCE.getFriends().sortedWith(String.CASE_INSENSITIVE_ORDER)
+        val friends = FriendManager.getFriends().sortedWith(String.CASE_INSENSITIVE_ORDER)
         val contentHeight = friends.size * (FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP)
         state.setMaxFriendScroll(contentHeight - listViewport.height)
         val maxScroll = Math.max(0.0f, contentHeight - listViewport.height)
@@ -168,7 +168,7 @@ class FriendClientSettingTab(
 
         for (entry in rowEntries) {
             if (entry.removeBounds.contains(event.x(), event.y())) {
-                FriendManager.INSTANCE.removeFriend(entry.name)
+                FriendManager.removeFriend(entry.name)
                 markDirty()
                 return true
             }
@@ -255,8 +255,8 @@ class FriendClientSettingTab(
 
     private fun addFriendFromInput() {
         val name = inputField.getText().trim()
-        if (!name.isEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
-            FriendManager.INSTANCE.addFriend(name)
+        if (!name.isEmpty() && !FriendManager.isFriend(name)) {
+            FriendManager.addFriend(name)
         }
         inputField.clear()
         markDirty()
@@ -350,7 +350,7 @@ class FriendClientSettingTab(
 
     private fun buildContentSignature(friends: List<String>): Long {
         var signature = 17L
-        signature = signature * 31L + TranslationManager.INSTANCE.getRevision()
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getFriendScroll())
         for (friend in friends) {
             signature = signature * 31L + friend.hashCode()

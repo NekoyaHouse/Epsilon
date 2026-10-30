@@ -90,7 +90,7 @@ object Chams : Module("Chams", Category.RENDER) {
             if (entity === mc.player && !self) {
                 return false
             }
-            if (FriendManager.INSTANCE.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity)) {
+            if (FriendManager.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity)) {
                 return friends
             }
             return players

@@ -24,12 +24,12 @@ object Filter : Module("Filter", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.Shader)
     private val baseColor by colorSetting("Base Color", Color(70, 70, 150, 50), true)
 
-    fun isLightMapMode(): Boolean = isEnabled && mode.`is`(Mode.LightMap)
+    fun isLightMapMode(): Boolean = isEnabled && mode == Mode.LightMap
 
     fun getLightMapColor(): Color = Color(baseColor.red, baseColor.green, baseColor.blue, 255)
 
     private fun onAfterRender3D(event: AfterRender3DEvent) {
-        if (mode.`is`(Mode.Shader)) {
+        if (mode == Mode.Shader) {
             val color = baseColor
             if (color.alpha <= 0) return
             FilterShader.renderToMainTarget(color)

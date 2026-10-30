@@ -55,9 +55,9 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         Sync
     }
 
-    private val mode: EnumSetting<Mode> by enumSetting("Mode", Mode.Stars)
-    private val physics: EnumSetting<Physics> by enumSetting("Physics", Physics.Fall)
-    private val colorMode: EnumSetting<ColorMode> by enumSetting("Color Mode", ColorMode.Sync)
+    private val mode: EnumSetting<Mode> = enumSetting("Mode", Mode.Stars)
+    private val physics: EnumSetting<Physics> = enumSetting("Physics", Physics.Fall)
+    private val colorMode: EnumSetting<ColorMode> = enumSetting("Color Mode", ColorMode.Sync)
     private val color by colorSetting(
         "Color", Color(255, 255, 255, 53), true, Setting.Dependency { colorMode.`is`(ColorMode.Custom) }
     )

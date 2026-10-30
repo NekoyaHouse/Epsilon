@@ -53,7 +53,7 @@ class ShadowRenderer private constructor() : IRenderer {
         private const val SEGMENTED_SHADOW_BYTES = SEGMENTED_STRIDE * 4L
         private val SEGMENTED_UNIFORMS_SIZE = segmentedUniformsSize()
 
-        fun create(): ShadowRenderer = RendererManager.INSTANCE.register(ShadowRenderer())
+        fun create(): ShadowRenderer = RendererManager.register(ShadowRenderer())
 
         private fun clampSegmentCount(segmentRects: FloatArray?, segmentCount: Int): Int {
             if (segmentRects == null || segmentCount <= 0) {
@@ -331,7 +331,7 @@ class ShadowRenderer private constructor() : IRenderer {
         clear()
         buffer.close()
         segmentedBuffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
     private fun appendNormalDraw(firstIndex: Int) {

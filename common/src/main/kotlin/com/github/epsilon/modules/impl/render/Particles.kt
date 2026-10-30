@@ -62,18 +62,18 @@ object Particles : Module("Particles", Category.RENDER) {
     private val ffSize by doubleSetting(
         "FF Size", 1.0, 0.1, 2.0, 0.1, Setting.Dependency { fireFliesEnabled }
     )
-    private val mode: EnumSetting<Mode> by enumSetting("Mode", Mode.SnowFlake)
+    private val mode: EnumSetting<Mode> = enumSetting("Mode", Mode.SnowFlake)
     private val count by intSetting(
         "Count", 100, 20, 800, 1, Setting.Dependency { !mode.`is`(Mode.Off) }
     )
     private val size by doubleSetting(
         "Size", 1.0, 0.1, 6.0, 0.1, Setting.Dependency { !mode.`is`(Mode.Off) }
     )
-    private val colorMode: EnumSetting<ColorMode> by enumSetting("Color Mode", ColorMode.Sync)
+    private val colorMode: EnumSetting<ColorMode> = enumSetting("Color Mode", ColorMode.Sync)
     private val color by colorSetting(
         "Color", Color(3649978), Setting.Dependency { colorMode.`is`(ColorMode.Custom) }
     )
-    private val physics: EnumSetting<Physics> by enumSetting(
+    private val physics: EnumSetting<Physics> = enumSetting(
         "Physics", Physics.Fly, Setting.Dependency { !mode.`is`(Mode.Off) }
     )
 

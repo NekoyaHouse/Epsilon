@@ -146,7 +146,7 @@ class TrollFriendWindow : TrollWindow() {
         if (listViewport.contains(event.x(), event.y())) {
             for (row in rows) {
                 if (row.removeBounds.contains(event.x(), event.y())) {
-                    FriendManager.INSTANCE.removeFriend(row.name)
+                    FriendManager.removeFriend(row.name)
                     return true
                 }
             }
@@ -185,8 +185,8 @@ class TrollFriendWindow : TrollWindow() {
 
     private fun addFriend() {
         val name = inputField.text.trim()
-        if (name.isNotEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
-            FriendManager.INSTANCE.addFriend(name)
+        if (name.isNotEmpty() && !FriendManager.isFriend(name)) {
+            FriendManager.addFriend(name)
         }
         inputField.clear()
     }
@@ -196,7 +196,7 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     private fun sortedFriends(): List<String> {
-        return FriendManager.INSTANCE.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
+        return FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
     }
 
     private fun removeBounds(rowBounds: UiRect): UiRect {

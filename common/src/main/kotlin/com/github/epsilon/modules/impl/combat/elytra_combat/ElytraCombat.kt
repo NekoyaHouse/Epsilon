@@ -36,6 +36,7 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.settings.setValue
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
@@ -82,79 +83,79 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private val sgFlight: SettingGroup = settingGroup("Flight")
     private val sgRender: SettingGroup = settingGroup("Render")
 
-    val mode: EnumSetting<ElytraCombatMode> by enumSetting("Mode", ElytraCombatMode.Follow) { newMode ->
+    var mode by enumSetting("Mode", ElytraCombatMode.Follow) { newMode ->
         onModeChanged(newMode)
     }.group(sgGeneral)
 
-    private val switchModeKey by keybindSetting("Switch Mode Key", -1).group(sgGeneral)
+    private var switchModeKey by keybindSetting("Switch Mode Key", -1).group(sgGeneral)
 
     /** 战斗决策调试输出开关。 */
-    val debug by boolSetting("Debug", false) { value ->
+    var debug by boolSetting("Debug", false) { value ->
         ElytraDebug.enabled = value
         ElytraDebug.reset()
     }.group(sgGeneral)
 
-    val targetRange by intSetting("Target Range", 80, 8, 256, 1).group(sgGeneral)
-    val dynamicTarget by boolSetting("Dynamic Target", false).group(sgGeneral)
-    private val onlyWhenNoWASD by boolSetting("Only When No WASD", false).group(sgGeneral)
-    private val autoControlElytra by boolSetting("Auto Control Elytra", true).group(sgGeneral)
+    var targetRange by intSetting("Target Range", 80, 8, 256, 1).group(sgGeneral)
+    var dynamicTarget by boolSetting("Dynamic Target", false).group(sgGeneral)
+    private var onlyWhenNoWASD by boolSetting("Only When No WASD", false).group(sgGeneral)
+    private var autoControlElytra by boolSetting("Auto Control Elytra", true).group(sgGeneral)
 
-    private val players by boolSetting("Players", true).group(sgTarget)
-    private val mobs by boolSetting("Mobs", false).group(sgTarget)
-    private val animals by boolSetting("Animals", false).group(sgTarget)
-    private val villagers by boolSetting("Villagers", false).group(sgTarget)
-    private val ambient by boolSetting("Ambient", false).group(sgTarget)
-    private val water by boolSetting("Water", false).group(sgTarget)
-    private val others by boolSetting("Others", false).group(sgTarget)
-    private val invisible by boolSetting("Invisible", false).group(sgTarget)
-    private val followFriend by boolSetting("Follow Friend", false).group(sgTarget)
-    val predictorMode: EnumSetting<PredictorMode> by enumSetting("Predictor", PredictorMode.NV).group(sgTarget)
-    val predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1).group(sgTarget)
-    val predictionHistory by intSetting("Prediction History", 5, 2, 20, 1).group(sgTarget)
+    private var players by boolSetting("Players", true).group(sgTarget)
+    private var mobs by boolSetting("Mobs", false).group(sgTarget)
+    private var animals by boolSetting("Animals", false).group(sgTarget)
+    private var villagers by boolSetting("Villagers", false).group(sgTarget)
+    private var ambient by boolSetting("Ambient", false).group(sgTarget)
+    private var water by boolSetting("Water", false).group(sgTarget)
+    private var others by boolSetting("Others", false).group(sgTarget)
+    private var invisible by boolSetting("Invisible", false).group(sgTarget)
+    private var followFriend by boolSetting("Follow Friend", false).group(sgTarget)
+    var predictorMode by enumSetting("Predictor", PredictorMode.NV).group(sgTarget)
+    var predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1).group(sgTarget)
+    var predictionHistory by intSetting("Prediction History", 5, 2, 20, 1).group(sgTarget)
 
-    val stopDistance by doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).group(sgFollow)
-    val followGroundHeight by doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).group(sgFollow)
-    private val pathfinding by boolSetting("Pathfinding", true).group(sgFollow)
-    private val searchRadius by intSetting("Search Radius", 24, 6, 64, 1, Setting.Dependency { pathfinding }).group(sgFollow)
-    private val maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, Setting.Dependency { pathfinding }).group(sgFollow)
-    private val dataSize by intSetting(
+    var stopDistance by doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).group(sgFollow)
+    var followGroundHeight by doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).group(sgFollow)
+    private var pathfinding by boolSetting("Pathfinding", true).group(sgFollow)
+    private var searchRadius by intSetting("Search Radius", 24, 6, 64, 1, Setting.Dependency { pathfinding }).group(sgFollow)
+    private var maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, Setting.Dependency { pathfinding }).group(sgFollow)
+    private var dataSize by intSetting(
         "Data Size", 50, 25, 100, 5,
         Setting.Dependency { pathfinding },
-    ) { size -> setPathDataSize(size) }.applyWhenRelease<IntSetting>().group<IntSetting>(sgFollow)
+    ) { size -> setPathDataSize(size) }.applyWhenRelease().group(sgFollow)
 
-    val maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0, 16.0, 0.5).group(sgMace)
-    val maceHeight by doubleSetting("Mace Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
-    val maceGroundHeight by doubleSetting("Mace Ground Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
-    val maceFollowMinHeight by doubleSetting("Mace Min Follow Height", 1.5, 0.0, 12.0, 0.5).group(sgMace)
-    val maceYBias by doubleSetting("Mace Y Bias", 3.0, -10.0, 10.0, 0.5).group(sgMace)
-    val macePullUpTicks by intSetting("Mace Pull Up Max Ticks", 20, 1, 100, 1).group(sgMace)
-    val maceUsePredictor by boolSetting("Mace Use Predictor", true).group(sgMace)
-    val maceAttackThreshold by doubleSetting("Mace Attack Threshold", 0.75, 0.1, 1.0, 0.05).group(sgMace)
-    val maceSwingHand by boolSetting("Mace Swing Hand", true).group(sgMace)
-    val maceAntiShield by boolSetting("Mace Anti Shield", true).group(sgMace)
-    val maceSmoothFlight by boolSetting("Mace Smooth Flight", true).group(sgMace)
-    val maceAngleOptimize by boolSetting("Mace Angle Optimize", false).group(sgMace)
-    val maceDownAngle by doubleSetting("Mace Down Angle", 30.5, 5.0, 80.0, 0.5, Setting.Dependency { maceAngleOptimize }).group(sgMace)
+    var maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0, 16.0, 0.5).group(sgMace)
+    var maceHeight by doubleSetting("Mace Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
+    var maceGroundHeight by doubleSetting("Mace Ground Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
+    var maceFollowMinHeight by doubleSetting("Mace Min Follow Height", 1.5, 0.0, 12.0, 0.5).group(sgMace)
+    var maceYBias by doubleSetting("Mace Y Bias", 3.0, -10.0, 10.0, 0.5).group(sgMace)
+    var macePullUpTicks by intSetting("Mace Pull Up Max Ticks", 20, 1, 100, 1).group(sgMace)
+    var maceUsePredictor by boolSetting("Mace Use Predictor", true).group(sgMace)
+    var maceAttackThreshold by doubleSetting("Mace Attack Threshold", 0.75, 0.1, 1.0, 0.05).group(sgMace)
+    var maceSwingHand by boolSetting("Mace Swing Hand", true).group(sgMace)
+    var maceAntiShield by boolSetting("Mace Anti Shield", true).group(sgMace)
+    var maceSmoothFlight by boolSetting("Mace Smooth Flight", true).group(sgMace)
+    var maceAngleOptimize by boolSetting("Mace Angle Optimize", false).group(sgMace)
+    var maceDownAngle by doubleSetting("Mace Down Angle", 30.5, 5.0, 80.0, 0.5, Setting.Dependency { maceAngleOptimize }).group(sgMace)
 
-    val spearEngageRange by doubleSetting("Spear Range", 8.0, 2.0, 24.0, 0.5).group(sgSpear)
-    val spearMinRange by doubleSetting("Spear Min Range", 1.0, 0.0, 8.0, 0.5).group(sgSpear)
-    val spearLungeStrength by doubleSetting("Spear Lunge Strength", 3.7, 0.5, 15.0, 0.1).group(sgSpear)
-    val spearPullOverTicks by intSetting("Spear Pull Over Ticks", 6, 1, 40, 1).group(sgSpear)
-    val spearUsePredictor by boolSetting("Spear Use Predictor", true).group(sgSpear)
-    val spearAntiSpear by boolSetting("Spear Anti Spear", true).group(sgSpear)
-    val spearAntiSpearExtra by doubleSetting("Spear Anti Extra Distance", 1.0, 0.0, 8.0, 0.5, Setting.Dependency { spearAntiSpear }).group(sgSpear)
-    private val logSpearHit by boolSetting("Log Spear Hit", false).group(sgSpear)
+    var spearEngageRange by doubleSetting("Spear Range", 8.0, 2.0, 24.0, 0.5).group(sgSpear)
+    var spearMinRange by doubleSetting("Spear Min Range", 1.0, 0.0, 8.0, 0.5).group(sgSpear)
+    var spearLungeStrength by doubleSetting("Spear Lunge Strength", 3.7, 0.5, 15.0, 0.1).group(sgSpear)
+    var spearPullOverTicks by intSetting("Spear Pull Over Ticks", 6, 1, 40, 1).group(sgSpear)
+    var spearUsePredictor by boolSetting("Spear Use Predictor", true).group(sgSpear)
+    var spearAntiSpear by boolSetting("Spear Anti Spear", true).group(sgSpear)
+    var spearAntiSpearExtra by doubleSetting("Spear Anti Extra Distance", 1.0, 0.0, 8.0, 0.5, Setting.Dependency { spearAntiSpear }).group(sgSpear)
+    private var logSpearHit by boolSetting("Log Spear Hit", false).group(sgSpear)
 
-    val controlMode: EnumSetting<ControlMode> by enumSetting("Control Mode", ControlMode.Input).group(sgFlight)
-    val maxFlightSpeed by doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight)
+    var controlMode by enumSetting("Control Mode", ControlMode.Input).group(sgFlight)
+    var maxFlightSpeed by doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight)
 
     /** 每 tick 最大转向角度（度）；360 表示不限速。 */
-    val maxTurnSpeed by doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight)
-    private val allowFirework by boolSetting("Allow Firework", true).group(sgFlight)
+    var maxTurnSpeed by doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight)
+    private var allowFirework by boolSetting("Allow Firework", true).group(sgFlight)
 
-    private val render by boolSetting("Render Vector", true).group(sgRender)
-    private val renderColor by colorSetting("Render Color", Color(255, 133, 161, 210), Setting.Dependency { render }).group(sgRender)
-    private val renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, Setting.Dependency { render }).group(sgRender)
+    private var render by boolSetting("Render Vector", true).group(sgRender)
+    private var renderColor by colorSetting("Render Color", Color(255, 133, 161, 210), Setting.Dependency { render }).group(sgRender)
+    private var renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, Setting.Dependency { render }).group(sgRender)
 
     /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */
     private val behaviors: EnumMap<ElytraCombatMode, ElytraCombatBehavior> =
@@ -206,11 +207,11 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
     override fun onEnable() {
         // 自动接管时先保存原 ElytraFly 状态，避免关闭模块后把用户设置覆盖掉。
-        this.currentBehavior = this.behaviors.getValue(this.mode.value)
+        this.currentBehavior = this.behaviors.getValue(this.mode)
         this.capturedElytraEnabled = ElytraFly.isEnabled
         this.capturedElytraMode = ElytraFly.mode
         this.changedElytraControl = false
-        if (this.autoControlElytra.value) {
+        if (this.autoControlElytra) {
             if (!ElytraFly.isEnabled) {
                 ElytraFly.isEnabled = true
                 this.changedElytraControl = true
@@ -220,7 +221,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
                 this.changedElytraControl = true
             }
         }
-        this.flightPlanner.setDataSize(this.dataSize.value)
+        this.flightPlanner.setDataSize(this.dataSize)
         resetState()
     }
 
@@ -262,7 +263,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
     /** 当前是否允许使用烟花；时机完全交给 ElytraFly 的烟花逻辑（Use Fireworks / Boost Delay）。 */
     fun shouldUseFirework(): Boolean {
-        return this.allowFirework.value && this.latestIntent.useFirework
+        return this.allowFirework && this.latestIntent.useFirework
     }
 
     fun player(): LocalPlayer {
@@ -277,7 +278,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         val state = this.currentBehavior.stateName()
         val target = this.target
         return if (target == null) {
-            this.mode.value.toString() + " " + state
+            this.mode.toString() + " " + state
         } else {
             target.name.string + " " + state
         }
@@ -292,7 +293,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             clearControl()
             return
         }
-        if (this.onlyWhenNoWASD.value && hasMovementControl()) {
+        if (this.onlyWhenNoWASD && hasMovementControl()) {
             clearControl()
             return
         }
@@ -306,9 +307,9 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         val snapshot = this.motionTracker.update(
             target,
             player.tickCount,
-            this.predictorMode.value,
-            this.predictTicks.value,
-            this.predictionHistory.value,
+            this.predictorMode,
+            this.predictTicks,
+            this.predictionHistory,
         )
         ElytraDebug.log(
             ElytraDebug.SLOT_TARGET,
@@ -323,10 +324,10 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         processHits()
 
         val planConfig = FlightPlanConfig(
-            this.stopDistance.value,
-            this.searchRadius.value,
-            this.maxNodes.value,
-            this.pathfinding.value,
+            this.stopDistance,
+            this.searchRadius,
+            this.maxNodes,
+            this.pathfinding,
         )
         val rawIntent = this.currentBehavior.tick(this, snapshot, this.flightPlanner, planConfig)
         this.latestIntent = stabilizeIntent(clampIntent(rawIntent))
@@ -346,11 +347,11 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private fun onKeyboardInput(event: KeyboardInputEvent) {
         val input = this.controlInput ?: return
         if (!canControlFlight()) return
-        event.setForward(input.forwardImpulse())
-        event.setStrafe(input.strafeImpulse())
-        event.setJump(input.jump)
-        event.setSneak(input.sneak)
-        event.setSprint(false)
+        event.forward = (input.forwardImpulse())
+        event.strafe = (input.strafeImpulse())
+        event.isJump = (input.jump)
+        event.isSneak = (input.sneak)
+        event.isSprint = (false)
     }
 
     private fun onFallFlyingMovement(event: FallFlyingMovementEvent) {
@@ -371,7 +372,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
                 // 直接速度不安全时保留原版滑翔结果，由 solveSafe 选择的旋转接管本 tick。
                 return
             }
-            event.setMovement(directVelocity)
+            event.movement = (directVelocity)
             return
         }
 
@@ -388,25 +389,25 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             "rotation.physics",
             "real=(" + ElytraDebug.fmt(player.yRot.toDouble()) + "," + ElytraDebug.fmt(player.xRot.toDouble()) + ")" +
                     " req=(" + ElytraDebug.fmt(input.yaw.toDouble()) + "," + ElytraDebug.fmt(input.pitch.toDouble()) + ")" +
-                    " vanillaVy=" + ElytraDebug.fmt(event.getMovement().y) +
+                    " vanillaVy=" + ElytraDebug.fmt(event.movement.y) +
                     " fixedVy=" + ElytraDebug.fmt(corrected.y),
         )
-        event.setMovement(corrected)
+        event.movement = (corrected)
     }
 
     private fun onAttackEntity(event: AttackEntityEvent) {
-        if (event.getPlayer() !== this.mc.player) {
+        if (event.player !== this.mc.player) {
             return
         }
         val target = this.target ?: return
-        if (event.getEntity() === target) {
+        if (event.entity === target) {
             this.hitTracker.markAttack(target, this.player().tickCount)
             this.currentBehavior.onAttack(target)
         }
     }
 
     private fun onPacketReceive(event: PacketEvent.Receive) {
-        when (val packet = event.getPacket()) {
+        when (val packet = event.packet) {
             is ClientboundDamageEventPacket -> this.hitTracker.onDamagePacket(packet)
             is ClientboundEntityEventPacket -> this.hitTracker.onEntityStatusPacket(packet)
             is ClientboundTeleportEntityPacket -> this.motionTracker.noteTeleport(packet.id())
@@ -415,21 +416,21 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     }
 
     private fun onKeyPress(event: KeyPressEvent) {
-        if (event.getAction() != InputConstants.PRESS) return
-        if (this.switchModeKey.value == event.getKey()) {
+        if (event.action != InputConstants.PRESS) return
+        if (this.switchModeKey == event.getKey()) {
             cycleMode()
         }
     }
 
     private fun onMousePress(event: MousePressEvent) {
-        if (event.getAction() != InputConstants.PRESS) return
-        if (this.switchModeKey.value == KeybindUtils.encodeMouseButton(event.getButton())) {
+        if (event.action != InputConstants.PRESS) return
+        if (this.switchModeKey == KeybindUtils.encodeMouseButton(event.button)) {
             cycleMode()
         }
     }
 
     private fun onRender3D() {
-        if (!this.render.value || this.controlInput == null) return
+        if (!this.render || this.controlInput == null) return
         val player = this.mc.player ?: return
         val velocity = this.latestIntent.desiredVelocity
         if (velocity.lengthSqr() < 1.0E-8) return
@@ -438,8 +439,8 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         Render3DScheduler.addLine(
             start,
             start.add(velocity.normalize().scale(4.0)),
-            this.renderColor.value,
-            this.renderWidth.value.toFloat(),
+            this.renderColor,
+            this.renderWidth.toFloat(),
         )
     }
 
@@ -450,24 +451,24 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         if (target != null &&
             (!target.isAlive ||
                     target.level() !== this.mc.level ||
-                    player.distanceTo(target) > this.targetRange.value)
+                    player.distanceTo(target) > this.targetRange)
         ) {
             this.target = null
         }
-        if (this.target == null || this.dynamicTarget.value) {
+        if (this.target == null || this.dynamicTarget) {
             this.target = TargetManager.INSTANCE.acquirePrimary(
                 TargetRequest.of(
-                    this.targetRange.value.toDouble(),
+                    this.targetRange.toDouble(),
                     360.0f,
-                    this.players.value,
-                    this.mobs.value,
-                    this.animals.value,
-                    this.villagers.value,
-                    this.ambient.value,
-                    this.water.value,
-                    this.others.value,
-                    this.invisible.value,
-                    this.followFriend.value,
+                    this.players,
+                    this.mobs,
+                    this.animals,
+                    this.villagers,
+                    this.ambient,
+                    this.water,
+                    this.others,
+                    this.invisible,
+                    this.followFriend,
                     Predicate { living -> living !== this.mc.player },
                     1,
                 )
@@ -482,8 +483,8 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         if (length < 1.0E-8) {
             return FlightIntent(Vec3.ZERO, intent.lookDirection, intent.directVelocity, false)
         }
-        val clamped = if (length > this.maxFlightSpeed.value) {
-            velocity.scale(this.maxFlightSpeed.value / length)
+        val clamped = if (length > this.maxFlightSpeed) {
+            velocity.scale(this.maxFlightSpeed / length)
         } else {
             velocity
         }
@@ -501,8 +502,8 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         }
 
         // 长矛瞄准跳过转向限速以跟随目标，仍保留微小变化的死区。
-        val limit = this.maxTurnSpeed.value
-        val unlimited = limit >= 360.0 || this.mode.`is`(ElytraCombatMode.Spear)
+        val limit = this.maxTurnSpeed
+        val unlimited = limit >= 360.0 || this.mode == (ElytraCombatMode.Spear)
 
         val previousDirection = previous.normalize()
         val nextDirection = desired.normalize()
@@ -570,7 +571,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             return null
         }
 
-        val pitchTolerance = if (this.mode.`is`(ElytraCombatMode.Spear)) {
+        val pitchTolerance = if (this.mode == (ElytraCombatMode.Spear)) {
             SPEAR_PITCH_DEVIATION_LIMIT
         } else {
             ElytraDirectionSolver.DEFAULT_PITCH_DEVIATION_LIMIT
@@ -579,7 +580,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         ElytraDirectionSolver.rememberPitch(rotations.pitch)
         val yawDelta = Mth.wrapDegrees(rotations.yaw - player.yRot)
         val direction = directionInput(yawDelta)
-        val direct = if (this.controlMode.`is`(ControlMode.DirectVelocity)) velocity else null
+        val direct = if (this.controlMode == (ControlMode.DirectVelocity)) velocity else null
         ElytraDebug.log(
             ElytraDebug.SLOT_INTENT,
             "input",
@@ -621,7 +622,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         var hit = this.hitTracker.poll()
         while (hit != null) {
             this.currentBehavior.onHit(hit)
-            if (hit == CombatHitTracker.HitType.SPEAR && this.logSpearHit.value) {
+            if (hit == CombatHitTracker.HitType.SPEAR && this.logSpearHit) {
                 Constants.LOGGER.info("ElytraCombat spear kinetic hit registered")
             }
             hit = this.hitTracker.poll()
@@ -644,9 +645,9 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
     private fun cycleMode() {
         // 切换模式时立即重置行为状态和路径请求，避免沿用上个模式的速度/状态。
-        val modes = this.mode.modes
-        val next = Math.floorMod(this.mode.modeIndex + 1, modes.size)
-        this.mode.setMode(modes[next])
+        val modes = ElytraCombatMode.entries
+        val next = Math.floorMod(this.mode.ordinal + 1, modes.size)
+        this.mode = modes[next]
         resetState()
     }
 

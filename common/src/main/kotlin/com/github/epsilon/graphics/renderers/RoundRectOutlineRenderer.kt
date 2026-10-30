@@ -34,7 +34,7 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
         private const val STRIDE = 52
         private const val OUTLINE_BYTES = STRIDE * 4L
 
-        fun create(): RoundRectOutlineRenderer = RendererManager.INSTANCE.register(RoundRectOutlineRenderer())
+        fun create(): RoundRectOutlineRenderer = RendererManager.register(RoundRectOutlineRenderer())
 
     }
 
@@ -235,7 +235,7 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
 
     override fun close() {
         buffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
 }

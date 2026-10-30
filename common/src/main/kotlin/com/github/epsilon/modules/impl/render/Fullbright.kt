@@ -27,17 +27,17 @@ object Fullbright : Module("Fullbright", Category.RENDER) {
         }
     }
 
-    fun isGammaMode(): Boolean = isEnabled && mode.`is`(Mode.Gamma)
+    fun isGammaMode(): Boolean = isEnabled && mode == Mode.Gamma
 
     override fun onDisable() {
-        if (mode.`is`(Mode.Gamma)) return
+        if (mode == Mode.Gamma) return
         runSafe {
             player.removeEffect(MobEffects.NIGHT_VISION)
         }
     }
 
     private fun onPlayerTick(event: PlayerTickEvent.Pre) {
-        if (mode.`is`(Mode.Potion)) {
+        if (mode == Mode.Potion) {
             runSafe {
                 player.addEffect(MobEffectInstance(MobEffects.NIGHT_VISION, -1, 0))
             }

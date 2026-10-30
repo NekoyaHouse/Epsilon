@@ -615,7 +615,7 @@ class ConfigClientSettingTab(
 
     private fun buildContentSignature(configs: List<String>, activeConfig: String): Long {
         var signature = 17L
-        signature = signature * 31L + TranslationManager.INSTANCE.getRevision()
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getConfigScroll())
         signature = signature * 31L + activeConfig.hashCode()
         for (config in configs) {

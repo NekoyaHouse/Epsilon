@@ -78,7 +78,7 @@ class MaceBehavior : ElytraCombatBehavior {
         }
 
         val tick = bot.player().tickCount
-        val targetPos = if (bot.maceUsePredictor.value) target.predictedPosition else target.position
+        val targetPos = if (bot.maceUsePredictor) target.predictedPosition else target.position
         val desired: Vec3
 
         when (this.state) {
@@ -110,16 +110,16 @@ class MaceBehavior : ElytraCombatBehavior {
                 } else {
                     // 到达高度与拉升目标使用同一配置值。
                     val followHeight = if (target.supported) {
-                        bot.maceGroundHeight.value
+                        bot.maceGroundHeight
                     } else {
-                        bot.maceHeight.value
+                        bot.maceHeight
                     }
                     val aimY = target.entity.y + followHeight
                     val arrived = bot.player().y > target.entity.y &&
                             aimY - bot.player().y <= PULL_UP_ARRIVE_TOLERANCE
                     val mayFollow = arrived ||
                             (bot.player().y > target.entity.y &&
-                                    tick - this.pullUpStartTick > bot.macePullUpTicks.value)
+                                    tick - this.pullUpStartTick > bot.macePullUpTicks)
                     desired = if (mayFollow) {
                         this.state = State.FOLLOW
                         if (target.supported && !inAttackRange(bot, target)) {
@@ -167,7 +167,7 @@ class MaceBehavior : ElytraCombatBehavior {
         val raw = FlightIntent(
             desired,
             desired.normalize(),
-            bot.controlMode.`is`(ElytraCombat.ControlMode.DirectVelocity),
+            bot.controlMode == (ElytraCombat.ControlMode.DirectVelocity),
             true,
         )
         return planner.plan(bot.player(), raw, target.predictedPosition, planConfig)
@@ -206,7 +206,7 @@ class MaceBehavior : ElytraCombatBehavior {
     }
 
     private fun pullUpDirection(bot: ElytraCombat, targetPos: Vec3, target: TargetSnapshot): Vec3 {
-        val height = if (target.supported) bot.maceGroundHeight.value else bot.maceHeight.value
+        val height = if (target.supported) bot.maceGroundHeight else bot.maceHeight
         val movement = Vec3(targetPos.x, targetPos.y + height, targetPos.z)
             .subtract(bot.player().position())
         return ensureMinimumLength(movement, 5.0)
@@ -214,15 +214,15 @@ class MaceBehavior : ElytraCombatBehavior {
 
     private fun followDirection(bot: ElytraCombat, targetPos: Vec3, target: TargetSnapshot): Vec3 {
         var movement = targetPos.subtract(bot.player().position())
-        if (bot.maceYBias.value != 0.0 && !target.supported) {
-            movement = movement.add(0.0, bot.maceYBias.value, 0.0)
+        if (bot.maceYBias != 0.0 && !target.supported) {
+            movement = movement.add(0.0, bot.maceYBias, 0.0)
         }
-        if (bot.maceSmoothFlight.value &&
+        if (bot.maceSmoothFlight &&
             movement.y < 0.0 &&
-            bot.player().y > target.entity.y + bot.maceFollowMinHeight.value
+            bot.player().y > target.entity.y + bot.maceFollowMinHeight
         ) {
             val horizontal = Math.max(0.001, movement.horizontalDistance())
-            val downAngle = if (bot.maceAngleOptimize.value) bot.maceDownAngle.value else 30.5
+            val downAngle = if (bot.maceAngleOptimize) bot.maceDownAngle else 30.5
             movement = Vec3(
                 movement.x,
                 -horizontal * Math.tan(Math.toRadians(downAngle)),
@@ -293,7 +293,7 @@ class MaceBehavior : ElytraCombatBehavior {
         if (horizontal.lengthSqr() < 1.0E-4) {
             return pullUp(bot, targetPos, target)
         }
-        val height = if (target.supported) bot.maceGroundHeight.value else bot.maceHeight.value
+        val height = if (target.supported) bot.maceGroundHeight else bot.maceHeight
         val climb = targetPos.y + height - player.y
         return horizontal.normalize().scale(RECOVERY_HORIZONTAL_SPEED)
             .add(0.0, Math.max(RECOVERY_CLIMB, climb), 0.0)
@@ -318,7 +318,7 @@ class MaceBehavior : ElytraCombatBehavior {
             return ensureMinimumLength(targetEye.subtract(playerPos), 5.0)
         }
 
-        val radius = Math.min(4, Math.max(1, Math.ceil(bot.maceEngageRange.value).toInt()))
+        val radius = Math.min(4, Math.max(1, Math.ceil(bot.maceEngageRange).toInt()))
         val hitPos = hit.blockPos
         val candidates = ArrayList<BlockPos>((radius * 2 + 1) * (radius * 2 + 1) * (radius * 2 + 1))
         for (x in hitPos.x - radius..hitPos.x + radius) {
@@ -358,7 +358,7 @@ class MaceBehavior : ElytraCombatBehavior {
      */
     private fun isGroundCandidateUsable(bot: ElytraCombat, target: TargetSnapshot, center: Vec3): Boolean {
         if (!bot.player().isWithinEntityInteractionRange(target.entity.boundingBox, 0.5) &&
-            center.distanceToSqr(target.entity.eyePosition) > bot.maceEngageRange.value * bot.maceEngageRange.value
+            center.distanceToSqr(target.entity.eyePosition) > bot.maceEngageRange * bot.maceEngageRange
         ) {
             return false
         }

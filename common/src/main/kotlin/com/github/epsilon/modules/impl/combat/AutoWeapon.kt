@@ -43,114 +43,114 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private val sgOtherEnchants: SettingGroup = settingGroup("Other Enchants")
     private val sgWeapon: SettingGroup = settingGroup("Weapon")
 
-    private val pauseOnEat by boolSetting("Pause On Eat", true).group(sgGeneral)
-    private val mode: EnumSetting<Mode> by enumSetting("Mode", Mode.Simple).group(sgGeneral)
-    private val targetSlot by intSetting(
+    private var pauseOnEat by boolSetting("Pause On Eat", true).group(sgGeneral)
+    private var mode by enumSetting("Mode", Mode.Simple).group(sgGeneral)
+    private var targetSlot by intSetting(
         "Target Slot", 1, 1, 9, 1,
-        Setting.Dependency { mode.`is`(Mode.Simple) },
+        Setting.Dependency { mode == (Mode.Simple) },
     ).group(sgGeneral)
-    private val swapBack by boolSetting("Swap Back", true).group(sgGeneral)
-    private val swapBackDelay by intSetting("Swap Back Delay", 200, 0, 500, 10).group(sgGeneral)
+    private var swapBack by boolSetting("Swap Back", true).group(sgGeneral)
+    private var swapBackDelay by intSetting("Swap Back Delay", 200, 0, 500, 10).group(sgGeneral)
 
-    private val smartDurability by boolSetting(
+    private var smartDurability by boolSetting(
         "Smart Durability Saver", false,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgSwapping)
-    private val smartShieldBreak by boolSetting(
+    private var smartShieldBreak by boolSetting(
         "Smart Shield Breaker", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgSwapping)
-    private val swordSwapping by boolSetting(
+    private var swordSwapping by boolSetting(
         "Sword Swapping", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgSwapping)
-    private val maceSwapping by boolSetting(
+    private var maceSwapping by boolSetting(
         "Mace Swapping", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgSwapping)
-    private val otherSwapping by boolSetting(
+    private var otherSwapping by boolSetting(
         "Other Swapping", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgSwapping)
 
-    private val enchantFireAspect by boolSetting(
+    private var enchantFireAspect by boolSetting(
         "Fire Aspect", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
-    private val enchantLooting by boolSetting(
+    private var enchantLooting by boolSetting(
         "Looting", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
-    private val enchantSharpness by boolSetting(
+    private var enchantSharpness by boolSetting(
         "Sharpness", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
-    private val enchantSmite by boolSetting(
+    private var enchantSmite by boolSetting(
         "Smite", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
-    private val enchantBaneOfArthropods by boolSetting(
+    private var enchantBaneOfArthropods by boolSetting(
         "Bane of Arthropods", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
-    private val enchantSweepingEdge by boolSetting(
+    private var enchantSweepingEdge by boolSetting(
         "Sweeping Edge", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && swordSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
     ).group(sgSwordEnchants)
 
-    private val regularMace by boolSetting(
+    private var regularMace by boolSetting(
         "Regular Mace", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && maceSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
     ).group(sgMaceEnchants)
-    private val enchantDensity by boolSetting(
+    private var enchantDensity by boolSetting(
         "Density", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && maceSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
     ).group(sgMaceEnchants)
-    private val enchantBreach by boolSetting(
+    private var enchantBreach by boolSetting(
         "Breach", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && maceSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
     ).group(sgMaceEnchants)
-    private val enchantWindBurst by boolSetting(
+    private var enchantWindBurst by boolSetting(
         "Wind Burst", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && maceSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
     ).group(sgMaceEnchants)
 
-    private val enchantImpaling by boolSetting(
+    private var enchantImpaling by boolSetting(
         "Impaling", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && otherSwapping },
+        Setting.Dependency { mode == (Mode.Smart) && otherSwapping },
     ).group(sgOtherEnchants)
 
-    private val onlyOnWeapon by boolSetting(
+    private var onlyOnWeapon by boolSetting(
         "Only On Weapon", false,
-        Setting.Dependency { mode.`is`(Mode.Smart) },
+        Setting.Dependency { mode == (Mode.Smart) },
     ).group(sgWeapon)
-    private val sword by boolSetting(
+    private var sword by boolSetting(
         "Sword", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val axe by boolSetting(
+    private var axe by boolSetting(
         "Axe", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val pickaxe by boolSetting(
+    private var pickaxe by boolSetting(
         "Pickaxe", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val shovel by boolSetting(
+    private var shovel by boolSetting(
         "Shovel", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val hoe by boolSetting(
+    private var hoe by boolSetting(
         "Hoe", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val mace by boolSetting(
+    private var mace by boolSetting(
         "Mace", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
-    private val trident by boolSetting(
+    private var trident by boolSetting(
         "Trident", true,
-        Setting.Dependency { mode.`is`(Mode.Smart) && onlyOnWeapon },
+        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
     ).group(sgWeapon)
 
     private val backTimer = TimerUtils()
@@ -172,14 +172,14 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         }
         if (pauseOnEat && PlayerUtils.isEating()) return
         if (!canSwapByWeapon()) return
-        performSwap(event.getEntity())
+        performSwap(event.entity)
     }
 
     private fun performSwap(target: Entity?) {
         if (awaitingBack) return
 
         val player = this.mc.player ?: return
-        val slotIndex = if (mode.`is`(Mode.Simple)) {
+        val slotIndex = if (mode == (Mode.Simple)) {
             targetSlot - 1
         } else {
             getSmartSlot(target)
@@ -205,11 +205,11 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private fun canSwapByWeapon(): Boolean {
         if (!onlyOnWeapon) return true
         return InvUtils.testInMainHand { item ->
-            (sword && item.`is`(ItemTags.SWORDS)) ||
-                    (axe && item.`is`(ItemTags.AXES)) ||
-                    (pickaxe && item.`is`(ItemTags.PICKAXES)) ||
-                    (shovel && item.`is`(ItemTags.SHOVELS)) ||
-                    (hoe && item.`is`(ItemTags.HOES)) ||
+            (sword && item == (ItemTags.SWORDS)) ||
+                    (axe && item == (ItemTags.AXES)) ||
+                    (pickaxe && item == (ItemTags.PICKAXES)) ||
+                    (shovel && item == (ItemTags.SHOVELS)) ||
+                    (hoe && item == (ItemTags.HOES)) ||
                     (mace && item.item is MaceItem) ||
                     (trident && item.item is TridentItem)
         }

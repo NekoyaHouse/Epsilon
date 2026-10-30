@@ -54,7 +54,7 @@ object SoundFX : Module("Sound FX", Category.PLAYER) {
     }
 
     private fun playSound(key: SoundKey) {
-        SoundManager.INSTANCE.playSound(key, volume.toFloat() / 100.0f)
+        SoundManager.playSound(key, volume.toFloat() / 100.0f)
     }
 
 }

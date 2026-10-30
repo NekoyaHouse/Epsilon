@@ -218,7 +218,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun confirmTrackedDeath(entityId: Int) {
-        if (!isEnabled || !triggerMode == TriggerMode.Kill) return
+        if (!isEnabled || triggerMode != TriggerMode.Kill) return
         val nn = NonNullContext.current ?: return
         val target = recentTargets[entityId]
         if (target == null || target.player.level() !== nn.world || !target.isRecent(System.currentTimeMillis())) {
@@ -229,7 +229,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun confirmDeathEvent(packet: ClientboundEntityEventPacket) {
-        if (!isEnabled || !triggerMode == TriggerMode.Kill) return
+        if (!isEnabled || triggerMode != TriggerMode.Kill) return
         val world = NonNullContext.current?.world ?: return
         val entity = packet.getEntity(world) ?: return
         confirmTrackedDeath(entity.id)

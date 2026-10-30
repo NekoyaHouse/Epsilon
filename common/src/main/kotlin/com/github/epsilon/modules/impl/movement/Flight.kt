@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -25,7 +26,7 @@ object Flight : Module("Flight", Category.MOVEMENT) {
                 y = -verticalSpeed
             }
 
-            val strafe = MoveUtils.forward(horizontalSpeed)
+            val strafe = forward(horizontalSpeed)
             player.deltaMovement = Vec3(strafe[0], y, strafe[1])
         }
     }

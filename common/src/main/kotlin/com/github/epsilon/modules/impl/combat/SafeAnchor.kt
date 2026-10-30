@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -154,7 +155,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             val key = triggerKey
             if (key == -1) return@nonNullListener
 
-            val keyDown = KeybindUtils.isPressed(key)
+            val keyDown = isPressed(key)
             val newPress = keyDown && !wasKeyDown
             wasKeyDown = keyDown
 

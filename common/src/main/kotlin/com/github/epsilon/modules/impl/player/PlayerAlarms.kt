@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.elements.impl.notification.NotificationMode
@@ -213,7 +214,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{new_gamemode}", translateGamemode(newMode))
                                     val mode = alertMode.value
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-                                        ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW))
+                                        addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW))
                                     }
                                     if (mode == AlertMode.Notification || mode == AlertMode.Both) {
                                         val hash = java.util.Objects.hash(playerName, "gamemode")

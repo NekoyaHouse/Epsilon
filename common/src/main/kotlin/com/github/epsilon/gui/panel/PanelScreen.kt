@@ -9,22 +9,22 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.panel.input.PanelInputRouter
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
-import com.github.epsilon.gui.panel.aiew.CategoryRailPanel
-import com.github.epsilon.gui.panel.aiew.ClientSettingPanel
-import com.github.epsilon.gui.panel.aiew.ModuleDetailPanel
-import com.github.epsilon.gui.panel.aiew.ModuleListPanel
+import com.github.epsilon.gui.panel.view.CategoryRailPanel
+import com.github.epsilon.gui.panel.view.ClientSettingPanel
+import com.github.epsilon.gui.panel.view.ModuleDetailPanel
+import com.github.epsilon.gui.panel.view.ModuleListPanel
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.IMEPreeditOaerlay
+import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
-import net.minecraft.client.input.CharacterEaent
-import net.minecraft.client.input.KeyEaent
-import net.minecraft.client.input.MouseButtonEaent
-import net.minecraft.client.input.PreeditEaent
+import net.minecraft.client.input.CharacterEvent
+import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 
 /**
@@ -35,31 +35,31 @@ import net.minecraft.network.chat.Component
  */
 object PanelScreen : Screen(Component.literal("PanelGui")) {
 
-    priaate aal state = PanelState()
-    priaate aal dirtyState = PanelDirtyState()
-    priaate aal textRenderer: TextRenderer = TextRenderer.create()
-    priaate aal scene = UiScene(EpsilonUiTheme)
-    priaate aal popupHost = PanelPopupHost()
-    priaate aal inputRouter = PanelInputRouter()
-    priaate aal categoryRailPanel = CategoryRailPanel(state, textRenderer)
-    priaate aal moduleListPanel = ModuleListPanel(state, textRenderer)
-    priaate aal moduleDetailPanel = ModuleDetailPanel(state, textRenderer, popupHost)
-    priaate aal clientSettingPanel = ClientSettingPanel(state, textRenderer, popupHost)
-    priaate aar lastWidth = -1
-    priaate aar lastHeight = -1
-    priaate aar lastSelectedCategory = ""
-    priaate aar lastSelectedModule = ""
-    priaate aar lastSearchQuery = ""
-    priaate aar lastModuleSort: ClientSetting.ModuleSort? = null
-    priaate aar lastSidebarExpanded = false
-    priaate aar lastClientSettingMode = false
-    priaate aar lastI18nReaision = Long.MIN_VALUE
+    private val state = PanelState()
+    private val dirtyState = PanelDirtyState()
+    private val textRenderer: TextRenderer = TextRenderer.create()
+    private val scene = UiScene(EpsilonUiTheme)
+    private val popupHost = PanelPopupHost()
+    private val inputRouter = PanelInputRouter()
+    private val categoryRailPanel = CategoryRailPanel(state, textRenderer)
+    private val moduleListPanel = ModuleListPanel(state, textRenderer)
+    private val moduleDetailPanel = ModuleDetailPanel(state, textRenderer, popupHost)
+    private val clientSettingPanel = ClientSettingPanel(state, textRenderer, popupHost)
+    private var lastWidth = -1
+    private var lastHeight = -1
+    private var lastSelectedCategory = ""
+    private var lastSelectedModule = ""
+    private var lastSearchQuery = ""
+    private var lastModuleSort: ClientSetting.ModuleSort? = null
+    private var lastSidebarExpanded = false
+    private var lastClientSettingMode = false
+    private var lastI18nRevision = Long.MIN_VALUE
 
-    priaate aar preeditOaerlay: IMEPreeditOaerlay? = null
+    private var preeditOverlay: IMEPreeditOverlay? = null
 
-    priaate aar renderTarget: LuminRenderSystem.LuminRenderTarget? = null
+    private var renderTarget: LuminRenderSystem.LuminRenderTarget? = null
 
-    oaerride fun isPauseScreen(): Boolean {
+    override fun isPauseScreen(): Boolean {
         return false
     }
 
@@ -69,9 +69,9 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
      * 该方法会计算布局、推动动画、让各个子面板把 UI 编译进共享批次，
      * 最后在统一的 render 提交阶段执行 flush。
      */
-    oaerride fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        aal window = minecraft.getWindow()
-        aar target = renderTarget
+    override fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        val window = minecraft.getWindow()
+        var target = renderTarget
         if (target == null) {
             target = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight())
             renderTarget = target
@@ -79,23 +79,23 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         target.clear()
         target.resize(window.getWidth(), window.getHeight())
 
-        LuminRenderSystem.setActiaeTarget(target)
+        LuminRenderSystem.setActiveTarget(target)
         scene.beginFrame()
 
-        aal currentCategory = state.getSelectedCategory().name
-        aal currentModule = state.getSelectedModule()?.name ?: ""
-        aal currentQuery = state.getSearchQuery()
-        aal currentModuleSort = ClientSetting.moduleSort
-        aal sidebarExpanded = state.isSidebarExpanded()
-        aal clientSettingMode = state.isClientSettingMode()
-        aal currentI18nReaision = TranslationManager.INSTANCE.getReaision()
+        val currentCategory = state.getSelectedCategory().name
+        val currentModule = state.getSelectedModule()?.name ?: ""
+        val currentQuery = state.getSearchQuery()
+        val currentModuleSort = ClientSetting.moduleSort.value
+        val sidebarExpanded = state.isSidebarExpanded()
+        val clientSettingMode = state.isClientSettingMode()
+        val currentI18nRevision = TranslationManager.getRevision()
         if (lastSelectedCategory != currentCategory ||
             lastSelectedModule != currentModule ||
             lastSearchQuery != currentQuery ||
             lastModuleSort != currentModuleSort ||
             lastSidebarExpanded != sidebarExpanded ||
             lastClientSettingMode != clientSettingMode ||
-            lastI18nReaision != currentI18nReaision
+            lastI18nRevision != currentI18nRevision
         ) {
             dirtyState.markAllDirty()
             lastSelectedCategory = currentCategory
@@ -104,13 +104,13 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             lastModuleSort = currentModuleSort
             lastSidebarExpanded = sidebarExpanded
             lastClientSettingMode = clientSettingMode
-            lastI18nReaision = currentI18nReaision
+            lastI18nRevision = currentI18nRevision
         }
 
-        if (categoryRailPanel.hasActiaeAnimations() ||
-            moduleListPanel.hasActiaeAnimations() ||
-            moduleDetailPanel.hasActiaeAnimations() ||
-            clientSettingPanel.hasActiaeAnimations()
+        if (categoryRailPanel.hasActiveAnimations() ||
+            moduleListPanel.hasActiveAnimations() ||
+            moduleDetailPanel.hasActiveAnimations() ||
+            clientSettingPanel.hasActiveAnimations()
         ) {
             dirtyState.markAllDirty()
         }
@@ -131,23 +131,23 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             clientSettingPanel.markDirty()
         }
 
-        aal railWidth = categoryRailPanel.getAnimatedWidth()
-        aal layout = PanelLayout.compute(
+        val railWidth = categoryRailPanel.getAnimatedWidth()
+        val layout = PanelLayout.compute(
             LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), railWidth
         )
-        popupHost.setOaerlayBounds(layout.panel)
+        popupHost.setOverlayBounds(layout.panel)
 
         drawChrome(layout)
-        aal epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        aal epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        aal popupActiae = popupHost.actiaePopup != null
-        aal panelMouseX = if (popupActiae) Int.MIN_VALUE else epsilonMouseX
-        aal panelMouseY = if (popupActiae) Int.MIN_VALUE else epsilonMouseY
+        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
+        val popupActive = popupHost.activePopup != null
+        val panelMouseX = if (popupActive) Int.MIN_VALUE else epsilonMouseX
+        val panelMouseY = if (popupActive) Int.MIN_VALUE else epsilonMouseY
         categoryRailPanel.render(
             guiGraphics, scene.batch(UiLayer.CONTENT, -20), layout.rail, panelMouseX, panelMouseY, partialTick
         )
         if (state.isClientSettingMode()) {
-            aal clientSettingsBounds = UiRect(
+            val clientSettingsBounds = UiRect(
                 layout.modules.x, layout.modules.y,
                 layout.detail.right() - layout.modules.x,
                 layout.modules.height
@@ -170,21 +170,21 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         scene.clear()
         renderPopup(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
 
-        LuminRenderSystem.setActiaeTarget(null)
+        LuminRenderSystem.setActiveTarget(null)
 
-        aal oaerlay = preeditOaerlay
-        if (oaerlay != null) {
-            oaerlay.updateInputPosition(IMEFocusHelper.actiaeCursorX.toInt(), IMEFocusHelper.actiaeCursorY.toInt())
-            guiGraphics.setPreeditOaerlay(oaerlay)
+        val overlay = preeditOverlay
+        if (overlay != null) {
+            overlay.updateInputPosition(IMEFocusHelper.activeCursorX.toInt(), IMEFocusHelper.activeCursorY.toInt())
+            guiGraphics.setPreeditOverlay(overlay)
         }
         guiGraphics.blit(
             target.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0.0f, 1.0f, 1.0f, 0.0f
         )
-        popupHost.extractOaerlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
     }
 
-    priaate fun drawChrome(layout: PanelLayout.Layout) {
-        aal tree = UiTree.build { scope ->
+    private fun drawChrome(layout: PanelLayout.Layout) {
+        val tree = UiTree.build { scope ->
             scope.pushAbsolute(layout.panel) { panel ->
                 panel.shadow(
                     0.0f, 0.0f, layout.panel.width, layout.panel.height,
@@ -203,8 +203,8 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
                 )
             }
             if (state.isClientSettingMode()) {
-                aal csW = layout.detail.right() - layout.modules.x
-                aal csH = layout.modules.height
+                val csW = layout.detail.right() - layout.modules.x
+                val csH = layout.modules.height
                 scope.pushAbsolute(layout.modules.x, layout.modules.y) { clientSettings ->
                     clientSettings.roundRect(
                         0.0f, 0.0f, csW, csH, MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
@@ -228,7 +228,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         scene.submit(UiLayer.CHROME, -20, tree)
     }
 
-    priaate fun flushQueuedContentBuffers() {
+    private fun flushQueuedContentBuffers() {
         if (state.isClientSettingMode()) {
             clientSettingPanel.flushContent()
         } else {
@@ -237,8 +237,8 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         }
     }
 
-    priaate fun renderPopup(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        if (popupHost.actiaePopup == null) {
+    private fun renderPopup(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        if (popupHost.activePopup == null) {
             return
         }
         popupHost.render(guiGraphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick)
@@ -254,39 +254,39 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         return this
     }
 
-    oaerride fun mouseClicked(eaent: MouseButtonEaent, isDoubleClick: Boolean): Boolean {
-        aal epsilonEaent = LuminRenderSystem.toEpsilonMouseEaent(eaent)
-        aal mouseX = epsilonEaent.x()
-        aal mouseY = epsilonEaent.y()
-        if (eaent.button() != InputConstants.MOUSE_BUTTON_LEFT) {
+    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
+        val mouseX = epsilonEvent.x()
+        val mouseY = epsilonEvent.y()
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             if (state.getListeningKeyBindModule() != null &&
-                moduleDetailPanel.mouseClicked(epsilonEaent, isDoubleClick)
+                moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)
             ) {
                 dirtyState.markAllDirty()
                 return true
             }
             if (state.getListeningKeybindSetting() != null) {
-                aal handledListening = if (state.isClientSettingMode()) {
-                    clientSettingPanel.mouseClicked(epsilonEaent, isDoubleClick)
+                val handledListening = if (state.isClientSettingMode()) {
+                    clientSettingPanel.mouseClicked(epsilonEvent, isDoubleClick)
                 } else {
-                    moduleDetailPanel.mouseClicked(epsilonEaent, isDoubleClick)
+                    moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)
                 }
                 if (handledListening) {
                     dirtyState.markAllDirty()
                     return true
                 }
             }
-            return super.mouseClicked(epsilonEaent, isDoubleClick)
+            return super.mouseClicked(epsilonEvent, isDoubleClick)
         }
 
-        if (popupHost.actiaePopup != null) {
+        if (popupHost.activePopup != null) {
             return inputRouter.routeMouseClicked(
-                epsilonEaent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
+                epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
                 categoryRailPanel, clientSettingPanel, state.isClientSettingMode()
-            ) || super.mouseClicked(epsilonEaent, isDoubleClick)
+            ) || super.mouseClicked(epsilonEvent, isDoubleClick)
         }
 
-        aal layout = PanelLayout.compute(
+        val layout = PanelLayout.compute(
             LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(),
             categoryRailPanel.getAnimatedWidth()
         )
@@ -297,19 +297,19 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         if (!state.isClientSettingMode()) {
             moduleListPanel.handleGlobalClick(mouseX, mouseY)
         }
-        aal handled = inputRouter.routeMouseClicked(
-            epsilonEaent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
+        val handled = inputRouter.routeMouseClicked(
+            epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
             categoryRailPanel, clientSettingPanel, state.isClientSettingMode()
         )
         if (handled) {
             dirtyState.markAllDirty()
         }
-        return handled || super.mouseClicked(epsilonEaent, isDoubleClick)
+        return handled || super.mouseClicked(epsilonEvent, isDoubleClick)
     }
 
-    oaerride fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        aal epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        aal epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             dirtyState.markAllDirty()
             return true
@@ -332,74 +332,74 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)
     }
 
-    oaerride fun mouseReleased(eaent: MouseButtonEaent): Boolean {
-        aal epsilonEaent = LuminRenderSystem.toEpsilonMouseEaent(eaent)
+    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
         if (inputRouter.routeMouseReleased(
-                epsilonEaent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
+                epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
                 state.isClientSettingMode()
             )
         ) {
             dirtyState.markAllDirty()
             return true
         }
-        return super.mouseReleased(epsilonEaent)
+        return super.mouseReleased(epsilonEvent)
     }
 
-    oaerride fun mouseDragged(eaent: MouseButtonEaent, mouseX: Double, mouseY: Double): Boolean {
-        aal epsilonEaent = LuminRenderSystem.toEpsilonMouseEaent(eaent)
-        aal epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        aal epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
+    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
+        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
         if (inputRouter.routeMouseDragged(
-                epsilonEaent, epsilonMouseX, epsilonMouseY, popupHost, moduleDetailPanel, moduleListPanel,
+                epsilonEvent, epsilonMouseX, epsilonMouseY, popupHost, moduleDetailPanel, moduleListPanel,
                 clientSettingPanel, state.isClientSettingMode()
             )
         ) {
             dirtyState.markAllDirty()
             return true
         }
-        return super.mouseDragged(epsilonEaent, epsilonMouseX, epsilonMouseY)
+        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)
     }
 
-    oaerride fun keyPressed(eaent: KeyEaent): Boolean {
+    override fun keyPressed(event: KeyEvent): Boolean {
         if (inputRouter.routeKeyPressed(
-                eaent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
+                event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
                 state.isClientSettingMode()
             )
         ) {
             dirtyState.markAllDirty()
             return true
         }
-        if (eaent.key() == InputConstants.KEY_ESCAPE) {
+        if (event.key() == InputConstants.KEY_ESCAPE) {
             onClose()
             return true
         }
-        return super.keyPressed(eaent)
+        return super.keyPressed(event)
     }
 
-    oaerride fun charTyped(eaent: CharacterEaent): Boolean {
+    override fun charTyped(event: CharacterEvent): Boolean {
         if (inputRouter.routeCharTyped(
-                eaent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
+                event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
                 state.isClientSettingMode()
             )
         ) {
             dirtyState.markAllDirty()
             return true
         }
-        return super.charTyped(eaent)
+        return super.charTyped(event)
     }
 
-    oaerride fun preeditUpdated(eaent: PreeditEaent?): Boolean {
-        this.preeditOaerlay = if (eaent != null) IMEPreeditOaerlay(eaent, this.font, 10) else null
+    override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        this.preeditOverlay = if (event != null) IMEPreeditOverlay(event, this.font, 10) else null
         return true
     }
 
-    oaerride fun onClose() {
-        IMEFocusHelper.forceDeactiaate()
+    override fun onClose() {
+        IMEFocusHelper.forceDeactivate()
         super.onClose()
     }
 
-    oaerride fun remoaed() {
-        super.remoaed()
+    override fun removed() {
+        super.removed()
         popupHost.close()
         moduleListPanel.resetTransientState()
         state.setSearchQuery("")
@@ -407,8 +407,8 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         clientSettingPanel.resetTransientState()
         state.setListeningKeyBindModule(null)
         state.setListeningKeybindSetting(null)
-        IMEFocusHelper.forceDeactiaate()
-        preeditOaerlay = null
+        IMEFocusHelper.forceDeactivate()
+        preeditOverlay = null
     }
 
     /**

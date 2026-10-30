@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.TimerManager
@@ -38,8 +39,8 @@ object Step : Module("Step", Category.MOVEMENT) {
 
     init {
         nonNullListener<ClientTickEvent.Pre> {
-            if (sneakingPause && player.isCrouching || insideBlockPause && PlayerUtils.isInBlock() ||
-                player.isInLava || player.isInWater || inWebPause && PlayerUtils.isInWeb() ||
+            if (sneakingPause && player.isCrouching || insideBlockPause && isInBlock() ||
+                player.isInLava || player.isInWater || inWebPause && isInWeb() ||
                 !player.onGround() || feetTrapPause && FeetTrap.isEnabled
             ) {
                 player.setStepHeight(0.6f)
@@ -51,7 +52,7 @@ object Step : Module("Step", Category.MOVEMENT) {
 
         nonNullListener<PlayerTickEvent.Pre> {
             if (timer && packets <= 0) {
-                TimerManager.INSTANCE.reset()
+                TimerManager.reset()
                 timer = false
             }
             val strict = mode = = Mode.NCP
@@ -64,7 +65,7 @@ object Step : Module("Step", Category.MOVEMENT) {
                 val offsets = getOffset(stepHeight)
                 if (offsets != null && offsets.size > 1) {
                     if (useTimer) {
-                        TimerManager.INSTANCE.set(getTimer(stepHeight).toFloat())
+                        TimerManager.set(getTimer(stepHeight).toFloat())
                         timer = true
                         packets = 2
                     }
@@ -93,7 +94,7 @@ object Step : Module("Step", Category.MOVEMENT) {
     }
 
     override fun onDisable() {
-        TimerManager.INSTANCE.reset()
+        TimerManager.reset()
         timer = false
         packets = 0
         runSafe {

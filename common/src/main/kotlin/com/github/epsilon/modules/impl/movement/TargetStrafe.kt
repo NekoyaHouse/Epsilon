@@ -191,7 +191,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
     private fun getTargetColor(entity: LivingEntity): Color {
         if (entity is Player) {
-            if (FriendManager.INSTANCE.isFriend(entity)) {
+            if (FriendManager.isFriend(entity)) {
                 return Color(85, 255, 85)
             } else {
                 Color(entity.teamColor)

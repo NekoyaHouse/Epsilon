@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -85,7 +86,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             }
 
             RotationManager.INSTANCE.setRotations(
-                RotationUtils.getRotationsToEntity(currentTarget), 180.0, Priority.Medium
+                getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
             if (!isReadyToAttack()) return@nonNullListener

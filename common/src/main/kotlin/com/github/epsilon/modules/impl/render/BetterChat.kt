@@ -85,12 +85,12 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
         val visibility = (mc.gui.hud.chat as ChatComponentAccessor)
             .`epsilon$getVisibility`(mc.gui.hud.guiTicks, focused)
         val hasQueue = mc.gui.chatListener().queueSize() > 0L
-        val drawChatPanel = visibility.lineCount() > 0 || hasQueue
+        val drawChatPanel = visibility.lineCount > 0 || hasQueue
 
         val lineHeight = (9.0 * (mc.options.chatLineSpacing().get() + 1.0)).toInt() * chatScale
-        val contentHeight = visibility.heightFactor() * lineHeight
+        val contentHeight = visibility.heightFactor * lineHeight
         val contentBelowChat = if (hasQueue) 9.0f * chatScale else 0.0f
-        val panelOpacity = if (hasQueue) 1.0f else visibility.opacity()
+        val panelOpacity = if (hasQueue) 1.0f else visibility.opacity
         val verticalPadding = CHAT_VERTICAL_PADDING * (if (focused || hasQueue) 1.0f else panelOpacity)
 
         val chatX = INPUT_X
@@ -131,8 +131,8 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
         val inputY = screenHeight - INPUT_BOTTOM_OFFSET - INPUT_HEIGHT + (1.0f - inputProgress) * INPUT_SLIDE_DISTANCE
         val inputWidth = screenWidth - INPUT_X * 2.0f
 
-        val chatRadius = Math.min(this.chatRadius.value.toFloat(), animatedChatHeight * 0.5f)
-        val inputRadius = this.inputRadius.value.toFloat()
+        val chatRadius = Math.min(this.chatRadius.toFloat(), animatedChatHeight * 0.5f)
+        val inputRadius = this.inputRadius.toFloat()
         val blur = blurStrength.toFloat()
         val coordinateScale = (mc.window.guiScale / LuminRenderSystem.getGuiScale()).toFloat()
         val renderChatX = chatX * coordinateScale

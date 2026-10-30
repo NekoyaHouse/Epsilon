@@ -46,8 +46,8 @@ object Hat : Module("Hat", Category.RENDER) {
     private val points by intSetting("Points", 30, 3, 180, 1)
     private val size by doubleSetting("Size", 0.5, 0.1, 3.0, 0.1)
     private val offset by doubleSetting("Offset", 2000.0, 0.0, 5000.0, 100.0)
-    private val color by colorSetting("Color", Color(255, 255, 255), Setting.Dependency { mode.`is`(Mode.Fade) })
-    private val secondColor by colorSetting("Second Color", Color(0, 0, 0), Setting.Dependency { mode.`is`(Mode.Fade) })
+    private val color by colorSetting("Color", Color(255, 255, 255), Setting.Dependency { mode == Mode.Fade })
+    private val secondColor by colorSetting("Second Color", Color(0, 0, 0), Setting.Dependency { mode == Mode.Fade })
     private val onlyThirdPerson by boolSetting("Only Third Person", true)
 
     private val positions: Array<DoubleArray> = Array(181) { DoubleArray(2) }
@@ -81,9 +81,9 @@ object Hat : Module("Hat", Category.RENDER) {
     }
 
     private fun onRender3D(event: Render3DEvent) {
-        if (this.lastSize != this.size.value || this.lastPoints != this.points.value) {
-            this.lastSize = this.size.value
-            this.lastPoints = this.points.value
+        if (this.lastSize != this.size || this.lastPoints != this.points) {
+            this.lastSize = this.size
+            this.lastPoints = this.points
             this.computeChineseHatPoints(this.lastPoints, this.lastSize)
         }
 
@@ -97,16 +97,16 @@ object Hat : Module("Hat", Category.RENDER) {
             return
         }
 
-        val pointCount = this.points.value
-        val radius = this.size.value
+        val pointCount = this.points
+        val radius = this.size
 
         val colors = arrayOfNulls<Color>(181)
         val colorMode = getColorMode()
 
         for (i in colors.indices) {
             colors[i] = this.fadeBetween(
-                colorMode, this.offset.value,
-                i.toDouble() * (this.offset.value / this.points.value)
+                colorMode, this.offset,
+                i.toDouble() * (this.offset / this.points)
             )
         }
 
@@ -174,7 +174,7 @@ object Hat : Module("Hat", Category.RENDER) {
     private fun withAlpha(source: Color, alpha: Int): Color =
         Color(source.red, source.green, source.blue, Mth.clamp(alpha, 0, 255))
 
-    private fun getColorMode(): Array<Color> = when (this.mode.value) {
+    private fun getColorMode(): Array<Color> = when (this.mode) {
         Mode.Astolfo -> arrayOf(
             Color(252, 106, 140), Color(252, 106, 213),
             Color(218, 106, 252), Color(145, 106, 252),
@@ -194,9 +194,9 @@ object Hat : Module("Hat", Category.RENDER) {
         )
 
         Mode.Fade -> arrayOf(
-            this.color.value,
-            this.secondColor.value,
-            this.color.value
+            this.color,
+            this.secondColor,
+            this.color
         )
     }
 

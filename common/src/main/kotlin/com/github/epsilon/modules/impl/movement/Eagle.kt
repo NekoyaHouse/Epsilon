@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -52,7 +53,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         nonNullListener<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
             if (mc.gui.screen() != null) return@nonNullListener
 
-            val physicallySneaking = KeybindUtils.isPressed(mc.options.keyShift)
+            val physicallySneaking = isPressed(mc.options.keyShift)
             if (sneakingOnly && physicallySneaking && shouldSneak()) {
                 event.isSneak = false
             }

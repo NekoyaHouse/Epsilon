@@ -297,7 +297,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
         if (candidate.level() !== nn.world || AntiBot.isBot(candidate)) return false
         if (TargetManager.INSTANCE.isSameTeam(candidate)) return false
-        return candidate !is Player || !FriendManager.INSTANCE.isFriend(candidate)
+        return candidate !is Player || !FriendManager.isFriend(candidate)
     }
 
     context(nn: NonNullContext)

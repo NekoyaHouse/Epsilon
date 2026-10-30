@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -28,7 +29,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            val slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING)
+            val slot = getItemSlot(Items.TOTEM_OF_UNDYING)
             if (slot == -1) {
                 return@nonNullListener
             }

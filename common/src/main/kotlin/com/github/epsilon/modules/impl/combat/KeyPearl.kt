@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
@@ -72,7 +73,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
             }
 
             if (pressed) {
-                val pearl = InvUtils.findInHotbar(Items.ENDER_PEARL)
+                val pearl = findInHotbar(Items.ENDER_PEARL)
                 if (!pearl.found()) {
                     resetState()
                     return@nonNullListener
@@ -82,7 +83,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     return@nonNullListener
                 }
 
-                if (pauseOnEat && (PlayerUtils.isEating() || NoSlowdown.isWorking())) {
+                if (pauseOnEat && (isEating() || NoSlowdown.isWorking())) {
                     return@nonNullListener
                 } else {
                     if (NoSlowdown.isWorking()) {
@@ -99,7 +100,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     Rot2f(player.yRot, player.xRot), 180.0, Priority.Highest
                 )
 
-                InvUtils.swap(pearl.slot, switchBack)
+                swap(pearl.slot, switchBack)
 
                 if (clock < delay) {
                     clock++
@@ -110,7 +111,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     val result: InteractionResult = interaction.useItem(player, InteractionHand.MAIN_HAND)
                     if (result.consumesAction()) {
                         if (swingHand) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                            swingHand(InteractionHand.MAIN_HAND)
                         }
                     }
                     hasActivated = true

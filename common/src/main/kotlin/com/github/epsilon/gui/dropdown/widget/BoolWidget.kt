@@ -100,7 +100,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
                 }
                 val newValue = !setting.value
                 setting.value = newValue
-                SoundManager.INSTANCE.playInUi(if (newValue) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+                SoundManager.playInUi(if (newValue) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
                 DropdownScreen.react(
                     if (newValue) ReisaDropdownCompanion.Action.TOGGLE_ON else ReisaDropdownCompanion.Action.TOGGLE_OFF
                 )

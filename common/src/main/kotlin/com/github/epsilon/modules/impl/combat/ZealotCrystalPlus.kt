@@ -166,87 +166,87 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private val sgRender: SettingGroup = settingGroup("Render")
 
     // General
-    private val players by boolSetting("Players", true).group(sgGeneral)
-    private val mobs by boolSetting("Mobs", false).group(sgGeneral)
-    private val animals by boolSetting("Animals", false).group(sgGeneral)
-    private val maxTargets by intSetting("Max Targets", 4, 1, 10, 1).group(sgGeneral)
-    private val targetRange by doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5).group(sgGeneral)
-    private val yawSpeed by doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).group(sgGeneral)
-    private val preRotation by boolSetting("Pre Rotation", true).group(sgGeneral)
-    private val placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).group(sgGeneral)
-    private val breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).group(sgGeneral)
-    private val eatingPause by boolSetting("Eating Pause", false).group(sgGeneral)
-    private val updateDelay by intSetting("Update Delay", 5, 0, 250, 1).group(sgGeneral)
-    private val globalDelay by intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000).group(sgGeneral)
+    private var players by boolSetting("Players", true).group(sgGeneral)
+    private var mobs by boolSetting("Mobs", false).group(sgGeneral)
+    private var animals by boolSetting("Animals", false).group(sgGeneral)
+    private var maxTargets by intSetting("Max Targets", 4, 1, 10, 1).group(sgGeneral)
+    private var targetRange by doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5).group(sgGeneral)
+    private var yawSpeed by doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).group(sgGeneral)
+    private var preRotation by boolSetting("Pre Rotation", true).group(sgGeneral)
+    private var placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).group(sgGeneral)
+    private var breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).group(sgGeneral)
+    private var eatingPause by boolSetting("Eating Pause", false).group(sgGeneral)
+    private var updateDelay by intSetting("Update Delay", 5, 0, 250, 1).group(sgGeneral)
+    private var globalDelay by intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000).group(sgGeneral)
 
     // Force Place
-    private val forcePlaceHealth by doubleSetting("Force Place Health", 8.0, 0.0, 20.0, 0.5).group(sgForcePlace)
-    private val forcePlaceArmorRate by intSetting("Force Place Armor Rate", 3, 0, 25, 1).group(sgForcePlace)
-    private val forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).group(sgForcePlace)
-    private val forcePlaceMotion by doubleSetting("Force Place Motion", 4.0, 0.0, 10.0, 0.25).group(sgForcePlace)
-    private val forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).group(sgForcePlace)
-    private val forcePlaceWhileSwording by boolSetting("Force Place While Swording", false).group(sgForcePlace)
+    private var forcePlaceHealth by doubleSetting("Force Place Health", 8.0, 0.0, 20.0, 0.5).group(sgForcePlace)
+    private var forcePlaceArmorRate by intSetting("Force Place Armor Rate", 3, 0, 25, 1).group(sgForcePlace)
+    private var forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).group(sgForcePlace)
+    private var forcePlaceMotion by doubleSetting("Force Place Motion", 4.0, 0.0, 10.0, 0.25).group(sgForcePlace)
+    private var forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).group(sgForcePlace)
+    private var forcePlaceWhileSwording by boolSetting("Force Place While Swording", false).group(sgForcePlace)
 
     // Calculation
-    private val assumeInstantMine by boolSetting("Assume Instant Mine", true).group(sgCalculation)
-    private val noSuicide by doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25).group(sgCalculation)
-    private val wallRange by doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1).group(sgCalculation)
-    private val motionPredict by boolSetting("Motion Predict", true).group(sgCalculation)
-    private val predictTicks by intSetting("Predict Ticks", 8, 0, 20, 1, Setting.Dependency { motionPredict }).group(sgCalculation)
-    private val damagePriority: EnumSetting<DamagePriority> by enumSetting("Damage Priority", DamagePriority.Efficient).group(sgCalculation)
-    private val armorMode: EnumSetting<DamageUtils.ArmorEnchantmentMode> by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).group(sgCalculation)
-    private val lethalOverride by boolSetting("Lethal Override", true).group(sgCalculation)
-    private val lethalThresholdAddition by doubleSetting("Lethal Threshold Addition", 0.5, -5.0, 5.0, 0.1, Setting.Dependency { lethalOverride }).group(sgCalculation)
-    private val lethalMaxSelfDamage by doubleSetting("Lethal Max Self Damage", 16.0, 0.0, 20.0, 0.25, Setting.Dependency { lethalOverride }).group(sgCalculation)
-    private val safeMaxTargetDamageReduction by doubleSetting("Safe Max Target Damage Reduction", 1.0, 0.0, 10.0, 0.1).group(sgCalculation)
-    private val safeMinSelfDamageReduction by doubleSetting("Safe Min Self Damage Reduction", 2.0, 0.0, 10.0, 0.1).group(sgCalculation)
-    private val collidingCrystalExtraSelfDamageThreshold by doubleSetting("Colliding Crystal Extra Self Damage Threshold", 4.0, 0.0, 10.0, 0.1).group(sgCalculation)
+    private var assumeInstantMine by boolSetting("Assume Instant Mine", true).group(sgCalculation)
+    private var noSuicide by doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25).group(sgCalculation)
+    private var wallRange by doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1).group(sgCalculation)
+    private var motionPredict by boolSetting("Motion Predict", true).group(sgCalculation)
+    private var predictTicks by intSetting("Predict Ticks", 8, 0, 20, 1, Setting.Dependency { motionPredict }).group(sgCalculation)
+    private var damagePriority by enumSetting("Damage Priority", DamagePriority.Efficient).group(sgCalculation)
+    private var armorMode by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).group(sgCalculation)
+    private var lethalOverride by boolSetting("Lethal Override", true).group(sgCalculation)
+    private var lethalThresholdAddition by doubleSetting("Lethal Threshold Addition", 0.5, -5.0, 5.0, 0.1, Setting.Dependency { lethalOverride }).group(sgCalculation)
+    private var lethalMaxSelfDamage by doubleSetting("Lethal Max Self Damage", 16.0, 0.0, 20.0, 0.25, Setting.Dependency { lethalOverride }).group(sgCalculation)
+    private var safeMaxTargetDamageReduction by doubleSetting("Safe Max Target Damage Reduction", 1.0, 0.0, 10.0, 0.1).group(sgCalculation)
+    private var safeMinSelfDamageReduction by doubleSetting("Safe Min Self Damage Reduction", 2.0, 0.0, 10.0, 0.1).group(sgCalculation)
+    private var collidingCrystalExtraSelfDamageThreshold by doubleSetting("Colliding Crystal Extra Self Damage Threshold", 4.0, 0.0, 10.0, 0.1).group(sgCalculation)
 
     // Place
-    private val placeMode: EnumSetting<PlaceMode> by enumSetting("Place Mode", PlaceMode.Single).group(sgPlace)
-    private val packetPlace: EnumSetting<PacketPlaceMode> by enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace)
-    private val spamPlace by boolSetting("Spam Place", false).group(sgPlace)
-    private val placeSwitchMode: EnumSetting<SwitchMode> by enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace)
-    private val placeSwing by boolSetting("Place Swing", false).group(sgPlace)
-    private val placeSideBypass: EnumSetting<PlaceBypass> by enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace)
-    private val placeMinDamage by doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).group(sgPlace)
-    private val placeMaxSelfDamage by doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).group(sgPlace)
-    private val placeBalance by doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).group(sgPlace)
-    private val placeDelay by intSetting("Place Delay", 50, 0, 500, 1).group(sgPlace)
-    private val placeRange by doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).group(sgPlace)
-    private val placeRangeMode: EnumSetting<RangeMode> by enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace)
+    private var placeMode by enumSetting("Place Mode", PlaceMode.Single).group(sgPlace)
+    private var packetPlace by enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace)
+    private var spamPlace by boolSetting("Spam Place", false).group(sgPlace)
+    private var placeSwitchMode by enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace)
+    private var placeSwing by boolSetting("Place Swing", false).group(sgPlace)
+    private var placeSideBypass by enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace)
+    private var placeMinDamage by doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).group(sgPlace)
+    private var placeMaxSelfDamage by doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).group(sgPlace)
+    private var placeBalance by doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).group(sgPlace)
+    private var placeDelay by intSetting("Place Delay", 50, 0, 500, 1).group(sgPlace)
+    private var placeRange by doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).group(sgPlace)
+    private var placeRangeMode by enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace)
 
     // Break
-    private val breakMode: EnumSetting<BreakMode> by enumSetting("Break Mode", BreakMode.Smart).group(sgBreak)
-    private val bbtt by boolSetting("2B2T", false).group(sgBreak)
-    private val bbttFactor by intSetting("2B2T Factor", 200, 0, 1000, 25, Setting.Dependency { bbtt }).group(sgBreak)
-    private val packetBreak: EnumSetting<BreakMode> by enumSetting("Packet Break", BreakMode.Target, Setting.Dependency { !bbtt }).group(sgBreak)
-    private val ownTimeout by intSetting(
+    private var breakMode by enumSetting("Break Mode", BreakMode.Smart).group(sgBreak)
+    private var bbtt by boolSetting("2B2T", false).group(sgBreak)
+    private var bbttFactor by intSetting("2B2T Factor", 200, 0, 1000, 25, Setting.Dependency { bbtt }).group(sgBreak)
+    private var packetBreak by enumSetting("Packet Break", BreakMode.Target, Setting.Dependency { !bbtt }).group(sgBreak)
+    private var ownTimeout by intSetting(
         "Own Timeout", 100, 0, 2000, 25,
-        Setting.Dependency { breakMode.value == BreakMode.Own || packetBreak.value == BreakMode.Own },
+        Setting.Dependency { breakMode == BreakMode.Own || packetBreak == BreakMode.Own },
     ).group(sgBreak)
-    private val antiWeakness: EnumSetting<SwitchMode> by enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak)
-    private val swapDelay by intSetting("Swap Delay", 0, 0, 20, 1).group(sgBreak)
-    private val breakMinDamage by doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25).group(sgBreak)
-    private val breakMaxSelfDamage by doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).group(sgBreak)
-    private val breakBalance by doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).group(sgBreak)
-    private val breakDelay by intSetting("Break Delay", 100, 0, 500, 1).group(sgBreak)
-    private val breakRange by doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).group(sgBreak)
-    private val breakRangeMode: EnumSetting<RangeMode> by enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak)
+    private var antiWeakness by enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak)
+    private var swapDelay by intSetting("Swap Delay", 0, 0, 20, 1).group(sgBreak)
+    private var breakMinDamage by doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25).group(sgBreak)
+    private var breakMaxSelfDamage by doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).group(sgBreak)
+    private var breakBalance by doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).group(sgBreak)
+    private var breakDelay by intSetting("Break Delay", 100, 0, 500, 1).group(sgBreak)
+    private var breakRange by doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).group(sgBreak)
+    private var breakRangeMode by enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak)
 
     // Render
-    private val swingMode: EnumSetting<SwingMode> by enumSetting("Swing Mode", SwingMode.Client).group(sgRender)
-    private val swingHand: EnumSetting<SwingHand> by enumSetting("Swing Hand", SwingHand.Auto).group(sgRender)
-    private val renderPredict: EnumSetting<RenderPredictMode> by enumSetting("Render Predict", RenderPredictMode.Off).group(sgRender)
-    private val hudInfo: EnumSetting<HudInfo> by enumSetting("Hud Info", HudInfo.Speed).group(sgRender)
-    private val filledAlpha by intSetting("Filled Alpha", 63, 0, 255, 1).group(sgRender)
-    private val outlineAlpha by intSetting("Outline Alpha", 200, 0, 255, 1).group(sgRender)
-    private val renderTargetDamage by boolSetting("Target Damage", true).group(sgRender)
-    private val renderSelfDamage by boolSetting("Self Damage", true).group(sgRender)
-    private val renderColor by colorSetting("Render Color", Color(255, 150, 120, 255), true).group(sgRender)
-    private val outlineWidth by doubleSetting("Outline Width", 3.0, 1.0, 10.0, 0.5).group(sgRender)
-    private val movingLength by intSetting("Moving Length", 400, 0, 1000, 50).group(sgRender)
-    private val fadeLength by intSetting("Fade Length", 200, 0, 1000, 50).group(sgRender)
+    private var swingMode by enumSetting("Swing Mode", SwingMode.Client).group(sgRender)
+    private var swingHand by enumSetting("Swing Hand", SwingHand.Auto).group(sgRender)
+    private var renderPredict by enumSetting("Render Predict", RenderPredictMode.Off).group(sgRender)
+    private var hudInfo by enumSetting("Hud Info", HudInfo.Speed).group(sgRender)
+    private var filledAlpha by intSetting("Filled Alpha", 63, 0, 255, 1).group(sgRender)
+    private var outlineAlpha by intSetting("Outline Alpha", 200, 0, 255, 1).group(sgRender)
+    private var renderTargetDamage by boolSetting("Target Damage", true).group(sgRender)
+    private var renderSelfDamage by boolSetting("Self Damage", true).group(sgRender)
+    private var renderColor by colorSetting("Render Color", Color(255, 150, 120, 255), true).group(sgRender)
+    private var outlineWidth by doubleSetting("Outline Width", 3.0, 1.0, 10.0, 0.5).group(sgRender)
+    private var movingLength by intSetting("Moving Length", 400, 0, 1000, 50).group(sgRender)
+    private var fadeLength by intSetting("Fade Length", 200, 0, 1000, 50).group(sgRender)
 
     private val placeTimer = TimerUtils()
     private val breakTimer = TimerUtils()
@@ -379,12 +379,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
         var acted = false
         val actionBreak = getActionBreakPlan()
-        if (breakMode.value != BreakMode.Off && breakTimer.passedMillise(breakDelay.toLong()) && actionBreak != null) {
+        if (breakMode != BreakMode.Off && breakTimer.passedMillise(breakDelay.toLong()) && actionBreak != null) {
             acted = breakDirect(actionBreak)
         }
 
         val actionPlace = getActionPlaceInfo()
-        if (!acted && !prioritizeBreak && placeMode.value != PlaceMode.Off &&
+        if (!acted && !prioritizeBreak && placeMode != PlaceMode.Off &&
             placeTimer.passedMillise(placeDelay.toLong()) && actionPlace != null && shouldAttemptPlace(actionPlace)
         ) {
             acted = placeDirect(actionPlace, false)
@@ -402,7 +402,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private fun onPacketReceive(event: PacketEvent.Receive) {
         if (nullCheck() || !isEnabled) return
 
-        when (val packet = event.getPacket()) {
+        when (val packet = event.packet) {
             is ClientboundAddEntityPacket -> if (packet.getType() == EntityTypes.END_CRYSTAL) {
                 handleSpawnPacket(packet)
             }
@@ -484,7 +484,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     override fun getInfo(): String? {
-        return when (hudInfo.value) {
+        return when (hudInfo) {
             HudInfo.Off -> ""
             HudInfo.Speed -> String.format(Locale.ROOT, "%.1f", getExplosionSpeed())
             HudInfo.Target -> {
@@ -620,12 +620,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             safeMaxTargetDamageReduction.toFloat(),
             safeMinSelfDamageReduction.toFloat(),
             collidingCrystalExtraSelfDamageThreshold.toFloat(),
-            damagePriority.value,
-            armorMode.value,
-            placeSideBypass.value,
-            packetPlace.value,
-            breakMode.value,
-            packetBreak.value,
+            damagePriority,
+            armorMode,
+            placeSideBypass,
+            packetPlace,
+            breakMode,
+            packetBreak,
         )
 
         val self = captureSelfSnapshot(player, level, settings.armorMode)
@@ -655,7 +655,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         level: net.minecraft.client.multiplayer.ClientLevel,
         armorMode: DamageUtils.ArmorEnchantmentMode,
     ): SelfSnapshot {
-        val currentRotation = RotationManager.INSTANCE.rotation
+        val currentRotation = RotationManager.INSTANCE.rotations
         return SelfSnapshot(
             player,
             player.position(),
@@ -1172,7 +1172,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         if (hand == InteractionHand.MAIN_HAND && crystals.slot != player.inventory.selectedSlot && crystals.slot != 40) {
-            when (placeSwitchMode.value) {
+            when (placeSwitchMode) {
                 SwitchMode.Off -> {
                     return false
                 }
@@ -1210,8 +1210,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun breakDirect(breakPlan: BreakPlan?): Boolean {
         if (breakPlan == null) return false
-        if (placeSwitchMode.value != SwitchMode.Ghost &&
-            antiWeakness.value != SwitchMode.Ghost &&
+        if (placeSwitchMode != SwitchMode.Ghost &&
+            antiWeakness != SwitchMode.Ghost &&
             System.currentTimeMillis() - lastSwapTime < swapDelay * 50L
         ) {
             return false
@@ -1221,7 +1221,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val needsAntiWeaknessSwap = player.hasEffect(MobEffects.WEAKNESS) && !isHoldingTool()
         var weaponSlot = -1
         if (needsAntiWeaknessSwap) {
-            if (antiWeakness.value == SwitchMode.Off) return false
+            if (antiWeakness == SwitchMode.Off) return false
             weaponSlot = findWeaponSlot()
             if (weaponSlot == -1) return false
         }
@@ -1233,7 +1233,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         if (needsAntiWeaknessSwap) {
-            InvUtils.swap(weaponSlot, antiWeakness.value == SwitchMode.Ghost)
+            InvUtils.swap(weaponSlot, antiWeakness == SwitchMode.Ghost)
             lastSwapTime = System.currentTimeMillis()
         }
 
@@ -1266,7 +1266,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         updateRenderTarget(current.blockPosition().below(), breakPlan.targetDamage, breakPlan.selfDamage)
 
         val placeInfo = getActionPlaceInfo()
-        if (packetPlace.value.onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos, current.boundingBox)) {
+        if (packetPlace.onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos, current.boundingBox)) {
             placeDirect(placeInfo, true)
         }
 
@@ -1288,7 +1288,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
         if (placeInfo == null) return
 
-        val shouldBreak = when (packetBreak.value) {
+        val shouldBreak = when (packetBreak) {
             BreakMode.Target -> crystalPlaceBoxIntersects(placeInfo.blockPos, getCrystalBoundingBox(crystalPos))
             BreakMode.Own -> crystalPlaceBoxIntersects(placeInfo.blockPos, getCrystalBoundingBox(crystalPos)) ||
                     (placedPosMap.containsKey(toLong(packet.x, packet.y - 1.0, packet.z)) && checkBreakDamage(snapshot, crystalPos))
@@ -1328,7 +1328,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 crystalSpawnMap.clear()
                 attackedCrystalMap.clear()
                 attackedPosMap.clear()
-                if (packetPlace.value.onRemove) {
+                if (packetPlace.onRemove) {
                     placeDirect(placeInfo, true)
                 }
                 return
@@ -1607,7 +1607,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val feetX = Mth.floor(player.x)
         val feetY = Mth.floor(player.y)
         val feetZ = Mth.floor(player.z)
-        val single = placeMode.value == PlaceMode.Single
+        val single = placeMode == PlaceMode.Single
 
         for (entity in level.entitiesForRendering()) {
             if (!entity.isAlive) continue
@@ -1644,7 +1644,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun checkPlaceRotation(pos: BlockPos): Boolean {
         if (placeRotationRange <= 0.0) return true
-        return checkPlaceRotation(pos, RotationManager.INSTANCE.rotation)
+        return checkPlaceRotation(pos, RotationManager.INSTANCE.rotations)
     }
 
     private fun checkPlaceRotation(pos: BlockPos, currentRotation: Rot2f): Boolean {
@@ -1654,7 +1654,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun checkCrystalRotation(crystalPos: Vec3, range: Double): Boolean {
         if (range <= 0.0) return true
-        return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.rotation)
+        return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.rotations)
     }
 
     private fun checkCrystalRotation(crystalPos: Vec3, range: Double, currentRotation: Rot2f): Boolean {
@@ -1708,11 +1708,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun placeDistanceSq(entity: Entity, x: Double, y: Double, z: Double): Double {
-        return if (placeRangeMode.value == RangeMode.Feet) entity.distanceToSqr(x, y, z) else eyeDistanceSq(entity, x, y, z)
+        return if (placeRangeMode == RangeMode.Feet) entity.distanceToSqr(x, y, z) else eyeDistanceSq(entity, x, y, z)
     }
 
     private fun breakDistanceSq(entity: Entity, x: Double, y: Double, z: Double): Double {
-        return if (breakRangeMode.value == RangeMode.Feet) entity.distanceToSqr(x, y, z) else eyeDistanceSq(entity, x, y, z)
+        return if (breakRangeMode == RangeMode.Feet) entity.distanceToSqr(x, y, z) else eyeDistanceSq(entity, x, y, z)
     }
 
     private fun eyeDistanceSq(entity: Entity, x: Double, y: Double, z: Double): Double {
@@ -1776,7 +1776,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun resolveSwingHand(placing: Boolean): InteractionHand {
         val player = this.mc.player ?: return InteractionHand.MAIN_HAND
-        return when (swingHand.value) {
+        return when (swingHand) {
             SwingHand.OffHand -> InteractionHand.OFF_HAND
             SwingHand.MainHand -> InteractionHand.MAIN_HAND
             SwingHand.Auto ->
@@ -1789,7 +1789,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun doSwing(hand: InteractionHand) {
-        when (swingMode.value) {
+        when (swingMode) {
             SwingMode.Client -> PlayerUtils.swingHand(hand)
             SwingMode.Packet -> PlayerUtils.swingHand(hand)
             SwingMode.None -> {
@@ -1812,22 +1812,22 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             return
         }
 
-        if (placeMode.value != PlaceMode.Off && placeInfo != null) {
+        if (placeMode != PlaceMode.Off && placeInfo != null) {
             RotationManager.INSTANCE.setRotations(placeInfo.rotation, getRotationSpeed(), null, Priority.High)
         }
     }
 
     private fun shouldPrioritizeBreak(breakPlan: BreakPlan?): Boolean {
         return preRotation &&
-                breakMode.value != BreakMode.Off &&
+                breakMode != BreakMode.Off &&
                 breakTimer.passedMillise(breakDelay.toLong()) &&
                 breakPlan != null &&
                 canAttemptBreak()
     }
 
     private fun canAttemptBreak(): Boolean {
-        if (placeSwitchMode.value != SwitchMode.Ghost &&
-            antiWeakness.value != SwitchMode.Ghost &&
+        if (placeSwitchMode != SwitchMode.Ghost &&
+            antiWeakness != SwitchMode.Ghost &&
             System.currentTimeMillis() - lastSwapTime < swapDelay * 50L
         ) {
             return false
@@ -1838,11 +1838,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             return true
         }
 
-        return antiWeakness.value != SwitchMode.Off && findWeaponSlot() != -1
+        return antiWeakness != SwitchMode.Off && findWeaponSlot() != -1
     }
 
     private fun isRotationReady(targetRotation: Rot2f): Boolean {
-        return getRotationDelta(RotationManager.INSTANCE.rotation, targetRotation) <= ROTATION_READY_EPSILON
+        return getRotationDelta(RotationManager.INSTANCE.rotations, targetRotation) <= ROTATION_READY_EPSILON
     }
 
     private fun getRotationDelta(from: Rot2f, to: Rot2f): Float {
@@ -1937,7 +1937,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun renderTargetPredictions() {
-        if (renderPredict.value == RenderPredictMode.Off) return
+        if (renderPredict == RenderPredictMode.Off) return
 
         val snapshot = latestSnapshot
         if (snapshot == null || snapshot.targets.isEmpty()) return
@@ -1952,7 +1952,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val filled = Color(100, 255, 100, 28)
 
         for (targetInfo in snapshot.targets) {
-            if (renderPredict.value == RenderPredictMode.Single && targetInfo.entity !== focus) {
+            if (renderPredict == RenderPredictMode.Single && targetInfo.entity !== focus) {
                 continue
             }
 

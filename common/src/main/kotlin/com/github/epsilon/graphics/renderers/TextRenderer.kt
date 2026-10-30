@@ -33,14 +33,14 @@ class TextRenderer : IRenderer {
 
     companion object {
 
-        fun create(bufferSize: Long): TextRenderer = RendererManager.INSTANCE.register(TextRenderer(bufferSize))
+        fun create(bufferSize: Long): TextRenderer = RendererManager.register(TextRenderer(bufferSize))
 
-        fun create(): TextRenderer = RendererManager.INSTANCE.register(TextRenderer())
+        fun create(): TextRenderer = RendererManager.register(TextRenderer())
 
-        fun createFontBlur(): TextRenderer = RendererManager.INSTANCE.register(TextRenderer(64 * 1024L, true))
+        fun createFontBlur(): TextRenderer = RendererManager.register(TextRenderer(64 * 1024L, true))
 
         fun createGlitch(): TextRenderer =
-            RendererManager.INSTANCE.register(TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH))
+            RendererManager.register(TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH))
 
     }
 
@@ -160,14 +160,14 @@ class TextRenderer : IRenderer {
     override fun close() {
         textRenderer.close()
         if (registered) {
-            RendererManager.INSTANCE.unregister(this)
+            RendererManager.unregister(this)
             registered = false
         }
     }
 
     private fun ensureRegistered() {
         if (!registered) {
-            RendererManager.INSTANCE.register(this)
+            RendererManager.register(this)
             registered = true
         }
     }

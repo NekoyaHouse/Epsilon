@@ -79,8 +79,8 @@ class StringListSelectPopup(
 
                 val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
                 val summaryScale = 0.52f
-                val summary = setting.getValue().size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
-                popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
+                val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
+                popup.text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
                 popup.text(
                     summary, animatedBounds.width - PADDING - textRenderer.getWidth(summary, summaryScale),
                     centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
@@ -185,7 +185,7 @@ class StringListSelectPopup(
     }
 
     private fun entries(): List<String> {
-        return ArrayList(setting.getValue())
+        return ArrayList(setting.value)
     }
 
     private fun buildEntryList(
@@ -257,7 +257,7 @@ class StringListSelectPopup(
     }
 
     private fun moveEntry(entry: String, offset: Int) {
-        val next = ArrayList(setting.getValue())
+        val next = ArrayList(setting.value)
         val index = next.indexOf(entry)
         val target = index + offset
         if (index < 0 || target < 0 || target >= next.size) {
@@ -265,7 +265,7 @@ class StringListSelectPopup(
         }
         val value = next.removeAt(index)
         next.add(target, value)
-        setting.setValue(next)
+        setting.value = next
     }
 
     private fun getInputBounds(popupY: Float): UiRect {

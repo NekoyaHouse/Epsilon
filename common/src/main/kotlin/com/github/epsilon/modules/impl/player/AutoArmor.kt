@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
@@ -105,11 +106,11 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 if (slot == -1) continue
 
                 if ((armorPiece.prevProtection == -1 || !oldVersion) && slot < 9) {
-                    InvUtils.swap(slot, true)
+                    swap(slot, true)
                     try {
                         interaction.useItem(player, InteractionHand.MAIN_HAND)
                     } finally {
-                        InvUtils.swapBack()
+                        swapBack()
                     }
                 } else {
                     if (player.isMoving() && noMove) return@nonNullListener
@@ -121,10 +122,10 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                         netHandler.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
                     }
 
-                    ClickSlotUtils.click(inventorySlot)
-                    ClickSlotUtils.click(armorSlot)
+                    click(inventorySlot)
+                    click(armorSlot)
                     if (armorPiece.prevProtection != -1) {
-                        ClickSlotUtils.click(inventorySlot)
+                        click(inventorySlot)
                     }
 
                     netHandler.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))

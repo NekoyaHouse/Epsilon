@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SwingHandEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -38,19 +39,19 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
 
             val currentTarget = target
             if (currentTarget == null || !currentTarget.isAlive || currentTarget.isDeadOrDying ||
-                RotationUtils.getEyeDistanceToEntity(currentTarget) > range
+                getEyeDistanceToEntity(currentTarget) > range
             ) {
                 redirecting = false
                 return@nonNullListener
             }
 
-            val rotations = RotationUtils.calculate(currentTarget.eyePosition)
+            val rotations = calculate(currentTarget.eyePosition)
             RotationManager.INSTANCE.setRotations(rotations, 180.0, Priority.High)
 
             val hitResult = RotationManager.INSTANCE.getHitResult()
             if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {
                 interaction.attack(player, currentTarget)
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                swingHand(InteractionHand.MAIN_HAND)
                 redirecting = false
             }
         }

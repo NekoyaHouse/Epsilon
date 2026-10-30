@@ -31,7 +31,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
     private var hoveredIndex = -1
 
     init {
-        val optionCount = setting.getModes().size
+        val optionCount = setting.modes.size
         this.scrollable = optionCount > MAX_VISIBLE_ITEMS
         if (scrollable) {
             val cappedHeight = MAX_VISIBLE_ITEMS * ITEM_HEIGHT + CONTENT_PADDING * 2
@@ -64,7 +64,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
             val progress = scope.animate(openAnimation, 1.0f)
             val popupY = bounds.y - (1.0f - progress) * 6.0f
             val viewportHeight = bounds.height - CONTENT_PADDING * 2
-            val fullContentHeight = setting.getModes().size * ITEM_HEIGHT
+            val fullContentHeight = setting.modes.size * ITEM_HEIGHT
             val itemAreaWidth = bounds.width - CONTENT_PADDING * 2 - (if (scrollable) 6.0f else 0.0f)
             val viewportBounds = UiRect(
                 bounds.x + CONTENT_PADDING, popupY + CONTENT_PADDING,
@@ -84,7 +84,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                 hoveredIndex = -1
                 val localViewportBounds = viewportBounds.relativeTo(popupBounds)
                 popup.viewport(contentBuffer, localViewportBounds, scroll, maxScroll, fullContentHeight) { content ->
-                    val modes = setting.getModes()
+                    val modes = setting.modes
                     val itemStartY = popupY + CONTENT_PADDING - scroll
                     for (i in modes.indices) {
                         val itemY = itemStartY + i * ITEM_HEIGHT
@@ -95,7 +95,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                         if (hovered) {
                             hoveredIndex = i
                         }
-                        val selected = i == setting.getModeIndex()
+                        val selected = i == setting.modeIndex
                         val supported = setting.isModeSupportedUnchecked(modes[i])
                         val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
                         val hoverBackground =
@@ -162,7 +162,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         if (!bounds.contains(event.x(), event.y()) || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
         }
-        val modes = setting.getModes()
+        val modes = setting.modes
         if (hoveredIndex < 0 || hoveredIndex >= modes.size) {
             return false
         }
@@ -205,7 +205,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
          */
         @Suppress("UNCHECKED_CAST")
         private fun setModeUnchecked(setting: EnumSetting<*>, mode: Enum<*>) {
-            (setting as Setting<Any>).setValue(mode)
+            (setting as Setting<Any>).value = mode
         }
 
     }

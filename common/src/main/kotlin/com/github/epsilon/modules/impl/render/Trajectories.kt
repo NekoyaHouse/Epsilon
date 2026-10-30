@@ -40,43 +40,43 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     private val generalGroup: SettingGroup = settingGroup("General")
     private val renderGroup: SettingGroup = settingGroup("Render")
 
-    private val items: RegistryListSetting<Item> by addSetting(
+    private val items: RegistryListSetting<Item> = addSetting(
         RegistryListSetting(
             "Items", defaultItems(), RegistryListSetting.Type.ITEM,
             Predicate { item -> ProjectileSimulator.supports(item) },
             Setting.Dependency { true }
         )
-    ).group(generalGroup)
-    private val otherPlayers by boolSetting("Other Players", true).group(generalGroup)
-    private val firedProjectiles by boolSetting("Fired Projectiles", false).group(generalGroup)
-    private val ignoreWitherSkulls by boolSetting("Ignore Wither Skulls", true, Setting.Dependency { firedProjectiles }).group(generalGroup)
-    private val simulationSteps by intSetting("Simulation Steps", 500, 0, 5000, 25).group(generalGroup)
-    private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0, 20, 1).group(renderGroup)
-    private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).group(renderGroup)
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.25).group(renderGroup)
-    private val impactFill by boolSetting("Impact Fill", true).group(renderGroup)
-    private val impactOutline by boolSetting("Impact Outline", true).group(renderGroup)
+    ).apply { group(generalGroup) }
+    private val otherPlayers by boolSetting("Other Players", true).apply { group(generalGroup) }
+    private val firedProjectiles by boolSetting("Fired Projectiles", false).apply { group(generalGroup) }
+    private val ignoreWitherSkulls by boolSetting("Ignore Wither Skulls", true, Setting.Dependency { firedProjectiles }).apply { group(generalGroup) }
+    private val simulationSteps by intSetting("Simulation Steps", 500, 0, 5000, 25).apply { group(generalGroup) }
+    private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0, 20, 1).apply { group(renderGroup) }
+    private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).apply { group(renderGroup) }
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.25).apply { group(renderGroup) }
+    private val impactFill by boolSetting("Impact Fill", true).apply { group(renderGroup) }
+    private val impactOutline by boolSetting("Impact Outline", true).apply { group(renderGroup) }
     private val impactFillColor by colorSetting(
         "Impact Fill Color", java.awt.Color(255, 150, 0, 45),
         Setting.Dependency { impactFill }
-    ).group(renderGroup)
+    ).apply { group(renderGroup) }
     private val impactOutlineColor by colorSetting(
         "Impact Outline Color", java.awt.Color(255, 180, 55, 245),
         Setting.Dependency { impactOutline }
-    ).group(renderGroup)
-    private val positionBoxes by boolSetting("Render Position Boxes", false).group(renderGroup)
+    ).apply { group(renderGroup) }
+    private val positionBoxes by boolSetting("Render Position Boxes", false).apply { group(renderGroup) }
     private val positionBoxSize by doubleSetting(
         "Position Box Size", 0.02, 0.01, 0.1, 0.005,
         Setting.Dependency { positionBoxes }
-    ).group(renderGroup)
+    ).apply { group(renderGroup) }
     private val positionFillColor by colorSetting(
         "Position Fill Color", java.awt.Color(255, 150, 0, 28),
         Setting.Dependency { positionBoxes }
-    ).group(renderGroup)
+    ).apply { group(renderGroup) }
     private val positionOutlineColor by colorSetting(
         "Position Outline Color", java.awt.Color(255, 180, 55, 180),
         Setting.Dependency { positionBoxes }
-    ).group(renderGroup)
+    ).apply { group(renderGroup) }
 
     private val MULTISHOT_OFFSET: Double = Math.toRadians(10.0)
 
@@ -154,7 +154,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         points.add(renderedStart ?: simulator.position())
         var blockHit: BlockHitResult? = null
         val entityHits = ArrayList<Entity>()
-        val limit = if (simulationSteps = = 0) Int.MAX_VALUE else simulationSteps
+        val limit = if (simulationSteps == 0) Int.MAX_VALUE else simulationSteps
 
         for (i in 0 until limit) {
             val step = simulator.tick()

@@ -39,7 +39,7 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
                 if (candidate === mc.cameraEntity && mc.options.cameraType.isFirstPerson) continue
 
                 val friend = candidate !== player &&
-                        (FriendManager.INSTANCE.isFriend(candidate) || TargetManager.INSTANCE.isSameTeam(candidate))
+                        (FriendManager.isFriend(candidate) || TargetManager.INSTANCE.isSameTeam(candidate))
                 if (friend && !friends) continue
 
                 SkeletonRenderer.render(

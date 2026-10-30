@@ -185,7 +185,7 @@ class CategoryPanel : AbstractDropdownPanel {
     private fun buildSortSignature(sortMode: ClientSetting.ModuleSort): Long {
         var signature = 17L
         signature = signature * 31L + sortMode.ordinal
-        signature = signature * 31L + TranslationManager.INSTANCE.revision
+        signature = signature * 31L + TranslationManager.revision
         signature = signature * 31L + moduleButtons.size
         for (button in moduleButtons) {
             val module = button.module
@@ -220,7 +220,7 @@ class CategoryPanel : AbstractDropdownPanel {
     }
 
     private fun refreshSearchTextCache() {
-        val revision = TranslationManager.INSTANCE.revision
+        val revision = TranslationManager.revision
         if (cachedSearchTextRevision == revision && searchTextCache.isNotEmpty()) {
             return
         }

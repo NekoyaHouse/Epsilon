@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -38,7 +39,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
         nonNullListener<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@nonNullListener
 
-            val pressed = KeybindUtils.isPressed(activateKey)
+            val pressed = isPressed(activateKey)
             if (!pressed) {
                 isKeyDown = false
             }
@@ -70,7 +71,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     Predicate { stack -> stack.`is`(Items.ELYTRA) }
                 }
                 if (!isItemSwapped) {
-                    val targetSlot = InvUtils.findInHotbar(predicate).slot
+                    val targetSlot = findInHotbar(predicate).slot
 
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
@@ -78,14 +79,14 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                             return@nonNullListener
                         }
 
-                        val invSlot = InvUtils.find(predicate).slot
+                        val invSlot = find(predicate).slot
                         if (invSlot != -1) {
                             var containerSlot = invSlot
                             if (invSlot < 9) containerSlot += 36
 
                             val targetHotbarSlot = elytraSlotSetting - 1
 
-                            ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
+                            swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
                             return@nonNullListener
                         } else {
@@ -94,13 +95,13 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                         }
                     }
 
-                    InvUtils.swap(targetSlot, false)
+                    swap(targetSlot, false)
                     isItemSwapped = true
                 }
 
                 if (!isSwinging) {
                     interaction.useItem(player, InteractionHand.MAIN_HAND)
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                    swingHand(InteractionHand.MAIN_HAND)
                     isSwinging = true
                 }
 

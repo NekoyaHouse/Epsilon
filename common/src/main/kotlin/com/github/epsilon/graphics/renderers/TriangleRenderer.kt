@@ -40,7 +40,7 @@ class TriangleRenderer private constructor() : IRenderer {
         private const val STRIDE = 16
         private const val TRIANGLE_BYTES = STRIDE * 3L
 
-        fun create(): TriangleRenderer = RendererManager.INSTANCE.register(TriangleRenderer())
+        fun create(): TriangleRenderer = RendererManager.register(TriangleRenderer())
 
     }
 
@@ -200,7 +200,7 @@ class TriangleRenderer private constructor() : IRenderer {
     override fun close() {
         clear()
         buffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
 }

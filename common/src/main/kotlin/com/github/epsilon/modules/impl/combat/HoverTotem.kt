@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -48,7 +49,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@nonNullListener
                             }
-                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, totem)
+                            swap(player.containerMenu.containerId, slotIndex, totem)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         } else if (!player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
@@ -56,7 +57,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@nonNullListener
                             }
-                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, 40)
+                            swap(player.containerMenu.containerId, slotIndex, 40)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         }

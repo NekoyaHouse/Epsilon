@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.managers.TimerManager
@@ -55,12 +56,12 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             if (player.onGround()) {
                 hasTouchedGround = true
             }
-            val elytra = InvUtils.find(Items.ELYTRA)
+            val elytra = find(Items.ELYTRA)
             hasElytra = canGlide(elytra.found())
 
             // 仅释放本模式设置的临时变速。
             if (strictTimer.passedMillise(1500L) && !strictTimer.passedMillise(2000L) ||
-                timerBoosted && player.isFallFlying && TimerManager.INSTANCE.get() == TIMER_BOOST
+                timerBoosted && player.isFallFlying && TimerManager.get() == TIMER_BOOST
             ) {
                 releaseTimerBoost()
             }
@@ -68,7 +69,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             if (player.isFallFlying) return@runSafe
 
             if (hasTouchedGround && elytraFly.ncpTimer.value && !player.onGround()) {
-                TimerManager.INSTANCE.set(TIMER_BOOST)
+                TimerManager.set(TIMER_BOOST)
                 timerBoosted = true
             }
 
@@ -197,7 +198,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
     private fun releaseTimerBoost() {
         if (!timerBoosted) return
         timerBoosted = false
-        TimerManager.INSTANCE.reset()
+        TimerManager.reset()
     }
 
     /**

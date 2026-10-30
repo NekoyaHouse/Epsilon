@@ -305,7 +305,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     private fun resolveNameColor(player: AbstractClientPlayer): Color {
-        val friendManager = FriendManager.INSTANCE
+        val friendManager = FriendManager
         return if (friendManager != null && friendManager.isFriend(player)) FRIEND_COLOR else textColor
     }
 

@@ -31,7 +31,7 @@ class FollowBehavior : ElytraCombatBehavior {
         var targetPoint = target.predictedPosition
         if (target.onGround || target.supported) {
             // 地面目标保留高度差，防止贴地追击时撞到台阶或地形。
-            targetPoint = targetPoint.add(0.0, bot.followGroundHeight.value, 0.0)
+            targetPoint = targetPoint.add(0.0, bot.followGroundHeight, 0.0)
         }
 
         val desired = targetPoint.subtract(bot.player().position())
@@ -41,7 +41,7 @@ class FollowBehavior : ElytraCombatBehavior {
         val raw = FlightIntent(
             desired,
             desired.normalize(),
-            bot.controlMode.`is`(ElytraCombat.ControlMode.DirectVelocity),
+            bot.controlMode == (ElytraCombat.ControlMode.DirectVelocity),
             true,
         )
         // 交给规划器决定直飞、基础 A* 或无路径时的局部避障。

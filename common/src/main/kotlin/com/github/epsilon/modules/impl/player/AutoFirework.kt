@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -29,7 +30,7 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
 
     init {
         nonNullListener<PlayerTickEvent.Pre> {
-            val pressed = KeybindUtils.isPressed(activateKey)
+            val pressed = isPressed(activateKey)
             if (!pressed) {
                 isKeyDown = false
             }
@@ -48,13 +49,13 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
                     previousItem = player.mainHandItem
                 }
 
-                val fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot
+                val fireworkSlot = findInHotbar(Items.FIREWORK_ROCKET).slot
                 if (fireworkSlot == -1) {
                     resetState()
                     return@nonNullListener
                 }
 
-                InvUtils.swap(fireworkSlot, false)
+                swap(fireworkSlot, false)
 
                 if (useDelayCounter < delay) {
                     ++useDelayCounter

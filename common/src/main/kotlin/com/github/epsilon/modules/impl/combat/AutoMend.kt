@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
@@ -28,21 +29,21 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
     init {
         nonNullListener<PlayerTickEvent.Pre> {
-            val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
+            val result = findInHotbar(Items.EXPERIENCE_BOTTLE)
             if (!result.found()) return@nonNullListener
 
             RotationManager.INSTANCE.setRotations(Rot2f(player.yRot, 90f), 180.0, Priority.High)
 
-            InvUtils.swap(result.slot, true)
+            swap(result.slot, true)
 
             val hand = result.getHand()
             interaction.useItem(player, hand)
             if (swingHand) {
-                PlayerUtils.swingHand(hand)
+                swingHand(hand)
             }
 
             if (switchMode.`is`(SwitchMode.Silent)) {
-                InvUtils.swapBack()
+                swapBack()
             } else {
                 shouldSwapBack = true
             }

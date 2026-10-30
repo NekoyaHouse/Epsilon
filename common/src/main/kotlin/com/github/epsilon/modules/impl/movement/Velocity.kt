@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
@@ -148,7 +149,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     if (target.isAlive && !AntiBot.isBot(target)) {
                         interaction.attack(player, target)
                         if (swingHand) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                            swingHand(InteractionHand.MAIN_HAND)
                         }
                     }
                 }

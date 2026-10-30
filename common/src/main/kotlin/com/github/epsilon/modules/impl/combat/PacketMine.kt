@@ -54,40 +54,40 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         Grow,
     }
 
-    private val usingPause by boolSetting("Pause On Use", true)
-    private val onlyMain by boolSetting("Only Main", true, Setting.Dependency { usingPause })
-    private val switchMode: EnumSetting<SwitchMode> by enumSetting("Switch Mode", SwitchMode.Silent)
-    private val range by intSetting("Range", 6, 0, 12, 1)
-    private val maxBreaks by intSetting("Try Break Time", 6, 0, 10, 1)
-    private val farCancel by boolSetting("Far Cancel", true)
-    private val swing by boolSetting("Swing Hand", true)
-    private val instantMine by boolSetting("Instant Mine", true)
-    private val instantDelay by intSetting("Instant Delay", 10, 0, 1000, 10)
-    private val fastBypass by boolSetting("Fast Bypass", true)
-    private val doubleBreak by boolSetting("Double Break", false)
-    private val checkGround by boolSetting("Check Ground", true)
-    private val bypassGround by boolSetting("Bypass Ground", false)
-    private val clientRemove by boolSetting("Client Remove", true)
-    private val switchDamage by intSetting("Switch Damage", 95, 0, 100, 1)
-    private val switchTime by intSetting("Switch Time", 100, 0, 1000, 10)
-    private val mineDelay by intSetting("Mine Delay", 300, 0, 1000, 10)
-    private val packetDelay by intSetting("Packet Delay", 200, 0, 1000, 10)
-    private val mineDamage by doubleSetting("Damage", 0.8, 0.0, 2.0, 0.05)
+    private var usingPause by boolSetting("Pause On Use", true)
+    private var onlyMain by boolSetting("Only Main", true, Setting.Dependency { usingPause })
+    private var switchMode by enumSetting("Switch Mode", SwitchMode.Silent)
+    private var range by intSetting("Range", 6, 0, 12, 1)
+    private var maxBreaks by intSetting("Try Break Time", 6, 0, 10, 1)
+    private var farCancel by boolSetting("Far Cancel", true)
+    private var swing by boolSetting("Swing Hand", true)
+    private var instantMine by boolSetting("Instant Mine", true)
+    private var instantDelay by intSetting("Instant Delay", 10, 0, 1000, 10)
+    private var fastBypass by boolSetting("Fast Bypass", true)
+    private var doubleBreak by boolSetting("Double Break", false)
+    private var checkGround by boolSetting("Check Ground", true)
+    private var bypassGround by boolSetting("Bypass Ground", false)
+    private var clientRemove by boolSetting("Client Remove", true)
+    private var switchDamage by intSetting("Switch Damage", 95, 0, 100, 1)
+    private var switchTime by intSetting("Switch Time", 100, 0, 1000, 10)
+    private var mineDelay by intSetting("Mine Delay", 300, 0, 1000, 10)
+    private var packetDelay by intSetting("Packet Delay", 200, 0, 1000, 10)
+    private var mineDamage by doubleSetting("Damage", 0.8, 0.0, 2.0, 0.05)
 
-    private val renderMode: EnumSetting<RenderMode> by enumSetting("Render Mode", RenderMode.Shrink)
-    private val fading by boolSetting("Fading", true)
-    private val renderTime by doubleSetting("Render Time", 0.1, 0.0, 5.0, 0.1, Setting.Dependency { fading })
-    private val fadeTime by doubleSetting("Fade Time", 0.2, 0.0, 5.0, 0.1, Setting.Dependency { fading })
-    private val fadeSideColor by colorSetting("Fade Side Color", Color(70, 200, 155, 31))
-    private val fadeLineColor by colorSetting("Fade Line Color", Color(70, 200, 155, 233))
-    private val sideStartColor by colorSetting("Side Start", Color(255, 0, 0, 31))
-    private val sideEndColor by colorSetting("Side End", Color(0, 150, 10, 31))
-    private val lineStartColor by colorSetting("Line Start", Color(255, 0, 0, 233))
-    private val lineEndColor by colorSetting("Line End", Color(5, 160, 0, 233))
-    private val secondSideStartColor by colorSetting("Second Side Start", Color(255, 0, 0, 31))
-    private val secondSideEndColor by colorSetting("Second Side End", Color(0, 150, 10, 31))
-    private val secondLineStartColor by colorSetting("Second Line Start", Color(255, 0, 0, 233))
-    private val secondLineEndColor by colorSetting("Second Line End", Color(5, 160, 0, 233))
+    private var renderMode by enumSetting("Render Mode", RenderMode.Shrink)
+    private var fading by boolSetting("Fading", true)
+    private var renderTime by doubleSetting("Render Time", 0.1, 0.0, 5.0, 0.1, Setting.Dependency { fading })
+    private var fadeTime by doubleSetting("Fade Time", 0.2, 0.0, 5.0, 0.1, Setting.Dependency { fading })
+    private var fadeSideColor by colorSetting("Fade Side Color", Color(70, 200, 155, 31))
+    private var fadeLineColor by colorSetting("Fade Line Color", Color(70, 200, 155, 233))
+    private var sideStartColor by colorSetting("Side Start", Color(255, 0, 0, 31))
+    private var sideEndColor by colorSetting("Side End", Color(0, 150, 10, 31))
+    private var lineStartColor by colorSetting("Line Start", Color(255, 0, 0, 233))
+    private var lineEndColor by colorSetting("Line End", Color(5, 160, 0, 233))
+    private var secondSideStartColor by colorSetting("Second Side Start", Color(255, 0, 0, 31))
+    private var secondSideEndColor by colorSetting("Second Side End", Color(0, 150, 10, 31))
+    private var secondLineStartColor by colorSetting("Second Line Start", Color(255, 0, 0, 233))
+    private var secondLineEndColor by colorSetting("Second Line End", Color(5, 160, 0, 233))
 
     var selfClickPos: BlockPos? = null
     var maxBreaksCount: Int = 0
@@ -161,11 +161,11 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     private fun onStartBreakingBlock(event: StartDestroyBlockEvent) {
-        if (!canBreak(event.getBlockPos())) return
+        if (!canBreak(event.blockPos)) return
         event.cancel()
         if (!mineTimer.passedMillise(mineDelay.toLong())) return
-        selfClickPos = event.getBlockPos()
-        mine(event.getBlockPos())
+        selfClickPos = event.blockPos
+        mine(event.blockPos)
     }
 
     fun isInstantMining(pos: BlockPos?): Boolean {
@@ -249,10 +249,10 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         if (secondProgressPercent >= 100) {
             secondPos = null
         }
-        if (timer.passedMillise(switchTime.toLong()) && hasSwitch && switchMode.value != SwitchMode.None) {
-            if (switchMode.value == SwitchMode.Delay) {
+        if (timer.passedMillise(switchTime.toLong()) && hasSwitch && switchMode != SwitchMode.None) {
+            if (switchMode == SwitchMode.Delay) {
                 InvUtils.swap(oldSlot, false)
-            } else if (switchMode.value == SwitchMode.Silent) {
+            } else if (switchMode == SwitchMode.Silent) {
                 this.mc.connection?.send(ServerboundSetCarriedItemPacket(oldSlot))
             }
             hasSwitch = false
@@ -269,7 +269,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
 
         updateFadeProgress(fadeDelta)
-        renderFadeBoxes(event.getPoseStack())
+        renderFadeBoxes(event.poseStack)
 
         val secondPosValue = secondPos
         if (secondPosValue != null && doubleBreak) {
@@ -293,7 +293,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             } else if (checkGround && !player.onGround()) {
                 secondProgress += (secondDelta * 4).toFloat()
             }
-            secondBlockRender(event.getPoseStack())
+            secondBlockRender(event.poseStack)
             if (secondProgress >= secondMax * secondDamage) {
                 sendStopSecond()
             }
@@ -304,10 +304,10 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         ) {
             val bestSlot = getTool(secondPosValue)
             if (!hasSwitch) oldSlot = player.inventory.selectedSlot
-            if (switchMode.value != SwitchMode.None && bestSlot != -1) {
-                if (switchMode.value == SwitchMode.Delay) {
+            if (switchMode != SwitchMode.None && bestSlot != -1) {
+                if (switchMode == SwitchMode.Delay) {
                     InvUtils.swap(bestSlot, false)
-                } else if (switchMode.value == SwitchMode.Silent) {
+                } else if (switchMode == SwitchMode.Silent) {
                     this.mc.connection?.send(ServerboundSetCarriedItemPacket(bestSlot))
                 }
                 timer.reset()
@@ -358,7 +358,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             } else if (checkGround && !player.onGround()) {
                 progress += (delta * 4).toFloat()
             }
-            mainBlockRender(event.getPoseStack())
+            mainBlockRender(event.poseStack)
             if (progress >= max * damage) {
                 sendStop()
                 completed = true
@@ -422,11 +422,11 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         if (!doubleBreak || secondPos == null) {
             val bestSlot = getTool(targetPos)
             if (!hasSwitch) oldSlot = player.inventory.selectedSlot
-            if (switchMode.value != SwitchMode.None && bestSlot != -1) {
-                if (switchMode.value == SwitchMode.Delay) {
+            if (switchMode != SwitchMode.None && bestSlot != -1) {
+                if (switchMode == SwitchMode.Delay) {
                     InvUtils.swap(bestSlot, false)
                 }
-                if (switchMode.value == SwitchMode.Silent) {
+                if (switchMode == SwitchMode.Silent) {
                     this.mc.connection?.send(ServerboundSetCarriedItemPacket(bestSlot))
                 }
                 timer.reset()
@@ -655,7 +655,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val color1 = if (rawProgress >= 0.95) sideEndColor else sideStartColor
         val color2 = if (rawProgress >= 0.95) lineEndColor else lineStartColor
 
-        when (renderMode.value) {
+        when (renderMode) {
             RenderMode.Box -> {
                 val box = AABB(target)
                 Render3DScheduler.addFilledBox(box, color1)
@@ -692,7 +692,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val color1 = if (rawProgress >= 0.95) secondSideEndColor else secondSideStartColor
         val color2 = if (rawProgress >= 0.95) secondLineEndColor else secondLineStartColor
 
-        when (renderMode.value) {
+        when (renderMode) {
             RenderMode.Box -> {
                 val box = AABB(second)
                 Render3DScheduler.addFilledBox(box, color1)

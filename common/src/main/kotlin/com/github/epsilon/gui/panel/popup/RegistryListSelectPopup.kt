@@ -134,8 +134,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
                 val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
                 val summaryScale = 0.52f
-                val summary = setting.getValue().size.toString() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName()
-                popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
+                val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName()
+                popup.text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
                 popup.text(
                     summary, animatedBounds.width - PADDING - textRenderer.getWidth(summary, summaryScale),
                     centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
@@ -366,7 +366,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         val needle = query.lowercase(Locale.ROOT).trim()
         val result = ArrayList<T>()
         for (entry in allEntries) {
-            if (setting.getValue().contains(entry)) continue
+            if (setting.value.contains(entry)) continue
             if (selectedCategory >= 0 && selectedCategory < categories.size) {
                 if (!categories[selectedCategory].predicate.test(entry)) continue
             }
@@ -379,7 +379,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun filteredSelected(): List<T> {
         val needle = query.lowercase(Locale.ROOT).trim()
         val result = ArrayList<T>()
-        for (entry in setting.getValue()) {
+        for (entry in setting.value) {
             val text = displayNameFn(entry).lowercase(Locale.ROOT)
             if (needle.isEmpty() || text.contains(needle)) result.add(entry)
         }
@@ -635,7 +635,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         @Suppress("UNCHECKED_CAST")
         fun create(bounds: UiRect, setting: RegistryListSetting<*>): PanelPopupHost.Popup {
-            return when (setting.getRegistryType()) {
+            return when (setting.registryType) {
                 RegistryListSetting.Type.BLOCK -> blockPopup(bounds, setting as RegistryListSetting<Block>)
                 RegistryListSetting.Type.ITEM -> itemPopup(bounds, setting as RegistryListSetting<Item>)
                 RegistryListSetting.Type.ENTITY_TYPE ->

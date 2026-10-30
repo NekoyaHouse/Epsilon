@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -81,7 +82,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
             val result = findBlocks()
             if (!result.found()) {
-                ChatUtils.addChatMessage("[FeetTrap] No block found")
+                addChatMessage("[FeetTrap] No block found")
                 toggle()
                 return@nonNullListener
             }
@@ -93,7 +94,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            if (pauseOnEat && PlayerUtils.isEating()) {
+            if (pauseOnEat && isEating()) {
                 return@nonNullListener
             }
 

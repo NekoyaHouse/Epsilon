@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -91,7 +92,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
             val target = findTarget() ?: return@nonNullListener
 
-            val targetRotation = RotationUtils.calculate(player.getEyePosition(), target.hit.location)
+            val targetRotation = calculate(player.getEyePosition(), target.hit.location)
             RotationManager.INSTANCE.setRotations(
                 targetRotation,
                 turnSpeed,
@@ -110,7 +111,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             opening = true
             openingStartedAt = System.currentTimeMillis()
             if (swing) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                swingHand(InteractionHand.MAIN_HAND)
             }
         }
 

@@ -88,7 +88,7 @@ object CombatWeaponController {
             if (shieldSwap) {
                 Predicate { stack -> InvHelper.isAxe(stack) }
             } else {
-                Predicate { stack -> stack.`is`(Items.MACE) }
+                Predicate { stack -> stack == (Items.MACE) }
             }
         ) ?: return false
         try {

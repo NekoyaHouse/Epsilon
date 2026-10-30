@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -90,11 +91,11 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
                     currentTarget = best
                     val target = currentTarget ?: return@nonNullListener
 
-                    val rotation = RotationUtils.calculate(getAimVec(target), false)
+                    val rotation = calculate(getAimVec(target), false)
 
                     RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
-                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@nonNullListener
+                    val hit = raytrace(rotation, maxRange) ?: return@nonNullListener
                     if (hit.type != HitResult.Type.ENTITY) return@nonNullListener
 
                     // 准备槽位与投掷状态

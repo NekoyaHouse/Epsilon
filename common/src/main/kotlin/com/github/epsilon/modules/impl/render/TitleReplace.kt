@@ -55,7 +55,7 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
         val flat = component.string
         val matcher = PATTERN.matcher(flat)
         if (!matcher.find()) return null
-        val prefix = flat.substring(0, matcher.start()) + matcher.group(1)
+        val prefix = flat.substring(0, matcher.start()) + matcher.apply { group(1) }
         val tail = flat.substring(matcher.end())
         return Component.literal(prefix).append(styledValue()).append(Component.literal(tail))
     }

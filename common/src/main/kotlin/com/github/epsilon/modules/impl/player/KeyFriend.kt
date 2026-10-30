@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyPressEvent
@@ -27,7 +28,7 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         }
 
         nonNullListener<MousePressEvent>(EventPriority.HIGHEST) { event ->
-            if (handleInput(KeybindUtils.encodeMouseButton(event.button), event.action)) {
+            if (handleInput(encodeMouseButton(event.button), event.action)) {
                 event.cancel()
             }
         }
@@ -44,11 +45,11 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         if (target !is Player) return false
 
         val playerName = target.gameProfile.name()
-        if (FriendManager.INSTANCE.isFriend(playerName)) {
-            FriendManager.INSTANCE.removeFriend(playerName)
+        if (FriendManager.isFriend(playerName)) {
+            FriendManager.removeFriend(playerName)
             NotificationManager.INSTANCE.error(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).string)
         } else {
-            FriendManager.INSTANCE.addFriend(playerName)
+            FriendManager.addFriend(playerName)
             NotificationManager.INSTANCE.success(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).string)
         }
         return true

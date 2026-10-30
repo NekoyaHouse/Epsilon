@@ -16,7 +16,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
     private val inputField: DropdownTextField = DropdownTextField(32)
 
     override fun computeContentHeight(): Float {
-        val friendCount = FriendManager.INSTANCE.friends.size
+        val friendCount = FriendManager.friends.size
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + Math.max(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP))
     }
 
@@ -49,7 +49,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
         val addTextY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(plusScale)) / 2.0f
         scope.text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
 
-        val friends = FriendManager.INSTANCE.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
+        val friends = FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
         var rowY = fieldY + FIELD_HEIGHT + GAP
         if (friends.isEmpty()) {
             val emptyText = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
@@ -106,11 +106,11 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
         inputField.blur()
 
         var rowY = fieldY + FIELD_HEIGHT + GAP
-        for (name in FriendManager.INSTANCE.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
+        for (name in FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
             val removeX = x + width - PADDING - 18.0f
             val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
             if (isHovered(mouseX, mouseY, removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE)) {
-                FriendManager.INSTANCE.removeFriend(name)
+                FriendManager.removeFriend(name)
                 return true
             }
             rowY += ROW_HEIGHT + GAP
@@ -151,8 +151,8 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
 
     private fun addFriend() {
         val name = inputField.text.trim()
-        if (name.isNotEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
-            FriendManager.INSTANCE.addFriend(name)
+        if (name.isNotEmpty() && !FriendManager.isFriend(name)) {
+            FriendManager.addFriend(name)
         }
         inputField.clear()
     }

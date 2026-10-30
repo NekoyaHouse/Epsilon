@@ -219,7 +219,7 @@ class CategoryRailPanel(
         }
         if (getMenuButtonBounds().contains(event.x(), event.y())) {
             state.toggleSidebarExpanded()
-            SoundManager.INSTANCE.playInUi(
+            SoundManager.playInUi(
                 if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE
             )
             return true

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -167,7 +168,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             if (!inWater && (player.isUnderWater || player.isInWater || player.isInLava) ||
                 player.isPassenger ||
                 player.onClimbable() ||
-                !inBlock && PlayerUtils.isInBlock() ||
+                !inBlock && isInBlock() ||
                 player.abilities.flying ||
                 player.isFallFlying ||
                 !player.isMoving

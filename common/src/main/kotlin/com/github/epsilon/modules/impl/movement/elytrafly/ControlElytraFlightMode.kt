@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.Constants
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
@@ -127,7 +128,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 useTimedFirework()
             }
 
-            val elytra = InvUtils.find(Items.ELYTRA)
+            val elytra = find(Items.ELYTRA)
 
             if (shouldEatGlide(eating)) {
                 handleEatGlide(elytra)

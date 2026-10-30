@@ -68,7 +68,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (expanded && keyCode == InputConstants.KEY_ESCAPE) {
             expanded = false
-            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE)
+            SoundManager.playInUi(SoundKey.SETTINGS_CLOSE)
             DropdownScreen.react(ReisaDropdownCompanion.Action.CANCEL)
             return true
         }
@@ -140,7 +140,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             && getHiddenModeCount() > 0
         ) {
             expanded = !expanded
-            SoundManager.INSTANCE.playInUi(if (expanded) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+            SoundManager.playInUi(if (expanded) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
             DropdownScreen.react(
                 if (expanded) ReisaDropdownCompanion.Action.PANEL_OPEN else ReisaDropdownCompanion.Action.PANEL_CLOSE
             )
@@ -158,12 +158,12 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             }
             setting.setMode(mode.name)
             expanded = false
-            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE)
+            SoundManager.playInUi(SoundKey.SETTINGS_CLOSE)
             DropdownScreen.react(ReisaDropdownCompanion.Action.CONFIRM)
             return true
         }
         expanded = false
-        SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE)
+        SoundManager.playInUi(SoundKey.SETTINGS_CLOSE)
         return false
     }
 

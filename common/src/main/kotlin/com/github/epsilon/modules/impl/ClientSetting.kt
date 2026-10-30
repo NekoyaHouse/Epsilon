@@ -155,7 +155,7 @@ object ClientSetting : Module("Client Setting", null) {
     val i18nFallback by boolSetting(
         "I18n Fallback",
         true,
-        Consumer { TranslationManager.INSTANCE.refresh() }
+        Consumer { TranslationManager.refresh() }
     ).group(sgGeneral)
 
     val fontAntiAliasing by boolSetting("Font Anti Aliasing", true).group(sgGeneral)

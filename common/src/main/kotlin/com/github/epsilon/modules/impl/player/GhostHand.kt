@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -47,9 +48,9 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
 
                 if (world.getBlockState(pos).hasBlockEntity()) {
                     for (hand in InteractionHand.values()) {
-                        val result = interaction.useItemOn(player, hand, BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true))
+                        val result = interaction.useItemOn(player, hand, BlockHitResult(Vec3.atCenterOf(pos), getDirection(pos), pos, true))
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
-                            PlayerUtils.swingHand(hand)
+                            swingHand(hand)
                             event.cancel()
                             return@nonNullListener
                         }

@@ -45,11 +45,11 @@ object HandView : Module("Hand View", Category.RENDER) {
     val disableSwapOff by boolSetting("Disable Swap Off", true)
 
     private val blockingAnimation by boolSetting("Blocking Animation", true)
-    private val blockingMode: EnumSetting<BlockMode> by enumSetting(
+    private val blockingMode: EnumSetting<BlockMode> = enumSetting(
         "Blocking Mode", BlockMode.NewExhibition, Setting.Dependency { blockingAnimation }
     )
 
-    val swingMode: EnumSetting<SwingMode> by enumSetting("Swing Mode", SwingMode.Vanilla)
+    val swingMode: EnumSetting<SwingMode> = enumSetting("Swing Mode", SwingMode.Vanilla)
     val onlyWeapon by boolSetting(
         "Only Weapon", true, Setting.Dependency { swingMode.`is`(SwingMode.Flux) }
     )
@@ -218,15 +218,15 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private class TransformSettings(prefix: String, group: SettingGroup, enabled: Setting.Dependency) {
 
-        private val scaleX by HandView.doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, enabled).group(group)
-        private val scaleY by HandView.doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, enabled).group(group)
-        private val scaleZ by HandView.doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, enabled).group(group)
-        private val positionX by HandView.doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, enabled).group(group)
-        private val positionY by HandView.doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, enabled).group(group)
-        private val positionZ by HandView.doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, enabled).group(group)
-        private val rotationX by HandView.doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, enabled).group(group)
-        private val rotationY by HandView.doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, enabled).group(group)
-        private val rotationZ by HandView.doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, enabled).group(group)
+        private val scaleX by HandView.doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, enabled).apply { group(group) }
+        private val scaleY by HandView.doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, enabled).apply { group(group) }
+        private val scaleZ by HandView.doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, enabled).apply { group(group) }
+        private val positionX by HandView.doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, enabled).apply { group(group) }
+        private val positionY by HandView.doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, enabled).apply { group(group) }
+        private val positionZ by HandView.doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, enabled).apply { group(group) }
+        private val rotationX by HandView.doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, enabled).apply { group(group) }
+        private val rotationY by HandView.doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, enabled).apply { group(group) }
+        private val rotationZ by HandView.doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, enabled).apply { group(group) }
 
         fun apply(poseStack: PoseStack) {
             poseStack.rotateDegrees(Axis.XP, rotationX.toFloat())

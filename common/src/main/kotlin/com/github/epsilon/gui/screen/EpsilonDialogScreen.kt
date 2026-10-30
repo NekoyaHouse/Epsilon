@@ -131,7 +131,7 @@ abstract class EpsilonDialogScreen protected constructor(
 
         LuminRenderSystem.setActiveTarget(null)
         graphics.blit(
-            renderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0, 1, 1, 0
+            renderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
         )
     }
 

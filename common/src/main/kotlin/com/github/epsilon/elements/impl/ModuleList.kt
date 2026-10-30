@@ -68,7 +68,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private val shadowColor by colorSetting(
         "Shadow Color", Color(255, 255, 255, 90),
         Setting.Dependency {
-            mode == DisplayMode.Normal && drawShadow && !shadowColorMode == ColorMode.Rainbow
+            mode == DisplayMode.Normal && drawShadow && shadowColorMode != ColorMode.Rainbow
         }
     )
     private val shadowColor2 by colorSetting(
@@ -101,7 +101,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     )
     private val themeColor1 by colorSetting(
         "Theme Color 1", Color.WHITE, false,
-        Setting.Dependency { !colorMode == ColorMode.Rainbow }
+        Setting.Dependency { colorMode != ColorMode.Rainbow }
     )
     private val themeColor2 by colorSetting(
         "Theme Color 2", Color.RED, false,

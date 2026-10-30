@@ -61,8 +61,8 @@ class BoolSettingRow(private val boolSetting: BoolSetting) : SettingRow<BoolSett
             PlatformNoticeScreen.show(boolSetting)
             return true
         }
-        boolSetting.setValue(!boolSetting.value)
-        SoundManager.INSTANCE.playInUi(if (boolSetting.value) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+        boolSetting.value = !boolSetting.value
+        SoundManager.playInUi(if (boolSetting.value) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
         return true
     }
 

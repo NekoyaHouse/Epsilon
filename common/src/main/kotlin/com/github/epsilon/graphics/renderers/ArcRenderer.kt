@@ -41,7 +41,7 @@ class ArcRenderer private constructor() : IRenderer {
         private const val ARC_BYTES = STRIDE * 4L
         private val TAU = (Math.PI * 2.0).toFloat()
 
-        fun create(): ArcRenderer = RendererManager.INSTANCE.register(ArcRenderer())
+        fun create(): ArcRenderer = RendererManager.register(ArcRenderer())
 
     }
 
@@ -230,7 +230,7 @@ class ArcRenderer private constructor() : IRenderer {
 
     override fun close() {
         buffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
 }

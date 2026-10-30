@@ -84,7 +84,7 @@ class AccountRow(private val account: Account<*>) {
                 )
             }
 
-            val head = account.cache.headTexture
+            val head = account.cache.getHeadTexture()
             val avatarY = (h - AVATAR_SIZE) / 2.0f
             s.roundedTexture(
                 head, CONTENT_INSET, avatarY, AVATAR_SIZE, AVATAR_SIZE, AVATAR_SIZE * 0.25f,
@@ -113,7 +113,7 @@ class AccountRow(private val account: Account<*>) {
 
             if (state.current) {
                 val subWidth = textRenderer.getWidth(secondary, subScale)
-                val badge = EpsilonTranslations.Gui.ACCOUNTS_CURRENT.translatedName
+                val badge = EpsilonTranslations.Gui.ACCOUNTS_CURRENT.getTranslatedName()
                 val badgeScale = 0.46f
                 val badgeTextWidth = textRenderer.getWidth(badge, badgeScale)
                 val badgeWidth = badgeTextWidth + 10.0f

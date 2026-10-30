@@ -61,7 +61,7 @@ class GeneralClientSettingTab(
             markDirty()
         }
 
-        val settings = ClientSetting.settings.filter { setting -> setting.isAvailable() }
+        val settings = ClientSetting.settings.filter { setting -> setting.isAvailable }
         val contentHeight = settingListController.getContentHeight(SETTING_OWNER_KEY, settings)
         state.setMaxClientSettingScroll(contentHeight - bounds.height)
         val maxScroll = Math.max(0.0f, contentHeight - bounds.height)
@@ -219,12 +219,12 @@ class GeneralClientSettingTab(
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
-                listening.setValue(-1)
+                listening.value = -1
                 state.setListeningKeybindSetting(null)
                 markDirty()
                 return true
             }
-            listening.setValue(event.key())
+            listening.value = event.key()
             state.setListeningKeybindSetting(null)
             markDirty()
             return true
@@ -269,11 +269,11 @@ class GeneralClientSettingTab(
             return true
         }
         val listening = state.getListeningKeybindSetting()
-        val listeningKey = listening?.getName() ?: ""
+        val listeningKey = listening?.name ?: ""
         if (lastListeningKey != listeningKey) {
             return true
         }
-        val visibleSettings = settings.map { setting -> setting.getName() }
+        val visibleSettings = settings.map { setting -> setting.name }
         if (lastVisibleSettings != visibleSettings) {
             return true
         }
@@ -286,19 +286,19 @@ class GeneralClientSettingTab(
     ) {
         contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)
         lastScroll = state.getClientSettingScroll()
-        lastListeningKey = state.getListeningKeybindSetting()?.getName() ?: ""
-        lastVisibleSettings = settings.map { setting -> setting.getName() }
+        lastListeningKey = state.getListeningKeybindSetting()?.name ?: ""
+        lastVisibleSettings = settings.map { setting -> setting.name }
         lastContentSignature = contentSignature
     }
 
     private fun buildContentSignature(settings: List<Setting<*>>): Long {
         var signature = 17L
-        signature = signature * 31L + TranslationManager.INSTANCE.getRevision()
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getClientSettingScroll())
-        signature = signature * 31L + (state.getListeningKeybindSetting()?.getName()?.hashCode() ?: 0)
+        signature = signature * 31L + (state.getListeningKeybindSetting()?.name?.hashCode() ?: 0)
         for (setting in settings) {
-            signature = signature * 31L + setting.getName().hashCode()
-            signature = signature * 31L + (if (setting.isAvailable()) 1 else 0)
+            signature = signature * 31L + setting.name.hashCode()
+            signature = signature * 31L + (if (setting.isAvailable) 1 else 0)
         }
         signature = signature * 31L + SettingLayoutPlanner.signature(SETTING_OWNER_KEY, settings)
         return signature

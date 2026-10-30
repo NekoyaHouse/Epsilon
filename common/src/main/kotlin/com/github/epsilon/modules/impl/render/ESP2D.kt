@@ -182,7 +182,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
 
         if (entity is Player) {
             if (entity === mc.player) return false
-            if (FriendManager.INSTANCE.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity))
+            if (FriendManager.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity))
                 return friends
             return players
         }
@@ -199,7 +199,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
 
     private fun getEntityColor(entity: LivingEntity): Color {
         if (entity is Player) {
-            if (FriendManager.INSTANCE.isFriend(entity)) return friendsColor
+            if (FriendManager.isFriend(entity)) return friendsColor
             return playersColor
         }
 

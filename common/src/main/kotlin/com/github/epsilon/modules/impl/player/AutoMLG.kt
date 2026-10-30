@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.NotificationManager
@@ -66,7 +67,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
             }
 
             if (pendingSwapBack && swapTimer.passedMillise(200L)) {
-                InvUtils.swapBack()
+                swapBack()
                 pendingSwapBack = false
             }
 
@@ -78,9 +79,9 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
 
                     if (isFacing(rotation, 2.0f, 2.5f)) {
-                        InvUtils.swap(grimCollectSlot, true)
+                        swap(grimCollectSlot, true)
                         if (useItem()) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                            swingHand(InteractionHand.MAIN_HAND)
                             pendingSwapBack = true
                             swapTimer.reset()
                             completeMlgCycle()
@@ -91,13 +92,13 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         }
                     }
                 } else {
-                    if (InvUtils.findInHotbar(Items.WATER_BUCKET).found()) {
-                        InvUtils.swapBack()
+                    if (findInHotbar(Items.WATER_BUCKET).found()) {
+                        swapBack()
                         completeMlgCycle()
                         return@nonNullListener
                     }
 
-                    val bucket = InvUtils.findInHotbar(Items.BUCKET)
+                    val bucket = findInHotbar(Items.BUCKET)
                     if (bucket.found()) {
                         val waterPos = grimFindCollectableWater()
                         if (waterPos != null) {
@@ -105,7 +106,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitX = Mth.clamp(eyesPos.x, waterPos.x.toDouble(), waterPos.x + 1.0)
                             val hitZ = Mth.clamp(eyesPos.z, waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
-                            val rotation = RotationUtils.calculate(hitVec)
+                            val rotation = calculate(hitVec)
                             RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
@@ -125,9 +126,9 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 }
 
                 if (shouldInteract && pendingSlot != -1) {
-                    InvUtils.swap(pendingSlot, true)
+                    swap(pendingSlot, true)
                     if (interactTimer.passedMillise(interactDelay.toLong()) && useItem()) {
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                        swingHand(InteractionHand.MAIN_HAND)
                         interactTimer.reset()
                         quickCollectDelayTicks = collectDelayTicks
                         grimShouldCollect = true
@@ -140,7 +141,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
             if (isFalling() && !grimShouldCollect) {
                 mlgCompleted = false
 
-                val waterBucket = InvUtils.findInHotbar(Items.WATER_BUCKET)
+                val waterBucket = findInHotbar(Items.WATER_BUCKET)
 
                 if (waterBucket.found()) {
                     val bestPos = getBestPos()
@@ -155,7 +156,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
                         if (dist < 10) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
-                            val rotation = RotationUtils.calculate(targetVec)
+                            val rotation = calculate(targetVec)
 
                             RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
 
@@ -171,7 +172,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                     return@nonNullListener
                                 }
 
-                                val preciseRotation = RotationUtils.calculate(hitVec)
+                                val preciseRotation = calculate(hitVec)
                                 RotationManager.INSTANCE.setRotations(preciseRotation, 180.0, Priority.High)
 
                                 val noSlowdown = NoSlowdown

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ChunkOcclusionEvent
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -97,11 +98,11 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val hit = mc.hitResult
                 if (hit is EntityHitResult) {
-                    rotation = RotationUtils.calculate(hit.entity.blockPosition())
+                    rotation = calculate(hit.entity.blockPosition())
                 } else if (hit is BlockHitResult) {
                     val crossHairPos: BlockPos = hit.blockPos
                     if (!world.getBlockState(crossHairPos).isAir) {
-                        rotation = RotationUtils.calculate(hit.location)
+                        rotation = calculate(hit.location)
                     }
                 }
 
@@ -112,7 +113,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
 
             var s = 0.5
-            if (KeybindUtils.isPressed(mc.options.keySprint)) s = 1.0
+            if (isPressed(mc.options.keySprint)) s = 1.0
 
             var a = false
             if (this.forward) {
@@ -157,12 +158,12 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
         nonNullListener<KeyboardInputEvent> {
             if (!player.abilities.flying && staySneaking && isSneaking) {
-                it.setSneak(true)
+                it.isSneak = true
             }
         }
 
         handler<KeyPressEvent>(EventPriority.HIGH) {
-            if (onInput(it.key, it.action) && !KeybindUtils.isPressed(InputConstants.KEY_F3)) {
+            if (onInput(it.getKey(), it.action) && !KeybindUtils.isPressed(InputConstants.KEY_F3)) {
                 it.cancel()
             }
         }

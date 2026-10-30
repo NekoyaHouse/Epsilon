@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.Constants
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -50,7 +51,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
     private val notifications by boolSetting("Notifications", true)
     private val ignoreBots by boolSetting("Ignore Bots", true)
-    private val renderMode: EnumSetting<RenderMode> by enumSetting("Render Mode", RenderMode.Model)
+    private val renderMode: EnumSetting<RenderMode> = enumSetting("Render Mode", RenderMode.Model)
     private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 25))
     private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 127))
 
@@ -71,7 +72,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                         if (ignoreBots && !mc.getConnection()!!.onlinePlayerIds.contains(player.uuid))
                             continue
                         if (notifications) {
-                            ChatUtils.addChatMessage(
+                            addChatMessage(
                                 player.name.string + " logged back at  X: " + player.x.toInt() +
                                         " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                             )
@@ -89,7 +90,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                     if (ignoreBots && !mc.getConnection()!!.onlinePlayerIds.contains(player.uuid))
                         continue
                     if (notifications) {
-                        ChatUtils.addChatMessage(
+                        addChatMessage(
                             player.name.string + " logged out at  X: " + player.x.toInt() +
                                     " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                         )

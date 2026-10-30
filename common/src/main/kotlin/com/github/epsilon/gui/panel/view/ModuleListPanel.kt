@@ -231,7 +231,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
             }
             if (row.getToggleBounds().contains(event.x(), event.y())) {
                 row.getModule().module.toggle()
-                SoundManager.INSTANCE.playInUi(
+                SoundManager.playInUi(
                     if (row.getModule().module.isEnabled) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE
                 )
             } else {
@@ -400,7 +400,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
 
     private fun buildContentSignature(modules: List<Module>): Long {
         var signature = 17L
-        signature = signature * 31L + TranslationManager.INSTANCE.getRevision()
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + state.getSelectedCategory().name.hashCode()
         signature = signature * 31L + state.getSearchQuery().hashCode()
         signature = signature * 31L + (if (searchFocused) 1 else 0)

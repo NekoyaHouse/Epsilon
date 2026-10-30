@@ -394,14 +394,14 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
     }
 
     private fun previewInput() {
-        if (!stringSetting.isApplyWhenRelease()) {
+        if (!stringSetting.isApplyWhenRelease) {
             applyValue(getDisplayBuffer())
         }
     }
 
     private fun applyValue(value: String) {
         if (stringSetting.value != value) {
-            stringSetting.setValue(value)
+            stringSetting.value = value
         }
     }
 

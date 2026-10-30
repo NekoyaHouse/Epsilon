@@ -67,7 +67,7 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
         pendingBounds = null
 
         val coordinateScale = (mc.window.guiScale / LuminRenderSystem.getGuiScale()).toFloat()
-        val radius = this.radius.value.toFloat() * coordinateScale
+        val radius = this.radius.toFloat() * coordinateScale
         val x = (bounds.left + xOffset.toFloat()) * coordinateScale
         val y = (bounds.top + yOffset.toFloat()) * coordinateScale
         val width = bounds.width() * coordinateScale

@@ -35,7 +35,7 @@ class RectRenderer private constructor() : IRenderer {
         private const val STRIDE = 16
         private const val RECT_BYTES = STRIDE * 4L
 
-        fun create(): RectRenderer = RendererManager.INSTANCE.register(RectRenderer())
+        fun create(): RectRenderer = RendererManager.register(RectRenderer())
 
     }
 
@@ -201,7 +201,7 @@ class RectRenderer private constructor() : IRenderer {
     override fun close() {
         clear()
         buffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
 }

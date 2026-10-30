@@ -200,7 +200,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val ffmpegReady = assets.isFfmpegReady
         if (videoReady && ffmpegReady) {
             try {
-                VideoManager.INSTANCE.loadBackground()
+                VideoManager.loadBackground()
             } catch (exception: Exception) {
                 Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception)
             }
@@ -215,7 +215,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     fun queueReisaGreeting() {
-        if (!ClientSetting.showReisaOnStartup.value || !AssetManager.INSTANCE.isReisaReady) {
+        if (!ClientSetting.showReisaOnStartup || !AssetManager.INSTANCE.isReisaReady) {
             reisaGreetingQueued = false
             return
         }
@@ -233,28 +233,28 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         if (assets.isReisaReady) {
             return
         }
-        val needed = ClientSetting.showReisaOnStartup.value || ClientSetting.showReisaOnShutdown.value
+        val needed = ClientSetting.showReisaOnStartup || ClientSetting.showReisaOnShutdown
         if (needed) {
             assets.requestDownload(listOf(AssetManager.Asset.REISA))
         }
     }
 
     private fun startReisaGreeting() {
-        if (!ClientSetting.showReisaOnStartup.value || !AssetManager.INSTANCE.isReisaReady) {
+        if (!ClientSetting.showReisaOnStartup || !AssetManager.INSTANCE.isReisaReady) {
             clearReisaGreeting()
             return
         }
         reisaGreetingQueued = false
         reisaGreetingStartMs = Util.getMillis()
         reisaExitStartMs = -1L
-        reisaWelcomeSound = SoundManager.INSTANCE.playTracked(
+        reisaWelcomeSound = SoundManager.playTracked(
             SoundKey.REISA_WELCOME,
-            ClientSetting.reisaVolume.value.toFloat()
+            ClientSetting.reisaVolume.toFloat()
         ).orElse(null)
     }
 
     fun requestShutdown(): Boolean {
-        if (!ClientSetting.showReisaOnShutdown.value || !AssetManager.INSTANCE.isReisaReady) return false
+        if (!ClientSetting.showReisaOnShutdown || !AssetManager.INSTANCE.isReisaReady) return false
         val minecraft = this.minecraft ?: return false
         if (!initialized || minecraft.gui.screen() !== this || reisaShutdownCommitted) return false
         if (reisaShutdownStartMs >= 0L) return true
@@ -264,9 +264,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         minecraft.soundManager.stop()
         reisaShutdownStartMs = Util.getMillis()
         reisaShutdownExitStartMs = -1L
-        reisaShutdownSound = SoundManager.INSTANCE.playTracked(
+        reisaShutdownSound = SoundManager.playTracked(
             SoundKey.REISA_BYE,
-            ClientSetting.reisaVolume.value.toFloat()
+            ClientSetting.reisaVolume.toFloat()
         ).orElse(null)
         return true
     }
@@ -326,7 +326,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         if (ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina) && drawColumbinaBackground()) {
             LuminRenderSystem.setActiveTarget(null)
-            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0, 1, 1, 0)
+            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
         } else {
             val background = when (ClientSetting.mainMenuBackground.value) {
                 Background.SEA_LEVEL -> GlslSandBox.SEA_LEVEL
@@ -345,7 +345,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             )
 
             LuminRenderSystem.setActiveTarget(null)
-            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0, 1, 1, 0)
+            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
         }
     }
 
@@ -369,7 +369,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
 
         LuminRenderSystem.setActiveTarget(null)
-        graphics.blit(uiRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0, 1, 1, 0)
+        graphics.blit(uiRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
     }
 
     private fun drawColumbinaBackground(): Boolean {
@@ -435,8 +435,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val scale = resolutionScale(width, height)
         val layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale)
         val layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale)
-        val layoutX = width - layoutWidth
-        val layoutY = height - layoutHeight
+        val layoutX = (width - layoutWidth).toFloat()
+        val layoutY = (height - layoutHeight).toFloat()
         val layoutMouseX = mouseX - layoutX
         val layoutMouseY = mouseY - layoutY
         val menuCenterCorrectionX = (width - layoutWidth) * 0.2f
@@ -490,7 +490,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         reisaShutdownTexturesPrewarmed = true
                     }
                     if (reisaShutdownStartMs >= 0L) {
-                        drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX.toFloat(), -layoutY.toFloat(), width, height)
+                        drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX, -layoutY.toFloat(), width, height)
                     } else {
                         drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                     }
@@ -1199,8 +1199,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             val layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale)
             val layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale)
             val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
-            val layoutX = if (columbinaStyle) width - layoutWidth else (width - layoutWidth) * 0.5f
-            val layoutY = if (columbinaStyle) height - layoutHeight else (height - layoutHeight) * 0.5f
+            val layoutX = if (columbinaStyle) (width - layoutWidth).toFloat() else (width - layoutWidth) * 0.5f
+            val layoutY = if (columbinaStyle) (height - layoutHeight).toFloat() else (height - layoutHeight) * 0.5f
             for (entry in entries) {
                 if (entry.isHovered(epsilonEvent.x() - layoutX, epsilonEvent.y() - layoutY)) {
                     entry.action.run()

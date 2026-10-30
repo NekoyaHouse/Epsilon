@@ -11,6 +11,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.settings.setValue
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
 import com.mojang.blaze3d.platform.InputConstants
@@ -40,7 +41,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
 
     private val modes: MutableMap<ElytraFlightModes, ElytraFlightMode> = EnumMap(ElytraFlightModes::class.java)
 
-    val mode by enumSetting("Mode", ElytraFlightModes.Control, ::onModeChanged)
+    var mode by enumSetting("Mode", ElytraFlightModes.Control, ::onModeChanged)
     val swapMode by enumSetting("Swap Mode", SwapMode.InvSwitch)
 
     val armored by boolSetting("Armored", false)

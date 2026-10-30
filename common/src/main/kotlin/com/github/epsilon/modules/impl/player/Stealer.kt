@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -61,7 +62,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
                                 for (slotId in slots) {
                                     val stack = menu.getSlot(slotId).item
                                     if (isItemUseful(stack) && isBestItemInChest(menu, stack) && timer.passedMillise(nextDelay.toLong())) {
-                                        ClickSlotUtils.shiftClick(menu.containerId, slotId)
+                                        shiftClick(menu.containerId, slotId)
                                         timer.reset()
                                         if (nextDelay > 0) {
                                             break

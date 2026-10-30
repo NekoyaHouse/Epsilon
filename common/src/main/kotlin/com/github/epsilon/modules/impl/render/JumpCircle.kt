@@ -99,7 +99,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
         if (circles.isEmpty()) return
 
         val poseStack = event.poseStack
-        val texture = if (mode.`is`(Mode.Portal)) BUBBLE_TEXTURE else CIRCLE_TEXTURE
+        val texture = if (mode == Mode.Portal) BUBBLE_TEXTURE else CIRCLE_TEXTURE
         val renderer = LuminImmediateRenderer.beginPosTexColorQuads(JUMP_CIRCLE_PIPELINE, texture)
 
         circles.reverse()

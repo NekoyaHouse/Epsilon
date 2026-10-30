@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -168,7 +169,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val velocity = Velocity
 
             if (velocity.delay) {
-                targets!!.sortBy { o -> Math.abs(velocity.yaw - RotationUtils.calculate(o).yaw).toDouble() }
+                targets!!.sortBy { o -> Math.abs(velocity.yaw - calculate(o).yaw).toDouble() }
             }
 
             when (targetMode) {
@@ -197,7 +198,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 PriorityMode.Range -> targets!!.sortBy { o -> o.distanceTo(player).toDouble() }
 
                 PriorityMode.Fov -> {
-                    targets!!.sortBy { o -> Math.abs(Mth.wrapDegrees(player.xRot - RotationUtils.calculate(o).yaw)).toDouble() }
+                    targets!!.sortBy { o -> Math.abs(Mth.wrapDegrees(player.xRot - calculate(o).yaw)).toDouble() }
                 }
 
                 PriorityMode.Health -> {
@@ -213,9 +214,9 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val ignoreWalls = throughWalls
 
             if (rotate) {
-                val calculate = RotationUtils.calculate(currentTarget, true, aimRange)
+                val calculate = calculate(currentTarget, true, aimRange)
 
-                if (!ignoreWalls && RaytraceUtils.raytrace(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
+                if (!ignoreWalls && raytrace(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
                     return@nonNullListener
                 }
 
@@ -226,7 +227,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                         calculate,
                         rotationSpeed.toDouble(),
                         { rotation ->
-                            val hit = RaytraceUtils.raytrace(rotation, 3.0)
+                            val hit = raytrace(rotation, 3.0)
                             hit is EntityHitResult && hit.entity === currentTarget
                         },
                         rotationPriority,
@@ -262,7 +263,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         nonNullListener<PlayerTickEvent.Pre> {
             while (attacks > 0) {
                 attacks--
-                if (pauseOnEat && PlayerUtils.isEating() || NoSlowdown.isWorking()) return@nonNullListener
+                if (pauseOnEat && isEating() || NoSlowdown.isWorking()) return@nonNullListener
 
                 val entity = getAttackEntity() ?: return@nonNullListener
 
@@ -271,7 +272,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 if (espMode = = ESPMode.Deobf) DeobfESP.markHit(entity)
 
                 if (swingHand) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                    swingHand(InteractionHand.MAIN_HAND)
                 }
             }
         }

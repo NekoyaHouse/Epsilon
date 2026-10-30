@@ -35,7 +35,7 @@ object Xray : Module("Xray", Category.RENDER) {
         New
     }
 
-    private val plugin: EnumSetting<Plugin> by enumSetting("Plugin", Plugin.New)
+    private val plugin: EnumSetting<Plugin> = enumSetting("Plugin", Plugin.New)
     val wallHack by boolSetting("WallHack", false) { _ -> mc.levelExtractor.allChanged() }
     private val brutForce by boolSetting("Ore Deobf", false)
     private val fast by boolSetting("Fast", false, Setting.Dependency { brutForce })

@@ -99,7 +99,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
     override fun init() {
         super.init()
-        for (account in AccountManager.INSTANCE.accounts) {
+        for (account in AccountManager.getAccounts()) {
             account.cache.loadHead()
         }
     }
@@ -202,8 +202,8 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     private fun syncRows() {
-        rows.removeAll { row -> !AccountManager.INSTANCE.exists(row.getAccount()) }
-        for (account in AccountManager.INSTANCE.accounts) {
+        rows.removeAll { row -> !AccountManager.exists(row.getAccount()) }
+        for (account in AccountManager.getAccounts()) {
             if (rows.none { row -> row.getAccount() === account }) {
                 rows.add(AccountRow(account))
             }
@@ -254,7 +254,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val backHovered = backBtn.contains(mouseX.toDouble(), mouseY.toDouble())
         drawIconGlyph(scope, backBtn, IconChars.ARROW_BACK, 1.0f, MD3Theme.TEXT_PRIMARY, if (backHovered) 0.9f else 0.0f)
 
-        val title = EpsilonTranslations.Gui.ACCOUNTS_TITLE.translatedName
+        val title = EpsilonTranslations.Gui.ACCOUNTS_TITLE.getTranslatedName()
         val titleScale = 1.2f
         val titleHeight = textRenderer.getHeight(titleScale, StaticFontLoader.JURA_LIGHT)
         scope.text(
@@ -276,7 +276,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val sortBounds = this.sortBounds ?: return
         searchField.buildUi(
             scope, searchBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer,
-            EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.translatedName, 1.0f,
+            EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 1.0f,
         )
         sortButton.draw(scope, sortBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, sortMode)
     }
@@ -316,9 +316,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val filtered = rows.isNotEmpty()
         val glyph = if (filtered) IconChars.SEARCH_OFF else IconChars.NO_ACCOUNTS
         val message = if (filtered) {
-            EpsilonTranslations.Gui.ACCOUNTS_SEARCH_EMPTY.translatedName
+            EpsilonTranslations.Gui.ACCOUNTS_SEARCH_EMPTY.getTranslatedName()
         } else {
-            EpsilonTranslations.Gui.ACCOUNTS_EMPTY.translatedName
+            EpsilonTranslations.Gui.ACCOUNTS_EMPTY.getTranslatedName()
         }
 
         val glyphScale = 5.0f
@@ -329,7 +329,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val msgWidth = textRenderer.getWidth(message, msgScale)
         val msgHeight = textRenderer.getHeight(msgScale)
 
-        val hint = if (filtered) null else EpsilonTranslations.Gui.ACCOUNTS_EMPTY_HINT.translatedName
+        val hint = if (filtered) null else EpsilonTranslations.Gui.ACCOUNTS_EMPTY_HINT.getTranslatedName()
         val hintScale = 1.0f
         val hintHeight = if (hint == null) 0.0f else textRenderer.getHeight(hintScale)
         val hintGap = if (hint == null) 0.0f else 6.0f
@@ -360,10 +360,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val buttonWidth = (panelW - PAD * 2.0f - gap * 3.0f) / 4.0f
         val buttonHeight = 30.0f
         val labels = arrayOf(
-            EpsilonTranslations.Gui.ACCOUNTS_ADD_CRACKED.translatedName,
-            EpsilonTranslations.Gui.ACCOUNTS_ADD_ALTENING.translatedName,
-            EpsilonTranslations.Gui.ACCOUNTS_ADD_SESSION.translatedName,
-            EpsilonTranslations.Gui.ACCOUNTS_ADD_MICROSOFT.translatedName,
+            EpsilonTranslations.Gui.ACCOUNTS_ADD_CRACKED.getTranslatedName(),
+            EpsilonTranslations.Gui.ACCOUNTS_ADD_ALTENING.getTranslatedName(),
+            EpsilonTranslations.Gui.ACCOUNTS_ADD_SESSION.getTranslatedName(),
+            EpsilonTranslations.Gui.ACCOUNTS_ADD_MICROSOFT.getTranslatedName(),
         )
 
         for (i in 0 until 4) {
@@ -389,7 +389,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         if (microsoftWaiting) {
             if (viewport != null) {
                 drawCenteredText(
-                    scope, EpsilonTranslations.Gui.ACCOUNTS_WAITING_MICROSOFT.translatedName,
+                    scope, EpsilonTranslations.Gui.ACCOUNTS_WAITING_MICROSOFT.getTranslatedName(),
                     viewport, MD3Theme.TEXT_SECONDARY, 0.66f,
                 )
             }
@@ -399,7 +399,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         if (microsoftError) {
             if (viewport != null) {
                 drawCenteredText(
-                    scope, EpsilonTranslations.Gui.ACCOUNTS_MICROSOFT_ERROR.translatedName,
+                    scope, EpsilonTranslations.Gui.ACCOUNTS_MICROSOFT_ERROR.getTranslatedName(),
                     viewport, MD3Theme.ERROR, 0.66f,
                 )
             }
@@ -408,17 +408,17 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
 
         val modeLabel = when (addMode) {
-            AddMode.CRACKED -> EpsilonTranslations.Gui.ACCOUNTS_ADD_CRACKED.translatedName
-            AddMode.ALTENING -> EpsilonTranslations.Gui.ACCOUNTS_ADD_ALTENING.translatedName
-            AddMode.SESSION -> EpsilonTranslations.Gui.ACCOUNTS_ADD_SESSION.translatedName
+            AddMode.CRACKED -> EpsilonTranslations.Gui.ACCOUNTS_ADD_CRACKED.getTranslatedName()
+            AddMode.ALTENING -> EpsilonTranslations.Gui.ACCOUNTS_ADD_ALTENING.getTranslatedName()
+            AddMode.SESSION -> EpsilonTranslations.Gui.ACCOUNTS_ADD_SESSION.getTranslatedName()
             else -> ""
         }
-        val formTitle = EpsilonTranslations.Gui.ACCOUNTS_ADD.translatedName + " " + modeLabel
+        val formTitle = EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName() + " " + modeLabel
         scope.text(formTitle, panelX + PAD, formTitleY, 0.95f, MD3Theme.TEXT_PRIMARY)
 
         val placeholder = when (addMode) {
-            AddMode.CRACKED -> EpsilonTranslations.Gui.ACCOUNTS_NAME_PLACEHOLDER.translatedName
-            else -> EpsilonTranslations.Gui.ACCOUNTS_TOKEN_PLACEHOLDER.translatedName
+            AddMode.CRACKED -> EpsilonTranslations.Gui.ACCOUNTS_NAME_PLACEHOLDER.getTranslatedName()
+            else -> EpsilonTranslations.Gui.ACCOUNTS_TOKEN_PLACEHOLDER.getTranslatedName()
         }
         val fieldBounds = formFieldBounds
         if (fieldBounds != null) {
@@ -438,7 +438,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         formCancelBtn = cancelBtn
         scope.button(
             cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height, MD3Theme.CONTROL_RADIUS.toFloat(),
-            Color(0, 0, 0, 0), EpsilonTranslations.Gui.ACCOUNTS_CANCEL.translatedName, 0.6f, MD3Theme.TEXT_PRIMARY,
+            Color(0, 0, 0, 0), EpsilonTranslations.Gui.ACCOUNTS_CANCEL.getTranslatedName(), 0.6f, MD3Theme.TEXT_PRIMARY,
         )
         scope.outline(
             cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height,
@@ -453,7 +453,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             val fg = if (canAdd) MD3Theme.ON_PRIMARY else MD3Theme.withAlpha(MD3Theme.ON_PRIMARY, 100)
             scope.button(
                 addBtn.x, addBtn.y, addBtn.width, addBtn.height, MD3Theme.CONTROL_RADIUS.toFloat(), bg,
-                EpsilonTranslations.Gui.ACCOUNTS_ADD.translatedName, 0.6f, fg,
+                EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName(), 0.6f, fg,
             )
         }
     }
@@ -515,7 +515,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
                         if (row.isConfirmingDelete()) {
                             row.setConfirmingDelete(false)
-                            AccountManager.INSTANCE.remove(row.getAccount())
+                            AccountManager.remove(row.getAccount())
                         } else {
                             row.setConfirmingDelete(true)
                         }
@@ -598,7 +598,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
                 if (authenticating.get() === focused) return true
                 if (row.isConfirmingDelete()) {
                     row.setConfirmingDelete(false)
-                    AccountManager.INSTANCE.remove(focused)
+                    AccountManager.remove(focused)
                 } else {
                     row.setConfirmingDelete(true)
                 }
@@ -698,7 +698,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun login(account: Account<*>) {
         if (!authenticating.compareAndSet(null, account)) return
 
-        ExecutorManager.INSTANCE.execute {
+        ExecutorManager.execute {
             try {
                 if (account.fetchInfo() && account.login() && account.type != AccountType.Cracked) {
                     account.cache.loadHead()
@@ -755,12 +755,12 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     private fun addAccount(account: Account<*>) {
-        if (AccountManager.INSTANCE.exists(account) || !authenticating.compareAndSet(null, account)) return
+        if (AccountManager.exists(account) || !authenticating.compareAndSet(null, account)) return
 
-        ExecutorManager.INSTANCE.execute {
+        ExecutorManager.execute {
             try {
                 if (!account.fetchInfo()) return@execute
-                AccountManager.INSTANCE.add(account)
+                AccountManager.add(account)
                 if (account.type != AccountType.Cracked) account.cache.loadHead()
             } finally {
                 authenticating.set(null)

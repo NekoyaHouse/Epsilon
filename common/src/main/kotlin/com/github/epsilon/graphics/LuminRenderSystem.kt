@@ -62,8 +62,8 @@ object LuminRenderSystem {
         MotionBlurShader.close()
         OverlayAntiAlias.close()
         ShaderUniforms.closeAll()
-        RenderTargetManager.INSTANCE.destroyAll()
-        RendererManager.INSTANCE.destroyAll()
+        RenderTargetManager.destroyAll()
+        RendererManager.destroyAll()
         StaticFontLoader.destroyDefault()
     }
 
@@ -313,11 +313,11 @@ object LuminRenderSystem {
         companion object {
 
             fun create(name: String, width: Int, height: Int): LuminRenderTarget {
-                return RenderTargetManager.INSTANCE.register(LuminRenderTarget(name, width, height, false))
+                return RenderTargetManager.register(LuminRenderTarget(name, width, height, false))
             }
 
             fun createWithDepth(name: String, width: Int, height: Int): LuminRenderTarget {
-                return RenderTargetManager.INSTANCE.register(LuminRenderTarget(name, width, height, true))
+                return RenderTargetManager.register(LuminRenderTarget(name, width, height, true))
             }
         }
 
@@ -421,7 +421,7 @@ object LuminRenderSystem {
 
         override fun close() {
             destroyTextures()
-            RenderTargetManager.INSTANCE.unregister(this)
+            RenderTargetManager.unregister(this)
         }
     }
 }

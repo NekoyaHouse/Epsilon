@@ -18,7 +18,7 @@ enum class AccountSortMode(
     );
 
     fun getLabel(): String {
-        return label.translatedName
+        return label.getTranslatedName()
     }
 
     fun getComparator(): Comparator<Account<*>>? {

@@ -97,15 +97,15 @@ class LandRenderer(
 
         val radius = Math.min(w, h) * 0.4f * Mth.clamp(radiusAnim.value, 0f, 1f)
 
-        if (island.backgroundBlur.value) {
-            BlurShader.render(x, y, w, h, radius, island.blurStrength.value.toFloat())
+        if (island.backgroundBlur) {
+            BlurShader.render(x, y, w, h, radius, island.blurStrength.toFloat())
         }
-        if (island.drawShadow.value) {
-            scope.shadow(x, y, w, h, radius, island.shadowBlur.value.toFloat(), island.shadowColor.value)
+        if (island.drawShadow) {
+            scope.shadow(x, y, w, h, radius, island.shadowBlur.toFloat(), island.shadowColor)
         }
-        scope.roundRect(x, y, w, h, radius, island.backgroundColor.value)
-        if (island.outline.value) {
-            scope.outline(x, y, w, h, radius, island.outlineWidth.value.toFloat(), island.outlineColor.value)
+        scope.roundRect(x, y, w, h, radius, island.backgroundColor)
+        if (island.outline) {
+            scope.outline(x, y, w, h, radius, island.outlineWidth.toFloat(), island.outlineColor)
         }
 
         val clip = UiRect(x, y, w, h)
@@ -218,19 +218,19 @@ class LandRenderer(
 
             val textY = centerY - textRenderer.getHeight(TEXT_SCALE, font) * 0.5f
             val textColor = IslandPalette.withAlphaMul(segment.textColor, alpha)
-            if (segment.glitch && island.textGlitch.value) {
+            if (segment.glitch && island.textGlitch) {
                 scope.glitchText(
                     segment.text, contentX, textY, TEXT_SCALE, textColor, TextGlitchEffect(
-                        island.chromaticX.value.toFloat(),
-                        island.chromaticY.value.toFloat(),
-                        island.glitchGlowRadius.value.toFloat(),
-                        island.glitchGlowIntensity.value.toFloat(),
-                        island.sliceHeight.value.toFloat(),
-                        island.sliceAmount.value.toFloat(),
-                        island.glitchStrength.value.toFloat(),
-                        island.scanlineStrength.value.toFloat(),
-                        island.glitchColor.value,
-                        island.noiseStrength.value.toFloat()
+                        island.chromaticX.toFloat(),
+                        island.chromaticY.toFloat(),
+                        island.glitchGlowRadius.toFloat(),
+                        island.glitchGlowIntensity.toFloat(),
+                        island.sliceHeight.toFloat(),
+                        island.sliceAmount.toFloat(),
+                        island.glitchStrength.toFloat(),
+                        island.scanlineStrength.toFloat(),
+                        island.glitchColor,
+                        island.noiseStrength.toFloat()
                     ), font
                 )
             } else {

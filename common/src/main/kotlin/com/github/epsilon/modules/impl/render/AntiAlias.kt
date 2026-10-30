@@ -25,7 +25,7 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
     }
 
     private val mode by enumSetting("Mode", Mode.SSAA) { newMode -> onModeChanged(newMode) }
-    private val samples by enumSetting("Samples", Samples.X4, com.github.epsilon.settings.Setting.Dependency { mode.`is`(Mode.SSAA) })
+    private val samples by enumSetting("Samples", Samples.X4, com.github.epsilon.settings.Setting.Dependency { mode == Mode.SSAA })
 
     /**
      * SSAA 叠加层入口：仅 SSAA 模式下重定向绘制目标，其余模式直接执行原绘制。
@@ -36,7 +36,7 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
     }
 
     fun render(drawAction: Runnable) {
-        if (isEnabled && mode.`is`(Mode.SSAA)) {
+        if (isEnabled && mode == Mode.SSAA) {
             OverlayAntiAlias.render(samples.scale, drawAction)
         } else {
             drawAction.run()
@@ -47,7 +47,7 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
      * FXAA 在 3D 渲染完成后处理整屏颜色目标，因此也会平滑覆盖层内容。
      */
     private fun onAfterRender3D(event: AfterRender3DEvent) {
-        if (mode.`is`(Mode.FXAA)) {
+        if (mode == Mode.FXAA) {
             FXAAShader.renderMainTarget()
         }
     }

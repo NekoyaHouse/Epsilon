@@ -211,7 +211,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             if (entry.bounds.contains(event.x(), event.y())) {
                 entry.section.toggleCollapsed()
                 draggingSliderEntry = null
-                SoundManager.INSTANCE.playInUi(
+                SoundManager.playInUi(
                     if (entry.section.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN
                 )
                 return true
@@ -574,7 +574,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     private fun createEnumPopup(enumRow: EnumSettingRow, rowBounds: UiRect, popupBounds: UiRect): EnumSelectPopup {
         val chipBounds = enumRow.getChipBounds(measureTextRenderer, rowBounds)
-        val optionCount = enumRow.getSetting().getModes().size
+        val optionCount = enumRow.getSetting().modes.size
         val visibleCount = Math.min(optionCount, EnumSelectPopup.MAX_VISIBLE_ITEMS)
         val popupHeight = visibleCount * 24.0f + 12.0f
         val popupWidth = Math.max(108.0f, chipBounds.width + 24.0f)

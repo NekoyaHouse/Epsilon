@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
@@ -71,8 +72,8 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
             if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST)) return@runSafe
 
             val containerId = player.containerMenu.containerId
-            ClickSlotUtils.click(containerId, 6)
-            ClickSlotUtils.click(containerId, 6)
+            click(containerId, 6)
+            click(containerId, 6)
 
             netHandler.send(
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
@@ -116,29 +117,29 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
     protected fun useFirework(): Boolean = runSafeOrFalse {
         val rocket = if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
-            InvUtils.findInHotbar(Items.FIREWORK_ROCKET)
+            findInHotbar(Items.FIREWORK_ROCKET)
         } else {
-            InvUtils.find(Items.FIREWORK_ROCKET)
+            find(Items.FIREWORK_ROCKET)
         }
         if (!rocket.found()) return@runSafeOrFalse false
 
         val hand = rocket.getHand()
 
         if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
-            InvUtils.swap(rocket.slot, true)
+            swap(rocket.slot, true)
         } else {
-            InvUtils.invSwap(rocket.slot)
+            invSwap(rocket.slot)
         }
 
         val result = interaction.useItem(player, hand)
         if (result.consumesAction()) {
-            PlayerUtils.swingHand(hand)
+            swingHand(hand)
         }
 
         if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
-            InvUtils.swapBack()
+            swapBack()
         } else {
-            InvUtils.invSwapBack()
+            invSwapBack()
         }
 
         result.consumesAction()
@@ -147,9 +148,9 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     protected fun swapArmor(containerSlot: Int) {
         runSafe {
             val containerId = player.containerMenu.containerId
-            ClickSlotUtils.click(containerId, containerSlot)
-            ClickSlotUtils.click(containerId, 6)
-            ClickSlotUtils.click(containerId, containerSlot)
+            click(containerId, containerSlot)
+            click(containerId, 6)
+            click(containerId, containerSlot)
         }
     }
 

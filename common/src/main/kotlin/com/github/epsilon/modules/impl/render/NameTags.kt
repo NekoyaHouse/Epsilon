@@ -153,7 +153,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         val radius = 4.25f * renderScale
 
         val contents = ArrayList<Segment>(4)
-        if (friendStatus && FriendManager.INSTANCE.isFriend(player)) {
+        if (friendStatus && FriendManager.isFriend(player)) {
             contents.add(Segment(IconChars.HANDSHAKE, "Friend", true, friendColor, friendColor))
         }
         if (teamStatus && TargetManager.INSTANCE.isSameTeam(player)) {

@@ -272,10 +272,10 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     private fun getVisibleValue(): Int = pendingValue ?: intSetting.value
 
     private fun previewValue(value: Int) {
-        if (intSetting.isApplyWhenRelease()) {
+        if (intSetting.isApplyWhenRelease) {
             pendingValue = value
         } else {
-            intSetting.setValue(value)
+            intSetting.value = value
         }
     }
 

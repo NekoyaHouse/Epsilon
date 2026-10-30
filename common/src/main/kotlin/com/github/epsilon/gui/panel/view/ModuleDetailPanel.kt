@@ -123,7 +123,7 @@ class ModuleDetailPanel(
         renderBatch.render(controlTree)
 
         val viewport = getViewport()
-        val settings = module.settings.filter { setting -> setting.isAvailable() }
+        val settings = module.settings.filter { setting -> setting.isAvailable }
         val settingOwnerKey = getSettingOwnerKey(module)
         val contentHeight = settingListController.getContentHeight(settingOwnerKey, settings)
         state.setMaxDetailScroll(contentHeight - viewport.height)
@@ -198,7 +198,7 @@ class ModuleDetailPanel(
 
         val listeningKeybindSetting = state.getListeningKeybindSetting()
         if (listeningKeybindSetting != null) {
-            listeningKeybindSetting.setValue(KeybindUtils.encodeMouseButton(event.button()))
+            listeningKeybindSetting.value = KeybindUtils.encodeMouseButton(event.button())
             state.setListeningKeybindSetting(null)
             markDirty()
             return true
@@ -309,12 +309,12 @@ class ModuleDetailPanel(
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
-                listeningSetting.setValue(-1)
+                listeningSetting.value = -1
                 state.setListeningKeybindSetting(null)
                 markDirty()
                 return true
             }
-            listeningSetting.setValue(event.key())
+            listeningSetting.value = event.key()
             state.setListeningKeybindSetting(null)
             markDirty()
             return true
@@ -586,7 +586,7 @@ class ModuleDetailPanel(
         ) {
             return true
         }
-        val visibleSettings = settings.map { setting -> setting.getName() }
+        val visibleSettings = settings.map { setting -> setting.name }
         if (lastVisibleSettings != visibleSettings) {
             return true
         }
@@ -601,7 +601,7 @@ class ModuleDetailPanel(
         lastDetailScroll = state.getDetailScroll()
         lastModuleKey =
             module.name + ":" + module.bindMode + ":" + module.keyBind + ":" + module.isHidden
-        lastVisibleSettings = settings.map { setting -> setting.getName() }
+        lastVisibleSettings = settings.map { setting -> setting.name }
         lastContentSignature = contentSignature
     }
 
@@ -613,17 +613,17 @@ class ModuleDetailPanel(
         module: Module, settings: List<Setting<*>>, settingOwnerKey: String,
     ): Long {
         var signature = 17L
-        signature = signature * 31L + TranslationManager.INSTANCE.getRevision()
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + module.name.hashCode()
         signature = signature * 31L + module.bindMode.ordinal
         signature = signature * 31L + module.keyBind
         signature = signature * 31L + (if (module.isHidden) 1 else 0)
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getDetailScroll())
         val listening = state.getListeningKeybindSetting()
-        signature = signature * 31L + (listening?.getName()?.hashCode() ?: 0)
+        signature = signature * 31L + (listening?.name?.hashCode() ?: 0)
         for (setting in settings) {
-            signature = signature * 31L + setting.getName().hashCode()
-            signature = signature * 31L + (if (setting.isAvailable()) 1 else 0)
+            signature = signature * 31L + setting.name.hashCode()
+            signature = signature * 31L + (if (setting.isAvailable) 1 else 0)
         }
         signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings)
         return signature

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -73,7 +74,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
 
             if (rotate) {
-                val rot = RotationUtils.calculate(currentAimPoint(bedTargetNow))
+                val rot = calculate(currentAimPoint(bedTargetNow))
                 if (bedTargetNow) {
                     RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), { candidate -> isBedHit(candidate, maxRange) }, Priority.Low)
                 } else {
@@ -89,7 +90,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             interaction.continueDestroyBlock(currentTarget!!, currentFace!!)
 
             if (swingHand) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                swingHand(InteractionHand.MAIN_HAND)
             }
 
             if (world.getBlockState(currentTarget!!).isAir) {

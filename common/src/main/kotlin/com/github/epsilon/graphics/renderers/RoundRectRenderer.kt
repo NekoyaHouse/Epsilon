@@ -34,7 +34,7 @@ class RoundRectRenderer private constructor() : IRenderer {
         private const val STRIDE = 48
         private const val RECT_BYTES = STRIDE * 4L
 
-        fun create(): RoundRectRenderer = RendererManager.INSTANCE.register(RoundRectRenderer())
+        fun create(): RoundRectRenderer = RendererManager.register(RoundRectRenderer())
 
     }
 
@@ -179,7 +179,7 @@ class RoundRectRenderer private constructor() : IRenderer {
 
     override fun close() {
         buffer.close()
-        RendererManager.INSTANCE.unregister(this)
+        RendererManager.unregister(this)
     }
 
     fun setScissor(x: Int, y: Int, width: Int, height: Int) {

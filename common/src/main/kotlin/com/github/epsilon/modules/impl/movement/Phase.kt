@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -97,7 +98,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (mode = = Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) &&
                 !player.isInWater && !player.isInLava && clipTimer <= 0
             ) {
-                val dir = MoveUtils.forward(0.5)
+                val dir = forward(0.5)
 
                 var blockToBreak: BlockPos? = null
 
@@ -113,11 +114,11 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 val bestTool = AutoTool.getBestTool(blockToBreak)
                 if (bestTool == -1) return@nonNullListener
 
-                InvUtils.swap(bestTool, true)
+                swap(bestTool, true)
                 interaction.continueDestroyBlock(blockToBreak, player.direction)
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                swingHand(InteractionHand.MAIN_HAND)
                 if (silent) {
-                    InvUtils.swapBack()
+                    swapBack()
                 }
             }
 
@@ -151,18 +152,18 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         return@nonNullListener
                     }
 
-                    val dir = MoveUtils.forward(0.5)
+                    val dir = forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
                         return@nonNullListener
                     }
 
-                    val angle = RotationUtils.calculate(Vec3.atCenterOf(block))
+                    val angle = calculate(Vec3.atCenterOf(block))
                     val result = if (swapMode = = SwapMode.Silent) {
-                        InvUtils.findInHotbar(Items.ENDER_PEARL)
+                        findInHotbar(Items.ENDER_PEARL)
                     } else {
-                        InvUtils.find(Items.ENDER_PEARL)
+                        find(Items.ENDER_PEARL)
                     }
                     if (result.found()) {
                         val prevYaw = player.yRot
@@ -187,7 +188,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
         runSafe {
             if (player.onGround() && mode = = Mode.CCClip) {
-                val diagonalOffset = MoveUtils.forwardWithoutStrafe(0.44)
+                val diagonalOffset = forwardWithoutStrafe(0.44)
                 val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
 
                 netHandler.send(
@@ -195,7 +196,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 )
 
                 if (diagonal) {
-                    val directionVec = MoveUtils.forwardWithoutStrafe(0.51)
+                    val directionVec = forwardWithoutStrafe(0.51)
 
                     var height = if (world.clip(
                             ClipContext(
@@ -228,7 +229,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
                     toggle()
                 } else {
-                    val directionVec = MoveUtils.forwardWithoutStrafe(0.57)
+                    val directionVec = forwardWithoutStrafe(0.57)
 
                     var height = if (world.clip(
                             ClipContext(

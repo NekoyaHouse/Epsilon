@@ -299,7 +299,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         if (node.isCollapsed()) {
             forEachWidget(node) { widget -> blurInput(widget) }
         }
-        SoundManager.INSTANCE.playInUi(if (node.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN)
+        SoundManager.playInUi(if (node.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN)
         DropdownScreen.react(
             if (node.isCollapsed()) ReisaDropdownCompanion.Action.PANEL_CLOSE else ReisaDropdownCompanion.Action.PANEL_OPEN
         )

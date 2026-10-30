@@ -71,7 +71,7 @@ class SpearBehavior : ElytraCombatBehavior {
         // 瞄准碰撞箱中心；水平预测按距离插值，垂直位置不使用预测。
         val predicted = target.predictedPosition
         val aimDistance = bot.player().eyePosition.distanceTo(predicted)
-        val blend = if (bot.spearUsePredictor.value) {
+        val blend = if (bot.spearUsePredictor) {
             Mth.clamp(
                 (aimDistance - AIM_PREDICTION_NEAR) / (AIM_PREDICTION_FAR - AIM_PREDICTION_NEAR),
                 0.0,
@@ -102,7 +102,7 @@ class SpearBehavior : ElytraCombatBehavior {
             }
 
             State.FOLLOW -> {
-                if (distance <= bot.spearEngageRange.value) {
+                if (distance <= bot.spearEngageRange) {
                     this.state = State.NEAR_FOLLOW
                     desired = nearFollowDirection(bot, target, targetPoint)
                 } else {
@@ -111,7 +111,7 @@ class SpearBehavior : ElytraCombatBehavior {
             }
 
             State.NEAR_FOLLOW -> {
-                if (distance > bot.spearEngageRange.value) {
+                if (distance > bot.spearEngageRange) {
                     this.state = State.FOLLOW
                     desired = followDirection(bot, targetPoint)
                 } else {
@@ -149,9 +149,9 @@ class SpearBehavior : ElytraCombatBehavior {
 
             State.PULL_OVER -> {
                 this.pullOverTicks++
-                val ticksUp = this.pullOverTicks > bot.spearPullOverTicks.value
-                val stillClose = distance <= bot.spearEngageRange.value
-                val outOfExtra = this.pullOverTicks > bot.spearPullOverTicks.value + PULL_OVER_EXTRA_TICKS
+                val ticksUp = this.pullOverTicks > bot.spearPullOverTicks
+                val stillClose = distance <= bot.spearEngageRange
+                val outOfExtra = this.pullOverTicks > bot.spearPullOverTicks + PULL_OVER_EXTRA_TICKS
                 // 尚未拉开距离时允许有限延长，避免无限脱战。
                 val finished = ticksUp && (!stillClose || outOfExtra)
                 if (finished) {
@@ -178,7 +178,7 @@ class SpearBehavior : ElytraCombatBehavior {
         val raw = FlightIntent(
             desired,
             desired.normalize(),
-            bot.controlMode.`is`(ElytraCombat.ControlMode.DirectVelocity),
+            bot.controlMode == (ElytraCombat.ControlMode.DirectVelocity),
             true,
         )
         return planner.plan(bot.player(), raw, target.predictedPosition, planConfig)
@@ -223,7 +223,7 @@ class SpearBehavior : ElytraCombatBehavior {
     private fun nearFollowDirection(bot: ElytraCombat, target: TargetSnapshot, targetPoint: Vec3): Vec3 {
         CombatWeaponController.ensureSpearUse()
 
-        if (bot.spearAntiSpear.value && target.usingSpear) {
+        if (bot.spearAntiSpear && target.usingSpear) {
             val antiSpear = antiSpearDirection(bot, target)
             if (antiSpear != null) {
                 return antiSpear
@@ -237,9 +237,9 @@ class SpearBehavior : ElytraCombatBehavior {
         look = ensureMinimumLength(look, 6.0)
 
         this.lunging = CombatWeaponController.canUseSpearAttack() &&
-                bot.player().eyePosition.distanceTo(targetPoint) <= bot.spearEngageRange.value + 2.0
+                bot.player().eyePosition.distanceTo(targetPoint) <= bot.spearEngageRange + 2.0
         if (this.lunging) {
-            return look.normalize().scale(bot.spearLungeStrength.value)
+            return look.normalize().scale(bot.spearLungeStrength)
         }
         return look
     }
@@ -267,7 +267,7 @@ class SpearBehavior : ElytraCombatBehavior {
                 " ready=" + ready +
                 " aggressive=" + aggressive +
                 " lunge=" + this.lunging +
-                " turn=" + ElytraDebug.fmt(bot.maxTurnSpeed.value) +
+                " turn=" + ElytraDebug.fmt(bot.maxTurnSpeed) +
                 charge
         if (summary == this.lastTrace) {
             return
@@ -286,7 +286,7 @@ class SpearBehavior : ElytraCombatBehavior {
         }
 
         val distance = entity.distanceTo(bot.player()).toDouble()
-        if (distance > bot.spearEngageRange.value * 2.0 + bot.spearAntiSpearExtra.value) {
+        if (distance > bot.spearEngageRange * 2.0 + bot.spearAntiSpearExtra) {
             return null
         }
 
@@ -295,10 +295,10 @@ class SpearBehavior : ElytraCombatBehavior {
         val eye = predicted.add(0.0, entity.getEyeHeight(entity.pose).toDouble(), 0.0)
         val facing = entity.lookAngle.normalize()
         val reach = target.velocity.dot(facing)
-        val start = eye.add(facing.scale(bot.spearMinRange.value))
+        val start = eye.add(facing.scale(bot.spearMinRange))
         val end = eye.add(
             facing.scale(
-                bot.spearEngageRange.value + Math.max(0.0, reach) + bot.spearAntiSpearExtra.value
+                bot.spearEngageRange + Math.max(0.0, reach) + bot.spearAntiSpearExtra
             )
         )
         if (bot.player().boundingBox.clip(start, end).isEmpty()) {
@@ -314,8 +314,8 @@ class SpearBehavior : ElytraCombatBehavior {
         val side = Vec3(-horizontal.z, 0.0, horizontal.x).normalize()
         val playerPos = bot.player().position()
         for (candidate in arrayOf(
-            side.scale(bot.spearLungeStrength.value),
-            side.scale(-bot.spearLungeStrength.value),
+            side.scale(bot.spearLungeStrength),
+            side.scale(-bot.spearLungeStrength),
         )) {
             if (LocalFlightAvoidance.isSegmentClear(bot.player(), playerPos, playerPos.add(candidate))) {
                 return candidate

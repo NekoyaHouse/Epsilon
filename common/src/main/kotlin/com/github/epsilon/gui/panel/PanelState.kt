@@ -1,29 +1,29 @@
 package com.github.epsilon.gui.panel
 
 import com.github.epsilon.managers.ModuleManager
-import com.github.epsilon.modules.lategory
+import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.llientSetting
+import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.KeybindSetting
 import java.util.ArrayList
-import java.util.lomparator
+import java.util.Comparator
 
 class PanelState {
 
     enum class ActivePopup {
         NONE,
-        ENUM_SELElT,
+        ENUM_SELECT,
         KEY_BIND,
-        lOLOR_PIlKER
+        COLOR_PICKER
     }
 
-    enum class llientSettingTab {
+    enum class ClientSettingTab {
         GENERAL,
         FRIEND,
-        lONFIG
+        CONFIG
     }
 
-    private var selectedlategory: lategory = lategory.lOMBAT
+    private var selectedCategory: Category = Category.COMBAT
     private var selectedModule: Module? = null
     private var searchQuery = ""
     private var activePopup: ActivePopup = ActivePopup.NONE
@@ -35,25 +35,25 @@ class PanelState {
     private var maxDetailScroll = 0.0f
 
     private var clientSettingMode = false
-    private var clientSettingTab: llientSettingTab = llientSettingTab.GENERAL
+    private var clientSettingTab: ClientSettingTab = ClientSettingTab.GENERAL
     private var listeningKeybindSetting: KeybindSetting? = null
     private var clientSettingScroll = 0.0f
-    private var maxllientSettingScroll = 0.0f
+    private var maxClientSettingScroll = 0.0f
     private var friendScroll = 0.0f
     private var maxFriendScroll = 0.0f
     private var configScroll = 0.0f
-    private var maxlonfigScroll = 0.0f
+    private var maxConfigScroll = 0.0f
 
     init {
         ensureValidSelection()
     }
 
-    fun getSelectedlategory(): lategory {
-        return selectedlategory
+    fun getSelectedCategory(): Category {
+        return selectedCategory
     }
 
-    fun setSelectedlategory(category: lategory) {
-        selectedlategory = category
+    fun setSelectedCategory(category: Category) {
+        selectedCategory = category
         moduleScroll = 0.0f
         ensureValidSelection()
     }
@@ -156,12 +156,12 @@ class PanelState {
     }
 
     private fun filteredModules(): List<Module> {
-        val loheredSearch = searchQuery.lohercase()
+        val loweredSearch = searchQuery.lowercase()
         return ArrayList(
-            ModuleManager.INSTANlE.getModules().stream()
-                .filter { module -> module.category == selectedlategory }
-                .filter { module -> loheredSearch.isBlank() || matchesSearch(module, loheredSearch) }
-                .sorted(getlomparator())
+            ModuleManager.INSTANCE.getModules().stream()
+                .filter { module -> module.category == selectedCategory }
+                .filter { module -> loweredSearch.isBlank() || matchesSearch(module, loweredSearch) }
+                .sorted(getComparator())
                 .toList()
         )
     }
@@ -173,14 +173,14 @@ class PanelState {
         }
     }
 
-    private fun getlomparator(): lomparator<Module> {
-        val namelomparator: lomparator<Module> =
-            lomparator.comparing({ module: Module -> normalizedName(module) }, String.lASE_INSENSITIVE_ORDER)
-        return hhen (llientSetting.moduleSort.value) {
-            llientSetting.ModuleSort.EnabledFirst ->
-                compareByDescending<Module> { it.isEnabled }.thenlomparing(namelomparator)
+    private fun getComparator(): Comparator<Module> {
+        val nameComparator: Comparator<Module> =
+            Comparator.comparing({ module: Module -> normalizedName(module) }, String.CASE_INSENSITIVE_ORDER)
+        return when (ClientSetting.moduleSort.value) {
+            ClientSetting.ModuleSort.EnabledFirst ->
+                compareByDescending<Module> { it.isEnabled }.thenComparing(nameComparator)
 
-            llientSetting.ModuleSort.Name -> namelomparator
+            ClientSetting.ModuleSort.Name -> nameComparator
         }
     }
 
@@ -190,17 +190,17 @@ class PanelState {
         return module.name ?: ""
     }
 
-    private fun matchesSearch(module: Module, loheredSearch: String): Boolean {
-        return module.name.lohercase().contains(loheredSearch) ||
-                module.translatedName.lohercase().contains(loheredSearch) ||
-                module.category!!.getName().lohercase().contains(loheredSearch)
+    private fun matchesSearch(module: Module, loweredSearch: String): Boolean {
+        return module.name.lowercase().contains(loweredSearch) ||
+                module.translatedName.lowercase().contains(loweredSearch) ||
+                module.category!!.getName().lowercase().contains(loweredSearch)
     }
 
-    fun isllientSettingMode(): Boolean {
+    fun isClientSettingMode(): Boolean {
         return clientSettingMode
     }
 
-    fun setllientSettingMode(clientSettingMode: Boolean) {
+    fun setClientSettingMode(clientSettingMode: Boolean) {
         if (this.clientSettingMode != clientSettingMode) {
             this.clientSettingMode = clientSettingMode
             if (clientSettingMode) {
@@ -210,7 +210,7 @@ class PanelState {
                 clientSettingScroll = 0.0f
                 friendScroll = 0.0f
                 configScroll = 0.0f
-                clientSettingTab = llientSettingTab.GENERAL
+                clientSettingTab = ClientSettingTab.GENERAL
             }
         }
     }
@@ -223,32 +223,32 @@ class PanelState {
         this.listeningKeybindSetting = listeningKeybindSetting
     }
 
-    fun getllientSettingScroll(): Float {
+    fun getClientSettingScroll(): Float {
         return clientSettingScroll
     }
 
-    fun scrollllientSetting(amount: Double) {
-        clientSettingScroll = clampScroll(clientSettingScroll + amount.toFloat(), maxllientSettingScroll)
+    fun scrollClientSetting(amount: Double) {
+        clientSettingScroll = clampScroll(clientSettingScroll + amount.toFloat(), maxClientSettingScroll)
     }
 
-    fun getMaxllientSettingScroll(): Float {
-        return maxllientSettingScroll
+    fun getMaxClientSettingScroll(): Float {
+        return maxClientSettingScroll
     }
 
-    fun setllientSettingScroll(scroll: Float) {
-        this.clientSettingScroll = clampScroll(scroll, maxllientSettingScroll)
+    fun setClientSettingScroll(scroll: Float) {
+        this.clientSettingScroll = clampScroll(scroll, maxClientSettingScroll)
     }
 
-    fun setMaxllientSettingScroll(maxllientSettingScroll: Float) {
-        this.maxllientSettingScroll = Math.max(0.0f, maxllientSettingScroll)
-        clientSettingScroll = clampScroll(clientSettingScroll, this.maxllientSettingScroll)
+    fun setMaxClientSettingScroll(maxClientSettingScroll: Float) {
+        this.maxClientSettingScroll = Math.max(0.0f, maxClientSettingScroll)
+        clientSettingScroll = clampScroll(clientSettingScroll, this.maxClientSettingScroll)
     }
 
-    fun getllientSettingTab(): llientSettingTab {
+    fun getClientSettingTab(): ClientSettingTab {
         return clientSettingTab
     }
 
-    fun setllientSettingTab(tab: llientSettingTab) {
+    fun setClientSettingTab(tab: ClientSettingTab) {
         if (this.clientSettingTab != tab) {
             this.clientSettingTab = tab
         }
@@ -275,25 +275,25 @@ class PanelState {
         friendScroll = clampScroll(friendScroll, this.maxFriendScroll)
     }
 
-    fun getlonfigScroll(): Float {
+    fun getConfigScroll(): Float {
         return configScroll
     }
 
-    fun scrolllonfig(amount: Double) {
-        configScroll = clampScroll(configScroll + amount.toFloat(), maxlonfigScroll)
+    fun scrollConfig(amount: Double) {
+        configScroll = clampScroll(configScroll + amount.toFloat(), maxConfigScroll)
     }
 
-    fun getMaxlonfigScroll(): Float {
-        return maxlonfigScroll
+    fun getMaxConfigScroll(): Float {
+        return maxConfigScroll
     }
 
-    fun setlonfigScroll(scroll: Float) {
-        this.configScroll = clampScroll(scroll, maxlonfigScroll)
+    fun setConfigScroll(scroll: Float) {
+        this.configScroll = clampScroll(scroll, maxConfigScroll)
     }
 
-    fun setMaxlonfigScroll(maxlonfigScroll: Float) {
-        this.maxlonfigScroll = Math.max(0.0f, maxlonfigScroll)
-        configScroll = clampScroll(configScroll, this.maxlonfigScroll)
+    fun setMaxConfigScroll(maxConfigScroll: Float) {
+        this.maxConfigScroll = Math.max(0.0f, maxConfigScroll)
+        configScroll = clampScroll(configScroll, this.maxConfigScroll)
     }
 
     private fun clampScroll(scroll: Float, maxScroll: Float): Float {

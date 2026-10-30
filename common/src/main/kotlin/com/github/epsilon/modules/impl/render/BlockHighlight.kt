@@ -37,13 +37,13 @@ object BlockHighlight : Module("Block Highlight", Category.RENDER) {
     private val sideColor by colorSetting(
         "Color", Color(255, 255, 255, 100),
         Setting.Dependency {
-            mode.`is`(Mode.Both) || mode.`is`(Mode.BothSide) || mode.`is`(Mode.Fill) || mode.`is`(Mode.FilledSide)
+            mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Fill || mode == Mode.FilledSide
         }
     )
     private val lineColor by colorSetting(
         "Line Color", Color(255, 255, 255, 255),
         Setting.Dependency {
-            mode.`is`(Mode.Both) || mode.`is`(Mode.BothSide) || mode.`is`(Mode.Outline) || mode.`is`(Mode.OutlinedSide)
+            mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Outline || mode == Mode.OutlinedSide
         }
     )
     private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5)
@@ -51,7 +51,7 @@ object BlockHighlight : Module("Block Highlight", Category.RENDER) {
     private val blurStrength by doubleSetting(
         "Blur Strength", 5.0, 0.0, 16.0, 0.5,
         Setting.Dependency {
-            blur && (mode.`is`(Mode.Both) || mode.`is`(Mode.BothSide) || mode.`is`(Mode.Fill))
+            blur && (mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Fill)
         }
     )
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
@@ -119,15 +120,15 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
 
             // 3. Check if placeable
-            if (!BlockUtils.canPlaceAt(placePos)) return@nonNullListener
+            if (!canPlaceAt(placePos)) return@nonNullListener
             if (!world.getBlockState(placePos.below()).isSolid) return@nonNullListener
 
             // 4. Find obsidian
-            val obsidian: FindItemResult = InvUtils.findInHotbar(Items.OBSIDIAN)
+            val obsidian: FindItemResult = findInHotbar(Items.OBSIDIAN)
             if (!obsidian.found()) return@nonNullListener
 
             // 5. Rotation and placement
-            val rot = RotationUtils.calculate(self.eyePosition, Vec3.atCenterOf(placePos))
+            val rot = calculate(self.eyePosition, Vec3.atCenterOf(placePos))
             var readyToPlace = true
 
             if (rotate.`is`(RotateMode.Normal)) {

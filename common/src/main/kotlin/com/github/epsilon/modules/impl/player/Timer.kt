@@ -55,27 +55,27 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     init {
         nonNullListener<ClientTickEvent.Pre> {
             // 先收回其他模块留下的临时倍率，再应用当前 Timer 模式。
-            TimerManager.INSTANCE.tryReset()
+            TimerManager.tryReset()
 
             when (mode) {
-                Mode.Always -> TimerManager.INSTANCE.set(multiplier.toFloat())
+                Mode.Always -> TimerManager.set(multiplier.toFloat())
 
                 Mode.SlowBalance -> {
                     val moving = player.isMoving()
                     if (shouldRelease && balance > 0.1F) {
                         val speed = multiplier.toFloat()
                         if (balance >= speed - 1.0F) {
-                            TimerManager.INSTANCE.set(speed)
+                            TimerManager.set(speed)
                             balance -= speed - 1.0F
                         } else {
-                            TimerManager.INSTANCE.set(1.0F)
+                            TimerManager.set(1.0F)
                         }
                     } else if (KillAura.target == null && balance < ticks) {
                         val speed = if (!moving && player.onGround()) 0.8F else 0.96F
-                        TimerManager.INSTANCE.set(speed)
+                        TimerManager.set(speed)
                         balance += 1.0F - speed
                     } else {
-                        TimerManager.INSTANCE.set(1.0F)
+                        TimerManager.set(1.0F)
                     }
                     balance = Mth.clamp(balance, 0.0F, ticks.toFloat())
                 }
@@ -218,7 +218,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
         lagging = false
         releasing = false
         shouldRelease = false
-        TimerManager.INSTANCE.reset()
+        TimerManager.reset()
         releaseAll()
     }
 
@@ -255,7 +255,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     private fun updateTimerSpeed() {
         val shouldSpeedUp = shouldRelease && balanceTime > 10L
         releasing = shouldSpeedUp
-        TimerManager.INSTANCE.set(if (shouldSpeedUp) multiplier.toFloat() else 1.0F)
+        TimerManager.set(if (shouldSpeedUp) multiplier.toFloat() else 1.0F)
     }
 
     private fun releaseAll() {

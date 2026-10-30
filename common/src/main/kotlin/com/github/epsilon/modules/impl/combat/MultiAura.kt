@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -66,7 +67,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
             }
 
             if (swingHand) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                swingHand(InteractionHand.MAIN_HAND)
             }
         }
     }

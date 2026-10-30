@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.utils.*
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -99,7 +100,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             if (switchClock > 0) --switchClock
             if (placeClock > 0) --placeClock
 
-            val pressed = KeybindUtils.isPressed(activateKey)
+            val pressed = isPressed(activateKey)
             if (pressed) {
                 val hitResult = mc.hitResult
                 if (hitResult is BlockHitResult) {
@@ -202,7 +203,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 }
             }
 
-            if (active && KeybindUtils.isPressed(activateKey)) {
+            if (active && isPressed(activateKey)) {
                 if (mainHandStack.`is`(Items.END_CRYSTAL) || mainHandStack.`is`(Items.OBSIDIAN)) {
                     event.cancel()
                 }
