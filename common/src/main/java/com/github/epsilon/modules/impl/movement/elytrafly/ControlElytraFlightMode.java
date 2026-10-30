@@ -78,8 +78,6 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
 
     @Override
     public void handleUnbreaking() {
-        if (eatGlideElytraSlot >= 0) return;
-        super.handleUnbreaking();
     }
 
     @Override
