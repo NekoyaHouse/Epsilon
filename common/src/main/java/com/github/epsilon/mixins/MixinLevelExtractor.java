@@ -25,7 +25,7 @@ public class MixinLevelExtractor {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WeatherEffectRenderer;extractRenderState(Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;)V")
     )
     private boolean extract$noWeather(WeatherEffectRenderer instance, ClientLevel level, float partialTicks, Vec3 cameraPos, WeatherRenderState renderState) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.weather.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getWeather()) {
             renderState.intensity = 0;
             return false;
         }
@@ -37,7 +37,7 @@ public class MixinLevelExtractor {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;extract(Lnet/minecraft/world/level/border/WorldBorder;FLnet/minecraft/world/phys/Vec3;DLnet/minecraft/client/renderer/state/level/WorldBorderRenderState;)V")
     )
     private boolean extract$noWorldBorder(WorldBorderRenderer instance, WorldBorder border, float deltaPartialTick, Vec3 cameraPos, double renderDistance, WorldBorderRenderState state) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.worldBorder.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getWorldBorder()) {
             state.alpha = 0;
             return false;
         }
@@ -46,7 +46,7 @@ public class MixinLevelExtractor {
 
     @Inject(method = "extractBlockDestroyAnimation", at = @At("HEAD"), cancellable = true)
     private void onExtractBlockDestroyAnimation(Camera camera, LevelRenderState levelRenderState, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.blockBreakOverlay.getValue()) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getBlockBreakOverlay()) ci.cancel();
     }
 
 }

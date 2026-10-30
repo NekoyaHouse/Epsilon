@@ -28,7 +28,7 @@ public abstract class MixinClientLevel {
 
     @ModifyArgs(method = "animateTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;doAnimateTick(IIIILnet/minecraft/util/RandomSource;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos$MutableBlockPos;)V"))
     private void onAnimateTick(Args args) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.barrierInvis.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getBarrierInvis()) {
             args.set(5, Blocks.BARRIER);
         }
     }

@@ -86,7 +86,7 @@ public class MixinLivingEntity {
         JumpCooldown module = JumpCooldown.INSTANCE;
         int newValue = value;
         if (instance == mc.player && module.isEnabled()) {
-            newValue = module.cooldown.getValue();
+            newValue = module.getCooldown();
         }
         original.call(instance, newValue);
     }
@@ -94,8 +94,8 @@ public class MixinLivingEntity {
     @Inject(method = "getModifiedSwingDuration(Lnet/minecraft/world/item/component/SwingAnimation;)I", at = @At("HEAD"), cancellable = true)
     private void hookGetModifiedSwingDuration(SwingAnimation animation, CallbackInfoReturnable<Integer> cir) {
         HandView handView = HandView.INSTANCE;
-        if ((LivingEntity) (Object) this == mc.player && handView.isEnabled() && handView.modifySwingDuration.getValue()) {
-            cir.setReturnValue(handView.swingDuration.getValue());
+        if ((LivingEntity) (Object) this == mc.player && handView.isEnabled() && handView.getModifySwingDuration()) {
+            cir.setReturnValue(handView.getSwingDuration());
         }
     }
 
@@ -111,7 +111,7 @@ public class MixinLivingEntity {
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
     private void onSpawnItemParticles(ItemStack itemStack, int count, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.eatParticles.getValue()
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getEatParticles()
                 && itemStack.getComponents().has(net.minecraft.core.component.DataComponents.FOOD)) {
             ci.cancel();
         }

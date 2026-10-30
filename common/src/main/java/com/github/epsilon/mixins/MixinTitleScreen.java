@@ -22,14 +22,14 @@ public class MixinTitleScreen {
     private void onInit(CallbackInfo ci) {
         if (!epsilon$welcomeHandled) {
             epsilon$welcomeHandled = true;
-            if (ClientSetting.INSTANCE.showWelcomeScreen.getValue()) {
+            if (ClientSetting.INSTANCE.getShowWelcomeScreen()) {
                 ci.cancel();
                 mc.gui.setScreen(WelcomeScreen.INSTANCE);
                 return;
             }
         }
 
-        if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
+        if (ClientSetting.INSTANCE.getUseMainMenu()) {
             ci.cancel();
             mc.gui.setScreen(MainMenuScreen.INSTANCE);
         }

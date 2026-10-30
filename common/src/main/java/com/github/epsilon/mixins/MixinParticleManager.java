@@ -33,8 +33,8 @@ public class MixinParticleManager {
         if (type == ParticleTypes.TOTEM_OF_UNDYING && MasEffects.INSTANCE.shouldHideVanillaTotemParticles())
             return true;
         if (NoRender.INSTANCE.isEnabled()) {
-            if (NoRender.INSTANCE.weather.getValue() && type == ParticleTypes.RAIN) return true;
-            if (NoRender.INSTANCE.fireworkExplosions.getValue() && type == ParticleTypes.FIREWORK) return true;
+            if (NoRender.INSTANCE.getWeather() && type == ParticleTypes.RAIN) return true;
+            if (NoRender.INSTANCE.getFireworkExplosions() && type == ParticleTypes.FIREWORK) return true;
         }
         return false;
     }

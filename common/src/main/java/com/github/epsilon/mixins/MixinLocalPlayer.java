@@ -117,7 +117,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Inject(method = "moveTowardsClosestSpace", at = @At("HEAD"), cancellable = true)
     private void hookPushOutOfBlocks(double x, double d, CallbackInfo info) {
-        if (Velocity.INSTANCE.isEnabled() && Velocity.INSTANCE.mode.is(Velocity.Mode.Cancel) && Velocity.INSTANCE.blockPush.getValue()) {
+        if (Velocity.INSTANCE.isEnabled() && Velocity.INSTANCE.getMode() == Velocity.Mode.Cancel && Velocity.INSTANCE.getBlockPush()) {
             info.cancel();
         }
     }

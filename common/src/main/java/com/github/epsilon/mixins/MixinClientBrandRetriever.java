@@ -12,7 +12,7 @@ public class MixinClientBrandRetriever {
 
     @Inject(method = "getClientModName", at = @At("RETURN"), cancellable = true)
     private static void onGetClientModName(CallbackInfoReturnable<String> cir) {
-        cir.setReturnValue(ClientIdentityHider.filterClientBrand(cir.getReturnValue()));
+        cir.setReturnValue(ClientIdentityHider.INSTANCE.filterClientBrand(cir.getReturnValue()));
     }
 
 }

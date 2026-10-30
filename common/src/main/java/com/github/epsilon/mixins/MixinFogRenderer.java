@@ -17,17 +17,17 @@ public abstract class MixinFogRenderer {
 
     @ModifyExpressionValue(method = "getBuffer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;fogEnabled:Z", opcode = Opcodes.GETSTATIC))
     private boolean modifyFogEnabled(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.fog.getValue()) return false;
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getFog()) return false;
         return original;
     }
 
     @ModifyReturnValue(method = "setupFog", at = @At("RETURN"))
     private FogData modifyFog(FogData fog) {
         WorldTweaks worldTweaks = WorldTweaks.INSTANCE;
-        if (worldTweaks.isEnabled() && worldTweaks.fogModify.getValue()) {
-            fog.environmentalStart = worldTweaks.fogStart.getValue();
-            fog.environmentalEnd = worldTweaks.fogEnd.getValue();
-            Color color = worldTweaks.fogColor.getValue();
+        if (worldTweaks.isEnabled() && worldTweaks.getFogModify()) {
+            fog.environmentalStart = worldTweaks.getFogStart();
+            fog.environmentalEnd = worldTweaks.getFogEnd();
+            Color color = worldTweaks.getFogColor();
             fog.color.set(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, 1.0F);
             return fog;
         }

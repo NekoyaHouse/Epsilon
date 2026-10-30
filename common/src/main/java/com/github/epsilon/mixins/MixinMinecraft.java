@@ -54,14 +54,14 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "onGameLoadFinished", at = @At("TAIL"))
     private void onGameLoadFinished(CallbackInfo ci) {
-        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) return;
+        if (!ClientSetting.INSTANCE.getShowReisaOnStartup()) return;
 
-        if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
+        if (ClientSetting.INSTANCE.getUseMainMenu()) {
             MainMenuScreen.INSTANCE.queueReisaGreeting();
         } else {
             SoundManager.INSTANCE.playSound(
                     SoundKey.REISA_WELCOME,
-                    ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
+                    (float) ClientSetting.INSTANCE.getReisaVolume()
             );
         }
     }
@@ -78,7 +78,7 @@ public abstract class MixinMinecraft {
 
     @ModifyArg(method = "updateTitle", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setTitle(Ljava/lang/String;)V"))
     private String onUpdateTitle(String title) {
-        ClientSetting.TitleMode mode = ClientSetting.INSTANCE.customTitle.getValue();
+        ClientSetting.TitleMode mode = ClientSetting.INSTANCE.getCustomTitle().getValue();
         if (mode == ClientSetting.TitleMode.Vanilla) {
             return title;
         } else if (mode == ClientSetting.TitleMode.Sakura) {
@@ -119,7 +119,7 @@ public abstract class MixinMinecraft {
     private void onStartUseItem(CallbackInfo ci) {
         UseCooldown useCooldown = UseCooldown.INSTANCE;
         if (useCooldown.isEnabled()) {
-            rightClickDelay = useCooldown.cooldown.getValue();
+            rightClickDelay = useCooldown.getCooldown();
         }
     }
 
@@ -137,12 +137,12 @@ public abstract class MixinMinecraft {
     private void onItemUseMouseHandle(CallbackInfo ci) {
         HandView handView = HandView.INSTANCE;
         Minecraft mc = (Minecraft) (Object) this;
-        if (handView.isEnabled() && handView.swingWhileUsing.getValue()
+        if (handView.isEnabled() && handView.getSwingWhileUsing()
                 && mc.options.keyAttack.isDown()
                 && mc.options.keyAttack.consumeClick()
-                && (!handView.onlyOnBlock.getValue() || mc.hitResult.getType() == HitResult.Type.BLOCK)
+                && (!handView.getOnlyOnBlock() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+            PlayerUtils.INSTANCE.swingHand(InteractionHand.MAIN_HAND);
         }
     }
 
@@ -154,8 +154,8 @@ public abstract class MixinMinecraft {
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         SmtcService.INSTANCE.stop();
-        VideoPlayer.stop();
-        LuminRenderSystem.destroyAll();
+        VideoPlayer.INSTANCE.stop();
+        LuminRenderSystem.INSTANCE.destroyAll();
     }
 
     @Inject(method = "pick", at = @At("HEAD"), cancellable = true)
@@ -177,16 +177,16 @@ public abstract class MixinMinecraft {
             float lastYaw = cameraEntity.yRotO;
             float lastPitch = cameraEntity.xRotO;
 
-            cameraEntity.position().x = freeCamera.pos.x;
-            cameraEntity.position().y = freeCamera.pos.y - cameraEntity.getEyeHeight(cameraEntity.getPose());
-            cameraEntity.position().z = freeCamera.pos.z;
-            cameraEntity.xo = freeCamera.prevPos.x;
-            cameraEntity.yo = freeCamera.prevPos.y - cameraEntity.getEyeHeight(cameraEntity.getPose());
-            cameraEntity.zo = freeCamera.prevPos.z;
-            cameraEntity.setYRot(freeCamera.yaw);
-            cameraEntity.setXRot(freeCamera.pitch);
-            cameraEntity.yRotO = freeCamera.lastYaw;
-            cameraEntity.xRotO = freeCamera.lastPitch;
+            cameraEntity.position().x = freeCamera.getPos().x;
+            cameraEntity.position().y = freeCamera.getPos().y - cameraEntity.getEyeHeight(cameraEntity.getPose());
+            cameraEntity.position().z = freeCamera.getPos().z;
+            cameraEntity.xo = freeCamera.getPrevPos().x;
+            cameraEntity.yo = freeCamera.getPrevPos().y - cameraEntity.getEyeHeight(cameraEntity.getPose());
+            cameraEntity.zo = freeCamera.getPrevPos().z;
+            cameraEntity.setYRot(freeCamera.getYaw());
+            cameraEntity.setXRot(freeCamera.getPitch());
+            cameraEntity.yRotO = freeCamera.getLastYaw();
+            cameraEntity.xRotO = freeCamera.getLastPitch();
 
             epsilon$freeCameraSet = true;
             pick(partialTicks);

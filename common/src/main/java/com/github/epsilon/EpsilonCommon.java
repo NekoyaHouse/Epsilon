@@ -32,13 +32,13 @@ public class EpsilonCommon {
 
         // 恢复配置
         ConfigManager.INSTANCE.initConfig();
-        EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
+        EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.getLanguage().getValue());
 
         // 初始化 Render3DScheduler 里的 RenderPipeline
         Render3DScheduler.INSTANCE.getClass();
 
         // 生成空的 i18n 文件
-        I18NFileGenerator.generate("epsilon-empty-i18n.json");
+        I18NFileGenerator.INSTANCE.generate("epsilon-empty-i18n.json");
 
         // 添加一个退出游戏时候的钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

@@ -11,7 +11,7 @@ public class MixinAbstractSignRenderer {
 
     @ModifyExpressionValue(method = "submitSignText", at = @At(value = "CONSTANT", args = {"intValue=4", "ordinal=1"}))
     private int loopTextLengthProxy(int i) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.signText.getValue()) return 0;
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getSignText()) return 0;
         return i;
     }
 

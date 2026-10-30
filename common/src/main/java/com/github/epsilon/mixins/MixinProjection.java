@@ -27,7 +27,7 @@ public class MixinProjection {
         if (!AspectRatio.INSTANCE.isEnabled() || projectionType != ProjectionType.PERSPECTIVE) return;
 
         float currentAspect = width / height;
-        float scale = currentAspect / AspectRatio.INSTANCE.ratio.getValue().floatValue();
+        float scale = currentAspect / (float) AspectRatio.INSTANCE.getRatio();
 
         Matrix4f m = cir.getReturnValue();
         m.m00(m.m00() * scale);

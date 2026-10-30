@@ -41,7 +41,7 @@ public class SmtcNativeBridge {
     private static native void resetNative();
 
     private static boolean loadLibrary() {
-        if (!ClientPlatform.isWindowsX64()) {
+        if (!ClientPlatform.INSTANCE.isWindowsX64()) {
             return false;
         }
 

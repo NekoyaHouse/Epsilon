@@ -20,12 +20,12 @@ public abstract class MixinMapRenderer {
 
     @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/MapRenderState;decorations:Ljava/util/List;", opcode = Opcodes.GETFIELD))
     private List<MapDecoration> getDecorationsProxy(List<MapDecoration> original) {
-        return (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.mapMarkers.getValue()) ? List.of() : original;
+        return (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getMapMarkers()) ? List.of() : original;
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void onRender(MapRenderState mapRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, boolean showOnlyFrame, int lightCoords, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.mapContents.getValue()) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getMapContents()) ci.cancel();
     }
 
 }

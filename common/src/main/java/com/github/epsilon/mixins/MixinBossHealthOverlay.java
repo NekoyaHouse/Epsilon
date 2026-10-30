@@ -12,7 +12,7 @@ public abstract class MixinBossHealthOverlay {
 
     @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
     private void onExtractRenderState(CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.bossBar.getValue()) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getBossBar()) ci.cancel();
     }
 
 }

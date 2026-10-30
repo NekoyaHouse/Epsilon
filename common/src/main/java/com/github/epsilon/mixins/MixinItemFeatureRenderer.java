@@ -13,7 +13,7 @@ public abstract class MixinItemFeatureRenderer {
 
     @WrapOperation(method = "prepareMainSubmit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/ItemFeatureRenderer$Submit;foilType()Lnet/minecraft/client/renderer/item/ItemStackRenderState$FoilType;"))
     private ItemStackRenderState.FoilType cancelEnchantGlint(ItemFeatureRenderer.Submit submit, Operation<ItemStackRenderState.FoilType> original) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.enchantGlint.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getEnchantGlint()) {
             return ItemStackRenderState.FoilType.NONE;
         }
         return original.call(submit);

@@ -14,10 +14,10 @@ public class MixinDynamicUniforms {
 
     @Inject(method = "reset", at = @At("RETURN"))
     private void onReset(CallbackInfo ci) {
-        LuminRenderSystem.endDynamicUniformFrame();
-        LuminImmediateRenderer.endFrame();
-        LuminRenderSystem.beginRenderFrame();
-        TtfFontLoader.beginRenderFrame();
+        LuminRenderSystem.INSTANCE.endDynamicUniformFrame();
+        LuminImmediateRenderer.INSTANCE.endFrame();
+        LuminRenderSystem.INSTANCE.beginRenderFrame();
+        TtfFontLoader.Companion.beginRenderFrame();
     }
 
 }

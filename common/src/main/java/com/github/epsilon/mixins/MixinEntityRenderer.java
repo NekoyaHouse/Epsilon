@@ -25,7 +25,7 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
     private void onExtractRenderStateReturn(T entity, S state, float partialTicks, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.shouldRender(entity)) {
-            state.outlineColor = shaders.getOutlineColor(entity, shaders.entityShader);
+            state.outlineColor = shaders.getOutlineColor(entity, shaders.getEntityShader());
         }
     }
 
@@ -37,14 +37,14 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
         }
 
         NoRender noRender = NoRender.INSTANCE;
-        if (noRender.isEnabled() && (noRender.noEntity(entity.getType()) || (noRender.fallingBlocks.getValue() && entity instanceof FallingBlockEntity))) {
+        if (noRender.isEnabled() && (noRender.noEntity(entity.getType()) || (noRender.getFallingBlocks() && entity instanceof FallingBlockEntity))) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "extractNameTags(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FDD)V", at = @At("HEAD"), cancellable = true)
     private void hookExtractNameTags(T entity, S state, float partialTicks, double nameTagDistance, double belowNameDistance, CallbackInfo ci) {
-        boolean hideGlobalNametags = NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noNametags.getValue();
+        boolean hideGlobalNametags = NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoNametags();
         boolean hidePlayerNametags = NameTags.INSTANCE.isEnabled() && entity instanceof Player;
         if (hideGlobalNametags || hidePlayerNametags) {
             ci.cancel();
@@ -54,7 +54,7 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
     @Inject(method = "finalizeRenderState(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;)V", at = @At("HEAD"), cancellable = true)
     private void onFinalizeRenderState(T entity, S state, CallbackInfo ci) {
         if (
-                NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noDeadEntities.getValue()
+                NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoDeadEntities()
                         && state instanceof LivingEntityRenderState livingState
                         && livingState.deathTime > 0
         ) {

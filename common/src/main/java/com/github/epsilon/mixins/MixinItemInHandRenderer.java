@@ -47,7 +47,7 @@ public abstract class MixinItemInHandRenderer {
     @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
     private void beginShadersHandCapture(float partialTicks, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
-        if (shaders.isEnabled() && shaders.hands.getValue()) {
+        if (shaders.isEnabled() && shaders.getHands()) {
             ShaderManager.INSTANCE.beginHandOutlineCapture(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
         }
     }
@@ -81,7 +81,7 @@ public abstract class MixinItemInHandRenderer {
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", ordinal = 2, shift = At.Shift.AFTER))
     private void addSwingToEating(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         HandView handView = HandView.INSTANCE;
-        if (handView.isEnabled() && handView.swingWhileUsing.getValue() && attack > 0.0F) {
+        if (handView.isEnabled() && handView.getSwingWhileUsing() && attack > 0.0F) {
             HumanoidArm arm = resolveArm(playerState, hand);
             if (arm != null) {
                 applyItemArmAttackTransform(poseStack, arm, attack);
@@ -113,9 +113,9 @@ public abstract class MixinItemInHandRenderer {
     @WrapOperation(method = "swingArm", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
     private void wrapSwingArmTranslate(PoseStack poseStack, float xo, float yo, float zo, Operation<Void> original) {
         HandView handView = HandView.INSTANCE;
-        boolean skip = handView.isEnabled() && handView.swingMode.is(HandView.SwingMode.Flux);
+        boolean skip = handView.isEnabled() && handView.getSwingMode().is(HandView.SwingMode.Flux);
 
-        if (skip && handView.onlyWeapon.getValue()) {
+        if (skip && handView.getOnlyWeapon()) {
             ItemStack item = mc.player.getMainHandItem();
             if (!item.is(ItemTags.SWORDS) && !item.is(ItemTags.AXES)) {
                 skip = false;
@@ -130,7 +130,7 @@ public abstract class MixinItemInHandRenderer {
     @ModifyArg(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"), index = 4)
     private int applyShadersHandOutline(int outlineColor) {
         Shaders shaders = Shaders.INSTANCE;
-        return shaders.isEnabled() && shaders.hands.getValue() ? shaders.getOutlineColor(shaders.handsShader) : outlineColor;
+        return shaders.isEnabled() && shaders.getHands() ? shaders.getOutlineColor(shaders.getHandsShader()) : outlineColor;
     }
 
     @Unique

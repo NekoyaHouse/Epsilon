@@ -55,7 +55,7 @@ public class MixinCamera {
 
     @Inject(method = "getFluidInCamera", at = @At("HEAD"), cancellable = true)
     private void onGetFluidInCamera(CallbackInfoReturnable<FogType> cir) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.liquidOverlay.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getLiquidOverlay()) {
             cir.setReturnValue(FogType.NONE);
         }
     }
@@ -67,7 +67,7 @@ public class MixinCamera {
         } else {
             CameraClip cameraClip = CameraClip.INSTANCE;
             if (cameraClip.isEnabled()) {
-                cir.setReturnValue(cameraClip.distance.getValue().floatValue());
+                cir.setReturnValue((float) cameraClip.getDistance());
             }
         }
     }
@@ -88,7 +88,7 @@ public class MixinCamera {
             args.set(2, freeCamera.getZ(partialTicks));
         } else {
             CameraClip cameraClip = CameraClip.INSTANCE;
-            if (cameraClip.isEnabled() && cameraClip.action.getValue()) {
+            if (cameraClip.isEnabled() && cameraClip.getAction()) {
                 if (mc.options.getCameraType() == CameraType.THIRD_PERSON_BACK) {
                     Vec3 targetPos = new Vec3(args.get(0), args.get(1), args.get(2));
                     cameraClip.updateActionCamera(targetPos);
