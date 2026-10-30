@@ -58,7 +58,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## 生命周期约束
 
-不得随意改变 `EpsilonCommon.init()` 的初始化顺序：EventBus lambda factory 必须先注册，模块与 HUD 元素必须先完成注册，Manager 预热必须早于配置恢复，语言选择必须在配置恢复之后。
+不得随意改变 `EpsilonCommon.init()` 的初始化顺序：模块与 HUD 元素必须先完成注册，Manager 预热必须早于配置恢复，语言选择必须在配置恢复之后。
 
 - `ModuleManager.initModules()` 与 `HudElementManager.initElements()` 必须在 `ConfigManager.initConfig()` 之前完成。
 - Manager 统一为 `public static final Xxx INSTANCE` 单例，构造函数默认私有（`ModuleManager` 等既有例外遵循现状）；调用方不得为已由 Manager 持有的资源另建实例。
@@ -81,6 +81,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - EventBus 按事件精确运行时 class 分发；不得假设父类型监听器会收到子类型事件。
 - 监听方法必须带 `@EventHandler`、返回 `void`，且只有一个非 primitive 参数。
+- EventBus 通过 `MethodHandles.privateLookupIn` 直接绑定 `@EventHandler` 方法，不需要为监听类注册 lambda factory 或包前缀；监听类不再受包名限制。
 - `Cancellable` 是类。使用 `cancel()`/`isCancelled()`，不存在 `setCancelled(boolean)`。
 - 有明确监听顺序时必须设置 priority，不得依赖跨对象的隐式注册顺序。
 - 修改 Minecraft 事件字段、构造参数或触发点前必须核对 `common/src/main/java/com/github/epsilon/events/impl/` 和当前版本参考源码。

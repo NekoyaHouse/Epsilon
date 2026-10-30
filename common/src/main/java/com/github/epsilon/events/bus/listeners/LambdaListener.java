@@ -1,15 +1,15 @@
 package com.github.epsilon.events.bus.listeners;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventHandler;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -17,11 +17,10 @@ import java.util.function.Consumer;
  */
 public class LambdaListener implements IListener {
 
-    public interface Factory {
-        MethodHandles.Lookup create(Method lookupInMethod, Class<?> klass) throws InvocationTargetException, IllegalAccessException;
-    }
-
-    private static Method privateLookupInMethod;
+    /**
+     * 按事件处理类缓存 private lookup：同一类型的多个实例反复订阅时（例如切换旋转模式重建 RotationManager）不必重复提升访问权限。
+     */
+    private static final Map<Class<?>, MethodHandles.Lookup> LOOKUPS = new ConcurrentHashMap<>();
 
     private final Class<?> target;
     private final boolean isStatic;
@@ -36,14 +35,14 @@ public class LambdaListener implements IListener {
      * @param method Method to create lambda for
      */
     @SuppressWarnings("unchecked")
-    public LambdaListener(Factory factory, Class<?> klass, Object object, Method method) {
+    public LambdaListener(Class<?> klass, Object object, Method method) {
         this.target = method.getParameters()[0].getType();
         this.isStatic = Modifier.isStatic(method.getModifiers());
         this.priority = method.getAnnotation(EventHandler.class).priority();
 
         try {
             String name = method.getName();
-            MethodHandles.Lookup lookup = factory.create(privateLookupInMethod, klass);
+            MethodHandles.Lookup lookup = lookupFor(klass);
 
             MethodType methodType = MethodType.methodType(void.class, method.getParameters()[0].getType());
 
@@ -87,12 +86,16 @@ public class LambdaListener implements IListener {
         return isStatic;
     }
 
-    static {
-        try {
-            privateLookupInMethod = MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
-        } catch (NoSuchMethodException e) {
-            Constants.LOGGER.warn("Failed to initialize LambdaListener reflection", e);
+    /**
+     * 直接为事件处理类取得带 private 访问权限的 lookup，监听类所在包不再需要预先注册。
+     */
+    private static MethodHandles.Lookup lookupFor(Class<?> klass) throws IllegalAccessException {
+        MethodHandles.Lookup lookup = LOOKUPS.get(klass);
+        if (lookup == null) {
+            lookup = MethodHandles.privateLookupIn(klass, MethodHandles.lookup());
+            LOOKUPS.put(klass, lookup);
         }
+        return lookup;
     }
 
 }

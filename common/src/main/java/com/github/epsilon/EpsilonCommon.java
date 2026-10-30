@@ -2,7 +2,6 @@ package com.github.epsilon;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.assets.i18n.I18NFileGenerator;
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.*;
 import com.github.epsilon.managers.network.ClientboundPacketManager;
@@ -11,16 +10,12 @@ import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.Minecraft;
 
-import java.lang.invoke.MethodHandles;
-
 public class EpsilonCommon {
 
     public static void init() {
         Constants.LOGGER.info("Welcome to " + Constants.NAME + ".");
 
         Constants.mc = Minecraft.getInstance();
-
-        EventBus.INSTANCE.registerLambdaFactory(EpsilonCommon.class.getPackageName(), (lookupInMethod, klass) -> (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup()));
 
         // 初始化客户端系统
         ModuleManager.INSTANCE.initModules();

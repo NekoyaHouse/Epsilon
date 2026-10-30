@@ -4,7 +4,6 @@ import com.github.epsilon.events.bus.listeners.IListener;
 import com.github.epsilon.events.bus.listeners.LambdaListener;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,14 +18,6 @@ public class EventBus {
     private final Map<Class<?>, List<IListener>> staticListenerCache = new ConcurrentHashMap<>();
 
     private final Map<Class<?>, List<IListener>> listenerMap = new ConcurrentHashMap<>();
-
-    private final List<LambdaFactoryInfo> lambdaFactoryInfos = new ArrayList<>();
-
-    public void registerLambdaFactory(String packagePrefix, LambdaListener.Factory factory) {
-        synchronized (lambdaFactoryInfos) {
-            lambdaFactoryInfos.add(new LambdaFactoryInfo(packagePrefix, factory));
-        }
-    }
 
     public boolean isListening(Class<?> eventKlass) {
         List<IListener> listeners = listenerMap.get(eventKlass);
@@ -145,7 +136,7 @@ public class EventBus {
     private void getListeners(List<IListener> listeners, Class<?> klass, Object object) {
         for (Method method : klass.getDeclaredMethods()) {
             if (isValid(method)) {
-                listeners.add(new LambdaListener(getLambdaFactory(klass), klass, object, method));
+                listeners.add(new LambdaListener(klass, object, method));
             }
         }
 
@@ -157,19 +148,6 @@ public class EventBus {
         if (method.getReturnType() != void.class) return false;
         if (method.getParameterCount() != 1) return false;
         return !method.getParameters()[0].getType().isPrimitive();
-    }
-
-    private LambdaListener.Factory getLambdaFactory(Class<?> klass) {
-        synchronized (lambdaFactoryInfos) {
-            for (LambdaFactoryInfo info : lambdaFactoryInfos) {
-                if (klass.getName().startsWith(info.packagePrefix)) return info.factory;
-            }
-        }
-
-        throw new RuntimeException("No registered lambda listener for '" + klass.getName() + "'.");
-    }
-
-    private record LambdaFactoryInfo(String packagePrefix, LambdaListener.Factory factory) {
     }
 
 }
