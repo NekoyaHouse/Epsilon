@@ -337,6 +337,51 @@
         "gamemode sound": "Sound",
         "gamemode chat message": "Alert"
       },
+      "auto mine": {
+        "_value": "Auto Mine",
+        "packet_mine_required": "Packet Mine must be enabled first",
+        "packet_mine_enabled": "Packet Mine has been enabled automatically",
+        "packet_mine_disabled": "Packet Mine is disabled, Auto Mine is paused",
+        "general": "General",
+        "targets": "Targets",
+        "feet settings": "Feet Settings",
+        "box settings": "Box Settings",
+        "range": "Range",
+        "order": {
+          "_value": "Order",
+          "distance": "Distance",
+          "health": "Health",
+          "hole": "Hole"
+        },
+        "invisible": "Invisible",
+        "friends": "Friends",
+        "switch delay": "Switch Delay",
+        "auto packet mine": "Auto Packet Mine",
+        "box": "Box",
+        "head": "Head",
+        "feet": "Feet",
+        "head mode": {
+          "_value": "Head Mode",
+          "inside": "Inside",
+          "above": "Above",
+          "both": "Both"
+        },
+        "feet mode": {
+          "_value": "Feet Mode",
+          "below": "Below",
+          "inside": "Inside",
+          "both": "Both"
+        },
+        "feet logic": {
+          "_value": "Feet Logic",
+          "first": "First",
+          "normal": "Normal",
+          "last": "Last"
+        },
+        "only on ground": "Only On Ground",
+        "box corners": "Box Corners",
+        "box head level": "Box Head Level"
+      },
       "client setting": {
         "_value": "Client Setting",
         "general": "General",
@@ -830,6 +875,7 @@
         "search range": "Search Range",
         "aim range": "Aim Range",
         "fov": "FOV",
+        "rotate": "Rotate",
         "rotation speed": "Rotation Speed",
         "rotation priority": {
           "_value": "Rotation Priority",
@@ -1595,6 +1641,7 @@
       },
       "flight": {
         "_value": "Flight",
+        "stop on disable": "Stop On Disable",
         "horizontal speed": "Horizontal Speed",
         "vertical speed": "Vertical Speed"
       },

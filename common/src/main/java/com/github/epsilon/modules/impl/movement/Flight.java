@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.MoveUtils;
 
@@ -15,12 +16,13 @@ public class Flight extends Module {
         super("Flight", Category.MOVEMENT);
     }
 
+    private final BoolSetting stopOnDisable = boolSetting("Stop On Disable", true);
     private final DoubleSetting horizontalSpeed = doubleSetting("Horizontal Speed", 3.5, 0.1, 10.0, 0.1);
     private final DoubleSetting verticalSpeed = doubleSetting("Vertical Speed", 1.0, 0.1, 5.0, 0.1);
 
     @Override
     protected void onDisable() {
-        mc.player.setDeltaMovement(0.0, 0.0, 0.0);
+        if (stopOnDisable.getValue()) mc.player.setDeltaMovement(0.0, 0.0, 0.0);
     }
 
     @EventHandler

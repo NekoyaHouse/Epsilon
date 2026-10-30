@@ -337,6 +337,51 @@
         "gamemode sound": "音效",
         "gamemode chat message": "警报"
       },
+      "auto mine": {
+        "_value": "自动挖掘",
+        "packet_mine_required": "需要先启用数据包挖掘",
+        "packet_mine_enabled": "已自动启用数据包挖掘",
+        "packet_mine_disabled": "数据包挖掘已关闭，自动挖掘已暂停",
+        "general": "常规",
+        "targets": "目标类型",
+        "feet settings": "挖脚设置",
+        "box settings": "盒子设置",
+        "range": "范围",
+        "order": {
+          "_value": "目标排序",
+          "distance": "距离",
+          "health": "血量",
+          "hole": "坑内优先"
+        },
+        "invisible": "隐身",
+        "friends": "好友",
+        "switch delay": "切换延迟",
+        "auto packet mine": "自动启用数据包挖掘",
+        "box": "盒子",
+        "head": "头部方块",
+        "feet": "脚下方块",
+        "head mode": {
+          "_value": "头部模式",
+          "inside": "方块内",
+          "above": "头顶上方",
+          "both": "全部"
+        },
+        "feet mode": {
+          "_value": "挖脚方式",
+          "below": "脚下",
+          "inside": "脚内",
+          "both": "全部"
+        },
+        "feet logic": {
+          "_value": "挖脚逻辑",
+          "first": "优先",
+          "normal": "正常",
+          "last": "最后"
+        },
+        "only on ground": "仅地面时挖脚",
+        "box corners": "包含角落",
+        "box head level": "包含头部层"
+      },
       "client setting": {
         "_value": "客户端设置",
         "general": "常规",
@@ -830,6 +875,7 @@
         "search range": "搜索范围",
         "aim range": "瞄准范围",
         "fov": "视野角度",
+        "rotate": "转头",
         "rotation speed": "旋转速度",
         "rotation priority": {
           "_value": "旋转优先级",
@@ -1595,6 +1641,7 @@
       },
       "flight": {
         "_value": "飞行",
+        "stop on disable": "关闭时重置加速度",
         "horizontal speed": "水平速度",
         "vertical speed": "垂直速度"
       },
