@@ -21,8 +21,6 @@ val sodiumNeoForgeOuterJar by configurations.creating {
 val kotlinRuntimeLibraries = listOf(
     "org.jetbrains.kotlin:kotlin-stdlib:${libs.versions.kotlin.get()}",
     "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${libs.versions.kotlinx.coroutines.get()}",
-    "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:${libs.versions.kotlinx.serialization.get()}",
-    "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:${libs.versions.kotlinx.serialization.get()}",
 )
 
 val extractSodiumNeoForgeModJar by tasks.registering(Copy::class) {

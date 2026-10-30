@@ -34,8 +34,6 @@ dependencies {
     compileOnly("org.bytedeco:javacv-platform:1.5.11")
     // 共享 Kotlin 源码可用 kotlinx 库；运行时分发由 fabric/neoforge 的 jar-in-jar 声明负责。
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.serialization.json)
 }
 
 configurations {

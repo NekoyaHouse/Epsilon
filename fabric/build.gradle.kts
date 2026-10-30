@@ -24,12 +24,8 @@ dependencies {
     // Kotlin 运行时与 kotlinx 库以 Jar-in-Jar 形式嵌套进 META-INF/jars，
     // 由 Fabric Loader 自动解包加载，因此玩家不需要额外安装 Kotlin。
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.serialization.json)
     include(libs.kotlin.stdlib.get())
     include(libs.kotlinx.coroutines.core.get())
-    include(libs.kotlinx.serialization.core.get())
-    include(libs.kotlinx.serialization.json.get())
 }
 
 loom {
