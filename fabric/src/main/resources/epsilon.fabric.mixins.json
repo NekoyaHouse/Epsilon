@@ -5,6 +5,7 @@
   "client": [
     "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext",
+    "MixinGui",
     "MixinMinecraftFabric"
   ],
   "injectors": {
