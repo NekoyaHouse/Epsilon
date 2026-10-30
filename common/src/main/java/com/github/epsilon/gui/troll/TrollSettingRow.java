@@ -131,7 +131,7 @@ public class TrollSettingRow {
             if (setting instanceof IntSetting || setting instanceof DoubleSetting) {
                 drawNumericEditing(scope, metrics);
             } else {
-                scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE));
+                scope.layer(3, content -> input.draw(content, TrollTheme.metrics(metrics), bounds.x(), bounds.y(), bounds.width(), bounds.height(), mouseX, mouseY, "", TrollTheme.TEXT_SCALE, true));
             }
             return;
         }
@@ -139,12 +139,12 @@ public class TrollSettingRow {
         float valueWidth = setting instanceof ColorSetting ? metrics.getHeight(TrollTheme.TEXT_SCALE) + 9.0f : Math.min(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width() * 0.48f);
         float scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - clicked * 0.1f);
         Color text = setting != null && !setting.isPlatformSupported() ? TrollTheme.alpha(TrollTheme.text(), 110) : TrollTheme.text();
-        scope.text(3, TrollTheme.trim(label(), metrics, scale, bounds.width() - valueWidth - 10.5f), bounds.x() + 3.0f + h * 3.0f, bounds.y() + 2.25f, scale, text);
+        scope.textWithShadow(3, TrollTheme.trim(label(), metrics, scale, bounds.width() - valueWidth - 10.5f), bounds.x() + 3.0f + h * 3.0f, bounds.y() + 2.25f, scale, text);
         if (setting instanceof ColorSetting color) {
             drawColorSwatch(scope, metrics, color.getValue());
             return;
         }
-        scope.text(3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth), bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, text);
+        scope.textWithShadow(3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth), bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, text);
     }
 
     private void drawNumericEditing(UiTree.Scope scope, TextRenderer metrics) {
@@ -155,10 +155,10 @@ public class TrollSettingRow {
         float valueWidth = Math.min(metrics.getWidth(text, valueScale), bounds.width() * 0.48f);
         float valueX = bounds.right() - valueWidth - 3.0f;
 
-        scope.text(3, TrollTheme.trim(label(), metrics, labelScale,
+        scope.textWithShadow(3, TrollTheme.trim(label(), metrics, labelScale,
                         Math.max(1.0f, bounds.width() - valueWidth - 10.5f)),
                 bounds.x() + 3.0f, textY, labelScale, TrollTheme.text());
-        scope.text(3, TrollTheme.trim(text, metrics, valueScale, valueWidth),
+        scope.textWithShadow(3, TrollTheme.trim(text, metrics, valueScale, valueWidth),
                 valueX, bounds.bottom() - metrics.getHeight(valueScale) - 3.0f,
                 valueScale, TrollTheme.text());
 

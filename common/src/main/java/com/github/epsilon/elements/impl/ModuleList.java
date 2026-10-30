@@ -40,7 +40,7 @@ public class ModuleList extends HudModule {
     }
 
     private final EnumSetting<DisplayMode> mode = enumSetting("Mode", DisplayMode.Normal);
-    private final DoubleSetting lineSpacing = doubleSetting("Line Spacing", 3.0, 0.0, 12.0, 0.5, () -> mode.is(DisplayMode.Simple));
+    private final DoubleSetting lineSpacing = doubleSetting("Line Spacing", 0.0, -3.0, 3.0, 0.5, () -> mode.is(DisplayMode.Simple));
     private final DoubleSetting horizontalPadding = doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting verticalPadding = doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, () -> mode.is(DisplayMode.Normal));
     private final DoubleSetting lineWidth = doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, () -> mode.is(DisplayMode.Normal));

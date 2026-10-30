@@ -8,6 +8,7 @@ import com.github.epsilon.gui.lib.render.LuminUiRenderer;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -79,6 +80,9 @@ public class UiTree {
      * 作用域负责收集节点、传播动画活动状态，并在需要时把子树包装成 layer 或 viewport。
      */
     public static class Scope {
+
+        private static final float TEXT_SHADOW_OFFSET = 0.703125f;
+        private static final float TEXT_SHADOW_RGB_SCALE = 0.25f;
 
         private List<UiNode> nodes = new ArrayList<>();
         private boolean hasActiveAnimations;
@@ -476,6 +480,28 @@ public class UiTree {
 
         public void text(int layer, String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
             addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
+        }
+
+        public void textWithShadow(String text, float x, float y, float scale, Color color) {
+            textWithShadow(0, text, x, y, scale, color, null);
+        }
+
+        public void textWithShadow(int layer, String text, float x, float y, float scale, Color color) {
+            textWithShadow(layer, text, x, y, scale, color, null);
+        }
+
+        public void textWithShadow(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            textWithShadow(0, text, x, y, scale, color, fontLoader);
+        }
+
+        public void textWithShadow(int layer, String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            if (text == null || text.isEmpty() || color == null || color.getAlpha() == 0) {
+                return;
+            }
+            float offset = TEXT_SHADOW_OFFSET * scale;
+            Color shadow = new Color(ARGB.scaleRGB(color.getRGB(), TEXT_SHADOW_RGB_SCALE), true);
+            text(layer, text, x + offset, y + offset, scale, shadow, fontLoader);
+            text(layer, text, x, y, scale, color, fontLoader);
         }
 
         public void gradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {

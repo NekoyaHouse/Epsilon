@@ -124,7 +124,7 @@ public class TrollConfigWindow extends TrollWindow {
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics);
         inputField.draw(scope, TrollTheme.metrics(metrics), inputBounds.x(), inputBounds.y(),
                 inputBounds.width(), inputBounds.height(), mouseX, mouseY,
-                EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE);
+                EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true);
 
         for (ActionButton button : actionButtons) {
             boolean hovered = button.bounds().contains(mouseX, mouseY);
@@ -132,14 +132,14 @@ public class TrollConfigWindow extends TrollWindow {
                     TrollTheme.alpha(TrollTheme.primary(), hovered ? 190 : 70));
             String label = TrollTheme.trim(button.type().label(), metrics, TrollTheme.VALUE_SCALE,
                     button.bounds().width() - 8.0f);
-            scope.text(2, label,
+            scope.textWithShadow(2, label,
                     button.bounds().centerX() - metrics.getWidth(label, TrollTheme.VALUE_SCALE) / 2.0f,
                     button.bounds().y() + (button.bounds().height() - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                     TrollTheme.VALUE_SCALE, TrollTheme.text());
         }
 
         if (!status.isBlank()) {
-            scope.text(2, TrollTheme.trim(status, metrics, TrollTheme.VALUE_SCALE, statusBounds.width()),
+            scope.textWithShadow(2, TrollTheme.trim(status, metrics, TrollTheme.VALUE_SCALE, statusBounds.width()),
                     statusBounds.x(), statusBounds.y() + (statusBounds.height() - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                     TrollTheme.VALUE_SCALE, TrollTheme.text());
         }
@@ -148,7 +148,7 @@ public class TrollConfigWindow extends TrollWindow {
         scope.scissor(listViewport, content -> {
             if (rows.isEmpty()) {
                 String empty = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName();
-                content.text(2, empty,
+                content.textWithShadow(2, empty,
                         listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
                         listViewport.y() + (listViewport.height() - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                         TrollTheme.VALUE_SCALE, TrollTheme.text());
@@ -162,7 +162,7 @@ public class TrollConfigWindow extends TrollWindow {
                                 : new Color(255, 255, 255, hovered ? 30 : 16));
 
                 float nameScale = TrollTheme.VALUE_SCALE;
-                content.text(2, TrollTheme.trim(row.name(), metrics, nameScale,
+                content.textWithShadow(2, TrollTheme.trim(row.name(), metrics, nameScale,
                                 row.bounds().width() - DELETE_BUTTON_SIZE - 18.0f),
                         row.bounds().x() + 5.0f,
                         row.bounds().y() + 2.0f,
@@ -171,7 +171,7 @@ public class TrollConfigWindow extends TrollWindow {
                 String hint = active
                         ? EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
                         : EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName();
-                content.text(2, TrollTheme.trim(hint, metrics, TrollTheme.VALUE_SCALE * 0.82f,
+                content.textWithShadow(2, TrollTheme.trim(hint, metrics, TrollTheme.VALUE_SCALE * 0.82f,
                                 row.bounds().width() - DELETE_BUTTON_SIZE - 18.0f),
                         row.bounds().x() + 5.0f,
                         row.bounds().bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
@@ -182,7 +182,7 @@ public class TrollConfigWindow extends TrollWindow {
                         row.deleteBounds().width(), row.deleteBounds().height(),
                         TrollTheme.alpha(TrollTheme.primary(), deleteHovered ? 180 : 40));
                 float iconScale = TrollTheme.VALUE_SCALE;
-                content.text(4, IconChars.CLOSE,
+                content.textWithShadow(4, IconChars.CLOSE,
                         row.deleteBounds().centerX() - metrics.getWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS) / 2.0f,
                         row.deleteBounds().y() + (row.deleteBounds().height() - metrics.getHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f,
                         iconScale, TrollTheme.text(), StaticFontLoader.ICONS);

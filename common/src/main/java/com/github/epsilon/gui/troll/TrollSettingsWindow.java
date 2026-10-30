@@ -117,7 +117,7 @@ public class TrollSettingsWindow extends TrollWindow {
                 } else {
                     content.rect(1, entry.bounds.x(), entry.bounds.y(), entry.bounds.width(), entry.bounds.height(), new Color(255, 255, 255, entry.bounds.contains(mouseX, mouseY) ? 32 : 12));
                     String label = (entry.section.isCollapsed() ? "+ " : "- ") + entry.section.title();
-                    content.text(3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width() - 18.0f), entry.bounds.x() + 9.0f, entry.bounds.y() + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text());
+                    content.textWithShadow(3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width() - 18.0f), entry.bounds.x() + 9.0f, entry.bounds.y() + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text());
                 }
             }
             for (Entry entry : entries) {

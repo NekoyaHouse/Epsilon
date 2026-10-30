@@ -89,10 +89,10 @@ public class TrollColorPicker extends TrollWindow {
             UiRect slider = sliders[i];
             scope.rect(1, slider.x(), slider.y(), slider.width(), slider.height(), new Color(0, 0, 0, 40));
             scope.rect(1, slider.x(), slider.y(), slider.width() * values[i] / 255.0f, slider.height(), TrollTheme.alpha(fills[i], 200));
-            scope.text(3, TrollTheme.trim(CHANNELS[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, slider.width() - 33.0f),
+            scope.textWithShadow(3, TrollTheme.trim(CHANNELS[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, slider.width() - 33.0f),
                     slider.x() + 3.0f, slider.y() + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text());
             String value = Integer.toString(values[i]);
-            scope.text(3, value, slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
+            scope.textWithShadow(3, value, slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
                     slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, TrollTheme.text());
         }
         drawPreview(scope, previousColor, original);
@@ -103,7 +103,7 @@ public class TrollColorPicker extends TrollWindow {
             scope.rect(1, button.x(), button.y(), button.width(), button.height(),
                     TrollTheme.alpha(TrollTheme.primary(), button.contains(mouseX, mouseY) ? 180 : 70));
             String label = TrollTheme.trim(labels[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, button.width() - 6.0f);
-            scope.text(3, label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
+            scope.textWithShadow(3, label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
                     button.y() + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text());
         }
     }

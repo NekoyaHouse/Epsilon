@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 
+import java.awt.*;
 import java.util.function.Predicate;
 
 import static com.github.epsilon.Constants.mc;
@@ -32,6 +33,10 @@ public class DropdownTextField {
     }
 
     public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+        draw(scope, textMetrics, x, y, width, height, mouseX, mouseY, placeholder, textScale, false);
+    }
+
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale, boolean textShadow) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
         scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
@@ -40,7 +45,13 @@ public class DropdownTextField {
         float textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f;
         float textX = x + 4.0f;
         updateCursorLayout(textMetrics, textX, textScale);
-        scope.text(trimToWidth(display, textScale, width - 8.0f, textMetrics), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
+        String visibleText = trimToWidth(display, textScale, width - 8.0f, textMetrics);
+        Color textColor = showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY;
+        if (textShadow) {
+            scope.textWithShadow(visibleText, textX, textY, textScale, textColor);
+        } else {
+            scope.text(visibleText, textX, textY, textScale, textColor);
+        }
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());

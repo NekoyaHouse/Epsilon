@@ -52,7 +52,7 @@ public class TrollTheme {
         if (titleBar) {
             scope.rect(bounds.x(), bounds.y(), bounds.width(), headerHeight, primary());
         }
-        scope.text(3, trim(title, metrics, TEXT_SCALE, bounds.width() - 9.0f), bounds.x() + 4.5f, bounds.y() + 4.5f, TEXT_SCALE, text());
+        scope.textWithShadow(3, trim(title, metrics, TEXT_SCALE, bounds.width() - 9.0f), bounds.x() + 4.5f, bounds.y() + 4.5f, TEXT_SCALE, text());
         if (GuiSetting.INSTANCE.windowOutline.getValue()) {
             scope.rectOutline(4, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0.5f, alpha(primary(), 255));
         }

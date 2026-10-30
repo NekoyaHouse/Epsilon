@@ -82,19 +82,19 @@ public class TrollFriendWindow extends TrollWindow {
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics);
         inputField.draw(scope, TrollTheme.metrics(metrics), inputBounds.x(), inputBounds.y(),
                 inputBounds.width(), inputBounds.height(), mouseX, mouseY,
-                EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE);
+                EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true);
 
         boolean addHovered = addBounds.contains(mouseX, mouseY);
         scope.rect(1, addBounds.x(), addBounds.y(), addBounds.width(), addBounds.height(),
                 TrollTheme.alpha(TrollTheme.primary(), addHovered ? 190 : 70));
-        scope.text(3, "+", addBounds.centerX() - metrics.getWidth("+", TrollTheme.TEXT_SCALE) / 2.0f,
+        scope.textWithShadow(3, "+", addBounds.centerX() - metrics.getWidth("+", TrollTheme.TEXT_SCALE) / 2.0f,
                 addBounds.y() + (addBounds.height() - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
                 TrollTheme.TEXT_SCALE, TrollTheme.text());
 
         scope.scissor(listViewport, content -> {
             if (rows.isEmpty()) {
                 String empty = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName();
-                content.text(2, empty,
+                content.textWithShadow(2, empty,
                         listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
                         listViewport.y() + (listViewport.height() - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                         TrollTheme.VALUE_SCALE, TrollTheme.text());
@@ -104,7 +104,7 @@ public class TrollFriendWindow extends TrollWindow {
                 boolean hovered = row.bounds().contains(mouseX, mouseY);
                 content.rect(1, row.bounds().x(), row.bounds().y(), row.bounds().width(), row.bounds().height(),
                         new Color(255, 255, 255, hovered ? 30 : 16));
-                content.text(2, TrollTheme.trim(row.name(), metrics, TrollTheme.TEXT_SCALE,
+                content.textWithShadow(2, TrollTheme.trim(row.name(), metrics, TrollTheme.TEXT_SCALE,
                                 row.bounds().width() - REMOVE_BUTTON_SIZE - 12.0f),
                         row.bounds().x() + 5.0f,
                         row.bounds().y() + (row.bounds().height() - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
@@ -115,7 +115,7 @@ public class TrollFriendWindow extends TrollWindow {
                         row.removeBounds().width(), row.removeBounds().height(),
                         TrollTheme.alpha(TrollTheme.primary(), removeHovered ? 180 : 40));
                 float iconScale = TrollTheme.VALUE_SCALE;
-                content.text(4, IconChars.CLOSE,
+                content.textWithShadow(4, IconChars.CLOSE,
                         row.removeBounds().centerX() - metrics.getWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS) / 2.0f,
                         row.removeBounds().y() + (row.removeBounds().height() - metrics.getHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f,
                         iconScale, TrollTheme.text(), StaticFontLoader.ICONS);

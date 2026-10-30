@@ -326,7 +326,7 @@ public class TrollGuiScreen extends Screen implements ListSettingPopupScreen {
         float iconScale = 0.92f;
         float iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS);
         float iconHeight = metrics.getHeight(iconScale, StaticFontLoader.ICONS);
-        scope.text(4, icon,
+        scope.textWithShadow(4, icon,
                 bounds.centerX() - iconWidth * 0.5f,
                 bounds.centerY() - iconHeight * 0.5f,
                 iconScale,

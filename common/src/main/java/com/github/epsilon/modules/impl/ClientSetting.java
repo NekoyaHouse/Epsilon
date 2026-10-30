@@ -118,7 +118,7 @@ public class ClientSetting extends Module {
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.gui.setScreen(HudEditorScreen.INSTANCE));
 
     // General
-    public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", InputConstants.KEY_RSHIFT).group(sgGeneral);
+    public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", InputConstants.KEY_RCONTROL).group(sgGeneral);
 
     public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> mc.gui.setScreen(getGuiScreen())).group(sgGeneral);
 
