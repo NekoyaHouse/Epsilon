@@ -53,9 +53,9 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
     private val mode by enumSetting("Mode", Mode.Vanilla)
     private val food by boolSetting("Food", true)
-    private val bow by boolSetting("Bow", true, Setting.Dependency { mode != Mode.GrimBlink })
-    private val crossbow by boolSetting("Crossbow", true, Setting.Dependency { mode != Mode.GrimBlink })
-    private val cobweb by boolSetting("Cobweb", true, Setting.Dependency { mode = = Mode.Vanilla })
+    private val bow by boolSetting("Bow", true, dependency = { mode != Mode.GrimBlink })
+    private val crossbow by boolSetting("Crossbow", true, dependency = { mode != Mode.GrimBlink })
+    private val cobweb by boolSetting("Cobweb", true, dependency = { mode == Mode.Vanilla })
 
     private var ticks = 0
     private var eating = false
@@ -72,7 +72,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             if (eating) {
                 ticks++
                 if (Math.toIntExact(packets.stream().filter { it is ClientboundPingPacket }.count()) > 150 && ticks > 1) {
-                    NotificationManager.INSTANCE.error(
+                    NotificationManager.error(
                         translatedName,
                         EpsilonTranslations.Notifications.TRANSACTION_COUNT_TOO_HIGH.getTranslatedName()
                     )
@@ -161,7 +161,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
         handler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (mode = = Mode.GrimBlink && eating && packet is ServerboundPlayerActionPacket &&
+            if (mode == Mode.GrimBlink && eating && packet is ServerboundPlayerActionPacket &&
                 packet.action == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM
             ) {
                 eating = false
@@ -179,8 +179,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
         nonNullListener<SlowdownEvent> { event ->
             if (!food && player.useItem.has(DataComponents.FOOD)) return@nonNullListener
-            if ((!bow || mode = = Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@nonNullListener
-            if ((!crossbow || mode = = Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@nonNullListener
+            if ((!bow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@nonNullListener
+            if ((!crossbow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@nonNullListener
 
             when (mode) {
                 Mode.Vanilla -> cancel(event)
@@ -192,7 +192,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     }
 
     fun isWorking(): Boolean {
-        return isEnabled && mode = = Mode.GrimBlink && eating
+        return isEnabled && mode == Mode.GrimBlink && eating
     }
 
     fun stop() {
@@ -259,7 +259,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     }
 
     fun noWeb(): Boolean {
-        return isEnabled && mode = = Mode.Vanilla && cobweb
+        return isEnabled && mode == Mode.Vanilla && cobweb
     }
 
 }

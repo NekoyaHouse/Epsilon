@@ -24,12 +24,12 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private val textColor by colorSetting("Text Color", Color(248, 249, 252, 245))
     private val textSecondary by colorSetting("Text Secondary", Color(210, 214, 225, 170))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, Setting.Dependency { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), Setting.Dependency { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), dependency = { drawShadow })
     private val backgroundBlur by boolSetting("Background Blur", true)
     private val blurStrength by intSetting("Blur Strength", 5, 1, 16, 1)
     private val smoothNumber by boolSetting("Smooth Number", true)
-    private val numberDelay by doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, Setting.Dependency { smoothNumber })
+    private val numberDelay by doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, dependency = { smoothNumber })
 
     private var initialized: Boolean = false
     private var previousCountText: String = "0"

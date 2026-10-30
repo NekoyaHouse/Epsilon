@@ -16,7 +16,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
     private val inputField: DropdownTextField = DropdownTextField(32)
 
     override fun computeContentHeight(): Float {
-        val friendCount = FriendManager.friends.size
+        val friendCount = FriendManager.getFriends().size
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + Math.max(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP))
     }
 
@@ -49,7 +49,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
         val addTextY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(plusScale)) / 2.0f
         scope.text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
 
-        val friends = FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
+        val friends = FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
         var rowY = fieldY + FIELD_HEIGHT + GAP
         if (friends.isEmpty()) {
             val emptyText = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
@@ -106,7 +106,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
         inputField.blur()
 
         var rowY = fieldY + FIELD_HEIGHT + GAP
-        for (name in FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
+        for (name in FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
             val removeX = x + width - PADDING - 18.0f
             val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
             if (isHovered(mouseX, mouseY, removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE)) {

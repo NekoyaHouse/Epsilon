@@ -35,7 +35,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     private val scale by doubleSetting("Scale", 0.75, 0.4, 1.4, 0.05)
     private val limitMinScale by boolSetting("Limit Min Scale", false)
     private val minScale by doubleSetting(
-        "Min Scale", 0.5, 0.1, 1.4, 0.05, Setting.Dependency { limitMinScale }
+        "Min Scale", 0.5, 0.1, 1.4, 0.05, dependency = { limitMinScale }
     )
     private val heightOffset by doubleSetting("Height Offset", 0.5, 0.0, 1.5, 0.05)
     private val showSelf by boolSetting("Show Self", false)
@@ -45,31 +45,31 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     private val outline by boolSetting("Outline", true)
     private val nameColor by colorSetting("Name Color", Color(247, 249, 252, 245))
     private val friendColor by colorSetting(
-        "Friend Color", Color(105, 229, 166, 245), Setting.Dependency { friendStatus }
+        "Friend Color", Color(105, 229, 166, 245), dependency = { friendStatus }
     )
     private val teamColor by colorSetting(
-        "Team Color", Color(116, 210, 150, 245), Setting.Dependency { teamStatus }
+        "Team Color", Color(116, 210, 150, 245), dependency = { teamStatus }
     )
     private val healthColor by colorSetting(
-        "Health Color", Color(215, 220, 228, 245), Setting.Dependency { showHealth }
+        "Health Color", Color(215, 220, 228, 245), dependency = { showHealth }
     )
     private val heartColor by colorSetting(
-        "Heart Color", Color(255, 91, 105, 250), Setting.Dependency { showHealth }
+        "Heart Color", Color(255, 91, 105, 250), dependency = { showHealth }
     )
     private val backgroundColor by colorSetting("Background Color", Color(13, 16, 20, 165))
     private val outlineColor by colorSetting(
-        "Outline Color", Color(255, 255, 255, 28), Setting.Dependency { outline }
+        "Outline Color", Color(255, 255, 255, 28), dependency = { outline }
     )
     private val backgroundBlur by boolSetting("Background Blur", true)
     private val blurStrength by intSetting(
-        "Blur Strength", 6, 1, 16, 1, Setting.Dependency { backgroundBlur }
+        "Blur Strength", 6, 1, 16, 1, dependency = { backgroundBlur }
     )
     private val dropShadow by boolSetting("Drop Shadow", true)
     private val shadowBlur by doubleSetting(
-        "Shadow Blur", 8.0, 2.0, 24.0, 0.5, Setting.Dependency { dropShadow }
+        "Shadow Blur", 8.0, 2.0, 24.0, 0.5, dependency = { dropShadow }
     )
     private val shadowColor by colorSetting(
-        "Shadow Color", Color(0, 0, 0, 135), Setting.Dependency { dropShadow }
+        "Shadow Color", Color(0, 0, 0, 135), dependency = { dropShadow }
     )
 
     private val schedulerSupplier: Supplier<Render2DScheduler> = Suppliers.memoize { Render2DScheduler() }
@@ -156,14 +156,14 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         if (friendStatus && FriendManager.isFriend(player)) {
             contents.add(Segment(IconChars.HANDSHAKE, "Friend", true, friendColor, friendColor))
         }
-        if (teamStatus && TargetManager.INSTANCE.isSameTeam(player)) {
+        if (teamStatus && TargetManager.isSameTeam(player)) {
             contents.add(Segment(IconChars.GROUPS, "Team", true, teamColor, teamColor))
         }
         contents.add(Segment(null, player.name.string, true, nameColor, nameColor))
         if (showHealth) {
             contents.add(
                 Segment(
-                    IconChars.FAVORITE, HealthManager.INSTANCE.getHealth(player).toString(), false,
+                    IconChars.FAVORITE, HealthManager.getHealth(player).toString(), false,
                     heartColor, healthColor
                 )
             )

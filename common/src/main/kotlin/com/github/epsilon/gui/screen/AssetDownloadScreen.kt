@@ -49,7 +49,7 @@ class AssetDownloadScreen(
     }
 
     override fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int) {
-        val manager = AssetManager.INSTANCE
+        val manager = AssetManager
         val job = manager.activeJob()
         val running = job != null && job.isRunning()
 
@@ -110,7 +110,7 @@ class AssetDownloadScreen(
             return
         }
 
-        val allReady = assets.all { asset -> AssetManager.INSTANCE.isReady(asset) }
+        val allReady = assets.all { asset -> AssetManager.isReady(asset) }
         scope.text(
             if (allReady) EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_MESSAGE.getTranslatedName()
             else EpsilonTranslations.Resources.HINT.getTranslatedName(),
@@ -119,7 +119,7 @@ class AssetDownloadScreen(
     }
 
     override fun buttons(): List<DialogButton> {
-        val manager = AssetManager.INSTANCE
+        val manager = AssetManager
         val job = manager.activeJob()
         if (job != null && job.isRunning()) {
             return listOf(
@@ -163,7 +163,7 @@ class AssetDownloadScreen(
 
     override fun onDialogClosed() {
         if (declineOnClose && !downloadRequested) {
-            AssetManager.INSTANCE.markDeclined(assets)
+            AssetManager.markDeclined(assets)
         }
     }
 

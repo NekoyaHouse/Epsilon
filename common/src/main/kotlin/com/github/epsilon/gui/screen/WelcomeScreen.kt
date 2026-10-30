@@ -93,7 +93,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
                 .withValues(EpsilonLanguage.values().toList())
                 .create(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT, Component.literal(LANGUAGE)) { _, language ->
                     ClientSetting.language.value = language
-                    ConfigManager.INSTANCE.saveNow()
+                    ConfigManager.saveNow()
                 }
         )
         addRenderableWidget(
@@ -169,7 +169,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
     private fun confirmDoNotShowAgain() {
         (ClientSetting.settings.firstOrNull { setting -> setting.name == "Show Welcome Screen" }
             as? BoolSetting)?.value = false
-        ConfigManager.INSTANCE.saveNow()
+        ConfigManager.saveNow()
         continueToNextScreen()
     }
 

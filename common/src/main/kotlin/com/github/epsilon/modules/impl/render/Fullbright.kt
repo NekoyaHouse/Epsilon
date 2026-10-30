@@ -21,11 +21,11 @@ object Fullbright : Module("Fullbright", Category.RENDER) {
         Potion
     }
 
-    private val mode by enumSetting("Mode", Mode.Gamma) { value ->
+    private val mode by enumSetting("Mode", Mode.Gamma, onChanged = { value ->
         if (value == Mode.Gamma) {
             mc.player?.removeEffect(MobEffects.NIGHT_VISION)
         }
-    }
+    })
 
     fun isGammaMode(): Boolean = isEnabled && mode == Mode.Gamma
 

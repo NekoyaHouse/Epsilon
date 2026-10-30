@@ -45,7 +45,7 @@ interface DropdownPanel {
 
     fun setPosition(x: Float, y: Float)
 
-    fun setMaxPanelHeight(maxPanelHeight: Float)
+    fun updateMaxPanelHeight(maxPanelHeight: Float)
 
     val x: Float
 

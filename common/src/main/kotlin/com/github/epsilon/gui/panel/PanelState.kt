@@ -158,7 +158,7 @@ class PanelState {
     private fun filteredModules(): List<Module> {
         val loweredSearch = searchQuery.lowercase()
         return ArrayList(
-            ModuleManager.INSTANCE.getModules().stream()
+            ModuleManager.getModules().stream()
                 .filter { module -> module.category == selectedCategory }
                 .filter { module -> loweredSearch.isBlank() || matchesSearch(module, loweredSearch) }
                 .sorted(getComparator())

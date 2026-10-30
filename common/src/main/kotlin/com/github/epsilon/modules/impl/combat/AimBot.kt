@@ -35,22 +35,22 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     }
 
     private val mode by enumSetting("Mode", Mode.AimAssist)
-    private val rotation by enumSetting("Rotation", Rotation.Silent, Setting.Dependency { !mode.`is`(Mode.AimAssist) })
-    private val aimStrength by intSetting("Aim Strength", 30, 1, 100, 1, Setting.Dependency { mode.`is`(Mode.AimAssist) })
-    private val aimSmooth by intSetting("Aim Smooth", 45, 1, 180, 1, Setting.Dependency { mode.`is`(Mode.AimAssist) })
-    private val aimTime by intSetting("Aim Time", 2, 1, 10, 1, Setting.Dependency { mode.`is`(Mode.AimAssist) })
-    private val onlyWeapon by boolSetting("Only Weapon", false, Setting.Dependency { mode.`is`(Mode.AimAssist) })
-    private val lmbActivation by boolSetting("LMB Activation", false, Setting.Dependency { mode.`is`(Mode.AimAssist) })
+    private val rotation by enumSetting("Rotation", Rotation.Silent, dependency = { mode != Mode.AimAssist })
+    private val aimStrength by intSetting("Aim Strength", 30, 1, 100, 1, dependency = { mode == Mode.AimAssist })
+    private val aimSmooth by intSetting("Aim Smooth", 45, 1, 180, 1, dependency = { mode == Mode.AimAssist })
+    private val aimTime by intSetting("Aim Time", 2, 1, 10, 1, dependency = { mode == Mode.AimAssist })
+    private val onlyWeapon by boolSetting("Only Weapon", false, dependency = { mode == Mode.AimAssist })
+    private val lmbActivation by boolSetting("LMB Activation", false, dependency = { mode == Mode.AimAssist })
     private val ignoreWalls by boolSetting("Ignore Walls", true)
     private val reactionTime by intSetting(
         "Reaction Time", 80, 1, 500, 1,
-        Setting.Dependency { mode.`is`(Mode.AimAssist) && !ignoreWalls })
-    private val ignoreInvisible by boolSetting("Ignore Invis", false, Setting.Dependency { mode.`is`(Mode.AimAssist) })
+        dependency = { mode == Mode.AimAssist && !ignoreWalls })
+    private val ignoreInvisible by boolSetting("Ignore Invis", false, dependency = { mode == Mode.AimAssist })
 
-    private val predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1, Setting.Dependency { mode.`is`(Mode.BowAim) })
-    private val bowFov by intSetting("Bow FOV", 90, 10, 360, 1, Setting.Dependency { mode.`is`(Mode.BowAim) })
-    private val bowRange by intSetting("Bow Range", 64, 8, 128, 1, Setting.Dependency { mode.`is`(Mode.BowAim) })
-    private val bowSmooth by intSetting("Bow Smooth", 30, 5, 100, 1, Setting.Dependency { mode.`is`(Mode.BowAim) })
+    private val predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1, dependency = { mode == Mode.BowAim })
+    private val bowFov by intSetting("Bow FOV", 90, 10, 360, 1, dependency = { mode == Mode.BowAim })
+    private val bowRange by intSetting("Bow Range", 64, 8, 128, 1, dependency = { mode == Mode.BowAim })
+    private val bowSmooth by intSetting("Bow Smooth", 30, 5, 100, 1, dependency = { mode == Mode.BowAim })
 
     private var target: Entity? = null
     private var rotationYaw = 0.0f
@@ -69,14 +69,14 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         }
 
         nonNullListener<Render3DEvent> {
-            if (mode.`is`(Mode.AimAssist)) {
+            if (mode == Mode.AimAssist) {
                 if (!rotationYaw.isNaN()) {
                     player.yRot = Mth.lerp(assistAcceleration, player.yRot, rotationYaw)
                 }
                 return@nonNullListener
             }
 
-            if (mode.`is`(Mode.BowAim) && rotation.`is`(Rotation.Client) && !bowTargetYaw.isNaN()) {
+            if (mode == Mode.BowAim && rotation == Rotation.Client && !bowTargetYaw.isNaN()) {
                 val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
                 val factor = Mth.clamp(bowSmooth / 100.0f * tickDelta, 0.0f, 1.0f)
                 val currentYaw = player.yRot

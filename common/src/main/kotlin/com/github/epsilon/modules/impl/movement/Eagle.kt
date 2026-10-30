@@ -65,7 +65,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
     }
 
     override fun getInfo(): String {
-        return if (minDelay = = maxDelay) {
+        return if (minDelay == maxDelay) {
             minDelay.toString()
         } else {
             minDelay.toString() + "-" + maxDelay.toString()

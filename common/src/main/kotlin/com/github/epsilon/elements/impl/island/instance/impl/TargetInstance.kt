@@ -41,7 +41,7 @@ class TargetInstance(
         val screenMaxWidth = LuminRenderSystem.getScaledWidthInt() - 50f
         targetWidth = Mth.clamp(desired, MIN_WIDTH, Math.max(MIN_WIDTH, screenMaxWidth))
         val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
-        val health = HealthManager.INSTANCE.getHealth(target)
+        val health = HealthManager.getHealth(target)
         val healthRowHeight = Math.max(BAR_HEIGHT, textRenderer.getHeight(HEALTH_SCALE))
         targetHeight = PADDING * 2f + HEAD_SIZE + HEALTH_ROW_GAP + healthRowHeight
 
@@ -89,7 +89,7 @@ class TargetInstance(
         drawTargetIcon(scope, iconX + ICON_SIZE * 0.5f, headY + ICON_TOP_OFFSET + ICON_SIZE * 0.5f)
 
         val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
-        val health = HealthManager.INSTANCE.getHealth(target)
+        val health = HealthManager.getHealth(target)
 
         val healthText = formatHealth(health)
         val maxHealthText = formatHealth(maxHealth)

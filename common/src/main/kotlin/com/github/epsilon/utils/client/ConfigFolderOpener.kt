@@ -15,7 +15,7 @@ object ConfigFolderOpener {
      * @throws IOException 无法创建或打开配置目录时
      */
     fun openConfigFolder(): Path {
-        val configDir = ConfigManager.INSTANCE.getConfigDir()
+        val configDir = ConfigManager.configDir
         Files.createDirectories(configDir)
         Blaze3D.openPath(configDir)
         return configDir

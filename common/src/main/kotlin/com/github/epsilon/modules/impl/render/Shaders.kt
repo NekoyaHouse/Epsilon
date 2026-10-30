@@ -39,7 +39,7 @@ object Shaders : Module("Shaders", Category.RENDER) {
 
     val hands by boolSetting("Hands", true).apply { group(sgTargets) }
     private val players by boolSetting("Players", true).apply { group(sgTargets) }
-    private val self by boolSetting("Self", true, Setting.Dependency { players }).apply { group(sgTargets) }
+    private val self by boolSetting("Self", true, dependency = { players }).apply { group(sgTargets) }
     private val friends by boolSetting("Friends", true).apply { group(sgTargets) }
     private val crystals by boolSetting("Crystals", true).apply { group(sgTargets) }
     private val chests by boolSetting("Chests", true).apply { group(sgTargets) }
@@ -50,13 +50,13 @@ object Shaders : Module("Shaders", Category.RENDER) {
 
     val maxRange by intSetting(
         "Max Range", 64, 16, 256, 1,
-        Setting.Dependency { hasEntityTargets() || chests }
+        dependency = { hasEntityTargets() || chests }
     ).apply { group(sgTargets) }
 
-    val entityShader: ShaderSettings = ShaderSettings("", sgEntityShader, Setting.Dependency { hasEntityTargets() })
-    val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false, Setting.Dependency { friends }).apply { group(sgEntityShader) }
-    val handsShader: ShaderSettings = ShaderSettings("Hands ", sgHandsShader, Setting.Dependency { hands })
-    val chestShader: ShaderSettings = ShaderSettings("Chest ", sgChestShader, Setting.Dependency { chests })
+    val entityShader: ShaderSettings = ShaderSettings("", sgEntityShader, { hasEntityTargets() })
+    val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false, dependency = { friends }).apply { group(sgEntityShader) }
+    val handsShader: ShaderSettings = ShaderSettings("Hands ", sgHandsShader, { hands })
+    val chestShader: ShaderSettings = ShaderSettings("Chest ", sgChestShader, { chests })
 
     fun shouldRenderChest(blockPos: BlockPos): Boolean {
         val player = mc.player ?: return false
@@ -110,7 +110,7 @@ object Shaders : Module("Shaders", Category.RENDER) {
 
     private fun isFriendOrSameTeam(entity: Entity): Boolean = entity !== mc.player &&
             entity is Player &&
-            (FriendManager.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity))
+            (FriendManager.isFriend(entity) || TargetManager.isSameTeam(entity))
 
     private fun hasEntityTargets(): Boolean = players || friends || crystals || creatures ||
             monsters || ambients || others
@@ -121,60 +121,60 @@ object Shaders : Module("Shaders", Category.RENDER) {
         targetEnabled: Setting.Dependency,
     ) {
 
-        val mode: EnumSetting<ShaderManager.Shader> = Shaders.enumSetting(prefix + "Mode", ShaderManager.Shader.Default, targetEnabled).apply { group(group) }
-        val outlineMode: EnumSetting<OutlineMode> = Shaders.enumSetting(prefix + "Outline Mode", OutlineMode.Outline, targetEnabled).apply { group(group) }
+        val mode: EnumSetting<ShaderManager.Shader> = Shaders.enumSetting(prefix + "Mode", ShaderManager.Shader.Default, dependency = targetEnabled).apply { group(group) }
+        val outlineMode: EnumSetting<OutlineMode> = Shaders.enumSetting(prefix + "Outline Mode", OutlineMode.Outline, dependency = targetEnabled).apply { group(group) }
 
         private val outlineAvailable: Setting.Dependency =
-            Setting.Dependency { targetEnabled.check() && outlineMode.`is`(OutlineMode.Outline) }
+            { targetEnabled.check() && outlineMode.`is`(OutlineMode.Outline) }
         private val glowAvailable: Setting.Dependency =
-            Setting.Dependency { targetEnabled.check() && outlineMode.`is`(OutlineMode.Glow) }
+            { targetEnabled.check() && outlineMode.`is`(OutlineMode.Glow) }
 
-        val glowColorMode: EnumSetting<GlowColorMode> = Shaders.enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, glowAvailable).apply { group(group) }
-        val glowRadius by Shaders.intSetting(prefix + "Glow Radius", 4, 2, 30, 1, glowAvailable).apply { group(group) }
-        val glowExposure by Shaders.doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, glowAvailable).apply { group(group) }
-        val glowColor by Shaders.colorSetting(
+        val glowColorMode: EnumSetting<GlowColorMode> = Shaders.enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, dependency = glowAvailable).apply { group(group) }
+        val glowRadius by Shaders.intSetting(prefix + "Glow Radius", 4, 2, 30, 1, dependency = glowAvailable).apply { group(group) }
+        val glowExposure by Shaders.doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, dependency = glowAvailable).apply { group(group) }
+        var glowColor by Shaders.colorSetting(
             prefix + "Glow Color", Color(255, 183, 197),
-            Setting.Dependency { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Solid) }
+            dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Solid) }
         ).apply { group(group) }
         val glowColor1 by Shaders.colorSetting(
             prefix + "Glow Color 1", Color(255, 183, 197),
-            Setting.Dependency { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
+            dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
         val glowColor2 by Shaders.colorSetting(
             prefix + "Glow Color 2", Color(0, 255, 200),
-            Setting.Dependency { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
+            dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
         val glowGradientSpeed by Shaders.doubleSetting(
             prefix + "Glow Gradient Speed", 2.0, 0.1, 10.0, 0.1,
-            Setting.Dependency { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
+            dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
         val factor by Shaders.doubleSetting(
             prefix + "Gradient Factor", 2.0, 0.0, 20.0, 0.1,
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
         val gradient by Shaders.doubleSetting(
             prefix + "Gradient", 2.0, 0.0, 20.0, 0.1,
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
         val gradientAlpha by Shaders.intSetting(
             prefix + "Gradient Alpha", 170, 0, 255, 1,
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
         val lineWidth by Shaders.intSetting(
             prefix + "Line Width", 2, 0, 500, 1,
-            Setting.Dependency { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
+            dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
         ).apply { group(group) }
-        val quality by Shaders.intSetting(prefix + "Quality", 3, 0, 6, 1, outlineAvailable).apply { group(group) }
+        val quality by Shaders.intSetting(prefix + "Quality", 3, 0, 6, 1, dependency = outlineAvailable).apply { group(group) }
         val octaves by Shaders.intSetting(
             prefix + "Smoke Octaves", 10, 5, 30, 1,
-            Setting.Dependency {
+            dependency = {
                 outlineAvailable.check() &&
                         (mode.`is`(ShaderManager.Shader.Smoke) || mode.`is`(ShaderManager.Shader.Gradient))
             }
         ).apply { group(group) }
         val fillAlpha by Shaders.intSetting(
             prefix + "Fill Alpha", 170, 0, 255, 1,
-            Setting.Dependency {
+            dependency = {
                 outlineAvailable.check() &&
                         (mode.`is`(ShaderManager.Shader.Smoke) ||
                                 mode.`is`(ShaderManager.Shader.Gradient) ||
@@ -183,36 +183,36 @@ object Shaders : Module("Shaders", Category.RENDER) {
         ).apply { group(group) }
         val glow by Shaders.boolSetting(
             prefix + "Smoke Glow", true,
-            Setting.Dependency { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
+            dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
         ).apply { group(group) }
         val outlineColor by Shaders.colorSetting(
             prefix + "Outline", Color(255, 255, 255, 136),
-            Setting.Dependency {
+            dependency = {
                 outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Gradient) && !mode.`is`(ShaderManager.Shader.Snow)
             }
         ).apply { group(group) }
         val smokeOutlineColor1 by Shaders.colorSetting(
             prefix + "Smoke Outline", Color(255, 255, 255, 136),
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }
         val smokeOutlineColor2 by Shaders.colorSetting(
             prefix + "Smoke Outline 2", Color(250, 250, 250, 136),
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }
         val fillColor1 by Shaders.colorSetting(
             prefix + "Fill", Color(255, 255, 255, 136),
-            Setting.Dependency { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Gradient) }
+            dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
         val fillColor2 by Shaders.colorSetting(
             prefix + "Smoke Fill", Color(255, 255, 255, 136),
-            Setting.Dependency {
+            dependency = {
                 outlineAvailable.check() &&
                         (mode.`is`(ShaderManager.Shader.Smoke) || mode.`is`(ShaderManager.Shader.Fade))
             }
         ).apply { group(group) }
         val fillColor3 by Shaders.colorSetting(
             prefix + "Smoke Fill 2", Color(255, 255, 255, 136),
-            Setting.Dependency { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
+            dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }
 
     }

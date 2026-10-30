@@ -162,20 +162,20 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         if (elytra) {
             if (!LivingEntity.canGlideUsing(stack, slot)) return 0
 
-            val elytraFlyActive = elytraPriority = = ElytraPriority.ElytraPlus &&
+            val elytraFlyActive = elytraPriority == ElytraPriority.ElytraPlus &&
                 ElytraFly.isEnabled &&
                 !ElytraFly.isArmorMode
-            val preserveEquippedElytra = elytraPriority = = ElytraPriority.Ignore &&
+            val preserveEquippedElytra = elytraPriority == ElytraPriority.Ignore &&
                 player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
 
-            if (elytraFlyActive || preserveEquippedElytra || elytraPriority = = ElytraPriority.Always) {
+            if (elytraFlyActive || preserveEquippedElytra || elytraPriority == ElytraPriority.Always) {
                 enchantmentScore = 999
             }
         }
 
         when (slot) {
             EquipmentSlot.HEAD -> {
-                if (head = = EnchantPriority.Protection) {
+                if (head == EnchantPriority.Protection) {
                     protectionMultiplier = 2
                 } else {
                     blastMultiplier = 2
@@ -183,7 +183,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
             }
 
             EquipmentSlot.CHEST -> {
-                if (body = = EnchantPriority.Protection) {
+                if (body == EnchantPriority.Protection) {
                     protectionMultiplier = 2
                 } else {
                     blastMultiplier = 2
@@ -191,7 +191,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
             }
 
             EquipmentSlot.LEGS -> {
-                if (tights = = EnchantPriority.Protection) {
+                if (tights == EnchantPriority.Protection) {
                     protectionMultiplier = 2
                 } else {
                     blastMultiplier = 2
@@ -199,7 +199,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
             }
 
             EquipmentSlot.FEET -> {
-                if (feet = = EnchantPriority.Protection) {
+                if (feet == EnchantPriority.Protection) {
                     protectionMultiplier = 2
                 } else {
                     blastMultiplier = 2

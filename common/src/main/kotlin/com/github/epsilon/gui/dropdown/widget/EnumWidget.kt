@@ -232,7 +232,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             textColor
         )
         if (!supported) {
-            val badge = EpsilonTranslations.PlatformOnly.BADGE.translatedName
+            val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
             val badgeScale = 0.48f
             // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
             val badgeWidth = textMetrics.textWidth(badge, badgeScale) + 16.0f
@@ -247,7 +247,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
     }
 
     private fun drawPlatformBadge(scope: UiTree.Scope, textMetrics: UiTextMetrics, trailingX: Float) {
-        val label = EpsilonTranslations.PlatformOnly.BADGE.translatedName
+        val label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
         val scale = 0.5f
         val width = textMetrics.textWidth(label, scale) + 16.0f
         val height = 12.0f

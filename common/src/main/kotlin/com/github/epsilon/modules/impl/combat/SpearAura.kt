@@ -105,66 +105,66 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     private val mace by boolSetting("Mace", true)
     private val maceSwapMode by enumSetting(
-        "Mace Swap Mode", MaceSwapMode.Silent, Setting.Dependency { mace })
+        "Mace Swap Mode", MaceSwapMode.Silent, dependency = { mace })
 
     private val esp by boolSetting("ESP", true)
-    private val espMode by enumSetting("ESP Mode", ESPMode.Circle, Setting.Dependency { esp })
+    private val espMode by enumSetting("ESP Mode", ESPMode.Circle, dependency = { esp })
     private val espColor1 by colorSetting(
         "ESP Main", Color(255, 183, 197),
-        Setting.Dependency { esp && espMode.`is`(ESPMode.CaptureMark) })
+        dependency = { esp && espMode == ESPMode.CaptureMark })
     private val espColor2 by colorSetting(
         "ESP Second", Color(255, 133, 161),
-        Setting.Dependency { esp && espMode.`is`(ESPMode.CaptureMark) })
+        dependency = { esp && espMode == ESPMode.CaptureMark })
     private val espSize by doubleSetting(
         "ESP Size", 1.2, 0.5, 3.0, 0.1,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.CaptureMark) })
+        dependency = { esp && espMode == ESPMode.CaptureMark })
     private val espRotSpeed by doubleSetting(
         "Rot Speed", 2.0, 0.5, 10.0, 0.1,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.CaptureMark) })
+        dependency = { esp && espMode == ESPMode.CaptureMark })
     private val waveSpeed by doubleSetting(
         "Wave Speed", 3.0, 0.5, 10.0, 0.1,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.CaptureMark) })
+        dependency = { esp && espMode == ESPMode.CaptureMark })
     private val sideColor by colorSetting(
         "Side Color", Color.WHITE, false,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Circle) })
+        dependency = { esp && espMode == ESPMode.Circle })
     private val lineColor by colorSetting(
         "Line Color", Color(255, 255, 255, 233),
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Circle) })
+        dependency = { esp && espMode == ESPMode.Circle })
     private val circleAlphaFactor by doubleSetting(
         "Circle Alpha Factor", 1.0, 0.0, 2.0, 0.05,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Circle) })
+        dependency = { esp && espMode == ESPMode.Circle })
     private val fireflyColorMode by enumSetting(
         "Firefly Color Mode", FireflyESP.ColorMode.Blend,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        dependency = { esp && espMode == ESPMode.Firefly })
     private val fireflyColor by colorSetting(
         "Firefly Color", Color(149, 149, 149, 255),
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        dependency = { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
         "Firefly Color 2", Color(255, 133, 161, 255),
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Blend) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
         "Firefly Color Mix", 0.65, 0.0, 1.0, 0.05,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Blend) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorSpeed by doubleSetting(
         "Firefly Color Speed", 1.2, 0.1, 6.0, 0.1,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Blend) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyRainbowSpeed by doubleSetting(
         "Firefly Rainbow Speed", 1.0, 0.1, 6.0, 0.1,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Rainbow) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowSaturation by doubleSetting(
         "Firefly Rainbow Saturation", 0.85, 0.1, 1.0, 0.05,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Rainbow) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowBrightness by doubleSetting(
         "Firefly Rainbow Brightness", 1.0, 0.1, 1.0, 0.05,
-        Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) && fireflyColorMode.`is`(FireflyESP.ColorMode.Rainbow) })
+        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyLength by intSetting(
-        "Firefly Length", 14, 8, 128, 1, Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        "Firefly Length", 14, 8, 128, 1, dependency = { esp && espMode == ESPMode.Firefly })
     private val fireflyFactor by intSetting(
-        "Firefly Factor", 8, 1, 10, 1, Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        "Firefly Factor", 8, 1, 10, 1, dependency = { esp && espMode == ESPMode.Firefly })
     private val fireflyShaking by doubleSetting(
-        "Firefly Shaking", 1.8, 0.25, 10.0, 0.25, Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        "Firefly Shaking", 1.8, 0.25, 10.0, 0.25, dependency = { esp && espMode == ESPMode.Firefly })
     private val fireflyAmplitude by doubleSetting(
-        "Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, Setting.Dependency { esp && espMode.`is`(ESPMode.Firefly) })
+        "Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, dependency = { esp && espMode == ESPMode.Firefly })
 
     var target: LivingEntity? = null
     private var targets: List<LivingEntity>? = null
@@ -213,7 +213,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             // 蓄力按键在低优先级监听器同步，晚于本 tick 的瞄准请求。
             autoChargeWanted = isHoldingSpear()
 
-            val newTargets = TargetManager.INSTANCE.acquireTargets(
+            val newTargets = TargetManager.acquireTargets(
                 TargetRequest.of(
                     range,
                     fov.toFloat(),
@@ -297,9 +297,9 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 forward = 1.0f
             }
 
-            event.setForward(forward)
-            event.setStrafe(strafe)
-            event.setSprint(true)
+            event.forward = forward
+            event.strafe = strafe
+            event.apply { isSprint = true }
         }
 
         nonNullListener<Render3DEvent> { event ->
@@ -496,7 +496,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     private fun findMace(): FindItemResult {
         // 攻击只结算主手，因此排除副手槽位 40；Silent 只能操作快捷栏，InvSwitch 才搜索整个主背包。
-        if (maceSwapMode.`is`(MaceSwapMode.InvSwitch)) {
+        if (maceSwapMode == MaceSwapMode.InvSwitch) {
             return InvUtils.find({ stack -> stack.`is`(Items.MACE) }, 0, 35)
         }
         return InvUtils.find({ stack -> stack.`is`(Items.MACE) }, 0, 8)

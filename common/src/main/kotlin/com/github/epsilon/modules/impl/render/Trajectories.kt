@@ -44,12 +44,12 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         RegistryListSetting(
             "Items", defaultItems(), RegistryListSetting.Type.ITEM,
             Predicate { item -> ProjectileSimulator.supports(item) },
-            Setting.Dependency { true }
+            dependency = { true }
         )
     ).apply { group(generalGroup) }
     private val otherPlayers by boolSetting("Other Players", true).apply { group(generalGroup) }
     private val firedProjectiles by boolSetting("Fired Projectiles", false).apply { group(generalGroup) }
-    private val ignoreWitherSkulls by boolSetting("Ignore Wither Skulls", true, Setting.Dependency { firedProjectiles }).apply { group(generalGroup) }
+    private val ignoreWitherSkulls by boolSetting("Ignore Wither Skulls", true, dependency = { firedProjectiles }).apply { group(generalGroup) }
     private val simulationSteps by intSetting("Simulation Steps", 500, 0, 5000, 25).apply { group(generalGroup) }
     private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0, 20, 1).apply { group(renderGroup) }
     private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).apply { group(renderGroup) }
@@ -58,24 +58,24 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     private val impactOutline by boolSetting("Impact Outline", true).apply { group(renderGroup) }
     private val impactFillColor by colorSetting(
         "Impact Fill Color", java.awt.Color(255, 150, 0, 45),
-        Setting.Dependency { impactFill }
+        dependency = { impactFill }
     ).apply { group(renderGroup) }
     private val impactOutlineColor by colorSetting(
         "Impact Outline Color", java.awt.Color(255, 180, 55, 245),
-        Setting.Dependency { impactOutline }
+        dependency = { impactOutline }
     ).apply { group(renderGroup) }
     private val positionBoxes by boolSetting("Render Position Boxes", false).apply { group(renderGroup) }
     private val positionBoxSize by doubleSetting(
         "Position Box Size", 0.02, 0.01, 0.1, 0.005,
-        Setting.Dependency { positionBoxes }
+        dependency = { positionBoxes }
     ).apply { group(renderGroup) }
     private val positionFillColor by colorSetting(
         "Position Fill Color", java.awt.Color(255, 150, 0, 28),
-        Setting.Dependency { positionBoxes }
+        dependency = { positionBoxes }
     ).apply { group(renderGroup) }
     private val positionOutlineColor by colorSetting(
         "Position Outline Color", java.awt.Color(255, 180, 55, 180),
-        Setting.Dependency { positionBoxes }
+        dependency = { positionBoxes }
     ).apply { group(renderGroup) }
 
     private val MULTISHOT_OFFSET: Double = Math.toRadians(10.0)

@@ -46,8 +46,8 @@ object Hat : Module("Hat", Category.RENDER) {
     private val points by intSetting("Points", 30, 3, 180, 1)
     private val size by doubleSetting("Size", 0.5, 0.1, 3.0, 0.1)
     private val offset by doubleSetting("Offset", 2000.0, 0.0, 5000.0, 100.0)
-    private val color by colorSetting("Color", Color(255, 255, 255), Setting.Dependency { mode == Mode.Fade })
-    private val secondColor by colorSetting("Second Color", Color(0, 0, 0), Setting.Dependency { mode == Mode.Fade })
+    private val color by colorSetting("Color", Color(255, 255, 255), dependency = { mode == Mode.Fade })
+    private val secondColor by colorSetting("Second Color", Color(0, 0, 0), dependency = { mode == Mode.Fade })
     private val onlyThirdPerson by boolSetting("Only Third Person", true)
 
     private val positions: Array<DoubleArray> = Array(181) { DoubleArray(2) }

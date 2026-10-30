@@ -36,13 +36,13 @@ object Xray : Module("Xray", Category.RENDER) {
     }
 
     private val plugin: EnumSetting<Plugin> = enumSetting("Plugin", Plugin.New)
-    val wallHack by boolSetting("WallHack", false) { _ -> mc.levelExtractor.allChanged() }
+    val wallHack by boolSetting("WallHack", false, onChanged = { _ -> mc.levelExtractor.allChanged() })
     private val brutForce by boolSetting("Ore Deobf", false)
-    private val fast by boolSetting("Fast", false, Setting.Dependency { brutForce })
-    private val delay by intSetting("Delay", 25, 1, 100, 1, Setting.Dependency { brutForce })
-    private val radius by intSetting("Radius", 5, 1, 64, 1, Setting.Dependency { brutForce })
-    private val up by intSetting("Up", 5, 1, 32, 1, Setting.Dependency { brutForce })
-    private val down by intSetting("Down", 5, 1, 32, 1, Setting.Dependency { brutForce })
+    private val fast by boolSetting("Fast", false, dependency = { brutForce })
+    private val delay by intSetting("Delay", 25, 1, 100, 1, dependency = { brutForce })
+    private val radius by intSetting("Radius", 5, 1, 64, 1, dependency = { brutForce })
+    private val up by intSetting("Up", 5, 1, 32, 1, dependency = { brutForce })
+    private val down by intSetting("Down", 5, 1, 32, 1, dependency = { brutForce })
     private val netherite by boolSetting("Netherite", false)
     private val diamond by boolSetting("Diamond ", false)
     private val gold by boolSetting("Gold", false)
@@ -261,7 +261,7 @@ object Xray : Module("Xray", Category.RENDER) {
     }
 
     private fun log(message: String) {
-        NotificationManager.INSTANCE.info("Xray", message)
+        NotificationManager.info("Xray", message)
     }
 
     class BlockMemory(val blockPos: BlockPos) {

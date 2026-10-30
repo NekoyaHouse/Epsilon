@@ -31,7 +31,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private val arrivalDistance by doubleSetting("Arrival Distance", 8.0, 2.0, 64.0, 0.5)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 10, 180, 10)
     private val takeoffHeight by doubleSetting("Takeoff Height", 192.0, 16.0, 1024.0, 1.0)
-    private val takeoffFirework by boolSetting("Takeoff Firework", true, Setting.Dependency { autoLaunch })
+    private val takeoffFirework by boolSetting("Takeoff Firework", true, dependency = { autoLaunch })
 
     private val saveInterval by intSetting("Save Interval", 100, 20, 1200, 20)
     private val writeRecordButton by buttonSetting("Write Record", Runnable { writeRecord(true) })

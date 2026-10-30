@@ -256,7 +256,7 @@ class ReisaDropdownCompanion {
          * 返回玲纱立绘纹理，资源尚未下载时返回 `null`。
          */
         fun texture(): Identifier? {
-            return AssetManager.INSTANCE.reisaTexture(textureSuffix)
+            return AssetManager.reisaTexture(textureSuffix)
         }
 
         fun durationMs(): Long {

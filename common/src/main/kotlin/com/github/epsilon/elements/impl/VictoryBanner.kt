@@ -61,29 +61,29 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     private val appearanceGroup: SettingGroup = settingGroup("Appearance")
     private val triggerMode by enumSetting(
         "Trigger Mode", TriggerMode.Kill,
-        Consumer<TriggerMode> { recentTargets.clear() }
-    ).group<EnumSetting<TriggerMode>>(triggerGroup)
+        { _: TriggerMode -> recentTargets.clear() }
+    ).group(triggerGroup)
     private val titleTriggers by stringListSetting(
         "Title Triggers", listOf("胜利", "挑战成功", "Victory"),
-        Setting.Dependency { triggerMode == TriggerMode.Title }
+        dependency = { triggerMode == TriggerMode.Title }
     )
     private val chatTriggers by stringListSetting(
         "Chat Triggers", listOf("获胜", "胜利", "挑战成功", "Victory"),
-        Setting.Dependency { triggerMode == TriggerMode.Chat }
+        dependency = { triggerMode == TriggerMode.Chat }
     )
-    private val title by stringSetting("Title", "TARGET ELIMINATED").group<StringSetting>(generalGroup)
-    private val subtitle by stringSetting("Subtitle", "ELIMINATION CONFIRMED").group<StringSetting>(generalGroup)
-    private val holdTime by doubleSetting("Hold Time", 1.9, 0.2, 10.0, 0.1).group<DoubleSetting>(generalGroup)
-    private val scale by doubleSetting("Scale", 0.75, 0.5, 2.0, 0.05).group<DoubleSetting>(appearanceGroup)
-    private val titleScale by doubleSetting("Title Scale", 1.5, 0.8, 1.8, 0.05).group<DoubleSetting>(appearanceGroup)
-    private val subtitleScale by doubleSetting("Subtitle Scale", 0.7, 0.6, 1.2, 0.05).group<DoubleSetting>(appearanceGroup)
-    private val accentColor by colorSetting("Accent Color", Color(244, 244, 20, 255)).group<ColorSetting>(appearanceGroup)
-    private val subtitleColor by colorSetting("Subtitle Color", Color(141, 145, 148, 255)).group<ColorSetting>(appearanceGroup)
-    private val backgroundColor by colorSetting("Background Color", Color(14, 15, 17, 158)).group<ColorSetting>(appearanceGroup)
-    private val backgroundBlur by boolSetting("Background Blur", true).group<BoolSetting>(appearanceGroup)
+    private val title by stringSetting("Title", "TARGET ELIMINATED").group(generalGroup)
+    private val subtitle by stringSetting("Subtitle", "ELIMINATION CONFIRMED").group(generalGroup)
+    private val holdTime by doubleSetting("Hold Time", 1.9, 0.2, 10.0, 0.1).group(generalGroup)
+    private val scale by doubleSetting("Scale", 0.75, 0.5, 2.0, 0.05).group(appearanceGroup)
+    private val titleScale by doubleSetting("Title Scale", 1.5, 0.8, 1.8, 0.05).group(appearanceGroup)
+    private val subtitleScale by doubleSetting("Subtitle Scale", 0.7, 0.6, 1.2, 0.05).group(appearanceGroup)
+    private val accentColor by colorSetting("Accent Color", Color(244, 244, 20, 255)).group(appearanceGroup)
+    private val subtitleColor by colorSetting("Subtitle Color", Color(141, 145, 148, 255)).group(appearanceGroup)
+    private val backgroundColor by colorSetting("Background Color", Color(14, 15, 17, 158)).group(appearanceGroup)
+    private val backgroundBlur by boolSetting("Background Blur", true).group(appearanceGroup)
     private val blurStrength by doubleSetting(
-        "Blur Strength", 8.0, 1.0, 20.0, 1.0, Setting.Dependency { backgroundBlur }
-    ).group<DoubleSetting>(appearanceGroup)
+        "Blur Strength", 8.0, 1.0, 20.0, 1.0, dependency = { backgroundBlur }
+    ).group(appearanceGroup)
 
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
@@ -100,8 +100,8 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         setAnchorState(HudModule.HorizontalAnchor.Center, HudModule.VerticalAnchor.Top, 0.0f, 72.0f)
         handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
         nonNullListener<AttackEntityEvent> { event ->
-            val target = event.getEntity()
-            if (triggerMode == TriggerMode.Kill && event.getPlayer() === player && target is Player && target !== player && target.isAlive) {
+            val target = event.entity
+            if (triggerMode == TriggerMode.Kill && event.player === player && target is Player && target !== player && target.isAlive) {
                 recentTargets[target.id] = TrackedTarget(target, System.currentTimeMillis())
             }
         }
@@ -122,12 +122,12 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     override fun onEnable() {
         clearRuntimeState()
-        QQAvatarManager.INSTANCE.requestLoad()
+        QQAvatarManager.requestLoad()
     }
 
     override fun onDisable() {
         clearRuntimeState()
-        QQAvatarManager.INSTANCE.release()
+        QQAvatarManager.release()
     }
 
     override fun render(deltaTracker: DeltaTracker) {
@@ -150,7 +150,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun onPacketReceive(event: PacketEvent.Receive) {
-        val packet: Packet<*> = event.getPacket()
+        val packet: Packet<*> = event.packet
         when (triggerMode) {
             TriggerMode.Title -> {
                 val text: Component? = when (packet) {
@@ -244,7 +244,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun renderBanner(preview: Boolean, elapsed: Long) {
-        QQAvatarManager.INSTANCE.requestLoad()
+        QQAvatarManager.requestLoad()
         val textRenderer = textRendererSupplier.get()
         val uiScale = scale.toFloat()
         val bannerTitle = if (preview) displayTitle(title) else displayTitle(currentTitle)
@@ -295,8 +295,8 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val avatarSize = 40.0f * uiScale
         val avatarRadius = 2.0f * uiScale
         scope.texture(
-            QQAvatarManager.INSTANCE.texture(), avatarX, avatarY, avatarSize, avatarSize,
-            0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), QQAvatarManager.INSTANCE.linearFilter()
+            QQAvatarManager.texture(), avatarX, avatarY, avatarSize, avatarSize,
+            0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), QQAvatarManager.linearFilter()
         )
         scope.outline(avatarX, avatarY, avatarSize, avatarSize, avatarRadius, uiScale, withAlpha(HAIRLINE, alpha))
     }

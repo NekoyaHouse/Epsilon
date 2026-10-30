@@ -22,16 +22,16 @@ class NVIDIANotification(private val owner: Notifications) {
         HIDDEN,
     }
 
-    private val active: Setting.Dependency = Setting.Dependency { owner.isStyle(Notifications.Style.NVIDIA) }
+    private val active: Setting.Dependency = { owner.isStyle(Notifications.Style.NVIDIA) }
 
-    private val subtitleYOffset by owner.doubleSetting("Subtitle Y Offset", 0.4, -10.0, 20.0, 0.1, active)
-    private val boxWidth by owner.intSetting("Width", 120, 80, 300, 1, active)
-    private val boxHeight by owner.intSetting("Height", 30, 24, 80, 1, active)
-    private val backgroundAlpha by owner.intSetting("Background Alpha", 145, 0, 255, 1, active)
-    private val displayTime by owner.intSetting("Display Time", 2000, 500, 5000, 100, active)
+    private val subtitleYOffset by owner.doubleSetting("Subtitle Y Offset", 0.4, -10.0, 20.0, 0.1, dependency = active)
+    private val boxWidth by owner.intSetting("Width", 120, 80, 300, 1, dependency = active)
+    private val boxHeight by owner.intSetting("Height", 30, 24, 80, 1, dependency = active)
+    private val backgroundAlpha by owner.intSetting("Background Alpha", 145, 0, 255, 1, dependency = active)
+    private val displayTimeMs by owner.intSetting("Display Time", 2000, 500, 5000, 100, dependency = active)
 
     fun getDisplayTime(): Int {
-        return displayTime
+        return displayTimeMs
     }
 
     fun render(scope: UiTree.Scope, metrics: TextRenderer, previewNotification: Notification?) {
@@ -44,7 +44,7 @@ class NVIDIANotification(private val owner: Notifications) {
 
         val entries: MutableList<RenderEntry> = ArrayList()
         var totalHeight = 0.0f
-        for (notification in NotificationManager.INSTANCE.getNotifications()) {
+        for (notification in NotificationManager.getNotifications()) {
             val frame = getRenderFrame(notification, spacing)
             if (frame.stage == RenderStage.HIDDEN) continue
             totalHeight += frame.occupiedHeight

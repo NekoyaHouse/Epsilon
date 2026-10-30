@@ -32,7 +32,7 @@ object Render3DScheduler {
     private val lines: MutableList<LineCommand> = ArrayList()
 
     init {
-        EventBus.INSTANCE.subscribe(this)
+        EventBus.subscribe(this)
     }
 
     fun isEmpty(): Boolean = blurredBoxes.isEmpty() &&

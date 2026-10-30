@@ -22,7 +22,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
         Silent,
     }
 
-    private val switchMode: EnumSetting<SwitchMode> by enumSetting("Switch Mode", SwitchMode.Normal)
+    private val switchMode: EnumSetting<SwitchMode> = enumSetting("Switch Mode", SwitchMode.Normal)
     private val swingHand by boolSetting("Swing Hand", false)
 
     private var shouldSwapBack = false

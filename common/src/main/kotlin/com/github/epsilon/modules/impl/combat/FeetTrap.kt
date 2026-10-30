@@ -45,7 +45,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val rotate by boolSetting("Rotate", true)
     private val rotationSpeed by intSetting(
         "Rotation Speed", 180, 18, 180, 18,
-        com.github.epsilon.settings.Setting.Dependency { rotate })
+        dependency = { rotate })
     private val enderChest by boolSetting("Ender Chest", true)
     private val inventorySwap by boolSetting("Inventory Swap", true)
 
@@ -108,7 +108,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     }
 
     private fun contextDependency(): com.github.epsilon.settings.Setting.Dependency =
-        com.github.epsilon.settings.Setting.Dependency { rotate }
+        { rotate }
 
     override fun onEnable() {
         val nn = NonNullContext.current

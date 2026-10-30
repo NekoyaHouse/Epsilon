@@ -47,8 +47,8 @@ object StaticFontLoader {
     fun defaultFont(): TtfFontLoader {
         if (destroyed) return DEFAULT
         val settings = ClientSetting
-        val mode = settings.font.getValue()
-        val fontPath = settings.customFont.getValue()
+        val mode = settings.font.value
+        val fontPath = settings.customFont
         if (isApplied(mode, fontPath)) return DEFAULT
         return applyDefaultFont(mode, fontPath)
     }

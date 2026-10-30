@@ -35,10 +35,10 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     }
 
     private val mode by enumSetting("Mode", Mode.Always)
-    private val activateKey by keybindSetting("Activate Key", InputConstants.KEY_X, Setting.Dependency { mode != Mode.Always })
+    private val activateKey by keybindSetting("Activate Key", InputConstants.KEY_X, dependency = { mode != Mode.Always })
     val multiplier by doubleSetting("Multiplier", 1.8, 0.1, 10.0, 0.1)
-    private val maxBalance by intSetting("Max Balance", 1000, 0, 10000, 1, Setting.Dependency { mode = = Mode.Balance })
-    val ticks by intSetting("Ticks", 13, 1, 20, 1, Setting.Dependency { mode = = Mode.SlowBalance })
+    private val maxBalance by intSetting("Max Balance", 1000, 0, 10000, 1, dependency = { mode == Mode.Balance })
+    val ticks by intSetting("Ticks", 13, 1, 20, 1, dependency = { mode == Mode.SlowBalance })
 
     private var balance = 0.0f
     private var currentTime = 0L
@@ -114,13 +114,13 @@ object Timer : Module("Timer", Category.MOVEMENT) {
         }
 
         nonNullListener<ClientTickEvent.Post> {
-            if (mode = = Mode.Balance && releasing && balanceTime <= 10L) {
+            if (mode == Mode.Balance && releasing && balanceTime <= 10L) {
                 stopBalance()
             }
         }
 
         nonNullListener<PlayerTickEvent.Post> {
-            if (mode = = Mode.Balance && attack) {
+            if (mode == Mode.Balance && attack) {
                 if (lagging) stopBalance()
                 attack = false
             }
@@ -171,14 +171,14 @@ object Timer : Module("Timer", Category.MOVEMENT) {
         }
 
         nonNullListener<LevelUpdateEvent> {
-            if (mode = = Mode.Balance) {
+            if (mode == Mode.Balance) {
                 packets.clear()
                 stopBalance()
             }
         }
 
         handler<KeyPressEvent> { event ->
-            if (event.key != activateKey) return@handler
+            if (event.getKey() != activateKey) return@handler
             if (event.action == InputConstants.PRESS) {
                 shouldRelease = true
             } else if (event.action == InputConstants.RELEASE) {
@@ -206,7 +206,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
 
     override fun onEnable() {
         resetState()
-        if (mode = = Mode.Balance) {
+        if (mode == Mode.Balance) {
             timer.reset()
             currentTime = System.currentTimeMillis()
             updateTimerSpeed()
@@ -223,15 +223,15 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     }
 
     fun getBalanceTime(): Long {
-        return if (mode = = Mode.SlowBalance) (balance * 50.0F).toLong() else balanceTime
+        return if (mode == Mode.SlowBalance) (balance * 50.0F).toLong() else balanceTime
     }
 
     fun getMaxBalance(): Long {
-        return if (mode = = Mode.SlowBalance) ticks.toLong() * 50L else maxBalance.toLong()
+        return if (mode == Mode.SlowBalance) ticks.toLong() * 50L else maxBalance.toLong()
     }
 
     fun isReleasing(): Boolean {
-        return if (mode = = Mode.SlowBalance) shouldRelease else releasing
+        return if (mode == Mode.SlowBalance) shouldRelease else releasing
     }
 
     private fun startBalance() {

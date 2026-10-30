@@ -20,8 +20,8 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     private val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 90))
     private val slotColor by colorSetting("Slot Color", Color(0, 0, 0, 0))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, Setting.Dependency { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), Setting.Dependency { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { drawShadow })
     private val backgroundBlur by boolSetting("Background Blur", true)
     private val blurStrength by intSetting("Blur Strength", 5, 1, 16, 1)
 

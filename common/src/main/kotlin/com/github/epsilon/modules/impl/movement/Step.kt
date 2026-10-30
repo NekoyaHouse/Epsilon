@@ -7,6 +7,7 @@ import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.FeetTrap
+import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.netHandler
@@ -25,10 +26,11 @@ object Step : Module("Step", Category.MOVEMENT) {
         NCP,
     }
 
-    private val mode by enumSetting("Mode", Mode.Vanilla)
+    private val modeSetting: EnumSetting<Mode> = enumSetting("Mode", Mode.Vanilla)
+    private val mode by modeSetting
     private val height by doubleSetting("Height", 1.0, 0.0, 5.0, 0.5)
-    private val useTimer by boolSetting("Timer", true, Setting.Dependency { mode = = Mode.OldNCP || mode == Mode.NCP })
-    private val fast by boolSetting("Fast", true, Setting.Dependency { mode = = Mode.NCP && useTimer })
+    private val useTimer by boolSetting("Timer", true, dependency = { mode == Mode.OldNCP || mode == Mode.NCP })
+    private val fast by boolSetting("Fast", true, dependency = { mode == Mode.NCP && useTimer })
     private val feetTrapPause by boolSetting("FeetTrap Pause", true)
     private val inWebPause by boolSetting("In Web Pause", true)
     private val insideBlockPause by boolSetting("Inside Block Pause", true)
@@ -55,8 +57,8 @@ object Step : Module("Step", Category.MOVEMENT) {
                 TimerManager.reset()
                 timer = false
             }
-            val strict = mode = = Mode.NCP
-            if (mode = = Mode.OldNCP || strict) {
+            val strict = mode == Mode.NCP
+            if (mode == Mode.OldNCP || strict) {
                 val stepHeight = player.y - player.yo
                 if (stepHeight <= 0.75 || stepHeight > height) {
                     return@nonNullListener
@@ -90,7 +92,7 @@ object Step : Module("Step", Category.MOVEMENT) {
     }
 
     override fun getInfo(): String {
-        return mode.translatedValue
+        return modeSetting.translatedValue
     }
 
     override fun onDisable() {
@@ -104,7 +106,7 @@ object Step : Module("Step", Category.MOVEMENT) {
 
     private fun getTimer(height: Double): Double {
         if (height > 0.6 && height <= 1) {
-            if (!fast && mode = = Mode.NCP) {
+            if (!fast && mode == Mode.NCP) {
                 return 1.0 / 3.0
             }
             return 0.5
@@ -114,7 +116,7 @@ object Step : Module("Step", Category.MOVEMENT) {
     }
 
     private fun getOffset(height: Double): DoubleArray? {
-        val strict = mode = = Mode.NCP
+        val strict = mode == Mode.NCP
         if (height == 0.75) {
             return if (strict) {
                 doubleArrayOf(0.42, 0.753, 0.75)

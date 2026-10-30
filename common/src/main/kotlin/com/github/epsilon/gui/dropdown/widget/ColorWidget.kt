@@ -504,7 +504,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         get() = pendingValue ?: setting.value
 
     private fun previewColor(color: Color) {
-        if (setting.isApplyWhenRelease()) {
+        if (setting.isApplyWhenRelease) {
             pendingValue = color
         } else {
             setting.value = color

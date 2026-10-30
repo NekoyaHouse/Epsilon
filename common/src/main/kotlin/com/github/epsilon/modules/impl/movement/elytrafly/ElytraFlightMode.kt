@@ -63,10 +63,10 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
     open fun handleUnbreaking() {
         runSafe {
-            if (!elytraFly.unbreaking.value) return@runSafe
+            if (!elytraFly.unbreaking) return@runSafe
             if (mc.gui.screen() != null) return@runSafe
             if (!player.isFallFlying || player.onGround()) return@runSafe
-            if (!unbreakingTimer.passedMillise(elytraFly.unbreakingDelay.value.toLong())) return@runSafe
+            if (!unbreakingTimer.passedMillise(elytraFly.unbreakingDelay.toLong())) return@runSafe
 
             val chestStack = player.getItemBySlot(EquipmentSlot.CHEST)
             if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST)) return@runSafe
@@ -108,7 +108,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     }
 
     protected fun canGlide(hasElytraInInventory: Boolean): Boolean = runSafeOrFalse {
-        if (elytraFly.armored.value && hasElytraInInventory) {
+        if (elytraFly.armored && hasElytraInInventory) {
             true
         } else {
             EquipmentSlot.VALUES.any { LivingEntity.canGlideUsing(player.getItemBySlot(it), it) }
@@ -116,7 +116,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     }
 
     protected fun useFirework(): Boolean = runSafeOrFalse {
-        val rocket = if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
+        val rocket = if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
             findInHotbar(Items.FIREWORK_ROCKET)
         } else {
             find(Items.FIREWORK_ROCKET)
@@ -125,7 +125,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
         val hand = rocket.getHand()
 
-        if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
+        if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
             swap(rocket.slot, true)
         } else {
             invSwap(rocket.slot)
@@ -136,7 +136,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
             swingHand(hand)
         }
 
-        if (elytraFly.swapMode.value == ElytraFly.SwapMode.Silent) {
+        if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
             swapBack()
         } else {
             invSwapBack()

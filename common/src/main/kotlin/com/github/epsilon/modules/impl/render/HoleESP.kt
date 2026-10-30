@@ -44,71 +44,71 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
     private val airYCheck by boolSetting("Air Y Check", true).apply { group(sgAir) }
     private val airFill by boolSetting("Air Fill", true).apply { group(sgAir) }
     private val airFillColor by colorSetting(
-        "Air Fill Color", Color(148, 0, 0, 100), Setting.Dependency { airFill }
+        "Air Fill Color", Color(148, 0, 0, 100), dependency = { airFill }
     ).apply { group(sgAir) }
-    private val airFade by boolSetting("Air Fade", true, Setting.Dependency { airFill }).apply { group(sgAir) }
+    private val airFade by boolSetting("Air Fade", true, dependency = { airFill }).apply { group(sgAir) }
     private val airFadeColor by colorSetting(
-        "Air Fade Color", Color(148, 0, 0, 0), Setting.Dependency { airFill && airFade }
+        "Air Fade Color", Color(148, 0, 0, 0), dependency = { airFill && airFade }
     ).apply { group(sgAir) }
     private val airBox by boolSetting("Air Box", true).apply { group(sgAir) }
     private val airBoxColor by colorSetting(
-        "Air Box Color", Color(148, 0, 0, 100), Setting.Dependency { airBox }
+        "Air Box Color", Color(148, 0, 0, 100), dependency = { airBox }
     ).apply { group(sgAir) }
 
     private val unsafeFill by boolSetting("Unsafe Fill", true).apply { group(sgUnsafe) }
     private val unsafeFillColor by colorSetting(
-        "Unsafe Fill Color", Color(255, 0, 0, 50), Setting.Dependency { unsafeFill }
+        "Unsafe Fill Color", Color(255, 0, 0, 50), dependency = { unsafeFill }
     ).apply { group(sgUnsafe) }
-    private val unsafeFade by boolSetting("Unsafe Fade", true, Setting.Dependency { unsafeFill }).apply { group(sgUnsafe) }
+    private val unsafeFade by boolSetting("Unsafe Fade", true, dependency = { unsafeFill }).apply { group(sgUnsafe) }
     private val unsafeFadeColor by colorSetting(
-        "Unsafe Fade Color", Color(255, 0, 0, 0), Setting.Dependency { unsafeFill && unsafeFade }
+        "Unsafe Fade Color", Color(255, 0, 0, 0), dependency = { unsafeFill && unsafeFade }
     ).apply { group(sgUnsafe) }
     private val unsafeBox by boolSetting("Unsafe Box", true).apply { group(sgUnsafe) }
     private val unsafeBoxColor by colorSetting(
-        "Unsafe Box Color", Color(255, 0, 0, 100), Setting.Dependency { unsafeBox }
+        "Unsafe Box Color", Color(255, 0, 0, 100), dependency = { unsafeBox }
     ).apply { group(sgUnsafe) }
 
     private val safeFill by boolSetting("Safe Fill", true).apply { group(sgSafe) }
     private val safeFillColor by colorSetting(
-        "Safe Fill Color", Color(8, 255, 79, 50), Setting.Dependency { safeFill }
+        "Safe Fill Color", Color(8, 255, 79, 50), dependency = { safeFill }
     ).apply { group(sgSafe) }
-    private val safeFade by boolSetting("Safe Fade", true, Setting.Dependency { safeFill }).apply { group(sgSafe) }
+    private val safeFade by boolSetting("Safe Fade", true, dependency = { safeFill }).apply { group(sgSafe) }
     private val safeFadeColor by colorSetting(
-        "Safe Fade Color", Color(8, 255, 79, 100), Setting.Dependency { safeFill && safeFade }
+        "Safe Fade Color", Color(8, 255, 79, 100), dependency = { safeFill && safeFade }
     ).apply { group(sgSafe) }
     private val safeBox by boolSetting("Safe Box", true).apply { group(sgSafe) }
     private val safeBoxColor by colorSetting(
-        "Safe Box Color", Color(8, 255, 79, 100), Setting.Dependency { safeBox }
+        "Safe Box Color", Color(8, 255, 79, 100), dependency = { safeBox }
     ).apply { group(sgSafe) }
 
     private val wallHeight by doubleSetting("Wall Height", 3.0, -3.0, 3.0, 0.1).apply { group(sgWall) }
     private val sideCheck by boolSetting("Side Check", true).apply { group(sgWall) }
     private val wallFill by boolSetting("Wall Fill", true).apply { group(sgWall) }
     private val wallFillColor by colorSetting(
-        "Wall Fill Color", Color(0, 255, 255, 128), Setting.Dependency { wallFill }
+        "Wall Fill Color", Color(0, 255, 255, 128), dependency = { wallFill }
     ).apply { group(sgWall) }
-    private val wallFade by boolSetting("Wall Fade", true, Setting.Dependency { wallFill }).apply { group(sgWall) }
+    private val wallFade by boolSetting("Wall Fade", true, dependency = { wallFill }).apply { group(sgWall) }
     private val wallFadeColor by colorSetting(
-        "Wall Fade Color", Color(0, 255, 255, 64), Setting.Dependency { wallFill && wallFade }
+        "Wall Fade Color", Color(0, 255, 255, 64), dependency = { wallFill && wallFade }
     ).apply { group(sgWall) }
     private val wallBox by boolSetting("Wall Box", true).apply { group(sgWall) }
     private val wallBoxColor by colorSetting(
-        "Wall Box Color", Color(0, 225, 255, 255), Setting.Dependency { wallBox }
+        "Wall Box Color", Color(0, 225, 255, 255), dependency = { wallBox }
     ).apply { group(sgWall) }
 
     private val wallSideFill by boolSetting("Wall Side Fill", true).apply { group(sgWallSide) }
     private val wallSideFillColor by colorSetting(
-        "Wall Side Fill Color", Color(0, 255, 255, 128), Setting.Dependency { wallSideFill }
+        "Wall Side Fill Color", Color(0, 255, 255, 128), dependency = { wallSideFill }
     ).apply { group(sgWallSide) }
     private val wallSideFade by boolSetting(
-        "Wall Side Fade", true, Setting.Dependency { wallSideFill }
+        "Wall Side Fade", true, dependency = { wallSideFill }
     ).apply { group(sgWallSide) }
     private val wallSideFadeColor by colorSetting(
-        "Wall Side Fade Color", Color(0, 255, 255, 64), Setting.Dependency { wallSideFill && wallSideFade }
+        "Wall Side Fade Color", Color(0, 255, 255, 64), dependency = { wallSideFill && wallSideFade }
     ).apply { group(sgWallSide) }
     private val wallSideBox by boolSetting("Wall Side Box", true).apply { group(sgWallSide) }
     private val wallSideBoxColor by colorSetting(
-        "Wall Side Box Color", Color(0, 225, 255, 255), Setting.Dependency { wallSideBox }
+        "Wall Side Box Color", Color(0, 225, 255, 255), dependency = { wallSideBox }
     ).apply { group(sgWallSide) }
 
     private var unsafeHoles: List<Hole> = emptyList()

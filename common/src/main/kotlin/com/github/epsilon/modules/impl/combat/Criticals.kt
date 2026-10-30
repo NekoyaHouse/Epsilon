@@ -44,7 +44,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
                 Velocity.attackQueue == 0 &&
                 event.forward > 0.0f
             ) {
-                event.setSprint(false)
+                event.apply { isSprint = false }
                 player.isSprinting = false
                 mc.options.keySprint.isDown = false
             }

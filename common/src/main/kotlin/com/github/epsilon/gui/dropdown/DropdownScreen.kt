@@ -68,8 +68,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     override fun init() {
         super.init()
         currentSessionId++
-        if (ClientSetting.showReisaInDropdown && !AssetManager.INSTANCE.isReisaReady()) {
-            AssetManager.INSTANCE.requestDownload(listOf(AssetManager.Asset.REISA))
+        if (ClientSetting.showReisaInDropdown && !AssetManager.isReisaReady()) {
+            AssetManager.requestDownload(listOf(AssetManager.Asset.REISA))
         }
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
@@ -84,7 +84,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
 
         for (panel in panels) {
-            panel.setMaxPanelHeight(resolveMaxPanelHeight(panel))
+            panel.updateMaxPanelHeight(resolveMaxPanelHeight(panel))
             panel.startIntro()
         }
     }
@@ -607,7 +607,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private fun updatePanelHeightLimits() {
         val screenLimited = LuminRenderSystem.getScaledHeight() * 0.72f
         for (panel in panels) {
-            panel.setMaxPanelHeight(resolveMaxPanelHeight(panel, screenLimited))
+            panel.updateMaxPanelHeight(resolveMaxPanelHeight(panel, screenLimited))
         }
     }
 
@@ -649,7 +649,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     private fun isReisaCompanionEnabled(): Boolean {
-        return ClientSetting.showReisaInDropdown && AssetManager.INSTANCE.isReisaReady()
+        return ClientSetting.showReisaInDropdown && AssetManager.isReisaReady()
     }
 
     override fun openRegistryListSettingPopup(setting: RegistryListSetting<*>) {

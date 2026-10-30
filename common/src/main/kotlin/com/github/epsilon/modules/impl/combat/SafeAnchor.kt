@@ -94,13 +94,13 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private val anchorPlaceMaxDelay by doubleSetting("Anchor Place Max Delay", 2.5, 0.0, 50.0, 0.1)
 
     private val sgShield: SettingGroup = settingGroup("Shield")
-    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0, 50.0, 0.1).group(sgShield)
-    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0, 50.0, 0.1).group(sgShield)
-    private val multiShield by boolSetting("Multi Shield", false, Setting.Dependency { mode = = Mode.Auto }).group(sgShield)
-    private val multiShieldChance by intSetting("Multi Shield Chance", 50, 0, 100, 1, Setting.Dependency { multiShield }).group(sgShield)
-    private val maxExtraShields by intSetting("Max Extra Shields", 1, 1, 5, 1, Setting.Dependency { multiShield }).group(sgShield)
-    private val shieldDistanceMin by intSetting("Shield Distance Min", 1, 1, 3, 1, Setting.Dependency { mode = = Mode.Auto }).group(sgShield)
-    private val shieldDistanceMax by intSetting("Shield Distance Max", 1, 1, 3, 1, Setting.Dependency { mode = = Mode.Auto }).group(sgShield)
+    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0, 50.0, 0.1).apply { group(sgShield) }
+    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0, 50.0, 0.1).apply { group(sgShield) }
+    private val multiShield by boolSetting("Multi Shield", false, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+    private val multiShieldChance by intSetting("Multi Shield Chance", 50, 0, 100, 1, dependency = { multiShield }).apply { group(sgShield) }
+    private val maxExtraShields by intSetting("Max Extra Shields", 1, 1, 5, 1, dependency = { multiShield }).apply { group(sgShield) }
+    private val shieldDistanceMin by intSetting("Shield Distance Min", 1, 1, 3, 1, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+    private val shieldDistanceMax by intSetting("Shield Distance Max", 1, 1, 3, 1, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
 
     private val chargeMinDelay by doubleSetting("Charge Min Delay", 0.0, 0.0, 50.0, 0.1)
     private val chargeMaxDelay by doubleSetting("Charge Max Delay", 2.5, 0.0, 50.0, 0.1)
@@ -111,18 +111,18 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private val minHealth by doubleSetting("Min Health", 4.0, 0.0, 20.0, 0.5)
 
     val prediction by boolSetting("Prediction", false)
-    val predictionStrength by doubleSetting("Prediction Strength", 3.0, 0.5, 20.0, 0.1, Setting.Dependency { prediction })
+    val predictionStrength by doubleSetting("Prediction Strength", 3.0, 0.5, 20.0, 0.1, dependency = { prediction })
 
     private val multiCharge by boolSetting("Multi Charge", false)
-    private val multiChargeChance by intSetting("Multi Charge Chance", 50, 0, 100, 1, Setting.Dependency { multiCharge })
-    private val minExtraCharges by intSetting("Min Extra Charges", 1, 1, 3, 1, Setting.Dependency { multiCharge })
-    private val maxExtraCharges by intSetting("Max Extra Charges", 1, 1, 3, 1, Setting.Dependency { multiCharge })
+    private val multiChargeChance by intSetting("Multi Charge Chance", 50, 0, 100, 1, dependency = { multiCharge })
+    private val minExtraCharges by intSetting("Min Extra Charges", 1, 1, 3, 1, dependency = { multiCharge })
+    private val maxExtraCharges by intSetting("Max Extra Charges", 1, 1, 3, 1, dependency = { multiCharge })
 
     private val render by boolSetting("Render", true)
 
-    private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 255), Setting.Dependency { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 50), Setting.Dependency { render })
-    private val lineWidth by doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.1, Setting.Dependency { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 255), dependency = { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 50), dependency = { render })
+    private val lineWidth by doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.1, dependency = { render })
 
     private var stage = Stage.IDLE
     private var currentAnchorPos: BlockPos? = null
@@ -570,7 +570,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun advanceFromPlaceAnchor() {
-        if (mode = = Mode.Assist) {
+        if (mode == Mode.Assist) {
             cooldownMs = 0
             actionTimer.reset()
             stage = Stage.WAIT_SHIELD
@@ -590,7 +590,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             return
         }
 
-        if (order = = Order.ChargeFirst) {
+        if (order == Order.ChargeFirst) {
             if (alreadyCharged) {
                 scheduleCooldown(shieldPlaceMinDelay, shieldPlaceMaxDelay)
                 stage = Stage.PLACE_SHIELD
@@ -606,7 +606,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun advanceFromPlaceShield() {
-        if (mode = = Mode.Assist) {
+        if (mode == Mode.Assist) {
             cooldownMs = 0
             actionTimer.reset()
             stage = Stage.WAIT_ANCHOR
@@ -618,7 +618,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (alreadyCharged) {
             scheduleCooldown(detonateMinDelay, detonateMaxDelay)
             stage = Stage.DETONATE
-        } else if (order = = Order.ChargeFirst) {
+        } else if (order == Order.ChargeFirst) {
             scheduleCooldown(detonateMinDelay, detonateMaxDelay)
             stage = Stage.DETONATE
         } else {
@@ -629,7 +629,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun advanceFromCharge() {
-        if (order = = Order.ChargeFirst) {
+        if (order == Order.ChargeFirst) {
             if (hasExistingShield()) {
                 scheduleCooldown(detonateMinDelay, detonateMaxDelay)
                 stage = Stage.DETONATE
@@ -678,7 +678,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             d -= 0.5
         }
 
-        if (placeMode = = PlaceMode.Cover && nn.player.isShiftKeyDown) {
+        if (placeMode == PlaceMode.Cover && nn.player.isShiftKeyDown) {
             val dx = playerPos.x - (currentAnchorPos!!.x + 0.5)
             val dz = playerPos.z - (currentAnchorPos!!.z + 0.5)
             val absX = Math.abs(dx)
@@ -869,7 +869,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             d -= 0.3
         }
 
-        if (placeMode = = PlaceMode.Cover) {
+        if (placeMode == PlaceMode.Cover) {
             val dx = playerPos.x - (currentAnchorPos!!.x + 0.5)
             val dz = playerPos.z - (currentAnchorPos!!.z + 0.5)
             val xDir = if (dx > 0) Direction.EAST else Direction.WEST
@@ -1086,7 +1086,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun doWaitAnchor() {
         if (!isAimingAtAnchor()) return
 
-        if (mode = = Mode.Assist && !hasAssistShield()) {
+        if (mode == Mode.Assist && !hasAssistShield()) {
             cooldownMs = 0
             actionTimer.reset()
             stage = Stage.WAIT_SHIELD
@@ -1164,7 +1164,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun getShieldPlayerPos(): Vec3 {
         if (prediction) {
-            val extrapolatedBox: AABB? = ExtrapolationManager.INSTANCE.extrapolate(
+            val extrapolatedBox: AABB? = ExtrapolationManager.extrapolate(
                 nn.player,
                 Math.ceil(predictionStrength).toInt(),
                 2,
@@ -1184,19 +1184,19 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         resetState()
     }
 
-    private fun scheduleCooldown(minDelay: DoubleSetting, maxDelay: DoubleSetting) {
+    private fun scheduleCooldown(minDelay: Double, maxDelay: Double) {
         cooldownMs = getDelayMs(minDelay, maxDelay)
         actionTimer.reset()
     }
 
-    private fun getDelayMs(minDelay: DoubleSetting, maxDelay: DoubleSetting): Int {
-        val min = Math.max(0.0, minDelay.value * 10).toInt()
-        val max = Math.max(min + 1.0, maxDelay.value * 10).toInt()
+    private fun getDelayMs(minDelay: Double, maxDelay: Double): Int {
+        val min = Math.max(0.0, minDelay * 10).toInt()
+        val max = Math.max(min + 1.0, maxDelay * 10).toInt()
         return randomInclusive(min, max)
     }
 
     private fun shouldPlaceExtraShield(): Boolean {
-        if (mode = = Mode.Assist) return false
+        if (mode == Mode.Assist) return false
         return multiShield &&
             placedShields.size < maxExtraShields &&
             ThreadLocalRandom.current().nextInt(100) < multiShieldChance

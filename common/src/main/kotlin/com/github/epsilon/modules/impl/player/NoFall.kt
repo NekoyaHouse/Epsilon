@@ -39,7 +39,7 @@ object NoFall : Module("No Fall", Category.PLAYER) {
                     if (lastFallDistance >= fallDistance) {
                         val noSlowdown = NoSlowdown
                         if (NoSlowdown.isWorking()) {
-                            NotificationManager.INSTANCE.warning(noSlowdown.translatedName, EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_FALLING.translatedName)
+                            NotificationManager.warning(noSlowdown.translatedName, EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_FALLING.getTranslatedName())
                             noSlowdown.stop()
                         }
 

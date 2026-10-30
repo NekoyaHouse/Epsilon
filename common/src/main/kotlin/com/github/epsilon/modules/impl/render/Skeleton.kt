@@ -23,7 +23,7 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
     private val distance by doubleSetting("Distance", 128.0, 8.0, 256.0, 8.0)
     private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.5)
     private val color by colorSetting("Color", Color.WHITE)
-    private val friendColor by colorSetting("Friend Color", Color(0x30FF00), com.github.epsilon.settings.Setting.Dependency { friends })
+    private val friendColor by colorSetting("Friend Color", Color(0x30FF00), dependency = { friends })
 
     init {
         handler<Render3DEvent> { onRender3D(it) }
@@ -39,7 +39,7 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
                 if (candidate === mc.cameraEntity && mc.options.cameraType.isFirstPerson) continue
 
                 val friend = candidate !== player &&
-                        (FriendManager.isFriend(candidate) || TargetManager.INSTANCE.isSameTeam(candidate))
+                        (FriendManager.isFriend(candidate) || TargetManager.isSameTeam(candidate))
                 if (friend && !friends) continue
 
                 SkeletonRenderer.render(

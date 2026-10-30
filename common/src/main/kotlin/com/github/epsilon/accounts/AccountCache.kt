@@ -19,7 +19,7 @@ class AccountCache {
 
     fun getHeadTexture(): PlayerHeadTexture {
         val texture = headTexture
-        return texture ?: SkinManager.INSTANCE.STEVE_HEAD
+        return texture ?: SkinManager.STEVE_HEAD
     }
 
     fun loadHead() {
@@ -37,7 +37,7 @@ class AccountCache {
         loadingHead = true
 
         ExecutorManager.execute {
-            val head = SkinManager.INSTANCE.fetchHead(UndashedUuid.fromStringLenient(uuid))
+            val head = SkinManager.fetchHead(UndashedUuid.fromStringLenient(uuid))
             Constants.mc.execute {
                 if (head != null) headTexture = PlayerHeadTexture(head)
                 loadingHead = false

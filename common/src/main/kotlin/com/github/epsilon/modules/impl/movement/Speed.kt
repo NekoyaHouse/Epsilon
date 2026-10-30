@@ -39,26 +39,26 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     }
 
     private val mode by enumSetting("Mode", Mode.Strafe)
-    private val collideSpeed by doubleSetting("CollideSpeed", 0.08, 0.0, 0.08, 0.01, Setting.Dependency { mode = = Mode.Grim })
-    private val strict by boolSetting("Strict", true, Setting.Dependency { mode = = Mode.Grim })
-    private val boat by boolSetting("BoatLongJump", true, Setting.Dependency { mode = = Mode.Grim })
-    private val boatExpand by doubleSetting("BoatExpand", 0.2, 0.0, 1.0, 0.01, Setting.Dependency { mode = = Mode.Grim })
-    private val boatSpeed by doubleSetting("BoatSpeed", 0.2, -2.0, 2.0, 0.01, Setting.Dependency { mode = = Mode.Grim })
-    private val boatJump by doubleSetting("BoatJump", 0.2, 0.0, 2.0, 0.01, Setting.Dependency { mode = = Mode.Grim })
+    private val collideSpeed by doubleSetting("CollideSpeed", 0.08, 0.0, 0.08, 0.01, dependency = { mode == Mode.Grim })
+    private val strict by boolSetting("Strict", true, dependency = { mode == Mode.Grim })
+    private val boat by boolSetting("BoatLongJump", true, dependency = { mode == Mode.Grim })
+    private val boatExpand by doubleSetting("BoatExpand", 0.2, 0.0, 1.0, 0.01, dependency = { mode == Mode.Grim })
+    private val boatSpeed by doubleSetting("BoatSpeed", 0.2, -2.0, 2.0, 0.01, dependency = { mode == Mode.Grim })
+    private val boatJump by doubleSetting("BoatJump", 0.2, 0.0, 2.0, 0.01, dependency = { mode == Mode.Grim })
 
-    private val inWater by boolSetting("InWater", false, Setting.Dependency { mode != Mode.Grim })
-    private val inBlock by boolSetting("InBlock", false, Setting.Dependency { mode != Mode.Grim })
-    private val airStop by boolSetting("AirStop", true, Setting.Dependency { mode != Mode.Grim })
-    private val lagTime by doubleSetting("LagTime", 500.0, 0.0, 1000.0, 1.0, Setting.Dependency { mode != Mode.Grim })
+    private val inWater by boolSetting("InWater", false, dependency = { mode != Mode.Grim })
+    private val inBlock by boolSetting("InBlock", false, dependency = { mode != Mode.Grim })
+    private val airStop by boolSetting("AirStop", true, dependency = { mode != Mode.Grim })
+    private val lagTime by doubleSetting("LagTime", 500.0, 0.0, 1000.0, 1.0, dependency = { mode != Mode.Grim })
 
-    private val jump by boolSetting("Jump", true, Setting.Dependency { mode = = Mode.Strafe })
-    private val strafeSpeed by doubleSetting("Speed", 0.2873, 0.0, 1.0, 0.0001, Setting.Dependency { mode = = Mode.Strafe })
-    private val explosions by boolSetting("ExplosionsBoost", false, Setting.Dependency { mode = = Mode.Strafe })
-    private val velocity by boolSetting("VelocityBoost", true, Setting.Dependency { mode = = Mode.Strafe })
-    private val multiplier by doubleSetting("H-Factor", 1.0, 0.0, 5.0, 0.01, Setting.Dependency { mode = = Mode.Strafe })
-    private val vertical by doubleSetting("V-Factor", 1.0, 0.0, 5.0, 0.01, Setting.Dependency { mode = = Mode.Strafe })
-    private val coolDown by intSetting("Cooldown", 1000, 0, 5000, 1, Setting.Dependency { mode = = Mode.Strafe })
-    private val slow by boolSetting("Slowness", false, Setting.Dependency { mode = = Mode.Strafe })
+    private val jump by boolSetting("Jump", true, dependency = { mode == Mode.Strafe })
+    private val strafeSpeed by doubleSetting("Speed", 0.2873, 0.0, 1.0, 0.0001, dependency = { mode == Mode.Strafe })
+    private val explosions by boolSetting("ExplosionsBoost", false, dependency = { mode == Mode.Strafe })
+    private val velocity by boolSetting("VelocityBoost", true, dependency = { mode == Mode.Strafe })
+    private val multiplier by doubleSetting("H-Factor", 1.0, 0.0, 5.0, 0.01, dependency = { mode == Mode.Strafe })
+    private val vertical by doubleSetting("V-Factor", 1.0, 0.0, 5.0, 0.01, dependency = { mode == Mode.Strafe })
+    private val coolDown by intSetting("Cooldown", 1000, 0, 5000, 1, dependency = { mode == Mode.Strafe })
+    private val slow by boolSetting("Slowness", false, dependency = { mode == Mode.Strafe })
 
     private var stop = false
     private var speed = 0.0
@@ -77,7 +77,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         nonNullListener<PacketEvent.Receive>(EventPriority.HIGH) { event ->
             val packet = event.packet
 
-            if (mode = = Mode.Strafe) {
+            if (mode == Mode.Strafe) {
                 if (packet is ClientboundSetEntityMotionPacket) {
                     if (packet.id == player.id && velocity) {
                         val packetSpeed = Math.hypot(packet.movement.x, packet.movement.z)
@@ -131,7 +131,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         }
 
         nonNullListener<PlayerTickEvent.Pre> {
-            if (mode = = Mode.Grim) {
+            if (mode == Mode.Grim) {
                 if (!player.isMoving) {
                     return@nonNullListener
                 }
@@ -177,7 +177,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 stop = true
                 return@nonNullListener
             }
-            if (mode = = Mode.Strafe) {
+            if (mode == Mode.Strafe) {
                 if (stop) {
                     stop = false
                     return@nonNullListener
@@ -240,7 +240,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 jumpEffect += (player.getEffect(MobEffects.JUMP_BOOST)!!.amplifier + 1) * 0.1f
             }
 
-            if (mode = = Mode.StrafeStrict) {
+            if (mode == Mode.StrafeStrict) {
                 if (!lagTimer.passedMillise(lagTime.toLong())) {
                     return@nonNullListener
                 }

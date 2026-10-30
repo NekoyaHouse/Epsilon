@@ -68,7 +68,7 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            val newTarget = TargetManager.INSTANCE.acquirePrimary(
+            val newTarget = TargetManager.acquirePrimary(
                 TargetRequest.of(
                     range,
                     fov.toFloat(),

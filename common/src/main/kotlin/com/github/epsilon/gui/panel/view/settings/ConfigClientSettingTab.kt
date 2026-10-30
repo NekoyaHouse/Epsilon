@@ -69,8 +69,8 @@ class ConfigClientSettingTab(
             markDirty()
         }
 
-        val configs = ConfigManager.INSTANCE.listConfigs()
-        val activeConfig = ConfigManager.INSTANCE.getActiveConfigName()
+        val configs = ConfigManager.listConfigs()
+        val activeConfig = ConfigManager.activeConfigName
         val inputSection = getInputSectionBounds(bounds)
         val listViewport = getListViewport(bounds)
         val contentHeight = configs.size * (ROW_HEIGHT + MD3Theme.ROW_GAP)
@@ -278,7 +278,7 @@ class ConfigClientSettingTab(
 
     override fun onActivated() {
         if (inputField.getText().isBlank()) {
-            inputField.setText(ConfigManager.INSTANCE.getActiveConfigName())
+            inputField.setText(ConfigManager.activeConfigName)
             inputField.setCursorToEnd()
         }
         markDirty()
@@ -417,7 +417,7 @@ class ConfigClientSettingTab(
             return
         }
         try {
-            val savedName = ConfigManager.INSTANCE.saveAsConfig(targetName)
+            val savedName = ConfigManager.saveAsConfig(targetName)
             inputField.setText(savedName)
             inputField.setCursorToEnd()
             state.setConfigScroll(0.0f)
@@ -433,7 +433,7 @@ class ConfigClientSettingTab(
             return
         }
         try {
-            val newName = ConfigManager.INSTANCE.newDefaultConfig(targetName)
+            val newName = ConfigManager.newDefaultConfig(targetName)
             inputField.setText(newName)
             inputField.setCursorToEnd()
             state.setConfigScroll(0.0f)
@@ -445,7 +445,7 @@ class ConfigClientSettingTab(
 
     private fun tryReload() {
         try {
-            ConfigManager.INSTANCE.reloadOrThrow()
+            ConfigManager.reloadOrThrow()
             markDirty()
         } catch (exception: Exception) {
             Constants.LOGGER.error("重载配置失败", exception)
@@ -455,7 +455,7 @@ class ConfigClientSettingTab(
 
     private fun tryExport() {
         try {
-            val exported = ConfigManager.INSTANCE.exportActiveConfigToZip(inputField.getText())
+            val exported = ConfigManager.exportActiveConfigToZip(inputField.getText())
             openExportSuccessPopup(exported)
         } catch (exception: Exception) {
             Constants.LOGGER.error("导出配置失败", exception)
@@ -469,7 +469,7 @@ class ConfigClientSettingTab(
             return
         }
         try {
-            val importedName = ConfigManager.INSTANCE.importConfigFromZip(zipPath)
+            val importedName = ConfigManager.importConfigFromZip(zipPath)
             inputField.setText(importedName)
             inputField.setCursorToEnd()
             state.setConfigScroll(0.0f)
@@ -488,11 +488,11 @@ class ConfigClientSettingTab(
     }
 
     private fun trySwitchConfig(configName: String) {
-        if (configName == ConfigManager.INSTANCE.getActiveConfigName()) {
+        if (configName == ConfigManager.activeConfigName) {
             return
         }
         try {
-            ConfigManager.INSTANCE.switchConfig(configName)
+            ConfigManager.switchConfig(configName)
             inputField.setText(configName)
             inputField.setCursorToEnd()
         } catch (exception: Exception) {
@@ -503,7 +503,7 @@ class ConfigClientSettingTab(
 
     private fun tryDeleteConfig(configName: String) {
         try {
-            if (!ConfigManager.INSTANCE.deleteConfig(configName)) {
+            if (!ConfigManager.deleteConfig(configName)) {
                 openErrorPopup(
                     { EpsilonTranslations.Gui.CONFIG_ERROR_DELETE.getTranslatedName() },
                     EpsilonTranslations.Gui.CONFIG_ERROR_DELETE_LAST.getTranslatedName()
@@ -511,7 +511,7 @@ class ConfigClientSettingTab(
                 return
             }
             if (inputField.getText().trim() == configName) {
-                inputField.setText(ConfigManager.INSTANCE.getActiveConfigName())
+                inputField.setText(ConfigManager.activeConfigName)
                 inputField.setCursorToEnd()
             }
         } catch (exception: Exception) {

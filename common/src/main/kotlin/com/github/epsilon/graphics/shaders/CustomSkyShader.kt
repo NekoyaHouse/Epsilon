@@ -41,7 +41,7 @@ object CustomSkyShader {
             return
         }
 
-        val mode: CustomSky.ShaderMode = module.shader.value
+        val mode: CustomSky.ShaderMode = module.shader
         val pipeline: RenderPipeline = getPipeline(mode)
         val encoder: CommandEncoder = RenderSystem.getDevice().createCommandEncoder()
         if (mode == CustomSky.ShaderMode.Local) {
@@ -58,9 +58,9 @@ object CustomSkyShader {
             )
         }
 
-        val color: Color = module.color.value
-        val backgroundColor: Color = module.backgroundColor.value
-        val time = (Util.getMillis() % 100_000L) * module.speed.value.toFloat() * 0.0008f
+        val color: Color = module.color
+        val backgroundColor: Color = module.backgroundColor
+        val time = (Util.getMillis() % 100_000L) * module.speed.toFloat() * 0.0008f
         val uniforms: GpuBufferSlice = LuminRenderSystem.writeDynamicUniform(
             "custom_sky",
             "Epsilon Custom Sky UBO",

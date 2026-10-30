@@ -11,6 +11,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.AntiBot
 import com.github.epsilon.modules.impl.combat.KillAura
+import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
@@ -49,22 +50,23 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         Delay,
     }
 
-    val mode by enumSetting("Mode", Mode.Cancel, ::onModeChanged)
-    private val serverMotion by boolSetting("Server Motion", true, Setting.Dependency { mode = = Mode.Cancel })
-    private val explosion by boolSetting("Explosion", true, Setting.Dependency { mode = = Mode.Cancel })
+    private val modeSetting: EnumSetting<Mode> = enumSetting("Mode", Mode.Cancel, ::onModeChanged)
+    val mode by modeSetting
+    private val serverMotion by boolSetting("Server Motion", true, dependency = { mode == Mode.Cancel })
+    private val explosion by boolSetting("Explosion", true, dependency = { mode == Mode.Cancel })
     private val explosionOnlyBlock by boolSetting(
         "Explosion Only Block", false,
-        Setting.Dependency { mode = = Mode.Cancel && explosion }
+        dependency = { mode == Mode.Cancel && explosion }
     )
-    val waterPush by boolSetting("No Water Push", true, Setting.Dependency { mode = = Mode.Cancel })
-    val entityPush by boolSetting("No Entity Push", true, Setting.Dependency { mode = = Mode.Cancel })
-    val blockPush by boolSetting("No Block Push", true, Setting.Dependency { mode = = Mode.Cancel })
-    private val attackCounts by intSetting("Attack Counts", 1, 1, 5, 1, Setting.Dependency { mode = = Mode.Reduce })
-    private val sprintTicks by intSetting("Sprint Ticks", 3, 1, 5, 1, Setting.Dependency { mode = = Mode.Reduce })
-    private val maxDelay by intSetting("Max Delay", 1000, 0, 1000, 50, Setting.Dependency { mode = = Mode.Reduce })
-    private val swingHand by boolSetting("Swing Hand", false, Setting.Dependency { mode = = Mode.Reduce })
-    private val delayTicks by intSetting("Delay Ticks", 3, 1, 5, 1, Setting.Dependency { mode = = Mode.Delay })
-    private val jumpReset by boolSetting("Jump Reset", false, Setting.Dependency { mode = = Mode.Delay })
+    val waterPush by boolSetting("No Water Push", true, dependency = { mode == Mode.Cancel })
+    val entityPush by boolSetting("No Entity Push", true, dependency = { mode == Mode.Cancel })
+    val blockPush by boolSetting("No Block Push", true, dependency = { mode == Mode.Cancel })
+    private val attackCounts by intSetting("Attack Counts", 1, 1, 5, 1, dependency = { mode == Mode.Reduce })
+    private val sprintTicks by intSetting("Sprint Ticks", 3, 1, 5, 1, dependency = { mode == Mode.Reduce })
+    private val maxDelay by intSetting("Max Delay", 1000, 0, 1000, 50, dependency = { mode == Mode.Reduce })
+    private val swingHand by boolSetting("Swing Hand", false, dependency = { mode == Mode.Reduce })
+    private val delayTicks by intSetting("Delay Ticks", 3, 1, 5, 1, dependency = { mode == Mode.Delay })
+    private val jumpReset by boolSetting("Jump Reset", false, dependency = { mode == Mode.Delay })
 
     @Volatile
     private var lag = 0L
@@ -158,7 +160,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
 
         nonNullListener<KeyboardInputEvent> { event ->
-            if (mode = = Mode.Delay && jumpReset && player.onGround() && player.hurtTime == 9) {
+            if (mode == Mode.Delay && jumpReset && player.onGround() && player.hurtTime == 9) {
                 event.isJump = true
             }
 
@@ -191,16 +193,16 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     }
 
     fun ownsIncomingDelayQueue(): Boolean {
-        return isEnabled && (mode = = Mode.Reduce && delay || mode == Mode.Delay && delayTicksRemaining > 0)
+        return isEnabled && (mode == Mode.Reduce && delay || mode == Mode.Delay && delayTicksRemaining > 0)
     }
 
     fun blocksBacktrack(): Boolean {
-        return isEnabled && (mode = = Mode.Reduce && (delay || attackQueue > 0) ||
-                mode = = Mode.Delay && delayTicksRemaining > 0)
+        return isEnabled && (mode == Mode.Reduce && (delay || attackQueue > 0) ||
+                mode == Mode.Delay && delayTicksRemaining > 0)
     }
 
     override fun getInfo(): String {
-        return mode.translatedValue + when (mode) {
+        return modeSetting.translatedValue + when (mode) {
             Mode.Cancel -> ""
             Mode.Reduce -> " " + (if (delay) (System.currentTimeMillis() - startDelay).toString() + "ms" else "")
             Mode.Delay -> " " + delayTicksRemaining + "t"

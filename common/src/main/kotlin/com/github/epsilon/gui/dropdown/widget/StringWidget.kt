@@ -91,7 +91,7 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
     }
 
     private fun previewSetting() {
-        if (!setting.isApplyWhenRelease()) {
+        if (!setting.isApplyWhenRelease) {
             applyText(inputField.text)
         }
     }

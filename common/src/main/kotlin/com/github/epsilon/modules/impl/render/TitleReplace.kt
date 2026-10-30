@@ -21,9 +21,9 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
 
     private val value by stringSetting("Value", "跨圈皇帝萌萌刻")
     private val gradient by boolSetting("Gradient", true)
-    private val color by colorSetting("Color", Color(0x55FFFF), false, Setting.Dependency { !gradient })
-    private val startColor by colorSetting("Start Color", Color(255, 183, 197), false, Setting.Dependency { gradient })
-    private val endColor by colorSetting("End Color", Color(255, 133, 161), false, Setting.Dependency { gradient })
+    private val color by colorSetting("Color", Color(0x55FFFF), false, dependency = { !gradient })
+    private val startColor by colorSetting("Start Color", Color(255, 183, 197), false, dependency = { gradient })
+    private val endColor by colorSetting("End Color", Color(255, 133, 161), false, dependency = { gradient })
 
     private val PATTERN: Pattern = Pattern.compile("(祝你好运\\s*)[^!！\\n]*")
 

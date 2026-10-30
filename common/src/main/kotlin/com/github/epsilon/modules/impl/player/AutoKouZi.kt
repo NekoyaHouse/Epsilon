@@ -40,7 +40,7 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
         nonNullListener<PlayerTickEvent.Pre> {
             if (!canSend()) return@nonNullListener
 
-            if (mode = = Mode.TXT) {
+            if (mode == Mode.TXT) {
                 sendTxtMode()
             } else {
                 sendSentenceMode()

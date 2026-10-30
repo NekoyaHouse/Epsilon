@@ -48,8 +48,8 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     private val swingHand by boolSetting("Swing Hand", false)
     private val cooldown by boolSetting("Cooldown", true)
     private val cooldownBase by doubleSetting(
-        "Cooldown Base", 0.75, 0.1, 1.0, 0.05, Setting.Dependency { cooldown })
-    private val attackDelay by intSetting("Attack Delay", 50, 1, 2000, 1, Setting.Dependency { !cooldown })
+        "Cooldown Base", 0.75, 0.1, 1.0, 0.05, dependency = { cooldown })
+    private val attackDelay by intSetting("Attack Delay", 50, 1, 2000, 1, dependency = { !cooldown })
     private val players by boolSetting("Players", true)
     private val animals by boolSetting("Animals", false)
     private val mobs by boolSetting("Mobs", false)
@@ -64,7 +64,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            target = TargetManager.INSTANCE.acquirePrimary(
+            target = TargetManager.acquirePrimary(
                 TargetRequest.of(
                     range,
                     360.0f,
@@ -120,7 +120,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     private fun doAura(currentTarget: LivingEntity) {
         if (RotationUtils.getEyeDistanceToEntity(currentTarget) > range) return
 
-        if (mode.`is`(AttackMode.Normal)) {
+        if (mode == AttackMode.Normal) {
             attack(currentTarget)
         } else {
             doMaceAttack(currentTarget, vclip)

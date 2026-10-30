@@ -36,8 +36,8 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
         this.metrics = metrics
-        val configs = ConfigManager.INSTANCE.listConfigs()
-        val activeConfig = ConfigManager.INSTANCE.activeConfigName
+        val configs = ConfigManager.listConfigs()
+        val activeConfig = ConfigManager.activeConfigName
         if (!inputField.isFocused && inputField.text.isBlank()) {
             inputField.text = activeConfig
             inputField.setCursorToEnd()
@@ -112,7 +112,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         inputField.draw(
             scope, TrollTheme.metrics(metrics), inputBounds.x, inputBounds.y,
             inputBounds.width, inputBounds.height, mouseX, mouseY,
-            EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.translatedName, TrollTheme.TEXT_SCALE
+            EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE
         )
 
         for (button in actionButtons) {
@@ -138,10 +138,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
             )
         }
 
-        val activeConfig = ConfigManager.INSTANCE.activeConfigName
+        val activeConfig = ConfigManager.activeConfigName
         scope.scissor(listViewport) { content ->
             if (rows.isEmpty()) {
-                val empty = EpsilonTranslations.Gui.CONFIG_EMPTY.translatedName
+                val empty = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName()
                 content.text(
                     2, empty,
                     listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
@@ -171,9 +171,9 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 )
 
                 val hint = if (active) {
-                    EpsilonTranslations.Gui.CONFIG_CURRENT.translatedName
+                    EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
                 } else {
-                    EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.translatedName
+                    EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
                 }
                 content.text(
                     2, TrollTheme.trim(hint, metrics, TrollTheme.VALUE_SCALE * 0.82f, row.bounds.width - DELETE_BUTTON_SIZE - 18.0f),
@@ -272,14 +272,14 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         val targetName = inputField.text.trim()
         if (targetName.isEmpty()) return
         try {
-            val savedName = ConfigManager.INSTANCE.saveAsConfig(targetName)
+            val savedName = ConfigManager.saveAsConfig(targetName)
             inputField.text = savedName
             inputField.setCursorToEnd()
             scroll.stop()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SAVED.translatedName + " " + savedName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SAVED.getTranslatedName() + " " + savedName
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 保存配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SAVE.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SAVE.getTranslatedName() }, exception)
         }
     }
 
@@ -287,36 +287,36 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         val targetName = inputField.text.trim()
         if (targetName.isEmpty()) return
         try {
-            val newName = ConfigManager.INSTANCE.newDefaultConfig(targetName)
+            val newName = ConfigManager.newDefaultConfig(targetName)
             inputField.text = newName
             inputField.setCursorToEnd()
             scroll.stop()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_CREATED.translatedName + " " + newName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_CREATED.getTranslatedName() + " " + newName
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 新建配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SAVE.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SAVE.getTranslatedName() }, exception)
         }
     }
 
     private fun tryReload() {
         try {
-            ConfigManager.INSTANCE.reloadOrThrow()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_RELOADED.translatedName
+            ConfigManager.reloadOrThrow()
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_RELOADED.getTranslatedName()
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 重载配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_RELOAD.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_RELOAD.getTranslatedName() }, exception)
         }
     }
 
     private fun tryExport() {
         try {
-            val exported = ConfigManager.INSTANCE.exportActiveConfigToZip(inputField.text)
+            val exported = ConfigManager.exportActiveConfigToZip(inputField.text)
             val fileName = if (exported?.fileName != null) exported.fileName.toString() else exported.toString()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_EXPORTED.translatedName + " " + fileName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_EXPORTED.getTranslatedName() + " " + fileName
             openExportSuccessPopup(exported)
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 导出配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_EXPORT.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_EXPORT.getTranslatedName() }, exception)
         }
     }
 
@@ -324,57 +324,57 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         val zipPath = inputField.text.trim()
         if (zipPath.isEmpty()) return
         try {
-            val importedName = ConfigManager.INSTANCE.importConfigFromZip(zipPath)
+            val importedName = ConfigManager.importConfigFromZip(zipPath)
             inputField.text = importedName
             inputField.setCursorToEnd()
             scroll.stop()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_IMPORTED.translatedName + " " + importedName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_IMPORTED.getTranslatedName() + " " + importedName
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 导入配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_IMPORT.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_IMPORT.getTranslatedName() }, exception)
         }
     }
 
     private fun tryOpenFolder() {
         try {
             val folder = ConfigFolderOpener.openConfigFolder()
-            status = EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.translatedName + " " + folder
+            status = EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName() + " " + folder
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 打开配置文件夹失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_OPEN_FOLDER.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_OPEN_FOLDER.getTranslatedName() }, exception)
         }
     }
 
     private fun trySwitchConfig(configName: String) {
-        if (configName == ConfigManager.INSTANCE.activeConfigName) return
+        if (configName == ConfigManager.activeConfigName) return
         try {
-            ConfigManager.INSTANCE.switchConfig(configName)
+            ConfigManager.switchConfig(configName)
             inputField.text = configName
             inputField.setCursorToEnd()
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.translatedName + " " + configName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + configName
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 切换配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SWITCH.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_SWITCH.getTranslatedName() }, exception)
         }
     }
 
     private fun tryDeleteConfig(configName: String) {
         try {
-            if (!ConfigManager.INSTANCE.deleteConfig(configName)) {
+            if (!ConfigManager.deleteConfig(configName)) {
                 openErrorPopup(
-                    Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_DELETE.translatedName },
-                    EpsilonTranslations.Gui.CONFIG_ERROR_DELETE_LAST.translatedName
+                    Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_DELETE.getTranslatedName() },
+                    EpsilonTranslations.Gui.CONFIG_ERROR_DELETE_LAST.getTranslatedName()
                 )
                 return
             }
             if (inputField.text.trim() == configName) {
-                inputField.text = ConfigManager.INSTANCE.activeConfigName
+                inputField.text = ConfigManager.activeConfigName
                 inputField.setCursorToEnd()
             }
-            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.translatedName + " " + configName
+            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + configName
         } catch (exception: Exception) {
             Constants.LOGGER.error("Troll GUI 删除配置失败", exception)
-            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_DELETE.translatedName }, exception)
+            openErrorPopup(Supplier { EpsilonTranslations.Gui.CONFIG_ERROR_DELETE.getTranslatedName() }, exception)
         }
     }
 
@@ -385,11 +385,11 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         popupHost.open(
             ConfirmActionPopup(
                 popupBounds,
-                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE.translatedName },
-                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE.translatedName },
+                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE.getTranslatedName() },
+                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE.getTranslatedName() },
                 detail,
-                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM.translatedName },
-                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.translatedName },
+                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM.getTranslatedName() },
+                Supplier { EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName() },
                 Runnable { tryDeleteConfig(configName) }
             )
         )
@@ -405,10 +405,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         popupHost.open(
             MessagePopup(
                 popupHost.getCenteredBounds(220.0f, 84.0f),
-                EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.translatedName,
+                EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName(),
                 actionMessageSupplier.get(),
                 trimmedDetail,
-                EpsilonTranslations.Gui.CONFIG_ERROR_OK.translatedName
+                EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName()
             )
         )
     }
@@ -420,10 +420,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         popupHost.open(
             MessagePopup(
                 popupHost.getCenteredBounds(220.0f, 84.0f),
-                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_TITLE.translatedName,
-                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_MESSAGE.translatedName,
+                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_TITLE.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_MESSAGE.getTranslatedName(),
                 trimmedDetail,
-                EpsilonTranslations.Gui.CONFIG_ERROR_OK.translatedName
+                EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName()
             )
         )
     }
@@ -434,7 +434,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     }
 
     private fun title(): String {
-        return EpsilonTranslations.Gui.TAB_CONFIG.translatedName
+        return EpsilonTranslations.Gui.TAB_CONFIG.getTranslatedName()
     }
 
     private fun deleteBounds(rowBounds: UiRect): UiRect {
@@ -460,12 +460,12 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
         fun label(): String {
             return when (this) {
-                SAVE_AS -> EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.translatedName
-                RELOAD -> EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.translatedName
-                EXPORT -> EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.translatedName
-                IMPORT -> EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.translatedName
-                NEW -> EpsilonTranslations.Gui.CONFIG_ACTION_NEW.translatedName
-                OPEN_FOLDER -> EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.translatedName
+                SAVE_AS -> EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName()
+                RELOAD -> EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.getTranslatedName()
+                EXPORT -> EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.getTranslatedName()
+                IMPORT -> EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.getTranslatedName()
+                NEW -> EpsilonTranslations.Gui.CONFIG_ACTION_NEW.getTranslatedName()
+                OPEN_FOLDER -> EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName()
             }
         }
     }

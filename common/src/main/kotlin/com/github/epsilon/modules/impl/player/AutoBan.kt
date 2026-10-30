@@ -73,7 +73,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
             return
         }
 
-        val word = if (order = = Order.RANDOM) {
+        val word = if (order == Order.RANDOM) {
             words[random.nextInt(words.size)]
         } else {
             if (currentIndex >= words.size) {

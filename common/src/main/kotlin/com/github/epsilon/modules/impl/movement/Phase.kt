@@ -49,16 +49,16 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
     private val mode by enumSetting("Mode", Mode.Vanilla)
     private val swapMode by enumSetting("Swap Mode", SwapMode.InvSwitch)
-    private val pauseOnPhase by boolSetting("Pause On Phase", false, Setting.Dependency { mode = = Mode.Pearl })
-    private val swingHand by boolSetting("Swing Hand", true, Setting.Dependency { mode = = Mode.Pearl })
-    private val silent by boolSetting("Silent", false, Setting.Dependency { mode = = Mode.Sunrise })
-    private val waitBreak by boolSetting("Wait Break", true, Setting.Dependency { mode = = Mode.Sunrise })
-    private val onlyOnGround by boolSetting("Only On Ground", false, Setting.Dependency { mode = = Mode.Pearl })
-    private val autoDisable by boolSetting("Auto Disable", false, Setting.Dependency { mode = = Mode.Pearl })
-    private val afterBreak by intSetting("Break Timeout", 4, 1, 20, 1, Setting.Dependency { mode = = Mode.Sunrise && waitBreak })
-    private val afterPearl by intSetting("Pearl Timeout", 0, 0, 60, 1, Setting.Dependency { mode = = Mode.Pearl })
-    private val pitch by doubleSetting("Pitch", 80.0, 0.0, 90.0, 1.0, Setting.Dependency { mode = = Mode.Pearl })
-    private val strict by boolSetting("Strict", false, Setting.Dependency { mode = = Mode.ForceMine })
+    private val pauseOnPhase by boolSetting("Pause On Phase", false, dependency = { mode == Mode.Pearl })
+    private val swingHand by boolSetting("Swing Hand", true, dependency = { mode == Mode.Pearl })
+    private val silent by boolSetting("Silent", false, dependency = { mode == Mode.Sunrise })
+    private val waitBreak by boolSetting("Wait Break", true, dependency = { mode == Mode.Sunrise })
+    private val onlyOnGround by boolSetting("Only On Ground", false, dependency = { mode == Mode.Pearl })
+    private val autoDisable by boolSetting("Auto Disable", false, dependency = { mode == Mode.Pearl })
+    private val afterBreak by intSetting("Break Timeout", 4, 1, 20, 1, dependency = { mode == Mode.Sunrise && waitBreak })
+    private val afterPearl by intSetting("Pearl Timeout", 0, 0, 60, 1, dependency = { mode == Mode.Pearl })
+    private val pitch by doubleSetting("Pitch", 80.0, 0.0, 90.0, 1.0, dependency = { mode == Mode.Pearl })
+    private val strict by boolSetting("Strict", false, dependency = { mode == Mode.ForceMine })
 
     var clipTimer = 0
     var afterPearlTime = 0
@@ -77,7 +77,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 }
             }
 
-            if (mode = = Mode.ForceMine) {
+            if (mode == Mode.ForceMine) {
                 val xDelta = Math.abs(playerPos.x - event.pos.x).toFloat()
                 val zDelta = Math.abs(playerPos.z - event.pos.z).toFloat()
 
@@ -95,7 +95,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (clipTimer > 0) clipTimer--
             if (afterPearlTime > 0) afterPearlTime--
 
-            if (mode = = Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) &&
+            if (mode == Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) &&
                 !player.isInWater && !player.isInLava && clipTimer <= 0
             ) {
                 val dir = forward(0.5)
@@ -122,7 +122,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 }
             }
 
-            if (mode = = Mode.ForceMine && (player.horizontalCollision || isPlayerInBlock()) &&
+            if (mode == Mode.ForceMine && (player.horizontalCollision || isPlayerInBlock()) &&
                 !player.isInWater && !player.isInLava
             ) {
                 for (x in -2 until 2) {
@@ -146,7 +146,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 }
             }
 
-            if (mode = = Mode.Pearl && (player.onGround() || !onlyOnGround)) {
+            if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
                     if (pauseOnPhase && isPlayerInBlock()) {
                         return@nonNullListener
@@ -160,7 +160,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     }
 
                     val angle = calculate(Vec3.atCenterOf(block))
-                    val result = if (swapMode = = SwapMode.Silent) {
+                    val result = if (swapMode == SwapMode.Silent) {
                         findInHotbar(Items.ENDER_PEARL)
                     } else {
                         find(Items.ENDER_PEARL)
@@ -187,7 +187,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
         clipTimer = 0
 
         runSafe {
-            if (player.onGround() && mode = = Mode.CCClip) {
+            if (player.onGround() && mode == Mode.CCClip) {
                 val diagonalOffset = forwardWithoutStrafe(0.44)
                 val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
 
@@ -271,7 +271,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun doUsePearl(slot: Int) {
-        if (swapMode = = SwapMode.Silent) {
+        if (swapMode == SwapMode.Silent) {
             InvUtils.swap(slot, true)
         } else {
             InvUtils.invSwap(slot)
@@ -283,7 +283,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         }
 
-        if (swapMode = = SwapMode.Silent) {
+        if (swapMode == SwapMode.Silent) {
             InvUtils.swapBack()
         } else {
             InvUtils.invSwapBack()
@@ -298,7 +298,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
     }
 
     private fun canNoClip(): Boolean {
-        if (mode = = Mode.Vanilla) return true
+        if (mode == Mode.Vanilla) return true
         if (!waitBreak) return true
         return clipTimer != 0
     }

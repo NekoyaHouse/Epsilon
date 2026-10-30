@@ -65,11 +65,11 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private var shouldRenderElements = false
 
     override fun init() {
-        NotificationManager.INSTANCE.clearAll()
+        NotificationManager.clearAll()
         val panel = ensureHudPanel()
         panel.isVisible = true
         panel.isOpened = true
-        panel.setMaxPanelHeight(resolveMaxPanelHeight())
+        panel.updateMaxPanelHeight(resolveMaxPanelHeight())
         panel.startIntro()
     }
 
@@ -118,7 +118,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private fun drawEditor(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         ensureHudPanel()
 
-        for (element in HudElementManager.INSTANCE.getElements()) {
+        for (element in HudElementManager.getElements()) {
             element.updateLayout()
         }
 
@@ -150,7 +150,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val backgroundMouseY = if (popupActive) Int.MIN_VALUE else mouseY
 
         beginEditorLayer(100)
-        val elements = HudElementManager.INSTANCE.getElements()
+        val elements = HudElementManager.getElements()
         val hovered = findElementAt(backgroundMouseX.toDouble(), backgroundMouseY.toDouble(), true)
         for (element in elements) {
             if (!element.isEnabled) continue
@@ -179,7 +179,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val previousTarget = LuminRenderSystem.getActiveTarget()
         LuminRenderSystem.setActiveTarget(target)
 
-        for (element in HudElementManager.INSTANCE.getElements()) {
+        for (element in HudElementManager.getElements()) {
             if (element.isEnabled) {
                 element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40))
             }
@@ -206,7 +206,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val overlayScale = (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale()).toFloat()
         graphics.pose().pushMatrix()
         graphics.pose().scale(overlayScale, overlayScale)
-        for (element in HudElementManager.INSTANCE.getElements()) {
+        for (element in HudElementManager.getElements()) {
             if (!element.isEnabled) continue
             element.renderOverlay(graphics, minecraft.getDeltaTracker())
         }
@@ -215,7 +215,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     private fun drawPanel(mouseX: Int, mouseY: Int) {
         val panel = ensureHudPanel()
-        panel.setMaxPanelHeight(resolveMaxPanelHeight())
+        panel.updateMaxPanelHeight(resolveMaxPanelHeight())
         panel.beginRenderFrame(++renderFrameId)
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
@@ -602,7 +602,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         if (!includePanelArea && isOverPanel(mouseX, mouseY)) {
             return null
         }
-        val elements = HudElementManager.INSTANCE.getElements()
+        val elements = HudElementManager.getElements()
         for (i in elements.size - 1 downTo 0) {
             val element = elements[i]
             if (!element.isEnabled) continue
@@ -679,17 +679,17 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     private fun ensureHudPanel(): CategoryPanel {
-        val elementCount = HudElementManager.INSTANCE.getElements().size
+        val elementCount = HudElementManager.getElements().size
         val existing = hudPanel
         if (existing != null && panelElementCount == elementCount) return existing
 
         val x = existing?.x ?: DropdownTheme.PANEL_MARGIN_X
         val y = existing?.y ?: DropdownTheme.PANEL_MARGIN_Y
-        val panel = CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementManager.INSTANCE.getElements())
+        val panel = CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementManager.getElements())
         panel.isVisible = true
         panel.isOpened = true
         panel.setPosition(x, y)
-        panel.setMaxPanelHeight(resolveMaxPanelHeight())
+        panel.updateMaxPanelHeight(resolveMaxPanelHeight())
         hudPanel = panel
         panelElementCount = elementCount
         return panel

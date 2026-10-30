@@ -18,7 +18,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
     private var visibleModules: List<Module> = emptyList()
 
     private fun title(): String {
-        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.translatedName else category.getName()
+        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.getName()
     }
 
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
@@ -27,7 +27,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         if (ClientSetting.moduleSort.`is`(ClientSetting.ModuleSort.EnabledFirst)) {
             order = Comparator.comparing<Module, Boolean> { it.isEnabled }.reversed().thenComparing(order)
         }
-        visibleModules = ModuleManager.INSTANCE.modules.stream()
+        visibleModules = ModuleManager.getModules().stream()
             .filter { module -> module.category == category }
             .sorted(order)
             .toList()

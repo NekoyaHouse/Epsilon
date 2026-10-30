@@ -20,15 +20,15 @@ abstract class MixinIrisHandRenderer {
      */
     @WrapOperation(
         method = ["renderSolid", "renderTranslucent"],
-        at = At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher\$PreparedFrame;close()V", ordinal = 0),
+        at = [At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher\$PreparedFrame;close()V", ordinal = 0)],
         remap = true,
     )
     private fun epsilon$renderOutlineBeforeFrameClose(frame: FeatureRenderDispatcher.PreparedFrame, original: Operation<Void>) {
         if (Shaders.isEnabled && Shaders.hands) {
             try {
-                ShaderManager.INSTANCE.renderHandOutline(frame)
+                ShaderManager.renderHandOutline(frame)
             } finally {
-                ShaderManager.INSTANCE.endHandOutlineCapture()
+                ShaderManager.endHandOutlineCapture()
             }
         }
         original.call(frame)

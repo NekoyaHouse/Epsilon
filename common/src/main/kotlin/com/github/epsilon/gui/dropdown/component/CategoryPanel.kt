@@ -32,7 +32,7 @@ class CategoryPanel : AbstractDropdownPanel {
     constructor(category: Category, panelIndex: Int) :
             super("category:$category", TitleSupplier { category.getName() }, category.icon, panelIndex) {
         this.category = category
-        val modules = ModuleManager.INSTANCE.modules.stream()
+        val modules = ModuleManager.getModules().stream()
             .filter { m -> m.category == category }
             .toList()
         initModuleButtons(modules)
@@ -134,10 +134,6 @@ class CategoryPanel : AbstractDropdownPanel {
         return false
     }
 
-    fun getCategory(): Category? {
-        return category
-    }
-
     fun setSearchQuery(searchQuery: String?) {
         val normalized = searchQuery?.trim()?.lowercase(Locale.ROOT) ?: ""
         if (this.searchQuery == normalized) {
@@ -185,7 +181,7 @@ class CategoryPanel : AbstractDropdownPanel {
     private fun buildSortSignature(sortMode: ClientSetting.ModuleSort): Long {
         var signature = 17L
         signature = signature * 31L + sortMode.ordinal
-        signature = signature * 31L + TranslationManager.revision
+        signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + moduleButtons.size
         for (button in moduleButtons) {
             val module = button.module
@@ -220,7 +216,7 @@ class CategoryPanel : AbstractDropdownPanel {
     }
 
     private fun refreshSearchTextCache() {
-        val revision = TranslationManager.revision
+        val revision = TranslationManager.getRevision()
         if (cachedSearchTextRevision == revision && searchTextCache.isNotEmpty()) {
             return
         }

@@ -41,7 +41,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
             attacks += MathUtils.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
             if (attacks < 1.0) return@nonNullListener
 
-            val targets = TargetManager.INSTANCE.acquireTargets(
+            val targets = TargetManager.acquireTargets(
                 TargetRequest.of(
                     range,
                     fov.toFloat(),

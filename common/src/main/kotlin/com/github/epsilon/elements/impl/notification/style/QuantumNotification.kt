@@ -17,28 +17,28 @@ import java.util.IdentityHashMap
 
 class QuantumNotification(private val owner: Notifications) {
 
-    private val active: Setting.Dependency = Setting.Dependency { owner.isStyle(Notifications.Style.Quantum) }
+    private val active: Setting.Dependency = { owner.isStyle(Notifications.Style.Quantum) }
 
     private val states: IdentityHashMap<Notification, SpringState> = IdentityHashMap()
-    private val backgroundColor by owner.colorSetting("Background Color", Color(0, 0, 0, 50), active)
-    private val backgroundBlur by owner.boolSetting("Background Blur", true, active)
+    private val backgroundColor by owner.colorSetting("Background Color", Color(0, 0, 0, 50), dependency = active)
+    private val backgroundBlur by owner.boolSetting("Background Blur", true, dependency = active)
     private val blurStrength by owner.doubleSetting(
         "Blur Strength", 5.0, 1.0, 20.0, 1.0,
-        Setting.Dependency { active.check() && backgroundBlur }
+        dependency = { active.check() && backgroundBlur }
     )
-    private val drawShadow by owner.boolSetting("Drop Shadow", true, active)
+    private val drawShadow by owner.boolSetting("Drop Shadow", true, dependency = active)
     private val shadowBlur by owner.doubleSetting(
         "Shadow Blur", 10.0, 2.0, 32.0, 1.0,
-        Setting.Dependency { active.check() && drawShadow }
+        dependency = { active.check() && drawShadow }
     )
     private val shadowColor by owner.colorSetting(
         "Shadow Color", Color(255, 255, 255, 110),
-        Setting.Dependency { active.check() && drawShadow }
+        dependency = { active.check() && drawShadow }
     )
-    private val displayTime by owner.intSetting("Quantum Display Time", 5000, 500, 10000, 100, active)
+    private val displayTimeMs by owner.intSetting("Quantum Display Time", 5000, 500, 10000, 100, dependency = active)
 
     fun getDisplayTime(): Int {
-        return displayTime
+        return displayTimeMs
     }
 
     fun width(scale: Float): Float {

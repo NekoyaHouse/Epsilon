@@ -42,14 +42,14 @@ object NoRender : Module("No Render", Category.RENDER) {
     val blockBreakOverlay by boolSetting("Block Break Overlay", false)
     val beaconBeams by boolSetting("Beacon Beams", false)
     val fallingBlocks by boolSetting("Falling Blocks", false)
-    val caveCulling by boolSetting("Cave Culling", false) { _ -> mc.levelExtractor.allChanged() }
+    val caveCulling by boolSetting("Cave Culling", false, onChanged = { _ -> mc.levelExtractor.allChanged() })
     val mapMarkers by boolSetting("Map Markers", false)
     val mapContents by boolSetting("Map Contents", false)
     val bannerRender by boolSetting("Banners", false)
     val explosions by boolSetting("Explosions", false)
     val fireworkExplosions by boolSetting("Firework Explosions", false)
     val barrierInvis by boolSetting("Barrier Invisibility", false)
-    val textureRotations by boolSetting("Texture Rotations", false) { _ -> mc.levelExtractor.allChanged() }
+    val textureRotations by boolSetting("Texture Rotations", false, onChanged = { _ -> mc.levelExtractor.allChanged() })
 
     // Entity
     val entities by entityTypeListSetting("Entities", listOf<EntityType<*>>())

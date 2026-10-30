@@ -9,6 +9,7 @@ import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.setValue
@@ -47,80 +48,81 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
     val armored by boolSetting("Armored", false)
     val noEat by boolSetting("No Eat", false)
     val unbreaking by boolSetting("Unbreaking", true)
-    val unbreakingDelay by intSetting("Unbreaking Delay", 800, 100, 2000, 50, Setting.Dependency { unbreaking })
+    val unbreakingDelay by intSetting("Unbreaking Delay", 800, 100, 2000, 50, dependency = { unbreaking })
     val noSprint by boolSetting(
         "No Sprint", true,
-        Setting.Dependency { mode = = ElytraFlightModes.Control && armored }
+        dependency = { mode == ElytraFlightModes.Control && armored }
     )
-    val useFireworks by boolSetting("Use Fireworks", true, Setting.Dependency { mode = = ElytraFlightModes.Control })
+    val useFireworks by boolSetting("Use Fireworks", true, dependency = { mode == ElytraFlightModes.Control })
     val boostDelay by intSetting(
         "Boost Delay", 20, 2, 50, 1,
-        Setting.Dependency { mode = = ElytraFlightModes.Control && useFireworks }
+        dependency = { mode == ElytraFlightModes.Control && useFireworks }
     )
 
-    val pitch40lowerBounds by doubleSetting(
+    var pitch40lowerBounds by doubleSetting(
         "Pitch40 Lower Bounds", 180.0, -128.0, 1024.0, 1.0,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 }
+        dependency = { mode == ElytraFlightModes.Pitch40 }
     )
     val pitch40rotationSpeedUp by doubleSetting(
         "Pitch40 Rotate Speed Up", 5.45, 1.0, 20.0, 0.05,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 }
+        dependency = { mode == ElytraFlightModes.Pitch40 }
     )
     val pitch40rotationSpeedDown by doubleSetting(
         "Pitch40 Rotate Speed Down", 0.90, 0.5, 2.0, 0.05,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 }
+        dependency = { mode == ElytraFlightModes.Pitch40 }
     )
     val pitch40PacketDelay by intSetting(
         "Pitch40 Packet Delay", 3, 1, 20, 1,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 && armored }
+        dependency = { mode == ElytraFlightModes.Pitch40 && armored }
     )
-    val pitch40AutoTakeoff by boolSetting(
+    var pitch40AutoTakeoff by boolSetting(
         "Pitch40 Auto Takeoff", true,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 }
+        dependency = { mode == ElytraFlightModes.Pitch40 }
     )
-    val pitch40TakeoffTargetHeight by doubleSetting(
+    var pitch40TakeoffTargetHeight by doubleSetting(
         "Pitch40 Takeoff Target Height", 300.0, -128.0, 1024.0, 1.0,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 && pitch40AutoTakeoff }
+        dependency = { mode == ElytraFlightModes.Pitch40 && pitch40AutoTakeoff }
     )
-    val pitch40AutoFirework by boolSetting(
+    var pitch40AutoFirework by boolSetting(
         "Pitch40 Auto Firework", true,
-        Setting.Dependency { mode = = ElytraFlightModes.Pitch40 && pitch40AutoTakeoff }
+        dependency = { mode == ElytraFlightModes.Pitch40 && pitch40AutoTakeoff }
     )
     val pitch40FireworkCooldown by intSetting(
         "Pitch40 Firework Cooldown", 10, 0, 100, 1,
-        Setting.Dependency {
-            mode = = ElytraFlightModes.Pitch40 && pitch40AutoTakeoff && pitch40AutoFirework
+        dependency = {
+            mode == ElytraFlightModes.Pitch40 && pitch40AutoTakeoff && pitch40AutoFirework
         }
     )
 
-    val ncpInstantFly by boolSetting("NCP Instant Fly", true, Setting.Dependency { mode = = ElytraFlightModes.NCP })
+    val ncpInstantFly by boolSetting("NCP Instant Fly", true, dependency = { mode == ElytraFlightModes.NCP })
     val ncpUpPitch by doubleSetting(
         "NCP Up Pitch", 0.0, 0.0, 90.0, 1.0,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP }
+        dependency = { mode == ElytraFlightModes.NCP }
     )
-    val ncpUpFactor by doubleSetting(
+    val ncpUpFactorSetting: DoubleSetting = doubleSetting(
         "NCP Up Factor", 1.0, 0.0, 10.0, 0.05,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP }
+        dependency = { mode == ElytraFlightModes.NCP }
     )
+    val ncpUpFactor by ncpUpFactorSetting
     val ncpDownFactor by doubleSetting(
         "NCP Down Factor", 1.0, 0.0, 10.0, 0.05,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP }
+        dependency = { mode == ElytraFlightModes.NCP }
     )
-    val ncpSpeed by doubleSetting("NCP Speed", 1.0, 0.1, 10.0, 0.1, Setting.Dependency { mode = = ElytraFlightModes.NCP })
+    val ncpSpeed by doubleSetting("NCP Speed", 1.0, 0.1, 10.0, 0.1, dependency = { mode == ElytraFlightModes.NCP })
     val ncpDownSpeed by doubleSetting(
         "NCP Down Speed", 1.0, 0.1, 10.0, 0.1,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP }
+        dependency = { mode == ElytraFlightModes.NCP }
     )
-    val ncpTimer by boolSetting("NCP Timer", true, Setting.Dependency { mode = = ElytraFlightModes.NCP })
-    val ncpSpeedLimit by boolSetting("NCP Speed Limit", true, Setting.Dependency { mode = = ElytraFlightModes.NCP })
+    val ncpTimer by boolSetting("NCP Timer", true, dependency = { mode == ElytraFlightModes.NCP })
+    val ncpSpeedLimit by boolSetting("NCP Speed Limit", true, dependency = { mode == ElytraFlightModes.NCP })
     val ncpMaxSpeed by doubleSetting(
         "NCP Max Speed", 2.5, 0.1, 10.0, 0.1,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP && ncpSpeedLimit }
+        dependency = { mode == ElytraFlightModes.NCP && ncpSpeedLimit }
     )
-    val ncpNoDrag by boolSetting("NCP No Drag", false, Setting.Dependency { mode = = ElytraFlightModes.NCP })
+    val ncpNoDrag by boolSetting("NCP No Drag", false, dependency = { mode == ElytraFlightModes.NCP })
     val ncpTimeout by doubleSetting(
         "NCP Timeout", 0.5, 0.1, 1.0, 0.05,
-        Setting.Dependency { mode = = ElytraFlightModes.NCP }
+        dependency = { mode == ElytraFlightModes.NCP }
     )
 
     private var activeModeType: ElytraFlightModes? = null
@@ -212,7 +214,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
      */
     val isArmorMode: Boolean
         get() = isEnabled && armored &&
-                (mode = = ElytraFlightModes.Control || mode == ElytraFlightModes.NCP)
+                (mode == ElytraFlightModes.Control || mode == ElytraFlightModes.NCP)
 
     fun capturePitch40ControlState(): Pitch40ControlState {
         return Pitch40ControlState(
@@ -244,7 +246,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         pitch40YawOverride = yawOverride
 
         if (mode != ElytraFlightModes.Pitch40) {
-            mode.setMode(ElytraFlightModes.Pitch40)
+            mode = ElytraFlightModes.Pitch40
         }
         if (!isEnabled) {
             isEnabled = true
@@ -259,7 +261,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         pitch40TakeoffTargetHeight = state.takeoffTargetHeight
         pitch40AutoFirework = state.autoFirework
         pitch40YawOverride = state.yawOverride
-        mode.setMode(state.mode)
+        mode = state.mode
 
         if (!state.enabled && isEnabled) {
             isEnabled = false

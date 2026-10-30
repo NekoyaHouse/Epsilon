@@ -55,7 +55,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     private var usingPause by boolSetting("Pause On Use", true)
-    private var onlyMain by boolSetting("Only Main", true, Setting.Dependency { usingPause })
+    private var onlyMain by boolSetting("Only Main", true, dependency = { usingPause })
     private var switchMode by enumSetting("Switch Mode", SwitchMode.Silent)
     private var range by intSetting("Range", 6, 0, 12, 1)
     private var maxBreaks by intSetting("Try Break Time", 6, 0, 10, 1)
@@ -76,8 +76,8 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
     private var renderMode by enumSetting("Render Mode", RenderMode.Shrink)
     private var fading by boolSetting("Fading", true)
-    private var renderTime by doubleSetting("Render Time", 0.1, 0.0, 5.0, 0.1, Setting.Dependency { fading })
-    private var fadeTime by doubleSetting("Fade Time", 0.2, 0.0, 5.0, 0.1, Setting.Dependency { fading })
+    private var renderTime by doubleSetting("Render Time", 0.1, 0.0, 5.0, 0.1, dependency = { fading })
+    private var fadeTime by doubleSetting("Fade Time", 0.2, 0.0, 5.0, 0.1, dependency = { fading })
     private var fadeSideColor by colorSetting("Fade Side Color", Color(70, 200, 155, 31))
     private var fadeLineColor by colorSetting("Fade Line Color", Color(70, 200, 155, 233))
     private var sideStartColor by colorSetting("Side Start", Color(255, 0, 0, 31))
@@ -177,7 +177,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     /** 返回当前的距离上限，供依赖 Packet Mine 的模块筛选可达方块。 */
-    fun getRange(): Int {
+    fun rangeLimit(): Int {
         return range
     }
 

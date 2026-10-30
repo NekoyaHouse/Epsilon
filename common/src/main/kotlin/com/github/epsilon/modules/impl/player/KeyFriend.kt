@@ -22,7 +22,7 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
 
     init {
         nonNullListener<KeyPressEvent>(EventPriority.HIGHEST) { event ->
-            if (handleInput(event.key, event.action)) {
+            if (handleInput(event.getKey(), event.action)) {
                 event.cancel()
             }
         }
@@ -47,10 +47,10 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         val playerName = target.gameProfile.name()
         if (FriendManager.isFriend(playerName)) {
             FriendManager.removeFriend(playerName)
-            NotificationManager.INSTANCE.error(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).string)
+            NotificationManager.error(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).string)
         } else {
             FriendManager.addFriend(playerName)
-            NotificationManager.INSTANCE.success(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).string)
+            NotificationManager.success(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).string)
         }
         return true
     }

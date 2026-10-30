@@ -43,115 +43,115 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private val sgOtherEnchants: SettingGroup = settingGroup("Other Enchants")
     private val sgWeapon: SettingGroup = settingGroup("Weapon")
 
-    private var pauseOnEat by boolSetting("Pause On Eat", true).group(sgGeneral)
-    private var mode by enumSetting("Mode", Mode.Simple).group(sgGeneral)
+    private var pauseOnEat by boolSetting("Pause On Eat", true).apply { group(sgGeneral) }
+    private var mode by enumSetting("Mode", Mode.Simple).apply { group(sgGeneral) }
     private var targetSlot by intSetting(
         "Target Slot", 1, 1, 9, 1,
-        Setting.Dependency { mode == (Mode.Simple) },
-    ).group(sgGeneral)
-    private var swapBack by boolSetting("Swap Back", true).group(sgGeneral)
-    private var swapBackDelay by intSetting("Swap Back Delay", 200, 0, 500, 10).group(sgGeneral)
+        dependency = { mode == (Mode.Simple) },
+    ).apply { group(sgGeneral) }
+    private var swapBack by boolSetting("Swap Back", true).apply { group(sgGeneral) }
+    private var swapBackDelay by intSetting("Swap Back Delay", 200, 0, 500, 10).apply { group(sgGeneral) }
 
     private var smartDurability by boolSetting(
         "Smart Durability Saver", false,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgSwapping)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgSwapping) }
     private var smartShieldBreak by boolSetting(
         "Smart Shield Breaker", true,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgSwapping)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgSwapping) }
     private var swordSwapping by boolSetting(
         "Sword Swapping", true,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgSwapping)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgSwapping) }
     private var maceSwapping by boolSetting(
         "Mace Swapping", true,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgSwapping)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgSwapping) }
     private var otherSwapping by boolSetting(
         "Other Swapping", true,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgSwapping)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgSwapping) }
 
     private var enchantFireAspect by boolSetting(
         "Fire Aspect", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
     private var enchantLooting by boolSetting(
         "Looting", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
     private var enchantSharpness by boolSetting(
         "Sharpness", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
     private var enchantSmite by boolSetting(
         "Smite", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
     private var enchantBaneOfArthropods by boolSetting(
         "Bane of Arthropods", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
     private var enchantSweepingEdge by boolSetting(
         "Sweeping Edge", true,
-        Setting.Dependency { mode == (Mode.Smart) && swordSwapping },
-    ).group(sgSwordEnchants)
+        dependency = { mode == (Mode.Smart) && swordSwapping },
+    ).apply { group(sgSwordEnchants) }
 
     private var regularMace by boolSetting(
         "Regular Mace", true,
-        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
-    ).group(sgMaceEnchants)
+        dependency = { mode == (Mode.Smart) && maceSwapping },
+    ).apply { group(sgMaceEnchants) }
     private var enchantDensity by boolSetting(
         "Density", true,
-        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
-    ).group(sgMaceEnchants)
+        dependency = { mode == (Mode.Smart) && maceSwapping },
+    ).apply { group(sgMaceEnchants) }
     private var enchantBreach by boolSetting(
         "Breach", true,
-        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
-    ).group(sgMaceEnchants)
+        dependency = { mode == (Mode.Smart) && maceSwapping },
+    ).apply { group(sgMaceEnchants) }
     private var enchantWindBurst by boolSetting(
         "Wind Burst", true,
-        Setting.Dependency { mode == (Mode.Smart) && maceSwapping },
-    ).group(sgMaceEnchants)
+        dependency = { mode == (Mode.Smart) && maceSwapping },
+    ).apply { group(sgMaceEnchants) }
 
     private var enchantImpaling by boolSetting(
         "Impaling", true,
-        Setting.Dependency { mode == (Mode.Smart) && otherSwapping },
-    ).group(sgOtherEnchants)
+        dependency = { mode == (Mode.Smart) && otherSwapping },
+    ).apply { group(sgOtherEnchants) }
 
     private var onlyOnWeapon by boolSetting(
         "Only On Weapon", false,
-        Setting.Dependency { mode == (Mode.Smart) },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) },
+    ).apply { group(sgWeapon) }
     private var sword by boolSetting(
         "Sword", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var axe by boolSetting(
         "Axe", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var pickaxe by boolSetting(
         "Pickaxe", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var shovel by boolSetting(
         "Shovel", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var hoe by boolSetting(
         "Hoe", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var mace by boolSetting(
         "Mace", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
     private var trident by boolSetting(
         "Trident", true,
-        Setting.Dependency { mode == (Mode.Smart) && onlyOnWeapon },
-    ).group(sgWeapon)
+        dependency = { mode == (Mode.Smart) && onlyOnWeapon },
+    ).apply { group(sgWeapon) }
 
     private val backTimer = TimerUtils()
     private var awaitingBack: Boolean = false

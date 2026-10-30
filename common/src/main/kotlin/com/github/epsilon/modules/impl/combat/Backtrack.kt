@@ -13,6 +13,7 @@ import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
+import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
@@ -61,20 +62,21 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private val chance by intSetting("Chance", 50, 0, 100, 1)
     private val pauseOnHurtTime by boolSetting("Pause On Hurt Time", false)
     private val hurtTime by intSetting(
-        "Hurt Time", 3, 0, 10, 1, Setting.Dependency { pauseOnHurtTime })
-    private val targetMode by enumSetting("Target Mode", TargetMode.Attack)
+        "Hurt Time", 3, 0, 10, 1, dependency = { pauseOnHurtTime })
+    private val targetModeSetting: EnumSetting<TargetMode> = enumSetting("Target Mode", TargetMode.Attack)
+    private val targetMode by targetModeSetting
     private val lastAttackTime by intSetting("Last Attack Time", 1000, 0, 5000, 50)
-    private val players by boolSetting("Players", true, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val mobs by boolSetting("Mobs", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val animals by boolSetting("Animals", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val villagers by boolSetting("Villagers", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val ambient by boolSetting("Ambient", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val water by boolSetting("Water", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val others by boolSetting("Others", false, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
-    private val invisible by boolSetting("Invisible", true, Setting.Dependency { targetMode.`is`(TargetMode.Range) })
+    private val players by boolSetting("Players", true, dependency = { targetMode == TargetMode.Range })
+    private val mobs by boolSetting("Mobs", false, dependency = { targetMode == TargetMode.Range })
+    private val animals by boolSetting("Animals", false, dependency = { targetMode == TargetMode.Range })
+    private val villagers by boolSetting("Villagers", false, dependency = { targetMode == TargetMode.Range })
+    private val ambient by boolSetting("Ambient", false, dependency = { targetMode == TargetMode.Range })
+    private val water by boolSetting("Water", false, dependency = { targetMode == TargetMode.Range })
+    private val others by boolSetting("Others", false, dependency = { targetMode == TargetMode.Range })
+    private val invisible by boolSetting("Invisible", true, dependency = { targetMode == TargetMode.Range })
     private val esp by boolSetting("ESP", true)
-    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 35), Setting.Dependency { esp })
-    private val outlineColor by colorSetting("Outline Color", Color(255, 255, 255, 190), Setting.Dependency { esp })
+    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 35), dependency = { esp })
+    private val outlineColor by colorSetting("Outline Color", Color(255, 255, 255, 190), dependency = { esp })
 
     private val packetLock = Any()
     private val packetQueue: ArrayDeque<QueuedPacket> = ArrayDeque()
@@ -99,7 +101,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
                 chancePassed = rollChance()
             }
 
-            if (targetMode.`is`(TargetMode.Attack)) {
+            if (targetMode == TargetMode.Attack) {
                 val living = event.entity as? LivingEntity
                 if (living != null) {
                     processTarget(living, now)
@@ -109,7 +111,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
 
         nonNullListener<ClientTickEvent.Pre>(EventPriority.HIGH) {
             val now = System.currentTimeMillis()
-            if (targetMode.`is`(TargetMode.Range)) {
+            if (targetMode == TargetMode.Range) {
                 val rangeTarget = findRangeTarget()
                 if (rangeTarget == null) {
                     clearAndReplay(true)
@@ -222,7 +224,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     override fun getInfo(): String? {
         synchronized(packetLock) {
             return if (backtracking && !packetQueue.isEmpty()) currentDelay.toString() + "ms"
-            else targetMode.getTranslatedValue()
+            else targetModeSetting.translatedValue
         }
     }
 
@@ -296,7 +298,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private fun isValidTarget(candidate: LivingEntity): Boolean {
         if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
         if (candidate.level() !== nn.world || AntiBot.isBot(candidate)) return false
-        if (TargetManager.INSTANCE.isSameTeam(candidate)) return false
+        if (TargetManager.isSameTeam(candidate)) return false
         return candidate !is Player || !FriendManager.isFriend(candidate)
     }
 

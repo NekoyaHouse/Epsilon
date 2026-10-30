@@ -111,7 +111,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
     }
 
     private fun drawPlatformBadge(scope: UiTree.Scope, textMetrics: UiTextMetrics, trailingX: Float) {
-        val label = EpsilonTranslations.PlatformOnly.BADGE.translatedName
+        val label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
         val scale = 0.5f
         // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
         val width = textMetrics.textWidth(label, scale) + 16.0f

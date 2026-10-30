@@ -51,9 +51,9 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     private val swingHand by boolSetting("Swing Hand", true)
 
     private val render by boolSetting("Render", true)
-    private val fadeTime by intSetting("Fade Time", 500, 0, 3000, 50, Setting.Dependency { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), Setting.Dependency { render })
-    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), Setting.Dependency { render })
+    private val fadeTime by intSetting("Fade Time", 500, 0, 3000, 50, dependency = { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), dependency = { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), dependency = { render })
 
     private var placeClock = 0
     private var switchClock = 0
@@ -64,7 +64,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
     init {
         // 渲染事件不受模块启用状态过滤：残留方块需要继续淡出。
-        EventBus.INSTANCE.handler<Render3DEvent> {
+        EventBus.handler<Render3DEvent> {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()
@@ -242,8 +242,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     }
 
     private fun resetState() {
-// this.placeClock = this.placeDelay.getValue().intValue();
-// this.switchClock = this.switchDelay.getValue().intValue();
+// this.placeClock = this.placeDelay.intValue();
+// this.switchClock = this.switchDelay.intValue();
         switchClock = 0
         placeClock = 0
         active = false

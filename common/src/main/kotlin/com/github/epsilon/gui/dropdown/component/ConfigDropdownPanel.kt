@@ -36,7 +36,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
         val contentX = x + PADDING
         val contentW = width - PADDING * 2.0f
 
-        val placeholder = ConfigManager.INSTANCE.activeConfigName
+        val placeholder = ConfigManager.activeConfigName
         if (!inputField.isFocused && inputField.text.isEmpty()) {
             inputField.text = placeholder
         }
@@ -84,7 +84,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
             currentY += ROW_HEIGHT
         }
 
-        val active = ConfigManager.INSTANCE.activeConfigName
+        val active = ConfigManager.activeConfigName
         val configs = configsForFrame()
         if (configs.isEmpty()) {
             val emptyScale = 0.55f
@@ -157,7 +157,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
             val deleteX = contentX + contentW - 18.0f
             if (isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
                 try {
-                    ConfigManager.INSTANCE.deleteConfig(name)
+                    ConfigManager.deleteConfig(name)
                     status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name
                 } catch (e: Exception) {
                     status = errorText(e)
@@ -166,7 +166,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
             }
             if (isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT)) {
                 try {
-                    ConfigManager.INSTANCE.switchConfig(name)
+                    ConfigManager.switchConfig(name)
                     inputField.text = name
                     inputField.setCursorToEnd()
                     status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name
@@ -196,7 +196,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
             when (index) {
                 0 -> {
                     if (value.isNotEmpty()) {
-                        val saved = ConfigManager.INSTANCE.saveAsConfig(value)
+                        val saved = ConfigManager.saveAsConfig(value)
                         inputField.text = saved
                         inputField.setCursorToEnd()
                         status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SAVED.getTranslatedName() + " " + saved
@@ -204,18 +204,18 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
                 }
 
                 1 -> {
-                    ConfigManager.INSTANCE.reloadOrThrow()
+                    ConfigManager.reloadOrThrow()
                     status = EpsilonTranslations.Gui.DROPDOWN_STATUS_RELOADED.getTranslatedName()
                 }
 
                 2 -> {
                     status = EpsilonTranslations.Gui.DROPDOWN_STATUS_EXPORTED.getTranslatedName() + " " +
-                            ConfigManager.INSTANCE.exportActiveConfigToZip(value).fileName
+                            ConfigManager.exportActiveConfigToZip(value).fileName
                 }
 
                 3 -> {
                     if (value.isNotEmpty()) {
-                        val imported = ConfigManager.INSTANCE.importConfigFromZip(value)
+                        val imported = ConfigManager.importConfigFromZip(value)
                         inputField.text = imported
                         inputField.setCursorToEnd()
                         status = EpsilonTranslations.Gui.DROPDOWN_STATUS_IMPORTED.getTranslatedName() + " " + imported
@@ -224,7 +224,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
 
                 4 -> {
                     if (value.isNotEmpty()) {
-                        val created = ConfigManager.INSTANCE.newDefaultConfig(value)
+                        val created = ConfigManager.newDefaultConfig(value)
                         inputField.text = created
                         inputField.setCursorToEnd()
                         status = EpsilonTranslations.Gui.DROPDOWN_STATUS_CREATED.getTranslatedName() + " " + created
@@ -272,7 +272,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
     private fun configsForFrame(): List<String> {
         val frameId = getRenderFrameId()
         if (cachedConfigFrameId != frameId) {
-            cachedConfigs = ConfigManager.INSTANCE.listConfigs()
+            cachedConfigs = ConfigManager.listConfigs()
             cachedConfigFrameId = frameId
         }
         return cachedConfigs

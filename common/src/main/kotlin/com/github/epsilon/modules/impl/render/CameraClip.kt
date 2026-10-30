@@ -12,10 +12,10 @@ import net.minecraft.world.phys.Vec3
 object CameraClip : Module("Camera Clip", Category.RENDER) {
 
     val distance by doubleSetting("Distance", 3.5, 1.0, 20.0, 0.5)
-    val action by boolSetting("Action", true) { _ -> resetCameraPos() }
-    val actionSmoothness by doubleSetting("Action Smoothness", 0.3, 0.1, 0.95, 0.01, Setting.Dependency { action })
-    val actionMaxDistance by doubleSetting("Action Max Distance", 20.0, 1.0, 50.0, 0.5, Setting.Dependency { action })
-    val betterBobView by boolSetting("Better Bob View", true, Setting.Dependency { mc.options.bobView().get() })
+    val action by boolSetting("Action", true, onChanged = { _ -> resetCameraPos() })
+    val actionSmoothness by doubleSetting("Action Smoothness", 0.3, 0.1, 0.95, 0.01, dependency = { action })
+    val actionMaxDistance by doubleSetting("Action Max Distance", 20.0, 1.0, 50.0, 0.5, dependency = { action })
+    val betterBobView by boolSetting("Better Bob View", true, dependency = { mc.options.bobView().get() })
 
     private var cameraPos: Vec3? = null
 

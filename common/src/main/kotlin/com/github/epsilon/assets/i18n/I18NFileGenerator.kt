@@ -40,14 +40,14 @@ object I18NFileGenerator {
             matched = true
         }
 
-        for (module in ModuleManager.INSTANCE.getModules()) {
+        for (module in ModuleManager.getModules()) {
             if (matchesOwner(EPSILON_OWNER, selectedOwner)) {
                 addModuleKeys(root, module)
                 matched = true
             }
         }
 
-        for (module in HudElementManager.INSTANCE.getElements()) {
+        for (module in HudElementManager.getElements()) {
             if (matchesOwner(EPSILON_OWNER, selectedOwner)) {
                 addModuleKeys(root, module)
                 matched = true

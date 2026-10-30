@@ -660,7 +660,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         IMEFocusHelper.forceDeactivate()
         renderTarget?.close()
         renderTarget = null
-        ConfigManager.INSTANCE.saveNow()
+        ConfigManager.saveNow()
         super.removed()
     }
 

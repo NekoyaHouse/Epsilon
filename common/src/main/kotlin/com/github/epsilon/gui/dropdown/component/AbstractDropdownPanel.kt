@@ -242,7 +242,7 @@ abstract class AbstractDropdownPanel protected constructor(
         this.y = y
     }
 
-    override fun setMaxPanelHeight(maxPanelHeight: Float) {
+    override fun updateMaxPanelHeight(maxPanelHeight: Float) {
         this.maxPanelHeight = maxPanelHeight
     }
 
@@ -260,7 +260,7 @@ abstract class AbstractDropdownPanel protected constructor(
 
     protected fun getTitle(): String {
         if (titleSupplier != null) return titleSupplier.get()
-        return titleComponent?.translatedName ?: title ?: ""
+        return titleComponent?.getTranslatedName() ?: title ?: ""
     }
 
     fun interface TitleSupplier {

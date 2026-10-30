@@ -17,7 +17,7 @@ open class MixinSodiumAbstractBlockRenderContext {
     @field:Shadow
     protected var state: BlockState? = null
 
-    @Inject(method = ["isFaceCulled"], at = At("HEAD"), cancellable = true)
+    @Inject(method = ["isFaceCulled"], at = [At("HEAD")], cancellable = true)
     private fun hookIsFaceCulled(face: Direction, cir: CallbackInfoReturnable<Boolean>) {
         if (Xray.isEnabled && Xray.wallHack) {
             cir.setReturnValue(!Xray.isCheckableOre(state!!.block))

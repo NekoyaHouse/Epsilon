@@ -104,14 +104,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     /**
      * 玲纱立绘改为按需下载，纹理标识在渲染线程上惰性注册；未下载时返回 null。
      */
-    private fun reisaWelcomeTexture(): Identifier? = AssetManager.INSTANCE.reisaTexture(REISA_WELCOME_SUFFIX)
+    private fun reisaWelcomeTexture(): Identifier? = AssetManager.reisaTexture(REISA_WELCOME_SUFFIX)
 
-    private fun reisaExitTexture(): Identifier? = AssetManager.INSTANCE.reisaTexture(REISA_EXIT_SUFFIX)
+    private fun reisaExitTexture(): Identifier? = AssetManager.reisaTexture(REISA_EXIT_SUFFIX)
 
     private fun reisaShutdownEntranceTexture(): Identifier? =
-        AssetManager.INSTANCE.reisaTexture(REISA_SHUTDOWN_ENTRANCE_SUFFIX)
+        AssetManager.reisaTexture(REISA_SHUTDOWN_ENTRANCE_SUFFIX)
 
-    private fun reisaShutdownFinalTexture(): Identifier? = AssetManager.INSTANCE.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX)
+    private fun reisaShutdownFinalTexture(): Identifier? = AssetManager.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX)
 
     init {
         entries.add(MenuEntry("Singleplayer", Runnable { minecraft?.gui?.setScreen(SelectWorldScreen(this)) }))
@@ -148,10 +148,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     override fun init() {
         super.init()
-        val assets = AssetManager.INSTANCE
+        val assets = AssetManager
         val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
         updateBackgroundVideo()
-        if (columbinaStyle && assets.isVideoSupported) {
+        if (columbinaStyle && assets.isVideoSupported()) {
             // 视频叠层光效可以独立缺失，缺失时补提示；已就绪或本会话已拒绝时不会重复弹窗。
             assets.requestDownload(
                 listOf(
@@ -177,9 +177,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     private fun updateBackgroundVideo() {
-        val assets = AssetManager.INSTANCE
+        val assets = AssetManager
         val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
-        if (!columbinaStyle || !assets.isVideoSupported) {
+        if (!columbinaStyle || !assets.isVideoSupported()) {
             if (columbinaStyle) {
                 ClientSetting.mainMenuStyle.value = ClientSetting.MainMenuStyle.Classic
             }
@@ -196,8 +196,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val downloadJob = assets.activeJob()
         if (downloadJob != null && downloadJob.isRunning()) return
 
-        val videoReady = assets.isVideoReady
-        val ffmpegReady = assets.isFfmpegReady
+        val videoReady = assets.isVideoReady()
+        val ffmpegReady = assets.isFfmpegReady()
         if (videoReady && ffmpegReady) {
             try {
                 VideoManager.loadBackground()
@@ -215,7 +215,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     fun queueReisaGreeting() {
-        if (!ClientSetting.showReisaOnStartup || !AssetManager.INSTANCE.isReisaReady) {
+        if (!ClientSetting.showReisaOnStartup || !AssetManager.isReisaReady()) {
             reisaGreetingQueued = false
             return
         }
@@ -229,8 +229,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
      * 玲纱立绘缺失时提示下载，仅在启用了启动问候或关机动画时需要。
      */
     private fun requestReisaAssetsIfNeeded() {
-        val assets = AssetManager.INSTANCE
-        if (assets.isReisaReady) {
+        val assets = AssetManager
+        if (assets.isReisaReady()) {
             return
         }
         val needed = ClientSetting.showReisaOnStartup || ClientSetting.showReisaOnShutdown
@@ -240,7 +240,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     private fun startReisaGreeting() {
-        if (!ClientSetting.showReisaOnStartup || !AssetManager.INSTANCE.isReisaReady) {
+        if (!ClientSetting.showReisaOnStartup || !AssetManager.isReisaReady()) {
             clearReisaGreeting()
             return
         }
@@ -254,7 +254,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     fun requestShutdown(): Boolean {
-        if (!ClientSetting.showReisaOnShutdown || !AssetManager.INSTANCE.isReisaReady) return false
+        if (!ClientSetting.showReisaOnShutdown || !AssetManager.isReisaReady()) return false
         val minecraft = this.minecraft ?: return false
         if (!initialized || minecraft.gui.screen() !== this || reisaShutdownCommitted) return false
         if (reisaShutdownStartMs >= 0L) return true
@@ -402,7 +402,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val finalU1 = u1
         val finalV0 = v0
         val finalV1 = v1
-        val lightTrails = AssetManager.INSTANCE.videoOverlayTexture()
+        val lightTrails = AssetManager.videoOverlayTexture()
         val backgroundTree = UiTree.build { scope ->
             scope.layer(0) { layer ->
                 layer.texture(
@@ -484,7 +484,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         scene.beginFrame()
         val tree = UiTree.build { scope ->
             scope.pushAbsolute(layoutX, layoutY) { content ->
-                if (AssetManager.INSTANCE.isReisaReady) {
+                if (AssetManager.isReisaReady()) {
                     if (!reisaShutdownTexturesPrewarmed) {
                         prewarmReisaShutdownTextures(content)
                         reisaShutdownTexturesPrewarmed = true

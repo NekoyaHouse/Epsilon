@@ -124,49 +124,49 @@ object ClientSetting : Module("Client Setting", null) {
 
     // General
     val guiKeybind by keybindSetting("Gui Keybind", InputConstants.KEY_RSHIFT)
-        .group(sgGeneral)
+        .apply { group(sgGeneral) }
 
-    val guiMode: EnumSetting<GuiMode> by enumSetting(
+    val guiMode: EnumSetting<GuiMode> = enumSetting(
         "Gui Mode",
         GuiMode.Dropdown,
-        Consumer { _ -> mc.gui.setScreen(getGuiScreen()) }
-    ).group(sgGeneral)
+        { _ -> mc.gui.setScreen(getGuiScreen()) }
+    ).apply { group(sgGeneral) }
 
-    val moduleSort: EnumSetting<ModuleSort> by enumSetting("Module Sort", ModuleSort.Name)
-        .group(sgGeneral)
+    val moduleSort: EnumSetting<ModuleSort> = enumSetting("Module Sort", ModuleSort.Name)
+        .apply { group(sgGeneral) }
 
-    val language: EnumSetting<EpsilonLanguage> by enumSetting(
+    val language: EnumSetting<EpsilonLanguage> = enumSetting(
         "Language",
         EpsilonLanguage.English,
-        Consumer { EpsilonLanguageManager.INSTANCE.selectLanguage(it) }
-    ).group(sgGeneral)
+        { EpsilonLanguageManager.selectLanguage(it) }
+    ).apply { group(sgGeneral) }
 
     val customLanguage by stringSetting(
         "Custom Language",
         "",
-        Setting.Dependency { language.`is`(EpsilonLanguage.Custom) },
-        Consumer { EpsilonLanguageManager.INSTANCE.refreshCustomLanguage() }
-    ).group<StringSetting>(sgGeneral).applyWhenRelease<StringSetting>()
+        dependency = { language.`is`(EpsilonLanguage.Custom) },
+        onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
+    ).apply { group(sgGeneral) }.apply { applyWhenRelease() }
 
     private val renderScale by doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5)
-        .group<DoubleSetting>(sgGeneral)
-        .applyWhenRelease<DoubleSetting>()
+        .apply { group(sgGeneral) }
+        .apply { applyWhenRelease() }
 
     val i18nFallback by boolSetting(
         "I18n Fallback",
         true,
-        Consumer { TranslationManager.refresh() }
-    ).group(sgGeneral)
+        { TranslationManager.refresh() }
+    ).apply { group(sgGeneral) }
 
-    val fontAntiAliasing by boolSetting("Font Anti Aliasing", true).group(sgGeneral)
+    val fontAntiAliasing by boolSetting("Font Anti Aliasing", true).apply { group(sgGeneral) }
 
-    val font: EnumSetting<FontMode> by enumSetting("Font", FontMode.Default).group(sgGeneral)
+    val font: EnumSetting<FontMode> = enumSetting("Font", FontMode.Default).apply { group(sgGeneral) }
 
     val customFont by stringSetting(
         "Custom Font",
         "",
-        Setting.Dependency { font.`is`(FontMode.Custom) }
-    ).group<StringSetting>(sgGeneral).applyWhenRelease<StringSetting>()
+        dependency = { font.`is`(FontMode.Custom) }
+    ).apply { group(sgGeneral) }.apply { applyWhenRelease() }
 
     val fontGlyphsPerFrame by intSetting(
         "Font Glyphs Per Frame",
@@ -174,54 +174,54 @@ object ClientSetting : Module("Client Setting", null) {
         1,
         64,
         1,
-        Consumer { applyFontGlyphUploadBudget(it) }
-    ).group(sgGeneral)
+        { applyFontGlyphUploadBudget(it) }
+    ).apply { group(sgGeneral) }
 
-    val replaceMinecraftFont by boolSetting("Replace Minecraft Font", true).group(sgGeneral)
+    val replaceMinecraftFont by boolSetting("Replace Minecraft Font", true).apply { group(sgGeneral) }
 
     val closeOnOutside by boolSetting(
         "Close Gui On Outside",
         false,
-        Setting.Dependency { guiMode.`is`(GuiMode.Panel) }
-    ).group(sgGeneral)
+        dependency = { guiMode.`is`(GuiMode.Panel) }
+    ).apply { group(sgGeneral) }
 
     val dropdownHints by boolSetting(
         "Dropdown Hints",
         true,
-        Setting.Dependency { guiMode.`is`(GuiMode.Dropdown) }
-    ).group(sgGeneral)
+        dependency = { guiMode.`is`(GuiMode.Dropdown) }
+    ).apply { group(sgGeneral) }
 
     // Teams
-    val teams: EnumSetting<Teams> by enumSetting("Teams", Teams.None).group(sgTeams)
+    val teams: EnumSetting<Teams> = enumSetting("Teams", Teams.None).apply { group(sgTeams) }
 
     // Anti Cheat
-    val rotationMode: EnumSetting<RotationManager.RotationMode> by enumSetting(
+    val rotationMode: EnumSetting<RotationManager.RotationMode> = enumSetting(
         "Rotation Mode",
         RotationManager.RotationMode.SILENT,
-        Consumer { RotationManager.switchRotationManager(it) }
-    ).group(sgAntiCheat)
+        { RotationManager.switchRotationManager(it) }
+    ).apply { group(sgAntiCheat) }
 
-    val modifyCrosshair by boolSetting("Modify Crosshair", true).group(sgAntiCheat)
+    val modifyCrosshair by boolSetting("Modify Crosshair", true).apply { group(sgAntiCheat) }
 
-    val hideMode: EnumSetting<HideMode> by enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat)
+    val hideMode: EnumSetting<HideMode> = enumSetting("Hide Mode", HideMode.None).apply { group(sgAntiCheat) }
 
     // Appearance
-    val themeMode: EnumSetting<ThemeMode> by enumSetting(
+    val themeMode: EnumSetting<ThemeMode> = enumSetting(
         "Theme Mode",
         ThemeMode.Dark,
-        Consumer { MD3Theme.syncFromSettings() }
-    ).group(sgAppearance)
+        { MD3Theme.syncFromSettings() }
+    ).apply { group(sgAppearance) }
 
-    val themePreset: EnumSetting<ThemePreset> by enumSetting(
+    val themePreset: EnumSetting<ThemePreset> = enumSetting(
         "Theme Preset",
         ThemePreset.TonalSpot,
-        Consumer { MD3Theme.syncFromSettings() }
-    ).group(sgAppearance)
+        { MD3Theme.syncFromSettings() }
+    ).apply { group(sgAppearance) }
 
-    val customIcon: EnumSetting<IconMode> by enumSetting(
+    val customIcon: EnumSetting<IconMode> = enumSetting(
         "Custom Icon",
         IconMode.Epsilon,
-        Consumer {
+        {
             try {
                 mc.window.setIcon(
                     mc.vanillaPackResources.fullResources(),
@@ -230,24 +230,24 @@ object ClientSetting : Module("Client Setting", null) {
             } catch (ignored: IOException) {
             }
         }
-    ).group(sgAppearance)
+    ).apply { group(sgAppearance) }
 
-    val customTitle: EnumSetting<TitleMode> by enumSetting(
+    val customTitle: EnumSetting<TitleMode> = enumSetting(
         "Custom Title",
         TitleMode.Epsilon,
-        Consumer { mc.updateTitle() }
-    ).group(sgAppearance)
+        { mc.updateTitle() }
+    ).apply { group(sgAppearance) }
 
-    val useMainMenu by boolSetting("Use MainMenu", true).group(sgAppearance)
+    val useMainMenu by boolSetting("Use MainMenu", true).apply { group(sgAppearance) }
 
-    val mainMenuStyle: EnumSetting<MainMenuStyle> by enumSetting(
+    val mainMenuStyle: EnumSetting<MainMenuStyle> = enumSetting(
         "MainMenu Style",
         MainMenuStyle.Columbina,
-        Setting.Dependency { useMainMenu },
-        Consumer { style ->
+        dependency = { useMainMenu },
+        onChanged = { style ->
             if (style == MainMenuStyle.Columbina) {
                 // 重新启用时允许下次进入主菜单再次提示下载缺失资源
-                AssetManager.INSTANCE.clearDeclined(
+                AssetManager.clearDeclined(
                     listOf(
                         AssetManager.Asset.VIDEO,
                         AssetManager.Asset.LIGHT_TRAILS,
@@ -257,44 +257,44 @@ object ClientSetting : Module("Client Setting", null) {
             }
         }
     )
-        .restrictMode<EnumSetting<MainMenuStyle>>(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64)
-        .group<EnumSetting<MainMenuStyle>>(sgAppearance)
+        .apply { restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64) }
+        .apply { group(sgAppearance) }
 
-    val mainMenuBackground: EnumSetting<MainMenuScreen.Background> by enumSetting(
+    val mainMenuBackground: EnumSetting<MainMenuScreen.Background> = enumSetting(
         "MainMenu Background",
         MainMenuScreen.Background.PLANET,
-        Setting.Dependency { useMainMenu && mainMenuStyle.`is`(MainMenuStyle.Classic) }
-    ).group(sgAppearance)
+        dependency = { useMainMenu && mainMenuStyle.`is`(MainMenuStyle.Classic) }
+    ).apply { group(sgAppearance) }
 
     val showWelcomeScreen by boolSetting("Show Welcome Screen", true)
-        .rootSetting<BoolSetting>()
-        .group<BoolSetting>(sgAppearance)
+        .apply { rootSetting() }
+        .apply { group(sgAppearance) }
 
     // 宇泽玲纱
-    val showReisaInDropdown by boolSetting("Show Reisa In Dropdown", true).group(sgReisa)
+    val showReisaInDropdown by boolSetting("Show Reisa In Dropdown", true).apply { group(sgReisa) }
 
-    val showReisaOnStartup by boolSetting("Show Reisa On Startup", true).group(sgReisa)
+    val showReisaOnStartup by boolSetting("Show Reisa On Startup", true).apply { group(sgReisa) }
 
-    val showReisaOnShutdown by boolSetting("Show Reisa On Shutdown", true).group(sgReisa)
+    val showReisaOnShutdown by boolSetting("Show Reisa On Shutdown", true).apply { group(sgReisa) }
 
-    val reisaVolume by doubleSetting("Reisa Volume", 0.15, 0.0, 0.5, 0.05).group(sgReisa)
+    val reisaVolume by doubleSetting("Reisa Volume", 0.15, 0.0, 0.5, 0.05).apply { group(sgReisa) }
 
     // Resources
     val resourceBaseUrl by stringSetting(
         "Resource Base URL",
         AssetManager.DEFAULT_RESOURCE_BASE_URL
-    ).group(sgResources)
+    ).apply { group(sgResources) }
 
-    val ffmpegDownloadUrl by stringSetting(
+    var ffmpegDownloadUrl by stringSetting(
         "FFmpeg Download URL",
         FFmpegNativePlatform.currentOrDefault().defaultUrl()
-    ).group(sgResources)
+    ).apply { group(sgResources) }
 
     @Suppress("unused")
     private val downloadAssets by buttonSetting(
         "Download Assets",
-        Runnable { AssetManager.INSTANCE.openDownloadScreen() }
-    ).group(sgResources)
+        Runnable { AssetManager.openDownloadScreen() }
+    ).apply { group(sgResources) }
 
     @Suppress("unused")
     private val clearAssetCache by buttonSetting(
@@ -302,63 +302,63 @@ object ClientSetting : Module("Client Setting", null) {
         Runnable {
             val parent = mc.gui.screen()
             val lines = listOf(
-                EpsilonTranslations.Resources.CLEAR_CONFIRM_MESSAGE.translatedName,
-                AssetManager.INSTANCE.rootDirectory().toString()
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_MESSAGE.getTranslatedName(),
+                AssetManager.rootDirectory().toString()
             )
             mc.gui.setScreen(
                 ConfirmDialogScreen(
                     parent,
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.translatedName,
+                    EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.getTranslatedName(),
                     lines,
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.translatedName,
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.translatedName,
+                    EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.getTranslatedName(),
+                    EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName(),
                     Runnable {
-                        AssetManager.INSTANCE.clearCache()
-                        NotificationManager.INSTANCE.success(
-                            EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.translatedName,
-                            EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.translatedName
+                        AssetManager.clearCache()
+                        NotificationManager.success(
+                            EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
+                            EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName()
                         )
                     }
                 )
             )
         }
-    ).group(sgResources)
+    ).apply { group(sgResources) }
 
     @Suppress("unused")
     private val openAssetFolder by buttonSetting(
         "Open Asset Folder",
         Runnable {
             try {
-                val directory: Path = AssetManager.INSTANCE.rootDirectory()
+                val directory: Path = AssetManager.rootDirectory()
                 Files.createDirectories(directory)
                 Blaze3D.openPath(directory)
             } catch (e: IOException) {
-                NotificationManager.INSTANCE.error(
-                    EpsilonTranslations.Resources.OPEN_FOLDER_FAILED.translatedName,
+                NotificationManager.error(
+                    EpsilonTranslations.Resources.OPEN_FOLDER_FAILED.getTranslatedName(),
                     e.message ?: e.javaClass.simpleName
                 )
             }
         }
-    ).group(sgResources)
+    ).apply { group(sgResources) }
 
     // Notification
-    val soundNotify by boolSetting("Sound Notify", true).group(sgNotification)
+    val soundNotify by boolSetting("Sound Notify", true).apply { group(sgNotification) }
 
-    val chatNotify by boolSetting("Chat Notify", true).group(sgNotification)
+    val chatNotify by boolSetting("Chat Notify", true).apply { group(sgNotification) }
 
-    val animatedChatPrefix by boolSetting("Animated Chat Prefix", true).group(sgNotification)
+    val animatedChatPrefix by boolSetting("Animated Chat Prefix", true).apply { group(sgNotification) }
 
     val chatPrefixColorStart by colorSetting(
         "Chat Prefix Color Start",
         Color(255, 175, 210),
-        Setting.Dependency { animatedChatPrefix }
-    ).group(sgNotification)
+        dependency = { animatedChatPrefix }
+    ).apply { group(sgNotification) }
 
     val chatPrefixColorEnd by colorSetting(
         "Chat Prefix Color End",
         Color(150, 220, 255),
-        Setting.Dependency { animatedChatPrefix }
-    ).group(sgNotification)
+        dependency = { animatedChatPrefix }
+    ).apply { group(sgNotification) }
 
     val chatPrefixGradientSpeed by doubleSetting(
         "Chat Prefix Gradient Speed",
@@ -366,8 +366,8 @@ object ClientSetting : Module("Client Setting", null) {
         0.1,
         1.0,
         0.1,
-        Setting.Dependency { animatedChatPrefix }
-    ).group(sgNotification)
+        dependency = { animatedChatPrefix }
+    ).apply { group(sgNotification) }
 
     fun getGuiScreen(): Screen {
         return when (guiMode.value) {

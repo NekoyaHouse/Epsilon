@@ -82,8 +82,8 @@ class TrollSettingRow {
         if (setting != null) return setting.displayName
         return when (action) {
             ModuleAction.TOGGLE -> module!!.translatedName
-            ModuleAction.BIND -> EpsilonTranslations.TrollGui.KEYBIND.translatedName
-            ModuleAction.HIDDEN -> EpsilonTranslations.Module.HIDDEN.translatedName
+            ModuleAction.BIND -> EpsilonTranslations.TrollGui.KEYBIND.getTranslatedName()
+            ModuleAction.HIDDEN -> EpsilonTranslations.Module.HIDDEN.getTranslatedName()
             null -> ""
         }
     }
@@ -97,11 +97,11 @@ class TrollSettingRow {
     }
 
     private fun valueText(previewEnum: Boolean): String {
-        if (listening) return EpsilonTranslations.TrollGui.LISTENING.translatedName
+        if (listening) return EpsilonTranslations.TrollGui.LISTENING.getTranslatedName()
         val module = this.module
         if (action == ModuleAction.BIND && module != null) {
             val modeKey = if (module.bindMode == Module.BindMode.Hold) EpsilonTranslations.Keybind.HOLD else EpsilonTranslations.Keybind.TOGGLE
-            return KeybindUtils.format(module.keyBind) + " (" + modeKey.translatedName + ")"
+            return KeybindUtils.format(module.keyBind) + " (" + modeKey.getTranslatedName() + ")"
         }
         return when (val s = setting) {
             is KeybindSetting -> KeybindUtils.format(s.value)
@@ -114,8 +114,8 @@ class TrollSettingRow {
                     s.translatedValue
                 }
             is StringSetting -> s.value
-            is StringListSetting -> s.value.size.toString() + " " + EpsilonTranslations.Gui.LIST_ENTRIES.translatedName
-            is RegistryListSetting<*> -> s.value.size.toString() + " " + EpsilonTranslations.Gui.LIST_ENTRIES.translatedName
+            is StringListSetting -> s.value.size.toString() + " " + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
+            is RegistryListSetting<*> -> s.value.size.toString() + " " + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
             else -> ""
         }
     }
@@ -383,7 +383,7 @@ class TrollSettingRow {
     private fun previewText() {
         val activeInput = input ?: return
         val setting = this.setting
-        if (setting is StringSetting && !setting.isApplyWhenRelease() && setting.value != activeInput.text) {
+        if (setting is StringSetting && !setting.isApplyWhenRelease && setting.value != activeInput.text) {
             setting.value = activeInput.text
         }
     }
@@ -448,7 +448,7 @@ class TrollSettingRow {
         dragStartX = mouseX
         var value = minimum() + Math.round(fraction * (maximum() - minimum()) / Math.max(0.000001, step)) * step
         value = Math.clamp(value, minimum(), maximum())
-        if (setting!!.isApplyWhenRelease()) pendingNumber = value else applyNumber(value)
+        if (setting!!.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
     }
 
     private fun applyNumber(value: Double) {

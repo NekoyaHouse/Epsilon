@@ -58,11 +58,11 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 startTakeoff()
                 return@runSafe
             }
-            if (elytraFly.pitch40AutoTakeoff.value) {
+            if (elytraFly.pitch40AutoTakeoff) {
                 completedTakeoffTarget = targetHeight
             }
 
-            if (player.y - 40.0 < elytraFly.pitch40lowerBounds.value) {
+            if (player.y - 40.0 < elytraFly.pitch40lowerBounds) {
                 fail(EpsilonTranslations.ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS)
             }
         }
@@ -156,14 +156,14 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 return@runSafe
             }
 
-            if (elytraFly.armored.value) {
+            if (elytraFly.armored) {
                 refreshArmoredFallFlying(elytra.slot, false)
             } else if (canStartFallFlying() && startFallFlying()) {
                 shouldJump = true
             }
 
-            if (elytraFly.pitch40AutoFirework.value && player.isFallFlying &&
-                fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown.value) && useFirework()
+            if (elytraFly.pitch40AutoFirework && player.isFallFlying &&
+                fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown) && useFirework()
             ) {
                 fireworkTimer.reset()
             }
@@ -177,7 +177,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             val elytra = find(Items.ELYTRA)
             if (!canGlide(elytra.found())) return@runSafe
 
-            if (elytraFly.armored.value) {
+            if (elytraFly.armored) {
                 refreshArmoredFallFlying(elytra.slot, true)
             } else if (startFallFlying()) {
                 shouldJump = true
@@ -202,7 +202,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         completedTakeoffTarget = getTakeoffTargetHeight()
         pitch = DESCEND_PITCH
         maintainFallFlying()
-        NotificationManager.INSTANCE.success(
+        NotificationManager.success(
             elytraFly.translatedName,
             EpsilonTranslations.ElytraFly.PITCH40_TAKEOFF_COMPLETE.getTranslatedName()
         )
@@ -210,7 +210,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     private fun refreshArmoredFallFlying(elytraSlot: Int, respectDelay: Boolean) {
         runSafe {
-            if (respectDelay && ++packetDelayTicks <= elytraFly.pitch40PacketDelay.value) {
+            if (respectDelay && ++packetDelayTicks <= elytraFly.pitch40PacketDelay) {
                 return@runSafe
             }
             packetDelayTicks = 0
@@ -231,25 +231,25 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             /*
              * 下降时看向 37.72 度；上升时先快速抬头到 -54.77 度，再缓慢压回 37.72 度。
              */
-            if (pitchingDown && player.y <= elytraFly.pitch40lowerBounds.value) {
+            if (pitchingDown && player.y <= elytraFly.pitch40lowerBounds) {
                 pitchingDown = false
             }
 
             if (!pitchingDown) {
-                pitch -= randPitch(elytraFly.pitch40rotationSpeedUp.value.toFloat(), 1.0f)
+                pitch -= randPitch(elytraFly.pitch40rotationSpeedUp.toFloat(), 1.0f)
 
                 if (pitch < ASCEND_PITCH) {
                     pitch = ASCEND_PITCH
                     pitchingDown = true
                 }
             } else if (pitch < DESCEND_PITCH) {
-                pitch += randPitch(elytraFly.pitch40rotationSpeedDown.value.toFloat(), 0.50f)
+                pitch += randPitch(elytraFly.pitch40rotationSpeedDown.toFloat(), 0.50f)
             }
         }
     }
 
     private fun getTakeoffTargetHeight(): Double {
-        return elytraFly.pitch40TakeoffTargetHeight.value
+        return elytraFly.pitch40TakeoffTargetHeight
     }
 
     private fun startTakeoff() {
@@ -258,13 +258,13 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun shouldStartTakeoff(targetHeight: Double): Boolean = runSafeOrFalse {
-        elytraFly.pitch40AutoTakeoff.value &&
+        elytraFly.pitch40AutoTakeoff &&
                 player.y < targetHeight - TARGET_REACH_MARGIN &&
                 (completedTakeoffTarget.isNaN() || targetHeight > completedTakeoffTarget + TARGET_REACH_MARGIN)
     }
 
     private fun fail(message: TranslateComponent) {
-        NotificationManager.INSTANCE.error(elytraFly.translatedName, message.getTranslatedName())
+        NotificationManager.error(elytraFly.translatedName, message.getTranslatedName())
         elytraFly.toggle()
     }
 

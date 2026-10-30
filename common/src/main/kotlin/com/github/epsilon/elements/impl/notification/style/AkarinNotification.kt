@@ -17,19 +17,19 @@ import java.awt.Color
  */
 class AkarinNotification(private val owner: Notifications) {
 
-    private val active: Setting.Dependency = Setting.Dependency { owner.isStyle(Notifications.Style.Akarin) }
+    private val active: Setting.Dependency = { owner.isStyle(Notifications.Style.Akarin) }
 
-    private val backgroundBlur by owner.boolSetting("Akarin Background Blur", true, active)
+    private val backgroundBlur by owner.boolSetting("Akarin Background Blur", true, dependency = active)
     private val blurStrength by owner.doubleSetting(
         "Akarin Blur Strength", 15.0, 1.0, 30.0, 1.0,
-        Setting.Dependency { active.check() && backgroundBlur }
+        dependency = { active.check() && backgroundBlur }
     )
-    private val backgroundAlpha by owner.intSetting("Akarin Background Alpha", 80, 0, 255, 1, active)
-    private val radius by owner.doubleSetting("Akarin Radius", CARD_RADIUS.toDouble(), 0.0, 14.0, 0.5, active)
-    private val displayTime by owner.intSetting("Akarin Display Time", 800, 500, 10000, 100, active)
+    private val backgroundAlpha by owner.intSetting("Akarin Background Alpha", 80, 0, 255, 1, dependency = active)
+    private val radius by owner.doubleSetting("Akarin Radius", CARD_RADIUS.toDouble(), 0.0, 14.0, 0.5, dependency = active)
+    private val displayTimeMs by owner.intSetting("Akarin Display Time", 800, 500, 10000, 100, dependency = active)
 
     fun getDisplayTime(): Int {
-        return displayTime
+        return displayTimeMs
     }
 
     fun height(scale: Float): Float {

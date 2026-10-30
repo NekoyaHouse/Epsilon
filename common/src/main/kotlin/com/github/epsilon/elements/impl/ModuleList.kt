@@ -32,80 +32,80 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private val mode by enumSetting("Mode", DisplayMode.Normal)
-    private val lineSpacing by doubleSetting("Line Spacing", 3.0, 0.0, 12.0, 0.5, Setting.Dependency { mode == DisplayMode.Simple })
-    private val horizontalPadding by doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, Setting.Dependency { mode == DisplayMode.Normal })
-    private val verticalPadding by doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, Setting.Dependency { mode == DisplayMode.Normal })
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, Setting.Dependency { mode == DisplayMode.Normal })
+    private val lineSpacing by doubleSetting("Line Spacing", 3.0, 0.0, 12.0, 0.5, dependency = { mode == DisplayMode.Simple })
+    private val horizontalPadding by doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
+    private val verticalPadding by doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, dependency = { mode == DisplayMode.Normal })
     private val showSuffix by boolSetting("Show Suffix", true)
     private val fontSize by doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0)
     private val textShadow by boolSetting("Text Shadow", true)
-    private val textShadowDepth by doubleSetting("Text Shadow Depth", 1.0, 0.0, 5.0, 0.1, Setting.Dependency { textShadow })
+    private val textShadowDepth by doubleSetting("Text Shadow Depth", 1.0, 0.0, 5.0, 0.1, dependency = { textShadow })
     private val textGlow by boolSetting("Text Glow", true)
-    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, Setting.Dependency { textGlow })
-    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, Setting.Dependency { textGlow })
+    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, dependency = { textGlow })
+    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, dependency = { textGlow })
     private val sliderSpeed by doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01)
-    private val background by boolSetting("Background", true, Setting.Dependency { mode == DisplayMode.Normal })
+    private val background by boolSetting("Background", true, dependency = { mode == DisplayMode.Normal })
     private val backgroundColor by colorSetting(
         "Background Color", Color(0, 0, 0, 50),
-        Setting.Dependency { mode == DisplayMode.Normal && background }
+        dependency = { mode == DisplayMode.Normal && background }
     )
-    private val drawShadow by boolSetting("Drop Shadow", true, Setting.Dependency { mode == DisplayMode.Normal })
+    private val drawShadow by boolSetting("Drop Shadow", true, dependency = { mode == DisplayMode.Normal })
     private val shadowBlur by doubleSetting(
         "Shadow Blur", 9.0, 2.0, 32.0, 1.0,
-        Setting.Dependency { mode == DisplayMode.Normal && drawShadow }
+        dependency = { mode == DisplayMode.Normal && drawShadow }
     )
     private val shadowColorMode by enumSetting(
         "Shadow Color Mode", ColorMode.Single,
-        Setting.Dependency { mode == DisplayMode.Normal && drawShadow }
+        dependency = { mode == DisplayMode.Normal && drawShadow }
     )
     private val shadowGradientLength by doubleSetting(
         "Shadow Gradient Length", 100.0, 10.0, 1000.0, 10.0,
-        Setting.Dependency {
+        dependency = {
             mode == DisplayMode.Normal && drawShadow &&
                     (shadowColorMode == ColorMode.Double || shadowColorMode == ColorMode.Fade)
         }
     )
     private val shadowColor by colorSetting(
         "Shadow Color", Color(255, 255, 255, 90),
-        Setting.Dependency {
+        dependency = {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode != ColorMode.Rainbow
         }
     )
     private val shadowColor2 by colorSetting(
         "Shadow Color 2", Color(255, 0, 0, 90),
-        Setting.Dependency {
+        dependency = {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode == ColorMode.Double
         }
     )
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
     private val doubleGradientLength by doubleSetting(
         "Double Gradient Length", 100.0, 10.0, 1000.0, 10.0,
-        Setting.Dependency { mode == DisplayMode.Normal && (colorMode == ColorMode.Double || colorMode == ColorMode.Fade) }
+        dependency = { mode == DisplayMode.Normal && (colorMode == ColorMode.Double || colorMode == ColorMode.Fade) }
     )
-    private val rainbowSpeed by doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, Setting.Dependency { usesRainbow() })
-    private val rainbowSpread by doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, Setting.Dependency { usesRainbow() })
-    private val rainbowHueOffset by doubleSetting("Rainbow Hue Offset", 0.0, 0.0, 360.0, 1.0, Setting.Dependency { usesRainbow() })
-    private val rainbowSaturation by doubleSetting("Rainbow Saturation", 0.5, 0.0, 1.0, 0.05, Setting.Dependency { usesRainbow() })
-    private val rainbowBrightness by doubleSetting("Rainbow Brightness", 1.0, 0.1, 1.0, 0.05, Setting.Dependency { usesRainbow() })
-    private val rainbowAlpha by intSetting("Rainbow Alpha", 255, 0, 255, 1, Setting.Dependency { colorMode == ColorMode.Rainbow })
+    private val rainbowSpeed by doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, dependency = { usesRainbow() })
+    private val rainbowSpread by doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, dependency = { usesRainbow() })
+    private val rainbowHueOffset by doubleSetting("Rainbow Hue Offset", 0.0, 0.0, 360.0, 1.0, dependency = { usesRainbow() })
+    private val rainbowSaturation by doubleSetting("Rainbow Saturation", 0.5, 0.0, 1.0, 0.05, dependency = { usesRainbow() })
+    private val rainbowBrightness by doubleSetting("Rainbow Brightness", 1.0, 0.1, 1.0, 0.05, dependency = { usesRainbow() })
+    private val rainbowAlpha by intSetting("Rainbow Alpha", 255, 0, 255, 1, dependency = { colorMode == ColorMode.Rainbow })
     private val shadowRainbowAlpha by intSetting(
         "Shadow Rainbow Alpha", 90, 0, 255, 1,
-        Setting.Dependency {
+        dependency = {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode == ColorMode.Rainbow
         }
     )
-    private val blur by boolSetting("Blur", true, Setting.Dependency { mode == DisplayMode.Normal })
+    private val blur by boolSetting("Blur", true, dependency = { mode == DisplayMode.Normal })
     private val blurStrength by intSetting(
         "Blur Strength", 8, 1, 20, 1,
-        Setting.Dependency { mode == DisplayMode.Normal && blur }
+        dependency = { mode == DisplayMode.Normal && blur }
     )
     private val themeColor1 by colorSetting(
         "Theme Color 1", Color.WHITE, false,
-        Setting.Dependency { colorMode != ColorMode.Rainbow }
+        dependency = { colorMode != ColorMode.Rainbow }
     )
     private val themeColor2 by colorSetting(
         "Theme Color 2", Color.RED, false,
-        Setting.Dependency { colorMode == ColorMode.Double }
+        dependency = { colorMode == ColorMode.Double }
     )
 
     private val moduleAnimations: MutableMap<Module, ToggleAnimation> = HashMap()
@@ -117,7 +117,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     override fun render(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
 
-        val modules: List<Module> = ModuleManager.INSTANCE.getModules()
+        val modules: List<Module> = ModuleManager.getModules()
         val liveModules: MutableSet<Module> = HashSet(modules)
         moduleAnimations.keys.removeAll { module -> !liveModules.contains(module) }
         moduleYPositions.keys.removeAll { module -> !liveModules.contains(module) }

@@ -92,24 +92,24 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private val sgFeet: SettingGroup = settingGroup("Feet Settings")
     private val sgBox: SettingGroup = settingGroup("Box Settings")
 
-    private val range by doubleSetting("Range", 4.5, 1.0, 8.0, 0.1).group(sgGeneral)
-    private val order: EnumSetting<TargetOrder> by enumSetting("Order", TargetOrder.Distance).group(sgGeneral)
-    private val invisible by boolSetting("Invisible", false).group(sgGeneral)
-    private val friends by boolSetting("Friends", false).group(sgGeneral)
-    private val delay by intSetting("Switch Delay", 100, 0, 1000, 10).group(sgGeneral)
-    private val autoPacketMine by boolSetting("Auto Packet Mine", true).group(sgGeneral)
+    private val range by doubleSetting("Range", 4.5, 1.0, 8.0, 0.1).apply { group(sgGeneral) }
+    private val order: EnumSetting<TargetOrder> = enumSetting("Order", TargetOrder.Distance).apply { group(sgGeneral) }
+    private val invisible by boolSetting("Invisible", false).apply { group(sgGeneral) }
+    private val friends by boolSetting("Friends", false).apply { group(sgGeneral) }
+    private val delay by intSetting("Switch Delay", 100, 0, 1000, 10).apply { group(sgGeneral) }
+    private val autoPacketMine by boolSetting("Auto Packet Mine", true).apply { group(sgGeneral) }
 
-    private val mineBox by boolSetting("Box", true).group(sgTargets)
-    private val mineHead by boolSetting("Head", false).group(sgTargets)
-    private val mineFeet by boolSetting("Feet", true).group(sgTargets)
-    private val headMode: EnumSetting<HeadMode> by enumSetting("Head Mode", HeadMode.Both, Setting.Dependency { mineHead }).group(sgTargets)
+    private val mineBox by boolSetting("Box", true).apply { group(sgTargets) }
+    private val mineHead by boolSetting("Head", false).apply { group(sgTargets) }
+    private val mineFeet by boolSetting("Feet", true).apply { group(sgTargets) }
+    private val headMode by enumSetting("Head Mode", HeadMode.Both, dependency = { mineHead }).apply { group(sgTargets) }
 
-    private val feetMode: EnumSetting<FeetMode> by enumSetting("Feet Mode", FeetMode.Below, Setting.Dependency { mineFeet }).group(sgFeet)
-    private val feetLogic: EnumSetting<FeetLogic> by enumSetting("Feet Logic", FeetLogic.First, Setting.Dependency { mineFeet }).group(sgFeet)
-    private val feetOnGround by boolSetting("Only On Ground", false, Setting.Dependency { mineFeet }).group(sgFeet)
+    private val feetMode by enumSetting("Feet Mode", FeetMode.Below, dependency = { mineFeet }).apply { group(sgFeet) }
+    private val feetLogic: EnumSetting<FeetLogic> = enumSetting("Feet Logic", FeetLogic.First, dependency = { mineFeet }).apply { group(sgFeet) }
+    private val feetOnGround by boolSetting("Only On Ground", false, dependency = { mineFeet }).apply { group(sgFeet) }
 
-    private val boxCorners by boolSetting("Box Corners", false, Setting.Dependency { mineBox }).group(sgBox)
-    private val boxHeadLevel by boolSetting("Box Head Level", false, Setting.Dependency { mineBox }).group(sgBox)
+    private val boxCorners by boolSetting("Box Corners", false, dependency = { mineBox }).apply { group(sgBox) }
+    private val boxHeadLevel by boolSetting("Box Head Level", false, dependency = { mineBox }).apply { group(sgBox) }
 
     private val switchTimer = TimerUtils()
     private val pauseNotifyTimer = TimerUtils()
@@ -167,9 +167,9 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         if (autoPacketMine) {
             PacketMine.isEnabled = true
             autoEnabledPacketMine = true
-            NotificationManager.INSTANCE.info(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.translatedName)
+            NotificationManager.info(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.getTranslatedName())
         } else {
-            NotificationManager.INSTANCE.error(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.translatedName)
+            NotificationManager.error(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.getTranslatedName())
             isEnabled = false
         }
     }
@@ -200,7 +200,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun withinMineRange(pos: BlockPos): Boolean {
-        val limit = Math.min(range, PacketMine.getRange().toDouble())
+        val limit = Math.min(range, PacketMine.rangeLimit().toDouble())
         return nn.player.getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
@@ -213,9 +213,9 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private fun notifyPacketMinePaused() {
         if (!pauseNotifyTimer.passedMillise(PAUSE_NOTIFY_INTERVAL)) return
         pauseNotifyTimer.reset()
-        NotificationManager.INSTANCE.warning(
+        NotificationManager.warning(
             translatedName,
-            EpsilonTranslations.AutoMine.PACKET_MINE_DISABLED.translatedName,
+            EpsilonTranslations.AutoMine.PACKET_MINE_DISABLED.getTranslatedName(),
             hashCode(),
         )
     }
@@ -223,7 +223,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     /** 按目标排序逐个玩家收集候选方块，返回第一个存在可挖方块的玩家的候选列表。 */
     context(nn: NonNullContext)
     private fun findCandidates(): List<Candidate> {
-        val targets = ArrayList(TargetManager.INSTANCE.acquireTargets(createTargetRequest()))
+        val targets = ArrayList(TargetManager.acquireTargets(createTargetRequest()))
         targets.sortWith(createTargetComparator())
 
         for (living in targets) {
@@ -274,12 +274,12 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun collectCandidates(target: Player): MutableList<Candidate> {
         val candidates = ArrayList<Candidate>()
-        val limit = Math.min(range, PacketMine.getRange().toDouble())
+        val limit = Math.min(range, PacketMine.rangeLimit().toDouble())
         val feet = target.blockPosition()
 
         if (mineFeet) {
             val belowAllowed = !feetOnGround || target.onGround()
-            when (feetMode.value) {
+            when (feetMode) {
                 FeetMode.Below -> {
                     if (belowAllowed) addCandidate(candidates, feet.below(), TargetCategory.Feet, limit)
                 }
@@ -295,7 +295,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
 
         if (mineHead) {
             val head = feet.above()
-            when (headMode.value) {
+            when (headMode) {
                 HeadMode.Inside -> addCandidate(candidates, head, TargetCategory.Head, limit)
 
                 HeadMode.Above -> addCandidate(candidates, head.above(), TargetCategory.Head, limit)

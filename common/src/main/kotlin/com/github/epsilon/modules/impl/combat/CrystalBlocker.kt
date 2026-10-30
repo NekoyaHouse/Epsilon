@@ -37,10 +37,10 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
     private val delay by intSetting("Delay", 2, 0, 20, 1)
     private val visibleSwapBackDelay by intSetting(
         "Swap Back Delay", 0, 0, 20, 1,
-        Setting.Dependency { switchMode.`is`(SwitchMode.Visible) })
+        dependency = { switchMode == SwitchMode.Visible })
     private val rotationSpeed by intSetting(
         "Rotation Speed", 180, 10, 180, 10,
-        Setting.Dependency { rotate.`is`(RotateMode.Silent) })
+        dependency = { rotate == RotateMode.Silent })
 
     private var timer = 0
     private var waitingSwapBack = false
@@ -131,10 +131,10 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             val rot = calculate(self.eyePosition, Vec3.atCenterOf(placePos))
             var readyToPlace = true
 
-            if (rotate.`is`(RotateMode.Normal)) {
+            if (rotate == RotateMode.Normal) {
                 self.yRot = rot.yaw
                 self.xRot = Mth.clamp(rot.pitch, -90.0f, 90.0f)
-            } else if (rotate.`is`(RotateMode.Silent)) {
+            } else if (rotate == RotateMode.Silent) {
                 RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
 
                 if (RotationManager.INSTANCE.rotations != null) {
@@ -160,7 +160,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
         val side: Direction = RotationUtils.getDirection(pos)
         val bhr = BlockHitResult(Vec3.atCenterOf(pos), side, pos, false)
 
-        if (switchMode.`is`(SwitchMode.Visible)) {
+        if (switchMode == SwitchMode.Visible) {
             val target = item.slot
             val needSwitch = oldSlot != target
             if (needSwitch) {

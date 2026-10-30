@@ -41,17 +41,17 @@ open class Module(
             }
             field = value
             if (value) {
-                EventBus.INSTANCE.subscribe(this)
+                EventBus.subscribe(this)
                 if (!nullCheck()) {
-                    NotificationManager.INSTANCE.moduleState(translatedName, notificationHash, true)
+                    NotificationManager.moduleState(translatedName, notificationHash, true)
                 }
                 onEnable()
             } else {
-                EventBus.INSTANCE.unsubscribe(this)
-                dynamicListeners.forEach(EventBus.INSTANCE::unsubscribe)
+                EventBus.unsubscribe(this)
+                dynamicListeners.forEach(EventBus::unsubscribe)
                 dynamicListeners.clear()
                 if (!nullCheck()) {
-                    NotificationManager.INSTANCE.moduleState(translatedName, notificationHash, false)
+                    NotificationManager.moduleState(translatedName, notificationHash, false)
                 }
                 onDisable()
             }
@@ -99,7 +99,7 @@ open class Module(
         priority: Int = EventPriority.MEDIUM,
         noinline block: context(NonNullContext) (E) -> Unit,
     ) {
-        EventBus.INSTANCE.handler(E::class.java, priority) { event ->
+        EventBus.handler(E::class.java, priority) { event ->
             if (isEnabled) {
                 runSafe { block(event) }
             }
@@ -111,7 +111,7 @@ open class Module(
         priority: Int = EventPriority.MEDIUM,
         noinline block: context(NonNullContext) (E) -> Unit,
     ) {
-        EventBus.INSTANCE.handler(E::class.java, priority) { event ->
+        EventBus.handler(E::class.java, priority) { event ->
             if (isEnabled) {
                 runSafe { block(event) }
             }
@@ -123,7 +123,7 @@ open class Module(
         priority: Int = EventPriority.MEDIUM,
         noinline block: (E) -> Unit,
     ) {
-        EventBus.INSTANCE.handler(E::class.java, priority) { event ->
+        EventBus.handler(E::class.java, priority) { event ->
             if (isEnabled) {
                 block(event)
             }
@@ -190,7 +190,7 @@ open class Module(
 
         /** 递归初始化分组翻译组件；子分组 key 逐级拼接在父分组 key 之下。 */
         fun initGroupI18n(parentComponent: TranslateComponent, group: SettingGroup) {
-            val component = parentComponent.createChild(group.getName().lowercase())
+            val component = parentComponent.createChild(group.name.lowercase())
             group.initTranslateComponent(component)
             for (child in group.children) {
                 initGroupI18n(component, child)

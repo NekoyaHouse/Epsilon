@@ -41,7 +41,7 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
     private val sideColor by colorSetting("Side Color", Color(160, 210, 255, 30))
     private val lineColor by colorSetting("Line Color", Color(160, 210, 255, 180))
     private val blur by boolSetting("Blur", true)
-    private val blurStrength by doubleSetting("Blur Strength", 8.0, 0.0, 16.0, 0.5, com.github.epsilon.settings.Setting.Dependency { blur })
+    private val blurStrength by doubleSetting("Blur Strength", 8.0, 0.0, 16.0, 0.5, dependency = { blur })
 
     private val searchThread: ExecutorService = Executors.newSingleThreadExecutor()
     private val searchTimer = TimerUtils()

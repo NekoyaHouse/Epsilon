@@ -26,7 +26,7 @@ import java.util.function.Function
 object Chams : Module("Chams", Category.RENDER) {
 
     private val players by boolSetting("Players", true)
-    private val self by boolSetting("Self", true, Setting.Dependency { players })
+    private val self by boolSetting("Self", true, dependency = { players })
     private val friends by boolSetting("Friends", true)
     private val crystals by boolSetting("Crystals", true)
     val chests by boolSetting("Chests", true)
@@ -90,7 +90,7 @@ object Chams : Module("Chams", Category.RENDER) {
             if (entity === mc.player && !self) {
                 return false
             }
-            if (FriendManager.isFriend(entity) || TargetManager.INSTANCE.isSameTeam(entity)) {
+            if (FriendManager.isFriend(entity) || TargetManager.isSameTeam(entity)) {
                 return friends
             }
             return players

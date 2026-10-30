@@ -56,7 +56,7 @@ import net.minecraft.client.player.LocalPlayer
  * 声明这一依赖后，即可在 lambda 内直接使用 [player]、[world] 等非空值，省去逐个 null 检查：
  *
  * ```kotlin
- * EventBus.INSTANCE.nonNullHandler<PlayerTickEvent.Post> {
+ * EventBus.nonNullHandler<PlayerTickEvent.Post> {
  *     player.jumpFromGround()
  * }
  * ```

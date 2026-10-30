@@ -50,50 +50,50 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     // General
-    private val alertMode: EnumSetting<AlertMode> by enumSetting("Alert Mode", AlertMode.Chat).group(sgGeneral)
-    private val showGamemodeInChat by boolSetting("Show Gamemode In Chat", false).group(sgGeneral)
+    private val alertMode: EnumSetting<AlertMode> = enumSetting("Alert Mode", AlertMode.Chat).apply { group(sgGeneral) }
+    private val showGamemodeInChat by boolSetting("Show Gamemode In Chat", false).apply { group(sgGeneral) }
 
-    private val names by stringListSetting("Names", listOf("ssy_", "e_2", "山水圆")).group(sgGeneral)
+    private val names by stringListSetting("Names", listOf("ssy_", "e_2", "山水圆")).apply { group(sgGeneral) }
 
     // Join Settings
-    private val joinRings by intSetting("Join Rings", 5, 1, 10, 1).group(sgJoin)
-    private val joinRingDelay by intSetting("Join Ring Delay", 20, 1, 100, 1).group(sgJoin)
-    private val joinVolume by doubleSetting("Join Volume", 1.0, 0.0, 1.0, 0.05).group(sgJoin)
-    private val joinPitch by doubleSetting("Join Pitch", 1.0, 0.5, 2.0, 0.05).group(sgJoin)
-    private val joinSound: RegistryListSetting<SoundEvent> by soundEventListSetting("Join Sound", listOf(SoundEvents.BELL_BLOCK)).group(sgJoin)
-    private val joinChatMessage by boolSetting("Join Chat Message", true).group(sgJoin)
+    private val joinRings by intSetting("Join Rings", 5, 1, 10, 1).apply { group(sgJoin) }
+    private val joinRingDelay by intSetting("Join Ring Delay", 20, 1, 100, 1).apply { group(sgJoin) }
+    private val joinVolume by doubleSetting("Join Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgJoin) }
+    private val joinPitch by doubleSetting("Join Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgJoin) }
+    private val joinSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Join Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgJoin) }
+    private val joinChatMessage by boolSetting("Join Chat Message", true).apply { group(sgJoin) }
 
     // Leave Settings
-    private val leaveRings by intSetting("Leave Rings", 3, 1, 10, 1).group(sgLeave)
-    private val leaveRingDelay by intSetting("Leave Ring Delay", 20, 1, 100, 1).group(sgLeave)
-    private val leaveVolume by doubleSetting("Leave Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeave)
-    private val leavePitch by doubleSetting("Leave Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeave)
-    private val leaveSound: RegistryListSetting<SoundEvent> by soundEventListSetting("Leave Sound", listOf(SoundEvents.ANVIL_LAND)).group(sgLeave)
-    private val leaveChatMessage by boolSetting("Leave Chat Message", true).group(sgLeave)
+    private val leaveRings by intSetting("Leave Rings", 3, 1, 10, 1).apply { group(sgLeave) }
+    private val leaveRingDelay by intSetting("Leave Ring Delay", 20, 1, 100, 1).apply { group(sgLeave) }
+    private val leaveVolume by doubleSetting("Leave Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgLeave) }
+    private val leavePitch by doubleSetting("Leave Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgLeave) }
+    private val leaveSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Leave Sound", listOf(SoundEvents.ANVIL_LAND)).apply { group(sgLeave) }
+    private val leaveChatMessage by boolSetting("Leave Chat Message", true).apply { group(sgLeave) }
 
     // Enter RD Settings
-    private val enterRDRings by intSetting("Enter Render Distance Rings", 2, 1, 10, 1).group(sgEnterRD)
-    private val enterRDRingDelay by intSetting("Enter Render Distance Ring Delay", 20, 1, 100, 1).group(sgEnterRD)
-    private val enterRDVolume by doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgEnterRD)
-    private val enterRDPitch by doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgEnterRD)
-    private val enterRDSound: RegistryListSetting<SoundEvent> by soundEventListSetting("Enter Render Distance Sound", listOf(SoundEvents.ANVIL_DESTROY)).group(sgEnterRD)
-    private val enterRDChatMessage by boolSetting("Enter Render Distance Chat Message", true).group(sgEnterRD)
+    private val enterRDRings by intSetting("Enter Render Distance Rings", 2, 1, 10, 1).apply { group(sgEnterRD) }
+    private val enterRDRingDelay by intSetting("Enter Render Distance Ring Delay", 20, 1, 100, 1).apply { group(sgEnterRD) }
+    private val enterRDVolume by doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgEnterRD) }
+    private val enterRDPitch by doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgEnterRD) }
+    private val enterRDSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Enter Render Distance Sound", listOf(SoundEvents.ANVIL_DESTROY)).apply { group(sgEnterRD) }
+    private val enterRDChatMessage by boolSetting("Enter Render Distance Chat Message", true).apply { group(sgEnterRD) }
 
     // Leave RD Settings
-    private val leaveRDRings by intSetting("Leave Render Distance Rings", 2, 1, 10, 1).group(sgLeaveRD)
-    private val leaveRDRingDelay by intSetting("Leave Render Distance Ring Delay", 20, 1, 100, 1).group(sgLeaveRD)
-    private val leaveRDVolume by doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeaveRD)
-    private val leaveRDPitch by doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeaveRD)
-    private val leaveRDSound: RegistryListSetting<SoundEvent> by soundEventListSetting("Leave Render Distance Sound", listOf(SoundEvents.BELL_BLOCK)).group(sgLeaveRD)
-    private val leaveRDChatMessage by boolSetting("Leave Render Distance Chat Message", true).group(sgLeaveRD)
+    private val leaveRDRings by intSetting("Leave Render Distance Rings", 2, 1, 10, 1).apply { group(sgLeaveRD) }
+    private val leaveRDRingDelay by intSetting("Leave Render Distance Ring Delay", 20, 1, 100, 1).apply { group(sgLeaveRD) }
+    private val leaveRDVolume by doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgLeaveRD) }
+    private val leaveRDPitch by doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgLeaveRD) }
+    private val leaveRDSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Leave Render Distance Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgLeaveRD) }
+    private val leaveRDChatMessage by boolSetting("Leave Render Distance Chat Message", true).apply { group(sgLeaveRD) }
 
     // Gamemode Change Settings
-    private val gamemodeRings by intSetting("Gamemode Rings", 3, 1, 10, 1).group(sgGamemode)
-    private val gamemodeRingDelay by intSetting("Gamemode Ring Delay", 20, 1, 100, 1).group(sgGamemode)
-    private val gamemodeVolume by doubleSetting("Gamemode Volume", 1.0, 0.0, 1.0, 0.05).group(sgGamemode)
-    private val gamemodePitch by doubleSetting("Gamemode Pitch", 1.0, 0.5, 2.0, 0.05).group(sgGamemode)
-    private val gamemodeSound: RegistryListSetting<SoundEvent> by soundEventListSetting("Gamemode Sound", listOf(SoundEvents.ARROW_HIT_PLAYER)).group(sgGamemode)
-    private val gamemodeChatMessage by boolSetting("Gamemode Chat Message", true).group(sgGamemode)
+    private val gamemodeRings by intSetting("Gamemode Rings", 3, 1, 10, 1).apply { group(sgGamemode) }
+    private val gamemodeRingDelay by intSetting("Gamemode Ring Delay", 20, 1, 100, 1).apply { group(sgGamemode) }
+    private val gamemodeVolume by doubleSetting("Gamemode Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgGamemode) }
+    private val gamemodePitch by doubleSetting("Gamemode Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgGamemode) }
+    private val gamemodeSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Gamemode Sound", listOf(SoundEvents.ARROW_HIT_PLAYER)).apply { group(sgGamemode) }
+    private val gamemodeChatMessage by boolSetting("Gamemode Chat Message", true).apply { group(sgGamemode) }
 
     private val playersInRender: MutableSet<UUID> = HashSet()
     private val gamemodeCache: MutableMap<UUID, GameType> = HashMap()
@@ -208,7 +208,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                             if (playerName != null && shouldAlarm(playerName)) {
                                 startRing(gamemodeRing, gamemodeRings, gamemodeRingDelay)
                                 if (gamemodeChatMessage) {
-                                    val msg = EpsilonTranslations.PlayerAlarms.GAMEMODE_ALERT_TEXT.translatedName
+                                    val msg = EpsilonTranslations.PlayerAlarms.GAMEMODE_ALERT_TEXT.getTranslatedName()
                                         .replace("{name}", playerName)
                                         .replace("{old_gamemode}", translateGamemode(oldMode))
                                         .replace("{new_gamemode}", translateGamemode(newMode))
@@ -218,7 +218,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                     }
                                     if (mode == AlertMode.Notification || mode == AlertMode.Both) {
                                         val hash = java.util.Objects.hash(playerName, "gamemode")
-                                        NotificationManager.INSTANCE.notifyHud(msg, "", NotificationMode.Info, hash)
+                                        NotificationManager.notifyHud(msg, "", NotificationMode.Info, hash)
                                     }
                                 }
                             }
@@ -302,7 +302,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         if (!enabled) return
         val mode = alertMode.value
         // Build full message
-        var msg = template.translatedName.replace("{name}", playerName)
+        var msg = template.getTranslatedName().replace("{name}", playerName)
         if (showGamemodeInChat && playerId != null) {
             msg = msg.replace("{gamemode}", getGamemodeName(playerId))
         } else {
@@ -315,13 +315,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         }
         // HUD Notification (no chat side-effect)
         if ((mode == AlertMode.Notification || mode == AlertMode.Both) && playerId != null) {
-            val hash = java.util.Objects.hash(playerName, template.translatedName)
+            val hash = java.util.Objects.hash(playerName, template.getTranslatedName())
             val notifMode = if (color == ChatFormatting.RED || color == ChatFormatting.DARK_RED) {
                 NotificationMode.Error
             } else {
                 NotificationMode.Success
             }
-            NotificationManager.INSTANCE.notifyHud(msg, "", notifMode, hash)
+            NotificationManager.notifyHud(msg, "", notifMode, hash)
         }
     }
 
@@ -357,21 +357,21 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                 if (mode != null) return translateGamemode(mode)
             }
         }
-        return EpsilonTranslations.PlayerAlarms.UNKNOWN_GAMEMODE.translatedName
+        return EpsilonTranslations.PlayerAlarms.UNKNOWN_GAMEMODE.getTranslatedName()
     }
 
     private fun translateGamemode(gameType: GameType): String {
         if (gameType == GameType.SURVIVAL) {
-            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SURVIVAL.translatedName
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SURVIVAL.getTranslatedName()
         }
         if (gameType == GameType.CREATIVE) {
-            return EpsilonTranslations.PlayerAlarms.GAMEMODE_CREATIVE.translatedName
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_CREATIVE.getTranslatedName()
         }
         if (gameType == GameType.ADVENTURE) {
-            return EpsilonTranslations.PlayerAlarms.GAMEMODE_ADVENTURE.translatedName
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_ADVENTURE.getTranslatedName()
         }
         if (gameType == GameType.SPECTATOR) {
-            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SPECTATOR.translatedName
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SPECTATOR.getTranslatedName()
         }
         return gameType.getName()
     }

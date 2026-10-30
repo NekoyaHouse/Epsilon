@@ -35,8 +35,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private val scale by doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05)
     private val panelWidthSetting by doubleSetting("Width", 250.0, 200.0, 300.0, 1.0)
     private val textGlow by boolSetting("Text Glow", true)
-    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, Setting.Dependency { textGlow })
-    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, Setting.Dependency { textGlow })
+    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, dependency = { textGlow })
+    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, dependency = { textGlow })
     private val playerRange by doubleSetting("Range", 128.0, 8.0, 256.0, 1.0)
     private val maxPlayers by intSetting("Max Players", 8, 1, 20, 1)
     private val showSelf by boolSetting("Show Self", false)
@@ -46,10 +46,10 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private val headerColor by colorSetting("Header Color", Color(255, 255, 255, 240))
     private val textColor by colorSetting("Text Color", Color(240, 243, 241, 230))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, Setting.Dependency { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), Setting.Dependency { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), dependency = { drawShadow })
     private val backgroundBlur by boolSetting("Background Blur", true)
-    private val blurStrength by intSetting("Blur Strength", 5, 1, 16, 1, Setting.Dependency { backgroundBlur })
+    private val blurStrength by intSetting("Blur Strength", 5, 1, 16, 1, dependency = { backgroundBlur })
 
     private val popCounts: ConcurrentHashMap<UUID, Int> = ConcurrentHashMap()
     private val nameScrollStartTimes: MutableMap<UUID, Long> = HashMap()
@@ -133,7 +133,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     private fun onPacketReceive(event: PacketEvent.Receive, level: ClientLevel) {
-        val packet = event.getPacket()
+        val packet = event.packet
         if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
             return
         }
@@ -168,8 +168,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val rows: MutableList<PlayerRow> = ArrayList(count)
         for (i in 0 until count) {
             val player = players[i]
-            val health = if (HealthManager.INSTANCE != null) {
-                HealthManager.INSTANCE.getHealth(player)
+            val health = if (HealthManager != null) {
+                HealthManager.getHealth(player)
             } else {
                 player.health + player.absorptionAmount
             }

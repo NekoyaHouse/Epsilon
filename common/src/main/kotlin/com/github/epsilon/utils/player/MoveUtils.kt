@@ -17,7 +17,7 @@ object MoveUtils {
      * @param speed 移动速度
      */
     fun forwardWithoutStrafe(speed: Double): DoubleArray {
-        val yaw = RotationManager.INSTANCE.yaw
+        val yaw = RotationManager.INSTANCE.getYaw()
 
         val rad = Math.toRadians((yaw + 90.0f).toDouble())
 
@@ -33,7 +33,7 @@ object MoveUtils {
      * @param speed 移动速度
      */
     fun forward(speed: Double): DoubleArray {
-        var yaw = RotationManager.INSTANCE.yaw
+        var yaw = RotationManager.INSTANCE.getYaw()
         val ctx = NonNullContext.current ?: return doubleArrayOf(0.0, 0.0)
 
         val moveVector = ctx.player.input.moveVector

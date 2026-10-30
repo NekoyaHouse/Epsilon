@@ -12,7 +12,7 @@ class StringListSettingWidget(setting: StringListSetting) : AbstractSetSettingWi
     }
 
     override fun labelText(): String {
-        return EpsilonTranslations.Gui.LIST_ENTRIES.translatedName
+        return EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
     }
 
     override fun openPopup() {

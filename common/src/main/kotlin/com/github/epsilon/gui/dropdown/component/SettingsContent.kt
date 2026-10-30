@@ -56,7 +56,7 @@ class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
         panelX: Float, contentY: Float, panelWidth: Float, frameId: Int,
     ) {
         if (renderer.isEmpty()) {
-            val label = EpsilonTranslations.Gui.NO_SETTINGS.translatedName
+            val label = EpsilonTranslations.Gui.NO_SETTINGS.getTranslatedName()
             val labelScale = 0.58f
             val textW = textMetrics.textWidth(label, labelScale)
             scope.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED)

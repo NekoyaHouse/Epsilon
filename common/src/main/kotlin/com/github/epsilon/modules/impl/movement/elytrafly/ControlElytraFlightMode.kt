@@ -82,7 +82,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 player.deltaMovement = player.deltaMovement.multiply(1.0, 0.0, 1.0)
             }
 
-            if (!avoidCeilingLift && !hasMoveInput() && (!elytraFly.useFireworks.value || hasFirstFirework)) {
+            if (!avoidCeilingLift && !hasMoveInput() && (!elytraFly.useFireworks || hasFirstFirework)) {
                 player.deltaMovement = Vec3(0.0, 0.02, 0.0)
             }
         }
@@ -90,7 +90,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         runSafe {
-            if (elytraFly.noSprint.value) {
+            if (elytraFly.noSprint) {
                 event.isSprint = false
                 player.isSprinting = false
                 mc.options.keySprint.isDown = false
@@ -115,8 +115,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     private fun updateControl() {
         runSafe {
             // 疾跑限制起飞与换甲，不阻止烟花恢复动量。
-            if (elytraFly.noSprint.value && player.isSprinting) {
-                if (!elytraFly.armored.value) {
+            if (elytraFly.noSprint && player.isSprinting) {
+                if (!elytraFly.armored) {
                     useTimedFirework()
                 }
                 return@runSafe
@@ -143,7 +143,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 return@runSafe
             }
 
-            if (elytraFly.armored.value) {
+            if (elytraFly.armored) {
                 if (canStartFallFlying()) {
                     jiaFei(elytra.slot)
                 }
@@ -162,18 +162,18 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 ElytraDebug.log(ElytraDebug.SLOT_FIREWORK, "firework", "blocked by ElytraCombat")
                 return@runSafe
             }
-            if (!elytraFly.useFireworks.value) return@runSafe
+            if (!elytraFly.useFireworks) return@runSafe
             if (isEating()) {
-                if (timer.hasDelayed(elytraFly.boostDelay.value)) {
+                if (timer.hasDelayed(elytraFly.boostDelay)) {
                     pendingFirework = true
                 }
                 return@runSafe
             }
             val lowMomentum = isLowMomentum()
             val waitTicks = if (lowMomentum) {
-                Math.min(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay.value)
+                Math.min(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay)
             } else {
-                elytraFly.boostDelay.value
+                elytraFly.boostDelay
             }
             if (!pendingFirework && !timer.hasDelayed(waitTicks)) {
                 return@runSafe
@@ -322,7 +322,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun shouldEatGlide(eating: Boolean): Boolean = runSafeOrFalse {
-        if (elytraFly.noEat.value || !elytraFly.armored.value) return@runSafeOrFalse false
+        if (elytraFly.noEat || !elytraFly.armored) return@runSafeOrFalse false
         if (player.onGround() || !eating) return@runSafeOrFalse false
         if (player.ticksUsingItem < EAT_GLIDE_START_TICK) return@runSafeOrFalse false
         // 容器界面下的槽位下标不属于 InventoryMenu，此时不做任何装备操作。
@@ -331,7 +331,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     private fun updateEatKeyRelease() {
         runSafe {
-            if (elytraFly.noEat.value) {
+            if (elytraFly.noEat) {
                 eatCompleted = false
                 return@runSafe
             }
@@ -363,7 +363,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 eatClimbed = false
                 return@runSafe
             }
-            if (elytraFly.noEat.value || !elytraFly.armored.value) return@runSafe
+            if (elytraFly.noEat || !elytraFly.armored) return@runSafe
             if (eatClimbed || player.onGround()) return@runSafe
             if (player.ticksUsingItem < EAT_CLIMB_TICK) return@runSafe
 

@@ -38,7 +38,7 @@ import org.joml.Vector3d
 
 object FreeCamera : Module("Free Camera", Category.RENDER) {
 
-    private val speed by doubleSetting("Speed", 1.0, 0.0, 10.0, 0.1) { v -> speedValue = v }
+    private val speed by doubleSetting("Speed", 1.0, 0.0, 10.0, 0.1, onChanged = { v -> speedValue = v })
     private val speedScrollSensitivity by doubleSetting("Speed Scroll Sensitivity", 0.0, 0.0, 2.0, 0.1)
     private val staySneaking by boolSetting("Stay Sneaking", true)
     private val toggleOnDamage by boolSetting("Toggle On Damage", false)

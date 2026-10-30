@@ -68,23 +68,23 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
             if (player.isFallFlying) return@runSafe
 
-            if (hasTouchedGround && elytraFly.ncpTimer.value && !player.onGround()) {
+            if (hasTouchedGround && elytraFly.ncpTimer && !player.onGround()) {
                 TimerManager.set(TIMER_BOOST)
                 timerBoosted = true
             }
 
-            if (elytraFly.armored.value) {
+            if (elytraFly.armored) {
                 updateArmoredGlide(elytra)
                 return@runSafe
             }
 
             if (player.onGround() ||
-                !elytraFly.ncpInstantFly.value ||
+                !elytraFly.ncpInstantFly ||
                 player.deltaMovement.y >= 0.0
             ) {
                 return@runSafe
             }
-            if (!instantFlyTimer.passedMillise((1000.0 * elytraFly.ncpTimeout.value).toLong())) return@runSafe
+            if (!instantFlyTimer.passedMillise((1000.0 * elytraFly.ncpTimeout).toLong())) return@runSafe
             instantFlyTimer.reset()
 
             if (canStartFallFlying()) {
@@ -135,7 +135,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             if (!hasElytra || !player.isFallFlying) return@runSafe
 
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val lookVec = Entity.calculateViewVector(-elytraFly.ncpUpPitch.value.toFloat(), player.getYRot(partialTick))
+            val lookVec = Entity.calculateViewVector(-elytraFly.ncpUpPitch.toFloat(), player.getYRot(partialTick))
             val lookDist = Math.sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z)
 
             val movement = player.deltaMovement
@@ -148,19 +148,19 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             val jumping = mc.options.keyJump.isDown
 
             if (mc.options.keyShift.isDown) {
-                y = -elytraFly.ncpDownSpeed.value
+                y = -elytraFly.ncpDownSpeed
             } else if (!jumping) {
-                y = HOVER_Y * elytraFly.ncpDownFactor.value
+                y = HOVER_Y * elytraFly.ncpDownFactor
             }
 
             if (jumping) {
-                if (motionDist > elytraFly.ncpUpFactor.value / elytraFly.ncpUpFactor.getMax()) {
+                if (motionDist > elytraFly.ncpUpFactor / elytraFly.ncpUpFactorSetting.max) {
                     val rawUpSpeed = motionDist * 0.01325
                     y += rawUpSpeed * 3.2
                     x -= lookVec.x * rawUpSpeed / lookDist
                     z -= lookVec.z * rawUpSpeed / lookDist
                 } else {
-                    val dir = directionSpeed(elytraFly.ncpSpeed.value)
+                    val dir = directionSpeed(elytraFly.ncpSpeed)
                     x = dir[0]
                     z = dir[1]
                 }
@@ -172,21 +172,21 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             }
 
             if (!jumping) {
-                val dir = directionSpeed(elytraFly.ncpSpeed.value)
+                val dir = directionSpeed(elytraFly.ncpSpeed)
                 x = dir[0]
                 z = dir[1]
             }
 
-            if (!elytraFly.ncpNoDrag.value) {
+            if (!elytraFly.ncpNoDrag) {
                 y *= 0.9900000095367432
                 x *= 0.9800000190734863
                 z *= 0.9900000095367432
             }
 
             val finalDist = Math.sqrt(x * x + z * z)
-            if (elytraFly.ncpSpeedLimit.value && finalDist > elytraFly.ncpMaxSpeed.value) {
-                x = x * elytraFly.ncpMaxSpeed.value / finalDist
-                z = z * elytraFly.ncpMaxSpeed.value / finalDist
+            if (elytraFly.ncpSpeedLimit && finalDist > elytraFly.ncpMaxSpeed) {
+                x = x * elytraFly.ncpMaxSpeed / finalDist
+                z = z * elytraFly.ncpMaxSpeed / finalDist
             }
 
             player.deltaMovement = Vec3(x, y, z)

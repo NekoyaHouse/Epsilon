@@ -13,7 +13,6 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Animation
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
-import java.util.function.Consumer
 import java.util.function.Supplier
 
 object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
@@ -24,7 +23,7 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
         Akarin,
     }
 
-    private val style by enumSetting("Style", Style.Quantum, Consumer { clearQuantum() })
+    private val style by enumSetting("Style", Style.Quantum, onChanged = { _: Style -> clearQuantum() })
     private val scale by doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05)
     private val fontScale by doubleSetting("Font Scale", 0.8, 0.5, 2.0, 0.05)
 
@@ -35,7 +34,7 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun render(deltaTracker: DeltaTracker) {
-        NotificationManager.INSTANCE.update()
+        NotificationManager.update()
 
         var preview: Notification? = null
         if (mc.gui.screen() is HudEditorScreen) {
@@ -47,13 +46,13 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
         }
         val previewNotification = preview
 
-        if (NotificationManager.INSTANCE.isEmpty() && previewNotification == null) return
+        if (NotificationManager.isEmpty() && previewNotification == null) return
 
         val metrics = textRendererSupplier.get()
         val scope = renderScope()
         if (isStyle(Style.Quantum)) {
             val scale = getScale()
-            val entries: MutableList<Notification> = ArrayList(NotificationManager.INSTANCE.getNotifications())
+            val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
             entries.removeAll { notification -> !quantum.isVisible(notification) }
             entries.reverse()
             if (entries.isEmpty() && previewNotification != null) entries.add(previewNotification)
@@ -62,7 +61,7 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
             quantum.render(scope, metrics, entries, x, y, scale, getFontScale(), horizontalAnchor, verticalAnchor)
         } else if (isStyle(Style.Akarin)) {
             val scale = getScale()
-            val entries: MutableList<Notification> = ArrayList(NotificationManager.INSTANCE.getNotifications())
+            val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
             entries.removeAll { notification -> !akarin.isVisible(notification) }
             entries.reverse()
             if (entries.isEmpty() && previewNotification != null) entries.add(previewNotification)

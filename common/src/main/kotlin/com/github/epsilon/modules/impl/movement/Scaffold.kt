@@ -145,38 +145,38 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val selfRescue by boolSetting("Self Rescue", true)
     private val mode by enumSetting("Mode", Mode.TellyBridge)
     private val swapMode by enumSetting("Swap Mode", SwapMode.Normal)
-    private val swapBack by boolSetting("Swap Back", true, Setting.Dependency { swapMode = = SwapMode.Normal })
-    private val snap by boolSetting("Snap", false, Setting.Dependency { mode = = Mode.GodBridge })
+    private val swapBack by boolSetting("Swap Back", true, dependency = { swapMode == SwapMode.Normal })
+    private val snap by boolSetting("Snap", false, dependency = { mode == Mode.GodBridge })
     private val degrees45 by boolSetting("45 Degrees", false)
     private val rotationMode by enumSetting("Rotation Mode", RotationMode.Static)
     private val raytrace by enumSetting("Raytrace Mode", RaytraceMode.Normal)
     private val rotationSpeed by intSetting(
         "Rotation Speed", 127, 10, 180, 10,
-        Setting.Dependency { rotationMode != RotationMode.Hypixel }
+        dependency = { rotationMode != RotationMode.Hypixel }
     )
     private val rotationSpeed2 by intSetting(
         "Rotation Speed 2", 36, 10, 180, 10,
-        Setting.Dependency { rotationMode = = RotationMode.Heypixel }
+        dependency = { rotationMode == RotationMode.Heypixel }
     )
     private val rotationBackSpeed by intSetting(
         "Rotation Back Speed", 180, 10, 180, 10,
-        Setting.Dependency { mode = = Mode.TellyBridge }
+        dependency = { mode == Mode.TellyBridge }
     )
     private val tellyTicks by intSetting(
         "Telly Ticks", 1, 0, 6, 1,
-        Setting.Dependency { mode = = Mode.TellyBridge }
+        dependency = { mode == Mode.TellyBridge }
     )
 
     private val swingHand by boolSetting("Swing Hand", true)
     private val render by boolSetting("Render", true)
-    private val fade by boolSetting("Fade", true, Setting.Dependency { render })
+    private val fade by boolSetting("Fade", true, dependency = { render })
     private val fadeTime by intSetting(
         "Fade Time", 500, 0, 3000, 50,
-        Setting.Dependency { render && fade }
+        dependency = { render && fade }
     )
-    private val shrink by boolSetting("Shrink", false, Setting.Dependency { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), Setting.Dependency { render })
-    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), Setting.Dependency { render })
+    private val shrink by boolSetting("Shrink", false, dependency = { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), dependency = { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), dependency = { render })
 
     private var airTicks = 0
     private var yLevel = 0
@@ -199,7 +199,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     init {
         // 原 Java 在构造器里直接 EventBus.subscribe(ConsumerListener)，这里保持「不按启用状态过滤」的语义。
-        EventBus.INSTANCE.handler<Render3DEvent> {
+        EventBus.handler<Render3DEvent> {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()
@@ -270,7 +270,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                 }
                 val strength = player.deltaMovement.horizontal().length()
                 if (strength >= 1.5) {
-                    NotificationManager.INSTANCE.warning(
+                    NotificationManager.warning(
                         translatedName,
                         EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName(),
                         this.hashCode()
@@ -285,7 +285,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     val face = direction ?: return@nonNullListener
                     val rotation = getRotation(pos, face)
                     RotationManager.INSTANCE.rotations = rotation
-                    RotationManager.INSTANCE.setActive(true)
+                    RotationManager.INSTANCE.updateActive(true)
 
                     // 代替 sendPosition()
                     netHandler.send(
@@ -351,7 +351,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                 ).toFloat()
             )
 
-            if (mode = = Mode.TellyBridge && player.onGround() && !mc.options.keyJump.isDown && player.isMoving) {
+            if (mode == Mode.TellyBridge && player.onGround() && !mc.options.keyJump.isDown && player.isMoving) {
                 event.isJump = true
             }
         }
@@ -359,7 +359,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         nonNullListener<PacketEvent.Receive> { event ->
             if (toggleOnTeleport && pearlUsePacketSent && event.packet is ClientboundPlayerPositionPacket) {
                 pearlUsePacketSent = false
-                NotificationManager.INSTANCE.error(
+                NotificationManager.error(
                     translatedName,
                     EpsilonTranslations.Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT.getTranslatedName()
                 )
@@ -409,7 +409,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             total += player.offhandItem.count
         }
 
-        val maxSlot = if (swapMode = = SwapMode.InvSwitch) player.inventory.containerSize else 9
+        val maxSlot = if (swapMode == SwapMode.InvSwitch) player.inventory.containerSize else 9
         for (i in 0 until maxSlot) {
             val stack = player.inventory.getItem(i)
             if (isValidStack(stack)) {
@@ -446,9 +446,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             rotation = getRotation(blockPos, direction)
             var speed = rotationSpeed
 
-            if (rotationMode = = RotationMode.Hypixel) {
+            if (rotationMode == RotationMode.Hypixel) {
                 speed = if (airTicks <= 1) 127 else 35
-            } else if (rotationMode = = RotationMode.Heypixel) {
+            } else if (rotationMode == RotationMode.Heypixel) {
                 speed = if (airTicks <= 1) rotationSpeed else rotationSpeed2
             }
 
@@ -526,7 +526,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     }
 
     private fun getYLevel(): Int = runSafeOrElse(0) {
-        if ((!mc.options.keyJump.isDown && player.isMoving && mode = = Mode.TellyBridge) &&
+        if ((!mc.options.keyJump.isDown && player.isMoving && mode == Mode.TellyBridge) &&
             Math.abs(yLevel - (Mth.floor(player.y) - 1)) <= 1.25
         ) {
             return@runSafeOrElse yLevel
@@ -661,7 +661,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     yaw + MathUtils.getRandom(-0.3f, 0.3f),
                     pitch + MathUtils.getRandom(-0.3f, 0.3f)
                 )
-                val matches = if (raytrace = = RaytraceMode.Normal) {
+                val matches = if (raytrace == RaytraceMode.Normal) {
                     overBlock(candidate, pos)
                 } else {
                     overBlock(candidate, pos, direction)
@@ -673,7 +673,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             for (pitch in -90 until 90) {
                 val candidate = Rot2f(yaw, pitch.toFloat())
-                val matches = if (raytrace = = RaytraceMode.Normal) {
+                val matches = if (raytrace == RaytraceMode.Normal) {
                     overBlock(candidate, pos)
                 } else {
                     overBlock(candidate, pos, direction)
@@ -721,7 +721,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         if (isValidStack(offhandStack)) {
             return@runSafeOrElse FindItemResult(40, offhandStack.count, offhandStack.maxStackSize)
         }
-        if (swapMode = = SwapMode.InvSwitch) {
+        if (swapMode == SwapMode.InvSwitch) {
             InvUtils.find { isValidStack(it) }
         } else {
             InvUtils.findInHotbar { isValidStack(it) }

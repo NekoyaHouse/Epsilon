@@ -28,6 +28,7 @@ import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket
 import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ClientGamePacketListener
 import java.util.concurrent.LinkedBlockingQueue
 
 object ClientboundPacketManager {
@@ -47,8 +48,7 @@ object ClientboundPacketManager {
     fun flush() {
         while (packets.isNotEmpty()) {
             try {
-                val packet = packets.poll()
-                packet.handle(Constants.mc.getConnection()!!.getConnection().packetListener)
+                dispatch(packets.poll())
             } catch (e: Exception) {
                 NotificationManager.error(
                     "Clientbound Packet",
@@ -80,6 +80,13 @@ object ClientboundPacketManager {
                 packet !is ClientboundSetObjectivePacket &&
                 packet !is ClientboundResetScorePacket &&
                 packet !is ClientboundSetScorePacket
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun dispatch(packet: Packet<*>?) {
+        if (packet == null) return
+        val connection = Constants.mc.getConnection() ?: return
+        (packet as Packet<ClientGamePacketListener>).handle(connection)
     }
 
     fun startTracking() {

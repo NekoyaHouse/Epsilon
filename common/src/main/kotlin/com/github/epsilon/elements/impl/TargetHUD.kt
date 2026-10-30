@@ -42,26 +42,26 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private val healthBarRadius by doubleSetting("Bar Radius", 2.0, 0.0, 15.0, 1.0)
     private val nameSize by doubleSetting("Name Size", 10.5, 8.0, 18.0, 0.5)
     private val delayBar by boolSetting("Delay Bar", true)
-    private val delayWait by boolSetting("Delay Wait", true, Setting.Dependency { delayBar })
+    private val delayWait by boolSetting("Delay Wait", true, dependency = { delayBar })
     private val delayTime by doubleSetting(
         "Delay Time", 250.0, 0.0, 500.0, 50.0,
-        Setting.Dependency { delayBar && delayWait }
+        dependency = { delayBar && delayWait }
     )
-    private val delaySpeed by doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, Setting.Dependency { delayBar })
+    private val delaySpeed by doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, dependency = { delayBar })
     private val barOutline by boolSetting("Bar Outline", true)
     private val barOutlineWidth by doubleSetting(
         "Bar Outline Width", 1.0, 0.5, 5.0, 0.5,
-        Setting.Dependency { barOutline }
+        dependency = { barOutline }
     )
     private val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 50))
     private val barBackgroundColor by colorSetting("Bar Background Color", Color(255, 255, 255, 55))
     private val barFillColor by colorSetting("Bar Fill Color", Color(255, 236, 248, 235))
-    private val delayBarColor by colorSetting("Delay Bar Color", Color(190, 190, 190, 100), Setting.Dependency { delayBar })
-    private val barOutlineColor by colorSetting("Bar Outline Color", Color(255, 255, 255, 85), Setting.Dependency { barOutline })
+    private val delayBarColor by colorSetting("Delay Bar Color", Color(190, 190, 190, 100), dependency = { delayBar })
+    private val barOutlineColor by colorSetting("Bar Outline Color", Color(255, 255, 255, 85), dependency = { barOutline })
     private val textColor by colorSetting("Text Color", Color(255, 255, 255, 235))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, Setting.Dependency { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), Setting.Dependency { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { drawShadow })
 
     private var lastTargetId: Int = Int.MIN_VALUE
     private var displayedHealth: Float = 0.0f
@@ -98,7 +98,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val maxHealth: Float
         val healthPercent: Float
         if (liveTarget === target) {
-            val health = HealthManager.INSTANCE.getHealth(target)
+            val health = HealthManager.getHealth(target)
             maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
             lastKnownMaxHealth = maxHealth
             healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
@@ -318,7 +318,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         }
 
         val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
-        val health = HealthManager.INSTANCE.getHealth(target)
+        val health = HealthManager.getHealth(target)
         val healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
         val armorPercent = Mth.clamp(target.armorValue / 20.0f, 0.0f, 1.0f)
         val damageProgress = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f))

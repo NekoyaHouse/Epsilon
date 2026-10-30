@@ -39,7 +39,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
 
     init {
         handler<KeyPressEvent> { event ->
-            if (event.key == activateKey) {
+            if (event.getKey() == activateKey) {
                 if (event.action == InputConstants.RELEASE) {
                     pressed = false
                 } else if (mc.gui.screen() == null) {
@@ -87,7 +87,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     return@nonNullListener
                 } else {
                     if (NoSlowdown.isWorking()) {
-                        NotificationManager.INSTANCE.warning(
+                        NotificationManager.warning(
                             NoSlowdown.translatedName,
                             EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_PEARL.getTranslatedName()
                         )

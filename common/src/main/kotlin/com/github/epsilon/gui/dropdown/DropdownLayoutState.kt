@@ -74,7 +74,7 @@ object DropdownLayoutState {
     }
 
     private fun getFile(): Path {
-        return ConfigManager.INSTANCE.configDir.resolve(FILE_NAME)
+        return ConfigManager.configDir.resolve(FILE_NAME)
     }
 
     private fun readFloat(obj: JsonObject, key: String, fallback: Float): Float {

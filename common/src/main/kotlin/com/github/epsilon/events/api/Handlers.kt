@@ -20,11 +20,11 @@ const val DEFAULT_HANDLER_PRIORITY: Int = EventPriority.MEDIUM
  * private var tickHandler: IListener? = null
  *
  * override fun onEnable() {
- *     tickHandler = EventBus.INSTANCE.handler<ClientTickEvent.Pre> { ... }
+ *     tickHandler = EventBus.handler<ClientTickEvent.Pre> { ... }
  * }
  *
  * override fun onDisable() {
- *     tickHandler?.let(EventBus.INSTANCE::unsubscribe)
+ *     tickHandler?.let(EventBus::unsubscribe)
  *     tickHandler = null
  * }
  * ```
@@ -49,7 +49,7 @@ fun <E : Any> EventBus.handler(
  * 世界、玩家、交互管理器或连接任一缺失时直接跳过，不会进入 lambda；因此处理器内不需要再做 null 检查：
  *
  * ```kotlin
- * EventBus.INSTANCE.nonNullHandler<PlayerTickEvent.Post> {
+ * EventBus.nonNullHandler<PlayerTickEvent.Post> {
  *     player.jumpFromGround()
  * }
  * ```

@@ -71,7 +71,7 @@ class TrollFriendWindow : TrollWindow() {
         inputField.draw(
             scope, TrollTheme.metrics(metrics), inputBounds.x, inputBounds.y,
             inputBounds.width, inputBounds.height, mouseX, mouseY,
-            EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.translatedName, TrollTheme.TEXT_SCALE
+            EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE
         )
 
         val addHovered = addBounds.contains(mouseX.toDouble(), mouseY.toDouble())
@@ -87,7 +87,7 @@ class TrollFriendWindow : TrollWindow() {
 
         scope.scissor(listViewport) { content ->
             if (rows.isEmpty()) {
-                val empty = EpsilonTranslations.Gui.FRIEND_EMPTY.translatedName
+                val empty = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
                 content.text(
                     2, empty,
                     listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
@@ -192,11 +192,11 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     private fun title(): String {
-        return EpsilonTranslations.Gui.TAB_FRIEND.translatedName
+        return EpsilonTranslations.Gui.TAB_FRIEND.getTranslatedName()
     }
 
     private fun sortedFriends(): List<String> {
-        return FriendManager.friends.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
+        return FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
     }
 
     private fun removeBounds(rowBounds: UiRect): UiRect {

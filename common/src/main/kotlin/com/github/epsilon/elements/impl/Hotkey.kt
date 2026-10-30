@@ -32,9 +32,9 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     }
 
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
-    private val singleColor by colorSetting("Color", Color.WHITE, false, Setting.Dependency { colorMode == ColorMode.Single })
-    private val doubleColor1 by colorSetting("Color 1", Color.WHITE, false, Setting.Dependency { colorMode == ColorMode.Double })
-    private val doubleColor2 by colorSetting("Color 2", Color.RED, false, Setting.Dependency { colorMode == ColorMode.Double })
+    private val singleColor by colorSetting("Color", Color.WHITE, false, dependency = { colorMode == ColorMode.Single })
+    private val doubleColor1 by colorSetting("Color 1", Color.WHITE, false, dependency = { colorMode == ColorMode.Double })
+    private val doubleColor2 by colorSetting("Color 2", Color.RED, false, dependency = { colorMode == ColorMode.Double })
     private val shadowColorMode by enumSetting("Shadow Color", ShadowColorMode.Black)
     private val showSuffix by boolSetting("Show Suffix", true)
 
@@ -43,7 +43,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
 
     override fun render(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
-        val modules: List<Module> = ModuleManager.INSTANCE.getModules()
+        val modules: List<Module> = ModuleManager.getModules()
         val liveModules: MutableSet<Module> = HashSet(modules)
         moduleAnimations.keys.removeAll { module -> !liveModules.contains(module) }
 

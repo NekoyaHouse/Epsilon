@@ -31,7 +31,7 @@ object DownloadJobOverlay : AutoCloseable {
 
     fun extractRenderState(screen: Screen, graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         val minecraft = Constants.mc ?: return
-        val job = AssetManager.INSTANCE.activeJob()
+        val job = AssetManager.activeJob()
         if (screen != minecraft.gui.screen() || screen is EpsilonDialogScreen || job == null || !job.isRunning()) {
             close()
             return
@@ -155,11 +155,11 @@ object DownloadJobOverlay : AutoCloseable {
         if (minecraft.gui.screen() != screen || screen != renderedScreen || cardBounds == null ||
             event.button() != InputConstants.MOUSE_BUTTON_LEFT
         ) return false
-        val job = AssetManager.INSTANCE.activeJob()
+        val job = AssetManager.activeJob()
         if (job == null || job !== renderedJob || !job.isRunning()) return false
         val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
         if (!cardBounds.contains(epsilonEvent.x(), epsilonEvent.y())) return false
-        AssetManager.INSTANCE.openDownloadScreen(job.assets())
+        AssetManager.openDownloadScreen(job.assets())
         return true
     }
 

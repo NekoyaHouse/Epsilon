@@ -29,7 +29,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
     private val tick by doubleSetting("Tick", 30.0, 5.0, 200.0, 1.0)
     private val SlowRelease by boolSetting("Slow Release", true)
     private val slowMove by boolSetting("Slow Move", false)
-    private val slowMoveTick by doubleSetting("Slow Move Tick", 5.0, 2.0, 5.0, 1.0, Setting.Dependency { slowMove })
+    private val slowMoveTick by doubleSetting("Slow Move Tick", 5.0, 2.0, 5.0, 1.0, dependency = { slowMove })
     private val fakePlayer by boolSetting("Fake Player", false)
 
     private val packets: Queue<Packet<*>> = ConcurrentLinkedQueue()

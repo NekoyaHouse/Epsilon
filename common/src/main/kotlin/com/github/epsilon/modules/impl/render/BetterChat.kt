@@ -25,12 +25,12 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
 
     private val backgroundColor by colorSetting("Background Color", Color(16, 17, 20, 150))
     private val inputBackgroundColor by colorSetting("Input Background Color", Color(16, 17, 20, 185))
-    private val chatRadius by doubleSetting("Chat Radius", 4.5, 0.0, 12.0, 0.5)
-    private val inputRadius by doubleSetting("Input Radius", 3.5, 0.0, 12.0, 0.5)
+    private var chatRadius by doubleSetting("Chat Radius", 4.5, 0.0, 12.0, 0.5)
+    private var inputRadius by doubleSetting("Input Radius", 3.5, 0.0, 12.0, 0.5)
     private val blurStrength by doubleSetting("Blur Strength", 8.0, 1.0, 20.0, 0.5)
     private val dropShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 24.0, 1.0, Setting.Dependency { dropShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), Setting.Dependency { dropShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 24.0, 1.0, dependency = { dropShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { dropShadow })
 
     private const val CHAT_BOTTOM_OFFSET = 40.0f
     private const val CHAT_HORIZONTAL_PADDING = 4.0f

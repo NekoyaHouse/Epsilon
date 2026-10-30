@@ -113,8 +113,8 @@ abstract class RotationManager {
                     ).toFloat()
 
                 offset.set(
-                    (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble()).toFloat()) * speed).toFloat(),
-                    (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble()).toFloat()) * speed).toFloat()
+                    (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
+                    (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
                 )
 
                 targetYaw += offset.yaw
@@ -132,8 +132,8 @@ abstract class RotationManager {
                     targetPitch -= offset.pitch
 
                     offset.set(
-                        (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble()).toFloat()) * speed).toFloat(),
-                        (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble()).toFloat()) * speed).toFloat()
+                        (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
+                        (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
                     )
 
                     targetYaw = targetYaw + offset.yaw
@@ -223,7 +223,7 @@ abstract class RotationManager {
         return active
     }
 
-    fun setActive(active: Boolean) {
+    fun updateActive(active: Boolean) {
         this.active = active
     }
 
@@ -231,7 +231,7 @@ abstract class RotationManager {
         return smoothed
     }
 
-    fun setSmoothed(smoothed: Boolean) {
+    fun updateSmoothed(smoothed: Boolean) {
         this.smoothed = smoothed
     }
 

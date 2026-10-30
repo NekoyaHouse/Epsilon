@@ -177,7 +177,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
                                 val noSlowdown = NoSlowdown
                                 if (NoSlowdown.isWorking()) {
-                                    NotificationManager.INSTANCE.warning(noSlowdown.translatedName, EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_WATER.translatedName)
+                                    NotificationManager.warning(noSlowdown.translatedName, EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_WATER.getTranslatedName())
                                     noSlowdown.stop()
                                 }
 

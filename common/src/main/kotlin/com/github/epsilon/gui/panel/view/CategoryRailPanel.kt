@@ -386,7 +386,7 @@ class CategoryRailPanel(
     }
 
     private fun getCategoryCount(category: Category): Int {
-        return ModuleManager.INSTANCE.getModules().count { module -> module.category === category }
+        return ModuleManager.getModules().count { module -> module.category === category }
     }
 
     private companion object {

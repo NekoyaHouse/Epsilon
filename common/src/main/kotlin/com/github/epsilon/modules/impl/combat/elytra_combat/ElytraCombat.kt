@@ -83,79 +83,77 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private val sgFlight: SettingGroup = settingGroup("Flight")
     private val sgRender: SettingGroup = settingGroup("Render")
 
-    var mode by enumSetting("Mode", ElytraCombatMode.Follow) { newMode ->
-        onModeChanged(newMode)
-    }.group(sgGeneral)
+    var mode by enumSetting("Mode", ElytraCombatMode.Follow, onChanged = { newMode ->
+        onModeChanged(newMode) }).apply { group(sgGeneral) }
 
-    private var switchModeKey by keybindSetting("Switch Mode Key", -1).group(sgGeneral)
+    private var switchModeKey by keybindSetting("Switch Mode Key", -1).apply { group(sgGeneral) }
 
     /** 战斗决策调试输出开关。 */
-    var debug by boolSetting("Debug", false) { value ->
+    var debug by boolSetting("Debug", false, onChanged = { value ->
         ElytraDebug.enabled = value
-        ElytraDebug.reset()
-    }.group(sgGeneral)
+        ElytraDebug.reset() }).apply { group(sgGeneral) }
 
-    var targetRange by intSetting("Target Range", 80, 8, 256, 1).group(sgGeneral)
-    var dynamicTarget by boolSetting("Dynamic Target", false).group(sgGeneral)
-    private var onlyWhenNoWASD by boolSetting("Only When No WASD", false).group(sgGeneral)
-    private var autoControlElytra by boolSetting("Auto Control Elytra", true).group(sgGeneral)
+    var targetRange by intSetting("Target Range", 80, 8, 256, 1).apply { group(sgGeneral) }
+    var dynamicTarget by boolSetting("Dynamic Target", false).apply { group(sgGeneral) }
+    private var onlyWhenNoWASD by boolSetting("Only When No WASD", false).apply { group(sgGeneral) }
+    private var autoControlElytra by boolSetting("Auto Control Elytra", true).apply { group(sgGeneral) }
 
-    private var players by boolSetting("Players", true).group(sgTarget)
-    private var mobs by boolSetting("Mobs", false).group(sgTarget)
-    private var animals by boolSetting("Animals", false).group(sgTarget)
-    private var villagers by boolSetting("Villagers", false).group(sgTarget)
-    private var ambient by boolSetting("Ambient", false).group(sgTarget)
-    private var water by boolSetting("Water", false).group(sgTarget)
-    private var others by boolSetting("Others", false).group(sgTarget)
-    private var invisible by boolSetting("Invisible", false).group(sgTarget)
-    private var followFriend by boolSetting("Follow Friend", false).group(sgTarget)
-    var predictorMode by enumSetting("Predictor", PredictorMode.NV).group(sgTarget)
-    var predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1).group(sgTarget)
-    var predictionHistory by intSetting("Prediction History", 5, 2, 20, 1).group(sgTarget)
+    private var players by boolSetting("Players", true).apply { group(sgTarget) }
+    private var mobs by boolSetting("Mobs", false).apply { group(sgTarget) }
+    private var animals by boolSetting("Animals", false).apply { group(sgTarget) }
+    private var villagers by boolSetting("Villagers", false).apply { group(sgTarget) }
+    private var ambient by boolSetting("Ambient", false).apply { group(sgTarget) }
+    private var water by boolSetting("Water", false).apply { group(sgTarget) }
+    private var others by boolSetting("Others", false).apply { group(sgTarget) }
+    private var invisible by boolSetting("Invisible", false).apply { group(sgTarget) }
+    private var followFriend by boolSetting("Follow Friend", false).apply { group(sgTarget) }
+    var predictorMode by enumSetting("Predictor", PredictorMode.NV).apply { group(sgTarget) }
+    var predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1).apply { group(sgTarget) }
+    var predictionHistory by intSetting("Prediction History", 5, 2, 20, 1).apply { group(sgTarget) }
 
-    var stopDistance by doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).group(sgFollow)
-    var followGroundHeight by doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).group(sgFollow)
-    private var pathfinding by boolSetting("Pathfinding", true).group(sgFollow)
-    private var searchRadius by intSetting("Search Radius", 24, 6, 64, 1, Setting.Dependency { pathfinding }).group(sgFollow)
-    private var maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, Setting.Dependency { pathfinding }).group(sgFollow)
+    var stopDistance by doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).apply { group(sgFollow) }
+    var followGroundHeight by doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).apply { group(sgFollow) }
+    private var pathfinding by boolSetting("Pathfinding", true).apply { group(sgFollow) }
+    private var searchRadius by intSetting("Search Radius", 24, 6, 64, 1, dependency = { pathfinding }).apply { group(sgFollow) }
+    private var maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, dependency = { pathfinding }).apply { group(sgFollow) }
     private var dataSize by intSetting(
         "Data Size", 50, 25, 100, 5,
-        Setting.Dependency { pathfinding },
-    ) { size -> setPathDataSize(size) }.applyWhenRelease().group(sgFollow)
+        dependency = { pathfinding },
+        onChanged = { size -> setPathDataSize(size) }).apply { applyWhenRelease() }.apply { group(sgFollow) }
 
-    var maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0, 16.0, 0.5).group(sgMace)
-    var maceHeight by doubleSetting("Mace Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
-    var maceGroundHeight by doubleSetting("Mace Ground Height", 10.0, 2.0, 32.0, 0.5).group(sgMace)
-    var maceFollowMinHeight by doubleSetting("Mace Min Follow Height", 1.5, 0.0, 12.0, 0.5).group(sgMace)
-    var maceYBias by doubleSetting("Mace Y Bias", 3.0, -10.0, 10.0, 0.5).group(sgMace)
-    var macePullUpTicks by intSetting("Mace Pull Up Max Ticks", 20, 1, 100, 1).group(sgMace)
-    var maceUsePredictor by boolSetting("Mace Use Predictor", true).group(sgMace)
-    var maceAttackThreshold by doubleSetting("Mace Attack Threshold", 0.75, 0.1, 1.0, 0.05).group(sgMace)
-    var maceSwingHand by boolSetting("Mace Swing Hand", true).group(sgMace)
-    var maceAntiShield by boolSetting("Mace Anti Shield", true).group(sgMace)
-    var maceSmoothFlight by boolSetting("Mace Smooth Flight", true).group(sgMace)
-    var maceAngleOptimize by boolSetting("Mace Angle Optimize", false).group(sgMace)
-    var maceDownAngle by doubleSetting("Mace Down Angle", 30.5, 5.0, 80.0, 0.5, Setting.Dependency { maceAngleOptimize }).group(sgMace)
+    var maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0, 16.0, 0.5).apply { group(sgMace) }
+    var maceHeight by doubleSetting("Mace Height", 10.0, 2.0, 32.0, 0.5).apply { group(sgMace) }
+    var maceGroundHeight by doubleSetting("Mace Ground Height", 10.0, 2.0, 32.0, 0.5).apply { group(sgMace) }
+    var maceFollowMinHeight by doubleSetting("Mace Min Follow Height", 1.5, 0.0, 12.0, 0.5).apply { group(sgMace) }
+    var maceYBias by doubleSetting("Mace Y Bias", 3.0, -10.0, 10.0, 0.5).apply { group(sgMace) }
+    var macePullUpTicks by intSetting("Mace Pull Up Max Ticks", 20, 1, 100, 1).apply { group(sgMace) }
+    var maceUsePredictor by boolSetting("Mace Use Predictor", true).apply { group(sgMace) }
+    var maceAttackThreshold by doubleSetting("Mace Attack Threshold", 0.75, 0.1, 1.0, 0.05).apply { group(sgMace) }
+    var maceSwingHand by boolSetting("Mace Swing Hand", true).apply { group(sgMace) }
+    var maceAntiShield by boolSetting("Mace Anti Shield", true).apply { group(sgMace) }
+    var maceSmoothFlight by boolSetting("Mace Smooth Flight", true).apply { group(sgMace) }
+    var maceAngleOptimize by boolSetting("Mace Angle Optimize", false).apply { group(sgMace) }
+    var maceDownAngle by doubleSetting("Mace Down Angle", 30.5, 5.0, 80.0, 0.5, dependency = { maceAngleOptimize }).apply { group(sgMace) }
 
-    var spearEngageRange by doubleSetting("Spear Range", 8.0, 2.0, 24.0, 0.5).group(sgSpear)
-    var spearMinRange by doubleSetting("Spear Min Range", 1.0, 0.0, 8.0, 0.5).group(sgSpear)
-    var spearLungeStrength by doubleSetting("Spear Lunge Strength", 3.7, 0.5, 15.0, 0.1).group(sgSpear)
-    var spearPullOverTicks by intSetting("Spear Pull Over Ticks", 6, 1, 40, 1).group(sgSpear)
-    var spearUsePredictor by boolSetting("Spear Use Predictor", true).group(sgSpear)
-    var spearAntiSpear by boolSetting("Spear Anti Spear", true).group(sgSpear)
-    var spearAntiSpearExtra by doubleSetting("Spear Anti Extra Distance", 1.0, 0.0, 8.0, 0.5, Setting.Dependency { spearAntiSpear }).group(sgSpear)
-    private var logSpearHit by boolSetting("Log Spear Hit", false).group(sgSpear)
+    var spearEngageRange by doubleSetting("Spear Range", 8.0, 2.0, 24.0, 0.5).apply { group(sgSpear) }
+    var spearMinRange by doubleSetting("Spear Min Range", 1.0, 0.0, 8.0, 0.5).apply { group(sgSpear) }
+    var spearLungeStrength by doubleSetting("Spear Lunge Strength", 3.7, 0.5, 15.0, 0.1).apply { group(sgSpear) }
+    var spearPullOverTicks by intSetting("Spear Pull Over Ticks", 6, 1, 40, 1).apply { group(sgSpear) }
+    var spearUsePredictor by boolSetting("Spear Use Predictor", true).apply { group(sgSpear) }
+    var spearAntiSpear by boolSetting("Spear Anti Spear", true).apply { group(sgSpear) }
+    var spearAntiSpearExtra by doubleSetting("Spear Anti Extra Distance", 1.0, 0.0, 8.0, 0.5, dependency = { spearAntiSpear }).apply { group(sgSpear) }
+    private var logSpearHit by boolSetting("Log Spear Hit", false).apply { group(sgSpear) }
 
-    var controlMode by enumSetting("Control Mode", ControlMode.Input).group(sgFlight)
-    var maxFlightSpeed by doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).group(sgFlight)
+    var controlMode by enumSetting("Control Mode", ControlMode.Input).apply { group(sgFlight) }
+    var maxFlightSpeed by doubleSetting("Max Flight Speed", 2.0, 0.5, 10.0, 0.1).apply { group(sgFlight) }
 
     /** 每 tick 最大转向角度（度）；360 表示不限速。 */
-    var maxTurnSpeed by doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).group(sgFlight)
-    private var allowFirework by boolSetting("Allow Firework", true).group(sgFlight)
+    var maxTurnSpeed by doubleSetting("Max Turn Speed", 20.0, 5.0, 360.0, 5.0).apply { group(sgFlight) }
+    private var allowFirework by boolSetting("Allow Firework", true).apply { group(sgFlight) }
 
-    private var render by boolSetting("Render Vector", true).group(sgRender)
-    private var renderColor by colorSetting("Render Color", Color(255, 133, 161, 210), Setting.Dependency { render }).group(sgRender)
-    private var renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, Setting.Dependency { render }).group(sgRender)
+    private var render by boolSetting("Render Vector", true).apply { group(sgRender) }
+    private var renderColor by colorSetting("Render Color", Color(255, 133, 161, 210), dependency = { render }).apply { group(sgRender) }
+    private var renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, dependency = { render }).apply { group(sgRender) }
 
     /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */
     private val behaviors: EnumMap<ElytraCombatMode, ElytraCombatBehavior> =
@@ -456,7 +454,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             this.target = null
         }
         if (this.target == null || this.dynamicTarget) {
-            this.target = TargetManager.INSTANCE.acquirePrimary(
+            this.target = TargetManager.acquirePrimary(
                 TargetRequest.of(
                     this.targetRange.toDouble(),
                     360.0f,
