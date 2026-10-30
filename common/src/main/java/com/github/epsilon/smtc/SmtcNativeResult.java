@@ -1,4 +1,4 @@
-package me.sofurry.smtc;
+package com.github.epsilon.smtc;
 
 /**
  * JNI 边界返回的原始 SMTC 数据。

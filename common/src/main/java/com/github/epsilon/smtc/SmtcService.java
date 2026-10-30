@@ -1,4 +1,4 @@
-package me.sofurry.smtc;
+package com.github.epsilon.smtc;
 
 import com.github.epsilon.Constants;
 
