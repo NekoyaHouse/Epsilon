@@ -181,7 +181,7 @@ class Render2DScheduler : AutoCloseable {
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
         Render2DCommandKind.BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR
         Render2DCommandKind.GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH
-        Render2DCommandKind.TEXT -> if (ClientSetting.INSTANCE.fontAntiAliasing.getValue()) {
+        Render2DCommandKind.TEXT -> if (ClientSetting.fontAntiAliasing) {
             LuminRenderPipelines.TTF_FONT_AA
         } else {
             LuminRenderPipelines.TTF_FONT_NO_AA
@@ -1055,7 +1055,6 @@ class Render2DScheduler : AutoCloseable {
         }
     }
 
-    @JvmRecord
     private data class BatchKey(val kind: Render2DCommandKind, val scissor: Render2DScissor?)
 
     private class BatchGroup(val kind: Render2DCommandKind, val scissor: Render2DScissor?) {
@@ -1127,7 +1126,6 @@ class Render2DScheduler : AutoCloseable {
         }
     }
 
-    @JvmRecord
     private data class PreparedBatch(val pipeline: RenderPipeline, val renderers: RendererBundle)
 
     private class RendererBundle(

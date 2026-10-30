@@ -11,10 +11,8 @@ import net.minecraft.resources.Identifier
  */
 sealed interface Render2DTexture {
 
-    @JvmRecord
     data class IdentifierRef(val identifier: Identifier?, val linearFilter: Boolean) : Render2DTexture
 
-    @JvmRecord
     data class LuminRef(val texture: LuminTexture?) : Render2DTexture
 
 }

@@ -24,19 +24,14 @@ import java.nio.ByteBuffer
 import java.util.EnumMap
 import java.util.Optional
 
-class CustomSkyShader private constructor() {
+object CustomSkyShader {
 
-    companion object {
-        @JvmField
-        val INSTANCE: CustomSkyShader = CustomSkyShader()
-
-        private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
-        private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
-            .putVec4()
-            .putVec4()
-            .putVec4()
-            .get()
-    }
+    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
+    private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
+        .putVec4()
+        .putVec4()
+        .putVec4()
+        .get()
 
     private val pipelines: EnumMap<CustomSky.ShaderMode, RenderPipeline> = EnumMap(CustomSky.ShaderMode::class.java)
     private var input: TextureTarget? = null
@@ -115,7 +110,6 @@ class CustomSkyShader private constructor() {
         }
     }
 
-    @JvmRecord
     private data class SkyUniforms(
         val red: Float, val green: Float, val blue: Float, val alpha: Float,
         val backgroundRed: Float, val backgroundGreen: Float, val backgroundBlue: Float, val backgroundAlpha: Float,

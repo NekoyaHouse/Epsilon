@@ -22,16 +22,11 @@ import java.awt.Color
 import java.nio.ByteBuffer
 import java.util.Optional
 
-class FilterShader {
+object FilterShader {
 
-    companion object {
-        @JvmField
-        val INSTANCE: FilterShader = FilterShader()
-
-        private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
-            .putVec4()
-            .get()
-    }
+    private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
+        .putVec4()
+        .get()
 
     private var pipeline: RenderPipeline? = null
     private var input: RenderTarget? = null
@@ -116,7 +111,6 @@ class FilterShader {
         }
     }
 
-    @JvmRecord
     private data class FilterColor(val red: Float, val green: Float, val blue: Float, val alpha: Float) :
         DynamicGpuDataStorage.DynamicGpuData {
 

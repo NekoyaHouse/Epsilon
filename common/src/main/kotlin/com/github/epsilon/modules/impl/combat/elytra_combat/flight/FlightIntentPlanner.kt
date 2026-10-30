@@ -1,0 +1,146 @@
+package com.github.epsilon.modules.impl.combat.elytra_combat.flight
+
+import com.github.epsilon.modules.impl.combat.elytra_combat.path.ElytraPathNavigator
+import com.github.epsilon.modules.impl.combat.elytra_combat.path.PathConfig
+import com.github.epsilon.modules.impl.combat.elytra_combat.path.PathPlan
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.world.phys.Vec3
+
+/**
+ * 将行为层的期望速度转换为可执行飞行意图。
+ *
+ * 先检查短距离直飞；开启寻路时直接使用后台基础 A*，否则退回局部扇区避障。
+ * 这样可以把 A* 路径和局部避障明确分开，避免两套方向在同一 tick 互相覆盖。
+ */
+class FlightIntentPlanner {
+
+    private val pathNavigator = ElytraPathNavigator()
+
+    /** 局部避障上一 tick 的方向，用于抑制左右两侧得分接近时来回切换。 */
+    private var lastAvoidanceDirection: Vec3? = null
+
+    fun plan(
+        player: LocalPlayer,
+        rawIntent: FlightIntent,
+        targetPoint: Vec3,
+        config: FlightPlanConfig,
+    ): FlightIntent {
+        if (rawIntent.desiredVelocity.lengthSqr() < 1.0E-8) {
+            return rawIntent
+        }
+
+        val desired = rawIntent.desiredVelocity
+        val probe = Math.clamp(desired.length() * 4.0, 4.0, LOCAL_PROBE_DISTANCE)
+        val directEnd = player.position().add(desired.normalize().scale(probe))
+        if (LocalFlightAvoidance.isSegmentClear(player, player.position(), directEnd)) {
+            // 保留避障方向偏好，使再次进入避障时的选择连续。
+            ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "direct")
+            return FlightIntent(desired, desired.normalize(), rawIntent.directVelocity, rawIntent.useFirework)
+        }
+
+        if (!config.pathfinding) {
+            return planAvoidance(player, desired, targetPoint, probe, rawIntent)
+        }
+
+        val path = this.pathNavigator.getPath(
+            player,
+            targetPoint,
+            PathConfig(config.stopDistance, config.searchRadius, config.maxNodes),
+        )
+        // 从原始 A* 路径选择当前仍能直线到达的最近航点。
+        val waypoint = selectPathWaypoint(player, path)
+        if (waypoint != null) {
+            var waypointVelocity = waypoint.subtract(player.position())
+            if (waypointVelocity.lengthSqr() >= 1.0E-8) {
+                waypointVelocity = waypointVelocity.normalize().scale(desired.length())
+                ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "waypoint " + vec(waypointVelocity))
+                // 保留行为层的烟花意图，交给飞控控制使用时机。
+                return FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity, rawIntent.useFirework)
+            }
+        }
+
+        return planAvoidance(player, desired, targetPoint, probe, rawIntent)
+    }
+
+    private fun planAvoidance(
+        player: LocalPlayer,
+        desired: Vec3,
+        targetPoint: Vec3,
+        probe: Double,
+        rawIntent: FlightIntent,
+    ): FlightIntent {
+        // 只有 A* 没有可用路径时才启用局部扇区搜索，并延续上一次方向。
+        val avoidance = LocalFlightAvoidance.findAvoidance(
+            player,
+            desired,
+            targetPoint,
+            probe,
+            this.lastAvoidanceDirection,
+        )
+        if (avoidance == null) {
+            // 局部避障无解时保留期望方向，由方向求解器继续搜索安全逃逸解。
+            ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", "none -> keep desired")
+            return FlightIntent(desired, desired.normalize(), rawIntent.directVelocity, rawIntent.useFirework)
+        }
+        val lastDirection = avoidance.normalize()
+        this.lastAvoidanceDirection = lastDirection
+        ElytraDebug.log(ElytraDebug.SLOT_AVOIDANCE, "avoidance", vec(avoidance))
+        return FlightIntent(avoidance, lastDirection, rawIntent.directVelocity, rawIntent.useFirework)
+    }
+
+    /**
+     * 从 A* 原始路径中选取当前仍能直线到达的航点；优先使用前视点，被阻挡时回退到更近的节点。
+     */
+    private fun selectPathWaypoint(player: LocalPlayer, path: PathPlan): Vec3? {
+        val points = path.points
+        if (points.size < 2) {
+            return null
+        }
+
+        val playerPos = player.position()
+        var index = points.indexOf(path.nextPoint)
+        if (index < 1) {
+            index = 1
+        }
+        for (i in index downTo 1) {
+            val candidate = points[i]
+            if (playerPos.distanceToSqr(candidate) < 1.0E-4) {
+                continue
+            }
+            if (LocalFlightAvoidance.isSegmentClear(player, playerPos, candidate)) {
+                // 从最远前视点向回退，优先保留尽量远的可达节点。
+                return candidate
+            }
+        }
+        return null
+    }
+
+    fun reset() {
+        this.lastAvoidanceDirection = null
+        this.pathNavigator.stop()
+    }
+
+    fun stop() {
+        this.lastAvoidanceDirection = null
+        this.pathNavigator.stop()
+    }
+
+    fun setDataSize(dataSize: Int) {
+        this.pathNavigator.setDataSize(dataSize)
+    }
+
+    private companion object {
+
+        private const val LOCAL_PROBE_DISTANCE = 6.0
+
+        private fun vec(value: Vec3?): String {
+            return if (value == null) {
+                "null"
+            } else {
+                "(" + ElytraDebug.fmt(value.x) + "," + ElytraDebug.fmt(value.y) + "," + ElytraDebug.fmt(value.z) + ")"
+            }
+        }
+
+    }
+
+}

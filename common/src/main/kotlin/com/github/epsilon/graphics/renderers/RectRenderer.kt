@@ -35,7 +35,6 @@ class RectRenderer private constructor() : IRenderer {
         private const val STRIDE = 16
         private const val RECT_BYTES = STRIDE * 4L
 
-        @JvmStatic
         fun create(): RectRenderer = RendererManager.INSTANCE.register(RectRenderer())
 
     }

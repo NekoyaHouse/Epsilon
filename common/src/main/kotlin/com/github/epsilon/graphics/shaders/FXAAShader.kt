@@ -24,19 +24,14 @@ import java.util.Optional
 /**
  * 整屏 FXAA 后处理，采样主渲染目标并写回，作为 {@code AntiAlias} 的 FXAA 模式使用。
  */
-class FXAAShader private constructor() {
+object FXAAShader {
 
-    companion object {
-        @JvmField
-        val INSTANCE: FXAAShader = FXAAShader()
+    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
+    private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("fxaa")
 
-        private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
-        private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("fxaa")
-
-        private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
-            .putVec4()
-            .get()
-    }
+    private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
+        .putVec4()
+        .get()
 
     private var pipeline: RenderPipeline? = null
     private var input: RenderTarget? = null
@@ -132,7 +127,6 @@ class FXAAShader private constructor() {
         }
     }
 
-    @JvmRecord
     private data class FXAAInfo(val width: Float, val height: Float) : DynamicGpuDataStorage.DynamicGpuData {
 
         override fun write(buffer: ByteBuffer) {

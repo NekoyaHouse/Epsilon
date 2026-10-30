@@ -41,7 +41,6 @@ class TextureRenderer private constructor() : IRenderer {
         private const val BUFFER_SIZE = 16 * 1024L
         private const val QUAD_BYTES = STRIDE * 4L
 
-        @JvmStatic
         fun create(): TextureRenderer = RendererManager.INSTANCE.register(TextureRenderer())
 
     }
@@ -416,10 +415,8 @@ class TextureRenderer private constructor() : IRenderer {
         RendererManager.INSTANCE.unregister(this)
     }
 
-    @JvmRecord
     private data class TextureKey(val texture: Any?, val linearFilter: Boolean)
 
-    @JvmRecord
     private data class PreparedTexture(val view: GpuTextureView, val sampler: GpuSampler)
 
     private class Batch(val buffer: LuminRingBuffer) {

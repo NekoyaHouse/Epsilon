@@ -58,8 +58,6 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
             return Uploaded(texture, view, sampler)
         }
 
-        @JvmStatic
-        @Throws(IOException::class)
         fun downloadHead(url: String): ByteArray {
             val skin: BufferedImage? = Http.get(url).sendInputStream().use { input ->
                 ImageIO.read(input)

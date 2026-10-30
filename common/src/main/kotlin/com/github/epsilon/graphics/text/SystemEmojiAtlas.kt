@@ -211,16 +211,13 @@ object SystemEmojiAtlas : AutoCloseable {
         }
     }
 
-    @JvmRecord
     data class EmojiGlyph(val texture: LuminTexture, val u0: Float, val v0: Float, val u1: Float, val v1: Float)
 
-    @JvmRecord
     private data class ColorGlyphLayer(val glyphId: Int, val paletteIndex: Int)
 
-    @JvmRecord
     private data class ColorGlyphFont(val layers: Map<Int, Array<ColorGlyphLayer>>, val colors: Array<Color>) {
 
-        // 方法名不能与 record 组件访问器 layers() 同名，故加 For 后缀。
+        // 类内已有属性 layers，方法名加 For 后缀避免与属性同名。
         fun layersFor(glyphId: Int): Array<ColorGlyphLayer>? {
             return layers[glyphId]
         }
@@ -335,6 +332,5 @@ object SystemEmojiAtlas : AutoCloseable {
         }
     }
 
-    @JvmRecord
     private data class Table(val offset: Int, val length: Int)
 }

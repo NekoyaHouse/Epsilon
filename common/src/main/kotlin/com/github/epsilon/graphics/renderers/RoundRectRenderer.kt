@@ -34,7 +34,6 @@ class RoundRectRenderer private constructor() : IRenderer {
         private const val STRIDE = 48
         private const val RECT_BYTES = STRIDE * 4L
 
-        @JvmStatic
         fun create(): RoundRectRenderer = RendererManager.INSTANCE.register(RoundRectRenderer())
 
     }

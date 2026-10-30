@@ -38,254 +38,214 @@ import org.joml.Vector4f
 import org.joml.Vector4fc
 import java.util.OptionalDouble
 
-class LuminRenderSystem {
+object LuminRenderSystem {
 
-    companion object {
+    val guiOrthoProjection: Projection = Projection()
 
-        @JvmField
-        val guiOrthoProjection: Projection = Projection()
+    private val guiProjectionMatrixBuffer: ProjectionMatrixBuffer = ProjectionMatrixBuffer("lumin-gui")
 
-        private val guiProjectionMatrixBuffer: ProjectionMatrixBuffer = ProjectionMatrixBuffer("lumin-gui")
+    /**
+     * 当前 GPU 后端是否为 Vulkan。设备创建后后端不会再变，因此只判定一次。
+     */
+    val IS_VULKAN_BACKEND: Boolean = "Vulkan" == RenderSystem.getDevice().deviceInfo.backendName()
 
-        /**
-         * 当前 GPU 后端是否为 Vulkan。设备创建后后端不会再变，因此只判定一次。
-         */
-        @JvmField
-        val IS_VULKAN_BACKEND: Boolean =
-            "Vulkan" == RenderSystem.getDevice().deviceInfo.backendName()
+    private var activeTarget: LuminRenderTarget? = null
+    private var renderFrameId = 0L
 
-        private var activeTarget: LuminRenderTarget? = null
-        private var renderFrameId = 0L
-
-        @JvmStatic
-        fun setActiveTarget(target: LuminRenderTarget?) {
-            activeTarget = target
-        }
-
-        @JvmStatic
-        fun destroyAll() {
-            guiProjectionMatrixBuffer.close()
-            FXAAShader.INSTANCE.close()
-            MotionBlurShader.INSTANCE.close()
-            OverlayAntiAlias.INSTANCE.close()
-            ShaderUniforms.closeAll()
-            RenderTargetManager.INSTANCE.destroyAll()
-            RendererManager.INSTANCE.destroyAll()
-            StaticFontLoader.destroyDefault()
-        }
-
-        @JvmStatic
-        fun <T : DynamicGpuDataStorage.DynamicGpuData> writeDynamicUniform(
-            key: String,
-            label: String,
-            uniformSize: Int,
-            initialCapacity: Int,
-            uniform: T,
-        ): GpuBufferSlice {
-            return ShaderUniforms.write(key, label, uniformSize, initialCapacity, uniform)
-        }
-
-        @JvmStatic
-        fun endDynamicUniformFrame() {
-            ShaderUniforms.endFrame()
-        }
-
-        @JvmStatic
-        fun beginRenderFrame() {
-            renderFrameId++
-        }
-
-        @JvmStatic
-        fun getRenderFrameId(): Long {
-            return renderFrameId
-        }
-
-        @JvmStatic
-        fun getActiveTarget(): LuminRenderTarget? {
-            return activeTarget
-        }
-
-        @JvmStatic
-        fun getGuiScale(): Double {
-            return ClientSetting.INSTANCE.scale
-        }
-
-        @JvmStatic
-        fun getScaledWidth(): Float {
-            val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
-            return (windowState.width / getGuiScale()).toFloat()
-        }
-
-        @JvmStatic
-        fun getScaledHeight(): Float {
-            val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
-            return (windowState.height / getGuiScale()).toFloat()
-        }
-
-        @JvmStatic
-        fun getScaledWidthInt(): Int {
-            return Math.ceil(getScaledWidth().toDouble()).toInt()
-        }
-
-        @JvmStatic
-        fun getScaledHeightInt(): Int {
-            return Math.ceil(getScaledHeight().toDouble()).toInt()
-        }
-
-        @JvmStatic
-        fun toEpsilonMouseX(mouseX: Double): Double {
-            return mouseX * Constants.mc.window.guiScale / getGuiScale()
-        }
-
-        @JvmStatic
-        fun toEpsilonMouseY(mouseY: Double): Double {
-            return mouseY * Constants.mc.window.guiScale / getGuiScale()
-        }
-
-        @JvmStatic
-        fun toMinecraftGuiX(epsilonX: Double): Double {
-            return epsilonX * getGuiScale() / Constants.mc.window.guiScale
-        }
-
-        @JvmStatic
-        fun toMinecraftGuiY(epsilonY: Double): Double {
-            return epsilonY * getGuiScale() / Constants.mc.window.guiScale
-        }
-
-        @JvmStatic
-        fun toEpsilonMouseX(mouseX: Int): Int {
-            return Math.round(toEpsilonMouseX(mouseX.toDouble())).toInt()
-        }
-
-        @JvmStatic
-        fun toEpsilonMouseY(mouseY: Int): Int {
-            return Math.round(toEpsilonMouseY(mouseY.toDouble())).toInt()
-        }
-
-        @JvmStatic
-        fun toEpsilonMouseEvent(event: MouseButtonEvent): MouseButtonEvent {
-            return MouseButtonEvent(toEpsilonMouseX(event.x()), toEpsilonMouseY(event.y()), event.buttonInfo())
-        }
-
-        @JvmStatic
-        fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float): ScissorRect {
-            return ScissorUtils.toFramebufferScissor(x, y, width, height)
-        }
-
-        @JvmStatic
-        fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Float): ScissorRect {
-            return ScissorUtils.toFramebufferScissor(x, y, width, height, guiHeight)
-        }
-
-        @JvmStatic
-        fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Int): ScissorRect {
-            return toFramebufferScissor(x, y, width, height, guiHeight.toFloat())
-        }
-
-        @JvmStatic
-        fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Double): ScissorRect {
-            return toFramebufferScissor(x, y, width, height, guiHeight.toFloat())
-        }
-
-        @JvmStatic
-        fun applyOrthoProjection() {
-            guiOrthoProjection
-                .setupOrtho(
-                    -1000.0F, 1000.0F,
-                    getScaledWidth(),
-                    getScaledHeight(),
-                    true
-                )
-            RenderSystem.setProjectionMatrix(
-                guiProjectionMatrixBuffer.getBuffer(guiOrthoProjection), ProjectionType.ORTHOGRAPHIC
-            )
-        }
-
-        /**
-         * 获取当前活动目标的 colorTextureView 和 depthTextureView。
-         * 如果设置了 activeTarget，则使用 activeTarget；否则使用主 RenderTarget。
-         */
-        @JvmStatic
-        fun resolveColorView(): GpuTextureView? {
-            val target = activeTarget
-            if (target != null) return target.colorView()
-            return Constants.mc.gameRenderer.mainRenderTarget().colorTextureView
-        }
-
-        @JvmStatic
-        fun resolveDepthView(): GpuTextureView? {
-            val target = activeTarget
-            if (target != null) return target.depthView()
-            return Constants.mc.gameRenderer.mainRenderTarget().depthTextureView
-        }
-
-        @JvmStatic
-        fun prepareQuadRendering(vertexCount: Int): QuadRenderingInfo? {
-            return prepareQuadRendering(vertexCount, true)
-        }
-
-        @JvmStatic
-        fun prepareQuadRendering(vertexCount: Int, applyProjection: Boolean): QuadRenderingInfo? {
-            if (applyProjection) {
-                applyOrthoProjection()
-            }
-
-            val colorView = resolveColorView()
-            val depthView = resolveDepthView()
-            if (colorView == null) return null
-
-            val indexCount = vertexCount / 4 * 6
-            val ibo = getQuadIndexBuffer(indexCount)
-
-            val dynamicUniforms = writeTransform(
-                RenderSystem.getModelViewMatrixCopy(),
-                Vector4f(1f, 1f, 1f, 1f),
-                Vector3f(0f, 0f, 0f),
-                TextureTransform.DEFAULT_TEXTURING.createMatrix()
-            )
-
-            return QuadRenderingInfo(colorView, depthView, getQuadIndexType(), ibo, indexCount, dynamicUniforms)
-        }
-
-        @JvmStatic
-        fun getQuadIndexBuffer(indexCount: Int): GpuBuffer {
-            val autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS)
-            return autoIndices.getBuffer(indexCount)
-        }
-
-        @JvmStatic
-        fun getQuadIndexType(): IndexType {
-            val autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS)
-            return autoIndices.type()
-        }
-
-        @JvmStatic
-        fun writeTransform(
-            modelView: Matrix4fc,
-            colorModulator: Vector4fc,
-            modelOffset: Vector3fc,
-            textureMatrix: Matrix4fc,
-        ): GpuBufferSlice {
-            return RenderSystem.getDynamicUniforms().writeTransform(
-                Matrix4f(modelView), Vector4f(colorModulator), Vector3f(modelOffset), Matrix4f(textureMatrix)
-            )
-        }
-
-        @JvmStatic
-        fun writeDefaultGuiTransform(): GpuBufferSlice {
-            return writeTransform(
-                RenderSystem.getModelViewMatrixCopy(),
-                Vector4f(1f, 1f, 1f, 1f),
-                Vector3f(0f, 0f, 0f),
-                TextureTransform.DEFAULT_TEXTURING.createMatrix()
-            )
-        }
+    fun setActiveTarget(target: LuminRenderTarget?) {
+        activeTarget = target
     }
 
-    @JvmRecord
+    fun destroyAll() {
+        guiProjectionMatrixBuffer.close()
+        FXAAShader.close()
+        MotionBlurShader.close()
+        OverlayAntiAlias.close()
+        ShaderUniforms.closeAll()
+        RenderTargetManager.INSTANCE.destroyAll()
+        RendererManager.INSTANCE.destroyAll()
+        StaticFontLoader.destroyDefault()
+    }
+
+    fun <T : DynamicGpuDataStorage.DynamicGpuData> writeDynamicUniform(
+        key: String,
+        label: String,
+        uniformSize: Int,
+        initialCapacity: Int,
+        uniform: T,
+    ): GpuBufferSlice {
+        return ShaderUniforms.write(key, label, uniformSize, initialCapacity, uniform)
+    }
+
+    fun endDynamicUniformFrame() {
+        ShaderUniforms.endFrame()
+    }
+
+    fun beginRenderFrame() {
+        renderFrameId++
+    }
+
+    fun getRenderFrameId(): Long {
+        return renderFrameId
+    }
+
+    fun getActiveTarget(): LuminRenderTarget? {
+        return activeTarget
+    }
+
+    fun getGuiScale(): Double {
+        return ClientSetting.getScale()
+    }
+
+    fun getScaledWidth(): Float {
+        val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
+        return (windowState.width / getGuiScale()).toFloat()
+    }
+
+    fun getScaledHeight(): Float {
+        val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
+        return (windowState.height / getGuiScale()).toFloat()
+    }
+
+    fun getScaledWidthInt(): Int {
+        return Math.ceil(getScaledWidth().toDouble()).toInt()
+    }
+
+    fun getScaledHeightInt(): Int {
+        return Math.ceil(getScaledHeight().toDouble()).toInt()
+    }
+
+    fun toEpsilonMouseX(mouseX: Double): Double {
+        return mouseX * Constants.mc.window.guiScale / getGuiScale()
+    }
+
+    fun toEpsilonMouseY(mouseY: Double): Double {
+        return mouseY * Constants.mc.window.guiScale / getGuiScale()
+    }
+
+    fun toMinecraftGuiX(epsilonX: Double): Double {
+        return epsilonX * getGuiScale() / Constants.mc.window.guiScale
+    }
+
+    fun toMinecraftGuiY(epsilonY: Double): Double {
+        return epsilonY * getGuiScale() / Constants.mc.window.guiScale
+    }
+
+    fun toEpsilonMouseX(mouseX: Int): Int {
+        return Math.round(toEpsilonMouseX(mouseX.toDouble())).toInt()
+    }
+
+    fun toEpsilonMouseY(mouseY: Int): Int {
+        return Math.round(toEpsilonMouseY(mouseY.toDouble())).toInt()
+    }
+
+    fun toEpsilonMouseEvent(event: MouseButtonEvent): MouseButtonEvent {
+        return MouseButtonEvent(toEpsilonMouseX(event.x()), toEpsilonMouseY(event.y()), event.buttonInfo())
+    }
+
+    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float): ScissorRect {
+        return ScissorUtils.toFramebufferScissor(x, y, width, height)
+    }
+
+    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Float): ScissorRect {
+        return ScissorUtils.toFramebufferScissor(x, y, width, height, guiHeight)
+    }
+
+    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Int): ScissorRect {
+        return toFramebufferScissor(x, y, width, height, guiHeight.toFloat())
+    }
+
+    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Double): ScissorRect {
+        return toFramebufferScissor(x, y, width, height, guiHeight.toFloat())
+    }
+
+    fun applyOrthoProjection() {
+        guiOrthoProjection
+            .setupOrtho(
+                -1000.0F, 1000.0F,
+                getScaledWidth(),
+                getScaledHeight(),
+                true
+            )
+        RenderSystem.setProjectionMatrix(
+            guiProjectionMatrixBuffer.getBuffer(guiOrthoProjection), ProjectionType.ORTHOGRAPHIC
+        )
+    }
+
+    /**
+     * 获取当前活动目标的 colorTextureView 和 depthTextureView。
+     * 如果设置了 activeTarget，则使用 activeTarget；否则使用主 RenderTarget。
+     */
+    fun resolveColorView(): GpuTextureView? {
+        val target = activeTarget
+        if (target != null) return target.colorView()
+        return Constants.mc.gameRenderer.mainRenderTarget().colorTextureView
+    }
+
+    fun resolveDepthView(): GpuTextureView? {
+        val target = activeTarget
+        if (target != null) return target.depthView()
+        return Constants.mc.gameRenderer.mainRenderTarget().depthTextureView
+    }
+
+    fun prepareQuadRendering(vertexCount: Int): QuadRenderingInfo? {
+        return prepareQuadRendering(vertexCount, true)
+    }
+
+    fun prepareQuadRendering(vertexCount: Int, applyProjection: Boolean): QuadRenderingInfo? {
+        if (applyProjection) {
+            applyOrthoProjection()
+        }
+
+        val colorView = resolveColorView()
+        val depthView = resolveDepthView()
+        if (colorView == null) return null
+
+        val indexCount = vertexCount / 4 * 6
+        val ibo = getQuadIndexBuffer(indexCount)
+
+        val dynamicUniforms = writeTransform(
+            RenderSystem.getModelViewMatrixCopy(),
+            Vector4f(1f, 1f, 1f, 1f),
+            Vector3f(0f, 0f, 0f),
+            TextureTransform.DEFAULT_TEXTURING.createMatrix()
+        )
+
+        return QuadRenderingInfo(colorView, depthView, getQuadIndexType(), ibo, indexCount, dynamicUniforms)
+    }
+
+    fun getQuadIndexBuffer(indexCount: Int): GpuBuffer {
+        val autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS)
+        return autoIndices.getBuffer(indexCount)
+    }
+
+    fun getQuadIndexType(): IndexType {
+        val autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS)
+        return autoIndices.type()
+    }
+
+    fun writeTransform(
+        modelView: Matrix4fc,
+        colorModulator: Vector4fc,
+        modelOffset: Vector3fc,
+        textureMatrix: Matrix4fc,
+    ): GpuBufferSlice {
+        return RenderSystem.getDynamicUniforms().writeTransform(
+            Matrix4f(modelView), Vector4f(colorModulator), Vector3f(modelOffset), Matrix4f(textureMatrix)
+        )
+    }
+
+    fun writeDefaultGuiTransform(): GpuBufferSlice {
+        return writeTransform(
+            RenderSystem.getModelViewMatrixCopy(),
+            Vector4f(1f, 1f, 1f, 1f),
+            Vector3f(0f, 0f, 0f),
+            TextureTransform.DEFAULT_TEXTURING.createMatrix()
+        )
+    }
+
     data class ScissorRect(val x: Int, val y: Int, val width: Int, val height: Int)
 
-    @JvmRecord
     data class QuadRenderingInfo(
         val colorView: GpuTextureView,
         val depthView: GpuTextureView?,
@@ -352,12 +312,10 @@ class LuminRenderSystem {
 
         companion object {
 
-            @JvmStatic
             fun create(name: String, width: Int, height: Int): LuminRenderTarget {
                 return RenderTargetManager.INSTANCE.register(LuminRenderTarget(name, width, height, false))
             }
 
-            @JvmStatic
             fun createWithDepth(name: String, width: Int, height: Int): LuminRenderTarget {
                 return RenderTargetManager.INSTANCE.register(LuminRenderTarget(name, width, height, true))
             }

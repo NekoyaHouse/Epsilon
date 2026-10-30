@@ -26,27 +26,22 @@ import org.joml.Matrix4fc
 import java.nio.ByteBuffer
 import java.util.Optional
 
-class MotionBlurShader private constructor() {
+object MotionBlurShader {
 
-    companion object {
-        @JvmField
-        val INSTANCE: MotionBlurShader = MotionBlurShader()
-
-        private const val MAX_SAMPLES = 256
-        private const val MAX_FRAME_TIME_SECONDS = 0.25
-        private const val MAX_CAMERA_DELTA_SQUARED = 1024.0
-        private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
-        private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("motion_blur")
-        private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
-            .putMat4f()
-            .putMat4f()
-            .putMat4f()
-            .putMat4f()
-            .putVec4()
-            .putVec4()
-            .putIVec4()
-            .get()
-    }
+    private const val MAX_SAMPLES = 256
+    private const val MAX_FRAME_TIME_SECONDS = 0.25
+    private const val MAX_CAMERA_DELTA_SQUARED = 1024.0
+    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
+    private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("motion_blur")
+    private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
+        .putMat4f()
+        .putMat4f()
+        .putMat4f()
+        .putMat4f()
+        .putVec4()
+        .putVec4()
+        .putIVec4()
+        .get()
 
     private val previousView = Matrix4f()
     private val previousProjection = Matrix4f()
@@ -195,7 +190,6 @@ class MotionBlurShader private constructor() {
         resetHistory()
     }
 
-    @JvmRecord
     data class Settings(
         val strength: Float,
         val samples: Int,
@@ -205,7 +199,6 @@ class MotionBlurShader private constructor() {
         val render: Boolean
     )
 
-    @JvmRecord
     private data class MotionBlurUniforms(
         val viewInverse: Matrix4fc,
         val projectionInverse: Matrix4fc,

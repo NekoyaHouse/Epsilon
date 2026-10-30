@@ -33,16 +33,12 @@ class TextRenderer : IRenderer {
 
     companion object {
 
-        @JvmStatic
         fun create(bufferSize: Long): TextRenderer = RendererManager.INSTANCE.register(TextRenderer(bufferSize))
 
-        @JvmStatic
         fun create(): TextRenderer = RendererManager.INSTANCE.register(TextRenderer())
 
-        @JvmStatic
         fun createFontBlur(): TextRenderer = RendererManager.INSTANCE.register(TextRenderer(64 * 1024L, true))
 
-        @JvmStatic
         fun createGlitch(): TextRenderer =
             RendererManager.INSTANCE.register(TextRenderer(64 * 1024L, TtfTextRenderer.Mode.GLITCH))
 

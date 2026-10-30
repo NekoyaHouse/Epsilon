@@ -27,16 +27,12 @@ object StaticFontLoader {
     @Volatile
     private var DEFAULT: TtfFontLoader = builtinDefault!!
 
-    @JvmField
     val ICONS: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/icons.ttf"))
 
-    @JvmField
     val JURA_LIGHT: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/jura-light.ttf"))
 
-    @JvmField
     val CINZEL_DECORATIVE: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/cinzeldecorative.ttf"))
 
-    @JvmField
     val OSAKA_CHIPS: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/osakachips.ttf"))
 
     private var customDefault: TtfFontLoader? = null
@@ -48,10 +44,9 @@ object StaticFontLoader {
     @Volatile
     private var systemFontLookup: Map<String, Path>? = null
 
-    @JvmStatic
     fun defaultFont(): TtfFontLoader {
         if (destroyed) return DEFAULT
-        val settings = ClientSetting.INSTANCE
+        val settings = ClientSetting
         val mode = settings.font.getValue()
         val fontPath = settings.customFont.getValue()
         if (isApplied(mode, fontPath)) return DEFAULT
@@ -91,7 +86,6 @@ object StaticFontLoader {
                 (mode != ClientSetting.FontMode.Custom || fontPath == appliedCustomFont)
     }
 
-    @JvmStatic
     fun destroyDefault() {
         synchronized(StaticFontLoader::class.java) {
             if (destroyed) {

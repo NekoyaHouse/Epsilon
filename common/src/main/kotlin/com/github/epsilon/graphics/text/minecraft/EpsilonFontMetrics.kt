@@ -19,7 +19,6 @@ object EpsilonFontMetrics {
 
     private var cachedFont: TtfFontLoader? = null
 
-    @JvmStatic
     fun font(): TtfFontLoader? {
         val current = cachedFont
         if (current != null) {
@@ -33,12 +32,10 @@ object EpsilonFontMetrics {
         }
     }
 
-    @JvmStatic
     fun minecraftScale(font: TtfFontLoader): Float {
         return REPLACEMENT_LINE_HEIGHT / font.fontFile.fontHeight
     }
 
-    @JvmStatic
     fun advance(codepoint: Int, style: Style, font: TtfFontLoader?): Float {
         if (Character.isWhitespace(codepoint)) {
             return SPACE_WIDTH + (if (style.isBold) 1.0f else 0.0f)
@@ -53,7 +50,6 @@ object EpsilonFontMetrics {
         return font.getAdvance(codepoint) * minecraftScale(font) + LETTER_SPACING + (if (style.isBold) 1.0f else 0.0f)
     }
 
-    @JvmStatic
     fun width(text: String): Float? {
         val loader = font() ?: return null
 
@@ -65,7 +61,6 @@ object EpsilonFontMetrics {
         return total
     }
 
-    @JvmStatic
     fun width(text: FormattedCharSequence): Float? {
         val loader = font() ?: return null
 
@@ -77,7 +72,6 @@ object EpsilonFontMetrics {
         return total
     }
 
-    @JvmStatic
     fun width(text: FormattedText): Float? {
         val loader = font() ?: return null
 

@@ -22,7 +22,7 @@ import org.joml.Vector3f
 import java.awt.Color
 import java.util.Optional
 
-class Render3DScheduler private constructor() {
+object Render3DScheduler {
 
     private val blurredBoxes: MutableList<BlurredBoxCommand> = ArrayList()
     private val filledBoxes: MutableList<FilledBoxCommand> = ArrayList()
@@ -112,7 +112,7 @@ class Render3DScheduler private constructor() {
         try {
             flushBlur()
             if (filledBoxes.isNotEmpty() || filledSides.isNotEmpty() || outlineBoxes.isNotEmpty() || sideOutlines.isNotEmpty() || lines.isNotEmpty()) {
-                AntiAlias.INSTANCE.render {
+                AntiAlias.render {
                     flushFilled()
                     flushLines(stack)
                 }
@@ -133,7 +133,7 @@ class Render3DScheduler private constructor() {
         }
 
         for (command in blurredBoxes) {
-            BlurShader.INSTANCE.render3DBox(command.box, command.blurStrength)
+            BlurShader.render3DBox(command.box, command.blurStrength)
         }
     }
 
@@ -410,40 +410,30 @@ class Render3DScheduler private constructor() {
         return Vector3f(xNormal / normalSqrt, yNormal / normalSqrt, zNormal / normalSqrt)
     }
 
-    @JvmRecord
     private data class BlurredBoxCommand(val box: AABB, val blurStrength: Double)
 
-    @JvmRecord
     private data class FilledBoxCommand(val box: AABB, val bottomColor: Int, val topColor: Int)
 
-    @JvmRecord
     private data class FilledSideCommand(val box: AABB, val color: Int, val direction: Direction)
 
-    @JvmRecord
     private data class OutlineBoxCommand(val box: AABB, val color: Int, val thickness: Float)
 
-    @JvmRecord
     private data class SideOutlineCommand(val box: AABB, val color: Int, val thickness: Float, val direction: Direction)
 
-    @JvmRecord
     private data class LineCommand(val from: Vec3, val to: Vec3, val color: Int, val thickness: Float)
 
-    companion object {
-        @JvmField
-        val INSTANCE: Render3DScheduler = Render3DScheduler()
+    private val FILLED_BOX_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filled_box"))
+        .withDepthStencilState(Optional.empty())
+        .withCull(false)
+        .build()
 
-        private val FILLED_BOX_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
-            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filled_box"))
-            .withDepthStencilState(Optional.empty())
-            .withCull(false)
-            .build()
-
-        private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/lines"))
-            .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(Optional.empty())
-            .withCull(false)
-            .build()
-    }
+    private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipeline/lines"))
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withDepthStencilState(Optional.empty())
+        .withCull(false)
+        .build()
 
 }
+

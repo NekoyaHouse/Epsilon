@@ -53,7 +53,6 @@ class ShadowRenderer private constructor() : IRenderer {
         private const val SEGMENTED_SHADOW_BYTES = SEGMENTED_STRIDE * 4L
         private val SEGMENTED_UNIFORMS_SIZE = segmentedUniformsSize()
 
-        @JvmStatic
         fun create(): ShadowRenderer = RendererManager.INSTANCE.register(ShadowRenderer())
 
         private fun clampSegmentCount(segmentRects: FloatArray?, segmentCount: Int): Int {
@@ -346,7 +345,6 @@ class ShadowRenderer private constructor() : IRenderer {
         draws.add(ShadowDraw(false, firstIndex, 6, -1))
     }
 
-    @JvmRecord
     private data class SegmentedShadow(
         val blurRadius: Float,
         val color: Color,
@@ -356,10 +354,8 @@ class ShadowRenderer private constructor() : IRenderer {
         val count: Int,
     )
 
-    @JvmRecord
     private data class PreparedSegmentedShadow(val uniforms: GpuBufferSlice)
 
-    @JvmRecord
     private data class ShadowDraw(
         val segmented: Boolean,
         val firstIndex: Int,
@@ -367,7 +363,6 @@ class ShadowRenderer private constructor() : IRenderer {
         val segmentedShadowIndex: Int,
     )
 
-    @JvmRecord
     private data class SegmentedShadowUniforms(val shadow: SegmentedShadow) : DynamicGpuDataStorage.DynamicGpuData {
 
         override fun write(buffer: ByteBuffer) {

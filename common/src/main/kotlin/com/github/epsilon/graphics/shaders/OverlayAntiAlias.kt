@@ -18,54 +18,49 @@ import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.renderer.RenderPipelines
 import java.util.Optional
 
-class OverlayAntiAlias private constructor() {
+object OverlayAntiAlias {
 
-    companion object {
-        @JvmField
-        val INSTANCE: OverlayAntiAlias = OverlayAntiAlias()
-
-        private const val MAX_TEXELS = 64L * 1024 * 1024
-        private val RESOLVE_4: RenderPipeline = createResolvePipeline(2)
-        private val RESOLVE_16: RenderPipeline = createResolvePipeline(4)
-        private val DEPTH_4: RenderPipeline = createDepthPipeline(2)
-        private val DEPTH_16: RenderPipeline = createDepthPipeline(4)
-
-        internal fun chooseScale(width: Int, height: Int, requestedScale: Int, maxSize: Int): Int {
-            if (width <= 0 || height <= 0) return 1
-            var scale = if (requestedScale >= 4) 4 else 2
-            while (scale > 1 && (width.toLong() * scale > maxSize || height.toLong() * scale > maxSize || width.toLong() * height * scale * scale > MAX_TEXELS)) {
-                scale /= 2
-            }
-            return scale
-        }
-
-        private fun createResolvePipeline(scale: Int): RenderPipeline {
-            return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-                .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_" + scale))
-                .withVertexShader("core/screenquad")
-                .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa"))
-                .withShaderDefine("SSAA_SCALE", scale)
-                .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
-                .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
-                .withCull(false)
-                .build()
-        }
-
-        private fun createDepthPipeline(scale: Int): RenderPipeline {
-            return RenderPipeline.builder()
-                .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_depth_" + scale))
-                .withVertexShader("core/screenquad")
-                .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa_depth"))
-                .withShaderDefine("SSAA_SCALE", scale)
-                .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
-                .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, true))
-                .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-                .withCull(false)
-                .build()
-        }
-    }
+    private const val MAX_TEXELS = 64L * 1024 * 1024
+    private val RESOLVE_4: RenderPipeline = createResolvePipeline(2)
+    private val RESOLVE_16: RenderPipeline = createResolvePipeline(4)
+    private val DEPTH_4: RenderPipeline = createDepthPipeline(2)
+    private val DEPTH_16: RenderPipeline = createDepthPipeline(4)
 
     private var overlay: LuminRenderTarget? = null
+
+    internal fun chooseScale(width: Int, height: Int, requestedScale: Int, maxSize: Int): Int {
+        if (width <= 0 || height <= 0) return 1
+        var scale = if (requestedScale >= 4) 4 else 2
+        while (scale > 1 && (width.toLong() * scale > maxSize || height.toLong() * scale > maxSize || width.toLong() * height * scale * scale > MAX_TEXELS)) {
+            scale /= 2
+        }
+        return scale
+    }
+
+    private fun createResolvePipeline(scale: Int): RenderPipeline {
+        return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_" + scale))
+            .withVertexShader("core/screenquad")
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa"))
+            .withShaderDefine("SSAA_SCALE", scale)
+            .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
+            .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+            .withCull(false)
+            .build()
+    }
+
+    private fun createDepthPipeline(scale: Int): RenderPipeline {
+        return RenderPipeline.builder()
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_depth_" + scale))
+            .withVertexShader("core/screenquad")
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa_depth"))
+            .withShaderDefine("SSAA_SCALE", scale)
+            .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
+            .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, true))
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+            .withCull(false)
+            .build()
+    }
 
     fun render(requestedScale: Int, drawAction: Runnable) {
         RenderSystem.assertOnRenderThread()

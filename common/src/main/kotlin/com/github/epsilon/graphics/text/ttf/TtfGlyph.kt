@@ -2,7 +2,6 @@ package com.github.epsilon.graphics.text.ttf
 
 import java.nio.ByteBuffer
 
-@JvmRecord
 data class TtfGlyph(
     val glyphData: ByteBuffer?,
     val alphaData: ByteBuffer?,

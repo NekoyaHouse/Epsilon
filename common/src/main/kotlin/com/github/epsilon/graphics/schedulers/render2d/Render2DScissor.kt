@@ -2,7 +2,6 @@ package com.github.epsilon.graphics.schedulers.render2d
 
 import java.util.Objects
 
-@JvmRecord
 data class Render2DScissor(val x: Int, val y: Int, val width: Int, val height: Int) {
 
     fun visible(): Boolean = width > 0 && height > 0

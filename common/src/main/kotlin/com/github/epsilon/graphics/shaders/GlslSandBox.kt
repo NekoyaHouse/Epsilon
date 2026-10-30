@@ -20,39 +20,26 @@ import java.util.HashMap
 import java.util.Optional
 import java.util.OptionalDouble
 
-// 原 Java 类未声明构造器（隐式 public 无参构造），这里同样保留 public 构造以维持 Java 可见 API。
-class GlslSandBox : AutoCloseable {
+object GlslSandBox : AutoCloseable {
 
-    companion object {
-        @JvmField
-        val INSTANCE: GlslSandBox = GlslSandBox()
+    val SEA_LEVEL: Identifier = ResourceLocationUtils.getIdentifier("menu/sea_level")
 
-        @JvmField
-        val SEA_LEVEL: Identifier = ResourceLocationUtils.getIdentifier("menu/sea_level")
+    val CLOUDS: Identifier = ResourceLocationUtils.getIdentifier("menu/clouds")
 
-        @JvmField
-        val CLOUDS: Identifier = ResourceLocationUtils.getIdentifier("menu/clouds")
+    val ALIEN_TERRAIN: Identifier = ResourceLocationUtils.getIdentifier("menu/alien_terrain")
 
-        @JvmField
-        val ALIEN_TERRAIN: Identifier = ResourceLocationUtils.getIdentifier("menu/alien_terrain")
+    val INFERNO: Identifier = ResourceLocationUtils.getIdentifier("menu/inferno")
 
-        @JvmField
-        val INFERNO: Identifier = ResourceLocationUtils.getIdentifier("menu/inferno")
+    val PLANET: Identifier = ResourceLocationUtils.getIdentifier("menu/planet")
 
-        @JvmField
-        val PLANET: Identifier = ResourceLocationUtils.getIdentifier("menu/planet")
+    val BLACK_HOLE: Identifier = ResourceLocationUtils.getIdentifier("menu/black_hole")
 
-        @JvmField
-        val BLACK_HOLE: Identifier = ResourceLocationUtils.getIdentifier("menu/black_hole")
+    val MINECRAFT: Identifier = ResourceLocationUtils.getIdentifier("menu/minecraft")
 
-        @JvmField
-        val MINECRAFT: Identifier = ResourceLocationUtils.getIdentifier("menu/minecraft")
-
-        private val SANDBOX_INFO_SIZE: Int = Std140SizeCalculator()
-            .putVec4()
-            .putVec4()
-            .get()
-    }
+    private val SANDBOX_INFO_SIZE: Int = Std140SizeCalculator()
+        .putVec4()
+        .putVec4()
+        .get()
 
     private val pipelines: MutableMap<Identifier, RenderPipeline> = HashMap()
 
@@ -121,7 +108,6 @@ class GlslSandBox : AutoCloseable {
         pipelines.clear()
     }
 
-    @JvmRecord
     private data class SandboxInfo(
         val width: Float,
         val height: Float,

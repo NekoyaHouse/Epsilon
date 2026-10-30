@@ -142,7 +142,6 @@ class TtfGlyphAtlas(atlasId: Int) {
         Constants.mc.getTextureManager().release(this.alphaTextureId)
     }
 
-    @JvmRecord
     data class GlyphUV(val u0: Float, val v0: Float, val u1: Float, val v1: Float)
 
     companion object {
@@ -155,7 +154,6 @@ class TtfGlyphAtlas(atlasId: Int) {
         private const val STAGING_ALIGNMENT = 4L
         private val NEXT_TEXTURE_ID = AtomicInteger()
 
-        @JvmStatic
         fun getSize(): Int {
             return SIZE
         }

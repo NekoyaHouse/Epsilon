@@ -41,7 +41,6 @@ class ArcRenderer private constructor() : IRenderer {
         private const val ARC_BYTES = STRIDE * 4L
         private val TAU = (Math.PI * 2.0).toFloat()
 
-        @JvmStatic
         fun create(): ArcRenderer = RendererManager.INSTANCE.register(ArcRenderer())
 
     }

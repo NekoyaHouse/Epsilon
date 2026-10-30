@@ -2,7 +2,6 @@ package com.github.epsilon.graphics.text
 
 import com.github.epsilon.graphics.text.ttf.TtfGlyphAtlas
 
-@JvmRecord
 data class GlyphDescriptor(
     val atlas: TtfGlyphAtlas,
     val uv: TtfGlyphAtlas.GlyphUV,

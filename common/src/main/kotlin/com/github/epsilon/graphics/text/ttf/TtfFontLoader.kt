@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class TtfFontLoader : IFontLoader {
 
-    @JvmField
     val fontFile: TtfFontFile
 
     private var renderScale = 1.0f
@@ -399,17 +398,14 @@ class TtfFontLoader : IFontLoader {
         private var uploadFrameId = Long.MIN_VALUE
         private var glyphUploadsThisFrame = 0
 
-        @JvmStatic
         fun getMaxGlyphUploadsPerFrame(): Int {
             return maxGlyphUploadsPerFrame
         }
 
-        @JvmStatic
         fun setMaxGlyphUploadsPerFrame(maxGlyphUploadsPerFrame: Int) {
             TtfFontLoader.maxGlyphUploadsPerFrame = Math.max(1, maxGlyphUploadsPerFrame)
         }
 
-        @JvmStatic
         fun beginRenderFrame() {
             GLOBAL_RENDER_FRAME_ID++
         }

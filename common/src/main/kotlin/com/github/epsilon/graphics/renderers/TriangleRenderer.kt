@@ -40,7 +40,6 @@ class TriangleRenderer private constructor() : IRenderer {
         private const val STRIDE = 16
         private const val TRIANGLE_BYTES = STRIDE * 3L
 
-        @JvmStatic
         fun create(): TriangleRenderer = RendererManager.INSTANCE.register(TriangleRenderer())
 
     }

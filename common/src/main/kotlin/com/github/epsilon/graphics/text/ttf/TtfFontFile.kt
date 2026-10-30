@@ -31,13 +31,10 @@ class TtfFontFile private constructor(
 
     private val fontInfo: STBTTFontinfo = STBTTFontinfo.create()
 
-    @JvmField
     val scale: Float
 
-    @JvmField
     val pixelAscent: Int
 
-    @JvmField
     val fontHeight: Int
 
     init {

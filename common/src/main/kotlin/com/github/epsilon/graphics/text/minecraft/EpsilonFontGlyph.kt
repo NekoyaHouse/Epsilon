@@ -21,7 +21,7 @@ import java.util.IdentityHashMap
 import java.util.function.Supplier
 
 // 原 Java 版本的 private static final 常量；放在文件级私有时，
-// 嵌套 record 也能直接访问，不需要经过 companion 作用域。
+// 嵌套 data class 也能直接访问，不需要经过 companion 作用域。
 private const val SHADOW_OFFSET = 0.45f
 private const val BOLD_OFFSET = 0.45f
 
@@ -43,7 +43,7 @@ class EpsilonFontGlyph private constructor(
     private val descriptor: GlyphDescriptor?
 ) : BakedGlyph {
 
-    // record 组件名 info 与 BakedGlyph.info() 冲突，改名为 glyphInfo，方法名保持 info()。
+    // 构造属性名 info 与 BakedGlyph.info() 冲突，改名为 glyphInfo，方法名保持 info()。
     private val glyphInfo: GlyphInfo = EpsilonGlyphInfo(EpsilonFontMetrics.advance(codepoint, Style.EMPTY, font))
 
     override fun info(): GlyphInfo {
@@ -68,7 +68,7 @@ class EpsilonFontGlyph private constructor(
     private fun renderType(): RenderType {
         val descriptor = this.descriptor
             ?: throw IllegalStateException("Whitespace glyphs do not have render types")
-        val antiAliasing = ClientSetting.INSTANCE.fontAntiAliasing.getValue()
+        val antiAliasing = ClientSetting.fontAntiAliasing
         val renderTypes = if (antiAliasing) AA_RENDER_TYPES else NO_AA_RENDER_TYPES
         val pipeline = if (antiAliasing) LuminRenderPipelines.TTF_FONT_AA else LuminRenderPipelines.TTF_FONT_NO_AA
         val name = if (antiAliasing) "epsilon_ttf_text_aa" else "epsilon_ttf_text_no_aa"
@@ -156,9 +156,8 @@ class EpsilonFontGlyph private constructor(
         buffer.addVertex(pose, x1 + shearTop + thickness, y0 - thickness, z).setUv(uv.u1, uv.v0).setColor(color)
     }
 
-    // record 组件名 style 与 TextRenderable.Styled.style() 冲突，
-    // 因此组件改名为 glyphStyle，并用 style() 显式实现接口方法。
-    @JvmRecord
+    // 构造属性名 style 与 TextRenderable.Styled.style() 冲突，
+    // 因此属性改名为 glyphStyle，并用 style() 显式实现接口方法。
     private data class GlyphInstance(
         val glyph: EpsilonFontGlyph,
         val x: Float,
@@ -206,7 +205,7 @@ class EpsilonFontGlyph private constructor(
         }
 
         override fun guiPipeline(): RenderPipeline {
-            return if (ClientSetting.INSTANCE.fontAntiAliasing.getValue()) {
+            return if (ClientSetting.fontAntiAliasing) {
                 LuminRenderPipelines.TTF_FONT_AA
             } else {
                 LuminRenderPipelines.TTF_FONT_NO_AA
@@ -238,11 +237,12 @@ class EpsilonFontGlyph private constructor(
         }
     }
 
-    @JvmRecord
-    private data class EpsilonGlyphInfo(val advance: Float) : GlyphInfo {
+    // Kotlin 属性不能实现 Java getter（getAdvance 与 getAdvance() 会 JVM 签名冲突），
+    // 因此 data class 组件改名为 advanceValue，getAdvance() 仍按接口显式实现。
+    private data class EpsilonGlyphInfo(val advanceValue: Float) : GlyphInfo {
 
         override fun getAdvance(): Float {
-            return this.advance
+            return this.advanceValue
         }
 
         override fun getBoldOffset(): Float {
@@ -259,7 +259,6 @@ class EpsilonFontGlyph private constructor(
         private val AA_RENDER_TYPES: MutableMap<TtfGlyphAtlas, RenderType> = IdentityHashMap()
         private val NO_AA_RENDER_TYPES: MutableMap<TtfGlyphAtlas, RenderType> = IdentityHashMap()
 
-        @JvmStatic
         fun create(codepoint: Int): EpsilonFontGlyph? {
             val font = EpsilonFontMetrics.font() ?: return null
 

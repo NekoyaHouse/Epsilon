@@ -1,6 +1,5 @@
 package com.github.epsilon.graphics.schedulers.render2d
 
-@JvmRecord
 data class Render2DBounds(val x: Float, val y: Float, val width: Float, val height: Float) {
 
     fun right(): Float = x + width
@@ -30,11 +29,9 @@ data class Render2DBounds(val x: Float, val y: Float, val width: Float, val heig
     }
 
     companion object {
-        @JvmStatic
         fun of(x: Float, y: Float, width: Float, height: Float): Render2DBounds =
             Render2DBounds(x, y, Math.max(0.0f, width), Math.max(0.0f, height))
 
-        @JvmStatic
         fun point(x: Float, y: Float): Render2DBounds = Render2DBounds(x, y, 0.0f, 0.0f)
     }
 

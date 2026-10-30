@@ -5,10 +5,10 @@ import java.awt.Color
 /**
  * 文本故障（glitch）效果参数。
  *
- * 原 Java 版本是紧凑构造器里做钳制与 null 回退的 record。`@JvmRecord` 无法改写构造参数值，
- * 因此按 GUIDE 2.2 改为普通 class：构造参数数量与顺序保持不变（包外 `new TextGlitchEffect(...)`），
- * 并用 `@get:JvmName` 生成 record 风格的字段访问器（包内大量 `effect.xxx()` 调用），
- * 同时手工实现 record 语义的 equals/hashCode/toString。
+ * 原 Java 版本是紧凑构造器里做钳制与 null 回退的 record。这里改用普通 class：
+ * 构造参数数量与顺序保持不变，钳制与 null 回退在属性初始化时完成，
+ * 属性名（chromaticX/…/neonColor/noiseStrength）与原 record 访问器一一对应，
+ * 同时保留 record 语义的 equals/hashCode/toString。
  */
 class TextGlitchEffect(
     chromaticX: Float,
@@ -23,34 +23,24 @@ class TextGlitchEffect(
     noiseStrength: Float
 ) {
 
-    @get:JvmName("chromaticX")
     val chromaticX: Float = clampFinite(chromaticX, 0.0f, 12.0f)
 
-    @get:JvmName("chromaticY")
     val chromaticY: Float = clampFinite(chromaticY, 0.0f, 12.0f)
 
-    @get:JvmName("glowRadius")
     val glowRadius: Float = clampFinite(glowRadius, 0.0f, 20.0f)
 
-    @get:JvmName("glowIntensity")
     val glowIntensity: Float = clampFinite(glowIntensity, 0.0f, 5.0f)
 
-    @get:JvmName("sliceHeight")
     val sliceHeight: Float = clampFinite(sliceHeight, 1.0f, 64.0f)
 
-    @get:JvmName("sliceAmount")
     val sliceAmount: Float = clampFinite(sliceAmount, 0.0f, 20.0f)
 
-    @get:JvmName("glitchStrength")
     val glitchStrength: Float = clampFinite(glitchStrength, 0.0f, 1.0f)
 
-    @get:JvmName("scanlineStrength")
     val scanlineStrength: Float = clampFinite(scanlineStrength, 0.0f, 1.0f)
 
-    @get:JvmName("neonColor")
     val neonColor: Color = neonColor ?: Color.CYAN
 
-    @get:JvmName("noiseStrength")
     val noiseStrength: Float = clampFinite(noiseStrength, 0.0f, 1.0f)
 
     fun requiredPadding(): Float {

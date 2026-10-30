@@ -18,7 +18,6 @@ sealed interface Render2DCommand {
 
     fun orderingBounds(): Render2DBounds = bounds
 
-    @JvmRecord
     data class Shadow(
         override val layer: Int,
         override val sequence: Long,
@@ -44,7 +43,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class SegmentedShadow(
         override val layer: Int,
         override val sequence: Long,
@@ -74,7 +72,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class RoundRect(
         override val layer: Int,
         override val sequence: Long,
@@ -94,7 +91,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class RoundRectOutline(
         override val layer: Int,
         override val sequence: Long,
@@ -120,7 +116,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class Rect(
         override val layer: Int,
         override val sequence: Long,
@@ -136,7 +131,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class Triangle(
         override val layer: Int,
         override val sequence: Long,
@@ -153,7 +147,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class Arc(
         override val layer: Int,
         override val sequence: Long,
@@ -176,7 +169,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class Texture(
         override val layer: Int,
         override val sequence: Long,
@@ -201,7 +193,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class Text(
         override val layer: Int,
         override val sequence: Long,
@@ -222,7 +213,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class GradientText(
         override val layer: Int,
         override val sequence: Long,
@@ -241,7 +231,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class BlurText(
         override val layer: Int,
         override val sequence: Long,
@@ -261,7 +250,6 @@ sealed interface Render2DCommand {
 
     }
 
-    @JvmRecord
     data class GlitchText(
         override val layer: Int,
         override val sequence: Long,

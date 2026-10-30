@@ -34,7 +34,6 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
         private const val STRIDE = 52
         private const val OUTLINE_BYTES = STRIDE * 4L
 
-        @JvmStatic
         fun create(): RoundRectOutlineRenderer = RendererManager.INSTANCE.register(RoundRectOutlineRenderer())
 
     }

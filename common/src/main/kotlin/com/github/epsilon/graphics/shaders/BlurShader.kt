@@ -29,33 +29,28 @@ import org.joml.Matrix4f
 import java.nio.ByteBuffer
 import java.util.Optional
 
-class BlurShader {
+object BlurShader {
 
-    companion object {
-        @JvmField
-        val INSTANCE: BlurShader = BlurShader()
+    private const val MAX_SEGMENTS = 64
 
-        private const val MAX_SEGMENTS = 64
+    private val BLUR_PATH: Identifier = ResourceLocationUtils.getIdentifier("blur")
+    private val BLUR_3D_BOX_PATH: Identifier = ResourceLocationUtils.getIdentifier("blur_3d_box")
 
-        private val BLUR_PATH: Identifier = ResourceLocationUtils.getIdentifier("blur")
-        private val BLUR_3D_BOX_PATH: Identifier = ResourceLocationUtils.getIdentifier("blur_3d_box")
+    private val UNIFORMS_SIZE: Int = blurUniformsSize()
 
-        private val UNIFORMS_SIZE: Int = blurUniformsSize()
+    private val BOX_UNIFORMS_SIZE: Int = Std140SizeCalculator().putVec4().get()
 
-        private val BOX_UNIFORMS_SIZE: Int = Std140SizeCalculator().putVec4().get()
-
-        private fun blurUniformsSize(): Int {
-            val calculator = Std140SizeCalculator().putVec3().putVec4().putVec4().putVec4()
-            for (i in 0 until MAX_SEGMENTS * 2) {
-                calculator.putVec4()
-            }
-            return calculator.get()
+    private fun blurUniformsSize(): Int {
+        val calculator = Std140SizeCalculator().putVec3().putVec4().putVec4().putVec4()
+        for (i in 0 until MAX_SEGMENTS * 2) {
+            calculator.putVec4()
         }
+        return calculator.get()
+    }
 
-        private fun clampSegmentCount(segmentRects: FloatArray?, segmentCount: Int): Int {
-            if (segmentRects == null || segmentCount <= 0) return 0
-            return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.size / 4))
-        }
+    private fun clampSegmentCount(segmentRects: FloatArray?, segmentCount: Int): Int {
+        if (segmentRects == null || segmentCount <= 0) return 0
+        return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.size / 4))
     }
 
     private var pipeline: RenderPipeline? = null
@@ -292,7 +287,6 @@ class BlurShader {
         renderer.vertex(matrix, x, y, z, -1)
     }
 
-    @JvmRecord
     private data class BlurUniforms(
         val width: Float,
         val height: Float,
@@ -344,7 +338,6 @@ class BlurShader {
         }
     }
 
-    @JvmRecord
     private data class BoxBlurUniforms(
         val width: Float, val height: Float, val quality: Float
     ) : DynamicGpuDataStorage.DynamicGpuData {

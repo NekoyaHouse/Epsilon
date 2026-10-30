@@ -29,64 +29,54 @@ import java.util.Optional
 import java.util.OptionalDouble
 import java.util.function.Consumer
 
-class LuminImmediateRenderer private constructor() {
+object LuminImmediateRenderer {
 
-    companion object {
+    private const val DEFAULT_BUFFER_SIZE: Long = 1024L * 1024
+    private val LITTLE_ENDIAN: Boolean = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN
 
-        private const val DEFAULT_BUFFER_SIZE: Long = 1024L * 1024
-        private val LITTLE_ENDIAN: Boolean = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN
+    private val POS_COLOR_QUADS: Channel = Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.QUADS)
+    private val POS_COLOR_TRIANGLE_STRIP: Channel =
+        Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_STRIP)
 
-        private val POS_COLOR_QUADS: Channel = Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.QUADS)
-        private val POS_COLOR_TRIANGLE_STRIP: Channel =
-            Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_STRIP)
+    private val POS_COLOR_TRIANGLE_FAN: Channel =
+        Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_FAN)
 
-        private val POS_COLOR_TRIANGLE_FAN: Channel =
-            Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.TRIANGLE_FAN)
+    private val POS_TEX_COLOR_QUADS: Channel =
+        Channel(DefaultVertexFormat.POSITION_TEX_COLOR, PrimitiveTopology.QUADS)
 
-        private val POS_TEX_COLOR_QUADS: Channel =
-            Channel(DefaultVertexFormat.POSITION_TEX_COLOR, PrimitiveTopology.QUADS)
+    private val POS_COLOR_NORMAL_LINE_WIDTH_LINES: Channel =
+        Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, PrimitiveTopology.LINES)
 
-        private val POS_COLOR_NORMAL_LINE_WIDTH_LINES: Channel =
-            Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, PrimitiveTopology.LINES)
+    fun beginPosColorQuads(pipeline: RenderPipeline): PosColorQuads {
+        return beginPosColorQuads(pipeline, null)
+    }
 
-        @JvmStatic
-        fun beginPosColorQuads(pipeline: RenderPipeline): PosColorQuads {
-            return beginPosColorQuads(pipeline, null)
-        }
+    fun beginPosColorQuads(pipeline: RenderPipeline, passConfigurer: Consumer<RenderPass>?): PosColorQuads {
+        return PosColorQuads(POS_COLOR_QUADS.begin(pipeline, null, passConfigurer))
+    }
 
-        @JvmStatic
-        fun beginPosColorQuads(pipeline: RenderPipeline, passConfigurer: Consumer<RenderPass>?): PosColorQuads {
-            return PosColorQuads(POS_COLOR_QUADS.begin(pipeline, null, passConfigurer))
-        }
+    fun beginPosColorTriangleStrip(pipeline: RenderPipeline): PosColorTriangleStrip {
+        return PosColorTriangleStrip(POS_COLOR_TRIANGLE_STRIP.begin(pipeline, null))
+    }
 
-        @JvmStatic
-        fun beginPosColorTriangleStrip(pipeline: RenderPipeline): PosColorTriangleStrip {
-            return PosColorTriangleStrip(POS_COLOR_TRIANGLE_STRIP.begin(pipeline, null))
-        }
+    fun beginPosColorTriangleFan(pipeline: RenderPipeline): PosColorTriangleFan {
+        return PosColorTriangleFan(POS_COLOR_TRIANGLE_FAN.begin(pipeline, null))
+    }
 
-        @JvmStatic
-        fun beginPosColorTriangleFan(pipeline: RenderPipeline): PosColorTriangleFan {
-            return PosColorTriangleFan(POS_COLOR_TRIANGLE_FAN.begin(pipeline, null))
-        }
+    fun beginPosTexColorQuads(pipeline: RenderPipeline, texture: Identifier): PosTexColorQuads {
+        return PosTexColorQuads(POS_TEX_COLOR_QUADS.begin(pipeline, texture))
+    }
 
-        @JvmStatic
-        fun beginPosTexColorQuads(pipeline: RenderPipeline, texture: Identifier): PosTexColorQuads {
-            return PosTexColorQuads(POS_TEX_COLOR_QUADS.begin(pipeline, texture))
-        }
+    fun beginLines(pipeline: RenderPipeline): Lines {
+        return Lines(POS_COLOR_NORMAL_LINE_WIDTH_LINES.begin(pipeline, null))
+    }
 
-        @JvmStatic
-        fun beginLines(pipeline: RenderPipeline): Lines {
-            return Lines(POS_COLOR_NORMAL_LINE_WIDTH_LINES.begin(pipeline, null))
-        }
-
-        @JvmStatic
-        fun endFrame() {
-            POS_COLOR_QUADS.endFrame()
-            POS_COLOR_TRIANGLE_STRIP.endFrame()
-            POS_COLOR_TRIANGLE_FAN.endFrame()
-            POS_TEX_COLOR_QUADS.endFrame()
-            POS_COLOR_NORMAL_LINE_WIDTH_LINES.endFrame()
-        }
+    fun endFrame() {
+        POS_COLOR_QUADS.endFrame()
+        POS_COLOR_TRIANGLE_STRIP.endFrame()
+        POS_COLOR_TRIANGLE_FAN.endFrame()
+        POS_TEX_COLOR_QUADS.endFrame()
+        POS_COLOR_NORMAL_LINE_WIDTH_LINES.endFrame()
     }
 
     /**
