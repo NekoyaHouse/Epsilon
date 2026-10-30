@@ -38,7 +38,11 @@ public class TrollCategoryWindow extends TrollWindow {
         visibleModules = ModuleManager.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).sorted(order).toList();
         float width = Math.max(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f);
         for (Module module : visibleModules) {
-            TrollSettingRow row = rows.computeIfAbsent(module, value -> new TrollSettingRow(value, TrollSettingRow.ModuleAction.TOGGLE));
+            TrollSettingRow row = rows.computeIfAbsent(module, value -> {
+                TrollSettingRow created = new TrollSettingRow(value, TrollSettingRow.ModuleAction.TOGGLE);
+                created.startOpenAnimation();
+                return created;
+            });
             width = Math.max(width, row.minimumWidth(metrics) + TrollTheme.xMargin() * 2.0f);
         }
         headerHeight = TrollTheme.headerHeight(metrics);
@@ -50,6 +54,11 @@ public class TrollCategoryWindow extends TrollWindow {
             rows.get(module).layout(new UiRect(viewport.x(), y, viewport.width(), TrollTheme.rowHeight(metrics)));
             y += step;
         }
+    }
+
+    @Override
+    protected void onOpenAnimationStarted() {
+        for (TrollSettingRow row : rows.values()) row.startOpenAnimation();
     }
 
     @Override

@@ -1,10 +1,11 @@
 package com.github.epsilon.utils.combat;
 
 import com.github.epsilon.utils.player.EnchantmentUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -368,7 +369,7 @@ public class DamageUtils {
 
         if (target != null) {
             mc.gameMode.attack(mc.player, target);
-            PlayerUtils.swingHand(net.minecraft.world.InteractionHand.MAIN_HAND);
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
             return true;
         }
         return false;

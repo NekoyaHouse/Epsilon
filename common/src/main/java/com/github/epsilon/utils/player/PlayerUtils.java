@@ -3,27 +3,12 @@ package com.github.epsilon.utils.player;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.phys.AABB;
 
 import static com.github.epsilon.Constants.mc;
 
 public class PlayerUtils {
-
-    /**
-     * 播放本地玩家的挥手动画。
-     *
-     * <p>26.3 移除了 {@code ServerboundSwingPacket}：服务端的挥手动画改由攻击、破坏方块等行为广播，
-     * 客户端不再有独立的挥手网络包。因此所有旧代码里“只发包不播动画”的模式都无法保留，
-     * 统一改为播放本地动画，保证各模块的视觉表现与旧版本一致。
-     *
-     * @param hand 挥手使用的手
-     */
-    public static void swingHand(InteractionHand hand) {
-        mc.player.swing(hand, SwingAnimation.DEFAULT, false);
-    }
 
     /**
      * 判断本地玩家是否正在使用食物。

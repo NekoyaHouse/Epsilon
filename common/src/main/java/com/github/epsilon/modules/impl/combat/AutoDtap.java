@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -108,7 +108,7 @@ public class AutoDtap extends Module {
                                 false
                         );
                         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, topHit);
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+                        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
 
                         stepDelay = 1 + random.nextInt(2);
                         step = 2; // 跳到恢复阶段
@@ -118,7 +118,7 @@ public class AutoDtap extends Module {
 
                         InvUtils.swap(obsidianSlot, false);
                         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+                        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
 
                         InvUtils.swap(endCrystalSlot, false);
 
@@ -143,7 +143,7 @@ public class AutoDtap extends Module {
                         false
                 );
                 mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, topHit);
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+                SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND);
 
                 stepDelay = 1 + random.nextInt(2);
                 step = 2;

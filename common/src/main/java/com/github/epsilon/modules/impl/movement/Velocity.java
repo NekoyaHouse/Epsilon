@@ -15,6 +15,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -238,9 +239,7 @@ public class Velocity extends Module {
         if (attackQueue >= 1) {
             if (RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof Player pl && pl.isAlive() && !AntiBot.INSTANCE.isBot(pl)) {
                 mc.gameMode.attack(mc.player, pl);
-                if (swingHand.getValue()) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-                }
+                SwingMode.of(swingHand.getValue()).attackSwing(InteractionHand.MAIN_HAND);
             }
             attackQueue--;
         }

@@ -132,19 +132,17 @@ public class ShaderManager {
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null, false);
     }
 
-    /**
-     * 处理实体描边目标并混回主目标。
-     *
-     * <p>26.3 的实体描边在 {@code LevelRenderer} 内部提交，Shaders 启用时会取消原版后处理链，
-     * 因此需要在 LevelRenderer 渲染结束后自行处理描边目标并混回主目标。
-     *
-     * @param outlineTarget 实体描边目标
-     * @param mainTarget    主渲染目标
-     */
-    public void processEntityOutlineTarget(RenderTarget outlineTarget, RenderTarget mainTarget) {
-        if (!Shaders.INSTANCE.isEnabled() || outlineTarget == null || mainTarget == null || mainTarget.getColorTextureView() == null) {
+    public void processEntityOutlineTarget(RenderTarget outlineTarget) {
+        if (!Shaders.INSTANCE.isEnabled() || outlineTarget == null) {
             return;
         }
+
+        RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
+
+        if (mainTarget.getColorTextureView() == null) {
+            return;
+        }
+
         processOutlineTarget(outlineTarget, Shaders.INSTANCE.entityShader);
         outlineTarget.blitAndBlendToTexture(mainTarget.getColorTextureView(), mainTarget.getDepthTextureView());
     }
@@ -229,11 +227,13 @@ public class ShaderManager {
         encoder.clearColorAndDepthTextures(chestTarget.getColorTexture(), new Vector4f(0.0f, 0.0f, 0.0f, 0.0f), chestTarget.getDepthTexture(), 1.0);
     }
 
-    public void processChestOutlineTarget(RenderTarget mainTarget, Matrix4fc modelViewMatrix) {
+    public void processChestOutlineTarget(Matrix4fc modelViewMatrix) {
         if (!capturedChests) {
             preparedChests = false;
             return;
         }
+
+        RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
 
         capturedChests = false;
         preparedChests = false;

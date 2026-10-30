@@ -44,6 +44,10 @@ public abstract class TrollWindow {
         openAnimation.setValue(0.0f);
         openAnimation.reset();
         openAnimation.run(1.0f);
+        onOpenAnimationStarted();
+    }
+
+    protected void onOpenAnimationStarted() {
     }
 
     public float getOpenProgress() {

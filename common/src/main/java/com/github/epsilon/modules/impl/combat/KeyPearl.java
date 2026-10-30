@@ -17,6 +17,7 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -126,9 +127,7 @@ public class KeyPearl extends Module {
             if (!hasActivated) {
                 InteractionResult result = mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
                 if (result.consumesAction()) {
-                    if (swingHand.getValue()) {
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-                    }
+                    SwingMode.of(swingHand.getValue()).interactSwing(InteractionHand.MAIN_HAND);
                 }
                 hasActivated = true;
             }

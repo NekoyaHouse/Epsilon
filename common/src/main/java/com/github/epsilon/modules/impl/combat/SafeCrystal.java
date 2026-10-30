@@ -6,7 +6,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
@@ -97,7 +97,7 @@ public class SafeCrystal extends Module {
         }
 
         mc.gameMode.attack(mc.player, crystal);
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
 
         attackCooldown = 1 + (int) (Math.random() * 2);
     }
@@ -140,7 +140,7 @@ public class SafeCrystal extends Module {
                 bhr
         );
 
-        PlayerUtils.swingHand(crystalHand);
+        SwingMode.Both.interactSwing(crystalHand);
 
         placeCooldown = 1 + (int) (Math.random() * 2);
     }

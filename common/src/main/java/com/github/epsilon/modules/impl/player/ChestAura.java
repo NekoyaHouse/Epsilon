@@ -12,6 +12,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -127,9 +128,7 @@ public class ChestAura extends Module {
         clickedContainers.add(target.pos());
         opening = true;
         openingStartedAt = System.currentTimeMillis();
-        if (swing.getValue()) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-        }
+        SwingMode.of(swing.getValue()).interactSwing(InteractionHand.MAIN_HAND);
     }
 
     @EventHandler

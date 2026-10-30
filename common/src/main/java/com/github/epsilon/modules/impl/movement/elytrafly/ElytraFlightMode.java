@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
@@ -124,7 +124,7 @@ public abstract class ElytraFlightMode {
 
         InteractionResult result = mc.gameMode.useItem(mc.player, hand);
         if (result.consumesAction()) {
-            PlayerUtils.swingHand(hand);
+            SwingMode.Both.interactSwing(hand);
         }
 
         if (elytraFly.swapMode.is(ElytraFly.SwapMode.Silent)) {

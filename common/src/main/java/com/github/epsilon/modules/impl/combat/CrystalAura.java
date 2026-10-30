@@ -12,7 +12,7 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.BlockPos;
@@ -127,14 +127,12 @@ public class CrystalAura extends Module {
 
                 InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, placeHit);
                 if (result.consumesAction()) {
-                    if (swingHand.getValue()) {
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-                    }
+                    SwingMode.of(swingHand.getValue()).interactSwing(InteractionHand.MAIN_HAND);
                 }
 
                 if (fakePunch.getValue() && randomInt <= particleChance.getValue().intValue() && hit.getDirection() == Direction.UP) {
                     // Placeholder for old block break particles behavior.
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
+                    SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND);
                 }
 
                 placeClock = placeDelay.getValue().intValue();
@@ -164,9 +162,7 @@ public class CrystalAura extends Module {
 
                 mc.gameMode.attack(mc.player, entity);
 
-                if (swingHand.getValue()) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND);
-                }
+                SwingMode.of(swingHand.getValue()).attackSwing(InteractionHand.MAIN_HAND);
 
                 breakClock = breakDelay.getValue().intValue();
 

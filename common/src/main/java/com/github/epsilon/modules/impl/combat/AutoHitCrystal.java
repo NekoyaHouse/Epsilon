@@ -14,7 +14,7 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.player.SwingMode;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;
@@ -226,9 +226,7 @@ public class AutoHitCrystal extends Module {
         InteractionHand hand = mc.player.getOffhandItem().is(Items.OBSIDIAN) ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hit);
         if (result.consumesAction()) {
-            if (swingHand.getValue()) {
-                PlayerUtils.swingHand(hand);
-            }
+            SwingMode.of(swingHand.getValue()).interactSwing(hand);
             renderBoxes.add(new RenderBox(new AABB(renderPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis()));
         }
     }
