@@ -15,7 +15,7 @@ public class MixinBlock {
     @Inject(method = "shouldRenderFace", at = @At("HEAD"), cancellable = true)
     private static void hookShouldRenderFace(BlockState state, BlockState neighborState, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         Xray xray = Xray.INSTANCE;
-        if (xray.isEnabled() && xray.wallHack.getValue()) {
+        if (xray.isEnabled() && xray.getWallHack()) {
             cir.setReturnValue(xray.isCheckableOre(state.getBlock()));
         }
     }

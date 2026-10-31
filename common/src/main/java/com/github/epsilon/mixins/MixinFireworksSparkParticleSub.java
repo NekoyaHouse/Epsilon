@@ -14,7 +14,7 @@ public class MixinFireworksSparkParticleSub {
 
     @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
     private void buildExplosionGeometry(QuadParticleRenderState particleTypeRenderState, Camera camera, float partialTickTime, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.fireworkExplosions.getValue()) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getFireworkExplosions()) ci.cancel();
     }
 
 }

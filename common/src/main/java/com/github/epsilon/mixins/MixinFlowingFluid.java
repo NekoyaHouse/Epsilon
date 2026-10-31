@@ -15,7 +15,7 @@ public class MixinFlowingFluid {
 
     @WrapOperation(method = "getFlow", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", ordinal = 0))
     private boolean hookGetFlow(Iterator<Direction> iterator, Operation<Boolean> original) {
-        if (Velocity.INSTANCE.isEnabled() && Velocity.INSTANCE.mode.is(Velocity.Mode.Cancel) && Velocity.INSTANCE.waterPush.getValue()) {
+        if (Velocity.INSTANCE.isEnabled() && Velocity.INSTANCE.getMode() == Velocity.Mode.Cancel && Velocity.INSTANCE.getWaterPush()) {
             return false;
         } else {
             return original.call(iterator);

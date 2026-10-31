@@ -85,21 +85,21 @@ public class MixinMultiPlayerGameMode {
     @WrapOperation(method = "continueDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.PUTFIELD, ordinal = 2))
     private void survivalBreakDelayChange(MultiPlayerGameMode instance, int value, Operation<Void> original) {
         BreakCooldown breakCooldown = BreakCooldown.INSTANCE;
-        int newValue = breakCooldown.isEnabled() ? breakCooldown.cooldown.getValue() : value;
+        int newValue = breakCooldown.isEnabled() ? breakCooldown.getCooldown() : value;
         original.call(instance, newValue);
     }
 
     @WrapOperation(method = "continueDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.PUTFIELD, ordinal = 1))
     private void creativeBreakDelayChangeOne(MultiPlayerGameMode instance, int value, Operation<Void> original) {
         BreakCooldown breakCooldown = BreakCooldown.INSTANCE;
-        int newValue = breakCooldown.isEnabled() ? breakCooldown.cooldown.getValue() : value;
+        int newValue = breakCooldown.isEnabled() ? breakCooldown.getCooldown() : value;
         original.call(instance, newValue);
     }
 
     @WrapOperation(method = "startDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.PUTFIELD))
     private void creativeBreakDelayChangeTwo(MultiPlayerGameMode instance, int value, Operation<Void> original) {
         BreakCooldown breakCooldown = BreakCooldown.INSTANCE;
-        int newValue = breakCooldown.isEnabled() ? breakCooldown.cooldown.getValue() : value;
+        int newValue = breakCooldown.isEnabled() ? breakCooldown.getCooldown() : value;
         original.call(instance, newValue);
     }
 

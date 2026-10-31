@@ -11,6 +11,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SwingAnimation;
@@ -30,7 +31,7 @@ public class MixinLivingEntity {
     @Inject(method = "setSprinting", at = @At("HEAD"), cancellable = true)
     private void preventSprintDuringInventorySorting(boolean sprinting, CallbackInfo ci) {
         InvManager invManager = InvManager.INSTANCE;
-        if (sprinting && (LivingEntity) (Object) this == mc.player && invManager.isEnabled() && invManager.isSprintTransitionPending()) {
+        if (sprinting && (Object) this == mc.player && invManager.isEnabled() && invManager.isSprintTransitionPending()) {
             ci.cancel();
         }
     }
@@ -57,7 +58,7 @@ public class MixinLivingEntity {
     private Vec3 modifyFallFlyingLookAngle(Vec3 original) {
         if ((Object) this == mc.player) {
             FallFlyingEvent event = EventBus.INSTANCE.post(new FallFlyingEvent(mc.player.getYRot(), mc.player.getXRot()));
-            return mc.player.calculateViewVector(event.getPitch(), event.getYaw());
+            return Entity.calculateViewVector(event.getPitch(), event.getYaw());
         }
         return original;
     }
@@ -86,7 +87,7 @@ public class MixinLivingEntity {
         JumpCooldown module = JumpCooldown.INSTANCE;
         int newValue = value;
         if (instance == mc.player && module.isEnabled()) {
-            newValue = module.cooldown.getValue();
+            newValue = module.getCooldown();
         }
         original.call(instance, newValue);
     }
@@ -94,8 +95,8 @@ public class MixinLivingEntity {
     @Inject(method = "getModifiedSwingDuration(Lnet/minecraft/world/item/component/SwingAnimation;)I", at = @At("HEAD"), cancellable = true)
     private void hookGetModifiedSwingDuration(SwingAnimation animation, CallbackInfoReturnable<Integer> cir) {
         HandView handView = HandView.INSTANCE;
-        if ((LivingEntity) (Object) this == mc.player && handView.isEnabled() && handView.modifySwingDuration.getValue()) {
-            cir.setReturnValue(handView.swingDuration.getValue());
+        if ((Object) this == mc.player && handView.isEnabled() && handView.getModifySwingDuration()) {
+            cir.setReturnValue(handView.getSwingDuration());
         }
     }
 
@@ -111,7 +112,7 @@ public class MixinLivingEntity {
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
     private void onSpawnItemParticles(ItemStack itemStack, int count, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.eatParticles.getValue()
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getEatParticles()
                 && itemStack.getComponents().has(net.minecraft.core.component.DataComponents.FOOD)) {
             ci.cancel();
         }

@@ -17,7 +17,7 @@ public abstract class MixinHumanoidArmorLayer<S extends HumanoidRenderState, M e
 
     @Inject(method = "submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/client/renderer/entity/state/HumanoidRenderState;FF)V", at = @At("HEAD"), cancellable = true)
     private void onRender(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, S state, float yRot, float xRot, CallbackInfo ci) {
-        if (state instanceof AvatarRenderState && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noArmor.getValue()) {
+        if (state instanceof AvatarRenderState && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoArmor()) {
             ci.cancel();
         }
     }

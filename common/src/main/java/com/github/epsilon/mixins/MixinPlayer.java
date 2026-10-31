@@ -22,7 +22,7 @@ public class MixinPlayer {
 
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
     private void onTravelPre(Vec3 input, CallbackInfo ci) {
-        if ((Player) (Object) this == mc.player) {
+        if ((Object) this == mc.player) {
             TravelEvent event = EventBus.INSTANCE.post(new TravelEvent());
             if (event.isCancelled()) {
                 ci.cancel();

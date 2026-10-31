@@ -99,7 +99,7 @@ public class MixinLevelRenderer {
             require = 0
     )
     private boolean modifyMobEffectBlocksSky(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && (NoRender.INSTANCE.blindness.getValue() || NoRender.INSTANCE.darkness.getValue())) {
+        if (NoRender.INSTANCE.isEnabled() && (NoRender.INSTANCE.getBlindness() || NoRender.INSTANCE.getDarkness())) {
             return false;
         }
         return original;

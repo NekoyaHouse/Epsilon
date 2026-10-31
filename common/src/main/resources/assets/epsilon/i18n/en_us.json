@@ -1313,6 +1313,7 @@
         },
         "swing mode": {
           "_value": "Swing Mode",
+          "both": "Both",
           "none": "None",
           "client": "Client",
           "packet": "Packet"

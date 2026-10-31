@@ -29,11 +29,11 @@ public class MixinFirstPersonHandsAndItems {
     private void hideHotbarSwitchAnimation(LocalPlayer player, CallbackInfo ci) {
         HandView handView = HandView.INSTANCE;
         if (handView.isEnabled()) {
-            if (handView.disableSwapMain.getValue()) {
+            if (handView.getDisableSwapMain()) {
                 this.mainHandHeight = 1.0F;
                 this.mainHandItem = player.getMainHandItem();
             }
-            if (handView.disableSwapOff.getValue()) {
+            if (handView.getDisableSwapOff()) {
                 this.offHandHeight = 1.0F;
                 this.offHandItem = player.getOffhandItem();
             }

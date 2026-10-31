@@ -21,8 +21,8 @@ public class MixinFont {
 
     @Inject(method = "getGlyph", at = @At("HEAD"), cancellable = true)
     private void onGetGlyph(int codepoint, Style style, CallbackInfoReturnable<BakedGlyph> cir) {
-        if (ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
-            EpsilonFontGlyph glyph = EpsilonFontGlyph.create(codepoint);
+        if (ClientSetting.INSTANCE.getReplaceMinecraftFont()) {
+            EpsilonFontGlyph glyph = EpsilonFontGlyph.Companion.create(codepoint);
             if (glyph != null) {
                 cir.setReturnValue(glyph);
             }
@@ -31,8 +31,8 @@ public class MixinFont {
 
     @Inject(method = "width(Ljava/lang/String;)I", at = @At("HEAD"), cancellable = true)
     private void onWidthString(String text, CallbackInfoReturnable<Integer> cir) {
-        if (ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
-            Float width = EpsilonFontMetrics.width(text);
+        if (ClientSetting.INSTANCE.getReplaceMinecraftFont()) {
+            Float width = EpsilonFontMetrics.INSTANCE.width(text);
             if (width != null) {
                 cir.setReturnValue(Mth.ceil(width));
             }
@@ -41,8 +41,8 @@ public class MixinFont {
 
     @Inject(method = "width(Lnet/minecraft/util/FormattedCharSequence;)I", at = @At("HEAD"), cancellable = true)
     private void onWidthFormattedCharSequence(FormattedCharSequence text, CallbackInfoReturnable<Integer> cir) {
-        if (ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
-            Float width = EpsilonFontMetrics.width(text);
+        if (ClientSetting.INSTANCE.getReplaceMinecraftFont()) {
+            Float width = EpsilonFontMetrics.INSTANCE.width(text);
             if (width != null) {
                 cir.setReturnValue(Mth.ceil(width));
             }
@@ -51,8 +51,8 @@ public class MixinFont {
 
     @Inject(method = "width(Lnet/minecraft/network/chat/FormattedText;)I", at = @At("HEAD"), cancellable = true)
     private void onWidthFormattedText(FormattedText text, CallbackInfoReturnable<Integer> cir) {
-        if (ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
-            Float width = EpsilonFontMetrics.width(text);
+        if (ClientSetting.INSTANCE.getReplaceMinecraftFont()) {
+            Float width = EpsilonFontMetrics.INSTANCE.width(text);
             if (width != null) {
                 cir.setReturnValue(Mth.ceil(width));
             }
@@ -61,7 +61,7 @@ public class MixinFont {
 
     @ModifyExpressionValue(method = "getGlyph", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/Style;isObfuscated()Z"))
     private boolean onIsObfuscated(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.obfuscation.getValue()) return false;
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getObfuscation()) return false;
         return original;
     }
 

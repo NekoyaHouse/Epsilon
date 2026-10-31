@@ -16,7 +16,7 @@ public abstract class MixinEnchantTableRenderer {
     @WrapWithCondition(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/EnchantTableRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;IIILnet/minecraft/client/resources/model/sprite/SpriteId;Lnet/minecraft/client/resources/model/sprite/SpriteGetter;I)V"))
     private <S> boolean onRenderBook(SubmitNodeCollector instance, Model<? super S> model, Object state, com.mojang.blaze3d.vertex.PoseStack poseStack, int lightCoords, int overlayCoords, int tintedColor, SpriteId spriteId, SpriteGetter spriteGetter, int outlineColor) {
-        return !(NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.enchTableBook.getValue());
+        return !(NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getEnchTableBook());
     }
 
 }

@@ -1,6 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     `java-library`
     `maven-publish`
+    // 三个子项目统一启用 Kotlin；common/src/main/kotlin 是共享 Kotlin 源码目录。
+    id("org.jetbrains.kotlin.jvm")
 }
 
 val baseVersion = providers.gradleProperty("version")
@@ -53,6 +57,15 @@ tasks.register("buildRelease") {
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
     withSourcesJar()
+}
+
+// kotlin-stdlib 由 Kotlin Gradle 插件按同一版本自动加入各子项目的 implementation；
+// kotlinx 库则由各子项目的 build 脚本声明（loader 还需额外登记 jar-in-jar）。
+kotlin {
+    // 与 Java toolchain 共用 JDK 25，并显式对齐字节码目标，避免混合编译时 JVM target 校验失败。
+    compilerOptions {
+        jvmTarget.set(JvmTarget.fromTarget(javaVersion))
+    }
 }
 
 repositories {

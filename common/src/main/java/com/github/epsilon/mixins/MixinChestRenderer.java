@@ -24,7 +24,7 @@ public class MixinChestRenderer {
         boolean renderShaderOutline = shaders.isEnabled() && shaders.shouldRenderChest(state.blockPos);
         int finalOutlineColor = renderShaderOutline ? 0 : outlineColor;
         Chams chams = Chams.INSTANCE;
-        if (chams.isEnabled() && chams.chests.getValue()) {
+        if (chams.isEnabled() && chams.getChests()) {
             RenderType renderType = chams.getRenderType(sprite.atlasLocation());
             submitNodeCollector.submitModel(model, modelState, poseStack, renderType, lightCoords, overlayCoords, tintedColor, sprites.get(sprite), finalOutlineColor);
         } else {
@@ -34,7 +34,7 @@ public class MixinChestRenderer {
         if (renderShaderOutline) {
             // 26.3 的 RenderSetup 不再携带输出目标：胸箱描边需要提交到模块自己的缓存，
             // 再由 ShaderManager 渲染进 chestTarget。
-            int tint = shaders.getOutlineColor(shaders.chestShader);
+            int tint = shaders.getOutlineColor(shaders.getChestShader());
             RenderType outlineRenderType = ShaderManager.INSTANCE.prepareChestOutline(sprite.atlasLocation());
             ShaderManager.INSTANCE.chestOutlineCollector()
                     .submitModel(model, modelState, poseStack, outlineRenderType, lightCoords, overlayCoords, tint, sprites.get(sprite), tint);

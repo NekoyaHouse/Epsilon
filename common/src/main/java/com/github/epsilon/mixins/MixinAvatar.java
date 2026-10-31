@@ -17,7 +17,7 @@ public class MixinAvatar {
     private EntityDimensions hookSneakTweakDefaultDimensions(EntityDimensions dimensions, Pose pose) {
         SneakTweak sneakTweak = SneakTweak.INSTANCE;
         if (
-                (Avatar) (Object) this == mc.player
+                (Object) this == mc.player
                         && sneakTweak.isEnabled()
                         && pose == Pose.CROUCHING
                         && mc.player.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING)

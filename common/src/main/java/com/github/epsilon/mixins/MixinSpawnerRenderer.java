@@ -17,7 +17,7 @@ public abstract class MixinSpawnerRenderer {
 
     @Inject(method = "submitEntityInSpawner", at = @At("HEAD"), cancellable = true)
     private static void onRenderDisplayEntity(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, EntityRenderState displayEntity, EntityRenderDispatcher entityRenderer, float spin, float scale, CameraRenderState camera, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noMobInSpawner.getValue()) ci.cancel();
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoMobInSpawner()) ci.cancel();
     }
 
 }

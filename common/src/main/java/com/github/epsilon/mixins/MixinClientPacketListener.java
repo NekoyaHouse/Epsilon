@@ -115,7 +115,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleAddEntity", at = @At("HEAD"), cancellable = true)
     private void onHandleAddEntity(net.minecraft.network.protocol.game.ClientboundAddEntityPacket packet, CallbackInfo ci) {
-        if (packet != null && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noEntity(packet.getType()) && NoRender.INSTANCE.dropSpawnPacket.getValue()) {
+        if (packet != null && NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.noEntity(packet.getType()) && NoRender.INSTANCE.getDropSpawnPacket()) {
             ci.cancel();
         }
     }
@@ -144,7 +144,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     }
 
     private static boolean shouldHideExplosion() {
-        return NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.explosions.getValue();
+        return NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getExplosions();
     }
 
 }

@@ -34,16 +34,16 @@ public class MixinConnection {
         if (ServerboundPacketManager.INSTANCE.onPacketSend(packet)) {
             return;
         }
-        if (NetworkUtils.bypassedPackets.contains(packet)) {
-            NetworkUtils.bypassedPackets.remove(packet);
-            Packet<?> filteredPacket = ClientIdentityHider.filterServerboundPacket(packet);
+        if (NetworkUtils.INSTANCE.getBypassedPackets().contains(packet)) {
+            NetworkUtils.INSTANCE.getBypassedPackets().remove(packet);
+            Packet<?> filteredPacket = ClientIdentityHider.INSTANCE.filterServerboundPacket(packet);
             if (filteredPacket != null) {
                 original.call(instance, filteredPacket, listener, flush);
             }
         } else {
             PacketEvent.Send event = EventBus.INSTANCE.post(new PacketEvent.Send(packet));
             if (!event.isCancelled()) {
-                Packet<?> filteredPacket = ClientIdentityHider.filterServerboundPacket(event.getPacket());
+                Packet<?> filteredPacket = ClientIdentityHider.INSTANCE.filterServerboundPacket(event.getPacket());
                 if (filteredPacket != null) {
                     original.call(instance, filteredPacket, listener, flush);
                 }

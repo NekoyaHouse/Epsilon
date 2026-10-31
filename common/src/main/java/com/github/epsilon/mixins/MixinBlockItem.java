@@ -31,7 +31,7 @@ public abstract class MixinBlockItem {
     @ModifyVariable(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;is(Ljava/lang/Object;)Z"), name = "placedState")
     private BlockState modifyState(BlockState placedState, BlockPlaceContext placeContext) {
         NoGhostBlocks noGhostBlocks = NoGhostBlocks.INSTANCE;
-        if (noGhostBlocks.isEnabled() && noGhostBlocks.placing.getValue()) {
+        if (noGhostBlocks.isEnabled() && noGhostBlocks.getPlacing()) {
             return getPlacementState(placeContext);
         }
         return placedState;

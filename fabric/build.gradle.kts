@@ -21,6 +21,11 @@ dependencies {
     // 开发环境仍保留在运行时类路径，便于本地调试。
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64")
     runtimeOnly("org.bytedeco:ffmpeg:6.1.1-1.5.10:macosx-arm64")
+    // Kotlin 运行时与 kotlinx 库以 Jar-in-Jar 形式嵌套进 META-INF/jars，
+    // 由 Fabric Loader 自动解包加载，因此玩家不需要额外安装 Kotlin。
+    implementation(libs.kotlinx.coroutines.core)
+    include(libs.kotlin.stdlib.get())
+    include(libs.kotlinx.coroutines.core.get())
 }
 
 loom {

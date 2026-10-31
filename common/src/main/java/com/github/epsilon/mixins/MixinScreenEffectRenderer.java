@@ -19,21 +19,21 @@ public class MixinScreenEffectRenderer {
     // 26.3 的屏幕效果提交改为直接传图集位置与 UV，参数列表随之变化。
     @Inject(method = "submitBlockSprite", at = @At("HEAD"), cancellable = true)
     private static void onRenderBlockOverlay(Identifier atlasLocation, float u0, float v0, float u1, float v1, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int color, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.blockOverlay.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getBlockOverlay()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "submitWater", at = @At("HEAD"), cancellable = true)
     private static void onRenderWater(PlayerRenderState.WaterOverlay waterOverlay, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.liquidOverlay.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getLiquidOverlay()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "submitFire", at = @At("HEAD"), cancellable = true)
     private static void onRenderFire(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, TextureAtlasSprite texture, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.fireOverlay.getValue()) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getFireOverlay()) {
             ci.cancel();
         }
     }
@@ -43,7 +43,7 @@ public class MixinScreenEffectRenderer {
         if (TotemAnimation.INSTANCE.isEnabled()) {
             TotemAnimation.INSTANCE.renderFloatingItem(partialTicks, poseStack, submitNodeCollector);
             ci.cancel();
-        } else if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.totemAnimation.getValue()) {
+        } else if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getTotemAnimation()) {
             ci.cancel();
         }
     }

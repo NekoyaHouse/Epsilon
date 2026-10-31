@@ -59,7 +59,7 @@ public abstract class MixinSubmitNodeCollection {
     @WrapOperation(method = {"submitModel", "submitItem"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/phase/FeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V"))
     private void submitChamsTranslucentGeometry(FeatureRenderPhase<SubmitNode> phase, SubmitNode submit, Operation<Void> original) {
         Chams chams = Chams.INSTANCE;
-        boolean translucentPhase = (Object) phase == this.translucentModels || (Object) phase == this.translucentBlocksAndItems;
+        boolean translucentPhase = phase == this.translucentModels || phase == this.translucentBlocksAndItems;
         if (translucentPhase && (chams.isSubmittingPlayer() || submit instanceof ModelFeatureRenderer.Submit<?> model && chams.isChamsRenderType(model.renderType()))) {
             chams.markAlwaysOnTopSubmit();
             this.alwaysOnTopGizmos.submit(submit);

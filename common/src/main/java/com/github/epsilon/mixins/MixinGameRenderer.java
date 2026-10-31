@@ -54,7 +54,7 @@ public class MixinGameRenderer {
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;close()V", ordinal = 0))
     private void renderHandOutlineBeforeFrameClose(FeatureRenderDispatcher.PreparedFrame frame, Operation<Void> original) {
         Shaders shaders = Shaders.INSTANCE;
-        if (shaders.isEnabled() && shaders.hands.getValue()) {
+        if (shaders.isEnabled() && shaders.getHands()) {
             try {
                 ShaderManager.INSTANCE.renderHandOutline(frame);
             } finally {
@@ -82,7 +82,7 @@ public class MixinGameRenderer {
     @WrapOperation(method = "bobView", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
     private void hookBobView(PoseStack instance, float xo, float yo, float zo, Operation<Void> original) {
         CameraClip cameraClip = CameraClip.INSTANCE;
-        if (!cameraClip.isEnabled() || !cameraClip.betterBobView.getValue()) original.call(instance, xo, yo, zo);
+        if (!cameraClip.isEnabled() || !cameraClip.getBetterBobView()) original.call(instance, xo, yo, zo);
     }
 
 }

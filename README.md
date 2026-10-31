@@ -30,7 +30,7 @@ The Lumin rendering system provides custom render pipelines for:
 - Texture rendering
 - Custom vertex formats
 
-See [Lumin Graphics README](common/src/main/java/com/github/epsilon/graphics/README.md) for details.
+See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run
 
