@@ -1,12 +1,18 @@
 package com.github.epsilon.events.api
 
+import com.github.epsilon.Constants
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeSuspend
-import com.github.epsilon.kernel.threads.Coroutine
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 const val DEFAULT_LISTENER_PRIORITY: Int = EventPriority.MEDIUM
+
+private val concurrentScope = CoroutineScope(
+    Dispatchers.Default + SupervisorJob() + CoroutineExceptionHandler { _, exception ->
+        Constants.LOGGER.error("异步事件监听器执行失败", exception)
+    }
+)
 
 inline fun <reified E : IEvent<*>> IListening.safeEventHandler(
     noinline function: NonNullContext.(E) -> Unit
@@ -164,8 +170,7 @@ fun <E : IEvent<*>> concurrentHandler(
     function: suspend (E) -> Unit
 ) {
     val eventBus = getEventBus(eventClass)
-    val handler =
-        Handler(owner, eventBus.busID, Int.MAX_VALUE) { Coroutine.launch { function.invoke(it as E) } }
+    val handler = Handler(owner, eventBus.busID, Int.MAX_VALUE) { concurrentScope.launch { function.invoke(it as E) } }
 
     if (alwaysListening) eventBus.subscribe(handler)
     else owner.register(handler)

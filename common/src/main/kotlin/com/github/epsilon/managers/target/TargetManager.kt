@@ -5,8 +5,6 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
@@ -27,17 +25,15 @@ object TargetManager : AlwaysListening {
     private var sharedTarget: LivingEntity? = null
 
     init {
-        handler<ClientTickEvent.Pre>(alwaysListening = true) { onClientTick() }
-    }
+        handler<ClientTickEvent.Pre>(alwaysListening = true) {
+            if (mc.player == null || mc.level == null) {
+                sharedTarget = null
+                return@handler
+            }
 
-    private fun onClientTick() {
-        if (mc.player == null || mc.level == null) {
-            sharedTarget = null
-            return
-        }
-
-        if (!isSharedTargetAlive()) {
-            sharedTarget = null
+            if (!isSharedTargetAlive()) {
+                sharedTarget = null
+            }
         }
     }
 
@@ -87,9 +83,9 @@ object TargetManager : AlwaysListening {
     private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === player) continue
+            if (entity === nn.player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }

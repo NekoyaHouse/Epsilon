@@ -4,9 +4,6 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -220,8 +217,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun grimFindCollectableWater(): BlockPos? {
-        val eyesPos = player.eyePosition
-        val base = BlockPos.containing(player.x, player.y, player.z)
+        val eyesPos = nn.player.eyePosition
+        val base = BlockPos.containing(nn.player.x, nn.player.y, nn.player.z)
         var bestPos: BlockPos? = null
         var bestDistance = Double.MAX_VALUE
 
@@ -229,7 +226,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
             for (y in -1..1) {
                 for (z in -1..1) {
                     val check = base.offset(x, y, z)
-                    val fluidState: FluidState = level.getFluidState(check)
+                    val fluidState: FluidState = nn.level.getFluidState(check)
                     if (!fluidState.isSourceOfType(Fluids.WATER)) continue
 
                     val hitX = eyesPos.x.coerceIn(check.x.toDouble(), check.x + 1.0)
@@ -251,15 +248,15 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun canSeePosition(from: Vec3, to: Vec3, targetBlock: BlockPos): Boolean {
-        val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, player)
-        val result: BlockHitResult = level.clip(clipContext)
+        val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, nn.player)
+        val result: BlockHitResult = nn.level.clip(clipContext)
         return result.type == HitResult.Type.MISS || result.blockPos == targetBlock
     }
 
     context(nn: NonNullContext)
     private fun shouldSkipMlgPlacement(bestPos: BlockPos): Boolean {
         val landingPos = bestPos.below()
-        val landingState: BlockState = level.getBlockState(landingPos)
+        val landingState: BlockState = nn.level.getBlockState(landingPos)
         if (landingState.isAir) return false
         if (!landingState.hasProperty(BlockStateProperties.WATERLOGGED)) return false
 
@@ -285,22 +282,22 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getBestPos(): BlockPos? {
-        val velocity = player.deltaMovement
-        val predictedPos = Vec3(player.x + velocity.x * 3, player.y, player.z + velocity.z * 3)
+        val velocity = nn.player.deltaMovement
+        val predictedPos = Vec3(nn.player.x + velocity.x * 3, nn.player.y, nn.player.z + velocity.z * 3)
 
-        val base = BlockPos.containing(predictedPos.x, player.y - 1, predictedPos.z)
-        val direct = BlockPos.containing(player.x, player.y - 1, player.z)
+        val base = BlockPos.containing(predictedPos.x, nn.player.y - 1, predictedPos.z)
+        val direct = BlockPos.containing(nn.player.x, nn.player.y - 1, nn.player.z)
 
-        if (!level.getBlockState(base).isAir) {
+        if (!nn.level.getBlockState(base).isAir) {
             return base.above()
         }
-        if (!level.getBlockState(direct).isAir) {
+        if (!nn.level.getBlockState(direct).isAir) {
             return direct.above()
         }
 
         for (i in 0..20) {
             val check = base.below(i)
-            if (!level.getBlockState(check).isAir) {
+            if (!nn.level.getBlockState(check).isAir) {
                 return check.above()
             }
         }
@@ -310,17 +307,17 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 if (x == 0 && z == 0) continue
                 for (i in 0..20) {
                     val check = base.offset(x, -i, z)
-                    if (!level.getBlockState(check).isAir) {
+                    if (!nn.level.getBlockState(check).isAir) {
                         return check.above()
                     }
                 }
             }
         }
 
-        val fallbackBase = BlockPos.containing(player.x, player.y - 1, player.z)
+        val fallbackBase = BlockPos.containing(nn.player.x, nn.player.y - 1, nn.player.z)
         for (i in 0..20) {
             val check = fallbackBase.below(i)
-            if (!level.getBlockState(check).isAir) {
+            if (!nn.level.getBlockState(check).isAir) {
                 return check.above()
             }
         }
@@ -330,8 +327,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun isFalling(): Boolean {
-        val falling = player.fallDistance > 3.0 && !player.onGround()
-        if (player.deltaMovement.y > 0) return false
+        val falling = nn.player.fallDistance > 3.0 && !nn.player.onGround()
+        if (nn.player.deltaMovement.y > 0) return false
         return falling
     }
 
@@ -344,7 +341,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun useItem(): Boolean {
-        val result = gameMode.useItem(player, InteractionHand.MAIN_HAND)
+        val result = nn.gameMode.useItem(nn.player, InteractionHand.MAIN_HAND)
         return result.consumesAction()
     }
 

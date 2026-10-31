@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.video.VideoPlayer;
 import com.github.epsilon.gui.screen.MainMenuScreen;
+import com.github.epsilon.kernel.jvm.NonNullContext;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -67,6 +68,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onPreTick(CallbackInfo info) {
+        NonNullContext.update();
         new ClientTickEvent.Pre().post();
     }
 
@@ -93,9 +95,15 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
     private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
+        NonNullContext.reset();
         if (level != null) {
             new GameLeftEvent().post();
         }
+    }
+
+    @Inject(method = "clearClientLevel", at = @At("HEAD"))
+    private void onClearClientLevel(Screen screen, CallbackInfo ci) {
+        NonNullContext.reset();
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
@@ -147,6 +155,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
     private void onUpdateLevelInEngines(ClientLevel level, boolean stopSound, CallbackInfo ci) {
+        NonNullContext.reset();
         new LevelUpdateEvent().post();
     }
 

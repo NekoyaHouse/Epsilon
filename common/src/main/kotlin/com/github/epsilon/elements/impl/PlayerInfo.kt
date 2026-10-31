@@ -11,8 +11,6 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
 import com.google.common.base.Suppliers
@@ -165,8 +163,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val maxDistanceSquared = Mth.square(playerRange)
         val players: MutableList<AbstractClientPlayer> = ArrayList()
 
-        val self = player
-        for (player in level.players()) {
+        val self = nn.player
+        for (player in nn.level.players()) {
             if ((!showSelf && player === self) || player.isRemoved) continue
             if (self.distanceToSqr(player) > maxDistanceSquared) continue
             players.add(player)
@@ -178,11 +176,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val rows: MutableList<PlayerRow> = ArrayList(count)
         for (i in 0 until count) {
             val player = players[i]
-            val health = if (HealthManager != null) {
-                HealthManager.getHealth(player)
-            } else {
-                player.health + player.absorptionAmount
-            }
+            val health = HealthManager.getHealth(player)
             val maxHealth = maxOf(1.0f, player.maxHealth + maxOf(0.0f, player.absorptionAmount))
             val distance = (self.distanceTo(player)).roundToInt()
             val direction = (Mth.wrapDegrees(player.yRot)).roundToInt()

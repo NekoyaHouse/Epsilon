@@ -3,8 +3,6 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.authlib.GameProfile
@@ -76,21 +74,21 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             }
 
             val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
-            val fake = RemotePlayer(level, GameProfile(uuid, nameSetting))
+            val fake = RemotePlayer(nn.level, GameProfile(uuid, nameSetting))
             fakePlayer = fake
             fake.id = -66123666
-            fake.copyPosition(player)
-            fake.yRot = player.yRot
-            fake.xRot = player.xRot
-            fake.setYHeadRot(player.yHeadRot)
-            fake.health = player.health
-            fake.absorptionAmount = player.absorptionAmount
+            fake.copyPosition(nn.player)
+            fake.yRot = nn.player.yRot
+            fake.xRot = nn.player.xRot
+            fake.setYHeadRot(nn.player.yHeadRot)
+            fake.health = nn.player.health
+            fake.absorptionAmount = nn.player.absorptionAmount
 
             if (copyInventory) {
-                fake.inventory.replaceWith(player.inventory)
+                fake.inventory.replaceWith(nn.player.inventory)
             }
 
-            level.addEntity(fake)
+            nn.level.addEntity(fake)
         }
     }
 

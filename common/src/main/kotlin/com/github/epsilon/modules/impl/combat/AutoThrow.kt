@@ -4,7 +4,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -183,7 +182,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun canWork(): Boolean {
-        if (player.isUsingItem) {
+        if (nn.player.isUsingItem) {
             return false
         }
 
@@ -191,7 +190,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             return false
         }
 
-        if (Scaffold.isEnabled && !player.onGround()) {
+        if (Scaffold.isEnabled && !nn.player.onGround()) {
             return false
         }
 
@@ -202,8 +201,8 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     // 通过离散模拟计算可行的命中方向，移植自现有实现并适配 Vec3
     context(nn: NonNullContext)
     private fun getAimVec(livingEntity: LivingEntity): Vec3 {
-        val shooterPosNow = player.eyePosition
-        val shooterVelNow = player.deltaMovement
+        val shooterPosNow = nn.player.eyePosition
+        val shooterVelNow = nn.player.deltaMovement
 
         val targetPosNow = livingEntity.boundingBox.center
         val targetVelNow = livingEntity.deltaMovement
@@ -219,7 +218,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         val g = 0.03  // 重力
         val k = 0.99  // 阻力
 
-        val hasInHand = isThrowable(player.mainHandItem) || isThrowable(player.offhandItem)
+        val hasInHand = isThrowable(nn.player.mainHandItem) || isThrowable(nn.player.offhandItem)
         val fireDelay = if (hasInHand) 2 else 3
 
         // 只在 XZ 上外推到开火时刻；Y 维持当前高度

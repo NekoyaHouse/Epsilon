@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.ClickSlotUtils
@@ -43,24 +42,24 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun shouldHoldTotem(): Boolean {
-        val totalHealth = player.health + player.absorptionAmount
+        val totalHealth = nn.player.health + nn.player.absorptionAmount
 
         if (totalHealth <= health.toFloat()) {
             return true
         }
 
         // Keep an empty offhand safe by filling it with a totem.
-        if (player.offhandItem.isEmpty) {
+        if (nn.player.offhandItem.isEmpty) {
             return true
         }
 
         // Simple void safety check for modern overworld min Y.
-        if (player.y < -64.0) {
+        if (nn.player.y < -64.0) {
             return true
         }
 
         if (checkGapple) {
-            val mainHandItem: Item = player.mainHandItem.item
+            val mainHandItem: Item = nn.player.mainHandItem.item
             if (mainHandItem === Items.GOLDEN_APPLE || mainHandItem === Items.ENCHANTED_GOLDEN_APPLE) {
                 return true
             }
@@ -84,7 +83,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
         ClickSlotUtils.click(target)
         ClickSlotUtils.click(45)
 
-        if (!player.inventoryMenu.carried.isEmpty) {
+        if (!nn.player.inventoryMenu.carried.isEmpty) {
             ClickSlotUtils.click(target)
         }
     }

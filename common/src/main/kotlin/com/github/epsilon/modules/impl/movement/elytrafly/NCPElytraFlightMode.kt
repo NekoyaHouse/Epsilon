@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.movement.elytrafly
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.utils.math.toRadians
@@ -210,7 +209,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
     private fun directionSpeed(speed: Double): DoubleArray {
         var forward = (if (mc.options.keyUp.isDown) 1.0f else 0.0f) - (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
         var side = (if (mc.options.keyLeft.isDown) 1.0f else 0.0f) - (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
-        var yaw = player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
+        var yaw = nn.player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
 
         if (forward != 0.0f) {
             if (side > 0.0f) {

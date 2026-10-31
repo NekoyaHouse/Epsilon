@@ -5,7 +5,8 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool
@@ -276,7 +277,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             InvUtils.invSwap(slot)
         }
 
-        gameMode.useItem(player, InteractionHand.MAIN_HAND)
+        nn.gameMode.useItem(nn.player, InteractionHand.MAIN_HAND)
 
         SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
 
@@ -302,7 +303,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun isPlayerInBlock(): Boolean {
-        return !level.getBlockState(BlockPos.containing(player.position())).isAir
+        return !nn.level.getBlockState(BlockPos.containing(nn.player.position())).isAir
     }
 
 }

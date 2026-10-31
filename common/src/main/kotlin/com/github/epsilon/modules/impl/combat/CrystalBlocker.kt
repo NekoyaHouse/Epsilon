@@ -3,8 +3,6 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -151,7 +149,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun placeBlock(pos: BlockPos, item: FindItemResult) {
-        val oldSlot = player.inventory.selectedSlot
+        val oldSlot = nn.player.inventory.selectedSlot
 
         val side: Direction = RotationUtils.getDirection(pos)
         val bhr = BlockHitResult(Vec3.atCenterOf(pos), side, pos, false)
@@ -163,7 +161,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 InvUtils.swap(target, true)
             }
 
-            gameMode.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
+            nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, bhr)
             SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
             if (needSwitch) {
@@ -178,7 +176,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
         } else {
             InvUtils.invSwap(item.slot)
-            gameMode.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
+            nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, bhr)
             SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
             InvUtils.invSwapBack()
         }

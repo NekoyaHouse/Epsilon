@@ -7,8 +7,6 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
@@ -226,8 +224,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun placeBlock(hit: BlockHitResult, renderPos: BlockPos) {
         val hand =
-            if (player.offhandItem.`is`(Items.OBSIDIAN)) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
-        val result: InteractionResult = gameMode.useItemOn(player, hand, hit)
+            if (nn.player.offhandItem.`is`(Items.OBSIDIAN)) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
+        val result: InteractionResult = nn.gameMode.useItemOn(nn.player, hand, hit)
         if (result.consumesAction()) {
             SwingMode.of(swingHand).interactSwing(hand)
             renderBoxes.add(RenderBox(AABB(renderPos), lineColor, sideColor, System.currentTimeMillis()))
@@ -235,8 +233,6 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     }
 
     private fun resetState() {
-// this.placeClock = this.placeDelay.intValue();
-// this.switchClock = this.switchDelay.intValue();
         switchClock = 0
         placeClock = 0
         active = false

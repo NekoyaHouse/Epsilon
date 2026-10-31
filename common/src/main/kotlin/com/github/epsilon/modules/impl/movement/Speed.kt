@@ -6,8 +6,6 @@ import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -305,7 +303,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun handleStrafeMotion(speed: Float): Vec2 {
-        val moveVector = player.input.moveVector
+        val moveVector = nn.player.input.moveVector
         val forward = moveVector.y
         val strafe = moveVector.x
         val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
@@ -327,17 +325,17 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun getSpeed(slowness: Boolean, defaultSpeed: Double): Double {
         var result = defaultSpeed
-        if (player.hasEffect(MobEffects.SPEED)) {
-            val amplifier = player.getEffect(MobEffects.SPEED)!!.amplifier
+        if (nn.player.hasEffect(MobEffects.SPEED)) {
+            val amplifier = nn.player.getEffect(MobEffects.SPEED)!!.amplifier
             result *= 1.0 + 0.2 * (amplifier + 1)
         }
 
-        if (slowness && player.hasEffect(MobEffects.SLOWNESS)) {
-            val amplifier = player.getEffect(MobEffects.SLOWNESS)!!.amplifier
+        if (slowness && nn.player.hasEffect(MobEffects.SLOWNESS)) {
+            val amplifier = nn.player.getEffect(MobEffects.SLOWNESS)!!.amplifier
             result /= 1.0 + 0.2 * (amplifier + 1)
         }
 
-        if (player.isCrouching) {
+        if (nn.player.isCrouching) {
             result /= 5.0
         }
         return result
@@ -347,8 +345,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private fun getJumpSpeed(): Double {
         var defaultSpeed = 0.0
 
-        if (player.hasEffect(MobEffects.JUMP_BOOST)) {
-            val amplifier = player.getEffect(MobEffects.JUMP_BOOST)!!.amplifier
+        if (nn.player.hasEffect(MobEffects.JUMP_BOOST)) {
+            val amplifier = nn.player.getEffect(MobEffects.JUMP_BOOST)!!.amplifier
             defaultSpeed += (amplifier + 1) * 0.1
         }
 
@@ -357,19 +355,19 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun canCollide(entity: Entity?, box: AABB): Boolean {
-        return !level.noBlockCollision(entity, box)
+        return !nn.level.noBlockCollision(entity, box)
     }
 
     context(nn: NonNullContext)
     private fun setMotionY(y: Double) {
-        val movement = player.deltaMovement
-        player.deltaMovement = Vec3(movement.x, y, movement.z)
+        val movement = nn.player.deltaMovement
+        nn.player.deltaMovement = Vec3(movement.x, y, movement.z)
     }
 
     context(nn: NonNullContext)
     private fun getDistance2D(): Double {
-        val xDist = player.x - player.xo
-        val zDist = player.z - player.zo
+        val xDist = nn.player.x - nn.player.xo
+        val zDist = nn.player.z - nn.player.zo
         return sqrt(xDist * xDist + zDist * zDist)
     }
 

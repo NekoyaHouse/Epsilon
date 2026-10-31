@@ -4,8 +4,6 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -205,12 +203,12 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun withinMineRange(pos: BlockPos): Boolean {
         val limit = minOf(range, PacketMine.rangeLimit().toDouble())
-        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        return nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
     context(nn: NonNullContext)
     private fun isAirOrReplacable(pos: BlockPos): Boolean {
-        val state = level.getBlockState(pos)
+        val state = nn.level.getBlockState(pos)
         return state.isAir || state.canBeReplaced()
     }
 
@@ -261,7 +259,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun createTargetComparator(): Comparator<LivingEntity> {
         val byDistance = Comparator<LivingEntity> { a, b ->
-            player.distanceToSqr(a).compareTo(player.distanceToSqr(b))
+            nn.player.distanceToSqr(a).compareTo(nn.player.distanceToSqr(b))
         }
         return when (order.value) {
             TargetOrder.Distance -> byDistance
@@ -350,22 +348,22 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     /** 复用 Packet Mine 的可挖判定：必须有碰撞体积、可破坏、在 Packet Mine 距离内且不在失败冷却中。 */
     context(nn: NonNullContext)
     private fun isMineable(pos: BlockPos, limit: Double): Boolean {
-        if (!level.isLoaded(pos)) return false
+        if (!nn.level.isLoaded(pos)) return false
         if ((failedUntil[pos] ?: 0L) > System.currentTimeMillis()) return false
-        val state = level.getBlockState(pos)
+        val state = nn.level.getBlockState(pos)
         if (state.isAir || state.canBeReplaced()) return false
         // Packet Mine 对硬度 < 0 的方块永远无法完成挖掘，选入会使其卡在忙碌状态。
-        if (state.getDestroySpeed(level, pos) < 0.0f) return false
-        if (state.getCollisionShape(level, pos).isEmpty) return false
+        if (state.getDestroySpeed(nn.level, pos) < 0.0f) return false
+        if (state.getCollisionShape(nn.level, pos).isEmpty) return false
         // 严格小于 Packet Mine 的 farCancel 阈值，避免在临界距离被反复取消。
-        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        return nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
     context(nn: NonNullContext)
     private fun sortCandidates(candidates: MutableList<Candidate>) {
         val byDistance = Comparator<Candidate> { a, b ->
-            player.eyePosition.distanceToSqr(Vec3.atCenterOf(a.pos))
-                .compareTo(player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
+            nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(a.pos))
+                .compareTo(nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
         }
 
         when (feetLogic.value) {

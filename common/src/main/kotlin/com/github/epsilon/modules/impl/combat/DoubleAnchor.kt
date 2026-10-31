@@ -3,9 +3,6 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
@@ -92,7 +89,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
 
-        if (level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
+        if (nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
             phase = Phase.CHARGE
             return
         }
@@ -103,8 +100,8 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = anchorSlot
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = anchorSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(placeCps)
 
@@ -115,7 +112,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     private fun doCharge() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val glowstoneSlot = findHotbarSlot(Items.GLOWSTONE)
         if (glowstoneSlot == -1) {
@@ -123,8 +120,8 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = glowstoneSlot
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = glowstoneSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
 
@@ -135,7 +132,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     private fun doAirplace() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val anchorSlot = findHotbarSlot(Items.RESPAWN_ANCHOR)
         if (anchorSlot == -1) {
@@ -143,10 +140,10 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = anchorSlot
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = anchorSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
         phase = Phase.CHARGE_2
@@ -156,7 +153,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     private fun doCharge2() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val glowstoneSlot = findHotbarSlot(Items.GLOWSTONE)
         if (glowstoneSlot == -1) {
@@ -164,8 +161,8 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = glowstoneSlot
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = glowstoneSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
 
@@ -176,11 +173,11 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     private fun doDetonate() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val slot = detonateSlot - 1
-        player.inventory.selectedSlot = slot
-        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = slot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
         phase = Phase.CLEANUP
@@ -189,7 +186,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun doCleanup() {
         if (originalSlot >= 0) {
-            player.inventory.selectedSlot = originalSlot
+            nn.player.inventory.selectedSlot = originalSlot
         }
         resetState()
     }
@@ -201,7 +198,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun findHotbarSlot(item: Item): Int {
         for (i in 0 until 9) {
-            if (player.inventory.getItem(i).`is`(item)) return i
+            if (nn.player.inventory.getItem(i).`is`(item)) return i
         }
         return -1
     }

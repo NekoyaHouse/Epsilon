@@ -1,9 +1,6 @@
 package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.mc
-import com.github.epsilon.kernel.jvm.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -24,8 +21,8 @@ object RaytraceUtils {
      */
     context(nn: NonNullContext)
     fun canSeePointFrom(eyes: Vec3, vec3: Vec3): Boolean {
-        return level.clip(
-            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
+        return nn.level.clip(
+            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player)
         ).type == HitResult.Type.MISS
     }
 
@@ -51,7 +48,7 @@ object RaytraceUtils {
      */
     context(nn: NonNullContext)
     fun raytrace(rotation: Rotation, range: Double, expand: Float): HitResult? {
-        return raytrace(rotation, range, expand, player)
+        return raytrace(rotation, range, expand, nn.player)
     }
 
     /**
@@ -66,9 +63,9 @@ object RaytraceUtils {
     context(nn: NonNullContext)
     fun raytrace(rotation: Rotation, range: Double, expand: Float, entity: Entity?): HitResult? {
         if (entity == null) return null
-        val world = level
+        val world = nn.level
 
-        val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val partialTicks = nn.mc.deltaTracker.getGameTimeDeltaPartialTick(true)
 
         val eyePos = entity.getEyePosition(partialTicks)
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
@@ -150,17 +147,17 @@ object RaytraceUtils {
     fun overBlock(rotation: Rotation, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
 
-        val eyePos = player.getEyePosition(1.0f)
+        val eyePos = nn.player.getEyePosition(1.0f)
         val reach = 4.5
         val endVec = eyePos.add(lookVec.scale(reach))
 
-        val result: BlockHitResult = level.clip(
+        val result: BlockHitResult = nn.level.clip(
             ClipContext(
                 eyePos,
                 endVec,
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                player
+                nn.player
             )
         )
 

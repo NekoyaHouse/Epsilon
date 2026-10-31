@@ -1,7 +1,6 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.player
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
@@ -201,7 +200,7 @@ object InvHelper {
      */
     context(nn: NonNullContext)
     fun getInventoryStack(slot: Int): ItemStack {
-        val items = player.inventory.nonEquipmentItems
+        val items = nn.player.inventory.nonEquipmentItems
 
         if (slot < 0 || slot >= items.size) {
             return ItemStack.EMPTY
@@ -215,7 +214,7 @@ object InvHelper {
      */
     context(nn: NonNullContext)
     fun getArmorStack(slot: EquipmentSlot): ItemStack {
-        return player.inventory.getItem(slot.getIndex(36))
+        return nn.player.inventory.getItem(slot.getIndex(36))
     }
 
     /**
@@ -223,7 +222,7 @@ object InvHelper {
      */
     context(nn: NonNullContext)
     fun getOffhandStack(): ItemStack {
-        return player.inventory.getItem(Inventory.SLOT_OFFHAND)
+        return nn.player.inventory.getItem(Inventory.SLOT_OFFHAND)
     }
 
     /**
@@ -282,7 +281,7 @@ object InvHelper {
      */
     context(nn: NonNullContext)
     fun findEmptyInventory(): Int {
-        val size = player.inventory.nonEquipmentItems.size
+        val size = nn.player.inventory.nonEquipmentItems.size
 
         for (i in 9 until size) {
             if (getInventoryStack(i).isEmpty) {
@@ -343,7 +342,7 @@ object InvHelper {
     context(nn: NonNullContext)
     fun getAllItems(): List<ItemStack> {
         val list = ArrayList<ItemStack>()
-        val inventory = player.inventory
+        val inventory = nn.player.inventory
 
         for (i in 0 until inventory.containerSize) {
             list.add(inventory.getItem(i))
@@ -402,7 +401,7 @@ object InvHelper {
         if (stack == null) {
             return -1
         }
-        val inventory = player.inventory
+        val inventory = nn.player.inventory
 
         for (i in 0 until inventory.containerSize) {
             if (inventory.getItem(i) === stack) {
@@ -440,7 +439,7 @@ object InvHelper {
      */
     context(nn: NonNullContext)
     fun getItemSlot(item: Item): Int {
-        val size = player.inventory.nonEquipmentItems.size
+        val size = nn.player.inventory.nonEquipmentItems.size
 
         for (i in 0 until size) {
             if (getInventoryStack(i).item === item) {

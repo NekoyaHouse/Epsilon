@@ -4,8 +4,6 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.utils.render.WorldToScreen
 import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -37,7 +35,7 @@ object TracesRenderer {
 
         val nn = NonNullContext.instance ?: return 0
         return context(nn) {
-            val self = player
+            val self = nn.player
             val connection = mc.connection
 
             val centerX = islandX + islandWidth * 0.5f
@@ -45,11 +43,11 @@ object TracesRenderer {
             val halfWidth = maxOf(0.0f, islandWidth * 0.5f)
             val halfHeight = maxOf(0.0f, islandHeight * 0.5f)
             val maxDistanceSquared = maxOf(0.0, maxDistance * maxDistance)
-            val partialTick = if (level.tickRateManager().isFrozen) 1.0f
+            val partialTick = if (nn.level.tickRateManager().isFrozen) 1.0f
             else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             var rendered = 0
 
-            for (player in level.players()) {
+            for (player in nn.level.players()) {
                 if (!shouldRender(player, maxDistanceSquared, self, connection)) continue
 
                 val position =

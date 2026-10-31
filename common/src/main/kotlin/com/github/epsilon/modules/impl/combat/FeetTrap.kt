@@ -4,9 +4,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -114,9 +111,9 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             return
         }
         context(nn) {
-            startX = player.x
-            startY = player.y
-            startZ = player.z
+            startX = nn.player.x
+            startY = nn.player.y
+            startZ = nn.player.z
         }
     }
 
@@ -143,7 +140,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun tryPlaceBlockOrHelper(pos: BlockPos, slot: Int) {
-        if (getPlaceSide(pos) != null || !level.getBlockState(pos).canBeReplaced()) {
+        if (getPlaceSide(pos) != null || !nn.level.getBlockState(pos).canBeReplaced()) {
             tryPlaceBlock(pos, slot)
         } else {
             val helper = getHelperPos(pos) ?: return
@@ -157,10 +154,10 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         var side: Direction? = null
         for (i in Direction.values()) {
             val neighbourPos = pos.relative(i)
-            val neighbourState = level.getBlockState(neighbourPos)
+            val neighbourState = nn.level.getBlockState(neighbourPos)
             if (neighbourState.canBeReplaced() || !isClickable(neighbourState, neighbourPos)) continue
             if (!RotationUtils.canSee(neighbourPos, i.opposite)) continue
-            val vecDis = player.eyePosition.distanceToSqr(hitVec(pos, i))
+            val vecDis = nn.player.eyePosition.distanceToSqr(hitVec(pos, i))
             if (vecDis > minDistance) {
                 continue
             }
@@ -172,8 +169,8 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isClickable(state: BlockState, pos: BlockPos): Boolean {
-        return player.isSecondaryUseActive || !(
-                state.getMenuProvider(level, pos) != null ||
+        return nn.player.isSecondaryUseActive || !(
+                state.getMenuProvider(nn.level, pos) != null ||
                         state.block is EntityBlock ||
                         state.`is`(BlockTags.BUTTONS) ||
                         state.`is`(BlockTags.PRESSURE_PLATES) ||
@@ -216,7 +213,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun placeBlock(pos: BlockPos, side: Direction, hand: InteractionHand) {
         val result = BlockHitResult(hitVec(pos, side), side, pos, false)
-        gameMode.useItemOn(player, hand, result)
+        nn.gameMode.useItemOn(nn.player, hand, result)
     }
 
     private fun hitVec(pos: BlockPos, side: Direction): Vec3 {
@@ -234,12 +231,12 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun selfIntersectPos(pos: BlockPos): Boolean {
-        return player.boundingBox.intersects(AABB(pos))
+        return nn.player.boundingBox.intersects(AABB(pos))
     }
 
     context(nn: NonNullContext)
     private fun otherIntersectPos(pos: BlockPos): Boolean {
-        for (otherPlayer in level.players()) {
+        for (otherPlayer in nn.level.players()) {
             if (otherPlayer.boundingBox.intersects(AABB(pos))) {
                 return true
             }

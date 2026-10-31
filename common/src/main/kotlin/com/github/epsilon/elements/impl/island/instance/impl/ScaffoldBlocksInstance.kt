@@ -8,8 +8,6 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.timer.TimerUtils
@@ -114,7 +112,7 @@ class ScaffoldBlocksInstance(
         val tintSource: BlockTintSource = mc.blockColors.getTintSource(state, 0) ?: return
         val nn = NonNullContext.instance ?: return
 
-        val tint = context(nn) { tintSource.colorAsTerrainParticle(state, level, player.blockPosition()) }
+        val tint = context(nn) { tintSource.colorAsTerrainParticle(state, nn.level, nn.player.blockPosition()) }
         iconTint = Color(tint, true)
     }
 

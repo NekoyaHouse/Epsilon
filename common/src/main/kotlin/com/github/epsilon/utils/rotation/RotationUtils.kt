@@ -2,8 +2,6 @@ package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
 import net.minecraft.core.BlockPos
@@ -44,7 +42,7 @@ object RotationUtils {
     private fun getNearestSide(pos: BlockPos, predicate: (Direction) -> Boolean): Direction? {
         var side: Direction? = null
         var closestDistanceSq = Double.MAX_VALUE
-        val eyePos = player.eyePosition
+        val eyePos = nn.player.eyePosition
 
         for (direction in Direction.entries) {
             if (!predicate(direction)) continue
@@ -75,15 +73,15 @@ object RotationUtils {
     private fun canSeeWithContext(pos: BlockPos, side: Direction): Boolean {
         val testVec = Vec3.atCenterOf(pos).relative(side, 0.5)
         val context = ClipContext(
-            player.eyePosition, testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player
+            nn.player.eyePosition, testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, nn.player
         )
-        val result = level.clip(context)
+        val result = nn.level.clip(context)
         return result.type == HitResult.Type.MISS
     }
 
     context(nn: NonNullContext)
     private fun getCollisionBox(pos: BlockPos): AABB {
-        val shape: VoxelShape = level.getBlockState(pos).getCollisionShape(level, pos).move(pos)
+        val shape: VoxelShape = nn.level.getBlockState(pos).getCollisionShape(nn.level, pos).move(pos)
         var collisionBox = AABB(pos)
 
         for (box in shape.toAabbs()) {
@@ -109,8 +107,8 @@ object RotationUtils {
     private fun isGrimDirectionWithContext(pos: BlockPos, direction: Direction): Boolean {
         val collisionBox = getCollisionBox(pos)
         val eyePositions = AABB(
-            player.x, player.y + 0.4, player.z,
-            player.x, player.y + 1.62, player.z
+            nn.player.x, nn.player.y + 0.4, nn.player.z,
+            nn.player.x, nn.player.y + 1.62, nn.player.z
         ).inflate(0.0002)
         return eyePositions.intersects(collisionBox) || !(when (direction) {
             Direction.NORTH -> eyePositions.minZ > collisionBox.minZ
@@ -132,7 +130,7 @@ object RotationUtils {
     context(nn: NonNullContext)
     fun isInFov(entity: Entity, fov: Float): Boolean {
         if (fov >= 360f) return true
-        val yawDiff = abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - player.yRot))
+        val yawDiff = abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - nn.player.yRot))
         return yawDiff <= fov / 2.0
     }
 
@@ -144,7 +142,7 @@ object RotationUtils {
      */
     context(nn: NonNullContext)
     fun getRotationsToEntity(entity: Entity): Rotation {
-        val eyePos = player.eyePosition
+        val eyePos = nn.player.eyePosition
         val targetPos = entity.position().add(0.0, entity.bbHeight / 2.0, 0.0)
         val dx = targetPos.x - eyePos.x
         val dy = targetPos.y - eyePos.y
@@ -163,7 +161,7 @@ object RotationUtils {
      */
     context(nn: NonNullContext)
     fun getEyeDistanceToEntity(entity: LivingEntity): Double {
-        val eyePos = player.eyePosition
+        val eyePos = nn.player.eyePosition
         val box = entity.boundingBox
         val dx = maxOf(box.minX - eyePos.x, maxOf(0.0, eyePos.x - box.maxX))
         val dy = maxOf(box.minY - eyePos.y, maxOf(0.0, eyePos.y - box.maxY))
@@ -197,7 +195,7 @@ object RotationUtils {
         return calculate(
             entity.position().add(
                 0.0,
-                (player.y - entity.y + player.eyeHeight).coerceIn(
+                (nn.player.y - entity.y + nn.player.eyeHeight).coerceIn(
                     0.0,
                     (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
                 ),
@@ -273,7 +271,7 @@ object RotationUtils {
      */
     context(nn: NonNullContext)
     fun calculate(to: BlockPos): Rotation {
-        return calculate(player.eyePosition, Vec3.atCenterOf(to))
+        return calculate(nn.player.eyePosition, Vec3.atCenterOf(to))
     }
 
     /**
@@ -284,7 +282,7 @@ object RotationUtils {
      */
     context(nn: NonNullContext)
     fun calculate(to: Vec3): Rotation {
-        return calculate(player.eyePosition, to)
+        return calculate(nn.player.eyePosition, to)
     }
 
     /**
@@ -332,9 +330,9 @@ object RotationUtils {
      */
     context(nn: NonNullContext)
     fun calculate(vec: Vec3, predict: Boolean): Rotation {
-        var eyesPos = player.eyePosition
+        var eyesPos = nn.player.eyePosition
 
-        if (predict) eyesPos = eyesPos.add(player.deltaMovement)
+        if (predict) eyesPos = eyesPos.add(nn.player.deltaMovement)
 
         val diffX = vec.x - eyesPos.x
         val diffY = vec.y - eyesPos.y
@@ -413,8 +411,8 @@ object RotationUtils {
     context(nn: NonNullContext)
     fun resetRotation(rotation: Rotation?): Rotation? {
         val target = rotation ?: return null
-        val yaw = target.yaw + Mth.wrapDegrees(player.yRot - target.yaw)
-        val pitch = player.xRot
+        val yaw = target.yaw + Mth.wrapDegrees(nn.player.yRot - target.yaw)
+        val pitch = nn.player.xRot
         return Rotation(yaw, pitch)
     }
 

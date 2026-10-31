@@ -4,8 +4,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -154,8 +152,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         if (distance <= 0.0) return false
 
         val distanceSq = distance * distance
-        for (other in level.players()) {
-            if (other !== player && other.distanceToSqr(player) <= distanceSq) {
+        for (other in nn.level.players()) {
+            if (other !== nn.player && other.distanceToSqr(nn.player) <= distanceSq) {
                 return true
             }
         }
@@ -165,8 +163,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun findTarget(): Target? {
         val radius = ceil(range).toInt()
-        val origin = player.blockPosition()
-        val eyes = player.eyePosition
+        val origin = nn.player.blockPosition()
+        val eyes = nn.player.eyePosition
 
         var best: Target? = null
         var bestDistance = Double.MAX_VALUE
@@ -176,7 +174,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             origin.offset(radius, radius, radius)
         )) {
             val immutable = pos.immutable()
-            if (!isSelectedContainer(level.getBlockEntity(immutable))) continue
+            if (!isSelectedContainer(nn.level.getBlockEntity(immutable))) continue
             if (isBlockedChest(immutable)) continue
             if (wasAlreadyOpened(immutable)) continue
 
@@ -197,13 +195,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val maxRange = range
         if (distanceSq > maxRange * maxRange) return null
 
-        val visibleHit = level.clip(
+        val visibleHit = nn.level.clip(
             ClipContext(
                 eyes,
                 Vec3.atCenterOf(pos),
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                player,
+                nn.player,
             )
         )
         if (visibleHit.type == HitResult.Type.BLOCK && visibleHit.blockPos == pos) {
@@ -226,25 +224,25 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
-        val start = player.getEyePosition(1.0F)
+        val start = nn.player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))
 
         if (!throughWalls) {
-            val hit = level.clip(
+            val hit = nn.level.clip(
                 ClipContext(
                     start,
                     end,
                     ClipContext.Block.OUTLINE,
                     ClipContext.Fluid.NONE,
-                    player,
+                    nn.player,
                 )
             )
             return if (hit.type == HitResult.Type.BLOCK) hit else null
         }
 
-        val state: BlockState = level.getBlockState(pos)
-        val shape = state.getShape(level, pos)
+        val state: BlockState = nn.level.getBlockState(pos)
+        val shape = state.getShape(nn.level, pos)
         return if (shape.isEmpty) null else shape.clip(start, end, pos)
     }
 
@@ -259,8 +257,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun isBlockedChest(pos: BlockPos): Boolean {
         val above = pos.above()
-        return level.getBlockEntity(pos) is ChestBlockEntity && level.getBlockState(above)
-            .isRedstoneConductor(level, above)
+        return nn.level.getBlockEntity(pos) is ChestBlockEntity && nn.level.getBlockState(above)
+            .isRedstoneConductor(nn.level, above)
     }
 
     private fun wasAlreadyOpened(pos: BlockPos): Boolean {
@@ -273,7 +271,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun markContainerOpened(pos: BlockPos) {
-        if (isSelectedContainer(level.getBlockEntity(pos))) {
+        if (isSelectedContainer(nn.level.getBlockEntity(pos))) {
             clickedContainers.add(pos.immutable())
         }
     }
@@ -296,12 +294,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun isInLobby(): Boolean {
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity.name.string.contains("\u00A7e\u00A7lCLICK TO PLAY")) {
                 return true
             }
         }
-        return player.inventory.getItem(8).`is`(Items.NETHER_STAR) && player.inventory.getItem(0).`is`(Items.COMPASS)
+        return nn.player.inventory.getItem(8).`is`(Items.NETHER_STAR) && nn.player.inventory.getItem(0)
+            .`is`(Items.COMPASS)
     }
 
     private data class Target(

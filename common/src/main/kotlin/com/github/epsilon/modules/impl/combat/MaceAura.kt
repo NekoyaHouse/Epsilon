@@ -3,9 +3,6 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.connection
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -111,7 +108,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             return false
         }
         if (cooldown) {
-            return player.getAttackStrengthScale(0.5f) >= cooldownBase.toFloat()
+            return nn.player.getAttackStrengthScale(0.5f) >= cooldownBase.toFloat()
         }
         return attackTimer.passedMillise(attackDelay.toLong())
     }
@@ -134,7 +131,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun doMaceAttack(currentTarget: LivingEntity, vclipValue: Double) {
-        val currentSlot = player.inventory.selectedSlot
+        val currentSlot = nn.player.inventory.selectedSlot
         var swappedInventory = false
 
         val hotbar: FindItemResult = InvUtils.findInHotbar(Items.MACE)
@@ -147,23 +144,23 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             if (!inv.found()) return
             InvUtils.invSwap(inv.slot)
             swappedInventory = true
-            InvUtils.swap(player.inventory.selectedSlot, true)
+            InvUtils.swap(nn.player.inventory.selectedSlot, true)
         }
 
-        val startPos: Vec3 = player.position()
+        val startPos: Vec3 = nn.player.position()
         val targetPos: Vec3 = startPos.add(0.0, vclipValue, 0.0)
 
         // 何意味，，，
         if (paperServer) {
             for (i in 0 until 4) {
-                connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
+                nn.connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
             }
         }
 
         doTp(startPos, targetPos, moveDistance, false, 20)
         sendMovePacket(startPos, false)
         attack(currentTarget)
-        sendMovePacket(player.x, player.y + 1.0E-4, player.z, false)
+        sendMovePacket(nn.player.x, nn.player.y + 1.0E-4, nn.player.z, false)
 
         if (swappedInventory) {
             InvUtils.invSwapBack()
@@ -197,12 +194,12 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun sendMovePacket(x: Double, y: Double, z: Double, onGround: Boolean) {
-        connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
+        nn.connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
     }
 
     context(nn: NonNullContext)
     private fun attack(currentTarget: LivingEntity) {
-        gameMode.attack(player, currentTarget)
+        nn.gameMode.attack(nn.player, currentTarget)
         SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
     }
 

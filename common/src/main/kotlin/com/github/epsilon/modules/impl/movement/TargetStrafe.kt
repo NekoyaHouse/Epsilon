@@ -8,8 +8,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -136,7 +134,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         var closestIndex = -1
         for (i in offsets.indices) {
             val position = getOrbitPosition(offsets[i])
-            val distance = player.distanceToSqr(position.x, player.y, position.z)
+            val distance = nn.player.distanceToSqr(position.x, nn.player.y, position.z)
             if (distance < closestDistance) {
                 closestDistance = distance
                 closestIndex = i
@@ -147,23 +145,23 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun getOrbitPosition(offset: OrbitOffset): Vec3 {
-        return Vec3(target!!.x + offset.x, player.y, target!!.z + offset.z)
+        return Vec3(target!!.x + offset.x, nn.player.y, target!!.z + offset.z)
     }
 
     context(nn: NonNullContext)
     private fun isOverVoid(x: Double, z: Double): Boolean {
-        if (player.isInWater || player.isInLava) return false
+        if (nn.player.isInWater || nn.player.isInLava) return false
 
         val box = AABB(
             x - 0.015,
-            player.y,
+            nn.player.y,
             z - 0.015,
             x + 0.015,
-            player.y + player.bbHeight,
+            nn.player.y + nn.player.bbHeight,
             z + 0.015
         )
         val minY = Mth.floor(box.minY)
-        if (minY < level.minY) return true
+        if (minY < nn.level.minY) return true
 
         val minX = Mth.floor(box.minX)
         val maxX = Mth.floor(box.maxX + 1.0)
@@ -174,8 +172,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         for (blockX in minX until maxX) {
             for (blockZ in minZ until maxZ) {
                 var blockY = minY
-                while (blockY >= level.minY) {
-                    val state: BlockState = level.getBlockState(pos.set(blockX, blockY, blockZ))
+                while (blockY >= nn.level.minY) {
+                    val state: BlockState = nn.level.getBlockState(pos.set(blockX, blockY, blockZ))
                     if (!state.canBeReplaced()) {
                         return false
                     }

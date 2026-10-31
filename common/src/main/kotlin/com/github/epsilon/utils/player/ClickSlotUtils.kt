@@ -1,16 +1,8 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.player
 import net.minecraft.world.inventory.ContainerInput
 
-/**
- * 容器槽位操作工具类。
- *
- * 所有方法都需要玩家、世界、交互管理器与连接同时存在；上下文缺失时直接跳过，
- * 等价于原实现的 `nullCheck()` 提前返回。
- */
 object ClickSlotUtils {
 
     /**
@@ -23,7 +15,7 @@ object ClickSlotUtils {
      */
     context(nn: NonNullContext)
     fun clickSlot(containerId: Int, slot: Int, button: Int, action: ContainerInput) {
-        gameMode.handleContainerInput(containerId, slot, button, action, player)
+        nn.gameMode.handleContainerInput(containerId, slot, button, action, nn.player)
     }
 
     /**
@@ -35,7 +27,7 @@ object ClickSlotUtils {
      */
     context(nn: NonNullContext)
     fun clickSlot(slot: Int, button: Int, action: ContainerInput) {
-        clickSlot(player.inventoryMenu.containerId, slot, button, action)
+        clickSlot(nn.player.inventoryMenu.containerId, slot, button, action)
     }
 
     /**

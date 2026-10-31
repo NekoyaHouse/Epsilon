@@ -7,9 +7,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.connection
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -368,8 +365,8 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         if (sounds.isEmpty()) return
         val sound = sounds[0]
         context(nn) {
-            level.playLocalSound(
-                player.blockPosition(),
+            nn.level.playLocalSound(
+                nn.player.blockPosition(),
                 sound,
                 SoundSource.PLAYERS,
                 vol.toFloat(),
@@ -382,10 +379,10 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private fun getPlayerName(id: UUID): String? {
         val nn = NonNullContext.instance ?: return null
         return context(nn) {
-            val player = level.getPlayerByUUID(id)
+            val player = nn.level.getPlayerByUUID(id)
             if (player != null) return@context player.gameProfile.name()
             // fallback: try to get from network player list
-            val entry = connection.getPlayerInfo(id)
+            val entry = nn.connection.getPlayerInfo(id)
             if (entry != null) {
                 val profile = entry.profile
                 return@context profile.name()

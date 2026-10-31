@@ -1,8 +1,6 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
@@ -18,8 +16,8 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isEating(): Boolean {
-        return (player.mainHandItem.components.has(DataComponents.FOOD) ||
-                player.offhandItem.components.has(DataComponents.FOOD)) && player.isUsingItem
+        return (nn.player.mainHandItem.components.has(DataComponents.FOOD) ||
+                nn.player.offhandItem.components.has(DataComponents.FOOD)) && nn.player.isUsingItem
     }
 
     /**
@@ -27,7 +25,7 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isInWeb(): Boolean {
-        val box = player.boundingBox.deflate(1.0E-6)
+        val box = nn.player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -41,7 +39,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (level.getBlockState(mutablePos).block is WebBlock) {
+                    if (nn.level.getBlockState(mutablePos).block is WebBlock) {
                         return true
                     }
                 }
@@ -56,7 +54,7 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isInBlock(): Boolean {
-        val box = player.boundingBox.deflate(1.0E-6)
+        val box = nn.player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -70,7 +68,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (level.getBlockState(mutablePos).isSolidRender) {
+                    if (nn.level.getBlockState(mutablePos).isSolidRender) {
                         return true
                     }
                 }

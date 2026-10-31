@@ -7,7 +7,6 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -214,7 +213,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun cancelPacket(event: PacketEvent.Receive) {
         val packet = event.packet
-        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
             event.cancel()
             return
         }
@@ -259,7 +258,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             lag = System.currentTimeMillis()
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
             val movement = packet.movement
             if (System.currentTimeMillis() - lag >= 100L) {
                 val knockback = movement.y > 0.0 && (movement.x != 0.0 || movement.z != 0.0)
@@ -293,7 +292,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             return
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id &&
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id &&
             System.currentTimeMillis() - delayLag >= 100L
         ) {
             val movement = packet.movement

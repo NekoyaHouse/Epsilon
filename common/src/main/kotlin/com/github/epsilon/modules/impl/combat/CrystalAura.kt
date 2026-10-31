@@ -4,9 +4,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
@@ -104,7 +101,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         if (dontPlace) placeClock--
         if (dontBreak) breakClock--
 
-        if (player.isUsingItem) return
+        if (nn.player.isUsingItem) return
         if (damageTick && damageTickCheck()) return
 
         if (activateKey != InputConstants.UNKNOWN.value && !KeybindUtils.isPressed(activateKey)) {
@@ -115,14 +112,14 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
         crystalling = true
 
-        if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return
+        if (!nn.player.mainHandItem.`is`(Items.END_CRYSTAL)) return
 
         val blockHit = mc.hitResult as? BlockHitResult
         if (blockHit != null) {
             if (!dontPlace &&
                 randomInt <= placeChance.toInt() &&
-                (level.getBlockState(blockHit.blockPos).`is`(Blocks.OBSIDIAN) ||
-                        level.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
+                (nn.level.getBlockState(blockHit.blockPos).`is`(Blocks.OBSIDIAN) ||
+                        nn.level.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
                 canPlaceCrystalAssumeObsidian(blockHit.blockPos)
             ) {
 
@@ -141,7 +138,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 }
 
                 val result: InteractionResult =
-                    gameMode.useItemOn(player, InteractionHand.MAIN_HAND, placeHit)
+                    nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, placeHit)
                 if (result.consumesAction()) {
                     SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
                 }
@@ -168,7 +165,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     return
                 }
 
-                val prevSlot = player.inventory.selectedSlot
+                val prevSlot = nn.player.inventory.selectedSlot
                 var swappedForWeakness = false
 
                 if ((entity is EndCrystal || entity is Slime) && antiWeakness && cantBreakCrystal()) {
@@ -179,7 +176,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     KeyMapping.click(mc.options.keyAttack.defaultKey)
                 }
 
-                gameMode.attack(player, entity)
+                nn.gameMode.attack(nn.player, entity)
 
                 SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
 
@@ -204,23 +201,23 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun canPlaceCrystalAssumeObsidian(supportPos: BlockPos): Boolean {
         val crystalPos = supportPos.above()
-        if (!level.getBlockState(crystalPos).isAir) return false
-        if (strictAirCheck && !level.getBlockState(crystalPos.above()).isAir) return false
+        if (!nn.level.getBlockState(crystalPos).isAir) return false
+        if (strictAirCheck && !nn.level.getBlockState(crystalPos.above()).isAir) return false
         val box = AABB(
             crystalPos.x.toDouble(), crystalPos.y.toDouble(), crystalPos.z.toDouble(),
             crystalPos.x + 1.0, crystalPos.y + 2.0, crystalPos.z + 1.0
         )
-        return level.getEntities(null, box).isEmpty()
+        return nn.level.getEntities(null, box).isEmpty()
     }
 
     context(nn: NonNullContext)
     private fun cantBreakCrystal(): Boolean {
-        val weakness: MobEffectInstance? = player.getEffect(MobEffects.WEAKNESS)
-        val strength: MobEffectInstance? = player.getEffect(MobEffects.STRENGTH)
+        val weakness: MobEffectInstance? = nn.player.getEffect(MobEffects.WEAKNESS)
+        val strength: MobEffectInstance? = nn.player.getEffect(MobEffects.STRENGTH)
 
         return weakness != null &&
                 (strength == null || strength.amplifier <= weakness.amplifier) &&
-                !isToolLike(player.mainHandItem)
+                !isToolLike(nn.player.mainHandItem)
     }
 
     private fun isToolLike(stack: ItemStack): Boolean {
@@ -233,9 +230,9 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isDeadBodyNearby(): Boolean {
-        for (otherPlayer in level.players()) {
-            if (otherPlayer === player) continue
-            if (otherPlayer.distanceToSqr(player) > 36.0) continue
+        for (otherPlayer in nn.level.players()) {
+            if (otherPlayer === nn.player) continue
+            if (otherPlayer.distanceToSqr(nn.player) > 36.0) continue
             if (!otherPlayer.isAlive || otherPlayer.deathTime > 0) {
                 return true
             }
@@ -245,9 +242,9 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun damageTickCheck(): Boolean {
-        val found = level.players().stream()
-            .filter { p -> p !== player }
-            .filter { p -> p.distanceToSqr(player) < 36.0 }
+        val found = nn.level.players().stream()
+            .filter { p -> p !== nn.player }
+            .filter { p -> p.distanceToSqr(nn.player) < 36.0 }
             .filter { p -> !p.onGround() }
             .anyMatch { p -> p.hurtTime >= 2 }
 

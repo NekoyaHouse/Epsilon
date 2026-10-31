@@ -6,8 +6,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.gameMode
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -463,7 +461,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun attackEntity(entity: Entity) {
-        gameMode.attack(player, entity)
+        nn.gameMode.attack(nn.player, entity)
         SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
     }
 
@@ -474,19 +472,19 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
      */
     context(nn: NonNullContext)
     private fun attackWithMace(entity: Entity) {
-        if (!mace || player.fallDistance <= MACE_MIN_FALL_DISTANCE || !entity.isAlive) return
+        if (!mace || nn.player.fallDistance <= MACE_MIN_FALL_DISTANCE || !entity.isAlive) return
 
         val maceResult: FindItemResult = findMace()
         if (!maceResult.found()) return
 
-        val selectedSlot = player.inventory.selectedSlot
+        val selectedSlot = nn.player.inventory.selectedSlot
         if (maceResult.slot == selectedSlot) {
             attackEntity(entity)
             return
         }
 
         when (maceSwapMode) {
-            MaceSwapMode.Normal, MaceSwapMode.Silent -> player.inventory.selectedSlot = maceResult.slot
+            MaceSwapMode.Normal, MaceSwapMode.Silent -> nn.player.inventory.selectedSlot = maceResult.slot
             MaceSwapMode.InvSwitch -> InvUtils.invSwap(maceResult.slot)
         }
 
@@ -496,7 +494,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             MaceSwapMode.Normal -> {
             }
 
-            MaceSwapMode.Silent -> player.inventory.selectedSlot = selectedSlot
+            MaceSwapMode.Silent -> nn.player.inventory.selectedSlot = selectedSlot
             MaceSwapMode.InvSwitch -> InvUtils.invSwapBack()
         }
     }
@@ -512,12 +510,12 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isHoldingSpear(): Boolean {
-        return player.mainHandItem.`is`(ItemTags.SPEARS)
+        return nn.player.mainHandItem.`is`(ItemTags.SPEARS)
     }
 
     context(nn: NonNullContext)
     private fun isUsingSpear(): Boolean {
-        return player.isUsingItem && player.useItem.`is`(ItemTags.SPEARS)
+        return nn.player.isUsingItem && nn.player.useItem.`is`(ItemTags.SPEARS)
     }
 
     /**
@@ -527,7 +525,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private fun getRelativeSpeedTo(entity: Entity): Double {
         val look = RotationUtils.getRotationsToEntity(entity)
         val direction = Vec3.directionFromRotation(look.pitch, look.yaw)
-        val relativeMotion = player.knownSpeed.subtract(entity.knownSpeed).scale(20.0)
+        val relativeMotion = nn.player.knownSpeed.subtract(entity.knownSpeed).scale(20.0)
         return maxOf(0.0, direction.dot(relativeMotion))
     }
 

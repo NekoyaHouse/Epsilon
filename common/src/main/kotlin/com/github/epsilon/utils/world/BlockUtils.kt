@@ -1,8 +1,6 @@
 package com.github.epsilon.utils.world
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -31,9 +29,9 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun canPlaceAt(pos: BlockPos): Boolean {
-        if (!level.getBlockState(pos).canBeReplaced()) return false
+        if (!nn.level.getBlockState(pos).canBeReplaced()) return false
         val except: Entity? = null
-        return level.getEntities(
+        return nn.level.getEntities(
             except,
             AABB(pos)
         ) { entity -> !(entity is ItemEntity || entity is ExperienceOrb || entity is ThrownExperienceBottle || entity is Arrow) }
@@ -45,7 +43,7 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun getPlacePos(hit: BlockHitResult, item: ItemStack): BlockPos {
-        val state = level.getBlockState(hit.blockPos)
+        val state = nn.level.getBlockState(hit.blockPos)
         if (!state.isAir && canBeReplacedWith(state, item)) {
             return hit.blockPos
         }
@@ -57,7 +55,7 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun isFaceVisible(pos: BlockPos, face: Direction): Boolean {
-        val eyePos = player.eyePosition
+        val eyePos = nn.player.eyePosition
         val box = AABB(pos)
         return when (face) {
             Direction.NORTH -> eyePos.z > box.minZ
@@ -74,10 +72,10 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun isSolidBlock(pos: BlockPos): Boolean {
-        val state = level.getBlockState(pos)
+        val state = nn.level.getBlockState(pos)
         if (state.isAir) return false
         if (canBeReplacedWith(state, ItemStack.EMPTY)) return false
-        return !state.getCollisionShape(level, pos).isEmpty
+        return !state.getCollisionShape(nn.level, pos).isEmpty
     }
 
     /**
@@ -86,7 +84,7 @@ object BlockUtils {
     context(nn: NonNullContext)
     fun hasBlockingEntity(box: AABB): Boolean {
         val except: Entity? = null
-        for (entity in level.getEntities(except, box)) {
+        for (entity in nn.level.getEntities(except, box)) {
             if (!entity.isAlive) continue
             if (entity is ItemEntity || entity is ExperienceOrb) continue
             if (entity is EndCrystal) continue
@@ -100,8 +98,8 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun isWithinRange(point: Vec3): Boolean {
-        val range = player.blockInteractionRange()
-        return point.distanceToSqr(player.eyePosition) <= range * range
+        val range = nn.player.blockInteractionRange()
+        return point.distanceToSqr(nn.player.eyePosition) <= range * range
     }
 
     /**
@@ -109,7 +107,7 @@ object BlockUtils {
      */
     context(nn: NonNullContext)
     fun getVisibleFace(pos: BlockPos): Direction {
-        return Direction.getApproximateNearest(player.position().subtract(Vec3.atCenterOf(pos)))
+        return Direction.getApproximateNearest(nn.player.position().subtract(Vec3.atCenterOf(pos)))
     }
 
 }

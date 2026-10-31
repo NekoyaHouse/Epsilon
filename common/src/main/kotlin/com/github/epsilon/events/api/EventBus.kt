@@ -1,7 +1,7 @@
 package com.github.epsilon.events.api
 
 import com.github.epsilon.Constants
-import com.github.epsilon.kernel.threads.Coroutine
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
@@ -12,7 +12,6 @@ open class NamedProfilerEventBus(private val profilerName: String) : ProfilerEve
 
 open class ProfilerEventBus : EventBus()
 
-/** 每个具体事件通过 Companion 持有独立总线，不向父类型总线冒泡。 */
 open class EventBus : IPosting {
     final override val eventBus: EventBus
         get() = this
@@ -42,7 +41,7 @@ open class EventBus : IPosting {
         if (parallelHandlers.isEmpty()) return
         runBlocking {
             for (handler in parallelHandlers) {
-                launch(Coroutine.context) {
+                launch(Dispatchers.Default) {
                     try {
                         handler.function(event)
                     } catch (exception: Exception) {

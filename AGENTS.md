@@ -85,19 +85,19 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Module 继承 `ListenerOwner`；默认监听器绑定到 owner，生效与否由 owner 的 `subscribe()` / `unsubscribe()` 决定（Module 即 `isEnabled` 切换），不得在处理器内重复过滤 `isEnabled`。
 - 确需在模块禁用期间继续监听时显式传 `alwaysListening = true`。Manager 等常驻监听器实现 `AlwaysListening`，不能使用未订阅的普通 `ListenerOwner`。
 - 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。旋转在 `PlayerTickEvent.Pre` 的 `-1000` 结算，3D scheduler 在 `Render3DEvent` 的 `-999` flush，不得反转顺序。
-- `NonNullContext` 在公共初始化最先预热；`ClientTickEvent.Pre` 以 `Int.MAX_VALUE` 刷新，主线程队列以 `EventPriority.HIGHEST + 1` 执行。断开连接和世界更新先清空快照，加入游戏和重生后刷新；缺失必需字段时必须清空，不能复用旧世界对象。`hitResult` / `cameraEntity` 可空，不作为上下文可用的前置条件。世界更新的清理监听器使用普通 `handler`，不能因上下文已清空而跳过。
-- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.kernel.jvm.NonNullContext`；统一用通配导入 `import com.github.epsilon.kernel.jvm.*` 一次性引入上下文类型与属性（`NonNullContext`、`player`、`level`、`gameMode`、`connection`、`mc`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
-- 在 `context(nn: NonNullContext)` 作用域内直接用上下文属性读取非空值，**不得**写成 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 这种显式访问：
+- `NonNullContext` 由共享 Mixin 在 Minecraft 生命周期边界直接维护，不订阅业务事件，也不需要 `hashCode()` 预热：发布 `ClientTickEvent.Pre` 前刷新；断开连接、清理世界和更新渲染引擎世界前清空；登录与重生在线程校验通过后先清空，处理完毕且发布对应事件前刷新。不得只靠下一次 tick 修复旧快照，同维度重生也会更换玩家，过渡界面可能立即渲染。缺失必需字段时必须清空，不能复用旧世界对象。`hitResult` / `cameraEntity` 可空，不作为上下文可用的前置条件。世界更新的清理监听器使用普通 `handler`，不能因上下文已清空而跳过。
+- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.kernel.jvm.NonNullContext`；统一用通配导入 `import com.github.epsilon.kernel.jvm.*` 一次性引入上下文类型与工具（`NonNullContext`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
+- 在 `context(nn: NonNullContext)` 或 `context(nn) { }` 作用域内，通过 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 显式访问上下文；不得恢复同名顶层属性扩展来省略 `nn.`：
 
   ```kotlin
   context(nn: NonNullContext)
   fun swingHand(hand: InteractionHand) {
-      player.swing(hand, SwingAnimation.DEFAULT, false)
+      nn.player.swing(hand, SwingAnimation.DEFAULT, false)
   }
   ```
 
-- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接使用 `player` / `level` / `gameMode` / `connection` 上下文属性，不得在函数体内自行读取 `NonNullContext.instance`；这些函数的调用点必须位于 `safeEventHandler` / `runSafe` / `context(nn) { }` 等上下文作用域内。
-- `kernel.jvm.NonNullContext.kt` 提供 `NonNullContext`、上述上下文属性与 `runSafe` 系列工具；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
+- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部通过 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` 访问上下文，不得在函数体内自行读取 `NonNullContext.instance`；这些函数的调用点必须位于 `safeEventHandler` / `runSafe` / `context(nn) { }` 等上下文作用域内。
+- `kernel.jvm.NonNullContext.kt` 提供 `NonNullContext` 与 `runSafe` 系列工具，不再提供 `player` / `level` / `gameMode` / `connection` / `mc` 顶层属性扩展；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
 - 上下文字段命名与 Minecraft 一致：世界用 `level`、连接用 `connection`；不得再使用 `world` / `netHandler` 等别名。
 - `Cancellable` 是实现 `ICancellable` 的类。使用 `cancel()` 和 Kotlin 的 `isCancelled` 属性（Java 使用 `isCancelled()`）；取消状态不可逆，不得通过 setter 取消已有的取消状态。
 - 有明确监听顺序时必须设置 priority，不得依赖跨对象的隐式注册顺序。

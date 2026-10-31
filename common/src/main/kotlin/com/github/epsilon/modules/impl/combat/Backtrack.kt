@@ -6,8 +6,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
@@ -261,7 +259,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private fun shouldBacktrackLocked(candidate: LivingEntity, now: Long): Boolean {
         if (!isValidTarget(candidate)) return false
 
-        val distance = candidate.boundingBox.distanceToSqr(player.eyePosition)
+        val distance = candidate.boundingBox.distanceToSqr(nn.player.eyePosition)
         val min = minOf(minRange, maxRange)
         val max = maxOf(minRange, maxRange)
         val inRange = distance >= min * min && distance <= max * max
@@ -275,7 +273,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             lastAttackAt != Long.MIN_VALUE && now - lastAttackAt <= lastAttackTime
 
         return (inRange || withinTrackingBuffer) &&
-                player.tickCount > 10 &&
+                nn.player.tickCount > 10 &&
                 chancePassed &&
                 now >= nextAllowedAt &&
                 attackedRecently &&
@@ -285,8 +283,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isValidTarget(candidate: LivingEntity): Boolean {
-        if (candidate === player || !candidate.isAlive || candidate.isDeadOrDying) return false
-        if (candidate.level() !== level || AntiBot.isBot(candidate)) return false
+        if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
+        if (candidate.level() !== nn.level || AntiBot.isBot(candidate)) return false
         if (TargetManager.isSameTeam(candidate)) return false
         return candidate !is Player || !FriendManager.isFriend(candidate)
     }
@@ -297,11 +295,11 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         val max = maxOf(minRange, maxRange)
         val minSquared = min * min
         val maxSquared = max * max
-        val eyePosition = player.eyePosition
+        val eyePosition = nn.player.eyePosition
         var nearest: LivingEntity? = null
         var nearestDistance = Double.MAX_VALUE
 
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             val living = entity as? LivingEntity ?: continue
             if (entity is ArmorStand) continue
             if (!isValidTarget(living) || !isEnabledRangeTarget(living)) continue

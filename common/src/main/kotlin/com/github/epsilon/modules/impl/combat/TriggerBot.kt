@@ -3,8 +3,6 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.level
-import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
@@ -66,12 +64,12 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun getCrosshairTarget(): Entity? {
-        val yaw = player.yRot
-        val pitch = player.xRot
+        val yaw = nn.player.yRot
+        val pitch = nn.player.xRot
         val distance = range.toFloat()
 
         val blockHit = rayTrace(distance.toDouble(), yaw, pitch)
-        val eyePos: Vec3 = player.eyePosition
+        val eyePos: Vec3 = nn.player.eyePosition
         var maxDistance = (distance * distance).toDouble()
 
         if (blockHit != null && blockHit.type != HitResult.Type.MISS) {
@@ -81,16 +79,16 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
         val lookVec = getRotationVector(pitch, yaw)
         val endPos = eyePos.add(lookVec.scale(distance.toDouble()))
         val searchBox: AABB =
-            player.boundingBox.expandTowards(lookVec.scale(distance.toDouble())).inflate(1.0, 1.0, 1.0)
+            nn.player.boundingBox.expandTowards(lookVec.scale(distance.toDouble())).inflate(1.0, 1.0, 1.0)
 
         val entityHit = ProjectileUtil.getEntityHitResult(
-            player,
+            nn.player,
             eyePos,
             endPos,
             searchBox,
             { entity ->
                 !entity.isSpectator && entity.isPickable &&
-                        entity is LivingEntity && entity.isAlive && entity !== player
+                        entity is LivingEntity && entity.isAlive && entity !== nn.player
             },
             maxDistance
         )
@@ -111,11 +109,11 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun rayTrace(distance: Double, yaw: Float, pitch: Float): HitResult {
-        val eyePos: Vec3 = player.eyePosition
+        val eyePos: Vec3 = nn.player.eyePosition
         val lookVec = getRotationVector(pitch, yaw)
         val endPos = eyePos.add(lookVec.scale(distance))
-        return level.clip(
-            ClipContext(eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)
+        return nn.level.clip(
+            ClipContext(eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, nn.player)
         )
     }
 
@@ -131,16 +129,16 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun shouldAttack(): Boolean {
-        val canCrit = !player.abilities.flying &&
-                !player.isFallFlying &&
-                !player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
-                level.getBlockState(player.blockPosition()).block !== Blocks.COBWEB
+        val canCrit = !nn.player.abilities.flying &&
+                !nn.player.isFallFlying &&
+                !nn.player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
+                nn.level.getBlockState(nn.player.blockPosition()).block !== Blocks.COBWEB
 
-        if (player.fallDistance > MIN_CRIT_FALL.toDouble() && player.fallDistance < MAX_CRIT_FALL.toDouble()) {
+        if (nn.player.fallDistance > MIN_CRIT_FALL.toDouble() && nn.player.fallDistance < MAX_CRIT_FALL.toDouble()) {
             return false
         }
 
-        if (getAttackCooldown() < (if (player.onGround()) 1.0f else attackCooldown.toFloat())) {
+        if (getAttackCooldown() < (if (nn.player.onGround()) 1.0f else attackCooldown.toFloat())) {
             return false
         }
 
@@ -148,28 +146,28 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             return true
         }
 
-        if (player.isInLava || isAboveWater()) {
+        if (nn.player.isInLava || isAboveWater()) {
             return true
         }
 
         if (canCrit) {
-            return !player.onGround() && player.fallDistance > critFallDistance.toFloat()
+            return !nn.player.onGround() && nn.player.fallDistance > critFallDistance.toFloat()
         }
         return true
     }
 
     context(nn: NonNullContext)
     private fun isAboveWater(): Boolean {
-        val pos = BlockPos.containing(player.x, player.y - 0.4, player.z)
-        return player.isInWater || level.getBlockState(pos).block === Blocks.WATER
+        val pos = BlockPos.containing(nn.player.x, nn.player.y - 0.4, nn.player.z)
+        return nn.player.isInWater || nn.level.getBlockState(pos).block === Blocks.WATER
     }
 
     fun getAttackCooldown(): Float {
         val nn = NonNullContext.instance ?: return 0.0f
         return context(nn) {
-            val attackSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
+            val attackSpeed = nn.player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
             val cooldownPerTick = 1.0f / attackSpeed * 20.0f
-            val lastAttackTicks = player.getAttackStrengthScale(0.0f) * cooldownPerTick
+            val lastAttackTicks = nn.player.getAttackStrengthScale(0.0f) * cooldownPerTick
             minOf(1.0f, lastAttackTicks / cooldownPerTick)
         }
     }
