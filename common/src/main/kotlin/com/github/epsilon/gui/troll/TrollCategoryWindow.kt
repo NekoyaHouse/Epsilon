@@ -15,9 +15,16 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     private val rows: MutableMap<Module, TrollSettingRow> = IdentityHashMap()
     private var visibleModules: List<Module> = emptyList()
+    private var searchFilter: String = ""
 
     private fun title(): String {
         return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name
+    }
+
+    fun setSearchFilter(filter: String) {
+        if (searchFilter == filter) return
+        searchFilter = filter
+        scroll.reset()
     }
 
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
@@ -26,12 +33,17 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         if (ClientSetting.moduleSort.`is`(ClientSetting.ModuleSort.EnabledFirst)) {
             order = Comparator.comparing<Module, Boolean> { it.isEnabled }.reversed().thenComparing(order)
         }
-        visibleModules = ModuleManager.getModules().stream()
+        val allModules = ModuleManager.getModules().stream()
             .filter { module -> module.category == category }
             .sorted(order)
             .toList()
+        visibleModules = if (searchFilter.isEmpty()) {
+            allModules
+        } else {
+            allModules.filter { module -> matchesSearch(module) }
+        }
         var width = maxOf(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
-        for (module in visibleModules) {
+        for (module in allModules) {
             val row = rows.getOrPut(module) {
                 val created = TrollSettingRow(module, TrollSettingRow.ModuleAction.TOGGLE)
                 created.startOpenAnimation()
@@ -74,6 +86,15 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
             if (rows.getValue(module).mouseClicked(event)) return true
         }
         return true
+    }
+
+    private fun matchesSearch(module: Module): Boolean {
+        return normalizeSearchText(module.name).contains(searchFilter, ignoreCase = true) ||
+            normalizeSearchText(module.translatedName).contains(searchFilter, ignoreCase = true)
+    }
+
+    private fun normalizeSearchText(value: String): String {
+        return value.filterNot { it.isWhitespace() }
     }
 
 }

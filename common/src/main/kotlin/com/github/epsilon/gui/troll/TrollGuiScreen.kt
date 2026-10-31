@@ -54,6 +54,8 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private var friendWindowOpen: Boolean = false
     private var configWindowOpen: Boolean = false
     private var guiAnimationStarted: Boolean = false
+    private var searchString: String = ""
+    private var searchUpdatedAt: Long = 0L
     private var friendToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var configToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var settingsWindow: TrollSettingsWindow? = null
@@ -82,6 +84,8 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         layoutWindows()
         if (!guiAnimationStarted) {
             guiAnimationStarted = true
+            // 26.3 的 SDL 文本输入只在获得焦点时产生 charTyped；Troll GUI 允许无文本框直接搜索。
+            IMEFocusHelper.activate()
             guiOpenAnimation.value = 0.0f
             guiOpenAnimation.reset()
             guiOpenAnimation.run(1.0f)
@@ -237,6 +241,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             }
             if (!modal) {
                 renderToggleButtons(frame, mx, my)
+                renderSearchText(frame)
             }
             val settingsWindow = this.settingsWindow
             if (settingsWindow != null) {
@@ -293,11 +298,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
     private fun queueWindow(
         frame: UiScene, layer: UiLayer, relativeLayer: Int, bounds: UiRect, tree: UiTree,
-        blurRects: FloatArray?, blurRadii: FloatArray?, blurSegmentCount: Int,
+        blurRects: FloatArray?, blurRadii: FloatArray?, blurSegmentCount: Int, blur: Boolean = true,
     ) {
         val batch = frame.batch(layer, relativeLayer)
         batch.render(tree)
-        pendingWindows.add(WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount))
+        pendingWindows.add(WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount, blur))
     }
 
     private fun renderAnimatedWindow(
@@ -432,7 +437,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             }
             pendingBackground?.flushAndClear()
             for (pass in pendingWindows) {
-                if (pendingWindowBlurStrength > 0.0f) {
+                if (pendingWindowBlurStrength > 0.0f && pass.blur) {
                     if (pass.blurSegmentCount > 0) {
                         BlurShader.render(
                             renderTarget, pass.bounds.x, pass.bounds.y,
@@ -657,6 +662,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             val window = windows[i]
             if (isWindowVisible(window) && window.keyPressed(event)) return true
         }
+        if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
+            clearSearch()
+            return true
+        }
         if (event.isEscape) onClose()
         return true
     }
@@ -670,7 +679,71 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             val window = windows[i]
             if (isWindowVisible(window) && window.charTyped(event)) return true
         }
+        if (event.codepoint() == ' '.code || Character.isLetter(event.codepoint())) {
+            appendSearch(event.codepointAsString())
+            return true
+        }
         return false
+    }
+
+    private fun appendSearch(text: String) {
+        if (text.isEmpty()) return
+        searchString += text
+        searchUpdatedAt = System.currentTimeMillis()
+        applySearchFilter()
+    }
+
+    private fun clearSearch() {
+        if (searchString.isEmpty()) return
+        searchString = ""
+        searchUpdatedAt = 0L
+        applySearchFilter()
+    }
+
+    private fun applySearchFilter() {
+        val filter = searchString.filterNot { it.isWhitespace() }
+        for (window in windows) {
+            if (window is TrollCategoryWindow) window.setSearchFilter(filter)
+        }
+    }
+
+    private fun renderSearchText(frame: UiScene) {
+        if (searchString.isBlank()) return
+        val elapsed = System.currentTimeMillis() - searchUpdatedAt
+        if (elapsed >= SEARCH_TEXT_FADE_MS) return
+        val progress = (elapsed.toFloat() / SEARCH_TEXT_FADE_MS).coerceIn(0.0f, 1.0f)
+        val alpha = (255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(progress))).roundToInt()
+        if (alpha <= 0) return
+        val metrics = textMetrics.get()
+        val text = TrollTheme.trim(
+            searchString,
+            metrics,
+            SEARCH_TEXT_SCALE,
+            screenWidth() - SEARCH_TEXT_MARGIN * 2.0f
+        )
+        if (text.isEmpty()) return
+        val width = metrics.getWidth(text, SEARCH_TEXT_SCALE)
+        val height = metrics.getHeight(SEARCH_TEXT_SCALE)
+        val tree = UiTree.build { scope ->
+            scope.textWithShadow(
+                text,
+                (screenWidth() - width) * 0.5f,
+                (screenHeight() - height) * 0.5f,
+                SEARCH_TEXT_SCALE,
+                TrollTheme.alpha(TrollTheme.text(), alpha)
+            )
+        }
+        queueWindow(
+            frame,
+            UiLayer.OVERLAY,
+            -1,
+            UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
+            tree,
+            null,
+            null,
+            0,
+            false
+        )
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
@@ -704,6 +777,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         colorPicker?.cancel()
         colorPicker = null
         closeSettings()
+        clearSearch()
         for (window in windows) window.resetInput()
         friendWindowOpen = false
         configWindowOpen = false
@@ -728,6 +802,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         val blurRects: FloatArray?,
         val blurRadii: FloatArray?,
         val blurSegmentCount: Int,
+        val blur: Boolean = true,
     )
 
     companion object {
@@ -736,6 +811,9 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         private const val TOGGLE_SIZE = 30.0f
         private const val TOGGLE_GAP = 8.0f
         private const val TOGGLE_MARGIN = 10.0f
+        private const val SEARCH_TEXT_SCALE = 2.0f
+        private const val SEARCH_TEXT_MARGIN = 8.0f
+        private const val SEARCH_TEXT_FADE_MS = 5000L
     }
 
 }

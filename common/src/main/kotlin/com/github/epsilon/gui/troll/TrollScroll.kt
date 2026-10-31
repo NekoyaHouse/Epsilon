@@ -34,6 +34,12 @@ class TrollScroll {
         velocity -= amount.toFloat() * 36.0f
     }
 
+    fun reset() {
+        position = 0.0f
+        velocity = 0.0f
+        lastUpdate = 0L
+    }
+
     fun stop() {
         velocity = 0.0f
         lastUpdate = 0L
