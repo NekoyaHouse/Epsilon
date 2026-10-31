@@ -19,30 +19,30 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
 
     private val button by enumSetting("Button", ClickButton.BOTH)
 
-    private val leftMinCPS by intSetting("Left Min CPS", 8, 1, 520, 1, dependency = { isLeftButtonEnabled() })
-    private val leftMaxCPS by intSetting("Left Max CPS", 12, 1, 520, 1, dependency = { isLeftButtonEnabled() })
-    private val leftJitter by boolSetting("Left Jitter", false, dependency = { isLeftButtonEnabled() })
+    private val leftMinCPS by intSetting("Left Min CPS", 8, 1..520, 1, { isLeftButtonEnabled() })
+    private val leftMaxCPS by intSetting("Left Max CPS", 12, 1..520, 1, { isLeftButtonEnabled() })
+    private val leftJitter by boolSetting("Left Jitter", false, { isLeftButtonEnabled() })
 
-    private val rightMinCPS by intSetting("Right Min CPS", 8, 1, 520, 1, dependency = { isRightButtonEnabled() })
-    private val rightMaxCPS by intSetting("Right Max CPS", 12, 1, 520, 1, dependency = { isRightButtonEnabled() })
-    private val rightJitter by boolSetting("Right Jitter", false, dependency = { isRightButtonEnabled() })
+    private val rightMinCPS by intSetting("Right Min CPS", 8, 1..520, 1, { isRightButtonEnabled() })
+    private val rightMaxCPS by intSetting("Right Max CPS", 12, 1..520, 1, { isRightButtonEnabled() })
+    private val rightJitter by boolSetting("Right Jitter", false, { isRightButtonEnabled() })
 
     private val enableBurst by boolSetting("Enable Burst", true)
-    private val burstChance by intSetting("Burst Chance", 15, 1, 100, 1, dependency = { enableBurst })
-    private val burstDuration by intSetting("Burst Duration", 800, 100, 3000, 100, dependency = { enableBurst })
+    private val burstChance by intSetting("Burst Chance", 15, 1..100, 1, { enableBurst })
+    private val burstDuration by intSetting("Burst Duration", 800, 100..3000, 100, { enableBurst })
     private val burstCPSMultiplier by doubleSetting(
-        "Burst CPS Multiplier", 1.8, 1.1, 3.0, 0.1, dependency = { enableBurst })
-    private val decayDuration by intSetting("Decay Duration", 1200, 500, 5000, 100, dependency = { enableBurst })
-    private val decayCurve by doubleSetting("Decay Curve", 1.5, 1.0, 3.0, 0.1, dependency = { enableBurst })
+        "Burst CPS Multiplier", 1.8, 1.1..3.0, 0.1, { enableBurst })
+    private val decayDuration by intSetting("Decay Duration", 1200, 500..5000, 100, { enableBurst })
+    private val decayCurve by doubleSetting("Decay Curve", 1.5, 1.0..3.0, 0.1, { enableBurst })
 
     private val enableDoubleClick by boolSetting("Enable Double Click", true)
     private val doubleClickChance by intSetting(
-        "Double Click Chance", 8, 1, 50, 1, dependency = { enableDoubleClick })
+        "Double Click Chance", 8, 1..50, 1, { enableDoubleClick })
     private val doubleClickDelay by intSetting(
-        "Double Click Delay", 40, 10, 100, 5, dependency = { enableDoubleClick })
+        "Double Click Delay", 40, 10..100, 5, { enableDoubleClick })
 
     private val enableMiss by boolSetting("Enable Miss", true)
-    private val missChance by intSetting("Miss Chance", 5, 1, 30, 1, dependency = { enableMiss })
+    private val missChance by intSetting("Miss Chance", 5, 1..30, 1, { enableMiss })
 
     private val leftState = ButtonState()
     private val rightState = ButtonState()

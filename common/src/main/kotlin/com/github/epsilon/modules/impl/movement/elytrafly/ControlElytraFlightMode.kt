@@ -270,7 +270,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         if (shouldAvoidCeilingLift()) {
             return maxOf(pitch, CEILING_ESCAPE_PITCH)
         }
-        return Mth.clamp(pitch, -90f, 90f)
+        return pitch.coerceIn(-90f, 90f)
     }
 
     private fun shouldAvoidCeilingLift(): Boolean = runSafeOrFalse {

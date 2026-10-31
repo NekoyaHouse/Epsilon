@@ -49,7 +49,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
     private val tights by enumSetting("Tights", EnchantPriority.Protection)
     private val feet by enumSetting("Feet", EnchantPriority.Protection)
     private val elytraPriority by enumSetting("Elytra Priority", ElytraPriority.Ignore)
-    private val delay by intSetting("Delay", 5, 0, 10, 1)
+    private val delay by intSetting("Delay", 5, 0..10, 1)
     private val oldVersion by boolSetting("Old Version", false)
     private val pauseInventory by boolSetting("Pause Inventory", false)
     private val noMove by boolSetting("No Move", false)

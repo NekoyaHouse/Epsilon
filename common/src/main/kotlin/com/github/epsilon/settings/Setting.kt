@@ -11,7 +11,7 @@ import kotlin.reflect.KProperty
  * 同时提供**成员**委托运算符，因此 Kotlin 侧可以写成：
  *
  * ```kotlin
- * private val aimStrength by intSetting("Aim Strength", 10, 1, 20, 1)
+ * private val aimStrength by intSetting("Aim Strength", 10, 1..20, 1)
  * if (aimStrength > 10) { ... }
  * ```
  *
@@ -19,7 +19,8 @@ import kotlin.reflect.KProperty
  */
 abstract class Setting<V>(
     val name: String,
-    val dependency: Dependency?,
+    /** 可见性条件；为 null 时始终可见。 */
+    val visible: Visibility?,
     var onChanged: ((V) -> Unit)?,
 ) {
 
@@ -35,11 +36,9 @@ abstract class Setting<V>(
             defaultValueStore = newValue
         }
 
-    var isRootSetting: Boolean = false
+    var isGlobalSetting: Boolean = false
 
-    var isApplyWhenRelease: Boolean = false
-
-    var group: SettingGroup? = null
+    var groupRef: SettingGroup? = null
 
     var platformRequirement: PlatformRequirement = PlatformRequirement.ANY
 
@@ -59,40 +58,17 @@ abstract class Setting<V>(
     val noticeKey: String
         get() = translateComponent?.getFullKey() ?: name
 
-    val isAvailable: Boolean
-        get() = dependency != null && dependency.check()
+    /** 当前是否满足可见性条件。 */
+    val isVisible: Boolean get() = visible?.check() ?: true
 
     open fun initTranslateComponent(component: TranslateComponent) {
         this.translateComponent = component
     }
 
     /**
-     * 声明该设置只在指定平台上可用。
-     */
-    fun platformOnly(requirement: PlatformRequirement?): Setting<V> {
-        this.platformRequirement = requirement ?: PlatformRequirement.ANY
-        return this
-    }
-
-    /**
      * 当前平台是否满足该设置的功能要求。
      */
     fun isPlatformSupported(): Boolean = platformRequirement.isSatisfied()
-
-    fun rootSetting(): Setting<V> {
-        this.isRootSetting = true
-        return this
-    }
-
-    fun applyWhenRelease(): Setting<V> {
-        this.isApplyWhenRelease = true
-        return this
-    }
-
-    fun group(group: SettingGroup): Setting<V> {
-        this.group = group
-        return this
-    }
 
     open fun setValueSilently(newValue: V) {
         valueStore = newValue
@@ -135,17 +111,40 @@ abstract class Setting<V>(
     @Suppress("UNCHECKED_CAST")
     private fun readDefaultValue(): V = defaultValueStore as V
 
-    // ---- 属性委托运算符（成员，无需 import）----
-
     operator fun getValue(thisRef: Any?, property: KProperty<*>): V = value
 
     operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: V) {
         value = newValue
     }
 
+    /** 设置可见性条件。 */
     @FunctionalInterface
-    fun interface Dependency {
+    fun interface Visibility {
         fun check(): Boolean
     }
 
+}
+
+/**
+ * 将设置归入指定分组，并保留具体设置类型以支持后续链式调用。
+ */
+fun <T : Setting<*>> T.group(group: SettingGroup): T {
+    this.groupRef = group
+    return this
+}
+
+/**
+ * 声明设置只在指定平台上可用，并保留具体设置类型。
+ */
+fun <T : Setting<*>> T.platformOnly(requirement: PlatformRequirement?): T {
+    this.platformRequirement = requirement ?: PlatformRequirement.ANY
+    return this
+}
+
+/**
+ * 将设置标记为全局设置，并保留具体设置类型。
+ */
+fun <T : Setting<*>> T.globalSetting(): T {
+    this.isGlobalSetting = true
+    return this
 }

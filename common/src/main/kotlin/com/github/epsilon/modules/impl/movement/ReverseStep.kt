@@ -14,8 +14,8 @@ import net.minecraft.world.phys.Vec3
 
 object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
 
-    private val fallSpeed by doubleSetting("Fall Speed", 3.0, 0.0, 10.0, 1.0)
-    private val fallDistance by doubleSetting("Fall Distance", 3.0, 0.0, 10.0, 1.0)
+    private val fallSpeed by doubleSetting("Fall Speed", 3.0, 0.0..10.0, 1.0)
+    private val fallDistance by doubleSetting("Fall Distance", 3.0, 0.0..10.0, 1.0)
     private val vehicles by boolSetting("Vehicles", false)
 
     init {

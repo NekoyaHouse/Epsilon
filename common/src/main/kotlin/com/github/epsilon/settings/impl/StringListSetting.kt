@@ -5,8 +5,8 @@ import com.github.epsilon.settings.Setting
 class StringListSetting(
     name: String,
     defaultValue: Collection<String>,
-    dependency: Dependency?,
-) : Setting<List<String>>(name, dependency, null) {
+    visible: Visibility?,
+) : Setting<List<String>>(name, visible, null) {
 
     init {
         val normalized = normalize(defaultValue)

@@ -240,7 +240,7 @@ object DamageUtils {
 
         // CombatRules.getDamageAfterAbsorb (without weapon-based armor piercing)
         val toughness = 2.0f + armorToughness / 4.0f
-        val effectiveArmor = Mth.clamp(totalArmor - damage / toughness, totalArmor * 0.2f, 20.0f)
+        val effectiveArmor = (totalArmor - damage / toughness).coerceIn(totalArmor * 0.2f, 20.0f)
         val armorFraction = effectiveArmor / 25.0f
         return damage * (1.0f - armorFraction)
     }
@@ -297,7 +297,7 @@ object DamageUtils {
         }
 
         // CombatRules.getDamageAfterMagicAbsorb
-        val clamped = Mth.clamp(totalProtection, 0.0f, 20.0f)
+        val clamped = totalProtection.coerceIn(0.0f, 20.0f)
         return damage * (1.0f - clamped / 25.0f)
     }
 

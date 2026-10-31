@@ -17,9 +17,9 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
 
     private val value by stringSetting("Value", "跨圈皇帝萌萌刻")
     private val gradient by boolSetting("Gradient", true)
-    private val color by colorSetting("Color", Color(0x55FFFF), false, dependency = { !gradient })
-    private val startColor by colorSetting("Start Color", Color(255, 183, 197), false, dependency = { gradient })
-    private val endColor by colorSetting("End Color", Color(255, 133, 161), false, dependency = { gradient })
+    private val color by colorSetting("Color", Color(0x55FFFF), false, { !gradient })
+    private val startColor by colorSetting("Start Color", Color(255, 183, 197), false, { gradient })
+    private val endColor by colorSetting("End Color", Color(255, 133, 161), false, { gradient })
 
     private val PATTERN: Pattern = Pattern.compile("(祝你好运\\s*)[^!！\\n]*")
 
@@ -50,7 +50,7 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
         val flat = component.string
         val matcher = PATTERN.matcher(flat)
         if (!matcher.find()) return null
-        val prefix = flat.substring(0, matcher.start()) + matcher.apply { group(1) }
+        val prefix = flat.substring(0, matcher.start()) + matcher.group(1)
         val tail = flat.substring(matcher.end())
         return Component.literal(prefix).append(styledValue()).append(Component.literal(tail))
     }

@@ -13,7 +13,6 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.*
-import net.minecraft.util.Mth
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -28,11 +27,10 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     private val mode by enumSetting("Mode", Mode.Always)
     private val activateKey by keybindSetting(
         "Activate Key",
-        InputConstants.KEY_X,
-        dependency = { mode != Mode.Always })
-    val multiplier by doubleSetting("Multiplier", 1.8, 0.1, 10.0, 0.1)
-    private val maxBalance by intSetting("Max Balance", 1000, 0, 10000, 1, dependency = { mode == Mode.Balance })
-    val ticks by intSetting("Ticks", 13, 1, 20, 1, dependency = { mode == Mode.SlowBalance })
+        InputConstants.KEY_X, { mode != Mode.Always })
+    val multiplier by doubleSetting("Multiplier", 1.8, 0.1..10.0, 0.1)
+    private val maxBalance by intSetting("Max Balance", 1000, 0..10000, 1, { mode == Mode.Balance })
+    val ticks by intSetting("Ticks", 13, 1..20, 1, { mode == Mode.SlowBalance })
 
     private var balance = 0.0f
     private var currentTime = 0L
@@ -71,7 +69,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     } else {
                         TimerManager.set(1.0F)
                     }
-                    balance = Mth.clamp(balance, 0.0F, ticks.toFloat())
+                    balance = balance.coerceIn(0.0F, ticks.toFloat())
                 }
 
                 Mode.Balance -> {

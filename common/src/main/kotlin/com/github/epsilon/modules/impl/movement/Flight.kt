@@ -12,8 +12,8 @@ import net.minecraft.world.phys.Vec3
 object Flight : Module("Flight", Category.MOVEMENT) {
 
     private val stopOnDisable by boolSetting("Stop On Disable", true)
-    private val horizontalSpeed by doubleSetting("Horizontal Speed", 3.5, 0.1, 10.0, 0.1)
-    private val verticalSpeed by doubleSetting("Vertical Speed", 1.0, 0.1, 5.0, 0.1)
+    private val horizontalSpeed by doubleSetting("Horizontal Speed", 3.5, 0.1..10.0, 0.1)
+    private val verticalSpeed by doubleSetting("Vertical Speed", 1.0, 0.1..5.0, 0.1)
 
     init {
         nonNullHandler<SendPositionEvent> {

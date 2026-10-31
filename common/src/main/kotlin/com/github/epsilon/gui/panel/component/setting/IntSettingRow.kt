@@ -227,9 +227,9 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
         val trackBounds = getTrackBounds(bounds)
         var progress = (mouseX - trackBounds.x) / trackBounds.width
         progress = (progress).coerceIn(0.0, 1.0)
-        val rawValue = intSetting.min + (intSetting.max - intSetting.min) * progress
+        val rawValue = intSetting.range.first + (intSetting.range.last - intSetting.range.first) * progress
         val step = maxOf(1, intSetting.step)
-        val snapped = intSetting.min + ((rawValue - intSetting.min) / step).roundToInt() * step
+        val snapped = intSetting.range.first + ((rawValue - intSetting.range.first) / step).roundToInt() * step
         previewValue(snapped)
     }
 
@@ -241,10 +241,10 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     }
 
     private fun getProgress(): Float {
-        if (intSetting.max <= intSetting.min) {
+        if (intSetting.range.last <= intSetting.range.first) {
             return 0.0f
         }
-        return ((getVisibleValue() - intSetting.min).toFloat() / (intSetting.max - intSetting.min).toFloat())
+        return ((getVisibleValue() - intSetting.range.first).toFloat() / (intSetting.range.last - intSetting.range.first).toFloat())
     }
 
     private fun formatValue(): String = getVisibleValue().toString()
@@ -273,11 +273,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     private fun getVisibleValue(): Int = pendingValue ?: intSetting.value
 
     private fun previewValue(value: Int) {
-        if (intSetting.isApplyWhenRelease) {
-            pendingValue = value
-        } else {
-            intSetting.value = value
-        }
+        pendingValue = value
     }
 
     private fun applyValueNow(value: Int) {

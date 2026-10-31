@@ -7,6 +7,7 @@ import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import net.minecraft.client.renderer.RenderPipelines
@@ -16,7 +17,6 @@ import net.minecraft.gizmos.Gizmos
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.LivingEntity
@@ -40,64 +40,74 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
     private val maceGroup: SettingGroup = settingGroup("Mace")
     private val hitboxGroup: SettingGroup = settingGroup("Hitboxes")
 
-    private val windParticles by boolSetting("Wind Particles", true).apply { group(generalGroup) }
-    private val customTotemEffect by boolSetting("Custom Totem Effect", true).apply { group(generalGroup) }
+    private val windParticles by boolSetting("Wind Particles", true).group(generalGroup)
+    private val customTotemEffect by boolSetting("Custom Totem Effect", true).group(generalGroup)
     private val totemEffectOpacity by doubleSetting(
-        "Totem Effect Opacity", 1.0, 0.0, 1.0, 0.05, dependency = { customTotemEffect }
-    ).apply { group(generalGroup) }
-    private val playerDeathEffect by boolSetting("Player Death Effect", true).apply { group(generalGroup) }
-    private val pearlTrailParticles by boolSetting("Pearl Trail Particles", true).apply { group(generalGroup) }
+        "Totem Effect Opacity", 1.0, 0.0..1.0, 0.05,
+        { customTotemEffect }
+    ).group(generalGroup)
+    private val playerDeathEffect by boolSetting("Player Death Effect", true).group(generalGroup)
+    private val pearlTrailParticles by boolSetting("Pearl Trail Particles", true).group(generalGroup)
     private val pearlTrailOpacity by doubleSetting(
-        "Pearl Trail Opacity", 0.5, 0.0, 1.0, 0.05, dependency = { pearlTrailParticles }
-    ).apply { group(generalGroup) }
-    private val glideIcon by boolSetting("Glide Icon", true).apply { group(generalGroup) }
+        "Pearl Trail Opacity", 0.5, 0.0..1.0, 0.05,
+        { pearlTrailParticles }
+    ).group(generalGroup)
+    private val glideIcon by boolSetting("Glide Icon", true).group(generalGroup)
 
-    private val maceShockwave by boolSetting("Mace Shockwave", true).apply { group(maceGroup) }
+    private val maceShockwave by boolSetting("Mace Shockwave", true).group(maceGroup)
     private val maceShockwaveSize by doubleSetting(
-        "Mace Shockwave Size", 1.0, 0.1, 3.0, 0.05, dependency = { maceShockwave }
-    ).apply { group(maceGroup) }
+        "Mace Shockwave Size", 1.0, 0.1..3.0, 0.05,
+        { maceShockwave }
+    ).group(maceGroup)
     private val maceShockwaveOpacity by doubleSetting(
-        "Mace Shockwave Opacity", 1.0, 0.0, 1.0, 0.05
-    ).apply { group(maceGroup) }
-    private val maceSpark by boolSetting("Mace Spark", true).apply { group(maceGroup) }
-    private val maceFlash by boolSetting("Mace Flash", true).apply { group(maceGroup) }
-    private val shieldEffect by boolSetting("Shield Effect", true).apply { group(maceGroup) }
-    private val armorParticles by boolSetting("Armor Particles", true).apply { group(maceGroup) }
+        "Mace Shockwave Opacity", 1.0, 0.0..1.0, 0.05
+    ).group(maceGroup)
+    private val maceSpark by boolSetting("Mace Spark", true).group(maceGroup)
+    private val maceFlash by boolSetting("Mace Flash", true).group(maceGroup)
+    private val shieldEffect by boolSetting("Shield Effect", true).group(maceGroup)
+    private val armorParticles by boolSetting("Armor Particles", true).group(maceGroup)
     private val legacyMaceShockwave by boolSetting(
-        "Legacy Mace Shockwave", false, dependency = { maceShockwave }
-    ).apply { group(maceGroup) }
+        "Legacy Mace Shockwave", false,
+        { maceShockwave }
+    ).group(maceGroup)
 
-    private val customHitbox by boolSetting("Custom Hitbox", true).apply { group(hitboxGroup) }
+    private val customHitbox by boolSetting("Custom Hitbox", true).group(hitboxGroup)
     private val pearlHitboxColors by boolSetting(
-        "Pearl Hitbox Colors", true, dependency = { customHitbox }
-    ).apply { group(hitboxGroup) }
+        "Pearl Hitbox Colors", true,
+        { customHitbox }
+    ).group(hitboxGroup)
     private val pearlAllies by stringListSetting(
-        "Pearl Allies", listOf(), dependency = { customHitbox && pearlHitboxColors }
-    ).apply { group(hitboxGroup) }
+        "Pearl Allies", listOf(),
+        { customHitbox && pearlHitboxColors }
+    ).group(hitboxGroup)
     private val selfPearlColor by colorSetting(
         "Self Pearl Color", Color(255, 255, 0, 179), true,
-        dependency = { customHitbox && pearlHitboxColors }
-    ).apply { group(hitboxGroup) }
+        { customHitbox && pearlHitboxColors }
+    ).group(hitboxGroup)
     private val allyPearlColor by colorSetting(
         "Ally Pearl Color", Color(0, 0, 255, 179), true,
-        dependency = { customHitbox && pearlHitboxColors }
-    ).apply { group(hitboxGroup) }
+        { customHitbox && pearlHitboxColors }
+    ).group(hitboxGroup)
     private val otherPearlColor by colorSetting(
         "Other Pearl Color", Color(255, 0, 0, 179), true,
-        dependency = { customHitbox && pearlHitboxColors }
-    ).apply { group(hitboxGroup) }
+        { customHitbox && pearlHitboxColors }
+    ).group(hitboxGroup)
     private val mobHitboxOpacity by doubleSetting(
-        "Mob Hitbox Opacity", 0.3, 0.0, 1.0, 0.05, dependency = { customHitbox }
-    ).apply { group(hitboxGroup) }
+        "Mob Hitbox Opacity", 0.3, 0.0..1.0, 0.05,
+        { customHitbox }
+    ).group(hitboxGroup)
     private val playerHitboxOpacity by doubleSetting(
-        "Player Hitbox Opacity", 1.0, 0.0, 1.0, 0.05, dependency = { customHitbox }
-    ).apply { group(hitboxGroup) }
+        "Player Hitbox Opacity", 1.0, 0.0..1.0, 0.05,
+        { customHitbox }
+    ).group(hitboxGroup)
     private val hitboxFadeDistance by doubleSetting(
-        "Hitbox Fade Distance", 15.0, 0.0, 64.0, 0.5, dependency = { customHitbox }
-    ).apply { group(hitboxGroup) }
+        "Hitbox Fade Distance", 15.0, 0.0..64.0, 0.5,
+        { customHitbox }
+    ).group(hitboxGroup)
     private val projectileFadeDistance by doubleSetting(
-        "Projectile Fade Distance", 5.0, 0.0, 64.0, 0.5, dependency = { customHitbox }
-    ).apply { group(hitboxGroup) }
+        "Projectile Fade Distance", 5.0, 0.0..64.0, 0.5,
+        { customHitbox }
+    ).group(hitboxGroup)
 
     private val particleRenderer = MasEffectsParticleRenderer()
 
@@ -263,7 +273,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
 
     private fun distanceFade(entity: Entity, startDistance: Float): Float {
         val player = mc.player ?: return 0.0f
-        return Mth.clamp((player.distanceTo(entity) - startDistance) / 20.0F, 0.0F, 1.0F)
+        return ((player.distanceTo(entity) - startDistance) / 20.0F).coerceIn(0.0F, 1.0F)
     }
 
     private fun pearlColor(pearl: ThrownEnderpearl): Color {

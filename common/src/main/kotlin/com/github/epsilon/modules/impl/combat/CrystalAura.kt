@@ -37,17 +37,17 @@ import net.minecraft.world.phys.Vec3
 object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     private val activateKey by keybindSetting("Activate Key", InputConstants.UNKNOWN.value)
-    private val placeDelay by doubleSetting("Place Delay", 0.0, 0.0, 20.0, 1.0)
-    private val breakDelay by doubleSetting("Break Delay", 0.0, 0.0, 20.0, 1.0)
-    private val placeChance by doubleSetting("Place Chance", 100.0, 0.0, 100.0, 1.0)
-    private val breakChance by doubleSetting("Break Chance", 100.0, 0.0, 100.0, 1.0)
+    private val placeDelay by doubleSetting("Place Delay", 0.0, 0.0..20.0, 1.0)
+    private val breakDelay by doubleSetting("Break Delay", 0.0, 0.0..20.0, 1.0)
+    private val placeChance by doubleSetting("Place Chance", 100.0, 0.0..100.0, 1.0)
+    private val breakChance by doubleSetting("Break Chance", 100.0, 0.0..100.0, 1.0)
     private val stopOnKill by boolSetting("Stop on Kill", false)
     private val fakePunch by boolSetting("Fake Punch", false)
     private val clickSimulation by boolSetting("Click Simulation", false)
     private val damageTick by boolSetting("Damage Tick", false)
     private val antiWeakness by boolSetting("Anti-Weakness", false)
     private val strictAirCheck by boolSetting("Strict Air Check", false)
-    private val particleChance by doubleSetting("Particle Chance", 20.0, 0.0, 100.0, 1.0)
+    private val particleChance by doubleSetting("Particle Chance", 20.0, 0.0..100.0, 1.0)
     private val swingHand by boolSetting("Swing Hand", true)
 
     private var placeClock = 0

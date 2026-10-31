@@ -27,9 +27,9 @@ object Step : Module("Step", Category.MOVEMENT) {
 
     private val modeSetting: EnumSetting<Mode> = enumSetting("Mode", Mode.Vanilla)
     private val mode by modeSetting
-    private val height by doubleSetting("Height", 1.0, 0.0, 5.0, 0.5)
-    private val useTimer by boolSetting("Timer", true, dependency = { mode == Mode.OldNCP || mode == Mode.NCP })
-    private val fast by boolSetting("Fast", true, dependency = { mode == Mode.NCP && useTimer })
+    private val height by doubleSetting("Height", 1.0, 0.0..5.0, 0.5)
+    private val useTimer by boolSetting("Timer", true, { mode == Mode.OldNCP || mode == Mode.NCP })
+    private val fast by boolSetting("Fast", true, { mode == Mode.NCP && useTimer })
     private val feetTrapPause by boolSetting("FeetTrap Pause", true)
     private val inWebPause by boolSetting("In Web Pause", true)
     private val insideBlockPause by boolSetting("Inside Block Pause", true)

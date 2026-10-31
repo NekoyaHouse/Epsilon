@@ -7,9 +7,9 @@ import com.github.epsilon.utils.client.PlatformRequirement
 class EnumSetting<E : Enum<E>>(
     name: String,
     defaultValue: E,
-    dependency: Dependency?,
+    visible: Visibility?,
     onChanged: ((E) -> Unit)?,
-) : Setting<E>(name, dependency, onChanged) {
+) : Setting<E>(name, visible, onChanged) {
 
     private val modeTranslations: MutableMap<E, TranslateComponent> = HashMap()
 

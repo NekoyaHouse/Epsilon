@@ -28,11 +28,11 @@ import kotlin.math.sqrt
 
 object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
-    private val minRange by doubleSetting("Min Range", 3.0, 0.0, 10.0, 0.1)
-    private var maxRange by doubleSetting("Max Range", 8.0, 2.0, 16.0, 0.1)
-    private val fov by intSetting("Fov", 90, 1, 360, 1)
-    private val delay by intSetting("Delay", 500, 0, 2000, 10)
-    private val rotationSpeed by intSetting("Rotation Speed", 180, 1, 180, 10)
+    private val minRange by doubleSetting("Min Range", 3.0, 0.0..10.0, 0.1)
+    private var maxRange by doubleSetting("Max Range", 8.0, 2.0..16.0, 0.1)
+    private val fov by intSetting("Fov", 90, 1..360, 1)
+    private val delay by intSetting("Delay", 500, 0..2000, 10)
+    private val rotationSpeed by intSetting("Rotation Speed", 180, 1..180, 10)
     private val rotationPriority by enumSetting("Rotation Priority", Priority.Lowest)
 
     private val timer = TimerUtils()

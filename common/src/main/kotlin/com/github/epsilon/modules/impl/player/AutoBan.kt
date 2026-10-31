@@ -21,7 +21,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
     }
 
     private val order by enumSetting("Order", Order.SEQUENTIAL)
-    private val delay by intSetting("Delay", 1000, 100, 10000, 100)
+    private val delay by intSetting("Delay", 1000, 100..10000, 100)
 
     private val words: MutableList<String> = ArrayList()
     private val random = Random()

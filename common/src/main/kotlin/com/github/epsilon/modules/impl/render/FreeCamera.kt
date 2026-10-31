@@ -29,8 +29,8 @@ import kotlin.math.sqrt
 
 object FreeCamera : Module("Free Camera", Category.RENDER) {
 
-    private val speed by doubleSetting("Speed", 1.0, 0.0, 10.0, 0.1, onChanged = { v -> speedValue = v })
-    private val speedScrollSensitivity by doubleSetting("Speed Scroll Sensitivity", 0.0, 0.0, 2.0, 0.1)
+    private val speed by doubleSetting("Speed", 1.0, 0.0..10.0, 0.1, onChanged = { v -> speedValue = v })
+    private val speedScrollSensitivity by doubleSetting("Speed Scroll Sensitivity", 0.0, 0.0..2.0, 0.1)
     private val staySneaking by boolSetting("Stay Sneaking", true)
     private val toggleOnDamage by boolSetting("Toggle On Damage", false)
     private val toggleOnDeath by boolSetting("Toggle On Death", false)
@@ -303,7 +303,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
         yaw += deltaX.toFloat()
         pitch += deltaY.toFloat()
 
-        pitch = Mth.clamp(pitch, -90.0f, 90.0f)
+        pitch = pitch.coerceIn(-90.0f, 90.0f)
     }
 
     fun sendChatInfo(text: String) {

@@ -17,18 +17,18 @@ import kotlin.math.pow
 
 object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 
-    private val scale by doubleSetting("Scale", 0.7, 0.5, 2.0, 0.1)
-    private val cornerRadius by doubleSetting("Corner Radius", 5.0, 0.0, 20.0, 0.5)
+    private val scale by doubleSetting("Scale", 0.7, 0.5..2.0, 0.1)
+    private val cornerRadius by doubleSetting("Corner Radius", 5.0, 0.0..20.0, 0.5)
     private val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 50))
     private val textColor by colorSetting("Text Color", Color(248, 249, 252, 245))
     private val textSecondary by colorSetting("Text Secondary", Color(210, 214, 225, 170))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), dependency = { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 9.0, 2.0..32.0, 1.0, { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 90), true, { drawShadow })
     private val backgroundBlur by boolSetting("Background Blur", true)
-    private val blurStrength by intSetting("Blur Strength", 5, 1, 16, 1)
+    private val blurStrength by intSetting("Blur Strength", 5, 1..16, 1)
     private val smoothNumber by boolSetting("Smooth Number", true)
-    private val numberDelay by doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, dependency = { smoothNumber })
+    private val numberDelay by doubleSetting("Number Delay", 0.15, 0.0..0.5, 0.01, { smoothNumber })
 
     private var initialized: Boolean = false
     private var previousCountText: String = "0"
@@ -90,11 +90,11 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     }
 
     private fun createAnimationState(): AnimationState {
-        val rawVisibility = Mth.clamp(visibilityProgress, 0.0f, 1.0f)
+        val rawVisibility = visibilityProgress.coerceIn(0.0f, 1.0f)
         val easedVisibility = (rawVisibility.toDouble()).pow(3.0).toFloat()
         val panelProgress = Easing.EASE_OUT_SINE.function.apply(easedVisibility)
         val contentProgress =
-            Easing.EASE_OUT_SINE.function.apply(Mth.clamp((rawVisibility - 0.08f) / 0.92f, 0.0f, 1.0f))
+            Easing.EASE_OUT_SINE.function.apply(((rawVisibility - 0.08f) / 0.92f).coerceIn(0.0f, 1.0f))
         val contentAlpha = contentProgress * contentProgress * (3.0f - 2.0f * contentProgress)
         return AnimationState(panelProgress, contentProgress, contentAlpha)
     }
@@ -218,7 +218,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
             lastVisibilityUpdateMs = now
         }
 
-        val delta = Mth.clamp((now - lastVisibilityUpdateMs) / 220.0f, 0.0f, 1.0f)
+        val delta = ((now - lastVisibilityUpdateMs) / 220.0f).coerceIn(0.0f, 1.0f)
         lastVisibilityUpdateMs = now
 
         if (shouldShow) {
@@ -334,7 +334,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private const val BASE_LABEL_GAP = 2.6f
 
     private fun withAlpha(color: Color, alphaMul: Float): Color {
-        val alpha = Mth.clamp((color.alpha * alphaMul).toInt(), 0, 255)
+        val alpha = (color.alpha * alphaMul).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

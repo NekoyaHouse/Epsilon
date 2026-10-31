@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.WebBlock
 object AutoTool : Module("Auto Tool", Category.PLAYER) {
 
     private val swapBack by boolSetting("Swap Back", true)
-    private val swapBackDelay by intSetting("Swap Back Delay", 0, 0, 15, 1, dependency = { swapBack })
+    private val swapBackDelay by intSetting("Swap Back Delay", 0, 0..15, 1, { swapBack })
 
     private var oldSlot = -1
     private var lastDestroyTick = -1

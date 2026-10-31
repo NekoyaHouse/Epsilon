@@ -10,7 +10,6 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.util.Mth
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -81,8 +80,8 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
         if (pickingSB) {
             DropdownScreen.react(ReisaDropdownCompanion.Action.COLOR_PICK)
-            val newSat = Mth.clamp((mouseX - absoluteX(gradX)) / gradW, 0.0f, 1.0f)
-            val newBri = 1.0f - Mth.clamp((mouseY - absoluteY(gradY)) / (PICKER_HEIGHT * t), 0.0f, 1.0f)
+            val newSat = ((mouseX - absoluteX(gradX)) / gradW).coerceIn(0.0f, 1.0f)
+            val newBri = 1.0f - ((mouseY - absoluteY(gradY)) / (PICKER_HEIGHT * t)).coerceIn(0.0f, 1.0f)
             var newColor = Color.getHSBColor(hsb[0], newSat, newBri)
             newColor = Color(newColor.red, newColor.green, newColor.blue, color.alpha)
             previewColor(newColor)
@@ -90,7 +89,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
         if (pickingHue) {
             DropdownScreen.react(ReisaDropdownCompanion.Action.COLOR_PICK)
-            val newHue = Mth.clamp((mouseX - absoluteX(gradX)) / gradW, 0.0f, 1.0f)
+            val newHue = ((mouseX - absoluteX(gradX)) / gradW).coerceIn(0.0f, 1.0f)
             var newColor = Color.getHSBColor(newHue, hsb[1], hsb[2])
             newColor = Color(newColor.red, newColor.green, newColor.blue, color.alpha)
             previewColor(newColor)
@@ -380,7 +379,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         val trackX = trackX
         val trackW = trackWidth
         val value =
-            Mth.clamp((Mth.clamp(((mouseX - trackX) / trackW).toFloat(), 0.0f, 1.0f) * 255.0f).roundToInt(), 0, 255)
+            (((mouseX - trackX) / trackW).toFloat().coerceIn(0.0f, 1.0f) * 255.0f).roundToInt().coerceIn(0, 255)
         setChannelValue(channel, value, true)
     }
 
@@ -396,7 +395,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
     private fun setChannelValue(channel: Channel, value: Int, defer: Boolean) {
         val current = visibleColor
-        val clamped = Mth.clamp(value, 0, 255)
+        val clamped = value.coerceIn(0, 255)
         val updated = when (channel) {
             Channel.RED -> Color(clamped, current.green, current.blue, current.alpha)
             Channel.GREEN -> Color(current.red, clamped, current.blue, current.alpha)
@@ -455,7 +454,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
     private fun parseChannel(value: String): Int {
         return try {
-            Mth.clamp(value.toInt(), 0, 255)
+            value.toInt().coerceIn(0, 255)
         } catch (ignored: NumberFormatException) {
             0
         }
@@ -506,11 +505,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         get() = pendingValue ?: setting.value
 
     private fun previewColor(color: Color) {
-        if (setting.isApplyWhenRelease) {
-            pendingValue = color
-        } else {
-            setting.value = color
-        }
+        pendingValue = color
     }
 
     private fun applyColorNow(color: Color) {

@@ -29,21 +29,23 @@ object BlockHighlight : Module("Block Highlight", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.Outline)
     private val sideColor by colorSetting(
         "Color", Color(255, 255, 255, 100),
-        dependency = {
+        true,
+        {
             mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Fill || mode == Mode.FilledSide
         }
     )
     private val lineColor by colorSetting(
         "Line Color", Color(255, 255, 255, 255),
-        dependency = {
+        true,
+        {
             mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Outline || mode == Mode.OutlinedSide
         }
     )
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.0..5.0, 0.5)
     private val blur by boolSetting("Blur", true)
     private val blurStrength by doubleSetting(
-        "Blur Strength", 5.0, 0.0, 16.0, 0.5,
-        dependency = {
+        "Blur Strength", 5.0, 0.0..16.0, 0.5,
+        {
             blur && (mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Fill)
         }
     )

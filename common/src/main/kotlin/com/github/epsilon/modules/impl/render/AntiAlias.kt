@@ -24,7 +24,7 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
     }
 
     private val mode by enumSetting("Mode", Mode.SSAA, onChanged = { newMode -> onModeChanged(newMode) })
-    private val samples by enumSetting("Samples", Samples.X4, dependency = { mode == Mode.SSAA })
+    private val samples by enumSetting("Samples", Samples.X4, { mode == Mode.SSAA })
 
     /**
      * SSAA 叠加层入口：仅 SSAA 模式下重定向绘制目标，其余模式直接执行原绘制。

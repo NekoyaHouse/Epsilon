@@ -29,9 +29,9 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
 
     private val activateKey by keybindSetting("Activate Key", InputConstants.UNKNOWN.value)
     private val pauseOnEat by boolSetting("Pause On Eat", true)
-    private val delay by intSetting("Delay", 0, 0, 20, 1)
+    private val delay by intSetting("Delay", 0, 0..20, 1)
     private val switchBack by boolSetting("Switch Back", true)
-    private val switchDelay by intSetting("Switch Delay", 0, 0, 20, 1)
+    private val switchDelay by intSetting("Switch Delay", 0, 0..20, 1)
     private val swingHand by boolSetting("Swing Hand", true)
 
     private var pressed = false

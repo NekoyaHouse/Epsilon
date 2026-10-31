@@ -1,17 +1,15 @@
 package com.github.epsilon.settings.impl
 
 import com.github.epsilon.settings.Setting
-import net.minecraft.util.Mth
 
 class DoubleSetting(
     name: String,
     defaultValue: Double,
-    val min: Double,
-    val max: Double,
+    val range: ClosedFloatingPointRange<Double>,
     val step: Double,
-    dependency: Dependency?,
+    visible: Visibility?,
     onChanged: ((Double) -> Unit)?,
-) : Setting<Double>(name, dependency, onChanged) {
+) : Setting<Double>(name, visible, onChanged) {
 
     init {
         initializeValue(defaultValue)
@@ -20,7 +18,7 @@ class DoubleSetting(
     override var value: Double
         get() = super.value
         set(newValue) {
-            writeValue(Mth.clamp(newValue, min, max))
+            writeValue(newValue.coerceIn(range))
         }
 
     fun setUnboundedValue(newValue: Double) {

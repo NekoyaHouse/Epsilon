@@ -39,17 +39,17 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     }
 
     private val mode by enumSetting("Mode", AttackMode.Mace)
-    private val range by doubleSetting("Range", 3.0, 1.0, 6.0, 0.1)
-    private val moveDistance by doubleSetting("Move Distance", 8.0, 1.0, 20.0, 0.1)
+    private val range by doubleSetting("Range", 3.0, 1.0..6.0, 0.1)
+    private val moveDistance by doubleSetting("Move Distance", 8.0, 1.0..20.0, 0.1)
     private val paperServer by boolSetting("Paper Server", true)
-    private val vclip by doubleSetting("VClip", 10.0, 1.0, 512.0, 1.0)
+    private val vclip by doubleSetting("VClip", 10.0, 1.0..512.0, 1.0)
     private val damageOverride by boolSetting("Damage VClip", true)
-    private val overrideVClip by doubleSetting("Override VClip", 30.0, 1.0, 512.0, 1.0)
+    private val overrideVClip by doubleSetting("Override VClip", 30.0, 1.0..512.0, 1.0)
     private val swingHand by boolSetting("Swing Hand", false)
     private val cooldown by boolSetting("Cooldown", true)
     private val cooldownBase by doubleSetting(
-        "Cooldown Base", 0.75, 0.1, 1.0, 0.05, dependency = { cooldown })
-    private val attackDelay by intSetting("Attack Delay", 50, 1, 2000, 1, dependency = { !cooldown })
+        "Cooldown Base", 0.75, 0.1..1.0, 0.05, { cooldown })
+    private val attackDelay by intSetting("Attack Delay", 50, 1..2000, 1, { !cooldown })
     private val players by boolSetting("Players", true)
     private val animals by boolSetting("Animals", false)
     private val mobs by boolSetting("Mobs", false)

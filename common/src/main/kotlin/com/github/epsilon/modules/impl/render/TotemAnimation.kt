@@ -35,7 +35,7 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
     }
 
     private val mode by enumSetting("Mode", Mode.FadeOut)
-    private val speed by intSetting("Speed", 40, 1, 100, 1)
+    private val speed by intSetting("Speed", 40, 1..100, 1)
 
     private var floatingItem: ItemStack? = null
     private var floatingItemTimeLeft = 0

@@ -69,7 +69,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
             scope.outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress))
         }
 
-        val knobSize = Mth.lerp(Mth.clamp(t, 0.0f, 1.0f), KNOB_SIZE_OFF, KNOB_SIZE_ON)
+        val knobSize = Mth.lerp(t.coerceIn(0.0f, 1.0f), KNOB_SIZE_OFF, KNOB_SIZE_ON)
         val stretchFactor = 4.0f * t * (1.0f - t)
         val knobW = knobSize + KNOB_STRETCH * stretchFactor
         val inset = Mth.lerp(t, KNOB_INSET_OFF, KNOB_INSET_ON)

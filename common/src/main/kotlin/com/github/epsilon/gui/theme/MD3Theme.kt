@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.theme
 
 import com.github.epsilon.modules.impl.ClientSetting
-import net.minecraft.util.Mth
 import java.awt.Color
 
 object MD3Theme {
@@ -116,12 +115,12 @@ object MD3Theme {
     }
 
     fun withAlpha(color: Color, alpha: Int): Color {
-        val clampedAlpha = Mth.clamp(alpha, 0, 255)
+        val clampedAlpha = alpha.coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, clampedAlpha)
     }
 
     fun lerp(start: Color, end: Color, delta: Float): Color {
-        val t = Mth.clamp(delta, 0.0f, 1.0f)
+        val t = delta.coerceIn(0.0f, 1.0f)
         val r = (start.red + (end.red - start.red) * t).toInt()
         val g = (start.green + (end.green - start.green) * t).toInt()
         val b = (start.blue + (end.blue - start.blue) * t).toInt()
@@ -134,7 +133,7 @@ object MD3Theme {
     }
 
     fun stateLayer(color: Color, progress: Float, maxAlpha: Int): Color {
-        return withAlpha(color, (Mth.clamp(progress, 0.0f, 1.0f) * Mth.clamp(maxAlpha, 0, 255)).toInt())
+        return withAlpha(color, (progress.coerceIn(0.0f, 1.0f) * maxAlpha.coerceIn(0, 255)).toInt())
     }
 
     fun rowSurface(hoverProgress: Float): Color {
@@ -147,7 +146,7 @@ object MD3Theme {
             return lerp(SURFACE_CONTAINER_HIGH, PRIMARY_CONTAINER, focusMix)
         }
         val base = if (isLightTheme()) SURFACE_CONTAINER else SURFACE_CONTAINER_LOW
-        return lerp(base, SURFACE_CONTAINER_HIGHEST, Mth.clamp(hoverProgress * 0.85f, 0.0f, 1.0f))
+        return lerp(base, SURFACE_CONTAINER_HIGHEST, (hoverProgress * 0.85f).coerceIn(0.0f, 1.0f))
     }
 
     fun filledFieldContent(focused: Boolean): Color {
@@ -164,7 +163,7 @@ object MD3Theme {
         }
         return lerp(
             withAlpha(OUTLINE, 96), withAlpha(TEXT_PRIMARY, 136),
-            Mth.clamp(hoverProgress * 0.55f, 0.0f, 1.0f)
+            (hoverProgress * 0.55f).coerceIn(0.0f, 1.0f)
         )
     }
 
@@ -193,14 +192,14 @@ object MD3Theme {
     }
 
     fun switchTrackOutline(toggleProgress: Float, hoverProgress: Float): Color {
-        val inactive = 1.0f - Mth.clamp(toggleProgress, 0.0f, 1.0f)
-        val hoverMix = Mth.clamp(hoverProgress * 0.35f, 0.0f, 1.0f)
+        val inactive = 1.0f - toggleProgress.coerceIn(0.0f, 1.0f)
+        val hoverMix = (hoverProgress * 0.35f).coerceIn(0.0f, 1.0f)
         val base = lerp(OUTLINE, TEXT_PRIMARY, hoverMix)
         return withAlpha(base, (inactive * (if (isLightTheme()) 188 else 168)).toInt())
     }
 
     fun switchTrackOutlineWidth(toggleProgress: Float): Float {
-        return 1.0f + (1.0f - Mth.clamp(toggleProgress, 0.0f, 1.0f)) * 0.1f
+        return 1.0f + (1.0f - toggleProgress.coerceIn(0.0f, 1.0f)) * 0.1f
     }
 
     private fun forPreset(preset: ClientSetting.ThemePreset, mode: ClientSetting.ThemeMode): ThemePalette {

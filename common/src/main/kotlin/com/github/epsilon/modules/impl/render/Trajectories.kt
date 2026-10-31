@@ -6,13 +6,13 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.entity.ProjectileSimulator
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.EnchantmentUtils
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
@@ -39,42 +39,45 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         RegistryListSetting(
             "Items", defaultItems(), RegistryListSetting.Type.ITEM,
             Predicate { item -> ProjectileSimulator.supports(item) },
-            dependency = { true }
+            { true }
         )
-    ).apply { group(generalGroup) }
-    private val otherPlayers by boolSetting("Other Players", true).apply { group(generalGroup) }
-    private val firedProjectiles by boolSetting("Fired Projectiles", false).apply { group(generalGroup) }
+    ).group(generalGroup)
+    private val otherPlayers by boolSetting("Other Players", true).group(generalGroup)
+    private val firedProjectiles by boolSetting("Fired Projectiles", false).group(generalGroup)
     private val ignoreWitherSkulls by boolSetting(
         "Ignore Wither Skulls",
-        true,
-        dependency = { firedProjectiles }).apply { group(generalGroup) }
-    private val simulationSteps by intSetting("Simulation Steps", 500, 0, 5000, 25).apply { group(generalGroup) }
-    private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0, 20, 1).apply { group(renderGroup) }
-    private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).apply { group(renderGroup) }
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.25).apply { group(renderGroup) }
-    private val impactFill by boolSetting("Impact Fill", true).apply { group(renderGroup) }
-    private val impactOutline by boolSetting("Impact Outline", true).apply { group(renderGroup) }
+        true, { firedProjectiles }).group(generalGroup)
+    private val simulationSteps by intSetting("Simulation Steps", 500, 0..5000, 25).group(generalGroup)
+    private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0..20, 1).group(renderGroup)
+    private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).group(renderGroup)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.25).group(renderGroup)
+    private val impactFill by boolSetting("Impact Fill", true).group(renderGroup)
+    private val impactOutline by boolSetting("Impact Outline", true).group(renderGroup)
     private val impactFillColor by colorSetting(
         "Impact Fill Color", java.awt.Color(255, 150, 0, 45),
-        dependency = { impactFill }
-    ).apply { group(renderGroup) }
+        true,
+        { impactFill }
+    ).group(renderGroup)
     private val impactOutlineColor by colorSetting(
         "Impact Outline Color", java.awt.Color(255, 180, 55, 245),
-        dependency = { impactOutline }
-    ).apply { group(renderGroup) }
-    private val positionBoxes by boolSetting("Render Position Boxes", false).apply { group(renderGroup) }
+        true,
+        { impactOutline }
+    ).group(renderGroup)
+    private val positionBoxes by boolSetting("Render Position Boxes", false).group(renderGroup)
     private val positionBoxSize by doubleSetting(
-        "Position Box Size", 0.02, 0.01, 0.1, 0.005,
-        dependency = { positionBoxes }
-    ).apply { group(renderGroup) }
+        "Position Box Size", 0.02, 0.01..0.1, 0.005,
+        { positionBoxes }
+    ).group(renderGroup)
     private val positionFillColor by colorSetting(
         "Position Fill Color", java.awt.Color(255, 150, 0, 28),
-        dependency = { positionBoxes }
-    ).apply { group(renderGroup) }
+        true,
+        { positionBoxes }
+    ).group(renderGroup)
     private val positionOutlineColor by colorSetting(
         "Position Outline Color", java.awt.Color(255, 180, 55, 180),
-        dependency = { positionBoxes }
-    ).apply { group(renderGroup) }
+        true,
+        { positionBoxes }
+    ).group(renderGroup)
 
     private val MULTISHOT_OFFSET: Double = (10.0).toRadians()
 
@@ -169,7 +172,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
             if (step.stop) break
         }
 
-        val start = Mth.clamp(points.size - 2, 0, ignoredTicks)
+        val start = (points.size - 2).coerceIn(0, ignoredTicks)
         return Path(points, start, blockHit, entityHits)
     }
 

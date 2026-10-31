@@ -8,6 +8,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.multiplayer.ClientLevel
@@ -29,81 +30,112 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
     private val sgWall: SettingGroup = settingGroup("Wall")
     private val sgWallSide: SettingGroup = settingGroup("Wall Side")
 
-    private val startFade by doubleSetting("Start Fade", 5.0, 1.0, 20.0, 0.1).apply { group(sgGeneral) }
-    private val distance by doubleSetting("Distance", 6.0, 1.0, 20.0, 0.1).apply { group(sgGeneral) }
-    private val height by doubleSetting("Height", 1.0, -3.0, 3.0, 0.1).apply { group(sgGeneral) }
-    private val updateDelay by intSetting("Update Delay", 50, 0, 1000, 10).apply { group(sgGeneral) }
+    private val startFade by doubleSetting("Start Fade", 5.0, 1.0..20.0, 0.1).group(sgGeneral)
+    private val distance by doubleSetting("Distance", 6.0, 1.0..20.0, 0.1).group(sgGeneral)
+    private val height by doubleSetting("Height", 1.0, -3.0..3.0, 0.1).group(sgGeneral)
+    private val updateDelay by intSetting("Update Delay", 50, 0..1000, 10).group(sgGeneral)
 
-    private val airHeight by doubleSetting("Air Height", 1.0, -3.0, 3.0, 0.01).apply { group(sgAir) }
-    private val airYCheck by boolSetting("Air Y Check", true).apply { group(sgAir) }
-    private val airFill by boolSetting("Air Fill", true).apply { group(sgAir) }
+    private val airHeight by doubleSetting("Air Height", 1.0, -3.0..3.0, 0.01).group(sgAir)
+    private val airYCheck by boolSetting("Air Y Check", true).group(sgAir)
+    private val airFill by boolSetting("Air Fill", true).group(sgAir)
     private val airFillColor by colorSetting(
-        "Air Fill Color", Color(148, 0, 0, 100), dependency = { airFill }
-    ).apply { group(sgAir) }
-    private val airFade by boolSetting("Air Fade", true, dependency = { airFill }).apply { group(sgAir) }
+        "Air Fill Color", Color(148, 0, 0, 100),
+        true,
+        { airFill }
+    ).group(sgAir)
+    private val airFade by boolSetting("Air Fade", true, { airFill }).group(sgAir)
     private val airFadeColor by colorSetting(
-        "Air Fade Color", Color(148, 0, 0, 0), dependency = { airFill && airFade }
-    ).apply { group(sgAir) }
-    private val airBox by boolSetting("Air Box", true).apply { group(sgAir) }
+        "Air Fade Color", Color(148, 0, 0, 0),
+        true,
+        { airFill && airFade }
+    ).group(sgAir)
+    private val airBox by boolSetting("Air Box", true).group(sgAir)
     private val airBoxColor by colorSetting(
-        "Air Box Color", Color(148, 0, 0, 100), dependency = { airBox }
-    ).apply { group(sgAir) }
+        "Air Box Color", Color(148, 0, 0, 100),
+        true,
+        { airBox }
+    ).group(sgAir)
 
-    private val unsafeFill by boolSetting("Unsafe Fill", true).apply { group(sgUnsafe) }
+    private val unsafeFill by boolSetting("Unsafe Fill", true).group(sgUnsafe)
     private val unsafeFillColor by colorSetting(
-        "Unsafe Fill Color", Color(255, 0, 0, 50), dependency = { unsafeFill }
-    ).apply { group(sgUnsafe) }
-    private val unsafeFade by boolSetting("Unsafe Fade", true, dependency = { unsafeFill }).apply { group(sgUnsafe) }
+        "Unsafe Fill Color", Color(255, 0, 0, 50),
+        true,
+        { unsafeFill }
+    ).group(sgUnsafe)
+    private val unsafeFade by boolSetting("Unsafe Fade", true, { unsafeFill }).group(sgUnsafe)
     private val unsafeFadeColor by colorSetting(
-        "Unsafe Fade Color", Color(255, 0, 0, 0), dependency = { unsafeFill && unsafeFade }
-    ).apply { group(sgUnsafe) }
-    private val unsafeBox by boolSetting("Unsafe Box", true).apply { group(sgUnsafe) }
+        "Unsafe Fade Color", Color(255, 0, 0, 0),
+        true,
+        { unsafeFill && unsafeFade }
+    ).group(sgUnsafe)
+    private val unsafeBox by boolSetting("Unsafe Box", true).group(sgUnsafe)
     private val unsafeBoxColor by colorSetting(
-        "Unsafe Box Color", Color(255, 0, 0, 100), dependency = { unsafeBox }
-    ).apply { group(sgUnsafe) }
+        "Unsafe Box Color", Color(255, 0, 0, 100),
+        true,
+        { unsafeBox }
+    ).group(sgUnsafe)
 
-    private val safeFill by boolSetting("Safe Fill", true).apply { group(sgSafe) }
+    private val safeFill by boolSetting("Safe Fill", true).group(sgSafe)
     private val safeFillColor by colorSetting(
-        "Safe Fill Color", Color(8, 255, 79, 50), dependency = { safeFill }
-    ).apply { group(sgSafe) }
-    private val safeFade by boolSetting("Safe Fade", true, dependency = { safeFill }).apply { group(sgSafe) }
+        "Safe Fill Color", Color(8, 255, 79, 50),
+        true,
+        { safeFill }
+    ).group(sgSafe)
+    private val safeFade by boolSetting("Safe Fade", true, { safeFill }).group(sgSafe)
     private val safeFadeColor by colorSetting(
-        "Safe Fade Color", Color(8, 255, 79, 100), dependency = { safeFill && safeFade }
-    ).apply { group(sgSafe) }
-    private val safeBox by boolSetting("Safe Box", true).apply { group(sgSafe) }
+        "Safe Fade Color", Color(8, 255, 79, 100),
+        true,
+        { safeFill && safeFade }
+    ).group(sgSafe)
+    private val safeBox by boolSetting("Safe Box", true).group(sgSafe)
     private val safeBoxColor by colorSetting(
-        "Safe Box Color", Color(8, 255, 79, 100), dependency = { safeBox }
-    ).apply { group(sgSafe) }
+        "Safe Box Color", Color(8, 255, 79, 100),
+        true,
+        { safeBox }
+    ).group(sgSafe)
 
-    private val wallHeight by doubleSetting("Wall Height", 3.0, -3.0, 3.0, 0.1).apply { group(sgWall) }
-    private val sideCheck by boolSetting("Side Check", true).apply { group(sgWall) }
-    private val wallFill by boolSetting("Wall Fill", true).apply { group(sgWall) }
+    private val wallHeight by doubleSetting("Wall Height", 3.0, -3.0..3.0, 0.1).group(sgWall)
+    private val sideCheck by boolSetting("Side Check", true).group(sgWall)
+    private val wallFill by boolSetting("Wall Fill", true).group(sgWall)
     private val wallFillColor by colorSetting(
-        "Wall Fill Color", Color(0, 255, 255, 128), dependency = { wallFill }
-    ).apply { group(sgWall) }
-    private val wallFade by boolSetting("Wall Fade", true, dependency = { wallFill }).apply { group(sgWall) }
+        "Wall Fill Color", Color(0, 255, 255, 128),
+        true,
+        { wallFill }
+    ).group(sgWall)
+    private val wallFade by boolSetting("Wall Fade", true, { wallFill }).group(sgWall)
     private val wallFadeColor by colorSetting(
-        "Wall Fade Color", Color(0, 255, 255, 64), dependency = { wallFill && wallFade }
-    ).apply { group(sgWall) }
-    private val wallBox by boolSetting("Wall Box", true).apply { group(sgWall) }
+        "Wall Fade Color", Color(0, 255, 255, 64),
+        true,
+        { wallFill && wallFade }
+    ).group(sgWall)
+    private val wallBox by boolSetting("Wall Box", true).group(sgWall)
     private val wallBoxColor by colorSetting(
-        "Wall Box Color", Color(0, 225, 255, 255), dependency = { wallBox }
-    ).apply { group(sgWall) }
+        "Wall Box Color", Color(0, 225, 255, 255),
+        true,
+        { wallBox }
+    ).group(sgWall)
 
-    private val wallSideFill by boolSetting("Wall Side Fill", true).apply { group(sgWallSide) }
+    private val wallSideFill by boolSetting("Wall Side Fill", true).group(sgWallSide)
     private val wallSideFillColor by colorSetting(
-        "Wall Side Fill Color", Color(0, 255, 255, 128), dependency = { wallSideFill }
-    ).apply { group(sgWallSide) }
+        "Wall Side Fill Color", Color(0, 255, 255, 128),
+        true,
+        { wallSideFill }
+    ).group(sgWallSide)
     private val wallSideFade by boolSetting(
-        "Wall Side Fade", true, dependency = { wallSideFill }
-    ).apply { group(sgWallSide) }
+        "Wall Side Fade", true,
+        { wallSideFill }
+    ).group(sgWallSide)
     private val wallSideFadeColor by colorSetting(
-        "Wall Side Fade Color", Color(0, 255, 255, 64), dependency = { wallSideFill && wallSideFade }
-    ).apply { group(sgWallSide) }
-    private val wallSideBox by boolSetting("Wall Side Box", true).apply { group(sgWallSide) }
+        "Wall Side Fade Color", Color(0, 255, 255, 64),
+        true,
+        { wallSideFill && wallSideFade }
+    ).group(sgWallSide)
+    private val wallSideBox by boolSetting("Wall Side Box", true).group(sgWallSide)
     private val wallSideBoxColor by colorSetting(
-        "Wall Side Box Color", Color(0, 225, 255, 255), dependency = { wallSideBox }
-    ).apply { group(sgWallSide) }
+        "Wall Side Box Color", Color(0, 225, 255, 255),
+        true,
+        { wallSideBox }
+    ).group(sgWallSide)
 
     private var unsafeHoles: List<Hole> = emptyList()
     private var safeHoles: List<Hole> = emptyList()
@@ -400,11 +432,11 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
         val fadeStart = minOf(startFade, renderDistance)
         val blockDistance = player.position().distanceTo(position)
         if (blockDistance <= fadeStart || fadeStart >= renderDistance) return 1.0
-        return Mth.clamp((renderDistance - blockDistance) / (renderDistance - fadeStart), 0.0, 1.0)
+        return ((renderDistance - blockDistance) / (renderDistance - fadeStart)).coerceIn(0.0, 1.0)
     }
 
     private fun withAlpha(color: Color, multiplier: Double): Int {
-        val alpha = Mth.clamp((color.alpha * multiplier).roundToInt(), 0, 255)
+        val alpha = (color.alpha * multiplier).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha).rgb
     }
 

@@ -14,7 +14,7 @@ import net.minecraft.world.item.Items
 object AutoTotem : Module("Auto Totem", Category.COMBAT) {
 
     private val strict by boolSetting("Strict", true)
-    private val health by doubleSetting("Health", 16.0, 0.0, 36.0, 0.5)
+    private val health by doubleSetting("Health", 16.0, 0.0..36.0, 0.5)
     private val checkGapple by boolSetting("Check Gapple", true)
 
     init {

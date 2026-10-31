@@ -13,14 +13,18 @@ object SneakTweak : Module("Sneak Tweak", Category.RENDER) {
     }
 
     private val smoothing by boolSetting("Smoothing", true)
-    private val speedPercentage by intSetting("Speed Percentage", 100, 25, 300, 1, dependency = { smoothing })
+    private val speedPercentage by intSetting("Speed Percentage", 100, 25..300, 1, { smoothing })
     private val sneakingEyeHeight by enumSetting(
         "Sneaking Eye Height",
         SneakingEyeHeight.Default,
         onChanged = { _ -> refreshPlayerDimensions() })
     private val customSneakingEyeHeight by doubleSetting(
-        "Custom Sneaking Eye Height", 1.27, 0.0, 1.8, 0.01,
-        dependency = { sneakingEyeHeight == SneakingEyeHeight.Custom }, onChanged = { _ -> refreshPlayerDimensions() })
+        "Custom Sneaking Eye Height",
+        1.27,
+        0.0..1.8,
+        0.01,
+        { sneakingEyeHeight == SneakingEyeHeight.Custom },
+        onChanged = { _ -> refreshPlayerDimensions() })
     private val thirdPersonEyeHeight by boolSetting(
         "Third Person Eye Height",
         false,

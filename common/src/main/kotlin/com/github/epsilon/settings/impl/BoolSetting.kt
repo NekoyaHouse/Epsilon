@@ -5,9 +5,9 @@ import com.github.epsilon.settings.Setting
 class BoolSetting(
     name: String,
     defaultValue: Boolean,
-    dependency: Dependency?,
+    visible: Visibility?,
     onChanged: ((Boolean) -> Unit)?,
-) : Setting<Boolean>(name, dependency, onChanged) {
+) : Setting<Boolean>(name, visible, onChanged) {
 
     init {
         initializeValue(defaultValue)

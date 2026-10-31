@@ -18,7 +18,6 @@ import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
-import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -49,29 +48,29 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     private var usingPause by boolSetting("Pause On Use", true)
-    private var onlyMain by boolSetting("Only Main", true, dependency = { usingPause })
+    private var onlyMain by boolSetting("Only Main", true, { usingPause })
     private var switchMode by enumSetting("Switch Mode", SwitchMode.Silent)
-    private var range by intSetting("Range", 6, 0, 12, 1)
-    private var maxBreaks by intSetting("Try Break Time", 6, 0, 10, 1)
+    private var range by intSetting("Range", 6, 0..12, 1)
+    private var maxBreaks by intSetting("Try Break Time", 6, 0..10, 1)
     private var farCancel by boolSetting("Far Cancel", true)
     private var swing by boolSetting("Swing Hand", true)
     private var instantMine by boolSetting("Instant Mine", true)
-    private var instantDelay by intSetting("Instant Delay", 10, 0, 1000, 10)
+    private var instantDelay by intSetting("Instant Delay", 10, 0..1000, 10)
     private var fastBypass by boolSetting("Fast Bypass", true)
     private var doubleBreak by boolSetting("Double Break", false)
     private var checkGround by boolSetting("Check Ground", true)
     private var bypassGround by boolSetting("Bypass Ground", false)
     private var clientRemove by boolSetting("Client Remove", true)
-    private var switchDamage by intSetting("Switch Damage", 95, 0, 100, 1)
-    private var switchTime by intSetting("Switch Time", 100, 0, 1000, 10)
-    private var mineDelay by intSetting("Mine Delay", 300, 0, 1000, 10)
-    private var packetDelay by intSetting("Packet Delay", 200, 0, 1000, 10)
-    private var mineDamage by doubleSetting("Damage", 0.8, 0.0, 2.0, 0.05)
+    private var switchDamage by intSetting("Switch Damage", 95, 0..100, 1)
+    private var switchTime by intSetting("Switch Time", 100, 0..1000, 10)
+    private var mineDelay by intSetting("Mine Delay", 300, 0..1000, 10)
+    private var packetDelay by intSetting("Packet Delay", 200, 0..1000, 10)
+    private var mineDamage by doubleSetting("Damage", 0.8, 0.0..2.0, 0.05)
 
     private var renderMode by enumSetting("Render Mode", RenderMode.Shrink)
     private var fading by boolSetting("Fading", true)
-    private var renderTime by doubleSetting("Render Time", 0.1, 0.0, 5.0, 0.1, dependency = { fading })
-    private var fadeTime by doubleSetting("Fade Time", 0.2, 0.0, 5.0, 0.1, dependency = { fading })
+    private var renderTime by doubleSetting("Render Time", 0.1, 0.0..5.0, 0.1, { fading })
+    private var fadeTime by doubleSetting("Fade Time", 0.2, 0.0..5.0, 0.1, { fading })
     private var fadeSideColor by colorSetting("Fade Side Color", Color(70, 200, 155, 31))
     private var fadeLineColor by colorSetting("Fade Line Color", Color(70, 200, 155, 233))
     private var sideStartColor by colorSetting("Side Start", Color(255, 0, 0, 31))
@@ -652,7 +651,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val target = targetPos ?: return
 
         val max = getMineTicks(getTool(target))
-        val rawProgress = Mth.clamp(progress / (max * mineDamage), 0.0, 1.0)
+        val rawProgress = (progress / (max * mineDamage)).coerceIn(0.0, 1.0)
 
         val color1 = if (rawProgress >= 0.95) sideEndColor else sideStartColor
         val color2 = if (rawProgress >= 0.95) lineEndColor else lineStartColor
@@ -689,7 +688,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val second = secondPos ?: return
 
         val max = getMineTicksSecond(getTool(second))
-        val rawProgress = Mth.clamp(secondProgress / (max * mineDamage), 0.0, 1.0)
+        val rawProgress = (secondProgress / (max * mineDamage)).coerceIn(0.0, 1.0)
 
         val color1 = if (rawProgress >= 0.95) secondSideEndColor else secondSideStartColor
         val color2 = if (rawProgress >= 0.95) secondLineEndColor else secondLineStartColor

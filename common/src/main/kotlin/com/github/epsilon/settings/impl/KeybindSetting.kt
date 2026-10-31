@@ -5,8 +5,8 @@ import com.github.epsilon.settings.Setting
 class KeybindSetting(
     name: String,
     defaultValue: Int,
-    dependency: Dependency?,
-) : Setting<Int>(name, dependency, null) {
+    visible: Visibility?,
+) : Setting<Int>(name, visible, null) {
 
     init {
         initializeValue(defaultValue)

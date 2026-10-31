@@ -37,8 +37,8 @@ import kotlin.math.abs
 
 object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
-    private val interactDelay by intSetting("Interact Delay", 60, 0, 300, 5)
-    private val collectDelayTicks by intSetting("Collect Delay Ticks", 2, 0, 10, 1)
+    private val interactDelay by intSetting("Interact Delay", 60, 0..300, 5)
+    private val collectDelayTicks by intSetting("Collect Delay Ticks", 2, 0..10, 1)
 
     private var mlgCompleted = true
     private val interactTimer = TimerUtils()
@@ -103,8 +103,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         val waterPos = grimFindCollectableWater()
                         if (waterPos != null) {
                             val eyesPos = player.eyePosition
-                            val hitX = Mth.clamp(eyesPos.x, waterPos.x.toDouble(), waterPos.x + 1.0)
-                            val hitZ = Mth.clamp(eyesPos.z, waterPos.z.toDouble(), waterPos.z + 1.0)
+                            val hitX = eyesPos.x.coerceIn(waterPos.x.toDouble(), waterPos.x + 1.0)
+                            val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
                             val rotation = RotationUtils.calculate(hitVec)
                             RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
@@ -164,8 +164,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 val eyesPos = player.eyePosition
                                 val neighbor = bestPos.below()
 
-                                val hitX = Mth.clamp(eyesPos.x, neighbor.x.toDouble(), neighbor.x + 1.0)
-                                val hitZ = Mth.clamp(eyesPos.z, neighbor.z.toDouble(), neighbor.z + 1.0)
+                                val hitX = eyesPos.x.coerceIn(neighbor.x.toDouble(), neighbor.x + 1.0)
+                                val hitZ = eyesPos.z.coerceIn(neighbor.z.toDouble(), neighbor.z + 1.0)
                                 val hitVec = Vec3(hitX, neighbor.y + 1.0, hitZ)
 
                                 if (eyesPos.distanceTo(hitVec) > 4.5) {
@@ -232,8 +232,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     val fluidState: FluidState = level.getFluidState(check)
                     if (!fluidState.isSourceOfType(Fluids.WATER)) continue
 
-                    val hitX = Mth.clamp(eyesPos.x, check.x.toDouble(), check.x + 1.0)
-                    val hitZ = Mth.clamp(eyesPos.z, check.z.toDouble(), check.z + 1.0)
+                    val hitX = eyesPos.x.coerceIn(check.x.toDouble(), check.x + 1.0)
+                    val hitZ = eyesPos.z.coerceIn(check.z.toDouble(), check.z + 1.0)
                     val targetVec = Vec3(hitX, check.y + 0.875, hitZ)
                     val distance = eyesPos.distanceToSqr(targetVec)
 

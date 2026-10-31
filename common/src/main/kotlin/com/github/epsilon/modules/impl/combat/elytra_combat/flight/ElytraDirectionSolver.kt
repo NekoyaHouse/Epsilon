@@ -174,11 +174,7 @@ object ElytraDirectionSolver {
         pitchDeviationLimit: Float,
     ): Rot2f {
         val desiredPitch = intentPitch(desiredVelocity, ceilingEscape)
-        val limited = Mth.clamp(
-            base.pitch,
-            desiredPitch - pitchDeviationLimit,
-            desiredPitch + pitchDeviationLimit,
-        )
+        val limited = base.pitch.coerceIn(desiredPitch - pitchDeviationLimit, desiredPitch + pitchDeviationLimit)
         if (limited == base.pitch) {
             return base
         }
@@ -249,11 +245,7 @@ object ElytraDirectionSolver {
         var previousPitch = applyCeilingEscape(lastSolvedPitch, ceilingEscape)
         // 上一 tick 的姿态也要落在本 tick 的意图带内，避免意图已反向时继续沿用旧姿态。
         val bandPitch = intentPitch(desiredVelocity, ceilingEscape)
-        previousPitch = Mth.clamp(
-            previousPitch,
-            bandPitch - pitchDeviationLimit,
-            bandPitch + pitchDeviationLimit,
-        )
+        previousPitch = previousPitch.coerceIn(bandPitch - pitchDeviationLimit, bandPitch + pitchDeviationLimit)
         val movement = player.deltaMovement
         val gravity = effectiveGravity(player)
         val desiredDirection = desiredVelocity.normalize()
@@ -283,7 +275,7 @@ object ElytraDirectionSolver {
     private fun keepPreviousEscape(player: LocalPlayer, ceilingEscape: Boolean): Rot2f? {
         val previous = lastEscapeRotation ?: return null
         val yaw = Mth.wrapDegrees(previous.yaw)
-        val pitch = applyCeilingEscape(Mth.clamp(previous.pitch, -89.0f, 89.0f), ceilingEscape)
+        val pitch = applyCeilingEscape(previous.pitch.coerceIn(-89.0f, 89.0f), ceilingEscape)
         if (trajectorySafeTicks(player, yaw, pitch) < TRAJECTORY_HORIZON_TICKS) {
             return null
         }
@@ -305,7 +297,7 @@ object ElytraDirectionSolver {
         for (offset in ESCAPE_OFFSETS) {
             val yaw = Mth.wrapDegrees(base.yaw + offset.yawOffset)
             val pitch = applyCeilingEscape(
-                Mth.clamp(base.pitch + offset.pitchOffset, -89.0f, 89.0f),
+                (base.pitch + offset.pitchOffset).coerceIn(-89.0f, 89.0f),
                 ceilingEscape,
             )
             if (nearPrevious && angleToLastEscape(yaw, pitch) > ESCAPE_KEEP_ANGLE) {
@@ -328,7 +320,7 @@ object ElytraDirectionSolver {
         for (offset in ESCAPE_OFFSETS) {
             val yaw = Mth.wrapDegrees(base.yaw + offset.yawOffset)
             val pitch = applyCeilingEscape(
-                Mth.clamp(base.pitch + offset.pitchOffset, -89.0f, 89.0f),
+                (base.pitch + offset.pitchOffset).coerceIn(-89.0f, 89.0f),
                 ceilingEscape,
             )
             val safeTicks = trajectorySafeTicks(player, yaw, pitch)
@@ -370,7 +362,7 @@ object ElytraDirectionSolver {
         var yaw = (atan2(desiredDirection.z, desiredDirection.x)).toDegrees().toFloat() - 90.0f
         yaw = Mth.wrapDegrees(yaw)
 
-        var bestPitch = Mth.clamp(pitchOf(desiredDirection), -89.0f, 89.0f)
+        var bestPitch = pitchOf(desiredDirection).coerceIn(-89.0f, 89.0f)
         var bestDot = Double.NEGATIVE_INFINITY
         var pitch = -80.0f
         while (pitch <= 80.0f) {
@@ -394,7 +386,7 @@ object ElytraDirectionSolver {
                 low = mid
             }
         }
-        return Rot2f(yaw, Mth.clamp((low + high) * 0.5f, -89.0f, 89.0f))
+        return Rot2f(yaw, ((low + high) * 0.5f).coerceIn(-89.0f, 89.0f))
     }
 
     private fun velocityAlignment(

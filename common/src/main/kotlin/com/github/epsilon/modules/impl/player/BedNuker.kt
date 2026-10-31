@@ -31,10 +31,10 @@ import java.awt.Color
 
 object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
-    private val range by doubleSetting("Range", 4.5, 1.0, 6.0, 0.1)
+    private val range by doubleSetting("Range", 4.5, 1.0..6.0, 0.1)
     private val throughWalls by boolSetting("Through Walls", false)
     private val rotate by boolSetting("Rotate", true)
-    private val rotationSpeed by intSetting("Rotation Speed", 180, 10, 180, 10, dependency = { rotate })
+    private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10, { rotate })
     private val swingHand by boolSetting("Swing Hand", true)
     private val esp by boolSetting("ESP", true)
 

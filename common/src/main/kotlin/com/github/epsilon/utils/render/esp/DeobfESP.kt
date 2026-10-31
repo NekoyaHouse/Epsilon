@@ -164,7 +164,7 @@ object DeobfESP {
         if (effect.killedAtMs < 0L) {
             val introProgress = progress(now - effect.createdAtMs, INTRO_DURATION_MS)
             val reactionProgress = progress(now - effect.lastHitAtMs, INTRO_DURATION_MS)
-            val pop = Easing.EASE_OUT_ELASTIC.function.apply(Mth.clamp(introProgress / 0.28f, 0.0f, 1.0f))
+            val pop = Easing.EASE_OUT_ELASTIC.function.apply((introProgress / 0.28f).coerceIn(0.0f, 1.0f))
             val damping = 1.0f - reactionProgress
             val squash = Mth.sin((reactionProgress * Mth.PI * 10.0f).toDouble()) * damping * 0.14f * wobble
 
@@ -188,9 +188,9 @@ object DeobfESP {
             offsetX = Mth.sin((killProgress * Mth.PI * 6.0f).toDouble()) * killProgress * baseWidth * 0.35f * wobble
             offsetY = 0.0f
 
-            val fadeProgress = Mth.clamp((killProgress - 0.58f) / 0.42f, 0.0f, 1.0f)
+            val fadeProgress = ((killProgress - 0.58f) / 0.42f).coerceIn(0.0f, 1.0f)
             val alpha =
-                Mth.clamp((255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))).roundToInt(), 0, 255)
+                (255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))).roundToInt().coerceIn(0, 255)
             val redProgress = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(killProgress)
             tint = redTint(redProgress, alpha)
             anchor = effect.deathAnchor!!.add(0.0, (drawHeight / 2.0f + flyProgress * flyHeight).toDouble(), 0.0)
@@ -234,17 +234,17 @@ object DeobfESP {
 
     private fun hitTint(reactionProgress: Float, alpha: Int): Color {
         val redProgress =
-            Mth.clamp(Mth.sin((Mth.clamp(reactionProgress / 0.72f, 0.0f, 1.0f) * Mth.PI).toDouble()), 0.0f, 1.0f)
+            Mth.sin(((reactionProgress / 0.72f).coerceIn(0.0f, 1.0f) * Mth.PI).toDouble()).coerceIn(0.0f, 1.0f)
         return redTint(redProgress, alpha)
     }
 
     private fun redTint(redProgress: Float, alpha: Int): Color {
-        val greenBlue = Mth.clamp((Mth.lerp(Mth.clamp(redProgress, 0.0f, 1.0f), 255.0f, 42.0f)).roundToInt(), 0, 255)
-        return Color(255, greenBlue, greenBlue, Mth.clamp(alpha, 0, 255))
+        val greenBlue = (Mth.lerp(redProgress.coerceIn(0.0f, 1.0f), 255.0f, 42.0f)).roundToInt().coerceIn(0, 255)
+        return Color(255, greenBlue, greenBlue, alpha.coerceIn(0, 255))
     }
 
     private fun progress(elapsed: Long, duration: Long): Float {
-        return Mth.clamp(elapsed / duration.toFloat(), 0.0f, 1.0f)
+        return (elapsed / duration.toFloat()).coerceIn(0.0f, 1.0f)
     }
 
     private class Effect(val target: LivingEntity, now: Long) {

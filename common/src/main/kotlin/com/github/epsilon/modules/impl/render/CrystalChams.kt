@@ -14,8 +14,8 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
     private val sideColor by colorSetting("Side Color", Color(160, 120, 255, 70), true)
     private val lineColor by colorSetting("Line Color", Color(230, 220, 255, 220), true)
-    private val scale by doubleSetting("Scale", 1.0, 0.1, 3.0, 0.05)
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.5)
+    private val scale by doubleSetting("Scale", 1.0, 0.1..3.0, 0.05)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.5)
 
     init {
         handler<Render3DEvent> { onRender3D(it) }

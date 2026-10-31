@@ -18,7 +18,6 @@ import net.minecraft.client.renderer.rendertype.TextureTransform
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
-import net.minecraft.util.Mth
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -82,14 +81,12 @@ object LuminImmediateRenderer {
      * 批次句柄的公共部分：持有共享通道，并负责在结束时提交本批次。
      */
     abstract class Batch protected constructor(protected val channel: Channel) {
-
         fun end() {
             channel.drawAndReset()
         }
     }
 
     open class PosColorQuads internal constructor(channel: Channel) : Batch(channel) {
-
         fun vertex(matrix: Matrix4f, x: Float, y: Float, z: Float, color: Int) {
             channel.putPosition(matrix, x, y, z)
             channel.putColor(color)
@@ -98,7 +95,6 @@ object LuminImmediateRenderer {
     }
 
     open class PosColorTriangleStrip internal constructor(channel: Channel) : Batch(channel) {
-
         fun vertex(matrix: Matrix4f, x: Float, y: Float, z: Float, color: Int) {
             channel.putPosition(matrix, x, y, z)
             channel.putColor(color)
@@ -107,7 +103,6 @@ object LuminImmediateRenderer {
     }
 
     open class PosColorTriangleFan internal constructor(channel: Channel) : Batch(channel) {
-
         fun vertex(matrix: Matrix4f, x: Float, y: Float, z: Float, color: Int) {
             channel.putPosition(matrix, x, y, z)
             channel.putColor(color)
@@ -116,7 +111,6 @@ object LuminImmediateRenderer {
     }
 
     open class PosTexColorQuads internal constructor(channel: Channel) : Batch(channel) {
-
         fun vertex(matrix: Matrix4f, x: Float, y: Float, z: Float, u: Float, v: Float, color: Int) {
             channel.putPosition(matrix, x, y, z)
             channel.putUv(u, v)
@@ -126,7 +120,6 @@ object LuminImmediateRenderer {
     }
 
     open class Lines internal constructor(channel: Channel) : Batch(channel) {
-
         private val normalTmp = Vector3f()
 
         fun vertex(
@@ -143,7 +136,6 @@ object LuminImmediateRenderer {
         ) {
             channel.putPosition(matrix, x, y, z)
             channel.putColor(color)
-
             pose.transformNormal(nx, ny, nz, normalTmp).normalize()
             channel.putNormal(normalTmp.x, normalTmp.y, normalTmp.z)
             channel.putLineWidth(width)
@@ -152,7 +144,6 @@ object LuminImmediateRenderer {
     }
 
     class Channel internal constructor(format: VertexFormat, mode: PrimitiveTopology) {
-
         private val ringBuffer: LuminRingBuffer = LuminRingBuffer(DEFAULT_BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
         private val mode: PrimitiveTopology = mode
         private val stride: Int = format.vertexSize
@@ -402,16 +393,16 @@ object LuminImmediateRenderer {
         }
 
         companion object {
-
             private fun resolveOffset(format: VertexFormat, semanticName: String): Int {
                 val element: VertexFormatElement? = format.getElement(semanticName)
-                return if (element != null) element.offset() else -1
+                return element?.offset() ?: -1
             }
 
             private fun packNormal(value: Float): Byte {
-                val clamped = Mth.clamp(value, -1.0f, 1.0f)
+                val clamped = value.coerceIn(-1.0f, 1.0f)
                 return ((clamped * 127.0f).toInt() and 0xFF).toByte()
             }
         }
     }
+
 }

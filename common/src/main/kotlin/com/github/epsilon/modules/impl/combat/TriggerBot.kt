@@ -29,11 +29,11 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     private const val MIN_CRIT_FALL = 1.0f
     private const val MAX_CRIT_FALL = 1.14f
 
-    private val range by doubleSetting("Range", 3.0, 1.0, 7.0, 0.1)
-    private val minDelay by intSetting("Random Delay Min", 2, 0, 20, 1)
-    private val maxDelay by intSetting("Random Delay Max", 13, 0, 20, 1)
-    private val attackCooldown by doubleSetting("Attack Cooldown", 0.9, 0.5, 1.0, 0.05)
-    private val critFallDistance by doubleSetting("Crit Fall Distance", 0.0, 0.0, 1.0, 0.05)
+    private val range by doubleSetting("Range", 3.0, 1.0..7.0, 0.1)
+    private val minDelay by intSetting("Random Delay Min", 2, 0..20, 1)
+    private val maxDelay by intSetting("Random Delay Max", 13, 0..20, 1)
+    private val attackCooldown by doubleSetting("Attack Cooldown", 0.9, 0.5..1.0, 0.05)
+    private val critFallDistance by doubleSetting("Crit Fall Distance", 0.0, 0.0..1.0, 0.05)
 
     private var delay = 0
 

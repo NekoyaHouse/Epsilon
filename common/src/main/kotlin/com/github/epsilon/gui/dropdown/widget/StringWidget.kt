@@ -83,19 +83,11 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
             DropdownScreen.react(ReisaDropdownCompanion.Action.CANCEL)
             return true
         }
-        if (inputField.keyPressed(keyCode)) {
-            previewSetting()
-            return true
-        }
-        return false
+        return inputField.keyPressed(keyCode)
     }
 
     override fun charTyped(typedText: String): Boolean {
-        if (inputField.charTyped(typedText)) {
-            previewSetting()
-            return true
-        }
-        return false
+        return inputField.charTyped(typedText)
     }
 
     fun isFocused(): Boolean {
@@ -105,12 +97,6 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
     fun blurInput() {
         commitSetting()
         inputField.blur()
-    }
-
-    private fun previewSetting() {
-        if (!setting.isApplyWhenRelease) {
-            applyText(inputField.text)
-        }
     }
 
     private fun commitSetting() {

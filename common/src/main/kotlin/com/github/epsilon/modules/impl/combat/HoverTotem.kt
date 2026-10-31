@@ -13,10 +13,10 @@ import kotlin.math.ceil
 
 object HoverTotem : Module("Hover Totem", Category.COMBAT) {
 
-    private val delay by doubleSetting("Delay", 0.0, 0.0, 20.0, 0.1)
-    private val randomDelay by doubleSetting("Random Delay", 0.0, 0.0, 10.0, 0.1)
+    private val delay by doubleSetting("Delay", 0.0, 0.0..20.0, 0.1)
+    private val randomDelay by doubleSetting("Random Delay", 0.0, 0.0..10.0, 0.1)
     private val hotbar by boolSetting("Hotbar", true)
-    private val slot by doubleSetting("Totem Slot", 1.0, 1.0, 9.0, 1.0)
+    private val slot by doubleSetting("Totem Slot", 1.0, 1.0..9.0, 1.0)
     private val autoSwitch by boolSetting("Auto Switch", true)
 
     private var clock = 0

@@ -7,7 +7,6 @@ import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.Setting
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.util.Mth
 import java.util.function.Predicate
 
 abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
@@ -29,7 +28,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         syncSessionState()
 
         val ratio = getRatio()
-        val sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f)
+        val sliderRatio = ratio.coerceIn(0.0f, 1.0f)
 
         scope.text(
             setting.displayName,
@@ -72,7 +71,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
 
             if (dragging && mouseX >= 0) {
                 DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
-                val rawRatio = Mth.clamp((mouseX - getTrackX()) / trackW, 0.0f, 1.0f)
+                val rawRatio = ((mouseX - getTrackX()) / trackW).coerceIn(0.0f, 1.0f)
                 updateValueFromRatio(rawRatio)
             }
         }
@@ -101,11 +100,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
     }
 
     protected fun previewValue(value: T) {
-        if (setting.isApplyWhenRelease) {
-            pendingValue = value
-        } else {
-            applyValue(value)
-        }
+        pendingValue = value
     }
 
     protected fun applyValueNow(value: T) {

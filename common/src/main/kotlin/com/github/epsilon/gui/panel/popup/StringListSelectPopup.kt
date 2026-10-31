@@ -19,7 +19,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import net.minecraft.util.Mth
 import kotlin.math.abs
 
 class StringListSelectPopup(
@@ -60,7 +59,7 @@ class StringListSelectPopup(
         val contentHeight = entries.size * (ROW_HEIGHT + ROW_GAP)
         val viewport = getViewport()
         maxScroll = maxOf(0.0f, contentHeight - viewport.height)
-        scroll = Mth.clamp(scroll, 0.0f, maxScroll)
+        scroll = scroll.coerceIn(0.0f, maxScroll)
         updateSmoothScroll(partialTick)
 
         val tree = UiTree.build { scope ->
@@ -295,7 +294,7 @@ class StringListSelectPopup(
             return
         }
         if (abs(scrollVelocity) <= 0.01f || partialTick <= 0.0f) return
-        val nextScroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll)
+        val nextScroll = (scroll + scrollVelocity * partialTick).coerceIn(0.0f, maxScroll)
         if (nextScroll.compareTo(scroll) == 0) {
             scrollVelocity = 0.0f
             return
@@ -313,7 +312,7 @@ class StringListSelectPopup(
     private fun applyDraggedScroll(mouseY: Double, viewport: UiRect) {
         val newScroll = scrollBarDrag.mouseDragged(mouseY, viewport, maxScroll)
         if (newScroll >= 0.0f) {
-            scroll = Mth.clamp(newScroll, 0.0f, maxScroll)
+            scroll = newScroll.coerceIn(0.0f, maxScroll)
             scrollVelocity = 0.0f
         }
     }

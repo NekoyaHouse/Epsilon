@@ -7,7 +7,6 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import net.minecraft.util.Mth
 import java.util.function.Supplier
 import kotlin.math.roundToInt
 
@@ -34,7 +33,7 @@ class BalanceInstance(
         targetWidth = maxOf(100f, PADDING * 2f + titleWidth + GAP + valueWidth)
         targetHeight = PADDING * 2f + textHeight + GAP + BAR_HEIGHT
 
-        progressAnim.run(Mth.clamp(balance.toFloat() / maxBalance, 0.0f, 1.0f))
+        progressAnim.run((balance.toFloat() / maxBalance).coerceIn(0.0f, 1.0f))
     }
 
     override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
@@ -59,7 +58,7 @@ class BalanceInstance(
         val barRadius = BAR_HEIGHT * 0.5f
         scope.roundRect(PADDING, barY, barWidth, BAR_HEIGHT, barRadius, fade(IslandPalette.TRACK))
 
-        val progress = Mth.clamp(progressAnim.value, 0f, 1f)
+        val progress = progressAnim.value.coerceIn(0f, 1f)
         if (progress > 0f) {
             scope.roundRectHorizontalGradient(
                 PADDING, barY, barWidth * progress, BAR_HEIGHT, barRadius,

@@ -9,7 +9,6 @@ import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import java.util.*
@@ -17,25 +16,26 @@ import kotlin.math.*
 
 class QuantumNotification(private val owner: Notifications) {
 
-    private val active: Setting.Dependency = { owner.isStyle(Notifications.Style.Quantum) }
+    private val active: () -> Boolean = { owner.isStyle(Notifications.Style.Quantum) }
 
     private val states: IdentityHashMap<Notification, SpringState> = IdentityHashMap()
-    private val backgroundColor by owner.colorSetting("Background Color", Color(0, 0, 0, 50), dependency = active)
-    private val backgroundBlur by owner.boolSetting("Background Blur", true, dependency = active)
+    private val backgroundColor by owner.colorSetting("Background Color", Color(0, 0, 0, 50), true, { active() })
+    private val backgroundBlur by owner.boolSetting("Background Blur", true, { active() })
     private val blurStrength by owner.doubleSetting(
-        "Blur Strength", 5.0, 1.0, 20.0, 1.0,
-        dependency = { active.check() && backgroundBlur }
+        "Blur Strength", 5.0, 1.0..20.0, 1.0,
+        { active() && backgroundBlur }
     )
-    private val drawShadow by owner.boolSetting("Drop Shadow", true, dependency = active)
+    private val drawShadow by owner.boolSetting("Drop Shadow", true, { active() })
     private val shadowBlur by owner.doubleSetting(
-        "Shadow Blur", 10.0, 2.0, 32.0, 1.0,
-        dependency = { active.check() && drawShadow }
+        "Shadow Blur", 10.0, 2.0..32.0, 1.0,
+        { active() && drawShadow }
     )
     private val shadowColor by owner.colorSetting(
         "Shadow Color", Color(255, 255, 255, 110),
-        dependency = { active.check() && drawShadow }
+        true,
+        { active() && drawShadow }
     )
-    private val displayTimeMs by owner.intSetting("Quantum Display Time", 5000, 500, 10000, 100, dependency = active)
+    private val displayTimeMs by owner.intSetting("Quantum Display Time", 5000, 500..10000, 100, { active() })
 
     fun getDisplayTime(): Int {
         return displayTimeMs

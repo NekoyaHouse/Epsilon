@@ -8,12 +8,12 @@ import java.awt.Color
 
 object WorldTweaks : Module("World Tweaks", Category.RENDER) {
 
-    val fogModify by boolSetting("Fog Modify", true).apply { rootSetting() }
-    val fogStart by intSetting("Fog Start", 0, 0, 256, 1, dependency = { fogModify })
-    val fogEnd by intSetting("Fog End", 64, 10, 256, 1, dependency = { fogModify })
-    val fogColor by colorSetting("Fog Color", Color(0xA900FF), false, dependency = { fogModify })
-    val changeTime by boolSetting("Change Time", false).apply { rootSetting() }
-    val time by intSetting("Time", 21, 0, 23, 1, dependency = { changeTime })
+    val fogModify by boolSetting("Fog Modify", true)
+    val fogStart by intSetting("Fog Start", 0, 0..256, 1, { fogModify })
+    val fogEnd by intSetting("Fog End", 64, 10..256, 1, { fogModify })
+    val fogColor by colorSetting("Fog Color", Color(0xA900FF), false, { fogModify })
+    val changeTime by boolSetting("Change Time", false)
+    val time by intSetting("Time", 21, 0..23, 1, { changeTime })
 
     fun getModifiedClockTime(clock: Holder<WorldClock>, original: Long): Long {
         if (!isEnabled || !changeTime) return original

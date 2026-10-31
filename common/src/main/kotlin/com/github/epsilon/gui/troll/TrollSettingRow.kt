@@ -326,8 +326,8 @@ class TrollSettingRow {
         val activeInput = input ?: return false
         if (event.isEscape || event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
             finishEditing(!event.isEscape)
-        } else if (activeInput.keyPressed(event)) {
-            previewText()
+        } else {
+            activeInput.keyPressed(event)
         }
         return true
     }
@@ -335,7 +335,7 @@ class TrollSettingRow {
     fun charTyped(event: CharacterEvent): Boolean {
         if (!isEditing()) return false
         val activeInput = input ?: return false
-        if (activeInput.charTyped(event)) previewText()
+        activeInput.charTyped(event)
         return true
     }
 
@@ -396,14 +396,6 @@ class TrollSettingRow {
         }
     }
 
-    private fun previewText() {
-        val activeInput = input ?: return
-        val setting = this.setting
-        if (setting is StringSetting && !setting.isApplyWhenRelease && setting.value != activeInput.text) {
-            setting.value = activeInput.text
-        }
-    }
-
     private fun setBind(bind: Int) {
         val module = this.module
         if (module != null) {
@@ -436,16 +428,16 @@ class TrollSettingRow {
 
     private fun minimum(): Double {
         return when (val s = setting) {
-            is IntSetting -> s.min.toDouble()
-            is DoubleSetting -> s.min
+            is IntSetting -> s.range.first.toDouble()
+            is DoubleSetting -> s.range.start
             else -> 0.0
         }
     }
 
     private fun maximum(): Double {
         return when (val s = setting) {
-            is IntSetting -> s.max.toDouble()
-            is DoubleSetting -> s.max
+            is IntSetting -> s.range.last.toDouble()
+            is DoubleSetting -> s.range.endInclusive
             else -> 0.0
         }
     }
@@ -465,7 +457,7 @@ class TrollSettingRow {
         dragStartX = mouseX
         var value = minimum() + (fraction * (maximum() - minimum()) / maxOf(0.000001, step)).roundToInt() * step
         value = (value).coerceIn(minimum(), maximum())
-        if (setting.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
+        pendingNumber = value
     }
 
     private fun applyNumber(value: Double) {

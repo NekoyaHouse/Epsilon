@@ -17,7 +17,6 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.*
 
@@ -206,7 +205,7 @@ class ModuleButton(val module: Module) : Component() {
             }
             val hintScale = 0.42f
             val hintW = textMetrics.textWidth(hint, hintScale)
-            val hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, 2.0f, width - hintW - 2.0f)
+            val hintX = (btnX + (btnW - hintW) * 0.5f).coerceIn(2.0f, width - hintW - 2.0f)
             scope.text(hint, hintX, DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED)
         }
     }

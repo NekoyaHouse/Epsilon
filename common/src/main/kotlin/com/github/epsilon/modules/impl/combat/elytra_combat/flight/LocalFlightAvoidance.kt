@@ -64,7 +64,7 @@ object LocalFlightAvoidance {
         for (yawOffset in YAW_OFFSETS) {
             for (pitchOffset in PITCH_OFFSETS) {
                 val yaw = Mth.wrapDegrees(baseYaw + yawOffset)
-                val pitch = Mth.clamp(basePitch + pitchOffset, -89.0f, 89.0f)
+                val pitch = (basePitch + pitchOffset).coerceIn(-89.0f, 89.0f)
                 val direction = direction(yaw, pitch)
                 val candidate = player.position().add(direction.scale(probeDistance))
                 if (!isSegmentClear(player, player.position(), candidate)) {

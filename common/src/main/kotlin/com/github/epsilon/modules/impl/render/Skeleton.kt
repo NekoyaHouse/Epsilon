@@ -17,10 +17,10 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
     private val friends by boolSetting("Friends", true)
     private val self by boolSetting("Self", false)
     private val invisibles by boolSetting("Invisibles", true)
-    private val distance by doubleSetting("Distance", 128.0, 8.0, 256.0, 8.0)
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5, 5.0, 0.5)
+    private val distance by doubleSetting("Distance", 128.0, 8.0..256.0, 8.0)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.5)
     private val color by colorSetting("Color", Color.WHITE)
-    private val friendColor by colorSetting("Friend Color", Color(0x30FF00), dependency = { friends })
+    private val friendColor by colorSetting("Friend Color", Color(0x30FF00), true, { friends })
 
     init {
         handler<Render3DEvent> { onRender3D(it) }

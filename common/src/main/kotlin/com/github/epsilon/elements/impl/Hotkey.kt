@@ -11,7 +11,6 @@ import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
 
@@ -30,17 +29,15 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     }
 
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
-    private val singleColor by colorSetting("Color", Color.WHITE, false, dependency = { colorMode == ColorMode.Single })
+    private val singleColor by colorSetting("Color", Color.WHITE, false, { colorMode == ColorMode.Single })
     private val doubleColor1 by colorSetting(
         "Color 1",
         Color.WHITE,
-        false,
-        dependency = { colorMode == ColorMode.Double })
+        false, { colorMode == ColorMode.Double })
     private val doubleColor2 by colorSetting(
         "Color 2",
         Color.RED,
-        false,
-        dependency = { colorMode == ColorMode.Double })
+        false, { colorMode == ColorMode.Double })
     private val shadowColorMode by enumSetting("Shadow Color", ShadowColorMode.Black)
     private val showSuffix by boolSetting("Show Suffix", true)
 
@@ -197,7 +194,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {
-        val alpha = Mth.clamp((color.alpha * Mth.clamp(multiplier, 0.0f, 1.0f)).toInt(), 0, 255)
+        val alpha = (color.alpha * multiplier.coerceIn(0.0f, 1.0f)).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 
@@ -209,12 +206,12 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
 
         fun update(target: Boolean, now: Long): Float {
             if (this.target != target) {
-                val elapsed = Mth.clamp(now - startedAt, 0L, ANIMATION_DURATION_MS.toLong())
+                val elapsed = (now - startedAt).coerceIn(0L, ANIMATION_DURATION_MS.toLong())
                 this.target = target
                 this.startedAt = now - (ANIMATION_DURATION_MS - elapsed)
             }
 
-            val elapsed = Mth.clamp((now - startedAt) / ANIMATION_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            val elapsed = ((now - startedAt) / ANIMATION_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
             val eased = Easing.EASE_IN_OUT_QUAD.function.apply(elapsed)
             progressValue = if (target) eased else 1.0f - eased
             return progressValue

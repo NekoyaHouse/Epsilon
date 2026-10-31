@@ -46,24 +46,31 @@ object Particles : Module("Particles", Category.RENDER) {
 
     private val fireFliesEnabled by boolSetting("Fire Flies", true)
     private val ffCount by intSetting(
-        "FF Count", 30, 20, 200, 1, dependency = { fireFliesEnabled }
+        "FF Count", 30, 20..200, 1,
+        { fireFliesEnabled }
     )
     private val ffSize by doubleSetting(
-        "FF Size", 1.0, 0.1, 2.0, 0.1, dependency = { fireFliesEnabled }
+        "FF Size", 1.0, 0.1..2.0, 0.1,
+        { fireFliesEnabled }
     )
     private val mode: EnumSetting<Mode> = enumSetting("Mode", Mode.SnowFlake)
     private val count by intSetting(
-        "Count", 100, 20, 800, 1, dependency = { !mode.`is`(Mode.Off) }
+        "Count", 100, 20..800, 1,
+        { !mode.`is`(Mode.Off) }
     )
     private val size by doubleSetting(
-        "Size", 1.0, 0.1, 6.0, 0.1, dependency = { !mode.`is`(Mode.Off) }
+        "Size", 1.0, 0.1..6.0, 0.1,
+        { !mode.`is`(Mode.Off) }
     )
     private val colorMode: EnumSetting<ColorMode> = enumSetting("Color Mode", ColorMode.Sync)
     private val color by colorSetting(
-        "Color", Color(3649978), dependency = { colorMode.`is`(ColorMode.Custom) }
+        "Color", Color(3649978),
+        true,
+        { colorMode.`is`(ColorMode.Custom) }
     )
     private val physics: EnumSetting<Physics> = enumSetting(
-        "Physics", Physics.Fly, dependency = { !mode.`is`(Mode.Off) }
+        "Physics", Physics.Fly,
+        { !mode.`is`(Mode.Off) }
     )
 
     private val fireFlies: MutableList<ParticleBase> = ArrayList()
@@ -168,7 +175,7 @@ object Particles : Module("Particles", Category.RENDER) {
     }
 
     private fun withAlpha(source: Color, alpha: Int): Color =
-        Color(source.red, source.green, source.blue, Mth.clamp(alpha, 0, 255))
+        Color(source.red, source.green, source.blue, alpha.coerceIn(0, 255))
 
     private class FireFly(
         posX: Float, posY: Float, posZ: Float,

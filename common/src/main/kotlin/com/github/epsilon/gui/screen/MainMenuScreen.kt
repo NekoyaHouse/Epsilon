@@ -494,25 +494,21 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val menuCenterCorrectionX = (width - layoutWidth) * 0.2f
         val introElapsed = maxOf(0L, now - introStartMs)
         val titleProgress = Easing.EASE_OUT_CUBIC.function.apply(
-            Mth.clamp((introElapsed - COLUMBINA_TITLE_DELAY_MS) / COLUMBINA_TITLE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            ((introElapsed - COLUMBINA_TITLE_DELAY_MS) / COLUMBINA_TITLE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         )
         val subtitleProgress = Easing.EASE_OUT_CUBIC.function.apply(
-            Mth.clamp(
-                (introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat(),
-                0.0f,
-                1.0f
-            )
+            ((introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat()).coerceIn(0.0f, 1.0f)
         )
         val shutdownElapsed = if (reisaShutdownStartMs < 0L) 0.0f else (now - reisaShutdownStartMs).toFloat()
         val exit = Easing.EASE_IN_OUT_CUBIC.function.apply(
-            Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            (shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         )
         val menuVisibility = 1.0f - exit
         val titleVisibility = titleProgress * menuVisibility
         val subtitleVisibility = subtitleProgress * menuVisibility
 
         val rightMargin = maxOf(46.5f * scale, layoutWidth * 0.055f)
-        val menuWidth = Mth.clamp(layoutWidth * 0.25f, 294.5f * scale, 418.5f * scale)
+        val menuWidth = (layoutWidth * 0.25f).coerceIn(294.5f * scale, 418.5f * scale)
         val restingMenuX = layoutWidth - rightMargin - menuWidth - menuCenterCorrectionX
         val menuX = restingMenuX + exit * 34.1f * scale
         val titleCenterX = restingMenuX + menuWidth * 0.53f
@@ -604,7 +600,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     val entry = entries[index]
                     val itemDelay = COLUMBINA_MENU_DELAY_MS + index * COLUMBINA_ITEM_STAGGER_MS
                     val itemProgress = Easing.EASE_OUT_CUBIC.function.apply(
-                        Mth.clamp((introElapsed - itemDelay) / COLUMBINA_ITEM_DURATION_MS.toFloat(), 0.0f, 1.0f)
+                        ((introElapsed - itemDelay) / COLUMBINA_ITEM_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
                     )
                     val itemVisibility = itemProgress * menuVisibility
                     val rowY = menuTop + index * rowStride + (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_RISE * scale
@@ -712,12 +708,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     private fun drawClassicMenu(mouseX: Int, mouseY: Int) {
         val now = Util.getMillis()
-        val introProgress = Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp((now - introStartMs) / 650.0f, 0.0f, 1.0f))
+        val introProgress = Easing.EASE_OUT_CUBIC.function.apply(((now - introStartMs) / 650.0f).coerceIn(0.0f, 1.0f))
         val width = LuminRenderSystem.getScaledWidthInt()
         val height = LuminRenderSystem.getScaledHeightInt()
         val shutdownElapsed = if (reisaShutdownStartMs < 0L) 0.0f else (now - reisaShutdownStartMs).toFloat()
         val menuVisibility = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(
-            Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            (shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         )
         val scale = resolutionScale(width, height)
         val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
@@ -791,7 +787,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 }
                 for (index in entries.indices) {
                     val entry = entries[index]
-                    val staged = Mth.clamp((introProgress - index * 0.08f) / 0.52f, 0.0f, 1.0f)
+                    val staged = ((introProgress - index * 0.08f) / 0.52f).coerceIn(0.0f, 1.0f)
                     val appear = Easing.EASE_OUT_CUBIC.function.apply(staged) * menuVisibility
                     if (appear <= 0.001f) {
                         entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f)
@@ -857,19 +853,19 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val now = Util.getMillis()
         val elapsed = maxOf(0L, now - reisaGreetingStartMs)
         val exitElapsed = if (reisaExitStartMs < 0L) -1L else maxOf(0L, now - reisaExitStartMs)
-        val entrance = Mth.clamp(elapsed / REISA_ENTRANCE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        val entrance = (elapsed / REISA_ENTRANCE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val slide = Easing.EASE_OUT_BACK.function.apply(entrance)
         val entranceUnfold = 0.04f + 0.96f * Easing.EASE_OUT_CUBIC.function.apply(
-            Mth.clamp((elapsed - 60.0f) / 760.0f, 0.0f, 1.0f)
+            ((elapsed - 60.0f) / 760.0f).coerceIn(0.0f, 1.0f)
         )
         val poseProgress = if (exitElapsed < 0L) 0.0f
-        else Mth.clamp((exitElapsed - REISA_EXIT_POSE_DELAY_MS) / REISA_EXIT_POSE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        else ((exitElapsed - REISA_EXIT_POSE_DELAY_MS) / REISA_EXIT_POSE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val poseEase = Easing.EASE_IN_OUT_CUBIC.function.apply(poseProgress)
         val moveProgress = if (exitElapsed < 0L) 0.0f
-        else Mth.clamp((exitElapsed - REISA_EXIT_MOVE_DELAY_MS) / REISA_EXIT_MOVE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        else ((exitElapsed - REISA_EXIT_MOVE_DELAY_MS) / REISA_EXIT_MOVE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val moveEase = Easing.EASE_IN_CUBIC.function.apply(moveProgress)
         val liftEase = Easing.EASE_IN_OUT_CUBIC.function.apply(moveProgress)
-        val fadeProgress = Mth.clamp((moveProgress - 0.25f) / 0.75f, 0.0f, 1.0f)
+        val fadeProgress = ((moveProgress - 0.25f) / 0.75f).coerceIn(0.0f, 1.0f)
         val fadeEase = Easing.EASE_OUT_CUBIC.function.apply(fadeProgress)
         val imageHeight = minOf(height * 0.78f, width * 0.58f)
         val imageWidth = imageHeight * REISA_ASPECT_RATIO
@@ -884,7 +880,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
         val baseImageY = height - imageHeight + 6.2f * scale
         val imageY = baseImageY + bob - 18.6f * scale * liftEase
-        val entranceAlpha = Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(elapsed / 240.0f, 0.0f, 1.0f))
+        val entranceAlpha = Easing.EASE_OUT_CUBIC.function.apply((elapsed / 240.0f).coerceIn(0.0f, 1.0f))
         val imageAlpha = entranceAlpha * (1.0f - fadeEase)
         val uniformScale = Mth.lerp(liftEase, 1.0f, 0.97f)
         val drawWidth = imageWidth * uniformScale
@@ -893,7 +889,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val drawY = imageY + (imageHeight - drawHeight) * 0.5f
 
         val baseProgress = if (exitElapsed < 0L) 0.0f
-        else Mth.clamp((exitElapsed - REISA_EXIT_BASE_DELAY_MS) / REISA_EXIT_BASE_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        else ((exitElapsed - REISA_EXIT_BASE_DELAY_MS) / REISA_EXIT_BASE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val baseWidth = 1.0f - Easing.EASE_IN_CUBIC.function.apply(baseProgress)
         val baseAlpha = entranceAlpha * if (exitElapsed < 0L) {
             entranceUnfold
@@ -946,12 +942,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     ) {
         val elapsed = maxOf(0L, now - reisaShutdownStartMs)
         val exitElapsed = if (reisaShutdownExitStartMs < 0L) -1L else maxOf(0L, now - reisaShutdownExitStartMs)
-        val entranceProgress = Mth.clamp(
-            (elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS) / REISA_SHUTDOWN_ENTRANCE_DURATION_MS.toFloat(), 0.0f, 1.0f
-        )
+        val entranceProgress = ((elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS) / REISA_SHUTDOWN_ENTRANCE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val entranceEase = Easing.EASE_OUT_BACK.function.apply(entranceProgress)
         val exitProgress = if (exitElapsed < 0L) 0.0f
-        else Mth.clamp(exitElapsed / REISA_SHUTDOWN_EXIT_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        else (exitElapsed / REISA_SHUTDOWN_EXIT_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         val exitEase = Easing.EASE_IN_CUBIC.function.apply(exitProgress)
         val imageHeight = minOf(height * 0.80f, width * 0.60f)
         val imageWidth = imageHeight * REISA_ASPECT_RATIO
@@ -1043,10 +1037,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         scale: Float,
     ) {
         val bubbleIn = Easing.EASE_OUT_CUBIC.function.apply(
-            Mth.clamp((elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) / 320.0f, 0.0f, 1.0f)
+            ((elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) / 320.0f).coerceIn(0.0f, 1.0f)
         )
         val bubbleOut = if (exitElapsed < 0L) 1.0f
-        else 1.0f - Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(exitElapsed / 300.0f, 0.0f, 1.0f))
+        else 1.0f - Easing.EASE_OUT_CUBIC.function.apply((exitElapsed / 300.0f).coerceIn(0.0f, 1.0f))
         val visibility = minOf(bubbleIn, bubbleOut)
         if (visibility <= 0.001f) return
 
@@ -1071,13 +1065,11 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val nameHeight = metrics.getHeight(nameScale, StaticFontLoader.JURA_LIGHT)
         val messageHeight = metrics.getHeight(messageScale)
         val bubbleHeight = topPadding + nameHeight + rowGap + messageHeight + bottomPadding
-        val bubbleX = Mth.clamp(imageX - bubbleWidth * 0.72f, 18.6f * scale, width - bubbleWidth - 18.6f * scale)
+        val bubbleX = (imageX - bubbleWidth * 0.72f).coerceIn(18.6f * scale, width - bubbleWidth - 18.6f * scale)
         val bubbleY = imageY + imageHeight * 0.22f + (1.0f - bubbleIn) * 18.6f * scale
         val radius = 9.3f * scale
-        val speechProgress = Mth.clamp(
-            (elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) /
-                    (REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS - REISA_SHUTDOWN_BUBBLE_DELAY_MS).toFloat(), 0.0f, 1.0f
-        )
+        val speechProgress = ((elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) /
+                    (REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS - REISA_SHUTDOWN_BUBBLE_DELAY_MS).toFloat()).coerceIn(0.0f, 1.0f)
 
         val surface = applyAlpha(Color(29, 31, 42), visibility * 0.97f)
         val outline = applyAlpha(Color(229, 194, 255), visibility * 0.54f)
@@ -1306,9 +1298,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         scale: Float,
     ) {
         val bubbleIn =
-            Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp((elapsed - REISA_BUBBLE_DELAY_MS) / 380.0f, 0.0f, 1.0f))
+            Easing.EASE_OUT_CUBIC.function.apply(((elapsed - REISA_BUBBLE_DELAY_MS) / 380.0f).coerceIn(0.0f, 1.0f))
         val bubbleExit = if (exitElapsed < 0L) 0.0f
-        else Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(exitElapsed / 260.0f, 0.0f, 1.0f))
+        else Easing.EASE_OUT_CUBIC.function.apply((exitElapsed / 260.0f).coerceIn(0.0f, 1.0f))
         val bubbleOut = 1.0f - bubbleExit
         val visibility = minOf(bubbleIn, bubbleOut)
         if (visibility <= 0.001f) return
@@ -1325,14 +1317,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val nameWidth = metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT)
         val messageWidth = metrics.getWidth(greeting, messageScale)
         val bubbleWidth =
-            Mth.clamp(maxOf(nameWidth, messageWidth) + contentInset * 2.0f, minBubbleWidth, maxBubbleWidth)
+            (maxOf(nameWidth, messageWidth) + contentInset * 2.0f).coerceIn(minBubbleWidth, maxBubbleWidth)
         val topPadding = 11.625f * scale
         val rowGap = 3.875f * scale
         val bottomPadding = 12.4f * scale
         val nameHeight = metrics.getHeight(nameScale, StaticFontLoader.JURA_LIGHT)
         val messageHeight = metrics.getHeight(messageScale)
         val bubbleHeight = topPadding + nameHeight + rowGap + messageHeight + bottomPadding
-        val bubbleX = Mth.clamp(imageX - bubbleWidth * 0.72f, 18.6f * scale, width - bubbleWidth - 18.6f * scale)
+        val bubbleX = (imageX - bubbleWidth * 0.72f).coerceIn(18.6f * scale, width - bubbleWidth - 18.6f * scale)
         val bubbleY = imageY + imageHeight * 0.23f + (1.0f - bubbleIn) * 18.6f * scale - bubbleExit * 15.5f * scale
         val radius = 9.3f * scale
         val alpha = visibility * 0.96f
@@ -1457,7 +1449,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     private fun applyAlpha(color: Color, alphaFactor: Float): Color {
-        val factor = Mth.clamp(alphaFactor, 0.0f, 1.0f)
+        val factor = alphaFactor.coerceIn(0.0f, 1.0f)
         return Color(color.red, color.green, color.blue, (color.alpha * factor).roundToInt())
     }
 

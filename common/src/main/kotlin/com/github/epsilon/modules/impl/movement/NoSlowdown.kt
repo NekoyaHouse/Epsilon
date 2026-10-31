@@ -38,9 +38,9 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
     private val mode by enumSetting("Mode", Mode.Vanilla)
     private val food by boolSetting("Food", true)
-    private val bow by boolSetting("Bow", true, dependency = { mode != Mode.GrimBlink })
-    private val crossbow by boolSetting("Crossbow", true, dependency = { mode != Mode.GrimBlink })
-    private val cobweb by boolSetting("Cobweb", true, dependency = { mode == Mode.Vanilla })
+    private val bow by boolSetting("Bow", true, { mode != Mode.GrimBlink })
+    private val crossbow by boolSetting("Crossbow", true, { mode != Mode.GrimBlink })
+    private val cobweb by boolSetting("Cobweb", true, { mode == Mode.Vanilla })
 
     private var ticks = 0
     private var eating = false

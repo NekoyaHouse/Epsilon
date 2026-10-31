@@ -85,11 +85,11 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         Firefly,
     }
 
-    private val range by doubleSetting("Range", 4.0, 0.0, 6.0, 0.1)
-    private val fov by intSetting("FOV", 360, 10, 360, 1)
+    private val range by doubleSetting("Range", 4.0, 0.0..6.0, 0.1)
+    private val fov by intSetting("FOV", 360, 10..360, 1)
     private val autoCharge by boolSetting("Auto Charge", true)
     private val move by boolSetting("Move", true)
-    private val rotationSpeed by intSetting("Rotation Speed", 180, 10, 180, 10)
+    private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10)
     private val rotationPriority by enumSetting("Rotation Priority", Priority.High)
 
     private val players by boolSetting("Players", true)
@@ -100,66 +100,73 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     private val mace by boolSetting("Mace", true)
     private val maceSwapMode by enumSetting(
-        "Mace Swap Mode", MaceSwapMode.Silent, dependency = { mace })
+        "Mace Swap Mode", MaceSwapMode.Silent, { mace })
 
     private val esp by boolSetting("ESP", true)
-    private val espMode by enumSetting("ESP Mode", ESPMode.Circle, dependency = { esp })
+    private val espMode by enumSetting("ESP Mode", ESPMode.Circle, { esp })
     private val espColor1 by colorSetting(
-        "ESP Main", Color(255, 183, 197),
-        dependency = { esp && espMode == ESPMode.CaptureMark })
+        "ESP Main", Color(255, 183, 197), true, { esp && espMode == ESPMode.CaptureMark })
     private val espColor2 by colorSetting(
-        "ESP Second", Color(255, 133, 161),
-        dependency = { esp && espMode == ESPMode.CaptureMark })
+        "ESP Second", Color(255, 133, 161), true, { esp && espMode == ESPMode.CaptureMark })
     private val espSize by doubleSetting(
-        "ESP Size", 1.2, 0.5, 3.0, 0.1,
-        dependency = { esp && espMode == ESPMode.CaptureMark })
+        "ESP Size", 1.2, 0.5..3.0, 0.1, { esp && espMode == ESPMode.CaptureMark })
     private val espRotSpeed by doubleSetting(
-        "Rot Speed", 2.0, 0.5, 10.0, 0.1,
-        dependency = { esp && espMode == ESPMode.CaptureMark })
+        "Rot Speed", 2.0, 0.5..10.0, 0.1, { esp && espMode == ESPMode.CaptureMark })
     private val waveSpeed by doubleSetting(
-        "Wave Speed", 3.0, 0.5, 10.0, 0.1,
-        dependency = { esp && espMode == ESPMode.CaptureMark })
+        "Wave Speed", 3.0, 0.5..10.0, 0.1, { esp && espMode == ESPMode.CaptureMark })
     private val sideColor by colorSetting(
-        "Side Color", Color.WHITE, false,
-        dependency = { esp && espMode == ESPMode.Circle })
+        "Side Color", Color.WHITE, false, { esp && espMode == ESPMode.Circle })
     private val lineColor by colorSetting(
-        "Line Color", Color(255, 255, 255, 233),
-        dependency = { esp && espMode == ESPMode.Circle })
+        "Line Color", Color(255, 255, 255, 233), true, { esp && espMode == ESPMode.Circle })
     private val circleAlphaFactor by doubleSetting(
-        "Circle Alpha Factor", 1.0, 0.0, 2.0, 0.05,
-        dependency = { esp && espMode == ESPMode.Circle })
+        "Circle Alpha Factor", 1.0, 0.0..2.0, 0.05, { esp && espMode == ESPMode.Circle })
     private val fireflyColorMode by enumSetting(
-        "Firefly Color Mode", FireflyESP.ColorMode.Blend,
-        dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Color Mode", FireflyESP.ColorMode.Blend, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor by colorSetting(
-        "Firefly Color", Color(149, 149, 149, 255),
-        dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Color", Color(149, 149, 149, 255), true, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
-        "Firefly Color 2", Color(255, 133, 161, 255),
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color 2",
+        Color(255, 133, 161, 255),
+        true,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
-        "Firefly Color Mix", 0.65, 0.0, 1.0, 0.05,
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color Mix",
+        0.65,
+        0.0..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorSpeed by doubleSetting(
-        "Firefly Color Speed", 1.2, 0.1, 6.0, 0.1,
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color Speed",
+        1.2,
+        0.1..6.0,
+        0.1,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyRainbowSpeed by doubleSetting(
-        "Firefly Rainbow Speed", 1.0, 0.1, 6.0, 0.1,
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Speed",
+        1.0,
+        0.1..6.0,
+        0.1,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowSaturation by doubleSetting(
-        "Firefly Rainbow Saturation", 0.85, 0.1, 1.0, 0.05,
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Saturation",
+        0.85,
+        0.1..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowBrightness by doubleSetting(
-        "Firefly Rainbow Brightness", 1.0, 0.1, 1.0, 0.05,
-        dependency = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Brightness",
+        1.0,
+        0.1..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyLength by intSetting(
-        "Firefly Length", 14, 8, 128, 1, dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Length", 14, 8..128, 1, { esp && espMode == ESPMode.Firefly })
     private val fireflyFactor by intSetting(
-        "Firefly Factor", 8, 1, 10, 1, dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Factor", 8, 1..10, 1, { esp && espMode == ESPMode.Firefly })
     private val fireflyShaking by doubleSetting(
-        "Firefly Shaking", 1.8, 0.25, 10.0, 0.25, dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Shaking", 1.8, 0.25..10.0, 0.25, { esp && espMode == ESPMode.Firefly })
     private val fireflyAmplitude by doubleSetting(
-        "Firefly Amplitude", 3.0, 0.0, 10.0, 0.25, dependency = { esp && espMode == ESPMode.Firefly })
+        "Firefly Amplitude", 3.0, 0.0..10.0, 0.25, { esp && espMode == ESPMode.Firefly })
 
     var target: LivingEntity? = null
     private var targets: List<LivingEntity>? = null

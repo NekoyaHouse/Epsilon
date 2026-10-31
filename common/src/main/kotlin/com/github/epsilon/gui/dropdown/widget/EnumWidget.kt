@@ -15,7 +15,6 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.util.Mth
 import java.awt.Color
 
 class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(setting) {
@@ -224,7 +223,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             return
         }
 
-        val alpha = Mth.clamp((visibleBottom - optionY) / OPTION_HEIGHT, 0.0f, 1.0f)
+        val alpha = ((visibleBottom - optionY) / OPTION_HEIGHT).coerceIn(0.0f, 1.0f)
         val supported = setting.isModeSupportedUnchecked(mode)
         var textColor: Color = if (!supported) {
             MD3Theme.TEXT_MUTED

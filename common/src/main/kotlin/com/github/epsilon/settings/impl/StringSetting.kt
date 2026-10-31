@@ -5,12 +5,12 @@ import com.github.epsilon.settings.Setting
 class StringSetting(
     name: String,
     defaultValue: String,
-    dependency: Dependency?,
+    visible: Visibility?,
     onChanged: ((String) -> Unit)?,
-) : Setting<String>(name, dependency, onChanged) {
+) : Setting<String>(name, visible, onChanged) {
 
-    constructor(name: String, defaultValue: String, dependency: Dependency?) :
-            this(name, defaultValue, dependency, null)
+    constructor(name: String, defaultValue: String, visible: Visibility?) :
+            this(name, defaultValue, visible, null)
 
     init {
         initializeValue(defaultValue)

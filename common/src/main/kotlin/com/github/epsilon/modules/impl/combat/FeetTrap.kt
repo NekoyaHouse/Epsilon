@@ -37,13 +37,12 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val toggleOnJump by boolSetting("Toggle On Jump", true)
     private val inAir by boolSetting("In Air", true)
     private val pauseOnEat by boolSetting("Pause On Eat", true)
-    private val placeDelay by intSetting("Place Delay", 50, 0, 500, 50)
+    private val placeDelay by intSetting("Place Delay", 50, 0..500, 50)
     private val extend by boolSetting("Extend", true)
-    private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1, 8, 1)
+    private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
     private val rotate by boolSetting("Rotate", true)
     private val rotationSpeed by intSetting(
-        "Rotation Speed", 180, 18, 180, 18,
-        dependency = { rotate })
+        "Rotation Speed", 180, 18..180, 18, { rotate })
     private val enderChest by boolSetting("Ender Chest", true)
     private val inventorySwap by boolSetting("Inventory Swap", true)
 
@@ -105,7 +104,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         }
     }
 
-    private fun contextDependency(): com.github.epsilon.settings.Setting.Dependency =
+    private fun contextVisibility(): com.github.epsilon.settings.Setting.Visibility =
         { rotate }
 
     override fun onEnable() {

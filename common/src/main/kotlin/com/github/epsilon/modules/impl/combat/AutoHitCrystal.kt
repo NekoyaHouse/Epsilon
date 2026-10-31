@@ -20,7 +20,6 @@ import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
-import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
@@ -36,10 +35,10 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
     private val activateKey by keybindSetting("Activate Key", InputConstants.UNKNOWN.value)
     private val checkPlace by boolSetting("Check Place", false)
-    private val switchDelay by doubleSetting("Switch Delay", 0.0, 0.0, 20.0, 1.0)
-    private val switchChance by doubleSetting("Switch Chance", 100.0, 0.0, 100.0, 1.0)
-    private val placeDelay by doubleSetting("Place Delay", 0.0, 0.0, 20.0, 1.0)
-    private val placeChance by doubleSetting("Place Chance", 100.0, 0.0, 100.0, 1.0)
+    private val switchDelay by doubleSetting("Switch Delay", 0.0, 0.0..20.0, 1.0)
+    private val switchChance by doubleSetting("Switch Chance", 100.0, 0.0..100.0, 1.0)
+    private val placeDelay by doubleSetting("Place Delay", 0.0, 0.0..20.0, 1.0)
+    private val placeChance by doubleSetting("Place Chance", 100.0, 0.0..100.0, 1.0)
     private val workWithTotem by boolSetting("Work With Totem", false)
     private val workWithCrystal by boolSetting("Work With Crystal", false)
     private val workWithPickaxe by boolSetting("Work With Pickaxe", false)
@@ -47,9 +46,9 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     private val swingHand by boolSetting("Swing Hand", true)
 
     private val render by boolSetting("Render", true)
-    private val fadeTime by intSetting("Fade Time", 500, 0, 3000, 50, dependency = { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), dependency = { render })
-    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), dependency = { render })
+    private val fadeTime by intSetting("Fade Time", 500, 0..3000, 50, { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), true, { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), true, { render })
 
     private var placeClock = 0
     private var switchClock = 0
@@ -70,8 +69,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
             for (box in renderBoxes) {
                 val age = time - box.startTime
-                val progress = Mth.clamp(age.toFloat() / fade, 0.0f, 1.0f)
-                val alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f)
+                val progress = (age.toFloat() / fade).coerceIn(0.0f, 1.0f)
+                val alphaFactor = (1.0f - progress).coerceIn(0.0f, 1.0f)
 
                 val boxSideColor = box.sideColor
                 val boxLineColor = box.lineColor

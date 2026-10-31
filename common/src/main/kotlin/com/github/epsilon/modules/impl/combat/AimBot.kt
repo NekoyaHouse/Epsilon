@@ -36,22 +36,21 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     }
 
     private val mode by enumSetting("Mode", Mode.AimAssist)
-    private val rotation by enumSetting("Rotation", Rotation.Silent, dependency = { mode != Mode.AimAssist })
-    private val aimStrength by intSetting("Aim Strength", 30, 1, 100, 1, dependency = { mode == Mode.AimAssist })
-    private val aimSmooth by intSetting("Aim Smooth", 45, 1, 180, 1, dependency = { mode == Mode.AimAssist })
-    private val aimTime by intSetting("Aim Time", 2, 1, 10, 1, dependency = { mode == Mode.AimAssist })
-    private val onlyWeapon by boolSetting("Only Weapon", false, dependency = { mode == Mode.AimAssist })
-    private val lmbActivation by boolSetting("LMB Activation", false, dependency = { mode == Mode.AimAssist })
+    private val rotation by enumSetting("Rotation", Rotation.Silent, { mode != Mode.AimAssist })
+    private val aimStrength by intSetting("Aim Strength", 30, 1..100, 1, { mode == Mode.AimAssist })
+    private val aimSmooth by intSetting("Aim Smooth", 45, 1..180, 1, { mode == Mode.AimAssist })
+    private val aimTime by intSetting("Aim Time", 2, 1..10, 1, { mode == Mode.AimAssist })
+    private val onlyWeapon by boolSetting("Only Weapon", false, { mode == Mode.AimAssist })
+    private val lmbActivation by boolSetting("LMB Activation", false, { mode == Mode.AimAssist })
     private val ignoreWalls by boolSetting("Ignore Walls", true)
     private val reactionTime by intSetting(
-        "Reaction Time", 80, 1, 500, 1,
-        dependency = { mode == Mode.AimAssist && !ignoreWalls })
-    private val ignoreInvisible by boolSetting("Ignore Invis", false, dependency = { mode == Mode.AimAssist })
+        "Reaction Time", 80, 1..500, 1, { mode == Mode.AimAssist && !ignoreWalls })
+    private val ignoreInvisible by boolSetting("Ignore Invis", false, { mode == Mode.AimAssist })
 
-    private val predictTicks by intSetting("Predict Ticks", 2, 0, 20, 1, dependency = { mode == Mode.BowAim })
-    private val bowFov by intSetting("Bow FOV", 90, 10, 360, 1, dependency = { mode == Mode.BowAim })
-    private val bowRange by intSetting("Bow Range", 64, 8, 128, 1, dependency = { mode == Mode.BowAim })
-    private val bowSmooth by intSetting("Bow Smooth", 30, 5, 100, 1, dependency = { mode == Mode.BowAim })
+    private val predictTicks by intSetting("Predict Ticks", 2, 0..20, 1, { mode == Mode.BowAim })
+    private val bowFov by intSetting("Bow FOV", 90, 10..360, 1, { mode == Mode.BowAim })
+    private val bowRange by intSetting("Bow Range", 64, 8..128, 1, { mode == Mode.BowAim })
+    private val bowSmooth by intSetting("Bow Smooth", 30, 5..100, 1, { mode == Mode.BowAim })
 
     private var target: Entity? = null
     private var rotationYaw = 0.0f
@@ -79,7 +78,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
 
             if (mode == Mode.BowAim && rotation == Rotation.Client && !bowTargetYaw.isNaN()) {
                 val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-                val factor = Mth.clamp(bowSmooth / 100.0f * tickDelta, 0.0f, 1.0f)
+                val factor = (bowSmooth / 100.0f * tickDelta).coerceIn(0.0f, 1.0f)
                 val currentYaw = player.yRot
                 player.yRot = currentYaw + Mth.wrapDegrees(bowTargetYaw - currentYaw) * factor
                 player.xRot = Mth.lerp(factor, player.xRot, bowTargetPitch)
@@ -169,7 +168,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         }
 
         val nearestTarget = getNearestTarget(5.0f)
-        assistAcceleration = Mth.clamp(assistAcceleration + aimStrength / 10000.0f, 0.0f, 1.0f)
+        assistAcceleration = (assistAcceleration + aimStrength / 10000.0f).coerceIn(0.0f, 1.0f)
 
         if (nearestTarget != null) {
             if (!player.hasLineOfSight(nearestTarget) && !ignoreWalls) {
@@ -193,7 +192,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             if (fixedDeltaYaw > 180.0f) {
                 fixedDeltaYaw -= 180.0f
             }
-            val yawStep = Mth.clamp(Mth.abs(fixedDeltaYaw), -aimSmooth.toFloat(), aimSmooth.toFloat())
+            val yawStep = Mth.abs(fixedDeltaYaw).coerceIn(-aimSmooth.toFloat(), aimSmooth.toFloat())
             val newYaw = rotationYaw + (if (fixedDeltaYaw > 0.0f) yawStep else -yawStep)
             val gcdFix = (mc.options.sensitivity().get() * 0.6 + 0.2).pow(3.0) * 1.2
             rotationYaw = (newYaw - (newYaw - rotationYaw) % gcdFix).toFloat()

@@ -30,7 +30,7 @@ object SettingLayoutPlanner {
         var inlineIndex = 0
 
         for (setting in sanitized) {
-            val group = setting.group
+            val group = setting.groupRef
             if (group == null) {
                 var inlineRun = root.lastInlineRun()
                 if (inlineRun == null) {

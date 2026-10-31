@@ -23,11 +23,14 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     var text: String = ""
         set(value) {
             field = clamp(value)
-            cursor = minOf(cursor, field.length)
+            cursor = cursor.coerceIn(0, field.length)
         }
 
     private var cursor: Int = 0
     private var cursorMidpoints: FloatArray = FloatArray(0)
+
+    private val safeCursor: Int
+        get() = cursor.coerceIn(0, text.length)
 
     fun draw(
         scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
@@ -65,7 +68,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         }
 
         if (isFocused) {
-            val safeCursor = minOf(cursor, text.length)
+            val safeCursor = cursor.coerceIn(0, text.length)
             val caretX = textX + textMetrics.textWidth(text.substring(0, safeCursor), textScale)
             drawCaret(scope, textMetrics, caretX, textY, textScale)
             IMEFocusHelper.updateCursorPos(caretX, textY)
@@ -104,7 +107,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         )
 
         if (isFocused) {
-            val safeCursor = minOf(cursor, text.length)
+            val safeCursor = cursor.coerceIn(0, text.length)
             val beforeCursor = text.substring(0, safeCursor)
             val caretX = caretBaseX + textMetrics.textWidth(beforeCursor, textScale)
             drawCaret(scope, textMetrics, caretX, textY, textScale)
@@ -117,7 +120,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
             return false
         }
         isFocused = true
-        cursor = resolveCursor(mouseX)
+        cursor = resolveCursor(mouseX).coerceIn(0, text.length)
         IMEFocusHelper.activate()
         return true
     }
@@ -134,7 +137,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
             return false
         }
         isFocused = true
-        cursor = resolveCursor(mouseX)
+        cursor = resolveCursor(mouseX).coerceIn(0, text.length)
         IMEFocusHelper.activate()
         return true
     }
@@ -163,16 +166,19 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         }
         return when (keyCode) {
             InputConstants.KEY_BACKSPACE -> {
-                if (cursor > 0 && text.isNotEmpty()) {
-                    text = text.substring(0, cursor - 1) + text.substring(cursor)
-                    cursor--
+                val index = safeCursor
+                if (index > 0) {
+                    text = text.substring(0, index - 1) + text.substring(index)
+                    cursor = index - 1
                 }
                 true
             }
 
             InputConstants.KEY_DELETE -> {
-                if (cursor < text.length) {
-                    text = text.substring(0, cursor) + text.substring(cursor + 1)
+                val index = safeCursor
+                if (index < text.length) {
+                    text = text.substring(0, index) + text.substring(index + 1)
+                    cursor = index
                 }
                 true
             }
@@ -209,9 +215,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         return isFocused && insertText(typedText)
     }
 
-    fun getCursorIndex(): Int {
-        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
-    }
+    fun getCursorIndex(): Int = safeCursor
 
     fun clear() {
         text = ""
@@ -234,8 +238,9 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         if (available <= 0) return false
         val safe = if (accepted.length > available) accepted.substring(0, available) else accepted.toString()
         if (safe.isEmpty()) return false
-        text = text.substring(0, cursor) + safe + text.substring(cursor)
-        cursor += safe.length
+        val index = safeCursor
+        text = text.substring(0, index) + safe + text.substring(index)
+        cursor = index + safe.length
         return true
     }
 

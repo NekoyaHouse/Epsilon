@@ -29,7 +29,7 @@ object ConfigManager {
     private const val EXPORTS_FOLDER = "exports"
     private const val FRIENDS_FILE_NAME = "friends.json"
     private const val ACTIVE_CONFIG_FILE_NAME = "active-config.txt"
-    private const val ROOT_SETTINGS_FILE_NAME = "client-settings.json"
+    private const val GLOBAL_SETTINGS_FILE_NAME = "client-settings.json"
     private const val ACCOUNTS_FILE_NAME = "accounts.json"
     private const val EXPORT_METADATA_FILE_NAME = "config-info.json"
     private const val SHOW_WELCOME_SCREEN_SETTING = "Show Welcome Screen"
@@ -40,7 +40,7 @@ object ConfigManager {
     val importDir: Path = configDir.resolve(IMPORTS_FOLDER)
     val exportDir: Path = configDir.resolve(EXPORTS_FOLDER)
     private val activeConfigFile: Path = configDir.resolve(ACTIVE_CONFIG_FILE_NAME)
-    private val rootSettingsFile: Path = configDir.resolve(ROOT_SETTINGS_FILE_NAME)
+    private val globalSettingsFile: Path = configDir.resolve(GLOBAL_SETTINGS_FILE_NAME)
     private val accountsFile: Path = configDir.resolve(ACCOUNTS_FILE_NAME)
     private val legacyFriendFile: Path = configDir.resolve(FRIENDS_FILE_NAME)
 
@@ -325,7 +325,7 @@ object ConfigManager {
         val settingsObj = getObject(moduleObj, "settings")
         if (settingsObj != null) {
             for (setting in module.settings) {
-                if (setting.isRootSetting) {
+                if (setting.isGlobalSetting) {
                     continue
                 }
                 applySetting(setting, settingsObj.get(setting.name))
@@ -379,7 +379,7 @@ object ConfigManager {
 
         val settingsObj = JsonObject()
         for (setting in module.settings) {
-            if (setting.isRootSetting) continue
+            if (setting.isGlobalSetting) continue
             val value = serializeSetting(setting)
             if (value != null) settingsObj.add(setting.name, value)
         }
@@ -623,7 +623,7 @@ object ConfigManager {
         resetModulesToDefaults(modules)
         applyToModules(modules)
         loadFriends(activeConfigStorageDir)
-        loadRootClientSettings()
+        loadGlobalClientSettings()
         loadAccounts()
         ClientSetting.syncFontGlyphUploadBudget()
     }
@@ -638,14 +638,14 @@ object ConfigManager {
             saveModuleToDisk(module, configStorageDir)
         }
         saveFriends(configStorageDir)
-        saveRootClientSettings()
+        saveGlobalClientSettings()
         saveAccounts()
     }
 
-    private fun loadRootClientSettings() {
+    private fun loadGlobalClientSettings() {
         try {
-            if (Files.exists(rootSettingsFile)) {
-                val json = Files.readString(rootSettingsFile, StandardCharsets.UTF_8)
+            if (Files.exists(globalSettingsFile)) {
+                val json = Files.readString(globalSettingsFile, StandardCharsets.UTF_8)
                 val parsed = JsonParser.parseString(json)
                 if (parsed != null && parsed.isJsonObject) {
                     val value = parsed.asJsonObject.get("showWelcomeScreen")
@@ -660,9 +660,9 @@ object ConfigManager {
             if (legacyValue != null) {
                 setShowWelcomeScreenSilently(legacyValue)
             }
-            saveRootClientSettings()
+            saveGlobalClientSettings()
         } catch (e: Exception) {
-            Constants.LOGGER.error("读取根配置失败", e)
+            Constants.LOGGER.error("读取全局设置失败", e)
         }
     }
 
@@ -671,19 +671,19 @@ object ConfigManager {
         if (setting is BoolSetting) setting.setValueSilently(value)
     }
 
-    private fun saveRootClientSettings() {
+    private fun saveGlobalClientSettings() {
         try {
             ensureRootDirectories()
             val root = JsonObject()
             root.addProperty("showWelcomeScreen", ClientSetting.showWelcomeScreen)
             Files.writeString(
-                rootSettingsFile, gson.toJson(root), StandardCharsets.UTF_8,
+                globalSettingsFile, gson.toJson(root), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.WRITE
             )
         } catch (e: Exception) {
-            Constants.LOGGER.error("写入根配置失败", e)
+            Constants.LOGGER.error("写入全局设置失败", e)
         }
     }
 

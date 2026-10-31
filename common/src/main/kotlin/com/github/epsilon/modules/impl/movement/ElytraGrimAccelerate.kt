@@ -74,8 +74,8 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private const val POSITION_EPSILON = 1.0E-7
 
     private val mode by enumSetting("Mode", SetBackTrigger.Simulation)
-    private val maxAccelerateVelocity by doubleSetting("Max Accelerate Velocity", 6.0, 0.0, 100.0, 0.5)
-    private val setbackWait by intSetting("Setback Wait", 20, 1, 100, 1)
+    private val maxAccelerateVelocity by doubleSetting("Max Accelerate Velocity", 6.0, 0.0..100.0, 0.5)
+    private val setbackWait by intSetting("Setback Wait", 20, 1..100, 1)
     private val fixOldVersionVelocity by boolSetting("Fix Old Version Velocity", false)
     private val fixKickFromLag by boolSetting("Fix Kick From Lag", true)
 

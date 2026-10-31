@@ -22,7 +22,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
     private val autoBreak by boolSetting("Auto Break", true)
     private val autoPlace by boolSetting("Auto Place", true)
-    private val antiSuicide by doubleSetting("Anti Suicide", 2.0, 1.0, 20.0, 0.5)
+    private val antiSuicide by doubleSetting("Anti Suicide", 2.0, 1.0..20.0, 0.5)
 
     private var attackCooldown = 0
     private var placeCooldown = 0

@@ -22,11 +22,11 @@ import java.util.function.Predicate
 object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
     private val activateKey by keybindSetting("Activate Key", InputConstants.KEY_G)
-    private val swapDelay by intSetting("Delay", 0, 0, 20, 1)
+    private val swapDelay by intSetting("Delay", 0, 0..20, 1)
     private val switchBack by boolSetting("Switch Back", true)
-    private val switchDelay by intSetting("Switch Delay", 0, 0, 20, 1)
+    private val switchDelay by intSetting("Switch Delay", 0, 0..20, 1)
     private val moveToSlot by boolSetting("Move to slot", true)
-    private val elytraSlotSetting by intSetting("Elytra Slot", 9, 1, 9, 1)
+    private val elytraSlotSetting by intSetting("Elytra Slot", 9, 1..9, 1)
 
     private var isSwinging = false
     private var isItemSwapped = false

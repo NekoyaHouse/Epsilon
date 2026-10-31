@@ -11,7 +11,6 @@ import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.abs
@@ -34,125 +33,112 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private val lineSpacing by doubleSetting(
         "Line Spacing",
         0.0,
-        -3.0,
-        3.0,
-        0.5,
-        dependency = { mode == DisplayMode.Simple })
+        -3.0..3.0,
+        0.5, { mode == DisplayMode.Simple })
     private val horizontalPadding by doubleSetting(
         "Horizontal Padding",
         3.0,
-        0.0,
-        20.0,
-        0.5,
-        dependency = { mode == DisplayMode.Normal })
+        0.0..20.0,
+        0.5, { mode == DisplayMode.Normal })
     private val verticalPadding by doubleSetting(
         "Vertical Padding",
         2.0,
-        0.0,
-        20.0,
-        0.5,
-        dependency = { mode == DisplayMode.Normal })
+        0.0..20.0,
+        0.5, { mode == DisplayMode.Normal })
     private val lineWidth by doubleSetting(
         "Line Width",
         2.0,
-        0.0,
-        5.0,
-        0.5,
-        dependency = { mode == DisplayMode.Normal })
+        0.0..5.0,
+        0.5, { mode == DisplayMode.Normal })
     private val showSuffix by boolSetting("Show Suffix", true)
-    private val fontSize by doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0)
+    private val fontSize by doubleSetting("Font Size", 13.0, 8.0..32.0, 1.0)
     private val textShadow by boolSetting("Text Shadow", true)
-    private val textShadowDepth by doubleSetting("Text Shadow Depth", 1.0, 0.0, 5.0, 0.1, dependency = { textShadow })
+    private val textShadowDepth by doubleSetting("Text Shadow Depth", 1.0, 0.0..5.0, 0.1, { textShadow })
     private val textGlow by boolSetting("Text Glow", true)
-    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1, 6.0, 0.1, dependency = { textGlow })
-    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, dependency = { textGlow })
-    private val sliderSpeed by doubleSetting("Slider Speed", 0.2, 0.01, 1.0, 0.01)
-    private val background by boolSetting("Background", true, dependency = { mode == DisplayMode.Normal })
+    private val glowRadius by doubleSetting("Glow Radius", 3.0, 0.1..6.0, 0.1, { textGlow })
+    private val glowIntensity by intSetting("Glow Intensity", 2, 1..5, 1, { textGlow })
+    private val sliderSpeed by doubleSetting("Slider Speed", 0.2, 0.01..1.0, 0.01)
+    private val background by boolSetting("Background", true, { mode == DisplayMode.Normal })
     private val backgroundColor by colorSetting(
         "Background Color", Color(0, 0, 0, 50),
-        dependency = { mode == DisplayMode.Normal && background }
+        true,
+        { mode == DisplayMode.Normal && background }
     )
-    private val drawShadow by boolSetting("Drop Shadow", true, dependency = { mode == DisplayMode.Normal })
+    private val drawShadow by boolSetting("Drop Shadow", true, { mode == DisplayMode.Normal })
     private val shadowBlur by doubleSetting(
-        "Shadow Blur", 9.0, 2.0, 32.0, 1.0,
-        dependency = { mode == DisplayMode.Normal && drawShadow }
+        "Shadow Blur", 9.0, 2.0..32.0, 1.0,
+        { mode == DisplayMode.Normal && drawShadow }
     )
     private val shadowColorMode by enumSetting(
         "Shadow Color Mode", ColorMode.Single,
-        dependency = { mode == DisplayMode.Normal && drawShadow }
+        { mode == DisplayMode.Normal && drawShadow }
     )
     private val shadowGradientLength by doubleSetting(
-        "Shadow Gradient Length", 100.0, 10.0, 1000.0, 10.0,
-        dependency = {
+        "Shadow Gradient Length", 100.0, 10.0..1000.0, 10.0,
+        {
             mode == DisplayMode.Normal && drawShadow &&
                     (shadowColorMode == ColorMode.Double || shadowColorMode == ColorMode.Fade)
         }
     )
     private val shadowColor by colorSetting(
         "Shadow Color", Color(255, 255, 255, 90),
-        dependency = {
+        true,
+        {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode != ColorMode.Rainbow
         }
     )
     private val shadowColor2 by colorSetting(
         "Shadow Color 2", Color(255, 0, 0, 90),
-        dependency = {
+        true,
+        {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode == ColorMode.Double
         }
     )
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
     private val doubleGradientLength by doubleSetting(
-        "Double Gradient Length", 100.0, 10.0, 1000.0, 10.0,
-        dependency = { mode == DisplayMode.Normal && (colorMode == ColorMode.Double || colorMode == ColorMode.Fade) }
+        "Double Gradient Length", 100.0, 10.0..1000.0, 10.0,
+        { mode == DisplayMode.Normal && (colorMode == ColorMode.Double || colorMode == ColorMode.Fade) }
     )
-    private val rainbowSpeed by doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, dependency = { usesRainbow() })
-    private val rainbowSpread by doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, dependency = { usesRainbow() })
+    private val rainbowSpeed by doubleSetting("Rainbow Speed", 1.0, 0.1..5.0, 0.1, { usesRainbow() })
+    private val rainbowSpread by doubleSetting("Rainbow Spread", 8.0, 0.0..60.0, 1.0, { usesRainbow() })
     private val rainbowHueOffset by doubleSetting(
         "Rainbow Hue Offset",
         0.0,
-        0.0,
-        360.0,
-        1.0,
-        dependency = { usesRainbow() })
+        0.0..360.0,
+        1.0, { usesRainbow() })
     private val rainbowSaturation by doubleSetting(
         "Rainbow Saturation",
         0.5,
-        0.0,
-        1.0,
-        0.05,
-        dependency = { usesRainbow() })
+        0.0..1.0,
+        0.05, { usesRainbow() })
     private val rainbowBrightness by doubleSetting(
         "Rainbow Brightness",
         1.0,
-        0.1,
-        1.0,
-        0.05,
-        dependency = { usesRainbow() })
+        0.1..1.0,
+        0.05, { usesRainbow() })
     private val rainbowAlpha by intSetting(
         "Rainbow Alpha",
         255,
-        0,
-        255,
-        1,
-        dependency = { colorMode == ColorMode.Rainbow })
+        0..255,
+        1, { colorMode == ColorMode.Rainbow })
     private val shadowRainbowAlpha by intSetting(
-        "Shadow Rainbow Alpha", 90, 0, 255, 1,
-        dependency = {
+        "Shadow Rainbow Alpha", 90, 0..255, 1,
+        {
             mode == DisplayMode.Normal && drawShadow && shadowColorMode == ColorMode.Rainbow
         }
     )
-    private val blur by boolSetting("Blur", true, dependency = { mode == DisplayMode.Normal })
+    private val blur by boolSetting("Blur", true, { mode == DisplayMode.Normal })
     private val blurStrength by intSetting(
-        "Blur Strength", 8, 1, 20, 1,
-        dependency = { mode == DisplayMode.Normal && blur }
+        "Blur Strength", 8, 1..20, 1,
+        { mode == DisplayMode.Normal && blur }
     )
     private val themeColor1 by colorSetting(
         "Theme Color 1", Color.WHITE, false,
-        dependency = { colorMode != ColorMode.Rainbow }
+        { colorMode != ColorMode.Rainbow }
     )
     private val themeColor2 by colorSetting(
         "Theme Color 2", Color.RED, false,
-        dependency = { colorMode == ColorMode.Double }
+        { colorMode == ColorMode.Double }
     )
 
     private val moduleAnimations: MutableMap<Module, ToggleAnimation> = HashMap()
@@ -513,7 +499,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             rainbowSaturation.toFloat(),
             rainbowBrightness.toFloat()
         )
-        return Color(rgb ushr 16 and 0xFF, rgb ushr 8 and 0xFF, rgb and 0xFF, Mth.clamp(alpha, 0, 255))
+        return Color(rgb ushr 16 and 0xFF, rgb ushr 8 and 0xFF, rgb and 0xFF, alpha.coerceIn(0, 255))
     }
 
     private fun animateColor(start: Color, end: Color, offset: Long): Color {
@@ -531,14 +517,14 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private fun darken(color: Color, factor: Float): Color {
-        val red = Mth.clamp((color.red * factor).toInt(), 0, 255)
-        val green = Mth.clamp((color.green * factor).toInt(), 0, 255)
-        val blue = Mth.clamp((color.blue * factor).toInt(), 0, 255)
+        val red = (color.red * factor).toInt().coerceIn(0, 255)
+        val green = (color.green * factor).toInt().coerceIn(0, 255)
+        val blue = (color.blue * factor).toInt().coerceIn(0, 255)
         return Color(red, green, blue, color.alpha)
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {
-        val alpha = Mth.clamp((color.alpha * Mth.clamp(multiplier, 0.0f, 1.0f)).toInt(), 0, 255)
+        val alpha = (color.alpha * multiplier.coerceIn(0.0f, 1.0f)).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 
@@ -562,12 +548,12 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 
         fun update(target: Boolean, now: Long): Float {
             if (this.target != target) {
-                val elapsed = Mth.clamp(now - startedAt, 0L, MODULE_ANIMATION_DURATION_MS.toLong())
+                val elapsed = (now - startedAt).coerceIn(0L, MODULE_ANIMATION_DURATION_MS.toLong())
                 this.target = target
                 this.startedAt = now - (MODULE_ANIMATION_DURATION_MS - elapsed)
             }
 
-            val elapsed = Mth.clamp((now - startedAt) / MODULE_ANIMATION_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            val elapsed = ((now - startedAt) / MODULE_ANIMATION_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
             val eased = Easing.EASE_IN_OUT_QUAD.function.apply(elapsed)
             progressValue = if (target) eased else 1.0f - eased
             return progressValue

@@ -41,8 +41,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
 
     private val mode by enumSetting("Mode", Mode.Default)
     private val easeOut by boolSetting("Ease Out", true)
-    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5, 5.0, 0.1)
-    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5, 5.0, 0.1)
+    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5..5.0, 0.1)
+    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5..5.0, 0.1)
     private val onlySelf by boolSetting("Only Self", false)
 
     private val circles: MutableList<Circle> = ArrayList()
@@ -176,7 +176,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
     }
 
     private fun applyOpacity(color: Color, opacity: Float): Color {
-        val alpha = Mth.clamp((color.alpha * Mth.clamp(opacity, 0.0f, 1.0f)).roundToInt(), 0, 255)
+        val alpha = (color.alpha * opacity.coerceIn(0.0f, 1.0f)).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

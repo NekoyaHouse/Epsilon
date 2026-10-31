@@ -34,76 +34,60 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
     private val text by stringSetting("Text", Constants.NAME)
     private val mode by enumSetting("Style", Mode.Tradition)
     private val fontMode by enumSetting("Font Mode", FontMode.OsakaChips)
-    private val scale by doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1)
+    private val scale by doubleSetting("Scale", 1.0, 0.5..2.0, 0.1)
     private val textColor by colorSetting(
         "Text Color",
-        Color(255, 255, 255, 235),
-        dependency = { mode == Mode.Tradition })
-    private val colorMode by enumSetting("Color Mode", ColorMode.Single, dependency = { mode == Mode.Sakura })
+        Color(255, 255, 255, 235), true, { mode == Mode.Tradition })
+    private val colorMode by enumSetting("Color Mode", ColorMode.Single, { mode == Mode.Sakura })
     private val singleColor by colorSetting(
         "Color",
         Color.WHITE,
-        false,
-        dependency = { mode == Mode.Sakura && colorMode == ColorMode.Single })
+        false, { mode == Mode.Sakura && colorMode == ColorMode.Single })
     private val doubleColor1 by colorSetting(
         "Color 1",
         Color.WHITE,
-        false,
-        dependency = { mode == Mode.Sakura && colorMode == ColorMode.Double })
+        false, { mode == Mode.Sakura && colorMode == ColorMode.Double })
     private val doubleColor2 by colorSetting(
         "Color 2",
         Color.RED,
-        false,
-        dependency = { mode == Mode.Sakura && colorMode == ColorMode.Double })
-    private val glow by boolSetting("Glow", true, dependency = { mode == Mode.Sakura })
+        false, { mode == Mode.Sakura && colorMode == ColorMode.Double })
+    private val glow by boolSetting("Glow", true, { mode == Mode.Sakura })
     private val glowRadius by doubleSetting(
         "Glow Radius",
         3.0,
-        0.1,
-        6.0,
-        0.1,
-        dependency = { mode == Mode.Sakura && glow })
-    private val glowIntensity by intSetting("Glow Intensity", 2, 1, 5, 1, dependency = { mode == Mode.Sakura && glow })
-    private val glitchColor by colorSetting("Glitch Color", Color.WHITE, false, dependency = { mode == Mode.Glitch })
-    private val chromaticX by doubleSetting("Chromatic X", 1.5, 0.0, 6.0, 0.1, dependency = { mode == Mode.Glitch })
-    private val chromaticY by doubleSetting("Chromatic Y", 0.0, 0.0, 6.0, 0.1, dependency = { mode == Mode.Glitch })
+        0.1..6.0,
+        0.1, { mode == Mode.Sakura && glow })
+    private val glowIntensity by intSetting("Glow Intensity", 2, 1..5, 1, { mode == Mode.Sakura && glow })
+    private val glitchColor by colorSetting("Glitch Color", Color.WHITE, false, { mode == Mode.Glitch })
+    private val chromaticX by doubleSetting("Chromatic X", 1.5, 0.0..6.0, 0.1, { mode == Mode.Glitch })
+    private val chromaticY by doubleSetting("Chromatic Y", 0.0, 0.0..6.0, 0.1, { mode == Mode.Glitch })
     private val glitchGlowRadius by doubleSetting(
         "Glitch Glow Radius",
         2.5,
-        0.0,
-        10.0,
-        0.1,
-        dependency = { mode == Mode.Glitch })
+        0.0..10.0,
+        0.1, { mode == Mode.Glitch })
     private val glitchGlowIntensity by doubleSetting(
         "Glitch Glow Intensity",
         1.6,
-        0.0,
-        3.0,
-        0.1,
-        dependency = { mode == Mode.Glitch })
-    private val sliceHeight by doubleSetting("Slice Height", 4.0, 1.0, 32.0, 0.5, dependency = { mode == Mode.Glitch })
-    private val sliceAmount by doubleSetting("Slice Amount", 2.5, 0.0, 10.0, 0.1, dependency = { mode == Mode.Glitch })
+        0.0..3.0,
+        0.1, { mode == Mode.Glitch })
+    private val sliceHeight by doubleSetting("Slice Height", 4.0, 1.0..32.0, 0.5, { mode == Mode.Glitch })
+    private val sliceAmount by doubleSetting("Slice Amount", 2.5, 0.0..10.0, 0.1, { mode == Mode.Glitch })
     private val glitchStrength by doubleSetting(
         "Glitch Strength",
         0.65,
-        0.0,
-        1.0,
-        0.05,
-        dependency = { mode == Mode.Glitch })
+        0.0..1.0,
+        0.05, { mode == Mode.Glitch })
     private val scanlineStrength by doubleSetting(
         "Scanline Strength",
         0.45,
-        0.0,
-        1.0,
-        0.05,
-        dependency = { mode == Mode.Glitch })
+        0.0..1.0,
+        0.05, { mode == Mode.Glitch })
     private val noiseStrength by doubleSetting(
         "Noise Strength",
         0.25,
-        0.0,
-        1.0,
-        0.05,
-        dependency = { mode == Mode.Glitch })
+        0.0..1.0,
+        0.05, { mode == Mode.Glitch })
 
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })

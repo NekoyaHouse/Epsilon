@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.IntSetting
-import net.minecraft.util.Mth
 import java.util.function.Predicate
 import kotlin.math.roundToInt
 
@@ -9,14 +8,14 @@ class IntSliderWidget(setting: IntSetting) :
     AbstractSliderWidget<IntSetting, Int>(setting, 12, Predicate { value -> value.matches(Regex("[0-9-]")) }) {
 
     override fun getRatio(): Float {
-        return (getVisibleValue() - setting.min).toFloat() / (setting.max - setting.min).toFloat()
+        return (getVisibleValue() - setting.range.first).toFloat() / (setting.range.last - setting.range.first).toFloat()
     }
 
     override fun updateValueFromRatio(rawRatio: Float) {
-        val range = setting.max - setting.min
+        val range = setting.range.last - setting.range.first
         val step = setting.step
-        val value = setting.min + (rawRatio * range / step).roundToInt() * step
-        previewValue(Mth.clamp(value, setting.min, setting.max))
+        val value = setting.range.first + (rawRatio * range / step).roundToInt() * step
+        previewValue(value.coerceIn(setting.range.first, setting.range.last))
     }
 
     override fun formatValue(value: Int): String {
@@ -58,11 +57,11 @@ class IntSliderWidget(setting: IntSetting) :
     }
 
     override fun getMin(): Int {
-        return setting.min
+        return setting.range.first
     }
 
     override fun getMax(): Int {
-        return setting.max
+        return setting.range.last
     }
 
 }

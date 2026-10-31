@@ -15,7 +15,6 @@ import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.color.block.BlockTintSource
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
@@ -59,7 +58,7 @@ class ScaffoldBlocksInstance(
         targetHeight = PADDING * 2f + maxOf(ICON_SIZE, RING_SIZE)
 
         val count = maxOf(0, countSupplier.get())
-        progress.run(Mth.clamp(count / max.toFloat(), 0f, 1f))
+        progress.run((count / max.toFloat()).coerceIn(0f, 1f))
 
         if (count != targetCount) {
             startCount = (countAnim.value).roundToInt()
@@ -71,7 +70,7 @@ class ScaffoldBlocksInstance(
         }
 
         val nowNs = System.nanoTime()
-        val deltaSeconds = Mth.clamp((nowNs - lastUpdateNs) / 1_000_000_000f, 0f, 0.05f)
+        val deltaSeconds = ((nowNs - lastUpdateNs) / 1_000_000_000f).coerceIn(0f, 0.05f)
         lastUpdateNs = nowNs
         spinAngleDeg = (spinAngleDeg + SPIN_DEGREES_PER_SECOND * deltaSeconds) % 360f
 
@@ -89,7 +88,7 @@ class ScaffoldBlocksInstance(
 
         scope.circle(centerX, centerY, ringRadius, RING_STROKE, fade(Color(255, 255, 255, 60)))
 
-        val progressValue = Mth.clamp(progress.value, 0f, 1f)
+        val progressValue = progress.value.coerceIn(0f, 1f)
         if (progressValue > 0f) {
             scope.gradientArc(
                 centerX, centerY, ringRadius, RING_STROKE,
@@ -155,8 +154,8 @@ class ScaffoldBlocksInstance(
             return
         }
 
-        val localProgress = Mth.clamp(progressed - step, 0f, 1f)
-        val current = startCount + direction * Mth.clamp(distance - 1, 0, step)
+        val localProgress = (progressed - step).coerceIn(0f, 1f)
+        val current = startCount + direction * (distance - 1).coerceIn(0, step)
         drawDigitRoll(scope, textRenderer, centerX, baseY, current, current + direction, direction, localProgress)
     }
 
@@ -256,7 +255,7 @@ class ScaffoldBlocksInstance(
         }
 
         private fun withAlpha(color: Color, alphaMul: Float): Color {
-            val alpha = Mth.clamp((color.alpha * alphaMul).toInt(), 0, 255)
+            val alpha = (color.alpha * alphaMul).toInt().coerceIn(0, 255)
             return Color(color.red, color.green, color.blue, alpha)
         }
 
