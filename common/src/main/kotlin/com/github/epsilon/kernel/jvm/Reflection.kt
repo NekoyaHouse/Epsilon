@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.jvm
 
-import cn.cutemic.clion.CLion
+import com.github.epsilon.Constants
 
 @Suppress("UNCHECKED_CAST")
 inline val <T> Class<out T>.companion: T?
@@ -22,10 +22,10 @@ inline val <T> Class<out T>.instanceJava: T?
             try {
                 it.isAccessible = true
                 it[null]
-                CLion.LOGGER.info("Class ${this.name} has a valid instance, attempt to reflect.")
+                Constants.LOGGER.info("Class ${this.name} has a valid instance, attempt to reflect.")
                 true
-            } catch (e: Exception) {
-                CLion.LOGGER.info("Class ${this.name} has no valid instance.")
+            } catch (_: Exception) {
+                Constants.LOGGER.info("Class ${this.name} has no valid instance.")
                 false
             }
         }?.run {

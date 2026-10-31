@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.threads
 
-import cn.cutemic.clion.CLion
+import com.github.epsilon.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.SynchronousQueue
@@ -17,7 +17,7 @@ private val pool0 = Runtime.getRuntime().availableProcessors().let { cpuCount ->
         5L,
         TimeUnit.SECONDS,
         SynchronousQueue(),
-        CountingThreadFactory("${CLion.NAME}-Task")
+        CountingThreadFactory("${Constants.NAME}-Task")
     )
 }
 

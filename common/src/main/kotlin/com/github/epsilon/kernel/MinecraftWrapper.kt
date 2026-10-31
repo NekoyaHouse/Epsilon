@@ -7,8 +7,8 @@ import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.HitResult
 
-
 object MinecraftWrapper {
+
     @JvmStatic
     val mc: Minecraft get() = Minecraft.getInstance()
 

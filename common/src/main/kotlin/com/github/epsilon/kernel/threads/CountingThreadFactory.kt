@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2021-2022, SagiriXiguajerry. All rights reserved.
- * This repository will be transformed to SuperMic_233.
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- */
-
 package com.github.epsilon.kernel.threads
 
 import java.util.concurrent.ThreadFactory
