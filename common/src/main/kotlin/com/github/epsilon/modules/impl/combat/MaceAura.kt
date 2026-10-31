@@ -10,7 +10,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
@@ -203,9 +203,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun attack(currentTarget: LivingEntity) {
         interaction.attack(player, currentTarget)
-        if (swingHand) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-        }
+        SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
     }
 
 }

@@ -8,7 +8,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
@@ -402,7 +402,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
                 }
             }, delay)
         }
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
         if (pos == targetPos) {
             started = true
             progress = 0.0f
@@ -443,7 +443,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             )
             player.resetFallDistance()
         }
-        if (swing) PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.of(swing).attackSwing(InteractionHand.MAIN_HAND)
         if (target == null) return
         this.mc.connection?.send(
             ServerboundPlayerActionPacket(
@@ -469,9 +469,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             )
             player.resetFallDistance()
         }
-        if (swing) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-        }
+        SwingMode.of(swing).attackSwing(InteractionHand.MAIN_HAND)
         if (clientRemove && second != null && !isAir(second)) {
             this.mc.gameMode?.destroyBlock(second)
         }

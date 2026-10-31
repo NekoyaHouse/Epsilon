@@ -8,6 +8,7 @@ import com.github.epsilon.gui.lib.render.LuminUiRenderer
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.utils.render.animation.Animation
 import net.minecraft.resources.Identifier
+import net.minecraft.util.ARGB
 import java.awt.Color
 
 /**
@@ -518,6 +519,28 @@ class UiTree private constructor(
 
         fun text(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?) {
             addNode(layer, TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader))
+        }
+
+        fun textWithShadow(text: String, x: Float, y: Float, scale: Float, color: Color) {
+            textWithShadow(0, text, x, y, scale, color, null)
+        }
+
+        fun textWithShadow(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color) {
+            textWithShadow(layer, text, x, y, scale, color, null)
+        }
+
+        fun textWithShadow(text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?) {
+            textWithShadow(0, text, x, y, scale, color, fontLoader)
+        }
+
+        fun textWithShadow(
+            layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?,
+        ) {
+            if (text.isEmpty() || color.alpha == 0) return
+            val offset = TEXT_SHADOW_OFFSET * scale
+            val shadow = Color(ARGB.scaleRGB(color.rgb, TEXT_SHADOW_RGB_SCALE), true)
+            text(layer, text, x + offset, y + offset, scale, shadow, fontLoader)
+            text(layer, text, x, y, scale, color, fontLoader)
         }
 
         fun gradientText(text: String, x: Float, y: Float, scale: Float, startColor: Color, endColor: Color) {
@@ -1121,6 +1144,11 @@ class UiTree private constructor(
             fun cursor(): Float {
                 return cursor
             }
+        }
+
+        companion object {
+            private const val TEXT_SHADOW_OFFSET = 0.703125f
+            private const val TEXT_SHADOW_RGB_SCALE = 0.25f
         }
     }
 

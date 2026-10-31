@@ -9,7 +9,7 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -143,16 +143,14 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 val result: InteractionResult =
                     interaction.useItemOn(player, InteractionHand.MAIN_HAND, placeHit)
                 if (result.consumesAction()) {
-                    if (swingHand) {
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-                    }
+                    SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
                 }
 
                 if (fakePunch && randomInt <= particleChance.toInt() &&
                     blockHit.direction == Direction.UP
                 ) {
                     // Placeholder for old block break particles behavior.
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                    SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 }
 
                 placeClock = placeDelay.toInt()
@@ -183,9 +181,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
                 interaction.attack(player, entity)
 
-                if (swingHand) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-                }
+                SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
 
                 breakClock = breakDelay.toInt()
 

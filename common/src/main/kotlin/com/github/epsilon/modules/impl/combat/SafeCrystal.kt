@@ -4,7 +4,7 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -95,7 +95,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
         }
 
         interaction.attack(player, crystal)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
         attackCooldown = 1 + (Random.nextDouble() * 2).toInt()
     }
@@ -139,7 +139,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
             hit
         )
 
-        PlayerUtils.swingHand(crystalHand)
+        SwingMode.Both.interactSwing(crystalHand)
 
         placeCooldown = 1 + (Random.nextDouble() * 2).toInt()
     }

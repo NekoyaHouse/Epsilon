@@ -14,6 +14,7 @@ import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.safety.NonNullContext
@@ -111,9 +112,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 if (!hasActivated) {
                     val result: InteractionResult = interaction.useItem(player, InteractionHand.MAIN_HAND)
                     if (result.consumesAction()) {
-                        if (swingHand) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-                        }
+                        SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
                     }
                     hasActivated = true
                 }

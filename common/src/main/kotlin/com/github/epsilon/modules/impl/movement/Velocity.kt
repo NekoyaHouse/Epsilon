@@ -14,6 +14,7 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.safety.NonNullContext
@@ -142,9 +143,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     val target = hitResult.entity as Player
                     if (target.isAlive && !AntiBot.isBot(target)) {
                         interaction.attack(player, target)
-                        if (swingHand) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-                        }
+                        SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
                     }
                 }
                 attackQueue--

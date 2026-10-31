@@ -10,7 +10,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
@@ -111,7 +111,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
                 InvUtils.swap(bestTool, true)
                 interaction.continueDestroyBlock(blockToBreak, player.direction)
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 if (silent) {
                     InvUtils.swapBack()
                 }
@@ -274,9 +274,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
         interaction.useItem(player, InteractionHand.MAIN_HAND)
 
-        if (swingHand) {
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-        }
+        SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
 
         if (swapMode == SwapMode.Silent) {
             InvUtils.swapBack()

@@ -9,7 +9,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
@@ -87,9 +87,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
             interaction.continueDestroyBlock(currentTarget!!, currentFace!!)
 
-            if (swingHand) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-            }
+            SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
 
             if (level.getBlockState(currentTarget!!).isAir) {
                 resetBreaking()

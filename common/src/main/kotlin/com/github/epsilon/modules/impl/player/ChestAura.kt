@@ -9,6 +9,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -99,9 +100,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             clickedContainers.add(target.pos)
             opening = true
             openingStartedAt = System.currentTimeMillis()
-            if (swing) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-            }
+            SwingMode.of(swing).interactSwing(InteractionHand.MAIN_HAND)
         }
 
         nonNullHandler<PacketEvent.Send> { event ->

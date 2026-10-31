@@ -33,6 +33,13 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float,
     ) {
+        draw(scope, textMetrics, x, y, width, height, mouseX, mouseY, placeholder, textScale, false)
+    }
+
+    fun draw(
+        scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
+        mouseX: Int, mouseY: Int, placeholder: String, textScale: Float, textShadow: Boolean,
+    ) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
         scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90))
 
@@ -41,7 +48,13 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         val textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f
         val textX = x + 4.0f
         updateCursorLayout(textMetrics, textX, textScale)
-        scope.text(trimToWidth(display, textScale, width - 8.0f, textMetrics), textX, textY, textScale, if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY)
+        val visibleText = trimToWidth(display, textScale, width - 8.0f, textMetrics)
+        val textColor = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
+        if (textShadow) {
+            scope.textWithShadow(visibleText, textX, textY, textScale, textColor)
+        } else {
+            scope.text(visibleText, textX, textY, textScale, textColor)
+        }
 
         if (isFocused) {
             val safeCursor = minOf(cursor, text.length)

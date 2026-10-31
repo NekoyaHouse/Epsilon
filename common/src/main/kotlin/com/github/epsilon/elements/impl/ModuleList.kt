@@ -31,7 +31,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private val mode by enumSetting("Mode", DisplayMode.Normal)
-    private val lineSpacing by doubleSetting("Line Spacing", 3.0, 0.0, 12.0, 0.5, dependency = { mode == DisplayMode.Simple })
+    private val lineSpacing by doubleSetting("Line Spacing", 0.0, -3.0, 3.0, 0.5, dependency = { mode == DisplayMode.Simple })
     private val horizontalPadding by doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
     private val verticalPadding by doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
     private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, dependency = { mode == DisplayMode.Normal })

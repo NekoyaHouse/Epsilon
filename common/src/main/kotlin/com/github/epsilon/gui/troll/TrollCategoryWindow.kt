@@ -33,7 +33,9 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         var width = maxOf(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (module in visibleModules) {
             val row = rows.getOrPut(module) {
-                TrollSettingRow(module, TrollSettingRow.ModuleAction.TOGGLE)
+                val created = TrollSettingRow(module, TrollSettingRow.ModuleAction.TOGGLE)
+                created.startOpenAnimation()
+                created
             }
             width = maxOf(width, row.minimumWidth(metrics) + TrollTheme.xMargin() * 2.0f)
         }
@@ -46,6 +48,10 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
             rows.getValue(module).layout(UiRect(viewport.x, y, viewport.width, TrollTheme.rowHeight(metrics)))
             y += step
         }
+    }
+
+    override fun onOpenAnimationStarted() {
+        for (row in rows.values) row.startOpenAnimation()
     }
 
     override fun allowHeaderOnly(): Boolean {

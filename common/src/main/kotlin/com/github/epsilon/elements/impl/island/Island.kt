@@ -19,7 +19,7 @@ import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
-import me.sofurry.smtc.SmtcService
+import com.github.epsilon.smtc.SmtcService
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.world.entity.LivingEntity

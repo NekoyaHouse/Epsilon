@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -55,7 +55,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             }
 
             interaction.attack(player, target)
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
             delay = MathUtils.getRandom(minDelay, maxDelay)
         }

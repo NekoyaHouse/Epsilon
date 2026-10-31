@@ -113,7 +113,7 @@ object ClientSetting : Module("Client Setting", null) {
     )
 
     // General
-    val guiKeybind by keybindSetting("Gui Keybind", InputConstants.KEY_RSHIFT)
+    val guiKeybind by keybindSetting("Gui Keybind", InputConstants.KEY_RCONTROL)
         .apply { group(sgGeneral) }
 
     val guiMode: EnumSetting<GuiMode> = enumSetting(

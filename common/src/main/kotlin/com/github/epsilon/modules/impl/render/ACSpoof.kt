@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 
@@ -52,6 +53,36 @@ object ACSpoof : Module("AC Spoof", Category.RENDER) {
             }
             accepted
         }
+    }
+
+    fun text(text: Component, color: Int): Component {
+        if (!isEnabled) return text
+
+        val original = text.visualOrderText
+        val replacement = text(original, color)
+        if (replacement === original) return text
+
+        val characters = ArrayList<StyledCharacter>()
+        replacement.accept { _, style, codePoint ->
+            characters.add(StyledCharacter(style, codePoint))
+            true
+        }
+
+        val result = Component.empty()
+        val builder = StringBuilder()
+        var currentStyle: Style? = null
+        for (character in characters) {
+            if (currentStyle != null && currentStyle != character.style) {
+                result.append(Component.literal(builder.toString()).withStyle(currentStyle))
+                builder.setLength(0)
+            }
+            currentStyle = character.style
+            builder.appendCodePoint(character.codePoint)
+        }
+        if (!builder.isEmpty()) {
+            result.append(Component.literal(builder.toString()).withStyle(currentStyle ?: Style.EMPTY))
+        }
+        return result
     }
 
     private fun matches(characters: List<StyledCharacter>, start: Int, color: Int): Boolean {

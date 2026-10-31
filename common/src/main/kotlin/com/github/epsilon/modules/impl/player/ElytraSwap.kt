@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
@@ -101,7 +101,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                 if (!isSwinging) {
                     interaction.useItem(player, InteractionHand.MAIN_HAND)
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                    SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
                     isSwinging = true
                 }
 

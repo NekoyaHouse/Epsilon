@@ -12,7 +12,7 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -231,9 +231,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             if (player.offhandItem.`is`(Items.OBSIDIAN)) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
         val result: InteractionResult = interaction.useItemOn(player, hand, hit)
         if (result.consumesAction()) {
-            if (swingHand) {
-                PlayerUtils.swingHand(hand)
-            }
+            SwingMode.of(swingHand).interactSwing(hand)
             renderBoxes.add(RenderBox(AABB(renderPos), lineColor, sideColor, System.currentTimeMillis()))
         }
     }

@@ -18,7 +18,7 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.FallingPlayer
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
@@ -288,9 +288,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                         BlockHitResult(getVec3(pos, face), face, pos, false)
                     )
                     if (result.consumesAction()) {
-                        if (swingHand) {
-                            PlayerUtils.swingHand(hand)
-                        }
+                        SwingMode.of(swingHand).interactSwing(hand)
                         if (render) {
                             renderBoxes.add(
                                 RenderInfo(
@@ -480,9 +478,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             )
 
             if (result.consumesAction()) {
-                if (swingHand) {
-                    PlayerUtils.swingHand(hand)
-                }
+                SwingMode.of(swingHand).interactSwing(hand)
 
                 if (render) {
                     renderBoxes.add(

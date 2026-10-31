@@ -15,6 +15,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.esp.CaptureMarkESP
 import com.github.epsilon.utils.render.esp.CircleESP
 import com.github.epsilon.utils.render.esp.DeobfESP
@@ -273,9 +274,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
                 if (espMode == ESPMode.Deobf) DeobfESP.markHit(entity)
 
-                if (swingHand) {
-                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-                }
+                SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
             }
         }
 

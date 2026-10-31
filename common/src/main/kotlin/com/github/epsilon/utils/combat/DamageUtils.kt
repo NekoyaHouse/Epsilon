@@ -2,7 +2,7 @@ package com.github.epsilon.utils.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -393,7 +393,7 @@ object DamageUtils {
 
         if (target != null) {
             interaction.attack(player, target)
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
             return true
         }
         return false

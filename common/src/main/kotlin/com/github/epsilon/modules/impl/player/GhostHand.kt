@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -51,7 +51,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                     for (hand in InteractionHand.values()) {
                         val result = interaction.useItemOn(player, hand, BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true))
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
-                            PlayerUtils.swingHand(hand)
+                            SwingMode.Both.interactSwing(hand)
                             event.cancel()
                             return@nonNullHandler
                         }

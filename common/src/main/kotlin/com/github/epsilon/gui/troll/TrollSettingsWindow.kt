@@ -131,7 +131,7 @@ class TrollSettingsWindow(
                         Color(255, 255, 255, if (hovered) 32 else 12)
                     )
                     val label = (if (entry.section!!.isCollapsed()) "+ " else "- ") + entry.section.title()
-                    content.text(
+                    content.textWithShadow(
                         3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
                         entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
                     )

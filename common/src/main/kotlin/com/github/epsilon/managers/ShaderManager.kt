@@ -134,12 +134,17 @@ object ShaderManager {
      * 因此需要在 LevelRenderer 渲染结束后自行处理描边目标并混回主目标。
      *
      * @param outlineTarget 实体描边目标
-     * @param mainTarget    主渲染目标
      */
-    fun processEntityOutlineTarget(outlineTarget: RenderTarget?, mainTarget: RenderTarget?) {
-        if (!Shaders.isEnabled || outlineTarget == null || mainTarget == null || mainTarget.colorTextureView == null) {
+    fun processEntityOutlineTarget(outlineTarget: RenderTarget?) {
+        if (!Shaders.isEnabled || outlineTarget == null) {
             return
         }
+
+        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+        if (mainTarget.colorTextureView == null) {
+            return
+        }
+
         processOutlineTarget(outlineTarget, Shaders.entityShader)
         outlineTarget.blitAndBlendToTexture(mainTarget.colorTextureView!!, mainTarget.depthTextureView!!)
     }
@@ -230,16 +235,18 @@ object ShaderManager {
         )
     }
 
-    fun processChestOutlineTarget(mainTarget: RenderTarget?, modelViewMatrix: Matrix4fc) {
+    fun processChestOutlineTarget(modelViewMatrix: Matrix4fc) {
         if (!capturedChests) {
             preparedChests = false
             return
         }
 
+        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+
         capturedChests = false
         preparedChests = false
 
-        if (chestTarget == null || mainTarget == null || mainTarget.colorTextureView == null) {
+        if (chestTarget == null || mainTarget.colorTextureView == null) {
             return
         }
 

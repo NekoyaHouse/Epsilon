@@ -7,7 +7,7 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
@@ -65,9 +65,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
                 attacks -= 1.0
             }
 
-            if (swingHand) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-            }
+            SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
         }
     }
 

@@ -20,7 +20,7 @@ import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
@@ -131,12 +131,6 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private enum class RangeMode {
         Feet,
         Eyes,
-    }
-
-    private enum class SwingMode {
-        None,
-        Client,
-        Packet,
     }
 
     private enum class RenderPredictMode {
@@ -1210,7 +1204,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val result: InteractionResult = gameMode.useItemOn(player, finalHand, hitResult)
         if (result.consumesAction()) {
             if (placeSwing) {
-                doSwing(resolveSwingHand(true))
+                doSwing(resolveSwingHand(true), false)
             }
             placedPosMap[placeInfo.blockPos.asLong()] = System.currentTimeMillis() + ownTimeout
             placeTimer.reset()
@@ -1274,7 +1268,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             return true
         }
         gameMode.attack(player, current)
-        doSwing(resolveSwingHand(false))
+        doSwing(resolveSwingHand(false), true)
         breakTimer.reset()
         lastActiveTime = System.currentTimeMillis()
         attackedCrystalMap[current.id] = System.currentTimeMillis() + 1000L
@@ -1824,14 +1818,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun doSwing(hand: InteractionHand) {
-        when (swingMode) {
-            SwingMode.Client -> PlayerUtils.swingHand(hand)
-            SwingMode.Packet -> PlayerUtils.swingHand(hand)
-            SwingMode.None -> {
-            }
-        }
+    private fun doSwing(hand: InteractionHand, attacking: Boolean) {
+        if (attacking) swingMode.attackSwing(hand) else swingMode.interactSwing(hand)
     }
 
     private fun getRotationSpeed(): Double {

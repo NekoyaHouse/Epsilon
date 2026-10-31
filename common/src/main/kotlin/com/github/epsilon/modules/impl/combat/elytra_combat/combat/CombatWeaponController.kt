@@ -4,7 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.player.LocalPlayer
@@ -104,9 +104,7 @@ object CombatWeaponController {
         try {
             // 只调用原生 attack，攻击距离使用本地实体交互 reach。
             gameMode.attack(player, target)
-            if (swingHand) {
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
-            }
+            SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
             return true
         } finally {
             selection.restore()

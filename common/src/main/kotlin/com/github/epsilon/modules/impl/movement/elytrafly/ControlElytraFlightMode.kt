@@ -52,9 +52,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         releaseEatGlide()
     }
 
+    // 控制模式有意跳过基类的自动修复：进食滑翔期间的槽位由本模式自行管理。
     override fun handleUnbreaking() {
-        if (eatGlideElytraSlot >= 0) return
-        super.handleUnbreaking()
     }
 
     override fun onPlayerTick() {

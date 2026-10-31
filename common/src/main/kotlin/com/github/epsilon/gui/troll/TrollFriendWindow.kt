@@ -70,7 +70,7 @@ class TrollFriendWindow : TrollWindow() {
         inputField.draw(
             scope, TrollTheme.metrics(metrics), inputBounds.x, inputBounds.y,
             inputBounds.width, inputBounds.height, mouseX, mouseY,
-            EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE
+            EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true
         )
 
         val addHovered = addBounds.contains(mouseX.toDouble(), mouseY.toDouble())
@@ -78,7 +78,7 @@ class TrollFriendWindow : TrollWindow() {
             1, addBounds.x, addBounds.y, addBounds.width, addBounds.height,
             TrollTheme.alpha(TrollTheme.primary(), if (addHovered) 190 else 70)
         )
-        scope.text(
+        scope.textWithShadow(
             3, "+", addBounds.centerX() - metrics.getWidth("+", TrollTheme.TEXT_SCALE) / 2.0f,
             addBounds.y + (addBounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
             TrollTheme.TEXT_SCALE, TrollTheme.text()
@@ -87,7 +87,7 @@ class TrollFriendWindow : TrollWindow() {
         scope.scissor(listViewport) { content ->
             if (rows.isEmpty()) {
                 val empty = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
-                content.text(
+                content.textWithShadow(
                     2, empty,
                     listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
                     listViewport.y + (listViewport.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
@@ -101,7 +101,7 @@ class TrollFriendWindow : TrollWindow() {
                     1, row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
                     Color(255, 255, 255, if (hovered) 30 else 16)
                 )
-                content.text(
+                content.textWithShadow(
                     2, TrollTheme.trim(row.name, metrics, TrollTheme.TEXT_SCALE, row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f),
                     row.bounds.x + 5.0f,
                     row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
@@ -115,7 +115,7 @@ class TrollFriendWindow : TrollWindow() {
                     TrollTheme.alpha(TrollTheme.primary(), if (removeHovered) 180 else 40)
                 )
                 val iconScale = TrollTheme.VALUE_SCALE
-                content.text(
+                content.textWithShadow(
                     4, IconChars.CLOSE,
                     row.removeBounds.centerX() - metrics.getWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS) / 2.0f,
                     row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f,

@@ -3,6 +3,7 @@
   "package": "com.github.epsilon.neoforge.mixins",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "MixinGui",
     "MixinMinecraft",
     "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext"

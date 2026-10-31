@@ -348,7 +348,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         val iconScale = 0.92f
         val iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS)
         val iconHeight = metrics.getHeight(iconScale, StaticFontLoader.ICONS)
-        scope.text(
+        scope.textWithShadow(
             4, icon,
             bounds.centerX() - iconWidth * 0.5f,
             bounds.centerY() - iconHeight * 0.5f,

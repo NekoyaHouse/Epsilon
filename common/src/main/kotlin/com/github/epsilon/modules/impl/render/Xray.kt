@@ -11,8 +11,7 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
@@ -194,7 +193,7 @@ object Xray : Module("Xray", Category.RENDER) {
             displayBlock = pos
             mc.gameMode!!.startDestroyBlock(pos, player.direction)
             mc.gameMode!!.stopDestroyBlock()
-            NonNullContext.current?.let { nn -> context(nn) { PlayerUtils.swingHand(InteractionHand.MAIN_HAND) } }
+            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
             checked.add(BlockMemory(pos))
             done++
         }

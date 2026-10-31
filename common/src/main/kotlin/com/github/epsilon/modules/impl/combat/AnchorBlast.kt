@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -106,7 +106,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
 
         player.inventory.selectedSlot = anchorSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(placeCps)
 
         phase = Phase.CHARGE
@@ -126,7 +126,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
 
         player.inventory.selectedSlot = glowstoneSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
 
         phase = Phase.DETONATE
@@ -141,7 +141,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
         val slot = detonateSlot - 1
         player.inventory.selectedSlot = slot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
         phase = Phase.CLEANUP
     }

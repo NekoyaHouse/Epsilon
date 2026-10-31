@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.safety.NonNullContext
@@ -38,9 +38,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
             val hand = result.getHand()
             interaction.useItem(player, hand)
-            if (swingHand) {
-                PlayerUtils.swingHand(hand)
-            }
+            SwingMode.of(swingHand).interactSwing(hand)
 
             if (switchMode.`is`(SwitchMode.Silent)) {
                 InvUtils.swapBack()

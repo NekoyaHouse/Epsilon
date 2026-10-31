@@ -7,7 +7,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
@@ -167,7 +167,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
 
             interaction.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+            SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
             if (needSwitch) {
                 val backDelay = visibleSwapBackDelay
@@ -182,7 +182,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
         } else {
             InvUtils.invSwap(item.slot)
             interaction.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+            SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
             InvUtils.invSwapBack()
         }
     }

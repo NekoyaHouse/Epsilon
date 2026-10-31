@@ -8,7 +8,7 @@ import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.interaction
@@ -50,7 +50,7 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
             val hitResult = RotationManager.INSTANCE.getHitResult()
             if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {
                 interaction.attack(player, currentTarget)
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 redirecting = false
             }
         }

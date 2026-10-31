@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
@@ -108,7 +108,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                             false
                         )
                         interaction.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                         stepDelay = 1 + random.nextInt(2)
                         step = 2 // 跳到恢复阶段
@@ -118,7 +118,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
 
                         InvUtils.swap(obsidianSlot, false)
                         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                         InvUtils.swap(endCrystalSlot, false)
 
@@ -143,7 +143,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     false
                 )
                 interaction.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
-                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                 stepDelay = 1 + random.nextInt(2)
                 step = 2

@@ -12,7 +12,7 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -322,7 +322,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
         InvUtils.swap(anchor.slot, false)
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, pendingAnchorHit!!)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         currentAnchorPos = pendingAnchorPos
         targetRotation = null
         targetBlockPos = null
@@ -1014,7 +1014,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         )
         val hit = BlockHitResult(hitVec, side, pos, false)
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
     }
 
     context(nn: NonNullContext)

@@ -13,11 +13,10 @@ import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandView;
-import com.github.epsilon.utils.player.PlayerUtils;
-import com.github.epsilon.utils.safety.NonNullContext;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.sofurry.smtc.SmtcService;
+import com.github.epsilon.smtc.SmtcService;
+import com.github.epsilon.utils.player.SwingMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -143,11 +142,7 @@ public abstract class MixinMinecraft {
                 && mc.options.keyAttack.consumeClick()
                 && (!handView.getOnlyOnBlock() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
-            // Kotlin 侧 swingHand 是 context(NonNullContext) 函数，JVM 签名把上下文放在首位参数。
-            NonNullContext ctx = NonNullContext.Companion.getCurrent();
-            if (ctx != null) {
-                PlayerUtils.INSTANCE.swingHand(ctx, InteractionHand.MAIN_HAND);
-            }
+            SwingMode.Client.attackSwing(InteractionHand.MAIN_HAND);
         }
     }
 

@@ -10,7 +10,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -81,7 +81,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     if (isFacing(rotation, 2.0f, 2.5f)) {
                         InvUtils.swap(grimCollectSlot, true)
                         if (useItem()) {
-                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                            SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
                             pendingSwapBack = true
                             swapTimer.reset()
                             completeMlgCycle()
@@ -128,7 +128,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 if (shouldInteract && pendingSlot != -1) {
                     InvUtils.swap(pendingSlot, true)
                     if (interactTimer.passedMillise(interactDelay.toLong()) && useItem()) {
-                        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+                        SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
                         interactTimer.reset()
                         quickCollectDelayTicks = collectDelayTicks
                         grimShouldCollect = true

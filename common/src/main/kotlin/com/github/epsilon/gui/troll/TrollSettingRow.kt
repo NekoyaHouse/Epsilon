@@ -37,11 +37,13 @@ class TrollSettingRow {
     private val action: ModuleAction?
     private val progress: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private val hover: Animation = Animation(Easing.EASE_OUT_EXPO, 300L)
+    private val click: Animation = Animation(Easing.EASE_OUT_CUBIC, 300L)
     private var bounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var input: DropdownTextField? = null
     private var originalText: String? = null
     private var listening: Boolean = false
     private var dragging: Boolean = false
+    private var pressed: Boolean = false
     private var enumDragged: Boolean = false
     private var dragStartX: Double = 0.0
     private var pendingNumber: Double? = null
@@ -122,6 +124,7 @@ class TrollSettingRow {
 
     fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
         val h = scope.animate(hover, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val clicked = scope.animate(click, pressed)
         val p = scope.animate(progress, target())
         scope.rect(1, bounds.x, bounds.y, bounds.width, bounds.height, Color(0, 0, 0, 40))
         if (p > 0.001f) {
@@ -137,7 +140,7 @@ class TrollSettingRow {
                 scope.layer(3) { content ->
                     activeInput.draw(
                         content, TrollTheme.metrics(metrics), bounds.x, bounds.y, bounds.width, bounds.height,
-                        mouseX, mouseY, "", TrollTheme.TEXT_SCALE
+                        mouseX, mouseY, "", TrollTheme.TEXT_SCALE, true
                     )
                 }
             }
@@ -149,9 +152,9 @@ class TrollSettingRow {
         } else {
             minOf(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width * 0.48f)
         }
-        val scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - (if (dragging) 0.1f else 0.0f))
+        val scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - clicked * 0.1f)
         val text = if (setting != null && !setting.isPlatformSupported()) TrollTheme.alpha(TrollTheme.text(), 110) else TrollTheme.text()
-        scope.text(
+        scope.textWithShadow(
             3, TrollTheme.trim(label(), metrics, scale, bounds.width - valueWidth - 10.5f),
             bounds.x + 3.0f + h * 3.0f, bounds.y + 2.25f, scale, text
         )
@@ -159,7 +162,7 @@ class TrollSettingRow {
             drawColorSwatch(scope, metrics, setting.value)
             return
         }
-        scope.text(
+        scope.textWithShadow(
             3, TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth),
             bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
             TrollTheme.VALUE_SCALE, text
@@ -175,11 +178,11 @@ class TrollSettingRow {
         val valueWidth = minOf(metrics.getWidth(text, valueScale), bounds.width * 0.48f)
         val valueX = bounds.right() - valueWidth - 3.0f
 
-        scope.text(
+        scope.textWithShadow(
             3, TrollTheme.trim(label(), metrics, labelScale, maxOf(1.0f, bounds.width - valueWidth - 10.5f)),
             bounds.x + 3.0f, textY, labelScale, TrollTheme.text()
         )
-        scope.text(
+        scope.textWithShadow(
             3, TrollTheme.trim(text, metrics, valueScale, valueWidth),
             valueX, bounds.bottom() - metrics.getHeight(valueScale) - 3.0f,
             valueScale, TrollTheme.text()
@@ -205,6 +208,7 @@ class TrollSettingRow {
 
     fun mouseClicked(event: MouseButtonEvent): Boolean {
         if (!bounds.contains(event.x(), event.y())) return false
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) pressed = true
         val setting = this.setting
         if (setting != null && !setting.isPlatformSupported()) {
             PlatformNoticeScreen.show(setting)
@@ -271,7 +275,9 @@ class TrollSettingRow {
     }
 
     fun mouseReleased(event: MouseButtonEvent) {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !dragging) return
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return
+        pressed = false
+        if (!dragging) return
         dragging = false
         val pending = pendingNumber
         if (pending != null) {
@@ -331,6 +337,7 @@ class TrollSettingRow {
     fun resetInput() {
         listening = false
         dragging = false
+        pressed = false
         pendingEnumIndex = -1
         val pending = pendingNumber
         if (pending != null) {

@@ -13,7 +13,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.esp.CaptureMarkESP
 import com.github.epsilon.utils.render.esp.CircleESP
 import com.github.epsilon.utils.render.esp.FireflyESP
@@ -452,7 +452,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun attackEntity(entity: Entity) {
         interaction.attack(player, entity)
-        PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+        SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
     }
 
     /**

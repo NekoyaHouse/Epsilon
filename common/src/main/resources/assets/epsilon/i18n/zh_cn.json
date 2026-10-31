@@ -1313,6 +1313,7 @@
         },
         "swing mode": {
           "_value": "挥手模式",
+          "both": "两者",
           "none": "无",
           "client": "客户端",
           "packet": "数据包"

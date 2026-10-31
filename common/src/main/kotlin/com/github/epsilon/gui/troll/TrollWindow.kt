@@ -42,6 +42,10 @@ abstract class TrollWindow protected constructor() {
         openAnimation.value = 0.0f
         openAnimation.reset()
         openAnimation.run(1.0f)
+        onOpenAnimationStarted()
+    }
+
+    protected open fun onOpenAnimationStarted() {
     }
 
     fun getOpenProgress(): Float {

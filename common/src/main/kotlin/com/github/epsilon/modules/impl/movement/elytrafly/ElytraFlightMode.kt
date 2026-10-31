@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.Minecraft
@@ -123,7 +123,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
         val result = interaction.useItem(player, hand)
         if (result.consumesAction()) {
-            PlayerUtils.swingHand(hand)
+            SwingMode.Both.interactSwing(hand)
         }
 
         if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
