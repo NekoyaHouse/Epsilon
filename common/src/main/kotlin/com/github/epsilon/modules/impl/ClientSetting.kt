@@ -18,8 +18,10 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.applyWhenRelease
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
+import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.IconSet
@@ -136,11 +138,11 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Language",
         "", { language.`is`(EpsilonLanguage.Custom) },
         onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
-    ).group(sgGeneral).apply { applyWhenRelease() }
+    ).group(sgGeneral).applyWhenRelease()
 
     private val renderScale by doubleSetting("Render Scale", 2.0, 1.0..6.0, 0.5)
         .group(sgGeneral)
-        .apply { applyWhenRelease() }
+        .applyWhenRelease()
 
     val i18nFallback by boolSetting(
         "I18n Fallback",
@@ -156,7 +158,7 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Font",
         "",
         { font.`is`(FontMode.Custom) }
-    ).group(sgGeneral).apply { applyWhenRelease() }
+    ).group(sgGeneral).applyWhenRelease()
 
     val fontGlyphsPerFrame by intSetting(
         "Font Glyphs Per Frame",
@@ -255,7 +257,7 @@ object ClientSetting : Module("Client Setting", null) {
     ).group(sgAppearance)
 
     val showWelcomeScreen by boolSetting("Show Welcome Screen", true)
-        .apply { rootSetting() }
+        .globalSetting()
         .group(sgAppearance)
 
     // 宇泽玲纱

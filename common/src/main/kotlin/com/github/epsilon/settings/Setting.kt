@@ -36,7 +36,7 @@ abstract class Setting<V>(
             defaultValueStore = newValue
         }
 
-    var isRootSetting: Boolean = false
+    var isGlobalSetting: Boolean = false
 
     var isApplyWhenRelease: Boolean = false
 
@@ -68,27 +68,9 @@ abstract class Setting<V>(
     }
 
     /**
-     * 声明该设置只在指定平台上可用。
-     */
-    fun platformOnly(requirement: PlatformRequirement?): Setting<V> {
-        this.platformRequirement = requirement ?: PlatformRequirement.ANY
-        return this
-    }
-
-    /**
      * 当前平台是否满足该设置的功能要求。
      */
     fun isPlatformSupported(): Boolean = platformRequirement.isSatisfied()
-
-    fun rootSetting(): Setting<V> {
-        this.isRootSetting = true
-        return this
-    }
-
-    fun applyWhenRelease(): Setting<V> {
-        this.isApplyWhenRelease = true
-        return this
-    }
 
     open fun setValueSilently(newValue: V) {
         valueStore = newValue
@@ -150,5 +132,29 @@ abstract class Setting<V>(
  */
 fun <T : Setting<*>> T.group(group: SettingGroup): T {
     this.groupRef = group
+    return this
+}
+
+/**
+ * 声明设置只在指定平台上可用，并保留具体设置类型。
+ */
+fun <T : Setting<*>> T.platformOnly(requirement: PlatformRequirement?): T {
+    this.platformRequirement = requirement ?: PlatformRequirement.ANY
+    return this
+}
+
+/**
+ * 将设置标记为全局设置，并保留具体设置类型。
+ */
+fun <T : Setting<*>> T.globalSetting(): T {
+    this.isGlobalSetting = true
+    return this
+}
+
+/**
+ * 将设置标记为释放时应用，并保留具体设置类型。
+ */
+fun <T : Setting<*>> T.applyWhenRelease(): T {
+    this.isApplyWhenRelease = true
     return this
 }

@@ -22,6 +22,7 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetMotionT
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.applyWhenRelease
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.toDegrees
@@ -104,7 +105,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var maxNodes by intSetting("Max Nodes", 1200, 100..6000, 100, { pathfinding }).group(sgFollow)
     private var dataSize by intSetting(
         "Data Size", 50, 25..100, 5, { pathfinding },
-        onChanged = { size -> setPathDataSize(size) }).apply { applyWhenRelease() }.group(sgFollow)
+        onChanged = { size -> setPathDataSize(size) }).applyWhenRelease().group(sgFollow)
 
     var maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0..16.0, 0.5).group(sgMace)
     var maceHeight by doubleSetting("Mace Height", 10.0, 2.0..32.0, 0.5).group(sgMace)

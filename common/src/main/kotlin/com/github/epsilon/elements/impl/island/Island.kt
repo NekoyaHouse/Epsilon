@@ -12,6 +12,7 @@ import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
+import com.github.epsilon.settings.platformOnly
 import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement

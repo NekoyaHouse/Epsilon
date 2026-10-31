@@ -228,7 +228,8 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
         val trackBounds = getTrackBounds(bounds)
         var progress = (mouseX - trackBounds.x) / trackBounds.width
         progress = (progress).coerceIn(0.0, 1.0)
-        val rawValue = doubleSetting.range.start + (doubleSetting.range.endInclusive - doubleSetting.range.start) * progress
+        val rawValue =
+            doubleSetting.range.start + (doubleSetting.range.endInclusive - doubleSetting.range.start) * progress
         val step = if (doubleSetting.step <= 0.0) 0.01 else doubleSetting.step
         val snapped = doubleSetting.range.start + ((rawValue - doubleSetting.range.start) / step).roundToInt() * step
         previewValue(snapped)

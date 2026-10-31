@@ -159,7 +159,9 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         Color(149, 149, 149, 255), true, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
         "Firefly Color 2",
-        Color(255, 133, 161, 255), true, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        Color(255, 133, 161, 255),
+        true,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
         "Firefly Color Mix",
         0.65,

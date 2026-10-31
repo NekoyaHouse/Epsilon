@@ -4,7 +4,6 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.group
 import com.github.epsilon.utils.render.ColorUtils
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent

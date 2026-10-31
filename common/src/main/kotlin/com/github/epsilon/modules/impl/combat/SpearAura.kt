@@ -125,17 +125,40 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private val fireflyColor by colorSetting(
         "Firefly Color", Color(149, 149, 149, 255), true, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
-        "Firefly Color 2", Color(255, 133, 161, 255), true, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color 2",
+        Color(255, 133, 161, 255),
+        true,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
-        "Firefly Color Mix", 0.65, 0.0..1.0, 0.05, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color Mix",
+        0.65,
+        0.0..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorSpeed by doubleSetting(
-        "Firefly Color Speed", 1.2, 0.1..6.0, 0.1, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        "Firefly Color Speed",
+        1.2,
+        0.1..6.0,
+        0.1,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyRainbowSpeed by doubleSetting(
-        "Firefly Rainbow Speed", 1.0, 0.1..6.0, 0.1, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Speed",
+        1.0,
+        0.1..6.0,
+        0.1,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowSaturation by doubleSetting(
-        "Firefly Rainbow Saturation", 0.85, 0.1..1.0, 0.05, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Saturation",
+        0.85,
+        0.1..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyRainbowBrightness by doubleSetting(
-        "Firefly Rainbow Brightness", 1.0, 0.1..1.0, 0.05, { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
+        "Firefly Rainbow Brightness",
+        1.0,
+        0.1..1.0,
+        0.05,
+        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Rainbow })
     private val fireflyLength by intSetting(
         "Firefly Length", 14, 8..128, 1, { esp && espMode == ESPMode.Firefly })
     private val fireflyFactor by intSetting(

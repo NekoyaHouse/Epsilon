@@ -50,14 +50,14 @@ interface SettingHost {
         defaultValue: Int,
         range: IntRange,
         step: Int,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((Int) -> Unit)? = null,
     ): IntSetting = addSetting(IntSetting(name, defaultValue, range, step, visible, onChanged))
 
     fun boolSetting(
         name: String,
         defaultValue: Boolean,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((Boolean) -> Unit)? = null,
     ): BoolSetting = addSetting(BoolSetting(name, defaultValue, visible, onChanged))
 
@@ -66,49 +66,49 @@ interface SettingHost {
         defaultValue: Double,
         range: ClosedFloatingPointRange<Double>,
         step: Double,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((Double) -> Unit)? = null,
     ): DoubleSetting = addSetting(DoubleSetting(name, defaultValue, range, step, visible, onChanged))
 
     fun stringSetting(
         name: String,
         defaultValue: String,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((String) -> Unit)? = null,
     ): StringSetting = addSetting(StringSetting(name, defaultValue, visible, onChanged))
 
     fun blockListSetting(
         name: String,
         defaultValue: Collection<Block>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): RegistryListSetting<Block> =
         addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.BLOCK, null, visible))
 
     fun itemListSetting(
         name: String,
         defaultValue: Collection<Item>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): RegistryListSetting<Item> =
         addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.ITEM, null, visible))
 
     fun entityTypeListSetting(
         name: String,
         defaultValue: Collection<EntityType<*>>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): RegistryListSetting<EntityType<*>> =
         addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.ENTITY_TYPE, null, visible))
 
     fun enchantmentListSetting(
         name: String,
         defaultValue: Collection<String>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): RegistryListSetting<String> =
         addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.ENCHANTMENT, null, visible))
 
     fun <E : Enum<E>> enumSetting(
         name: String,
         defaultValue: E,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((E) -> Unit)? = null,
     ): EnumSetting<E> = addSetting(EnumSetting(name, defaultValue, visible, onChanged))
 
@@ -116,33 +116,33 @@ interface SettingHost {
         name: String,
         defaultValue: Color,
         allowAlpha: Boolean = true,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((Color) -> Unit)? = null,
     ): ColorSetting = addSetting(ColorSetting(name, defaultValue, allowAlpha, visible))
 
     fun keybindSetting(
         name: String,
         defaultValue: Int,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
         onChanged: ((Int) -> Unit)? = null,
     ): KeybindSetting = addSetting(KeybindSetting(name, defaultValue, visible))
 
     fun buttonSetting(
         name: String,
         func: Runnable,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): ButtonSetting = addSetting(ButtonSetting(name, func, visible))
 
     fun stringListSetting(
         name: String,
         defaultValue: Collection<String>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): StringListSetting = addSetting(StringListSetting(name, defaultValue, visible))
 
     fun soundEventListSetting(
         name: String,
         defaultValue: Collection<SoundEvent>,
-        visible: Setting.Visibility = Setting.Visibility { true },
+        visible: Setting.Visibility? = null,
     ): RegistryListSetting<SoundEvent> =
         addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, visible))
 
