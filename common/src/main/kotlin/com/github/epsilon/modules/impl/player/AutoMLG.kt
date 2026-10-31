@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -55,8 +56,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private var pendingSwapBack = false
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
-            if (Scaffold.isEmergencyPlacementActive) return@nonNullListener
+        nonNullHandler<ClientTickEvent.Pre> {
+            if (Scaffold.isEmergencyPlacementActive) return@nonNullHandler
 
             if ((isFalling() || player.isInWater || player.isInLava) && !mlgCompleted) {
                 player.setSprinting(false)
@@ -92,7 +93,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     if (InvUtils.findInHotbar(Items.WATER_BUCKET).found()) {
                         InvUtils.swapBack()
                         completeMlgCycle()
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     val bucket = InvUtils.findInHotbar(Items.BUCKET)
@@ -111,7 +112,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         }
                     }
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (waitingForRotation && lockedRotation != null) {
@@ -119,7 +120,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 RotationManager.INSTANCE.setRotations(locked, 180.0, Priority.High)
 
                 if (!isFacing(locked, 1.6f, 2.0f)) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (shouldInteract && pendingSlot != -1) {
@@ -132,7 +133,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         resetPending()
                     }
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (isFalling() && !grimShouldCollect) {
@@ -146,7 +147,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         if (shouldSkipMlgPlacement(bestPos)) {
                             mlgCompleted = true
                             resetPending()
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
 
                         val dist = player.getEyePosition().distanceTo(Vec3.atCenterOf(bestPos).add(0.0, 0.5, 0.0))
@@ -166,7 +167,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 val hitVec = Vec3(hitX, neighbor.y + 1.0, hitZ)
 
                                 if (eyesPos.distanceTo(hitVec) > 4.5) {
-                                    return@nonNullListener
+                                    return@nonNullHandler
                                 }
 
                                 val preciseRotation = RotationUtils.calculate(hitVec)

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.modules.Category
@@ -52,13 +53,13 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     var crystalling = false
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             onTick(it)
         }
 
-        nonNullListener<RightClickEvent> { event ->
-            if (!mc.mouseHandler.isRightPressed()) return@nonNullListener
-            if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return@nonNullListener
+        nonNullHandler<RightClickEvent> { event ->
+            if (!mc.mouseHandler.isRightPressed()) return@nonNullHandler
+            if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return@nonNullHandler
 
             val hit = mc.hitResult
             if (hit is BlockHitResult) {

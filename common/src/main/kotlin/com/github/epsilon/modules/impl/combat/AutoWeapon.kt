@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -158,8 +159,8 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private var awaitingBack: Boolean = false
 
     init {
-        nonNullListener<AttackEntityEvent> { onAttackEntity(it) }
-        nonNullListener<PlayerTickEvent.Pre> { onTick() }
+        nonNullHandler<AttackEntityEvent> { onAttackEntity(it) }
+        nonNullHandler<PlayerTickEvent.Pre> { onTick() }
     }
 
     override fun onDisable() {

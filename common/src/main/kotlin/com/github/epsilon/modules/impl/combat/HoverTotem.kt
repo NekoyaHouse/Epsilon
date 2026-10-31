@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -24,7 +25,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen is InventoryScreen) {
                 val hoveredSlot = screen.hoveredSlot
@@ -37,7 +38,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                 if (hoveredSlot != null) {
                     val slotIndex = hoveredSlot.index
                     if (slotIndex > 35) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     val totemSlot = slot.toInt()
@@ -47,7 +48,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                         if (hotbar && !player.inventory.getItem(totem).`is`(Items.TOTEM_OF_UNDYING)) {
                             if (clock > 0) {
                                 --clock
-                                return@nonNullListener
+                                return@nonNullHandler
                             }
                             ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, totem)
                             currentDelay = getRandomDelay()
@@ -55,7 +56,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                         } else if (!player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
                             if (clock > 0) {
                                 --clock
-                                return@nonNullListener
+                                return@nonNullHandler
                             }
                             ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, 40)
                             currentDelay = getRandomDelay()

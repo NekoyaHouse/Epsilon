@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -37,7 +39,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     private var direction = 1
 
     init {
-        nonNullListener<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
+        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
             val left = mc.options.keyLeft.isDown
             val right = mc.options.keyRight.isDown
             if (left != right) {
@@ -46,12 +48,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (speedOnly && !Speed.isEnabled && !Flight.isEnabled) {
                 resetTarget()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (requireJump && (mc.gui.screen() != null || !mc.options.keyJump.isDown)) {
                 resetTarget()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (KillAura.isEnabled && !Scaffold.isEnabled && !player.isUsingItem && !player.isBlocking) {
@@ -62,14 +64,14 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (target == null) {
                 targetYaw = Float.NaN
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val offsets = createOrbitOffsets()
             var closestIndex = findClosestIndex(offsets)
             if (closestIndex < 0) {
                 resetTarget()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (player.horizontalCollision) {

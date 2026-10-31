@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
@@ -33,12 +34,12 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
     private var attacks = 0.0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (pauseOnContainers && mc.gui.screen() != null) return@nonNullListener
-            if (player.isUsingItem || player.isBlocking) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (pauseOnContainers && mc.gui.screen() != null) return@nonNullHandler
+            if (player.isUsingItem || player.isBlocking) return@nonNullHandler
 
             attacks += MathUtils.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
-            if (attacks < 1.0) return@nonNullListener
+            if (attacks < 1.0) return@nonNullHandler
 
             val targets = TargetManager.acquireTargets(
                 TargetRequest.of(
@@ -56,7 +57,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
                 )
             )
 
-            if (targets.isEmpty()) return@nonNullListener
+            if (targets.isEmpty()) return@nonNullHandler
 
             while (attacks >= 1.0) {
                 for (target in targets) {

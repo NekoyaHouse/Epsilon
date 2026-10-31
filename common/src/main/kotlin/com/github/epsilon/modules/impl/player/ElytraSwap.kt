@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -35,8 +36,8 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
     private var isKeyDown = false
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@nonNullHandler
 
             val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
@@ -44,7 +45,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
             }
 
             if (pressed) {
-                if (isKeyDown && originalSlot == -1) return@nonNullListener
+                if (isKeyDown && originalSlot == -1) return@nonNullHandler
                 isKeyDown = true
 
                 if (originalSlot == -1) {
@@ -53,7 +54,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                 if (swapCounter < swapDelay) {
                     ++swapCounter
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 val wearingElytra = player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
@@ -75,7 +76,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
                             resetState()
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
 
                         val invSlot = InvUtils.find(predicate).slot
@@ -87,10 +88,10 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                             ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
-                            return@nonNullListener
+                            return@nonNullHandler
                         } else {
                             resetState()
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
                     }
 

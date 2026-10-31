@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -37,9 +38,9 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private var cooldown = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             val key = triggerKey
-            if (key == -1) return@nonNullListener
+            if (key == -1) return@nonNullHandler
 
             val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
@@ -47,7 +48,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
 
             if (newPress) {
                 if (SafeAnchor.isActive() || DoubleAnchor.isActive()) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (phase != Phase.IDLE && originalSlot >= 0) {
@@ -58,11 +59,11 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
                 phase = Phase.PLACE_ANCHOR
             }
 
-            if (phase == Phase.IDLE) return@nonNullListener
+            if (phase == Phase.IDLE) return@nonNullHandler
 
             if (cooldown > 0) {
                 cooldown--
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             when (phase) {

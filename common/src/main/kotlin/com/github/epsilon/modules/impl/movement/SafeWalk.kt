@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -33,15 +34,15 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
     private val blocksOnly by boolSetting("Blocks Only", true)
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (!player.onGround() || !isMovementInputPressed()) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (!player.onGround() || !isMovementInputPressed()) return@nonNullHandler
 
             val motionX = player.deltaMovement.x
             val motionZ = player.deltaMovement.z
-            if (!canSafeWalk(motionX, motionZ)) return@nonNullListener
+            if (!canSafeWalk(motionX, motionZ)) return@nonNullHandler
 
             val multiplier = if (player.hasEffect(MobEffects.SPEED)) speedMotion else motion
-            if (multiplier == 1.0) return@nonNullListener
+            if (multiplier == 1.0) return@nonNullHandler
 
             player.deltaMovement = Vec3(
                 motionX * multiplier,
@@ -50,8 +51,8 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
             )
         }
 
-        nonNullListener<MoveEvent>(EventPriority.LOWEST) { event ->
-            if (!canSafeWalk(event.x, event.z)) return@nonNullListener
+        nonNullHandler<MoveEvent>(EventPriority.LOWEST) { event ->
+            if (!canSafeWalk(event.x, event.z)) return@nonNullHandler
 
             var movementX = event.x
             var movementZ = event.z

@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.AfterRender3DEvent
@@ -41,7 +43,7 @@ object MotionBlur : Module("Motion Blur", Category.RENDER) {
         handler<AfterRender3DEvent>(EventPriority.HIGHEST) { onAfterRender3D(it) }
         handler<GameJoinedEvent> { onGameJoined(it) }
         handler<GameLeftEvent> { onGameLeft(it) }
-        nonNullListener<LevelUpdateEvent> { onLevelUpdate(it) }
+        nonNullHandler<LevelUpdateEvent> { onLevelUpdate(it) }
     }
 
     fun captureFrame(cameraState: CameraRenderState, modelViewMatrix: Matrix4fc) {

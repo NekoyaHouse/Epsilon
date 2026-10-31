@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.impl.KeyPressEvent
@@ -57,10 +59,10 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) {
                 pressed = false
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (hasActivated) {
@@ -75,15 +77,15 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 val pearl = InvUtils.findInHotbar(Items.ENDER_PEARL)
                 if (!pearl.found()) {
                     resetState()
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (player.cooldowns.isOnCooldown(Items.ENDER_PEARL.defaultInstance)) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (pauseOnEat && (PlayerUtils.isEating() || NoSlowdown.isWorking())) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 } else {
                     if (NoSlowdown.isWorking()) {
                         NotificationManager.warning(
@@ -103,7 +105,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
 
                 if (clock < delay) {
                     clock++
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (!hasActivated) {

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -17,8 +18,8 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
     private val vehicles by boolSetting("Vehicles", false)
 
     init {
-        nonNullListener<PlayerTickEvent.Post> {
-            if (Scaffold.isEnabled) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Post> {
+            if (Scaffold.isEnabled) return@nonNullHandler
 
             val vehicle = player.vehicle
             if (vehicle != null && vehicles) {
@@ -27,7 +28,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
                 }
             } else {
                 if (player.isSuppressingSlidingDownLadder || player.zza == 0.0f && player.xxa == 0.0f) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
                 if (!isOnBed() && canSnap(player)) {
                     player.deltaMovement = Vec3(player.deltaMovement.x, -fallSpeed, player.deltaMovement.z)

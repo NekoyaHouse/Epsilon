@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -18,18 +19,18 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
     private val checkGapple by boolSetting("Check Gapple", true)
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (!shouldHoldTotem()) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING)
             if (slot == -1) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             moveItemToOffhand(slot)

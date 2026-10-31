@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -18,9 +19,9 @@ object InputDisabler : Module("Input Disabler", Category.PLAYER) {
     private var shouldRestore = false
 
     init {
-        nonNullListener<PacketEvent.Send> { event ->
+        nonNullHandler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (packet !is ServerboundContainerClickPacket && packet !is ServerboundContainerClosePacket) return@nonNullListener
+            if (packet !is ServerboundContainerClickPacket && packet !is ServerboundContainerClosePacket) return@nonNullHandler
 
             event.cancel()
             spoofInput(player, connection)

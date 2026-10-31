@@ -2,7 +2,6 @@ package com.github.epsilon.managers.target
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
@@ -27,7 +26,7 @@ object TargetManager {
     private var sharedTarget: LivingEntity? = null
 
     init {
-        EventBus.handler<ClientTickEvent.Pre>(this, alwaysListening = true) { onClientTick() }
+        handler<ClientTickEvent.Pre>(alwaysListening = true) { onClientTick() }
     }
 
     private fun onClientTick() {

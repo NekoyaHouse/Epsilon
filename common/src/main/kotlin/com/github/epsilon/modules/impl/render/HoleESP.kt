@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -128,9 +130,9 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
     )
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (scannedLevel !== level) updateTimer.setMs(updateDelay.toLong())
-            if (!updateTimer.every(updateDelay.toLong())) return@nonNullListener
+            if (!updateTimer.every(updateDelay.toLong())) return@nonNullHandler
 
             val result = scan()
             unsafeHoles = result.unsafeHoles

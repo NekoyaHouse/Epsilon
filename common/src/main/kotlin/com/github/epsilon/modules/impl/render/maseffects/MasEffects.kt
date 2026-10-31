@@ -1,6 +1,8 @@
 package com.github.epsilon.modules.impl.render.maseffects
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -110,7 +112,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
     private val particleRenderer = MasEffectsParticleRenderer()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             particleRenderer.tick()
 
             if (playerDeathEffect) {
@@ -130,8 +132,8 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
             }
         }
 
-        nonNullListener<AttackEntityEvent> {
-            if (it.player !== player || !it.player.mainHandItem.`is`(Items.MACE)) return@nonNullListener
+        nonNullHandler<AttackEntityEvent> {
+            if (it.player !== player || !it.player.mainHandItem.`is`(Items.MACE)) return@nonNullHandler
 
             val victim = it.entity
             val shielding = victim is Player &&

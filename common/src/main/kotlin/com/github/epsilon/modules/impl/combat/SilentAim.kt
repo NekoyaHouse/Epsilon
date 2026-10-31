@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SwingHandEvent
@@ -33,15 +34,15 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
     private var target: LivingEntity? = null
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (!redirecting) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (!redirecting) return@nonNullHandler
 
             val currentTarget = target
             if (currentTarget == null || !currentTarget.isAlive || currentTarget.isDeadOrDying ||
                 RotationUtils.getEyeDistanceToEntity(currentTarget) > range
             ) {
                 redirecting = false
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val rotations = RotationUtils.calculate(currentTarget.eyePosition)
@@ -55,16 +56,16 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
             }
         }
 
-        nonNullListener<SwingHandEvent> { event ->
-            if (redirecting) return@nonNullListener
+        nonNullHandler<SwingHandEvent> { event ->
+            if (redirecting) return@nonNullHandler
 
             if (weaponOnly && !player.mainHandItem.has(DataComponents.WEAPON)) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val hitResult = mc.hitResult
             if (hitResult == null || hitResult.type != HitResult.Type.MISS) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val newTarget = TargetManager.acquirePrimary(
@@ -83,7 +84,7 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
                 )
             )
 
-            if (newTarget == null) return@nonNullListener
+            if (newTarget == null) return@nonNullHandler
 
             target = newTarget
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -56,20 +57,20 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
     }
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (!player.onGround()) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (!player.onGround()) return@nonNullHandler
 
             if (waitingSwapBack) {
                 if (swapBackTicks > 0) {
                     swapBackTicks--
-                    if (swapBackTicks > 0) return@nonNullListener
+                    if (swapBackTicks > 0) return@nonNullHandler
                 }
                 if (savedOldSlot >= 0) {
                     player.inventory.setSelectedSlot(savedOldSlot)
                 }
                 waitingSwapBack = false
                 savedOldSlot = -1
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (timer > 0) {
@@ -85,7 +86,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 { crystal -> Math.abs(crystal.y - playerY) < 1.0 }
             ).minByOrNull { crystal -> self.distanceTo(crystal) }
 
-            if (targetCrystal == null) return@nonNullListener
+            if (targetCrystal == null) return@nonNullHandler
 
             // 2.1 Check if already blocked by obsidian
             val eyes: Vec3 = self.eyePosition
@@ -101,7 +102,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             )
             if (hit.type == HitResult.Type.BLOCK) {
                 val hitPos = (hit as BlockHitResult).blockPos
-                if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullListener
+                if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullHandler
             }
 
             // 2. Calculate placement position
@@ -117,12 +118,12 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
 
             // 3. Check if placeable
-            if (!BlockUtils.canPlaceAt(placePos)) return@nonNullListener
-            if (!level.getBlockState(placePos.below()).isSolid) return@nonNullListener
+            if (!BlockUtils.canPlaceAt(placePos)) return@nonNullHandler
+            if (!level.getBlockState(placePos.below()).isSolid) return@nonNullHandler
 
             // 4. Find obsidian
             val obsidian: FindItemResult = InvUtils.findInHotbar(Items.OBSIDIAN)
-            if (!obsidian.found()) return@nonNullListener
+            if (!obsidian.found()) return@nonNullHandler
 
             // 5. Rotation and placement
             val rot = RotationUtils.calculate(self.eyePosition, Vec3.atCenterOf(placePos))

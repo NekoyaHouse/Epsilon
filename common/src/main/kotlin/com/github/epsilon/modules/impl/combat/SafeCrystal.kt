@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -30,7 +31,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
     private const val MAX_ATTACK_DISTANCE = 3.6
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (autoBreak) {
                 handleAutoCrystalBreak()
             }

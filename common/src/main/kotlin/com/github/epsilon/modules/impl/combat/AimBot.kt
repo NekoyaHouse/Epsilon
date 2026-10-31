@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.managers.FriendManager
@@ -59,19 +60,19 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private val visibleTime = TimerUtils()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             when (mode) {
                 Mode.AimAssist -> updateAimAssist()
                 Mode.BowAim -> updateBowAim()
             }
         }
 
-        nonNullListener<Render3DEvent> {
+        nonNullHandler<Render3DEvent> {
             if (mode == Mode.AimAssist) {
                 if (!rotationYaw.isNaN()) {
                     player.yRot = Mth.lerp(assistAcceleration, player.yRot, rotationYaw)
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (mode == Mode.BowAim && rotation == Rotation.Client && !bowTargetYaw.isNaN()) {

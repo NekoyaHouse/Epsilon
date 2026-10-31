@@ -2,7 +2,6 @@ package com.github.epsilon.managers
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.PacketEvent
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket
 import net.minecraft.world.entity.Entity
@@ -14,7 +13,7 @@ object HealthManager {
     private val scoreboardHealth = ConcurrentHashMap<String, Int>()
 
     init {
-        EventBus.handler<PacketEvent.Receive>(this, alwaysListening = true) { event -> onPacket(event) }
+        handler<PacketEvent.Receive>(alwaysListening = true) { event -> onPacket(event) }
     }
 
     fun getHealth(entity: Entity): Float {

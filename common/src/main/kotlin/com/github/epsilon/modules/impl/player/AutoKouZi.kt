@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -36,8 +37,8 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     private val random = Random()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (!canSend()) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (!canSend()) return@nonNullHandler
 
             if (mode == Mode.TXT) {
                 sendTxtMode()

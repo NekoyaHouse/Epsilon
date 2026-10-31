@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -98,7 +100,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private var lastSetBackPacketTick = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             tickStartX = player.x
             tickStartY = player.y
             tickStartZ = player.z
@@ -112,10 +114,10 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
                     !isFireworkBoosted()
         }
 
-        nonNullListener<SendPositionEvent>(EventPriority.LOW) { event ->
+        nonNullHandler<SendPositionEvent>(EventPriority.LOW) { event ->
             if (!currentTryWorking || !isSpeedAllowed()) {
                 trackSentPosition(event.x, event.y, event.z)
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             // 回滚到 tick 起点：本地坐标停在服务端最后收到的位置上，拉回才不会把玩家拖走
@@ -127,16 +129,16 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             if (pendingSetBackPacket != null) {
                 // 上一轮的伪造包尚未发出，丢弃它，避免同一 tick 连发两个包
                 pendingSetBackPacket = null
-                return@nonNullListener
+                return@nonNullHandler
             }
             pendingSetBackPacket = createSetBackPacket(moveX, moveZ)
         }
 
-        nonNullListener<AfterSendPositionEvent> {
+        nonNullHandler<AfterSendPositionEvent> {
             val packet = pendingSetBackPacket
             pendingSetBackPacket = null
 
-            if (packet == null) return@nonNullListener
+            if (packet == null) return@nonNullHandler
 
             // 绕过 Epsilon 的发送事件，避免伪造包被其他模块记录或延迟
             NetworkUtils.sendPacketNoEvent(packet)

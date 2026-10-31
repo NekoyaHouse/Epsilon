@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer

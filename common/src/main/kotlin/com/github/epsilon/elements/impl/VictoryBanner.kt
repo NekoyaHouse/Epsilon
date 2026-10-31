@@ -2,6 +2,8 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.Constants
 import com.github.epsilon.elements.HudModule
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -98,7 +100,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     init {
         setAnchorState(HudModule.HorizontalAnchor.Center, HudModule.VerticalAnchor.Top, 0.0f, 72.0f)
         handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
-        nonNullListener<AttackEntityEvent> { event ->
+        nonNullHandler<AttackEntityEvent> { event ->
             val target = event.entity
             if (triggerMode == TriggerMode.Kill && event.player === player && target is Player && target !== player && target.isAlive) {
                 recentTargets[target.id] = TrackedTarget(target, System.currentTimeMillis())

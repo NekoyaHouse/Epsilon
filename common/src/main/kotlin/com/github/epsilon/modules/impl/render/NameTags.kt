@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -59,15 +60,15 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     )
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             val currentRotation = rotation
             if (currentRotation != null && rotate) {
                 RotationManager.INSTANCE.setRotations(currentRotation, rotationSpeed.toDouble())
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre> {
-            if (!timer.passedMillise(placeDelay.toLong())) return@nonNullListener
+        nonNullHandler<ClientTickEvent.Pre> {
+            if (!timer.passedMillise(placeDelay.toLong())) return@nonNullHandler
 
             progress = 0
 
@@ -81,22 +82,22 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             if (!result.found()) {
                 ChatUtils.addChatMessage("[FeetTrap] No block found")
                 toggle()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (toggleOnMove && player.distanceToSqr(startX, startY, startZ) > 1.0 ||
                 toggleOnJump && player.input.keyPresses.jump()
             ) {
                 toggle()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (pauseOnEat && PlayerUtils.isEating()) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (!inAir && !player.onGround()) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             doSurround(BlockPos.containing(player.x, player.y, player.z), result.slot)

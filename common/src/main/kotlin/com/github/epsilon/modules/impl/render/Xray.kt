@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -65,7 +67,7 @@ object Xray : Module("Xray", Category.RENDER) {
     private var area: AABB = AABB(BlockPos.ZERO)
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (plugin.`is`(Plugin.New)) {
                 checked.forEach { blockMemory ->
                     if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
@@ -83,7 +85,7 @@ object Xray : Module("Xray", Category.RENDER) {
             }
         }
 
-        nonNullListener<MoveEvent> { event ->
+        nonNullHandler<MoveEvent> { event ->
             if (brutForce) {
                 if (all != done) {
                     event.z = 0.0

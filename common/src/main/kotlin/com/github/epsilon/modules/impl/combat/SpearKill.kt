@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -48,9 +49,9 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
 
     init {
         // 原实现监听 PlayerTickEvent 基类（按事件精确 class 分发，子类事件不会命中），保持原样。
-        nonNullListener<PlayerTickEvent> {
+        nonNullHandler<PlayerTickEvent> {
             if (ElytraCombat.isControllingCombat()) {
-                return@nonNullListener
+                return@nonNullHandler
             }
             updateTarget()
 

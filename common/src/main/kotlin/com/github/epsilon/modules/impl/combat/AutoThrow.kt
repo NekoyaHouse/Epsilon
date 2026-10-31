@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -39,7 +40,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     private var currentTarget: LivingEntity? = null
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             val slot = getThrowSlot()
             if (player.mainHandItem.`is`(Items.SNOWBALL) ||
                 player.mainHandItem.`is`(Items.EGG) ||
@@ -87,14 +88,14 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
                     }
 
                     currentTarget = best
-                    val target = currentTarget ?: return@nonNullListener
+                    val target = currentTarget ?: return@nonNullHandler
 
                     val rotation = RotationUtils.calculate(getAimVec(target), false)
 
                     RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
-                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@nonNullListener
-                    if (hit.type != HitResult.Type.ENTITY) return@nonNullListener
+                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@nonNullHandler
+                    if (hit.type != HitResult.Type.ENTITY) return@nonNullHandler
 
                     // 准备槽位与投掷状态
                     val off = player.offhandItem
@@ -112,7 +113,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (shouldThrow && canWork()) {
                 var used = false
                 val off = player.offhandItem

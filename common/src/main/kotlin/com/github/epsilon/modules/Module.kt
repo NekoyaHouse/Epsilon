@@ -1,15 +1,11 @@
 package com.github.epsilon.modules
 
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventBus
-import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.SettingHost
-import com.github.epsilon.utils.safety.*
 import com.google.gson.JsonObject
 import net.minecraft.client.Minecraft
 
@@ -83,42 +79,11 @@ open class Module(
     }
 
     // ---- 事件注册 ----
-    // 模块在 object 的 init 块中声明监听器：
-    //   init { nonNullListener<ClientTickEvent.Pre> { ... } }
-    // 监听器绑定到模块对象本身，是否派发由 isEnabled 的 EventBus.subscribe / unsubscribe 决定，
-    // 因此禁用状态下不会再收到事件；依赖玩家/世界的监听器会在上下文缺失时自动跳过。
-    // alwaysListening = true 用于确实需要在禁用期间继续监听的场景（如残留渲染效果淡出）。
-
-    /**
-     * 模块作用域的 [EventBus.nonNullHandler]。
-     *
-     * [alwaysListening] 为 false（默认）时监听器只在模块启用期间生效；为 true 时立即订阅并一直监听，
-     * 处理器执行前仍按 [isEnabled] 过滤。
-     */
-    protected inline fun <reified E : Any> nonNullListener(
-        priority: Int = EventPriority.MEDIUM,
-        alwaysListening: Boolean = false,
-        noinline block: context(NonNullContext) (E) -> Unit,
-    ) {
-        EventBus.nonNullHandler<E>(this, priority, alwaysListening) { event ->
-            if (!alwaysListening || isEnabled) {
-                block(event)
-            }
-        }
-    }
-
-    /** 模块作用域的 [EventBus.handler]，语义同 [nonNullListener]。 */
-    protected inline fun <reified E : Any> handler(
-        priority: Int = EventPriority.MEDIUM,
-        alwaysListening: Boolean = false,
-        noinline block: (E) -> Unit,
-    ) {
-        EventBus.handler<E>(this, priority, alwaysListening) { event ->
-            if (!alwaysListening || isEnabled) {
-                block(event)
-            }
-        }
-    }
+    // 模块在 object 的 init 块中注册监听器（import com.github.epsilon.events.api.nonNullHandler / handler）：
+    //   init { nonNullHandler<ClientTickEvent.Pre> { ... } }
+    // 隐式 receiver 即模块对象，监听器绑定到模块，是否派发由 isEnabled 的
+    // EventBus.subscribe / unsubscribe 决定，因此禁用状态下不会再收到事件；
+    // 依赖玩家/世界的监听器会在上下文缺失时自动跳过。
 
     fun toggle() {
         isEnabled = !isEnabled

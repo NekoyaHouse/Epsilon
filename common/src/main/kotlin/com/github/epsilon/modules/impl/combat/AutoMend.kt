@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -27,9 +28,9 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
     private var shouldSwapBack = false
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
-            if (!result.found()) return@nonNullListener
+            if (!result.found()) return@nonNullHandler
 
             RotationManager.INSTANCE.setRotations(Rot2f(player.yRot, 90f), 180.0, Priority.High)
 

@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -94,7 +96,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
-        nonNullListener<AttackEntityEvent> { event ->
+        nonNullHandler<AttackEntityEvent> { event ->
             val now = System.currentTimeMillis()
             synchronized(packetLock) {
                 lastAttackAt = now
@@ -109,7 +111,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre>(EventPriority.HIGH) {
+        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGH) {
             val now = System.currentTimeMillis()
             if (targetMode == TargetMode.Range) {
                 val rangeTarget = findRangeTarget()

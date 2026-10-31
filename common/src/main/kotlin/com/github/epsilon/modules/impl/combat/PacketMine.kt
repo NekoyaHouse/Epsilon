@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -120,8 +121,8 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     private val instantTimer = TimerUtils()
 
     init {
-        nonNullListener<StartDestroyBlockEvent> { onStartBreakingBlock(it) }
-        nonNullListener<Render3DEvent> { onRender(it) }
+        nonNullHandler<StartDestroyBlockEvent> { onStartBreakingBlock(it) }
+        nonNullHandler<Render3DEvent> { onRender(it) }
     }
 
     override fun onEnable() {

@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ChunkOcclusionEvent
@@ -81,8 +83,8 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             lastPitch = pitch
         }
 
-        nonNullListener<ClientTickEvent.Post> {
-            val cameraEntity = mc.cameraEntity ?: return@nonNullListener
+        nonNullHandler<ClientTickEvent.Post> {
+            val cameraEntity = mc.cameraEntity ?: return@nonNullHandler
             if (cameraEntity.isInWall) cameraEntity.noPhysics = true
             if (perspective?.isFirstPerson != true) mc.options.setCameraType(CameraType.FIRST_PERSON)
 
@@ -155,7 +157,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             pos.set(pos.x + velX, pos.y + velY, pos.z + velZ)
         }
 
-        nonNullListener<KeyboardInputEvent> {
+        nonNullHandler<KeyboardInputEvent> {
             if (!player.abilities.flying && staySneaking && isSneaking) {
                 it.isSneak = true
             }
@@ -191,7 +193,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
         }
 
-        nonNullListener<PacketEvent.Receive> {
+        nonNullHandler<PacketEvent.Receive> {
             val packet = it.packet
             if (packet is ClientboundPlayerCombatKillPacket) {
                 val entity = level.getEntity(packet.playerId())

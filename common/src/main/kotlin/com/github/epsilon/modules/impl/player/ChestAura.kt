@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -66,28 +67,28 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     private var openingStartedAt = 0L
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             updateTrackedLevel()
 
             if (opening) {
-                if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullListener
-                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@nonNullListener
+                if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
+                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@nonNullHandler
                 opening = false
                 timer.reset()
             }
 
-            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@nonNullListener
+            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@nonNullHandler
 
             if (hasNearbyPlayer()) {
                 if (mc.gui.screen() is AbstractContainerScreen<*>) {
                     player.closeContainer()
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullListener
+            if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
 
-            val target = findTarget() ?: return@nonNullListener
+            val target = findTarget() ?: return@nonNullHandler
 
             val targetRotation = RotationUtils.calculate(player.getEyePosition(), target.hit.location)
             RotationManager.INSTANCE.setRotations(
@@ -98,10 +99,10 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             )
 
             val hit = raycastTarget(RotationManager.INSTANCE.getRotation(), target.pos, target.throughWalls)
-            if (hit == null || hit.blockPos != target.pos) return@nonNullListener
+            if (hit == null || hit.blockPos != target.pos) return@nonNullHandler
 
             val result = interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-            if (!result.consumesAction()) return@nonNullListener
+            if (!result.consumesAction()) return@nonNullHandler
 
             playerClickedContainers.add(target.pos)
             clickedContainers.add(target.pos)
@@ -112,7 +113,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             }
         }
 
-        nonNullListener<PacketEvent.Send> { event ->
+        nonNullHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundUseItemOnPacket) {
                 val pos = packet.hitResult().blockPos
@@ -125,7 +126,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             }
         }
 
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundBlockEventPacket) {
                 markContainerOpened(packet.pos)

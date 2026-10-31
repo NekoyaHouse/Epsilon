@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.bus.EventPriority
@@ -21,13 +22,13 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
     private val activateKey by keybindSetting("Activate Key", KeybindUtils.encodeMouseButton(InputConstants.MOUSE_BUTTON_MIDDLE))
 
     init {
-        nonNullListener<KeyPressEvent>(EventPriority.HIGHEST) { event ->
+        nonNullHandler<KeyPressEvent>(EventPriority.HIGHEST) { event ->
             if (handleInput(event.getKey(), event.action)) {
                 event.cancel()
             }
         }
 
-        nonNullListener<MousePressEvent>(EventPriority.HIGHEST) { event ->
+        nonNullHandler<MousePressEvent>(EventPriority.HIGHEST) { event ->
             if (handleInput(KeybindUtils.encodeMouseButton(event.button), event.action)) {
                 event.cancel()
             }

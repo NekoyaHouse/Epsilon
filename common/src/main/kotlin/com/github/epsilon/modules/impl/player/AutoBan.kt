@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -30,7 +31,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
     private var currentIndex = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (countdownTicks > 0) {
                 if (countdownTicks == 60) {
                     sendMessage("保护机制: 3秒后开始发送违禁词")
@@ -45,7 +46,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
                     sendMessage("开始发送!")
                     lastSendTime = System.currentTimeMillis()
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (System.currentTimeMillis() - lastSendTime >= delay) {

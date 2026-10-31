@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
@@ -44,10 +45,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     private var trackedBedFace: Direction? = null
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (shouldPauseBreaking()) {
                 clearBreakingState()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val maxRange = range
@@ -60,7 +61,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
                 val nextTarget = findTarget()
                 if (nextTarget == null) {
                     resetBreaking()
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
                 resetBreaking()
                 currentTarget = nextTarget.pos
@@ -95,10 +96,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
         }
 
-        nonNullListener<Render3DEvent> {
-            if (!esp || currentTarget == null) return@nonNullListener
+        nonNullHandler<Render3DEvent> {
+            if (!esp || currentTarget == null) return@nonNullHandler
 
-            val target = currentTarget ?: return@nonNullListener
+            val target = currentTarget ?: return@nonNullHandler
             val shape = level.getBlockState(target).getShape(level, target)
             val box = if (shape.isEmpty) AABB(target) else shape.bounds().move(target)
             Render3DScheduler.addFilledBox(box, Color(255, 0, 0, 50))

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
@@ -16,7 +17,7 @@ object Flight : Module("Flight", Category.MOVEMENT) {
     private val verticalSpeed by doubleSetting("Vertical Speed", 1.0, 0.1, 5.0, 0.1)
 
     init {
-        nonNullListener<SendPositionEvent> {
+        nonNullHandler<SendPositionEvent> {
             var y = 0.0
 
             if (mc.options.keyJump.isDown) {

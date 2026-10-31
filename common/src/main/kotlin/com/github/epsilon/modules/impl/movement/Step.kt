@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -38,19 +40,19 @@ object Step : Module("Step", Category.MOVEMENT) {
     private var packets = 0
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             if (sneakingPause && player.isCrouching || insideBlockPause && PlayerUtils.isInBlock() ||
                 player.isInLava || player.isInWater || inWebPause && PlayerUtils.isInWeb() ||
                 !player.onGround() || feetTrapPause && FeetTrap.isEnabled
             ) {
                 player.setStepHeight(0.6f)
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             player.setStepHeight(height.toFloat())
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (timer && packets <= 0) {
                 TimerManager.reset()
                 timer = false
@@ -59,7 +61,7 @@ object Step : Module("Step", Category.MOVEMENT) {
             if (mode == Mode.OldNCP || strict) {
                 val stepHeight = player.y - player.yo
                 if (stepHeight <= 0.75 || stepHeight > height) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 val offsets = getOffset(stepHeight)

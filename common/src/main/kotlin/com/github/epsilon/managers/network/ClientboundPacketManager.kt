@@ -3,7 +3,6 @@ package com.github.epsilon.managers.network
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.managers.NotificationManager
 import net.minecraft.network.protocol.Packet
@@ -39,7 +38,7 @@ object ClientboundPacketManager {
     private var shouldFlush = false
 
     init {
-        EventBus.handler<LevelUpdateEvent>(this, alwaysListening = true) {
+        handler<LevelUpdateEvent>(alwaysListening = true) {
             shouldFlush = true
             tracking = false
         }

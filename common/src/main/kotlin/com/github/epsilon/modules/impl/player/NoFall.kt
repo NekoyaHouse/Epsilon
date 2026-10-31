@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.managers.NotificationManager
@@ -27,7 +28,7 @@ object NoFall : Module("No Fall", Category.PLAYER) {
     private var lastFallDistance = 0.0
 
     init {
-        nonNullListener<SendPositionEvent> { event ->
+        nonNullHandler<SendPositionEvent> { event ->
             when (mode) {
                 Mode.GroundSpoof -> {
                     if (player.fallDistance > fallDistance) event.isOnGround = true
@@ -56,8 +57,8 @@ object NoFall : Module("No Fall", Category.PLAYER) {
             }
         }
 
-        nonNullListener<KeyboardInputEvent> { event ->
-            if (mode != Mode.GrimJump) return@nonNullListener
+        nonNullHandler<KeyboardInputEvent> { event ->
+            if (mode != Mode.GrimJump) return@nonNullHandler
 
             if (lastFallDistance >= fallDistance && player.onGround()) {
                 event.isSneak = false

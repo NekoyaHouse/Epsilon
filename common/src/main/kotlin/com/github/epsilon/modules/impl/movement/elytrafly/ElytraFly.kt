@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
@@ -133,7 +135,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         modes[ElytraFlightModes.Pitch40] = Pitch40ElytraFlightMode(this)
         modes[ElytraFlightModes.NCP] = NCPElytraFlightMode(this)
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (sprintSuppressTicks > 0) {
                 sprintSuppressTicks--
             }
@@ -143,19 +145,19 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<TravelEvent> {
+        nonNullHandler<TravelEvent> {
             getActiveMode().onTravel(it)
         }
 
-        nonNullListener<KeyboardInputEvent> {
+        nonNullHandler<KeyboardInputEvent> {
             getActiveMode().onKeyboardInput(it)
         }
 
-        nonNullListener<FallFlyingEvent> {
+        nonNullHandler<FallFlyingEvent> {
             getActiveMode().onFallFlying(it)
         }
 
-        nonNullListener<FireworkRotationEvent> {
+        nonNullHandler<FireworkRotationEvent> {
             getActiveMode().onFireworkUpdate(it)
         }
 
@@ -169,7 +171,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<RightClickEvent> {
+        nonNullHandler<RightClickEvent> {
             getActiveMode().onRightClick()
         }
     }

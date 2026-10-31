@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
@@ -111,7 +112,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val gamemodeRing = RingState()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             // Handle all rings
             handleRing(joinRing) { playSound(joinVolume, joinPitch, joinSound.value) }
             handleRing(leaveRing) { playSound(leaveVolume, leavePitch, leaveSound.value) }
@@ -173,7 +174,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             playersInRender.addAll(currentInRender)
         }
 
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
 
             // Player Join

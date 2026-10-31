@@ -2,6 +2,8 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
@@ -93,7 +95,7 @@ object Particles : Module("Particles", Category.RENDER) {
         .build()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             fireFlies.removeAll { particle -> particle.tick() }
             particles.removeAll { particle -> particle.tick() }
 

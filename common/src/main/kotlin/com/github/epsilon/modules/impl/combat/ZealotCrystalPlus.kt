@@ -1,6 +1,8 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.Constants
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
@@ -312,7 +314,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         workerThread.isDaemon = true
         workerThread.start()
 
-        nonNullListener<PlayerTickEvent.Pre> { onTick() }
+        nonNullHandler<PlayerTickEvent.Pre> { onTick() }
         handler<PacketEvent.Receive> { onPacketReceive(it) }
         handler<Render3DEvent> { onRender3D() }
         handler<Render2DEvent.Level> { onRender2D(it) }

@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -120,13 +121,13 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private var autoEnabledPacketMine = false
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
-            if (!player.isAlive) return@nonNullListener
+        nonNullHandler<ClientTickEvent.Pre> {
+            if (!player.isAlive) return@nonNullHandler
 
             if (!PacketMine.isEnabled) {
                 pendingPos = null
                 notifyPacketMinePaused()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             checkPendingBlock()
@@ -135,12 +136,12 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
             // 忙碌期间持续重置计时器，使切换延迟真正从当前方块挖完的时刻开始计算。
             if (PacketMine.isBusy()) {
                 switchTimer.reset()
-                return@nonNullListener
+                return@nonNullHandler
             }
-            if (!switchTimer.passedMillise(delay.toLong())) return@nonNullListener
+            if (!switchTimer.passedMillise(delay.toLong())) return@nonNullHandler
 
             val candidates = findCandidates()
-            if (candidates.isEmpty()) return@nonNullListener
+            if (candidates.isEmpty()) return@nonNullHandler
 
             pendingPos = candidates.first().pos
             PacketMine.mine(pendingPos!!)

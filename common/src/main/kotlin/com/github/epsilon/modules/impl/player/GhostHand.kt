@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.modules.Category
@@ -19,13 +20,13 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
     private val posList: MutableSet<BlockPos> = ObjectOpenHashSet()
 
     init {
-        nonNullListener<StartUseItemEvent> { event ->
-            if (!mc.options.keyUse.isDown) return@nonNullListener
+        nonNullHandler<StartUseItemEvent> { event ->
+            if (!mc.options.keyUse.isDown) return@nonNullHandler
 
             val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             val normalHit = player.pick(player.blockInteractionRange(), partialTick, false)
             if (level.getBlockState(BlockPos.containing(normalHit.location)).hasBlockEntity()) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val direction = Vec3(0.0, 0.0, 0.1)
@@ -50,7 +51,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
                             PlayerUtils.swingHand(hand)
                             event.cancel()
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
                     }
                 }

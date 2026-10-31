@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.RightClickEvent
@@ -61,7 +61,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
     init {
         // 渲染事件不受模块启用状态过滤：残留方块需要继续淡出。
-        EventBus.handler<Render3DEvent>(this, alwaysListening = true) {
+        handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()
@@ -91,8 +91,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@nonNullHandler
 
             if (switchClock > 0) --switchClock
             if (placeClock > 0) --placeClock
@@ -104,7 +104,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                     if (hitResult.type == HitResult.Type.BLOCK && !active &&
                         !level.getBlockState(hitResult.blockPos).canBeReplaced() && checkPlace
                     ) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
                 }
 
@@ -115,14 +115,14 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                         (workWithPickaxe && mainHandStack.`is`(ItemTags.PICKAXES)) ||
                         active)
                 ) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 active = true
 
                 if (!crystalling && hitResult is BlockHitResult) {
                     if (hitResult.type == HitResult.Type.MISS) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     val renderPos = hitResult.blockPos.relative(hitResult.direction)
@@ -134,14 +134,14 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                     } else if (!level.getBlockState(renderPos).`is`(Blocks.OBSIDIAN)) {
                         val state = level.getBlockState(hitResult.blockPos)
                         if (state.`is`(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0) {
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
 
                         mc.options.keyUse.isDown = false
 
                         if (!player.isHolding(Items.OBSIDIAN)) {
                             if (switchClock > 0) {
-                                return@nonNullListener
+                                return@nonNullHandler
                             }
                             if (MathUtils.getRandom(1, 100) <= switchChance.toInt()) {
                                 switchClock = switchDelay.toInt()
@@ -151,7 +151,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
                         if (player.isHolding(Items.OBSIDIAN)) {
                             if (placeClock > 0) {
-                                return@nonNullListener
+                                return@nonNullHandler
                             }
 
                             if (MathUtils.getRandom(1, 100) <= placeChance.toInt()) {
@@ -166,7 +166,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 if (crystalling) {
                     if (!player.isHolding(Items.END_CRYSTAL)) {
                         if (switchClock > 0) {
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
                         if (MathUtils.getRandom(1, 100) <= switchChance.toInt()) {
                             if (selectItemFromHotbar(Items.END_CRYSTAL)) {
@@ -184,8 +184,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             }
         }
 
-        nonNullListener<RightClickEvent> { event ->
-            if (!active) return@nonNullListener
+        nonNullHandler<RightClickEvent> { event ->
+            if (!active) return@nonNullHandler
 
             val mainHandStack = player.mainHandItem
             val crosshairTarget = mc.hitResult

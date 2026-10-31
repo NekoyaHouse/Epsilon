@@ -82,7 +82,8 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - EventBus 按事件精确运行时 class 分发；不得假设父类型监听器会收到子类型事件。
 - 监听方法必须带 `@EventHandler`、返回 `void`，且只有一个非 primitive 参数。
 - EventBus 通过 `MethodHandles.privateLookupIn` 直接绑定 `@EventHandler` 方法，不需要为监听类注册 lambda factory 或包前缀；监听类不再受包名限制。
-- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt`：模块内用 `Module.nonNullListener` / `Module.handler`，其它对象用 `EventBus.nonNullHandler(this, ...)` / `EventBus.handler(this, ...)`。监听器默认绑定到 owner，生效与否由 `EventBus.subscribe(owner)` / `EventBus.unsubscribe(owner)` 决定（Module 即 `isEnabled` 切换），不得在处理器内再写 `if (isEnabled)` 之类的重复过滤。
+- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `Any.nonNullHandler` / `Any.handler` 扩展：在模块或其它对象的 `init` 中直接 `nonNullHandler<E> { ... }`（`import com.github.epsilon.events.api.nonNullHandler`），隐式 receiver 即 owner，不得再写 `EventBus.nonNullHandler(this, ...)`，也不得为监听器另加模块级转发包装。
+- 默认（`alwaysListening = false`）监听器绑定到 owner，生效与否由 `EventBus.subscribe(owner)` / `EventBus.unsubscribe(owner)` 决定（Module 即 `isEnabled` 切换），不得在处理器内再写 `if (isEnabled)` 之类的重复过滤。
 - 确需在 owner 未订阅（模块禁用）期间继续监听时显式传 `alwaysListening = true`；Manager 等从不 subscribe/unsubscribe 的常驻监听器必须使用 `alwaysListening = true`，否则监听器不会生效。
 - 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.utils.safety.NonNullContext`；统一用通配导入 `import com.github.epsilon.utils.safety.*` 一次性引入上下文类型与属性（`NonNullContext`、`player`、`level`、`interaction`、`connection`、`mc`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
 - 在 `context(nn: NonNullContext)` 作用域内直接用上下文属性读取非空值，**不得**写成 `nn.player` / `nn.level` / `nn.interaction` / `nn.connection` / `nn.mc` 这种显式访问：
@@ -94,7 +95,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
   }
   ```
 
-- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接使用 `player` / `level` / `interaction` / `connection` 上下文属性，不得在函数体内自行读取 `NonNullContext.current`；这些函数的调用点必须位于 `nonNullListener` / `runSafe` / `context(nn) { }` 等上下文作用域内。
+- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接使用 `player` / `level` / `interaction` / `connection` 上下文属性，不得在函数体内自行读取 `NonNullContext.current`；这些函数的调用点必须位于 `nonNullHandler` / `runSafe` / `context(nn) { }` 等上下文作用域内。
 - `utils.safety` 只提供 `NonNullContext`、上述上下文属性与 `runSafe` 系列工具；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
 - 上下文字段命名与 Minecraft 一致：世界用 `level`、连接用 `connection`；不得再使用 `world` / `netHandler` 等别名。
 - `Cancellable` 是类。使用 `cancel()`/`isCancelled()`，不存在 `setCancelled(boolean)`。

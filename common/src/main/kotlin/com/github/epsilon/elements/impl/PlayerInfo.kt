@@ -2,6 +2,8 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.elements.HudModule
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.GameLeftEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -57,8 +59,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private var rowsInitialized: Boolean = false
 
     init {
-        nonNullListener<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
-        nonNullListener<PlayerTickEvent.Post> { refreshRows() }
+        nonNullHandler<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
+        nonNullHandler<PlayerTickEvent.Post> { refreshRows() }
         handler<GameLeftEvent> {
             popCounts.clear()
             nameScrollStartTimes.clear()

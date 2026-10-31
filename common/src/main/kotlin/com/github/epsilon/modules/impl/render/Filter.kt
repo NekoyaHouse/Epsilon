@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.AfterRender3DEvent

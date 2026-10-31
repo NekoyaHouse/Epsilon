@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -31,10 +33,10 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> { event ->
+        nonNullHandler<PlayerTickEvent.Pre> { event ->
             if (player.onGround()) {
                 isEnabled = false
-                return@nonNullListener
+                return@nonNullHandler
             }
             when (stage) {
                 0 -> {

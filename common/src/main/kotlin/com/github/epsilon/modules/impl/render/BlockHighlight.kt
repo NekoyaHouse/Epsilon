@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler

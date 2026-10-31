@@ -15,7 +15,6 @@ import com.github.epsilon.elements.impl.Watermark
 import com.github.epsilon.elements.impl.island.Island
 import com.github.epsilon.elements.impl.notification.Notifications
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.scene.UiLayer
@@ -30,7 +29,7 @@ object HudElementManager {
     private val scene = UiScene(EpsilonUiTheme)
 
     init {
-        EventBus.handler<Render2DEvent.HUD>(this, alwaysListening = true) { event -> onRender2D(event) }
+        handler<Render2DEvent.HUD>(alwaysListening = true) { event -> onRender2D(event) }
     }
 
     fun initElements() {

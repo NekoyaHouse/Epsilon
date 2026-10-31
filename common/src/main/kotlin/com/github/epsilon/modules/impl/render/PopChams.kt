@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
@@ -42,15 +44,15 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
     private var nextEntityId = Int.MIN_VALUE
 
     init {
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            val entity = packet.getEntity(level) ?: return@nonNullListener
-            if (entity !is Player) return@nonNullListener
-            if (ignoreSelf && entity === player) return@nonNullListener
+            val entity = packet.getEntity(level) ?: return@nonNullHandler
+            if (entity !is Player) return@nonNullHandler
+            if (ignoreSelf && entity === player) return@nonNullHandler
 
             synchronized(ghosts) {
                 ghosts.add(GhostPlayer(level, entity, mc))

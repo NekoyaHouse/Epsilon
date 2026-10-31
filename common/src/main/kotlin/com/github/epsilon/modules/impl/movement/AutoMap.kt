@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -49,7 +50,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private var takeoffBaseY = Double.NaN
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (!initializedInWorld) {
                 initializeInWorld()
             }
@@ -59,8 +60,8 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             autoSaveRecord()
         }
 
-        nonNullListener<KeyboardInputEvent> { event ->
-            if (!initializedInWorld) return@nonNullListener
+        nonNullHandler<KeyboardInputEvent> { event ->
+            if (!initializedInWorld) return@nonNullHandler
 
             event.forward = 1.0f
             event.strafe = 0.0f

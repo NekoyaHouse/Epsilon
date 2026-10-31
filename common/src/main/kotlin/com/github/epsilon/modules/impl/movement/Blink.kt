@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.SendPositionEvent
@@ -50,14 +51,14 @@ object Blink : Module("Blink", Category.MOVEMENT) {
     private var lastLerpZ = 0.0
 
     init {
-        nonNullListener<PacketEvent.Send> { event ->
+        nonNullHandler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (packet is ServerboundHelloPacket || packet is ClientIntentionPacket) return@nonNullListener
+            if (packet is ServerboundHelloPacket || packet is ClientIntentionPacket) return@nonNullHandler
             event.cancel()
             packets.add(packet)
         }
 
-        nonNullListener<Render3DEvent> {
+        nonNullHandler<Render3DEvent> {
             val fake = localPlayer
             if (fake != null && fakePlayer) {
                 val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
@@ -82,7 +83,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<SendPositionEvent> {
+        nonNullHandler<SendPositionEvent> {
             if (mc.gui.screen() is RecoverWorldDataScreen && isEnabled) {
                 isEnabled = false
             }

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
@@ -146,11 +147,11 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private const val STAGE_TIMEOUT_TICKS = 60
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@nonNullHandler
 
             val key = triggerKey
-            if (key == -1) return@nonNullListener
+            if (key == -1) return@nonNullHandler
 
             val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
@@ -170,21 +171,21 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 scheduleCooldown(anchorPlaceMinDelay, anchorPlaceMaxDelay)
             }
 
-            if (stage == Stage.IDLE) return@nonNullListener
+            if (stage == Stage.IDLE) return@nonNullHandler
 
             while (stage != Stage.IDLE && actionTimer.passedMillise(cooldownMs.toLong())) {
                 if (stage != Stage.WAIT_SHIELD && stage != Stage.WAIT_ANCHOR) {
                     stageTicksElapsed++
                     if (stageTicksElapsed > STAGE_TIMEOUT_TICKS) {
                         resetState()
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
                 }
 
                 val anchorPos = currentAnchorPos
                 if (anchorPos != null && stage != Stage.PLACE_ANCHOR && !level.getBlockState(anchorPos).`is`(Blocks.RESPAWN_ANCHOR)) {
                     resetState()
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 applyTargetRotation()
@@ -195,12 +196,12 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                         returningRotation = false
                         resetState()
                     }
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 val rotation = targetRotation
                 if (rotation != null && !rotationAimed()) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 when (stage) {
@@ -214,20 +215,20 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
                     Stage.WAIT_SHIELD -> {
                         doWaitShield()
-                        if (stage == Stage.WAIT_SHIELD) return@nonNullListener
+                        if (stage == Stage.WAIT_SHIELD) return@nonNullHandler
                     }
 
                     Stage.WAIT_ANCHOR -> {
                         doWaitAnchor()
-                        if (stage == Stage.WAIT_ANCHOR) return@nonNullListener
+                        if (stage == Stage.WAIT_ANCHOR) return@nonNullHandler
                     }
 
-                    Stage.IDLE -> return@nonNullListener
+                    Stage.IDLE -> return@nonNullHandler
                 }
             }
         }
 
-        nonNullListener<Render3DEvent> {
+        nonNullHandler<Render3DEvent> {
             val time = System.currentTimeMillis()
             renderBoxes.removeAll { box -> time - box.startTime > 1000 }
 
@@ -244,7 +245,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 Render3DScheduler.addOutlineBox(AABB(box.pos), Color(bc.red, bc.green, bc.blue, lineAlpha).rgb, lineWidth.toFloat())
             }
 
-            if (mode != Mode.Assist || currentAnchorPos == null) return@nonNullListener
+            if (mode != Mode.Assist || currentAnchorPos == null) return@nonNullHandler
 
             val anchorCenter = Vec3.atCenterOf(currentAnchorPos!!)
             val playerFeet = player.position()

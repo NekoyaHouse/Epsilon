@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -38,9 +39,9 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     private var cooldown = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             val key = triggerKey
-            if (key == -1) return@nonNullListener
+            if (key == -1) return@nonNullHandler
 
             val keyDown = isTriggerKeyDown(key)
             val newPress = keyDown && !wasKeyDown
@@ -55,11 +56,11 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
                 phase = Phase.PLACE_ANCHOR
             }
 
-            if (phase == Phase.IDLE) return@nonNullListener
+            if (phase == Phase.IDLE) return@nonNullHandler
 
             if (cooldown > 0) {
                 cooldown--
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             when (phase) {

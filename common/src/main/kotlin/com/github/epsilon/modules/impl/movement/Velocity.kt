@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -97,7 +98,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     private val delayPackets: Queue<Packet<*>> = ArrayDeque()
 
     init {
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             synchronized(packetLock) {
                 when (mode) {
                     Mode.Cancel -> cancelPacket(event)
@@ -107,8 +108,8 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre> {
-            if (mode != Mode.Reduce) return@nonNullListener
+        nonNullHandler<ClientTickEvent.Pre> {
+            if (mode != Mode.Reduce) return@nonNullHandler
 
             if (delay && (player.onGround() || System.currentTimeMillis() - lag < 100 ||
                     System.currentTimeMillis() - startDelay >= maxDelay) && flush()
@@ -128,10 +129,10 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre>(EventPriority.LOW) {
+        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
             var pending: List<Packet<*>> = emptyList()
             synchronized(packetLock) {
-                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@nonNullListener
+                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@nonNullHandler
                 if (--delayTicksRemaining == 0) {
                     pending = drain(delayPackets)
                 }
@@ -139,8 +140,8 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             handlePackets(pending)
         }
 
-        nonNullListener<PlayerTickEvent.Pre>(EventPriority.LOW) {
-            if (mode != Mode.Reduce) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
+            if (mode != Mode.Reduce) return@nonNullHandler
 
             if (attackQueue >= 1) {
                 val hitResult = RotationManager.INSTANCE.getHitResult()
@@ -157,12 +158,12 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<KeyboardInputEvent> { event ->
+        nonNullHandler<KeyboardInputEvent> { event ->
             if (mode == Mode.Delay && jumpReset && player.onGround() && player.hurtTime == 9) {
                 event.isJump = true
             }
 
-            if (mode != Mode.Reduce) return@nonNullListener
+            if (mode != Mode.Reduce) return@nonNullHandler
 
             val hitResult = RotationManager.INSTANCE.getHitResult()
             if (delay && player.fallDistance == 0.0 && hitResult is EntityHitResult &&

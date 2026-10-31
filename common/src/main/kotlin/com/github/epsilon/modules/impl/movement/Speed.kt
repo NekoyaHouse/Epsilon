@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.MoveEvent
@@ -71,7 +72,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private val lagTimer = TimerUtils()
 
     init {
-        nonNullListener<PacketEvent.Receive>(EventPriority.HIGH) { event ->
+        nonNullHandler<PacketEvent.Receive>(EventPriority.HIGH) { event ->
             val packet = event.packet
 
             if (mode == Mode.Strafe) {
@@ -127,10 +128,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (mode == Mode.Grim) {
                 if (!player.isMoving) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 var collisions = 0
@@ -142,7 +143,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                         val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
                         val boatBoost = boatSpeed
                         player.deltaMovement = Vec3(-Math.sin(yaw) * boatBoost, boatJump, Math.cos(yaw) * boatBoost)
-                        return@nonNullListener
+                        return@nonNullHandler
                     } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(entityBox)) {
                         collisions++
                     }
@@ -154,11 +155,11 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Post> {
+        nonNullHandler<PlayerTickEvent.Post> {
             distance = getDistance2D()
         }
 
-        nonNullListener<MoveEvent> { event ->
+        nonNullHandler<MoveEvent> { event ->
             if (!player.isMoving && airStop && mode != Mode.Grim) {
                 player.deltaMovement = Vec3(0.0, player.deltaMovement.y, 0.0)
             }
@@ -172,16 +173,16 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             ) {
                 resetStrafe()
                 stop = true
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (mode == Mode.Strafe) {
                 if (stop) {
                     stop = false
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (!lagTimer.passedMillise(lagTime.toLong())) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (stage == 1) {
@@ -219,7 +220,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 event.cancel()
 
                 stage++
-                return@nonNullListener
+                return@nonNullHandler
             }
             var speedEffect = 1.0
             var slowEffect = 1.0
@@ -239,13 +240,13 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
             if (mode == Mode.StrafeStrict) {
                 if (!lagTimer.passedMillise(lagTime.toLong())) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
                 if (strafe == 1) {
                     speed = 1.35f * base - 0.01f
                 } else if (strafe == 2) {
                     if (player.input.keyPresses.jump || !player.onGround()) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
                     val jumpMotion = 0.3999999463558197f + jumpEffect
                     event.y = jumpMotion.toDouble()

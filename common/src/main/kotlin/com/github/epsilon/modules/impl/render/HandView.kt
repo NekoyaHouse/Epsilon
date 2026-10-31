@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ArmRenderEvent
 import com.github.epsilon.events.impl.HeldItemRenderEvent
 import com.github.epsilon.modules.Category

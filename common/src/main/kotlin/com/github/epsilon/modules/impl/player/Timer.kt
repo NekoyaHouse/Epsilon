@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.LevelUpdateEvent
@@ -53,7 +55,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     val packets: Queue<Packet<ClientGamePacketListener>> = ConcurrentLinkedQueue()
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             // 先收回其他模块留下的临时倍率，再应用当前 Timer 模式。
             TimerManager.tryReset()
 
@@ -90,12 +92,12 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     val killAuraTarget = KillAura.target
                     if (KillAura.isEnabled && killAuraTarget != null && player.distanceTo(killAuraTarget) <= KillAura.aimRange.toFloat()) {
                         stopBalance()
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     if (!player.isAlive || player.health <= 0.0f) {
                         isEnabled = false
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     if (!shouldRelease && !lagging && !releasing && !player.isMoving()) {
@@ -113,30 +115,30 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Post> {
+        nonNullHandler<ClientTickEvent.Post> {
             if (mode == Mode.Balance && releasing && balanceTime <= 10L) {
                 stopBalance()
             }
         }
 
-        nonNullListener<PlayerTickEvent.Post> {
+        nonNullHandler<PlayerTickEvent.Post> {
             if (mode == Mode.Balance && attack) {
                 if (lagging) stopBalance()
                 attack = false
             }
         }
 
-        nonNullListener<PacketEvent.Receive> { event ->
-            if (mode != Mode.Balance) return@nonNullListener
+        nonNullHandler<PacketEvent.Receive> { event ->
+            if (mode != Mode.Balance) return@nonNullHandler
 
             val packet = event.packet
             if (packet is ClientboundPlayerPositionPacket) {
                 stopBalance()
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (packet is ClientboundSetEntityMotionPacket && packet.id() == player.id) {
                 stopBalance()
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (packet is ClientboundPingPacket && lagging) {
                 packets.add(packet as Packet<ClientGamePacketListener>)
@@ -144,8 +146,8 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PacketEvent.Send> { event ->
-            if (mode != Mode.Balance) return@nonNullListener
+        nonNullHandler<PacketEvent.Send> { event ->
+            if (mode != Mode.Balance) return@nonNullHandler
 
             val packet = event.packet
             if (packet is ServerboundMovePlayerPacket) {
@@ -170,7 +172,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<LevelUpdateEvent> {
+        nonNullHandler<LevelUpdateEvent> {
             if (mode == Mode.Balance) {
                 packets.clear()
                 stopBalance()

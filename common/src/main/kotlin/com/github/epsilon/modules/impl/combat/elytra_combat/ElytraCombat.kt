@@ -1,6 +1,8 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat
 
 import com.github.epsilon.Constants
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.FallFlyingMovementEvent
@@ -182,16 +184,16 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
     init {
         // tick 顺序：刷新目标 → 更新预测快照 → 消费命中 → 行为状态机 → 限速 → 转控制输入。
-        nonNullListener<PlayerTickEvent.Pre>(EventPriority.HIGH) { onPlayerTick() }
+        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.HIGH) { onPlayerTick() }
 
         // 行为规划出的输入覆盖真实键盘，DirectVelocity 模式仍保留同一套 WASD 反馈。
         handler<KeyboardInputEvent>(EventPriority.HIGH) { onKeyboardInput(it) }
 
         // 事件发生在速度写入前，按托管旋转复算滑翔速度，使本地与服务端朝向一致。
-        nonNullListener<FallFlyingMovementEvent>(EventPriority.HIGHEST) { onFallFlyingMovement(it) }
+        nonNullHandler<FallFlyingMovementEvent>(EventPriority.HIGHEST) { onFallFlyingMovement(it) }
 
         // 只记录本地玩家对当前目标发起的攻击，行为状态机据此进入等待/脱战阶段。
-        nonNullListener<AttackEntityEvent> { onAttackEntity(it) }
+        nonNullHandler<AttackEntityEvent> { onAttackEntity(it) }
 
         // 伤害包用于重锤确认，实体事件用于 kinetic 命中；传送包只清除旧轨迹。
         handler<PacketEvent.Receive> { onPacketReceive(it) }

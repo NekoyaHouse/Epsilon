@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.Constants
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -24,23 +25,23 @@ object AutoQueue : Module("Auto Queue", Category.PLAYER) {
     private val questions: JsonObject = loadQuestions()
 
     init {
-        nonNullListener<PacketEvent.Receive> { event ->
-            if (mode != Mode.XIN_2B2T) return@nonNullListener
+        nonNullHandler<PacketEvent.Receive> { event ->
+            if (mode != Mode.XIN_2B2T) return@nonNullHandler
             val packet = event.packet
-            if (packet !is ClientboundSystemChatPacket) return@nonNullListener
+            if (packet !is ClientboundSystemChatPacket) return@nonNullHandler
 
             val message = packet.content().string
-            if (!message.contains("丨")) return@nonNullListener
+            if (!message.contains("丨")) return@nonNullHandler
 
             val parts = message.split("丨")
-            if (parts.size != 2) return@nonNullListener
+            if (parts.size != 2) return@nonNullHandler
 
             val question = parts[0].replace(Regex("<[^>]*>"), "").trim()
             val options = parts[1].trim()
 
-            if (!questions.has(question)) return@nonNullListener
+            if (!questions.has(question)) return@nonNullHandler
 
-            val match = Regex(questions.get(question).asString).find(options) ?: return@nonNullListener
+            val match = Regex(questions.get(question).asString).find(options) ?: return@nonNullHandler
             val answer = match.groupValues[1]
             player.connection.sendChat(answer)
         }

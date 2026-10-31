@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
@@ -63,7 +65,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             clipTimer = afterBreak
         }
 
-        nonNullListener<BlockCollisionEvent> { event ->
+        nonNullHandler<BlockCollisionEvent> { event ->
             val playerPos = BlockPos.containing(player.position())
 
             if ((mode != Mode.CCClip && mode != Mode.Pearl && mode != Mode.ForceMine && canNoClip()) || afterPearlTime > 0) {
@@ -77,7 +79,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 val zDelta = Math.abs(playerPos.z - event.pos.z).toFloat()
 
                 if (xDelta != 0.0f && zDelta != 0.0f && strict) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (event.pos != playerPos.below() || mc.options.keyShift.isDown) {
@@ -86,7 +88,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> { event ->
+        nonNullHandler<PlayerTickEvent.Pre> { event ->
             if (clipTimer > 0) clipTimer--
             if (afterPearlTime > 0) afterPearlTime--
 
@@ -105,9 +107,9 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     blockToBreak = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
                 }
 
-                if (blockToBreak == null) return@nonNullListener
+                if (blockToBreak == null) return@nonNullHandler
                 val bestTool = AutoTool.getBestTool(blockToBreak)
-                if (bestTool == -1) return@nonNullListener
+                if (bestTool == -1) return@nonNullHandler
 
                 InvUtils.swap(bestTool, true)
                 interaction.continueDestroyBlock(blockToBreak, player.direction)
@@ -144,14 +146,14 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
                     if (pauseOnPhase && isPlayerInBlock()) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     val dir = MoveUtils.forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
-                        return@nonNullListener
+                        return@nonNullHandler
                     }
 
                     val angle = RotationUtils.calculate(Vec3.atCenterOf(block))

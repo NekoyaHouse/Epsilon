@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.Constants
 import com.github.epsilon.events.impl.PacketEvent
@@ -61,7 +63,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
 
     init {
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundPlayerInfoUpdatePacket) {
                 if (packet.actions().contains(Action.ADD_PLAYER)) {
@@ -100,7 +102,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             for (target in level.players()) {
                 if (target === player) continue
                 playerCache[target.gameProfile.id()] = target

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Category
@@ -12,7 +13,7 @@ import net.minecraft.world.effect.MobEffects
 object Fullbright : Module("Fullbright", Category.RENDER) {
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> { onPlayerTick(it) }
+        nonNullHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     private enum class Mode {

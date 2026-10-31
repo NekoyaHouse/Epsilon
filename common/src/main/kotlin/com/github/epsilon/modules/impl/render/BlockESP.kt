@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.Render3DEvent
@@ -50,7 +52,7 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
     var boxes: MutableList<AABB> = ArrayList()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> { onPlayerTick(it) }
+        nonNullHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
         handler<Render3DEvent> { onRender3D(it) }
     }
 

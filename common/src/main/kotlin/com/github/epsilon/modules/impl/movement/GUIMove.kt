@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category

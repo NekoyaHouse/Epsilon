@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
@@ -26,11 +27,11 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
     private var lastDestroyTick = -1
 
     init {
-        nonNullListener<StartDestroyBlockEvent>(EventPriority.LOWEST) { event ->
+        nonNullHandler<StartDestroyBlockEvent>(EventPriority.LOWEST) { event ->
             lastDestroyTick = player.tickCount
             val bestTool = getBestTool(event.blockPos)
             val selectedSlot = player.inventory.selectedSlot
-            if (bestTool == -1 || bestTool == selectedSlot) return@nonNullListener
+            if (bestTool == -1 || bestTool == selectedSlot) return@nonNullHandler
             if (swapBack) {
                 if (oldSlot == -1) oldSlot = selectedSlot
             } else {
@@ -40,12 +41,12 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
             interaction.ensureHasSentCarriedItem()
         }
 
-        nonNullListener<AfterSendPositionEvent> {
-            if (oldSlot == -1) return@nonNullListener
+        nonNullHandler<AfterSendPositionEvent> {
+            if (oldSlot == -1) return@nonNullHandler
 
             if (interaction.isDestroying || BedNuker.isBreakingTarget) {
                 lastDestroyTick = player.tickCount
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (player.tickCount - lastDestroyTick >= swapBackDelay) {

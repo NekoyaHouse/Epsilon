@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.gui.dropdown.DropdownScreen
@@ -63,7 +64,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
     )
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen != null &&
                 pauseInventory &&
@@ -73,10 +74,10 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 screen !is TrollGuiScreen &&
                 screen !is HudEditorScreen
             ) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            if (tickDelay-- > 0) return@nonNullListener
+            if (tickDelay-- > 0) return@nonNullHandler
 
             armorList.forEach { it.reset() }
 
@@ -110,7 +111,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                         InvUtils.swapBack()
                     }
                 } else {
-                    if (player.isMoving() && noMove) return@nonNullListener
+                    if (player.isMoving() && noMove) return@nonNullHandler
 
                     val inventorySlot = if (slot < 9) 36 + slot else slot
                     val armorSlot = 8 - armorPiece.equipmentSlot.index
@@ -129,7 +130,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 }
 
                 tickDelay = delay
-                return@nonNullListener
+                return@nonNullHandler
             }
         }
     }

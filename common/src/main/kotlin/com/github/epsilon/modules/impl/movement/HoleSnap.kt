@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
@@ -76,13 +78,13 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<MoveEvent>(EventPriority.HIGHEST) { event ->
+        nonNullHandler<MoveEvent>(EventPriority.HIGHEST) { event ->
             val hole = if (singleTarget) singleHole else findHole()
             targetHole = hole
 
             if (hole == null || singleBlocked()) {
                 toggle()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             TimerManager.set(timer.toFloat())
@@ -103,7 +105,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                     event.z = 0.0
                     event.cancel()
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (step && !Step.isEnabled) {
@@ -119,7 +121,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                 collisions++
                 if (collisionLimit > 0 && collisions >= collisionLimit) {
                     toggle()
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
             } else {
                 collisions = 0
@@ -138,10 +140,10 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             event.cancel()
         }
 
-        nonNullListener<Render3DEvent> {
-            if (!render || targetHole == null) return@nonNullListener
+        nonNullHandler<Render3DEvent> {
+            if (!render || targetHole == null) return@nonNullHandler
 
-            val hole = targetHole ?: return@nonNullListener
+            val hole = targetHole ?: return@nonNullHandler
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val playerPos = player.getPosition(partialTick)
             val topEdge = getTopEdge(hole, playerPos)

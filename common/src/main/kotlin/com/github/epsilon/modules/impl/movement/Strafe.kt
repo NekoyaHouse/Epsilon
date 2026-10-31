@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.MoveEvent
@@ -18,17 +19,17 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
     private val autoJump by boolSetting("Auto Jump", true)
 
     init {
-        nonNullListener<MoveEvent> { event ->
+        nonNullHandler<MoveEvent> { event ->
             if (player.isCrouching || player.isFallFlying || player.isInLava ||
                 PlayerUtils.isInBlock() || player.isInWater || player.abilities.flying ||
                 Flight.isEnabled || Speed.isEnabled
             ) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (airStop && !player.isMoving) {
                 player.deltaMovement = Vec3(0.0, player.deltaMovement.y, 0.0)
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             var speed = 0.2873
@@ -43,7 +44,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
             event.cancel()
         }
 
-        nonNullListener<KeyboardInputEvent> { event ->
+        nonNullHandler<KeyboardInputEvent> { event ->
             if (autoJump && player.isMoving) event.isJump = true
         }
     }

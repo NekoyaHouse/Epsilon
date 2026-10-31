@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -25,13 +26,13 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
     private val positions: MutableList<PlayerState> = ArrayList()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (record) {
                 positions.add(PlayerState(player.x, player.y, player.z, player.yRot, player.xRot))
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            val fake = fakePlayer ?: return@nonNullListener
+            val fake = fakePlayer ?: return@nonNullHandler
             if (playback && positions.isNotEmpty()) {
                 if (movementTick >= positions.size) {
                     movementTick = 0

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -35,19 +36,19 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     private var delay = 0
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@nonNullHandler
 
             if (player.isUsingItem || player.isBlocking) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            val target = getCrosshairTarget() ?: return@nonNullListener
+            val target = getCrosshairTarget() ?: return@nonNullHandler
 
             if (!shouldAttack()) {
                 if (delay > 0) {
                     delay--
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
             }
 

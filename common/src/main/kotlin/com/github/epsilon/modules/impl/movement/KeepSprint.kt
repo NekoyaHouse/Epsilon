@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.AttackSlowdownEvent
 import com.github.epsilon.modules.Category
@@ -28,7 +30,7 @@ object KeepSprint : Module("Keep Sprint", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<AfterSendPositionEvent> {
+        nonNullHandler<AfterSendPositionEvent> {
             if (shouldReSprint && player.isMoving && player.foodData.foodLevel > 6 && !player.isBlocking) {
                 shouldReSprint = false
                 player.isSprinting = true

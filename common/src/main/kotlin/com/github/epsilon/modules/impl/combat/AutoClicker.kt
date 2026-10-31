@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -47,8 +48,8 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     private val rightState = ButtonState()
 
     init {
-        nonNullListener<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullListener
+        nonNullHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@nonNullHandler
 
             val currentTime = System.currentTimeMillis()
 

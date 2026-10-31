@@ -1,6 +1,8 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
@@ -59,9 +61,9 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     private val packets: Queue<Packet<*>> = LinkedBlockingQueue()
 
     init {
-        nonNullListener<SendPositionEvent> {
+        nonNullHandler<SendPositionEvent> {
             if (mode != Mode.GrimBlink) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (eating) {
@@ -126,14 +128,14 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PacketEvent.Receive> { event ->
-            if (player.tickCount < 30 || !eating || mode != Mode.GrimBlink) return@nonNullListener
+        nonNullHandler<PacketEvent.Receive> { event ->
+            if (player.tickCount < 30 || !eating || mode != Mode.GrimBlink) return@nonNullHandler
 
             val packet = event.packet
 
             if (packet is ClientboundPlayerPositionPacket) {
                 flush()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (packet is ClientboundSetHealthPacket ||
@@ -145,7 +147,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                 packet is ClientboundBlockUpdatePacket ||
                 packet is ClientboundBlockEventPacket
             ) {
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (packet.type().flow() == PacketFlow.CLIENTBOUND) {
@@ -172,10 +174,10 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<SlowdownEvent> { event ->
-            if (!food && player.useItem.has(DataComponents.FOOD)) return@nonNullListener
-            if ((!bow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@nonNullListener
-            if ((!crossbow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@nonNullListener
+        nonNullHandler<SlowdownEvent> { event ->
+            if (!food && player.useItem.has(DataComponents.FOOD)) return@nonNullHandler
+            if ((!bow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@nonNullHandler
+            if ((!crossbow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@nonNullHandler
 
             when (mode) {
                 Mode.Vanilla -> cancel(event)

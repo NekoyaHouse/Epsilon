@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
@@ -16,7 +17,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     private var stopSprinting = false
 
     init {
-        nonNullListener<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
+        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (!canCrit(player) || player.fallDistance >= 1.0) {
                 fallTicks = 0
             } else {
@@ -24,7 +25,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre>(EventPriority.LOWEST) {
+        nonNullHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
             stopSprinting = fallTicks > 0 &&
                 fallTicks < 3 &&
                 player.isSprinting &&
@@ -32,8 +33,8 @@ object Criticals : Module("Criticals", Category.COMBAT) {
                 Velocity.attackQueue == 0
         }
 
-        nonNullListener<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
-            if (!stopSprinting) return@nonNullListener
+        nonNullHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
+            if (!stopSprinting) return@nonNullHandler
             stopSprinting = false
 
             if (fallTicks > 0 &&

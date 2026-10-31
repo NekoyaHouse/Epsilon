@@ -2,7 +2,6 @@ package com.github.epsilon.managers
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
 import net.minecraft.client.player.AbstractClientPlayer
@@ -19,7 +18,7 @@ object ExtrapolationManager {
     private var motions: Map<AbstractClientPlayer, List<Vec3>> = HashMap()
 
     init {
-        EventBus.handler<ClientTickEvent.Post>(this, EventPriority.HIGHEST, alwaysListening = true) { onClientTick() }
+        handler<ClientTickEvent.Post>(EventPriority.HIGHEST, alwaysListening = true) { onClientTick() }
     }
 
     private fun onClientTick() {

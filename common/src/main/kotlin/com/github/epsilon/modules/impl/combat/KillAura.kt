@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
@@ -127,7 +127,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
     init {
         // 常驻监听：模块禁用时也需要继续绘制 Deobf ESP 的上升效果。
-        EventBus.handler<Render3DEvent>(this, alwaysListening = true) { event ->
+        handler<Render3DEvent>(alwaysListening = true) { event ->
             val nn = NonNullContext.current ?: return@handler
             context(nn) {
                 DeobfESP.render(
@@ -140,14 +140,14 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             if (!esp || espMode != ESPMode.Deobf) {
                 DeobfESP.clear()
             }
 
             if (pauseOnScaffold && Scaffold.isEnabled) {
                 resetState()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             targets = ArrayList(
@@ -193,7 +193,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
             if (targets!!.isEmpty()) {
                 target = null
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             when (priorityMode) {
@@ -219,7 +219,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 val calculate = RotationUtils.calculate(currentTarget, true, aimRange)
 
                 if (!ignoreWalls && RaytraceUtils.raytrace(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
-                    return@nonNullListener
+                    return@nonNullHandler
                 }
 
                 if (ignoreWalls) {
@@ -262,12 +262,12 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             while (attacks > 0) {
                 attacks--
-                if (pauseOnEat && PlayerUtils.isEating() || NoSlowdown.isWorking()) return@nonNullListener
+                if (pauseOnEat && PlayerUtils.isEating() || NoSlowdown.isWorking()) return@nonNullHandler
 
-                val entity = getAttackEntity() ?: return@nonNullListener
+                val entity = getAttackEntity() ?: return@nonNullHandler
 
                 interaction.attack(player, entity)
 
@@ -279,7 +279,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
         }
 
-        nonNullListener<Render3DEvent> { event ->
+        nonNullHandler<Render3DEvent> { event ->
             if (target != null && Velocity.attackQueue <= 0) {
                 if (!hitSelect || getAttackEntity() !is Player) {
                     when (mode) {
@@ -301,7 +301,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
 
             val currentTarget = target
-            if (!esp || espMode == ESPMode.Deobf || currentTarget == null) return@nonNullListener
+            if (!esp || espMode == ESPMode.Deobf || currentTarget == null) return@nonNullHandler
 
             val stack = event.poseStack
 

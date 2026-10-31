@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -192,7 +192,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     init {
         // 原 Java 在构造器里直接 EventBus.subscribe(ConsumerListener)，这里保持「不按启用状态过滤」的语义。
-        EventBus.handler<Render3DEvent>(this, alwaysListening = true) {
+        handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()
@@ -238,11 +238,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> { event ->
+        nonNullHandler<PlayerTickEvent.Pre> { event ->
             if (!event.isCancelled) emergencyPlacementActive = false
 
             blockResult = findBlockResult()
-            if (!blockResult.found()) return@nonNullListener
+            if (!blockResult.found()) return@nonNullHandler
 
             if (player.onGround()) {
                 airTicks = 0
@@ -274,8 +274,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     event.cancel()
 
                     rotateCount++
-                    val pos = blockPos ?: return@nonNullListener
-                    val face = direction ?: return@nonNullListener
+                    val pos = blockPos ?: return@nonNullHandler
+                    val face = direction ?: return@nonNullHandler
                     val rotation = getRotation(pos, face)
                     RotationManager.INSTANCE.rotations = rotation
                     RotationManager.INSTANCE.updateActive(true)
@@ -318,7 +318,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     }
 
                     swapBack()
-                    return@nonNullListener
+                    return@nonNullHandler
                 } else {
                     rotateCount = 0
                 }
@@ -330,7 +330,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<KeyboardInputEvent>(EventPriority.HIGHEST) { event ->
+        nonNullHandler<KeyboardInputEvent>(EventPriority.HIGHEST) { event ->
             forwardInput = event.forward
             strafeInput = event.strafe
             inputYaw = Mth.wrapDegrees(
@@ -349,7 +349,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PacketEvent.Receive> { event ->
+        nonNullHandler<PacketEvent.Receive> { event ->
             if (toggleOnTeleport && pearlUsePacketSent && event.packet is ClientboundPlayerPositionPacket) {
                 pearlUsePacketSent = false
                 NotificationManager.error(
@@ -360,7 +360,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullListener<PacketEvent.Send> { event ->
+        nonNullHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundUseItemPacket) {
                 val usedStack = player.getItemInHand(packet.hand)

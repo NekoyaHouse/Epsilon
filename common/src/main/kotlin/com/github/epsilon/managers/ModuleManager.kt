@@ -3,7 +3,6 @@ package com.github.epsilon.managers
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.managers.sound.SoundKey
@@ -143,8 +142,8 @@ object ModuleManager {
     private val modules = ArrayList<Module>()
 
     init {
-        EventBus.handler<KeyPressEvent>(this, alwaysListening = true) { event -> onKeyPress(event) }
-        EventBus.handler<MousePressEvent>(this, alwaysListening = true) { event -> onMousePress(event) }
+        handler<KeyPressEvent>(alwaysListening = true) { event -> onKeyPress(event) }
+        handler<MousePressEvent>(alwaysListening = true) { event -> onMousePress(event) }
     }
 
     fun initModules() {

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -48,7 +49,7 @@ object Health : Module("Health", Category.RENDER) {
     private var blinkUntilTick = -1
 
     init {
-        nonNullListener<Render2DEvent.HUD> { event ->
+        nonNullHandler<Render2DEvent.HUD> { event ->
             runSafe {
                 renderHealth(event.guiGraphics)
             }

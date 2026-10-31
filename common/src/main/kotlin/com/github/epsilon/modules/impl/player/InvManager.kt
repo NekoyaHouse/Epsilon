@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -114,7 +115,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
-        nonNullListener<PacketEvent.Send> { event ->
+        nonNullHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundContainerClosePacket) {
                 this.inventoryOpen = false
@@ -137,16 +138,16 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             actionConsumed = false
 
             if (InvHelper.shouldDisableFeatures()) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (NoSlowdown.isWorking()) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (player.isMoving()) {
@@ -157,27 +158,27 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
             if (pauseOnEat && PlayerUtils.isEating()) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (pauseOnKillAura && KillAura.isEnabled && KillAura.target != null) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
             if (pauseOnScaffold && Scaffold.isEnabled) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val allowMove = mode == Mode.Silent
             if (Stealer.isWorking() || (if (mode == Mode.Inventory) mc.gui.screen() !is InventoryScreen else !allowMove && this.noMoveTicks <= 1)) {
                 this.clickOffHand = false
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
             val screen = mc.gui.screen()
             if (screen is AbstractContainerScreen<*> && screen.menu.containerId != player.inventoryMenu.containerId) {
                 cancelPendingAction()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (this.autoArmor) {
@@ -430,7 +431,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     val stack = InvHelper.getInventoryStack(slotIdx)
                     if (!stack.isEmpty && !this.isItemUseful(stack) && canExecuteInventoryAction()) {
                         if (this.throwItem(stack)) {
-                            return@nonNullListener
+                            return@nonNullHandler
                         }
                     }
                 }
@@ -441,7 +442,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             }
         }
 
-        nonNullListener<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
+        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (shouldStopSprinting() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
                 player.setSprinting(false)
                 if (!player.wasSprinting) {

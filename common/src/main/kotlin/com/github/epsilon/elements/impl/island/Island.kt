@@ -9,6 +9,7 @@ import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInsta
 import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance
 import com.github.epsilon.elements.impl.island.instance.impl.TargetInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer

@@ -1,5 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
@@ -205,7 +207,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private var pendingAttackClick = 0
 
     init {
-        nonNullListener<ClientTickEvent.Pre> {
+        nonNullHandler<ClientTickEvent.Pre> {
             localPlayerId = player.id
             forceForward = false
             // 蓄力按键在低优先级监听器同步，晚于本 tick 的瞄准请求。
@@ -232,7 +234,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 target = null
                 aimRotations = null
                 aimActive = false
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             val currentTarget = newTargets.first()
@@ -240,24 +242,24 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             aimActive = isHoldingSpear() || isUsingSpear()
             if (!aimActive) {
                 aimRotations = null
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             // 命中后的无敌帧窗口内只暂停，不再瞄准/移动；重锤补刀窗口例外。蓄力不受影响。
             if (hitPauseTicks > 0 && spearMaceDelay <= 0) {
                 hitPauseTicks--
                 aimRotations = null
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= SPEAR_MIN_TRACK_DISTANCE) {
                 aimRotations = null
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (getRelativeSpeedTo(currentTarget) <= SPEAR_MIN_RELATIVE_SPEED) {
                 aimRotations = null
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             forceForward = move
@@ -265,7 +267,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             val rotations = RotationUtils.calculate(currentTarget, true, range)
             if (RaytraceUtils.raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
                 aimRotations = null
-                return@nonNullListener
+                return@nonNullHandler
             }
             aimRotations = rotations
             RotationManager.INSTANCE.setRotations(
@@ -282,8 +284,8 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         /**
          * 沿托管旋转方向移动，直接使用原始 WASD 输入，避免与 MovementFix 重复旋转。
          */
-        nonNullListener<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
-            if (!aimActive || !move || aimRotations == null) return@nonNullListener
+        nonNullHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
+            if (!aimActive || !move || aimRotations == null) return@nonNullHandler
 
             var forward = (if (mc.options.keyUp.isDown) 1.0f else 0.0f) -
                 (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
@@ -291,7 +293,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
 
             if (forward == 0.0f && strafe == 0.0f) {
-                if (!forceForward) return@nonNullListener
+                if (!forceForward) return@nonNullHandler
                 forward = 1.0f
             }
 
@@ -300,9 +302,9 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             event.apply { isSprint = true }
         }
 
-        nonNullListener<Render3DEvent> { event ->
+        nonNullHandler<Render3DEvent> { event ->
             val currentTarget = target
-            if (!esp || currentTarget == null || !currentTarget.isAlive) return@nonNullListener
+            if (!esp || currentTarget == null || !currentTarget.isAlive) return@nonNullHandler
 
             val stack: PoseStack = event.poseStack
 
@@ -357,7 +359,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             }
         }
 
-        nonNullListener<PlayerTickEvent.Pre> {
+        nonNullHandler<PlayerTickEvent.Pre> {
             if (spearHitPending) {
                 spearHitPending = false
                 if (isUsingSpear()) {
@@ -367,7 +369,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 forceForward = false
                 // 命中包可能在 ClientTickEvent.Pre 之后才到达，这里再松一次按键，防止下一 tick 原版重新起手。
                 stopAutoCharge()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (spearMaceDelay > 0) {
@@ -390,7 +392,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
          * 通过按住右键维持蓄力，左键攻击时让位并补发点击。
          * 必须晚于 onClientTick 执行，避免读取上一 tick 的状态。
          */
-        nonNullListener<ClientTickEvent.Pre>(EventPriority.LOWEST) {
+        nonNullHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
             val attackDown = mc.options.keyAttack.isDown
 
             if (attackDown && autoChargeKeyHeld && player.isUsingItem) {
@@ -409,16 +411,16 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 } else {
                     pendingAttackClick--
                 }
-                return@nonNullListener
+                return@nonNullHandler
             }
 
-            if (attackDown) return@nonNullListener
+            if (attackDown) return@nonNullHandler
 
             if (!autoCharge || !autoChargeWanted ||
                 spearHitPending || spearMaceDelay > 0 || !isHoldingSpear()
             ) {
                 stopAutoCharge()
-                return@nonNullListener
+                return@nonNullHandler
             }
 
             if (!mc.options.keyUse.isDown) {
