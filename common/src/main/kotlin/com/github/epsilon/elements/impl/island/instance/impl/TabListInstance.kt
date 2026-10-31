@@ -9,7 +9,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.modules.impl.render.ACSpoof
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.gui.components.PlayerTabOverlay
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo

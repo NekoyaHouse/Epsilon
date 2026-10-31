@@ -3,9 +3,8 @@ package com.github.epsilon.utils.render.esp
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*

@@ -10,10 +10,8 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.BlendFunction

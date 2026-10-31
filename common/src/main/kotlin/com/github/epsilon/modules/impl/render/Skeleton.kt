@@ -10,9 +10,7 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.SkeletonRenderer
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import java.awt.Color
 
 object Skeleton : Module("Skeleton", Category.RENDER) {

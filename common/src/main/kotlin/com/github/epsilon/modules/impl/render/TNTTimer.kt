@@ -13,8 +13,7 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack

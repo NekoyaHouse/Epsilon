@@ -13,8 +13,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.setValue
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import com.mojang.blaze3d.platform.InputConstants
 import java.util.EnumMap
 

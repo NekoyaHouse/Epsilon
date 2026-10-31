@@ -13,7 +13,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction

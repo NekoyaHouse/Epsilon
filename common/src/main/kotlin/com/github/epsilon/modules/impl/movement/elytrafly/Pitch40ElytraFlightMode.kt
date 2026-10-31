@@ -8,13 +8,10 @@ import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.rotation.RotationManager
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.item.Items
 

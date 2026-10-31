@@ -21,11 +21,8 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.interaction
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.connection
-import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.FallingPlayer
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
@@ -34,10 +31,6 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrElse
-import com.github.epsilon.utils.runSafeOrFalse
-import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket

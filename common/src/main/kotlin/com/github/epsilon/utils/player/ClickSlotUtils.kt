@@ -1,8 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import net.minecraft.world.inventory.ContainerInput
 
 /**

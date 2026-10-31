@@ -11,13 +11,9 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombatInput
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrElse
-import com.github.epsilon.utils.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth

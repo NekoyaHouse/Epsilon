@@ -19,11 +19,10 @@ import com.github.epsilon.modules.impl.player.Timer
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.runSafe
 import com.google.common.base.Suppliers
 import me.sofurry.smtc.SmtcService
 import net.minecraft.client.DeltaTracker

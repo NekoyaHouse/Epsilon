@@ -8,9 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen
 import net.minecraft.client.player.RemotePlayer

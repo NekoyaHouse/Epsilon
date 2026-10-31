@@ -4,7 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis

@@ -14,10 +14,8 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.hole.HoleUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity

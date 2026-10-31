@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.combat
 
 import com.github.epsilon.Constants
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import net.minecraft.core.BlockPos

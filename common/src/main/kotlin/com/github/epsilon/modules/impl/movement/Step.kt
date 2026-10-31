@@ -10,10 +10,8 @@ import com.github.epsilon.modules.impl.combat.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.connection
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.runSafe
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.ai.attributes.Attributes

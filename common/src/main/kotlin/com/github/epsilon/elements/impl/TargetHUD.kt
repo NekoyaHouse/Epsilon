@@ -10,7 +10,7 @@ import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker

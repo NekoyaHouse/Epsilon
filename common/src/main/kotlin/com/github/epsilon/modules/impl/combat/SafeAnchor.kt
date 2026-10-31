@@ -17,11 +17,9 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.combat.DamageUtils
-import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
@@ -29,7 +27,6 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction

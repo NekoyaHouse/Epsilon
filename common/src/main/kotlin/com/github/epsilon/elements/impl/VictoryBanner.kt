@@ -21,8 +21,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.github.epsilon.settings.impl.StringSetting
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker

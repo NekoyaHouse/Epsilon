@@ -4,9 +4,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.BedBlock

@@ -4,8 +4,7 @@ import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.bus.listeners.ConsumerListener
 import com.github.epsilon.events.bus.listeners.IListener
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 
 /** 默认监听优先级，与 [EventPriority.MEDIUM] 一致。 */
 const val DEFAULT_HANDLER_PRIORITY: Int = EventPriority.MEDIUM

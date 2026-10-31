@@ -12,7 +12,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet

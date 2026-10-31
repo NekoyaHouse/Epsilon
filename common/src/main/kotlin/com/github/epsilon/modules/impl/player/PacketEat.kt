@@ -4,7 +4,7 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.item.ItemStack

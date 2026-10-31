@@ -10,12 +10,9 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket

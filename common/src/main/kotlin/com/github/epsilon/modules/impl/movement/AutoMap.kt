@@ -8,13 +8,9 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrElse
-import com.github.epsilon.utils.runSafeOrFalse
 import com.google.gson.JsonObject
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth

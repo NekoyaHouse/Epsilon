@@ -2,7 +2,7 @@ package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.Constants
 import com.github.epsilon.managers.rotation.RotationManager
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth

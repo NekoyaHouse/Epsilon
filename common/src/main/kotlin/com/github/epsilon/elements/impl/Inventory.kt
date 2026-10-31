@@ -4,7 +4,7 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.item.ItemStack

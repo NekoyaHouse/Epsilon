@@ -9,8 +9,7 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.SettingHost
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import com.google.gson.JsonObject
 import net.minecraft.client.Minecraft
 

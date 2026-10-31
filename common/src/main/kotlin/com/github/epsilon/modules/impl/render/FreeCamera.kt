@@ -18,9 +18,8 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.level
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils

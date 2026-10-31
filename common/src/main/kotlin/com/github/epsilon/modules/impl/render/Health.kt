@@ -4,7 +4,7 @@ import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen

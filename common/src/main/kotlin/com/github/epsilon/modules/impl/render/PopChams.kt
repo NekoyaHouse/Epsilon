@@ -10,10 +10,9 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.level
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel

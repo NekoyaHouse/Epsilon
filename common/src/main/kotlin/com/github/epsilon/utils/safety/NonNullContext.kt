@@ -1,4 +1,4 @@
-package com.github.epsilon.utils
+package com.github.epsilon.utils.safety
 
 import com.github.epsilon.Constants
 import com.github.epsilon.managers.rotation.RotationManager
@@ -64,8 +64,8 @@ import net.minecraft.client.player.LocalPlayer
  * 上下文按需计算并缓存：只要 `Minecraft` 的对应字段没有变化就复用同一实例，避免每个事件都分配新对象；
  * 世界卸载或返回主菜单后字段变为 null，[current] 随即返回 null，监听器不会执行。
  *
- * [player]、[level] 等是声明在本文件中的上下文属性；在 `com.github.epsilon.utils` 以外的包使用时
- * 需要导入对应属性，或改用 `contextOf<NonNullContext>()` 显式取值。
+ * [player]、[level] 等是声明在本文件中的上下文属性；在 `com.github.epsilon.utils.safety` 以外的包使用时
+ * 推荐直接 `import com.github.epsilon.utils.safety.*` 一次引入上下文类型与属性，或改用 `contextOf<NonNullContext>()` 显式取值。
  */
 class NonNullContext private constructor(
     val level: ClientLevel,

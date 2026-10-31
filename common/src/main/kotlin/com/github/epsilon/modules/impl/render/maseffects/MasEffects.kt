@@ -16,8 +16,7 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents

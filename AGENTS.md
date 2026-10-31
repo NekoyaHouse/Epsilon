@@ -83,7 +83,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - 监听方法必须带 `@EventHandler`、返回 `void`，且只有一个非 primitive 参数。
 - EventBus 通过 `MethodHandles.privateLookupIn` 直接绑定 `@EventHandler` 方法，不需要为监听类注册 lambda factory 或包前缀；监听类不再受包名限制。
 - Kotlin 监听优先使用 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `EventBus.nonNullHandler`。
-- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.utils.NonNullContext`，统一通过下面这组上下文属性读取，不得重复写 `mc.player!!` 或手写判空：
+- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.utils.safety.NonNullContext`，统一通过下面这组上下文属性读取，不得重复写 `mc.player!!` 或手写判空：
 
   ```kotlin
   context(nn: NonNullContext)
@@ -103,6 +103,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
       get() = nn.connection
   ```
 
+- 推荐用通配导入一次性引入上下文类型与属性：`import com.github.epsilon.utils.safety.*`（`NonNullContext`、`player`、`level`、`interaction`、`connection`、`runSafe` 等），避免逐项 import。
 - 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接用 `nn.player` / `nn.level` / `nn.interaction` / `nn.connection`，不得在函数体内自行读取 `NonNullContext.current`；调用方负责把上下文传进来，或在 `nonNullListener` / `runSafe` / `context(nn) { }` 作用域内调用。
 - 上下文字段命名与 Minecraft 一致：世界用 `level`、连接用 `connection`；不得再使用 `world` / `netHandler` 等别名。
 - `Cancellable` 是类。使用 `cancel()`/`isCancelled()`，不存在 `setCancelled(boolean)`。

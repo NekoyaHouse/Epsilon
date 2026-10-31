@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.managers.rotation.RotationManager
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 
 /**
  * 依据当前旋转与移动输入计算水平速度向量。

@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils

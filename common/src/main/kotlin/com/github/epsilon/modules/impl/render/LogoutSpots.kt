@@ -17,12 +17,11 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.render.SkeletonRenderer
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.level
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile

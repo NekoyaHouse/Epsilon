@@ -5,8 +5,7 @@ import com.github.epsilon.events.impl.AttackSlowdownEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 
 object KeepSprint : Module("Keep Sprint", Category.MOVEMENT) {
 

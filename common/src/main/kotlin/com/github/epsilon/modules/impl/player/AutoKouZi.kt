@@ -4,8 +4,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import net.minecraft.network.chat.Component
 import java.io.BufferedReader
 import java.io.InputStream

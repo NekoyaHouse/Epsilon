@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity

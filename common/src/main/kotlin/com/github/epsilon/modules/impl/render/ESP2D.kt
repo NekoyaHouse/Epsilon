@@ -14,8 +14,7 @@ import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.google.common.base.Suppliers
 import net.minecraft.client.Camera
 import net.minecraft.util.Mth

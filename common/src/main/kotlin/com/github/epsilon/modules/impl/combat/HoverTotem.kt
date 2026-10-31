@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Items

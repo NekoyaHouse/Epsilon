@@ -3,8 +3,7 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
+import com.github.epsilon.utils.safety.*
 import net.minecraft.util.Mth
 
 object MovementFix : Module("Movement Fix", Category.MOVEMENT) {

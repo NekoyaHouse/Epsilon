@@ -3,7 +3,7 @@ package com.github.epsilon.elements.impl.island
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.WorldToScreen
 import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientPacketListener

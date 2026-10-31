@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import net.minecraft.world.phys.Vec3
 
 object Dolphin : Module("Dolphin", Category.MOVEMENT) {

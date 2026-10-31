@@ -6,13 +6,9 @@ import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.utils.player.ClickSlotUtils
-import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.connection
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket

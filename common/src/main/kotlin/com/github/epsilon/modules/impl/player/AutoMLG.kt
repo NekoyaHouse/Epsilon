@@ -10,16 +10,13 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand

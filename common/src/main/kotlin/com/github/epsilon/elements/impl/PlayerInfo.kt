@@ -12,8 +12,7 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel

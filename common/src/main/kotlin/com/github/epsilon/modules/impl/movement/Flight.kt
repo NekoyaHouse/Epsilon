@@ -5,9 +5,8 @@ import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.runSafe
 import net.minecraft.world.phys.Vec3
 
 object Flight : Module("Flight", Category.MOVEMENT) {

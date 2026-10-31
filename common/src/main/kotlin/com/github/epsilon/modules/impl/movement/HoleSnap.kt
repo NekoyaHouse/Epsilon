@@ -13,10 +13,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
 import com.github.epsilon.utils.world.hole.HoleUtils

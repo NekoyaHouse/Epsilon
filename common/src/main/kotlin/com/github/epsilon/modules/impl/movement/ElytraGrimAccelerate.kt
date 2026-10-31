@@ -8,11 +8,8 @@ import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.player
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.level
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket

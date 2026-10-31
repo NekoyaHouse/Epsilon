@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth

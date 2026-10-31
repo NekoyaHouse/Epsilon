@@ -16,7 +16,7 @@ import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.safety.*
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet

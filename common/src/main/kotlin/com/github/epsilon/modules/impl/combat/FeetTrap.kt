@@ -7,9 +7,7 @@ import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
@@ -18,7 +16,6 @@ import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.BlockPos

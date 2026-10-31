@@ -4,12 +4,9 @@ import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.managers.TimerManager
-import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.player
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
