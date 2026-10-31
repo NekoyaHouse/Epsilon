@@ -71,7 +71,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
 
             if (rotate) {
-                val rot = calculate(currentAimPoint(bedTargetNow))
+                val rot = RotationUtils.calculate(currentAimPoint(bedTargetNow))
                 if (bedTargetNow) {
                     RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), { candidate -> isBedHit(candidate, maxRange) }, Priority.Low)
                 } else {
@@ -87,7 +87,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             interaction.continueDestroyBlock(currentTarget!!, currentFace!!)
 
             if (swingHand) {
-                swingHand(InteractionHand.MAIN_HAND)
+                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
             }
 
             if (level.getBlockState(currentTarget!!).isAir) {

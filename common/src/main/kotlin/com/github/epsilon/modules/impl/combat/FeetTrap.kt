@@ -79,7 +79,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
             val result = findBlocks()
             if (!result.found()) {
-                addChatMessage("[FeetTrap] No block found")
+                ChatUtils.addChatMessage("[FeetTrap] No block found")
                 toggle()
                 return@nonNullListener
             }
@@ -91,7 +91,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            if (pauseOnEat && isEating()) {
+            if (pauseOnEat && PlayerUtils.isEating()) {
                 return@nonNullListener
             }
 
@@ -113,9 +113,11 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             toggle()
             return
         }
-        startX = nn.player.x
-        startY = nn.player.y
-        startZ = nn.player.z
+        context(nn) {
+            startX = player.x
+            startY = player.y
+            startZ = player.z
+        }
     }
 
     context(nn: NonNullContext)

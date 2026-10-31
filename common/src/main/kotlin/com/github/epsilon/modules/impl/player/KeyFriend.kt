@@ -28,7 +28,7 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         }
 
         nonNullListener<MousePressEvent>(EventPriority.HIGHEST) { event ->
-            if (handleInput(encodeMouseButton(event.button), event.action)) {
+            if (handleInput(KeybindUtils.encodeMouseButton(event.button), event.action)) {
                 event.cancel()
             }
         }

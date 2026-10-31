@@ -87,9 +87,9 @@ object TargetManager {
     private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === nn.player) continue
+            if (entity === player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }

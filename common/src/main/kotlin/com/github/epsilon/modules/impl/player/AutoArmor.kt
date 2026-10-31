@@ -103,11 +103,11 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 if (slot == -1) continue
 
                 if ((armorPiece.prevProtection == -1 || !oldVersion) && slot < 9) {
-                    swap(slot, true)
+                    InvUtils.swap(slot, true)
                     try {
                         interaction.useItem(player, InteractionHand.MAIN_HAND)
                     } finally {
-                        swapBack()
+                        InvUtils.swapBack()
                     }
                 } else {
                     if (player.isMoving() && noMove) return@nonNullListener
@@ -119,10 +119,10 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                         connection.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
                     }
 
-                    click(inventorySlot)
-                    click(armorSlot)
+                    ClickSlotUtils.click(inventorySlot)
+                    ClickSlotUtils.click(armorSlot)
                     if (armorPiece.prevProtection != -1) {
-                        click(inventorySlot)
+                        ClickSlotUtils.click(inventorySlot)
                     }
 
                     connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))

@@ -29,7 +29,7 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
 
     init {
         nonNullListener<PlayerTickEvent.Pre> {
-            val pressed = isPressed(activateKey)
+            val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
                 isKeyDown = false
             }
@@ -48,13 +48,13 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
                     previousItem = player.mainHandItem
                 }
 
-                val fireworkSlot = findInHotbar(Items.FIREWORK_ROCKET).slot
+                val fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot
                 if (fireworkSlot == -1) {
                     resetState()
                     return@nonNullListener
                 }
 
-                swap(fireworkSlot, false)
+                InvUtils.swap(fireworkSlot, false)
 
                 if (useDelayCounter < delay) {
                     ++useDelayCounter

@@ -53,7 +53,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             if (player.onGround()) {
                 hasTouchedGround = true
             }
-            val elytra = find(Items.ELYTRA)
+            val elytra = InvUtils.find(Items.ELYTRA)
             hasElytra = canGlide(elytra.found())
 
             // 仅释放本模式设置的临时变速。

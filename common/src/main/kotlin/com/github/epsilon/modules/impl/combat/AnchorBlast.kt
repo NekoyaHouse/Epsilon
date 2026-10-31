@@ -41,7 +41,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
             val key = triggerKey
             if (key == -1) return@nonNullListener
 
-            val keyDown = isPressed(key)
+            val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
             wasKeyDown = keyDown
 

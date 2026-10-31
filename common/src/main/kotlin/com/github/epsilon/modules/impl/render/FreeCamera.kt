@@ -97,11 +97,11 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val hit = mc.hitResult
                 if (hit is EntityHitResult) {
-                    rotation = calculate(hit.entity.blockPosition())
+                    rotation = RotationUtils.calculate(hit.entity.blockPosition())
                 } else if (hit is BlockHitResult) {
                     val crossHairPos: BlockPos = hit.blockPos
                     if (!level.getBlockState(crossHairPos).isAir) {
-                        rotation = calculate(hit.location)
+                        rotation = RotationUtils.calculate(hit.location)
                     }
                 }
 
@@ -112,7 +112,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
 
             var s = 0.5
-            if (isPressed(mc.options.keySprint)) s = 1.0
+            if (KeybindUtils.isPressed(mc.options.keySprint)) s = 1.0
 
             var a = false
             if (this.forward) {

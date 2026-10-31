@@ -52,7 +52,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             }
 
             interaction.attack(player, target)
-            swingHand(InteractionHand.MAIN_HAND)
+            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
 
             delay = MathUtils.getRandom(minDelay, maxDelay)
         }
@@ -88,7 +88,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             searchBox,
             { entity ->
                 !entity.isSpectator() && entity.isPickable() &&
-                    entity is LivingEntity && entity.isAlive && entity !== nn.player
+                    entity is LivingEntity && entity.isAlive && entity !== player
             },
             maxDistance
         )
@@ -164,10 +164,12 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
     fun getAttackCooldown(): Float {
         val nn = NonNullContext.current ?: return 0.0f
-        val attackSpeed = nn.player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
-        val cooldownPerTick = 1.0f / attackSpeed * 20.0f
-        val lastAttackTicks = nn.player.getAttackStrengthScale(0.0f) * cooldownPerTick
-        return Math.min(1.0f, lastAttackTicks / cooldownPerTick)
+        return context(nn) {
+            val attackSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
+            val cooldownPerTick = 1.0f / attackSpeed * 20.0f
+            val lastAttackTicks = player.getAttackStrengthScale(0.0f) * cooldownPerTick
+            Math.min(1.0f, lastAttackTicks / cooldownPerTick)
+        }
     }
 
 }

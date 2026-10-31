@@ -211,7 +211,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{new_gamemode}", translateGamemode(newMode))
                                     val mode = alertMode.value
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-                                        addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW))
+                                        ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW))
                                     }
                                     if (mode == AlertMode.Notification || mode == AlertMode.Both) {
                                         val hash = java.util.Objects.hash(playerName, "gamemode")
@@ -326,33 +326,34 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         val nn = NonNullContext.current ?: return
         if (sounds.isEmpty()) return
         val sound = sounds[0]
-        nn.level.playLocalSound(nn.player.blockPosition(), sound, SoundSource.PLAYERS, vol.toFloat(), pitch.toFloat(), false)
+        context(nn) {
+            level.playLocalSound(player.blockPosition(), sound, SoundSource.PLAYERS, vol.toFloat(), pitch.toFloat(), false)
+        }
     }
 
     private fun getPlayerName(id: UUID): String? {
         val nn = NonNullContext.current ?: return null
-        val player = nn.level.getPlayerByUUID(id)
-        if (player != null) return player.gameProfile.name()
-        // fallback: try to get from network player list
-        val entry = nn.connection.getPlayerInfo(id)
-        if (entry != null) {
-            val profile = entry.profile ?: return null
-            return profile.name()
+        return context(nn) {
+            val player = level.getPlayerByUUID(id)
+            if (player != null) return@context player.gameProfile.name()
+            // fallback: try to get from network player list
+            val entry = connection.getPlayerInfo(id)
+            if (entry != null) {
+                val profile = entry.profile ?: return@context null
+                return@context profile.name()
+            }
+            null
         }
-        return null
     }
 
     private fun getGamemodeName(id: UUID): String {
         val cached = gamemodeCache[id]
         if (cached != null) return translateGamemode(cached)
         // fallback: try to get from network info
-        val nn = NonNullContext.current
-        if (nn != null) {
-            val info = nn.connection.getPlayerInfo(id)
-            if (info != null) {
-                val mode = info.gameMode
-                if (mode != null) return translateGamemode(mode)
-            }
+        val info = NonNullContext.current?.connection?.getPlayerInfo(id)
+        if (info != null) {
+            val mode = info.gameMode
+            if (mode != null) return translateGamemode(mode)
         }
         return EpsilonTranslations.PlayerAlarms.UNKNOWN_GAMEMODE.getTranslatedName()
     }

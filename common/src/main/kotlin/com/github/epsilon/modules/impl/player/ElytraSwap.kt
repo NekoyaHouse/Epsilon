@@ -38,7 +38,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
         nonNullListener<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@nonNullListener
 
-            val pressed = isPressed(activateKey)
+            val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
                 isKeyDown = false
             }
@@ -70,7 +70,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     Predicate { stack -> stack.`is`(Items.ELYTRA) }
                 }
                 if (!isItemSwapped) {
-                    val targetSlot = findInHotbar(predicate).slot
+                    val targetSlot = InvUtils.findInHotbar(predicate).slot
 
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
@@ -78,14 +78,14 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                             return@nonNullListener
                         }
 
-                        val invSlot = find(predicate).slot
+                        val invSlot = InvUtils.find(predicate).slot
                         if (invSlot != -1) {
                             var containerSlot = invSlot
                             if (invSlot < 9) containerSlot += 36
 
                             val targetHotbarSlot = elytraSlotSetting - 1
 
-                            swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
+                            ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
                             return@nonNullListener
                         } else {
@@ -94,13 +94,13 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                         }
                     }
 
-                    swap(targetSlot, false)
+                    InvUtils.swap(targetSlot, false)
                     isItemSwapped = true
                 }
 
                 if (!isSwinging) {
                     interaction.useItem(player, InteractionHand.MAIN_HAND)
-                    swingHand(InteractionHand.MAIN_HAND)
+                    PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
                     isSwinging = true
                 }
 

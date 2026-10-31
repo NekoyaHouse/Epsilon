@@ -152,7 +152,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             val key = triggerKey
             if (key == -1) return@nonNullListener
 
-            val keyDown = isPressed(key)
+            val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
             wasKeyDown = keyDown
 
@@ -283,7 +283,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             }
 
             val hitPos = hit.blockPos
-            if (nn.level.getBlockState(hitPos).`is`(Blocks.RESPAWN_ANCHOR)) {
+            if (level.getBlockState(hitPos).`is`(Blocks.RESPAWN_ANCHOR)) {
                 currentAnchorPos = hitPos
                 targetRotation = null
                 targetBlockPos = null
@@ -291,7 +291,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 return
             }
 
-            val hitState = nn.level.getBlockState(hitPos)
+            val hitState = level.getBlockState(hitPos)
             val anchorStack = Items.RESPAWN_ANCHOR.getDefaultInstance()
             val placePos = if (!hitState.isAir && BlockUtils.canBeReplacedWith(hitState, anchorStack)) {
                 hitPos
@@ -324,7 +324,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         }
 
         InvUtils.swap(anchor.slot, false)
-        nn.interaction.useItemOn(nn.player, InteractionHand.MAIN_HAND, pendingAnchorHit!!)
+        interaction.useItemOn(player, InteractionHand.MAIN_HAND, pendingAnchorHit!!)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         currentAnchorPos = pendingAnchorPos
         targetRotation = null
@@ -337,7 +337,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun canPlaceAnchor(pos: BlockPos, item: ItemStack): Boolean {
-        if (!BlockUtils.canBeReplacedWith(nn.level.getBlockState(pos), item)) return false
+        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), item)) return false
         return !BlockUtils.hasBlockingEntity(AABB(pos))
     }
 
@@ -448,7 +448,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun doCharge() {
-        val state = nn.level.getBlockState(currentAnchorPos!!)
+        val state = level.getBlockState(currentAnchorPos!!)
         if (!state.`is`(Blocks.RESPAWN_ANCHOR)) {
             abortSequence()
             return
@@ -518,7 +518,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun doDetonate() {
-        val state = nn.level.getBlockState(currentAnchorPos!!)
+        val state = level.getBlockState(currentAnchorPos!!)
         if (!state.`is`(Blocks.RESPAWN_ANCHOR)) {
             abortSequence()
             return
@@ -676,7 +676,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             d -= 0.5
         }
 
-        if (placeMode == PlaceMode.Cover && nn.player.isShiftKeyDown) {
+        if (placeMode == PlaceMode.Cover && player.isShiftKeyDown) {
             val dx = playerPos.x - (currentAnchorPos!!.x + 0.5)
             val dz = playerPos.z - (currentAnchorPos!!.z + 0.5)
             val absX = Math.abs(dx)
@@ -732,7 +732,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun findFallbackShieldPos(): BlockPos? {
-        if (!nn.player.isShiftKeyDown) return null
+        if (!player.isShiftKeyDown) return null
 
         val playerPos = getShieldPlayerPos()
         val anchorPos = Vec3.atCenterOf(currentAnchorPos!!)
@@ -772,14 +772,14 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun trySetShieldPlacement(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
         val glowStack = Items.GLOWSTONE.getDefaultInstance()
-        if (!BlockUtils.canBeReplacedWith(nn.level.getBlockState(pos), glowStack)) return false
+        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), glowStack)) return false
         if (BlockUtils.hasBlockingEntity(AABB(pos))) return false
 
         val below = pos.below()
         if (below != currentAnchorPos) {
-            val belowState = nn.level.getBlockState(below)
+            val belowState = level.getBlockState(below)
             if (!belowState.isAir && !BlockUtils.canBeReplacedWith(belowState, glowStack) &&
-                !belowState.getCollisionShape(nn.level, below).isEmpty
+                !belowState.getCollisionShape(level, below).isEmpty
             ) {
                 shieldSide = Direction.UP
                 shieldSidePlacement = false
@@ -828,7 +828,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (pos == currentAnchorPos) return false
         if (placedShields.contains(pos)) return false
         if (BlockUtils.hasBlockingEntity(AABB(pos))) return false
-        if (!BlockUtils.canBeReplacedWith(nn.level.getBlockState(pos), item)) return false
+        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), item)) return false
         return isShieldBlocking(pos)
     }
 
@@ -836,15 +836,15 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun isSupportedOnGround(pos: BlockPos): Boolean {
         val below = pos.below()
         if (below == currentAnchorPos) return false
-        val state = nn.level.getBlockState(below)
+        val state = level.getBlockState(below)
         return !state.isAir && !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.getDefaultInstance()) &&
-            !state.getCollisionShape(nn.level, below).isEmpty
+            !state.getCollisionShape(level, below).isEmpty
     }
 
     context(nn: NonNullContext)
     private fun isAnchorCharged(pos: BlockPos?): Boolean {
         if (pos == null) return false
-        val state = nn.level.getBlockState(pos)
+        val state = level.getBlockState(pos)
         return state.`is`(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0
     }
 
@@ -886,21 +886,21 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isExistingShield(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
-        val state = nn.level.getBlockState(pos)
+        val state = level.getBlockState(pos)
         if (BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.getDefaultInstance())) return false
-        return Block.isShapeFullBlock(state.getCollisionShape(nn.level, pos))
+        return Block.isShapeFullBlock(state.getCollisionShape(level, pos))
     }
 
     context(nn: NonNullContext)
     private fun isExplosionSafe(): Boolean {
         val anchorPos = currentAnchorPos ?: return false
         val explosionCenter = Vec3.atCenterOf(anchorPos)
-        val health = nn.player.health + nn.player.absorptionAmount
+        val health = player.health + player.absorptionAmount
         val threshold = minHealth.toFloat()
 
-        val actual = DamageUtils.anchorDamage(nn.player, explosionCenter, DamageUtils.ArmorEnchantmentMode.None)
-        val pppp = DamageUtils.anchorDamage(nn.player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPPP)
-        val ppbp = DamageUtils.anchorDamage(nn.player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPBP)
+        val actual = DamageUtils.anchorDamage(player, explosionCenter, DamageUtils.ArmorEnchantmentMode.None)
+        val pppp = DamageUtils.anchorDamage(player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPPP)
+        val ppbp = DamageUtils.anchorDamage(player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPBP)
 
         var worstDamage = Math.max(actual, Math.max(pppp, ppbp))
         worstDamage *= 1.12f
@@ -916,7 +916,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             return true
         }
 
-        if (isExplosionHandSafe(nn.player.mainHandItem)) return true
+        if (isExplosionHandSafe(player.mainHandItem)) return true
 
         if (isHotbarSlotSafe(originalSlot)) {
             InvUtils.swap(originalSlot, false)
@@ -936,7 +936,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isHotbarSlotSafe(slot: Int): Boolean {
         if (slot < 0 || slot > 8) return false
-        return isExplosionHandSafe(nn.player.inventory.getItem(slot))
+        return isExplosionHandSafe(player.inventory.getItem(slot))
     }
 
     private fun isExplosionHandSafe(stack: ItemStack): Boolean {
@@ -981,7 +981,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val currentRot = if (RotationManager.INSTANCE.isActive()) {
             RotationManager.INSTANCE.getRotation()
         } else {
-            Rot2f(nn.player.yRot, nn.player.xRot)
+            Rot2f(player.yRot, player.xRot)
         }
         val yawDiff = Math.abs(Mth.wrapDegrees(rotation.yaw - currentRot.yaw))
         val pitchDiff = Math.abs(rotation.pitch - currentRot.pitch)
@@ -991,17 +991,17 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun getTargetRotation(targetPos: Vec3): Rot2f {
-        return RotationUtils.calculate(nn.player.getEyePosition(), targetPos)
+        return RotationUtils.calculate(player.getEyePosition(), targetPos)
     }
 
     context(nn: NonNullContext)
     private fun placeAtAvoiding(placePos: BlockPos, avoidPos: BlockPos): Boolean {
         setShiftState(true)
-        val handItem = nn.player.mainHandItem
+        val handItem = player.mainHandItem
         for (dir in Direction.values()) {
             val neighbor = placePos.relative(dir)
             if (neighbor == avoidPos) continue
-            val state = nn.level.getBlockState(neighbor)
+            val state = level.getBlockState(neighbor)
             if (state.isAir || BlockUtils.canBeReplacedWith(state, handItem)) continue
             interactBlock(neighbor, dir.opposite)
             setShiftState(false)
@@ -1019,13 +1019,13 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             pos.z + 0.5 + side.stepZ * 0.45,
         )
         val hit = BlockHitResult(hitVec, side, pos, false)
-        nn.interaction.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
+        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
     }
 
     context(nn: NonNullContext)
     private fun setShiftState(state: Boolean) {
-        nn.player.setShiftKeyDown(state)
+        player.setShiftKeyDown(state)
     }
 
     private fun addRenderBox(pos: BlockPos) {
@@ -1058,8 +1058,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun hasAssistShield(): Boolean {
         for (pos in placedShields) {
-            val state = nn.level.getBlockState(pos)
-            if (Block.isShapeFullBlock(state.getCollisionShape(nn.level, pos))) return true
+            val state = level.getBlockState(pos)
+            if (Block.isShapeFullBlock(state.getCollisionShape(level, pos))) return true
         }
         return hasExistingShield()
     }
@@ -1067,7 +1067,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun tryAssistShieldPlace(pos: BlockPos, interactPos: BlockPos, interactSide: Direction): Boolean {
         if (pos == currentAnchorPos || placedShields.contains(pos)) return false
-        if (!BlockUtils.canBeReplacedWith(nn.level.getBlockState(pos), Items.GLOWSTONE.getDefaultInstance())) return false
+        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), Items.GLOWSTONE.getDefaultInstance())) return false
         if (BlockUtils.hasBlockingEntity(AABB(pos))) return false
 
         val glowstone = InvUtils.findInHotbar(Items.GLOWSTONE)
@@ -1093,7 +1093,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             return
         }
 
-        val state = nn.level.getBlockState(currentAnchorPos!!)
+        val state = level.getBlockState(currentAnchorPos!!)
         if (!state.`is`(Blocks.RESPAWN_ANCHOR)) {
             abortSequence()
             return
@@ -1165,7 +1165,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun getShieldPlayerPos(): Vec3 {
         if (prediction) {
             val extrapolatedBox: AABB? = ExtrapolationManager.extrapolate(
-                nn.player,
+                player,
                 Math.ceil(predictionStrength).toInt(),
                 2,
             )
@@ -1173,7 +1173,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 return extrapolatedBox.center
             }
         }
-        return nn.player.position()
+        return player.position()
     }
 
     fun isActive(): Boolean {

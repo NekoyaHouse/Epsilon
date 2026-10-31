@@ -28,21 +28,21 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
     init {
         nonNullListener<PlayerTickEvent.Pre> {
-            val result = findInHotbar(Items.EXPERIENCE_BOTTLE)
+            val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
             if (!result.found()) return@nonNullListener
 
             RotationManager.INSTANCE.setRotations(Rot2f(player.yRot, 90f), 180.0, Priority.High)
 
-            swap(result.slot, true)
+            InvUtils.swap(result.slot, true)
 
             val hand = result.getHand()
             interaction.useItem(player, hand)
             if (swingHand) {
-                swingHand(hand)
+                PlayerUtils.swingHand(hand)
             }
 
             if (switchMode.`is`(SwitchMode.Silent)) {
-                swapBack()
+                InvUtils.swapBack()
             } else {
                 shouldSwapBack = true
             }

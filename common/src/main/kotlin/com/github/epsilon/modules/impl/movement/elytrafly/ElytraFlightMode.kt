@@ -68,8 +68,8 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
             if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST)) return@runSafe
 
             val containerId = player.containerMenu.containerId
-            click(containerId, 6)
-            click(containerId, 6)
+            ClickSlotUtils.click(containerId, 6)
+            ClickSlotUtils.click(containerId, 6)
 
             connection.send(
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
@@ -113,29 +113,29 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
     protected fun useFirework(): Boolean = runSafeOrFalse {
         val rocket = if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
-            findInHotbar(Items.FIREWORK_ROCKET)
+            InvUtils.findInHotbar(Items.FIREWORK_ROCKET)
         } else {
-            find(Items.FIREWORK_ROCKET)
+            InvUtils.find(Items.FIREWORK_ROCKET)
         }
         if (!rocket.found()) return@runSafeOrFalse false
 
         val hand = rocket.getHand()
 
         if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
-            swap(rocket.slot, true)
+            InvUtils.swap(rocket.slot, true)
         } else {
-            invSwap(rocket.slot)
+            InvUtils.invSwap(rocket.slot)
         }
 
         val result = interaction.useItem(player, hand)
         if (result.consumesAction()) {
-            swingHand(hand)
+            PlayerUtils.swingHand(hand)
         }
 
         if (elytraFly.swapMode == ElytraFly.SwapMode.Silent) {
-            swapBack()
+            InvUtils.swapBack()
         } else {
-            invSwapBack()
+            InvUtils.invSwapBack()
         }
 
         result.consumesAction()
@@ -144,9 +144,9 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     protected fun swapArmor(containerSlot: Int) {
         runSafe {
             val containerId = player.containerMenu.containerId
-            click(containerId, containerSlot)
-            click(containerId, 6)
-            click(containerId, containerSlot)
+            ClickSlotUtils.click(containerId, containerSlot)
+            ClickSlotUtils.click(containerId, 6)
+            ClickSlotUtils.click(containerId, containerSlot)
         }
     }
 

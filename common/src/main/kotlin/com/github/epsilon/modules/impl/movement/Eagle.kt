@@ -50,7 +50,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         nonNullListener<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
             if (mc.gui.screen() != null) return@nonNullListener
 
-            val physicallySneaking = isPressed(mc.options.keyShift)
+            val physicallySneaking = KeybindUtils.isPressed(mc.options.keyShift)
             if (sneakingOnly && physicallySneaking && shouldSneak()) {
                 event.isSneak = false
             }

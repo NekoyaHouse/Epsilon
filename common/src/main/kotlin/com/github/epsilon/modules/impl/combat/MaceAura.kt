@@ -84,7 +84,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             }
 
             RotationManager.INSTANCE.setRotations(
-                getRotationsToEntity(currentTarget), 180.0, Priority.Medium
+                RotationUtils.getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
             if (!isReadyToAttack()) return@nonNullListener
@@ -154,7 +154,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
         // 何意味，，，
         if (paperServer) {
             for (i in 0 until 4) {
-                nn.connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
+                connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
             }
         }
 
@@ -195,7 +195,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun sendMovePacket(x: Double, y: Double, z: Double, onGround: Boolean) {
-        nn.connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
+        connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
     }
 
     context(nn: NonNullContext)

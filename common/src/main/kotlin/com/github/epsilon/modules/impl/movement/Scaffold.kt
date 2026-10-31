@@ -301,7 +301,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     )
                     if (result.consumesAction()) {
                         if (swingHand) {
-                            swingHand(hand)
+                            PlayerUtils.swingHand(hand)
                         }
                         if (render) {
                             renderBoxes.add(
@@ -478,8 +478,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             val face = direction ?: return@runSafe
 
             val skip = when (raytrace) {
-                RaytraceMode.Normal -> !overBlock(RotationManager.INSTANCE.getRotation(), pos)
-                RaytraceMode.Strict -> !overBlock(RotationManager.INSTANCE.getRotation(), pos, face)
+                RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos)
+                RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos, face)
             }
             if (skip) {
                 return@runSafe
@@ -497,7 +497,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             if (result.consumesAction()) {
                 if (swingHand) {
-                    swingHand(hand)
+                    PlayerUtils.swingHand(hand)
                 }
 
                 if (render) {
@@ -616,7 +616,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             return@runSafeOrElse current
         }
 
-        val calculated = calculate(pos, direction)
+        val calculated = RotationUtils.calculate(pos, direction)
         val yawArray = floatArrayOf(
             -135f,
             -90f,
@@ -655,9 +655,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     pitch + MathUtils.getRandom(-0.3f, 0.3f)
                 )
                 val matches = if (raytrace == RaytraceMode.Normal) {
-                    overBlock(candidate, pos)
+                    RaytraceUtils.overBlock(candidate, pos)
                 } else {
-                    overBlock(candidate, pos, direction)
+                    RaytraceUtils.overBlock(candidate, pos, direction)
                 }
                 if (matches) {
                     return@runSafeOrElse candidate
@@ -667,9 +667,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             for (pitch in -90 until 90) {
                 val candidate = Rot2f(yaw, pitch.toFloat())
                 val matches = if (raytrace == RaytraceMode.Normal) {
-                    overBlock(candidate, pos)
+                    RaytraceUtils.overBlock(candidate, pos)
                 } else {
-                    overBlock(candidate, pos, direction)
+                    RaytraceUtils.overBlock(candidate, pos, direction)
                 }
                 if (matches) {
                     return@runSafeOrElse candidate
@@ -737,14 +737,14 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             when (swapMode) {
                 SwapMode.Normal -> {
                     val selectedSlot = player.inventory.selectedSlot
-                    swap(blockResult.slot, true)
+                    InvUtils.swap(blockResult.slot, true)
                     if (swapBack && blockResult.slot != selectedSlot) {
                         shouldSwapBack = true
                     }
                 }
 
-                SwapMode.Silent -> swap(blockResult.slot, true)
-                SwapMode.InvSwitch -> invSwap(blockResult.slot)
+                SwapMode.Silent -> InvUtils.swap(blockResult.slot, true)
+                SwapMode.InvSwitch -> InvUtils.invSwap(blockResult.slot)
                 SwapMode.None -> {
                 }
             }

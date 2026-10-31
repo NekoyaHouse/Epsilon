@@ -67,37 +67,37 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
 
     fun getBestTool(pos: BlockPos): Int {
         val nn = NonNullContext.current ?: return -1
-        val player = nn.player
-        val world = nn.level
-        val blockState = world.getBlockState(pos)
-        val block = blockState.block
-        var slot = 0
-        var dmg = 1.0F
+        return context(nn) {
+            val blockState = level.getBlockState(pos)
+            val block = blockState.block
+            var slot = 0
+            var dmg = 1.0F
 
-        for (index in 0 until 9) {
-            val itemStack = player.inventory.getItem(index)
-            if (
-                !InvHelper.isGodItem(itemStack) &&
-                !itemStack.isEmpty &&
-                !blockState.isAir &&
-                (!itemStack.`is`(ItemTags.SWORDS) || block is WebBlock)
-            ) {
-                var strVsBlock = itemStack.item.getDestroySpeed(itemStack, blockState)
-                if (strVsBlock > 1.0F && block !is DropExperienceBlock && block !is RedStoneOreBlock) {
-                    val level = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
-                    if (level > 0) {
-                        strVsBlock += (level * level + 1).toFloat()
+            for (index in 0 until 9) {
+                val itemStack = player.inventory.getItem(index)
+                if (
+                    !InvHelper.isGodItem(itemStack) &&
+                    !itemStack.isEmpty &&
+                    !blockState.isAir &&
+                    (!itemStack.`is`(ItemTags.SWORDS) || block is WebBlock)
+                ) {
+                    var strVsBlock = itemStack.item.getDestroySpeed(itemStack, blockState)
+                    if (strVsBlock > 1.0F && block !is DropExperienceBlock && block !is RedStoneOreBlock) {
+                        val level = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
+                        if (level > 0) {
+                            strVsBlock += (level * level + 1).toFloat()
+                        }
+                    }
+
+                    if (strVsBlock > dmg) {
+                        slot = index
+                        dmg = strVsBlock
                     }
                 }
-
-                if (strVsBlock > dmg) {
-                    slot = index
-                    dmg = strVsBlock
-                }
             }
-        }
 
-        return if (dmg > 1.0F) slot else -1
+            if (dmg > 1.0F) slot else -1
+        }
     }
 
 }

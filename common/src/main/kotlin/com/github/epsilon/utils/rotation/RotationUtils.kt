@@ -21,28 +21,27 @@ object RotationUtils {
      *
      * @param pos 目标位置
      * @return 操作结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun getDirection(pos: BlockPos): Direction {
-        val raycastSide = getNearestSide(nn, pos) { direction -> canSeeWithContext(nn, pos, direction) }
+        val raycastSide = getNearestSide(pos) { direction -> canSeeWithContext(pos, direction) }
         if (raycastSide != null) {
             return raycastSide
         }
-        val grimSide = getNearestSide(nn, pos) { direction -> isGrimDirectionWithContext(nn, pos, direction) }
+        val grimSide = getNearestSide(pos) { direction -> isGrimDirectionWithContext(pos, direction) }
         if (grimSide != null) {
             return grimSide
         }
         return Direction.UP
     }
 
-    private fun getNearestSide(nn: NonNullContext, pos: BlockPos, predicate: (Direction) -> Boolean): Direction? {
+    context(nn: NonNullContext)
+    private fun getNearestSide(pos: BlockPos, predicate: (Direction) -> Boolean): Direction? {
         var side: Direction? = null
         var closestDistanceSq = Double.MAX_VALUE
-        val eyePos = nn.player.getEyePosition()
+        val eyePos = player.eyePosition
 
-        for (direction in Direction.values()) {
+        for (direction in Direction.entries) {
             if (!predicate(direction)) continue
 
             val distanceSq = eyePos.distanceToSqr(Vec3.atCenterOf(pos.relative(direction)))
@@ -61,25 +60,25 @@ object RotationUtils {
      * @param pos  目标位置
      * @param side 方块面方向
      * @return 判断结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun canSee(pos: BlockPos, side: Direction): Boolean {
-        return canSeeWithContext(nn, pos, side)
+        return canSeeWithContext(pos, side)
     }
 
-    private fun canSeeWithContext(nn: NonNullContext, pos: BlockPos, side: Direction): Boolean {
+    context(nn: NonNullContext)
+    private fun canSeeWithContext(pos: BlockPos, side: Direction): Boolean {
         val testVec = Vec3.atCenterOf(pos).relative(side, 0.5)
         val context = ClipContext(
-            nn.player.getEyePosition(), testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, nn.player
+            player.eyePosition, testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player
         )
-        val result = nn.level.clip(context)
-        return result.getType() == HitResult.Type.MISS
+        val result = level.clip(context)
+        return result.type == HitResult.Type.MISS
     }
 
-    private fun getCollisionBox(nn: NonNullContext, pos: BlockPos): AABB {
-        val shape: VoxelShape = nn.level.getBlockState(pos).getCollisionShape(nn.level, pos).move(pos)
+    context(nn: NonNullContext)
+    private fun getCollisionBox(pos: BlockPos): AABB {
+        val shape: VoxelShape = level.getBlockState(pos).getCollisionShape(level, pos).move(pos)
         var collisionBox = AABB(pos)
 
         for (box in shape.toAabbs()) {
@@ -95,20 +94,18 @@ object RotationUtils {
      * @param pos       目标位置
      * @param direction 方块面方向
      * @return 判断结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun isGrimDirection(pos: BlockPos, direction: Direction): Boolean {
-        return isGrimDirectionWithContext(nn, pos, direction)
+        return isGrimDirectionWithContext(pos, direction)
     }
 
-    private fun isGrimDirectionWithContext(nn: NonNullContext, pos: BlockPos, direction: Direction): Boolean {
-        val collisionBox = getCollisionBox(nn, pos)
-        val player = nn.player
+    context(nn: NonNullContext)
+    private fun isGrimDirectionWithContext(pos: BlockPos, direction: Direction): Boolean {
+        val collisionBox = getCollisionBox(pos)
         val eyePositions = AABB(
-            player.getX(), player.getY() + 0.4, player.getZ(),
-            player.getX(), player.getY() + 1.62, player.getZ()
+            player.x, player.y + 0.4, player.z,
+            player.x, player.y + 1.62, player.z
         ).inflate(0.0002)
         if (eyePositions.intersects(collisionBox)) {
             return true
@@ -129,13 +126,11 @@ object RotationUtils {
      * @param entity 实体
      * @param fov    水平视野角度
      * @return 判断结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun isInFov(entity: Entity, fov: Float): Boolean {
         if (fov >= 360f) return true
-        val yawDiff = Math.abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - nn.player.getYRot()))
+        val yawDiff = Math.abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - player.yRot))
         return yawDiff <= fov / 2.0
     }
 
@@ -144,13 +139,11 @@ object RotationUtils {
      *
      * @param entity 实体
      * @return 获取或计算得到的结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun getRotationsToEntity(entity: Entity): Rot2f {
-        val eyePos = nn.player.getEyePosition()
-        val targetPos = entity.position().add(0.0, entity.getBbHeight() / 2.0, 0.0)
+        val eyePos = player.eyePosition
+        val targetPos = entity.position().add(0.0, entity.bbHeight / 2.0, 0.0)
         val dx = targetPos.x - eyePos.x
         val dy = targetPos.y - eyePos.y
         val dz = targetPos.z - eyePos.z
@@ -165,13 +158,11 @@ object RotationUtils {
      *
      * @param entity 实体
      * @return 获取或计算得到的结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun getEyeDistanceToEntity(entity: LivingEntity): Double {
-        val eyePos = nn.player.getEyePosition()
-        val box = entity.getBoundingBox()
+        val eyePos = player.eyePosition
+        val box = entity.boundingBox
         val dx = Math.max(box.minX - eyePos.x, Math.max(0.0, eyePos.x - box.maxX))
         val dy = Math.max(box.minY - eyePos.y, Math.max(0.0, eyePos.y - box.maxY))
         val dz = Math.max(box.minZ - eyePos.z, Math.max(0.0, eyePos.z - box.maxZ))
@@ -198,19 +189,16 @@ object RotationUtils {
      *
      * @param entity 实体
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(entity: Entity): Rot2f {
-        val player = nn.player
         return calculate(
             entity.position().add(
                 0.0,
                 Mth.clamp(
-                    player.getY() - entity.getY() + player.getEyeHeight(),
+                    player.y - entity.y + player.eyeHeight,
                     0.0,
-                    (entity.getBoundingBox().maxY - entity.getBoundingBox().minY) * 0.9
+                    (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
                 ),
                 0.0
             )
@@ -224,8 +212,6 @@ object RotationUtils {
      * @param adaptive 是否在实体包围盒内自适应选择目标点
      * @param range    射线追踪或自适应选点距离
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(entity: Entity, adaptive: Boolean, range: Double): Rot2f {
@@ -233,11 +219,11 @@ object RotationUtils {
 
         val result = RaytraceUtils.raytrace(normalRotations, range, 0.0f)
 
-        if (!adaptive || (result != null && result.getType() == HitResult.Type.ENTITY)) {
+        if (!adaptive || (result != null && result.type == HitResult.Type.ENTITY)) {
             return normalRotations
         }
 
-        val bb = entity.getBoundingBox()
+        val bb = entity.boundingBox
         val minX = bb.minX
         val maxX = bb.maxX
         val minY = bb.minY
@@ -264,7 +250,7 @@ object RotationUtils {
 
                     val rayCastResult = RaytraceUtils.raytrace(adaptiveRotations, range, 0.0f)
 
-                    if (rayCastResult != null && rayCastResult.getType() == HitResult.Type.ENTITY) {
+                    if (rayCastResult != null && rayCastResult.type == HitResult.Type.ENTITY) {
                         return adaptiveRotations
                     }
 
@@ -283,12 +269,10 @@ object RotationUtils {
      *
      * @param to 目标位置
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(to: BlockPos): Rot2f {
-        return calculate(nn.player.getEyePosition(), Vec3.atCenterOf(to))
+        return calculate(player.eyePosition, Vec3.atCenterOf(to))
     }
 
     /**
@@ -296,12 +280,10 @@ object RotationUtils {
      *
      * @param to 目标位置
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(to: Vec3): Rot2f {
-        return calculate(nn.player.getEyePosition(), to)
+        return calculate(player.eyePosition, to)
     }
 
     /**
@@ -310,17 +292,15 @@ object RotationUtils {
      * @param position  目标位置
      * @param direction 方块面方向
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(position: Vec3, direction: Direction): Rot2f {
         var x = position.x + 0.5
         var y = position.y + 0.5
         var z = position.z + 0.5
-        x += direction.getStepX().toDouble() * 0.5
-        y += direction.getStepY().toDouble() * 0.5
-        z += direction.getStepZ().toDouble() * 0.5
+        x += direction.stepX.toDouble() * 0.5
+        y += direction.stepY.toDouble() * 0.5
+        z += direction.stepZ.toDouble() * 0.5
         return calculate(Vec3(x, y, z))
     }
 
@@ -330,17 +310,15 @@ object RotationUtils {
      * @param position  目标位置
      * @param direction 方块面方向
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(position: BlockPos, direction: Direction): Rot2f {
-        var x = position.getX() + 0.5
-        var y = position.getY() + 0.5
-        var z = position.getZ() + 0.5
-        x += direction.getStepX().toDouble() * 0.5
-        y += direction.getStepY().toDouble() * 0.5
-        z += direction.getStepZ().toDouble() * 0.5
+        var x = position.x + 0.5
+        var y = position.y + 0.5
+        var z = position.z + 0.5
+        x += direction.stepX.toDouble() * 0.5
+        y += direction.stepY.toDouble() * 0.5
+        z += direction.stepZ.toDouble() * 0.5
         return calculate(Vec3(x, y, z))
     }
 
@@ -350,16 +328,12 @@ object RotationUtils {
      * @param vec     目标位置
      * @param predict 是否按玩家速度预判
      * @return 计算得到的旋转角
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun calculate(vec: Vec3, predict: Boolean): Rot2f {
-        val player = nn.player
+        var eyesPos = player.eyePosition
 
-        var eyesPos = player.getEyePosition()
-
-        if (predict) eyesPos = eyesPos.add(player.getDeltaMovement())
+        if (predict) eyesPos = eyesPos.add(player.deltaMovement)
 
         val diffX = vec.x - eyesPos.x
         val diffY = vec.y - eyesPos.y
@@ -434,14 +408,12 @@ object RotationUtils {
      *
      * @param rotation 旋转角
      * @return 操作结果
-     *
-     * 调用方需在 NonNullContext 作用域内调用。
      */
     context(nn: NonNullContext)
     fun resetRotation(rotation: Rot2f?): Rot2f? {
         val target = rotation ?: return null
-        val yaw = target.yaw + Mth.wrapDegrees(nn.player.getYRot() - target.yaw)
-        val pitch = nn.player.getXRot()
+        val yaw = target.yaw + Mth.wrapDegrees(player.yRot - target.yaw)
+        val pitch = player.xRot
         return Rot2f(yaw, pitch)
     }
 
@@ -516,7 +488,7 @@ object RotationUtils {
             yaw = lastYaw + move.yaw
             pitch = lastPitch + move.pitch
 
-            val iterations = (Constants.client.getFps() / 20f + Math.random() * 10).toInt()
+            val iterations = (Constants.client.fps / 20f + Math.random() * 10).toInt()
             for (i in 1..iterations) {
                 if (Math.abs(move.yaw) + Math.abs(move.pitch) > 0.0001) {
                     yaw += ((Math.random() - 0.5) / 1000).toFloat()

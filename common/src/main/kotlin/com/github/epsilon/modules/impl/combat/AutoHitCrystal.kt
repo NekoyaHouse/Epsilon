@@ -97,7 +97,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             if (switchClock > 0) --switchClock
             if (placeClock > 0) --placeClock
 
-            val pressed = isPressed(activateKey)
+            val pressed = KeybindUtils.isPressed(activateKey)
             if (pressed) {
                 val hitResult = mc.hitResult
                 if (hitResult is BlockHitResult) {
@@ -200,7 +200,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 }
             }
 
-            if (active && isPressed(activateKey)) {
+            if (active && KeybindUtils.isPressed(activateKey)) {
                 if (mainHandStack.`is`(Items.END_CRYSTAL) || mainHandStack.`is`(Items.OBSIDIAN)) {
                     event.cancel()
                 }

@@ -93,7 +93,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (mode == Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) &&
                 !player.isInWater && !player.isInLava && clipTimer <= 0
             ) {
-                val dir = forward(0.5)
+                val dir = MoveUtils.forward(0.5)
 
                 var blockToBreak: BlockPos? = null
 
@@ -109,11 +109,11 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 val bestTool = AutoTool.getBestTool(blockToBreak)
                 if (bestTool == -1) return@nonNullListener
 
-                swap(bestTool, true)
+                InvUtils.swap(bestTool, true)
                 interaction.continueDestroyBlock(blockToBreak, player.direction)
-                swingHand(InteractionHand.MAIN_HAND)
+                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
                 if (silent) {
-                    swapBack()
+                    InvUtils.swapBack()
                 }
             }
 
@@ -147,18 +147,18 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         return@nonNullListener
                     }
 
-                    val dir = forward(0.5)
+                    val dir = MoveUtils.forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
                         return@nonNullListener
                     }
 
-                    val angle = calculate(Vec3.atCenterOf(block))
+                    val angle = RotationUtils.calculate(Vec3.atCenterOf(block))
                     val result = if (swapMode == SwapMode.Silent) {
-                        findInHotbar(Items.ENDER_PEARL)
+                        InvUtils.findInHotbar(Items.ENDER_PEARL)
                     } else {
-                        find(Items.ENDER_PEARL)
+                        InvUtils.find(Items.ENDER_PEARL)
                     }
                     if (result.found()) {
                         val prevYaw = player.yRot
@@ -183,7 +183,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
         runSafe {
             if (player.onGround() && mode == Mode.CCClip) {
-                val diagonalOffset = forwardWithoutStrafe(0.44)
+                val diagonalOffset = MoveUtils.forwardWithoutStrafe(0.44)
                 val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
 
                 connection.send(
@@ -191,7 +191,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 )
 
                 if (diagonal) {
-                    val directionVec = forwardWithoutStrafe(0.51)
+                    val directionVec = MoveUtils.forwardWithoutStrafe(0.51)
 
                     var height = if (level.clip(
                             ClipContext(
@@ -224,7 +224,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
                     toggle()
                 } else {
-                    val directionVec = forwardWithoutStrafe(0.57)
+                    val directionVec = MoveUtils.forwardWithoutStrafe(0.57)
 
                     var height = if (level.clip(
                             ClipContext(

@@ -117,15 +117,15 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
 
             // 3. Check if placeable
-            if (!canPlaceAt(placePos)) return@nonNullListener
+            if (!BlockUtils.canPlaceAt(placePos)) return@nonNullListener
             if (!level.getBlockState(placePos.below()).isSolid) return@nonNullListener
 
             // 4. Find obsidian
-            val obsidian: FindItemResult = findInHotbar(Items.OBSIDIAN)
+            val obsidian: FindItemResult = InvUtils.findInHotbar(Items.OBSIDIAN)
             if (!obsidian.found()) return@nonNullListener
 
             // 5. Rotation and placement
-            val rot = calculate(self.eyePosition, Vec3.atCenterOf(placePos))
+            val rot = RotationUtils.calculate(self.eyePosition, Vec3.atCenterOf(placePos))
             var readyToPlace = true
 
             if (rotate == RotateMode.Normal) {

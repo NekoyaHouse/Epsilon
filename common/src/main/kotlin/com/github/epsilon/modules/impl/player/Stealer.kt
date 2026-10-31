@@ -62,7 +62,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
                                 for (slotId in slots) {
                                     val stack = menu.getSlot(slotId).item
                                     if (isItemUseful(stack) && isBestItemInChest(menu, stack) && timer.passedMillise(nextDelay.toLong())) {
-                                        shiftClick(menu.containerId, slotId)
+                                        ClickSlotUtils.shiftClick(menu.containerId, slotId)
                                         timer.reset()
                                         if (nextDelay > 0) {
                                             break

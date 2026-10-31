@@ -250,7 +250,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            if (getEyeDistanceToEntity(currentTarget) <= SPEAR_MIN_TRACK_DISTANCE) {
+            if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= SPEAR_MIN_TRACK_DISTANCE) {
                 aimRotations = null
                 return@nonNullListener
             }
@@ -262,8 +262,8 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
             forceForward = move
 
-            val rotations = calculate(currentTarget, true, range)
-            if (raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
+            val rotations = RotationUtils.calculate(currentTarget, true, range)
+            if (RaytraceUtils.raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
                 aimRotations = null
                 return@nonNullListener
             }
@@ -272,7 +272,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 rotations,
                 rotationSpeed.toDouble(),
                 { rotation ->
-                    val hit = raytrace(rotation, range)
+                    val hit = RaytraceUtils.raytrace(rotation, range)
                     hit is EntityHitResult && hit.entity === target
                 },
                 rotationPriority

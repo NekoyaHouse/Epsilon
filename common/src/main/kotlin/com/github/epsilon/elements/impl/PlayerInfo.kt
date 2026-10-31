@@ -145,17 +145,18 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
     private fun refreshRows() {
         val nn = NonNullContext.current ?: return
-        cachedRows = collectRows(nn)
+        cachedRows = context(nn) { collectRows() }
         rowsInitialized = true
         pruneNameScrollState(cachedRows)
     }
 
-    private fun collectRows(nn: NonNullContext): List<PlayerRow> {
+    context(nn: NonNullContext)
+    private fun collectRows(): List<PlayerRow> {
         val maxDistanceSquared = Mth.square(playerRange)
         val players: MutableList<AbstractClientPlayer> = ArrayList()
 
-        val self = nn.player
-        for (player in nn.level.players()) {
+        val self = player
+        for (player in level.players()) {
             if ((!showSelf && player === self) || player.isRemoved) continue
             if (self.distanceToSqr(player) > maxDistanceSquared) continue
             players.add(player)

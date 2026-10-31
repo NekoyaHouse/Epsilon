@@ -66,28 +66,30 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             return
         }
 
-        movementTick = 0
-        deathTime = 0
-        if (!record) {
-            positions.clear()
+        context(nn) {
+            movementTick = 0
+            deathTime = 0
+            if (!record) {
+                positions.clear()
+            }
+
+            val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
+            val fake = RemotePlayer(level, GameProfile(uuid, nameSetting))
+            fakePlayer = fake
+            fake.setId(-66123666)
+            fake.copyPosition(player)
+            fake.setYRot(player.yRot)
+            fake.setXRot(player.xRot)
+            fake.setYHeadRot(player.yHeadRot)
+            fake.setHealth(player.health)
+            fake.setAbsorptionAmount(player.absorptionAmount)
+
+            if (copyInventory) {
+                fake.inventory.replaceWith(player.inventory)
+            }
+
+            level.addEntity(fake)
         }
-
-        val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
-        val fake = RemotePlayer(nn.level, GameProfile(uuid, nameSetting))
-        fakePlayer = fake
-        fake.setId(-66123666)
-        fake.copyPosition(nn.player)
-        fake.setYRot(nn.player.yRot)
-        fake.setXRot(nn.player.xRot)
-        fake.setYHeadRot(nn.player.yHeadRot)
-        fake.setHealth(nn.player.health)
-        fake.setAbsorptionAmount(nn.player.absorptionAmount)
-
-        if (copyInventory) {
-            fake.inventory.replaceWith(nn.player.inventory)
-        }
-
-        nn.level.addEntity(fake)
     }
 
     override fun onDisable() {

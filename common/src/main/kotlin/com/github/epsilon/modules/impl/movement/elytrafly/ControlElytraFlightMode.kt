@@ -124,7 +124,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 useTimedFirework()
             }
 
-            val elytra = find(Items.ELYTRA)
+            val elytra = InvUtils.find(Items.ELYTRA)
 
             if (shouldEatGlide(eating)) {
                 handleEatGlide(elytra)

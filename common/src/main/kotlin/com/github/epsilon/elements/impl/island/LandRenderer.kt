@@ -180,10 +180,10 @@ class LandRenderer(
     private fun getLatency(): Int {
         if (Constants.client.isLocalServer) return 0
 
-        val nn = NonNullContext.current
+        val player = NonNullContext.current?.player
         val connection: ClientPacketListener? = Constants.client.getConnection()
-        if (connection != null && nn != null) {
-            val playerInfo: PlayerInfo? = connection.getPlayerInfo(nn.player.uuid)
+        if (connection != null && player != null) {
+            val playerInfo: PlayerInfo? = connection.getPlayerInfo(player.uuid)
             if (playerInfo != null && playerInfo.latency >= 0) {
                 return playerInfo.latency
             }

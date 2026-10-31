@@ -185,10 +185,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun updateKillTrigger() {
-        val nn = NonNullContext.current
-        if (triggerMode == TriggerMode.Kill && nn != null) {
+        val level = NonNullContext.current?.level
+        if (triggerMode == TriggerMode.Kill && level != null) {
             val now = System.currentTimeMillis()
-            val world = nn.level
             val iterator = recentTargets.entries.iterator()
             while (iterator.hasNext()) {
                 val entry = iterator.next()
@@ -199,13 +198,13 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
                     continue
                 }
 
-                if (targetPlayer.level() !== world) {
+                if (targetPlayer.level() !== level) {
                     iterator.remove()
                     continue
                 }
 
                 val dead = targetPlayer.isDeadOrDying || targetPlayer.deathTime > 0 || targetPlayer.health <= 0.0f
-                val removed = targetPlayer.isRemoved || world.getEntity(entry.key) !== targetPlayer
+                val removed = targetPlayer.isRemoved || level.getEntity(entry.key) !== targetPlayer
                 if (dead || removed) {
                     iterator.remove()
                     play(null)
@@ -218,9 +217,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     private fun confirmTrackedDeath(entityId: Int) {
         if (!isEnabled || triggerMode != TriggerMode.Kill) return
-        val nn = NonNullContext.current ?: return
+        val level = NonNullContext.current?.level ?: return
         val target = recentTargets[entityId]
-        if (target == null || target.player.level() !== nn.level || !target.isRecent(System.currentTimeMillis())) {
+        if (target == null || target.player.level() !== level || !target.isRecent(System.currentTimeMillis())) {
             return
         }
         recentTargets.remove(entityId)

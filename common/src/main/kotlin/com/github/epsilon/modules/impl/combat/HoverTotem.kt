@@ -49,7 +49,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@nonNullListener
                             }
-                            swap(player.containerMenu.containerId, slotIndex, totem)
+                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, totem)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         } else if (!player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
@@ -57,7 +57,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@nonNullListener
                             }
-                            swap(player.containerMenu.containerId, slotIndex, 40)
+                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, 40)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         }

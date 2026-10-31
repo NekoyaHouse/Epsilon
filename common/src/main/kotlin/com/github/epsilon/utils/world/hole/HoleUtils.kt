@@ -9,8 +9,6 @@ object HoleUtils {
     /**
      * 检测指定位置开始的洞结构。
      *
-     * 调用方需在 [NonNullContext] 作用域内调用。
-     *
      * @param pos 目标位置
      * @return 操作结果
      */
@@ -21,8 +19,6 @@ object HoleUtils {
 
     /**
      * 检测指定位置开始的洞结构。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      *
      * @param pos   目标位置
      * @param depth 洞结构需要检查的内部高度
@@ -36,8 +32,6 @@ object HoleUtils {
     /**
      * 检测指定位置开始的洞结构。
      *
-     * 调用方需在 [NonNullContext] 作用域内调用。
-     *
      * @param pos   目标位置
      * @param depth 洞结构需要检查的内部高度
      * @param floor 是否要求洞底为抗爆方块
@@ -50,8 +44,6 @@ object HoleUtils {
 
     /**
      * 检测指定位置开始的洞结构。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      *
      * @param pos     目标位置
      * @param single  是否检测单格洞
@@ -106,15 +98,13 @@ object HoleUtils {
     /**
      * 判断指定位置是否为可作为洞壁的抗爆方块。
      *
-     * 调用方需在 [NonNullContext] 作用域内调用。
-     *
      * @param pos 目标位置
      * @return 判断结果
      */
     context(nn: NonNullContext)
     fun isBlock(pos: BlockPos): Boolean {
-        return nn.level.isLoaded(pos)
-            && !nn.level.getBlockState(pos).getCollisionShape(nn.level, pos).isEmpty()
+        return level.isLoaded(pos)
+            && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
     }
 
     context(nn: NonNullContext)
@@ -133,8 +123,6 @@ object HoleUtils {
 
     /**
      * 判断玩家当前是否位于洞结构中。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      *
      * @param player 玩家
      * @return 判断结果

@@ -66,7 +66,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
             }
 
             if (swingHand) {
-                swingHand(InteractionHand.MAIN_HAND)
+                PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
             }
         }
     }

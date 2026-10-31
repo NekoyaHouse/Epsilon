@@ -24,16 +24,14 @@ object BlockUtils {
     /**
      * 判断本地玩家是否可在指定位置放置方块。
      *
-     * 调用方需在 [NonNullContext] 作用域内调用。
-     *
      * @param pos 目标位置
      * @return 判断结果
      */
     context(nn: NonNullContext)
     fun canPlaceAt(pos: BlockPos): Boolean {
-        if (!nn.level.getBlockState(pos).canBeReplaced()) return false
+        if (!level.getBlockState(pos).canBeReplaced()) return false
         val except: Entity? = null
-        return nn.level.getEntities(
+        return level.getEntities(
             except,
             AABB(pos)
         ) { entity -> !(entity is ItemEntity || entity is ExperienceOrb || entity is ThrownExperienceBottle || entity is Arrow) }
@@ -42,12 +40,10 @@ object BlockUtils {
 
     /**
      * 计算方块交互命中的实际放置位置。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun getPlacePos(hit: BlockHitResult, item: ItemStack): BlockPos {
-        val state = nn.level.getBlockState(hit.blockPos)
+        val state = level.getBlockState(hit.blockPos)
         if (!state.isAir && canBeReplacedWith(state, item)) {
             return hit.blockPos
         }
@@ -56,12 +52,10 @@ object BlockUtils {
 
     /**
      * 判断方块的某一面是否朝向本地玩家可见。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun isFaceVisible(pos: BlockPos, face: Direction): Boolean {
-        val eyePos = nn.player.getEyePosition()
+        val eyePos = player.eyePosition
         val box = AABB(pos)
         return when (face) {
             Direction.NORTH -> eyePos.z > box.minZ
@@ -75,26 +69,22 @@ object BlockUtils {
 
     /**
      * 判断指定位置是否为有碰撞体积的实心方块。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun isSolidBlock(pos: BlockPos): Boolean {
-        val state = nn.level.getBlockState(pos)
+        val state = level.getBlockState(pos)
         if (state.isAir) return false
         if (canBeReplacedWith(state, ItemStack.EMPTY)) return false
-        return !state.getCollisionShape(nn.level, pos).isEmpty()
+        return !state.getCollisionShape(level, pos).isEmpty()
     }
 
     /**
      * 判断包围盒内是否存在会阻挡放置的实体。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun hasBlockingEntity(box: AABB): Boolean {
         val except: Entity? = null
-        for (entity in nn.level.getEntities(except, box)) {
+        for (entity in level.getEntities(except, box)) {
             if (!entity.isAlive) continue
             if (entity is ItemEntity || entity is ExperienceOrb) continue
             if (entity is EndCrystal) continue
@@ -105,23 +95,19 @@ object BlockUtils {
 
     /**
      * 判断目标点是否处于本地玩家的方块交互距离内。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun isWithinRange(point: Vec3): Boolean {
-        val range = nn.player.blockInteractionRange()
-        return point.distanceToSqr(nn.player.getEyePosition()) <= range * range
+        val range = player.blockInteractionRange()
+        return point.distanceToSqr(player.eyePosition) <= range * range
     }
 
     /**
      * 计算方块朝向玩家一侧的大致方向。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun getVisibleFace(pos: BlockPos): Direction {
-        return Direction.getApproximateNearest(nn.player.position().subtract(Vec3.atCenterOf(pos)))
+        return Direction.getApproximateNearest(player.position().subtract(Vec3.atCenterOf(pos)))
     }
 
 }

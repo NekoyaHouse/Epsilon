@@ -25,7 +25,7 @@ object Flight : Module("Flight", Category.MOVEMENT) {
                 y = -verticalSpeed
             }
 
-            val strafe = forward(horizontalSpeed)
+            val strafe = MoveUtils.forward(horizontalSpeed)
             player.deltaMovement = Vec3(strafe[0], y, strafe[1])
         }
     }

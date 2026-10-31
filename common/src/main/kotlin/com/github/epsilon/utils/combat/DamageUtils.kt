@@ -14,7 +14,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.state.BlockState
@@ -27,9 +26,6 @@ import net.minecraft.world.phys.Vec3
  *
  * 客户端计算流程与原版 `ServerExplosion`、`ExplosionDamageCalculator`、`CombatRules` 以及
  * `LivingEntity.getDamageAfterArmorAbsorb/getDamageAfterMagicAbsorb` 保持一致。
- *
- * 需要在客户端世界内做视线/暴露采样或读取本地玩家的方法接收 [NonNullContext] 上下文参数，
- * 调用方需在 `NonNullContext` 作用域内调用（`nonNullListener` / `runSafe` / `context(nn)`）。
  */
 object DamageUtils {
 
@@ -52,8 +48,6 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对目标造成的最终伤害。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用。
-     *
      * @param target     目标实体
      * @param crystalPos 末影水晶爆炸中心
      * @param targetPos  目标预测位置；为 null 时使用实体当前位置
@@ -68,8 +62,6 @@ object DamageUtils {
     /**
      * 估算重生锚爆炸对目标造成的最终伤害。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用。
-     *
      * @param target    目标实体
      * @param anchorPos 重生锚爆炸中心
      * @param mode      护甲附魔计算模式
@@ -82,8 +74,6 @@ object DamageUtils {
 
     /**
      * 估算指定爆炸对目标造成的最终伤害。
-     *
-     * 调用方需在 `NonNullContext` 作用域内调用。
      *
      * @param target       目标实体
      * @param explosionPos 爆炸中心
@@ -128,8 +118,6 @@ object DamageUtils {
     /**
      * 计算尚未应用护甲等减免的原始爆炸伤害。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用。
-     *
      * @param target       目标实体
      * @param explosionPos 爆炸中心
      * @param radius       爆炸或特效半径
@@ -153,8 +141,6 @@ object DamageUtils {
     /**
      * 计算爆炸中心对目标包围盒的无遮挡采样比例。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用（需要世界做视线检测）。
-     *
      * @param center 爆炸中心
      * @param entity 实体
      * @return 范围为 0 到 1 的无遮挡比例
@@ -166,8 +152,6 @@ object DamageUtils {
 
     /**
      * 计算爆炸中心对目标包围盒的无遮挡采样比例。
-     *
-     * 调用方需在 `NonNullContext` 作用域内调用（需要世界做视线检测）。
      *
      * @param center 爆炸中心
      * @param bb     用于采样的实体包围盒
@@ -198,7 +182,7 @@ object DamageUtils {
                     val z = Mth.lerp(zz, bb.minZ, bb.maxZ)
                     val from = Vec3(x + xOffset, y, z + zOffset)
 
-                    if (nn.level.clip(
+                    if (level.clip(
                             ClipContext(
                                 from, center,
                                 ClipContext.Block.COLLIDER,
@@ -235,8 +219,6 @@ object DamageUtils {
             Difficulty.EASY -> Math.min(damage / 2.0f + 1.0f, damage)
             Difficulty.NORMAL -> damage
             Difficulty.HARD -> damage * 1.5f
-            // 原 Java switch 覆盖全部枚举常量；Kotlin 对 Java 枚举要求 else 分支。
-            else -> damage
         }
     }
 
@@ -319,8 +301,6 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对本地玩家造成的最终伤害。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用。
-     *
      * @param crystalPos 末影水晶爆炸中心
      * @param mode       护甲附魔计算模式
      * @return 本地玩家预计受到的伤害，最小为 0
@@ -333,8 +313,6 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对本地玩家造成的最终伤害。
      *
-     * 调用方需在 `NonNullContext` 作用域内调用。
-     *
      * @param crystalPos 末影水晶爆炸中心
      * @param selfPos    本地玩家预测位置；为 null 时使用当前位置
      * @param mode       护甲附魔计算模式
@@ -342,7 +320,7 @@ object DamageUtils {
      */
     context(nn: NonNullContext)
     fun selfCrystalDamage(crystalPos: Vec3, selfPos: Vec3?, mode: ArmorEnchantmentMode): Float {
-        return crystalDamage(nn.player, crystalPos, selfPos, mode)
+        return crystalDamage(player, crystalPos, selfPos, mode)
     }
 
     /**
@@ -366,15 +344,12 @@ object DamageUtils {
 
     /**
      * 破坏准星指向的末影水晶（用于自动打水晶类模块）。
-     *
-     * 调用方需在 `NonNullContext` 作用域内调用。
      */
     context(nn: NonNullContext)
     fun breakCrosshairCrystal(): Boolean {
         if (Constants.client.cameraEntity == null) return false
 
-        val player = nn.player
-        val world = nn.level
+        val world = level
         val eye = player.eyePosition
         val look = player.lookAngle
         val end = eye.add(look.scale(4.0))
@@ -412,7 +387,7 @@ object DamageUtils {
         }
 
         if (target != null) {
-            nn.interaction.attack(player, target)
+            interaction.attack(player, target)
             PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
             return true
         }

@@ -39,8 +39,8 @@ object Step : Module("Step", Category.MOVEMENT) {
 
     init {
         nonNullListener<ClientTickEvent.Pre> {
-            if (sneakingPause && player.isCrouching || insideBlockPause && isInBlock() ||
-                player.isInLava || player.isInWater || inWebPause && isInWeb() ||
+            if (sneakingPause && player.isCrouching || insideBlockPause && PlayerUtils.isInBlock() ||
+                player.isInLava || player.isInWater || inWebPause && PlayerUtils.isInWeb() ||
                 !player.onGround() || feetTrapPause && FeetTrap.isEnabled
             ) {
                 player.setStepHeight(0.6f)

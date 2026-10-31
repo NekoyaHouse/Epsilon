@@ -272,7 +272,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private fun shouldBacktrackLocked(candidate: LivingEntity, now: Long): Boolean {
         if (!isValidTarget(candidate)) return false
 
-        val distance = candidate.boundingBox.distanceToSqr(nn.player.eyePosition)
+        val distance = candidate.boundingBox.distanceToSqr(player.eyePosition)
         val min = Math.min(minRange, maxRange)
         val max = Math.max(minRange, maxRange)
         val inRange = distance >= min * min && distance <= max * max
@@ -286,7 +286,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             lastAttackAt != Long.MIN_VALUE && now - lastAttackAt <= lastAttackTime
 
         return (inRange || withinTrackingBuffer) &&
-            nn.player.tickCount > 10 &&
+            player.tickCount > 10 &&
             chancePassed &&
             now >= nextAllowedAt &&
             attackedRecently &&
@@ -296,8 +296,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isValidTarget(candidate: LivingEntity): Boolean {
-        if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
-        if (candidate.level() !== nn.level || AntiBot.isBot(candidate)) return false
+        if (candidate === player || !candidate.isAlive || candidate.isDeadOrDying) return false
+        if (candidate.level() !== level || AntiBot.isBot(candidate)) return false
         if (TargetManager.isSameTeam(candidate)) return false
         return candidate !is Player || !FriendManager.isFriend(candidate)
     }
@@ -308,11 +308,11 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         val max = Math.max(minRange, maxRange)
         val minSquared = min * min
         val maxSquared = max * max
-        val eyePosition = nn.player.eyePosition
+        val eyePosition = player.eyePosition
         var nearest: LivingEntity? = null
         var nearestDistance = Double.MAX_VALUE
 
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val living = entity as? LivingEntity ?: continue
             if (entity is ArmorStand) continue
             if (!isValidTarget(living) || !isEnabledRangeTarget(living)) continue

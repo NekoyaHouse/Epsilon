@@ -33,7 +33,7 @@ object ClickSlotUtils {
      */
     context(nn: NonNullContext)
     fun clickSlot(slot: Int, button: Int, action: ContainerInput) {
-        clickSlot(nn.player.inventoryMenu.containerId, slot, button, action)
+        clickSlot(player.inventoryMenu.containerId, slot, button, action)
     }
 
     /**

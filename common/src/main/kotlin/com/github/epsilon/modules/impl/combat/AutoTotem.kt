@@ -27,7 +27,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
                 return@nonNullListener
             }
 
-            val slot = getItemSlot(Items.TOTEM_OF_UNDYING)
+            val slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING)
             if (slot == -1) {
                 return@nonNullListener
             }
@@ -43,7 +43,6 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun shouldHoldTotem(): Boolean {
-        val player = nn.player
         val totalHealth = player.health + player.absorptionAmount
 
         if (totalHealth <= health.toFloat()) {
@@ -85,7 +84,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
         ClickSlotUtils.click(target)
         ClickSlotUtils.click(45)
 
-        if (!nn.player.inventoryMenu.carried.isEmpty) {
+        if (!player.inventoryMenu.carried.isEmpty) {
             ClickSlotUtils.click(target)
         }
     }

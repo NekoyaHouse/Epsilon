@@ -12,9 +12,7 @@ import net.minecraft.world.phys.Vec3
 /**
  * 玩家下落轨迹模拟器。
  *
- * 位置、速度与模拟状态为该类实例字段；只有“本地玩家是否疾跑 / 包围盒宽度 / 世界射线检测”
- * 需要客户端上下文，相关方法接收 [NonNullContext] 上下文参数，调用方需在 `NonNullContext`
- * 作用域内调用（`nonNullListener` / `runSafe` / `context(nn)`）。
+ * 位置、速度与模拟状态为该类实例字段。
  */
 class FallingPlayer(
     var x: Double,
@@ -60,7 +58,7 @@ class FallingPlayer(
             }
 
             var fixedJumpFactor = jumpMovementFactor
-            if (nn.player.isSprinting) {
+            if (player.isSprinting) {
                 fixedJumpFactor *= 1.3F
             }
 
@@ -108,7 +106,7 @@ class FallingPlayer(
             val start = Vec3(x, y, z)
             calculateForTick()
             val end = Vec3(x, y, z)
-            val halfWidth = nn.player.bbWidth / 2.0F
+            val halfWidth = player.bbWidth / 2.0F
 
             raytrace(start, end)?.let { return it }
             raytrace(start.add(halfWidth.toDouble(), 0.0, halfWidth.toDouble()), end)?.let { return it }
@@ -126,13 +124,13 @@ class FallingPlayer(
 
     context(nn: NonNullContext)
     private fun raytrace(start: Vec3, end: Vec3): BlockPos? {
-        val result = nn.level.clip(
+        val result = level.clip(
             ClipContext(
                 start,
                 end,
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
-                nn.player,
+                player,
             )
         )
 

@@ -7,9 +7,6 @@ import java.util.function.Predicate
 
 /**
  * 背包快捷栏查找与切换工具类。
- *
- * 依赖玩家的方法统一接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext` 作用域内调用
- * （`nonNullListener` / `runSafe` / `context(nn)`），由调用方保证玩家、世界与连接已经就绪。
  */
 object InvUtils {
 
@@ -24,7 +21,7 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun testInMainHand(predicate: Predicate<ItemStack>): Boolean {
-        return predicate.test(nn.player.mainHandItem)
+        return predicate.test(player.mainHandItem)
     }
 
     /**
@@ -34,7 +31,7 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun testInOffHand(predicate: Predicate<ItemStack>): Boolean {
-        return predicate.test(nn.player.offhandItem)
+        return predicate.test(player.offhandItem)
     }
 
     /**
@@ -44,9 +41,9 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun findInHotbar(vararg items: Item): FindItemResult {
-        return findInHotbar(Predicate { itemStack ->
+        return findInHotbar { itemStack ->
             items.any { itemStack.item === it }
-        })
+        }
     }
 
     /**
@@ -57,11 +54,11 @@ object InvUtils {
     context(nn: NonNullContext)
     fun findInHotbar(isGood: Predicate<ItemStack>): FindItemResult {
         if (testInOffHand(isGood)) {
-            val offhand = nn.player.offhandItem
+            val offhand = player.offhandItem
             return FindItemResult(40, offhand.count, offhand.maxStackSize)
         } else if (testInMainHand(isGood)) {
-            val mainHand = nn.player.mainHandItem
-            return FindItemResult(nn.player.inventory.selectedSlot, mainHand.count, mainHand.maxStackSize)
+            val mainHand = player.mainHandItem
+            return FindItemResult(player.inventory.selectedSlot, mainHand.count, mainHand.maxStackSize)
         }
 
         return find(isGood, 0, 8)
@@ -74,9 +71,9 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun find(vararg items: Item): FindItemResult {
-        return find(Predicate { itemStack ->
+        return find { itemStack ->
             items.any { itemStack.item === it }
-        })
+        }
     }
 
     /**
@@ -86,7 +83,7 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun find(isGood: Predicate<ItemStack>): FindItemResult {
-        return find(isGood, 0, nn.player.inventory.containerSize)
+        return find(isGood, 0, player.inventory.containerSize)
     }
 
     /**
@@ -101,7 +98,7 @@ object InvUtils {
         var slot = -1
         var count = 0
         var maxCount = 0
-        val inventory = nn.player.inventory
+        val inventory = player.inventory
 
         for (i in start..end) {
             val stack = inventory.getItem(i)
@@ -124,7 +121,7 @@ object InvUtils {
      */
     context(nn: NonNullContext)
     fun swap(slot: Int, saveSwap: Boolean) {
-        val inventory = nn.player.inventory
+        val inventory = player.inventory
 
         if (slot == 40 || inventory.selectedSlot == slot) {
             return
@@ -160,8 +157,8 @@ object InvUtils {
         if (slot < 9) containerSlot += 36
         else if (slot == 40) containerSlot = 45
 
-        val selectedSlot = nn.player.inventory.selectedSlot
-        ClickSlotUtils.swap(nn.player.containerMenu.containerId, containerSlot, selectedSlot)
+        val selectedSlot = player.inventory.selectedSlot
+        ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, selectedSlot)
         invSlots = intArrayOf(containerSlot, selectedSlot)
     }
 
@@ -173,7 +170,7 @@ object InvUtils {
         val slots = invSlots ?: return
         if (slots.size < 2) return
 
-        ClickSlotUtils.swap(nn.player.containerMenu.containerId, slots[0], slots[1])
+        ClickSlotUtils.swap(player.containerMenu.containerId, slots[0], slots[1])
     }
 
 }

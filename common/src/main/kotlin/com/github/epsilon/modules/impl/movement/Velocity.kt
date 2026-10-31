@@ -149,7 +149,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     if (target.isAlive && !AntiBot.isBot(target)) {
                         interaction.attack(player, target)
                         if (swingHand) {
-                            swingHand(InteractionHand.MAIN_HAND)
+                            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
                         }
                     }
                 }

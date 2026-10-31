@@ -165,7 +165,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             if (!inWater && (player.isUnderWater || player.isInWater || player.isInLava) ||
                 player.isPassenger ||
                 player.onClimbable() ||
-                !inBlock && isInBlock() ||
+                !inBlock && PlayerUtils.isInBlock() ||
                 player.abilities.flying ||
                 player.isFallFlying ||
                 !player.isMoving

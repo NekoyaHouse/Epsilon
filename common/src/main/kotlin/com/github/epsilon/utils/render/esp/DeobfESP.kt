@@ -63,15 +63,13 @@ object DeobfESP {
 
     /**
      * 仅保留仍处于上升阶段的命中特效。
-     *
-     * 调用方需在 [NonNullContext] 作用域内调用。
      */
     context(nn: NonNullContext)
     fun retainRisingEffects() {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
-        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-        val world = nn.level
+        val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val world = level
         val iterator = effects.values.iterator()
 
         while (iterator.hasNext()) {
@@ -93,8 +91,6 @@ object DeobfESP {
     /**
      * 渲染全部活动命中特效。
      *
-     * 调用方需在 [NonNullContext] 作用域内调用。
-     *
      * @param poseStack 渲染姿态栈
      * @param size      特效尺寸
      * @param spins     旋转圈数
@@ -105,9 +101,9 @@ object DeobfESP {
     fun render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
-        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
         val camera: Camera = Constants.client.gameRenderer.mainCamera()
-        val world = nn.level
+        val world = level
         val texture = KillAura.deobfMode.texture
         val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
         val iterator = effects.values.iterator()
@@ -205,7 +201,7 @@ object DeobfESP {
         val matrix: Matrix4f = poseStack.last().pose()
         val halfWidth = drawWidth / 2.0f
         val halfHeight = drawHeight / 2.0f
-        val argb = tint.getRGB()
+        val argb = tint.rgb
 
         renderer.vertex(matrix, -halfWidth, halfHeight, 0.0f, 0.0f, 1.0f, argb)
         renderer.vertex(matrix, halfWidth, halfHeight, 0.0f, 1.0f, 1.0f, argb)

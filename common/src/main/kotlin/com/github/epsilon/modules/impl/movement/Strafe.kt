@@ -20,7 +20,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
     init {
         nonNullListener<MoveEvent> { event ->
             if (player.isCrouching || player.isFallFlying || player.isInLava ||
-                isInBlock() || player.isInWater || player.abilities.flying ||
+                PlayerUtils.isInBlock() || player.isInWater || player.abilities.flying ||
                 Flight.isEnabled || Speed.isEnabled
             ) {
                 return@nonNullListener
@@ -37,7 +37,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
                 speed *= 1.0 + 0.2 * (player.getEffect(MobEffects.SPEED)!!.amplifier + 1.0)
             }
 
-            val strafe = forward(speed)
+            val strafe = MoveUtils.forward(speed)
             event.x = strafe[0]
             event.z = strafe[1]
             event.cancel()

@@ -247,8 +247,8 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun damageTickCheck(): Boolean {
         val found = level.players().stream()
-            .filter { p -> p !== nn.player }
-            .filter { p -> p.distanceToSqr(nn.player) < 36.0 }
+            .filter { p -> p !== player }
+            .filter { p -> p.distanceToSqr(player) < 36.0 }
             .filter { p -> !p.onGround() }
             .anyMatch { p -> p.hurtTime >= 2 }
 

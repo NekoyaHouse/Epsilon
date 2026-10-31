@@ -140,7 +140,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 return@runSafe
             }
 
-            val elytra = find(Items.ELYTRA)
+            val elytra = InvUtils.find(Items.ELYTRA)
             if (!canGlide(elytra.found())) {
                 fail(EpsilonTranslations.ElytraFly.PITCH40_NO_USABLE_ELYTRA)
                 return@runSafe
@@ -171,7 +171,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         runSafe {
             if (player.onGround() || player.isInWater) return@runSafe
 
-            val elytra = find(Items.ELYTRA)
+            val elytra = InvUtils.find(Items.ELYTRA)
             if (!canGlide(elytra.found())) return@runSafe
 
             if (elytraFly.armored) {

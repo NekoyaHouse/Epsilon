@@ -10,9 +10,6 @@ import net.minecraft.world.level.block.WebBlock
 
 /**
  * 本地玩家相关工具类。
- *
- * 依赖玩家的方法统一接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext` 作用域内调用
- * （`nonNullListener` / `runSafe` / `context(nn)`），由调用方保证玩家与世界已经就绪。
  */
 object PlayerUtils {
 
@@ -26,7 +23,7 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun swingHand(hand: InteractionHand) {
-        nn.player.swing(hand, SwingAnimation.DEFAULT, false)
+        player.swing(hand, SwingAnimation.DEFAULT, false)
     }
 
     /**
@@ -34,7 +31,6 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isEating(): Boolean {
-        val player = nn.player
         return (player.mainHandItem.components.has(DataComponents.FOOD) ||
                 player.offhandItem.components.has(DataComponents.FOOD)) && player.isUsingItem
     }
@@ -44,7 +40,7 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isInWeb(): Boolean {
-        val box = nn.player.boundingBox.deflate(1.0E-6)
+        val box = player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -58,7 +54,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (nn.level.getBlockState(mutablePos).block is WebBlock) {
+                    if (level.getBlockState(mutablePos).block is WebBlock) {
                         return true
                     }
                 }
@@ -73,7 +69,7 @@ object PlayerUtils {
      */
     context(nn: NonNullContext)
     fun isInBlock(): Boolean {
-        val box = nn.player.boundingBox.deflate(1.0E-6)
+        val box = player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -87,7 +83,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (nn.level.getBlockState(mutablePos).isSolidRender()) {
+                    if (level.getBlockState(mutablePos).isSolidRender) {
                         return true
                     }
                 }
