@@ -77,6 +77,9 @@ class SpearBehavior : ElytraCombatBehavior {
             aimBase.z,
         )
         val distance = bot.player().eyePosition.distanceTo(targetPoint)
+        // 统一维护蓄力：任何状态下只要发现没在蓄力就补上。命中后不再主动松手，因此脱战
+        // （PULL_OVER）期间蓄力是连续的，回到追击时伤害窗口已经攒够，不必再等一个 delayTicks。
+        val charged = CombatWeaponController.ensureSpearUse()
         var desired: Vec3 = Vec3.ZERO
         this.lunging = false
         if (this.state != State.NEAR_FOLLOW) {
@@ -85,7 +88,7 @@ class SpearBehavior : ElytraCombatBehavior {
 
         when (this.state) {
             State.NONE -> {
-                if (CombatWeaponController.ensureSpearUse()) {
+                if (charged) {
                     this.state = State.FOLLOW
                 }
                 desired = followDirection(bot, targetPoint)
@@ -154,8 +157,7 @@ class SpearBehavior : ElytraCombatBehavior {
                     this.pullOverTicks = 0
                     desired = followDirection(bot, targetPoint)
                 } else {
-                    // 脱战期间重新蓄力，为下次冲锋准备。
-                    CombatWeaponController.ensureSpearUse()
+                    // 蓄力由 tick 开头统一维护，命中后也不再松手，这里只负责脱离方向。
                     desired = pullOverDirection(bot, targetPoint)
                 }
             }
@@ -176,7 +178,8 @@ class SpearBehavior : ElytraCombatBehavior {
 
     override fun onHit(hitType: CombatHitTracker.HitType) {
         if (hitType == CombatHitTracker.HitType.SPEAR) {
-            CombatWeaponController.stopSpearUse()
+            // 不在这里松手：蓄力由 tick 开头的"未蓄力就补"统一维护，命中后保持连续蓄力，
+            // 脱战结束时伤害窗口已经攒够。
             this.state = State.PULL_OVER
             this.pullOverTicks = 0
             this.lungeTicks = 0
@@ -189,7 +192,6 @@ class SpearBehavior : ElytraCombatBehavior {
     }
 
     private fun followDirection(bot: ElytraCombat, targetPoint: Vec3): Vec3 {
-        CombatWeaponController.ensureSpearUse()
         return ensureMinimumLength(targetPoint.subtract(bot.player().eyePosition), 6.0)
     }
 
@@ -211,8 +213,6 @@ class SpearBehavior : ElytraCombatBehavior {
     }
 
     private fun nearFollowDirection(bot: ElytraCombat, target: TargetSnapshot, targetPoint: Vec3): Vec3 {
-        CombatWeaponController.ensureSpearUse()
-
         if (bot.spearAntiSpear && target.usingSpear) {
             val antiSpear = antiSpearDirection(bot, target)
             if (antiSpear != null) {

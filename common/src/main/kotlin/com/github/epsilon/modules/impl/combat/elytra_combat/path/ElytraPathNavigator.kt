@@ -738,7 +738,8 @@ class ElytraPathNavigator {
             for (i in 1 until nodes.size) {
                 points.add(Vec3.atBottomCenterOf(nodes[i]))
             }
-            return PathPlan(points[1], points.toList())
+            // 与 Java 版 List.copyOf 对齐：points 会被 advancePath 原样共享给消费端，必须不可变。
+            return PathPlan(points[1], java.util.List.copyOf(points))
         }
 
         private fun stopPath(request: SearchRequest): PathPlan {

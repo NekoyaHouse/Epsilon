@@ -182,7 +182,9 @@ internal class AStarSearch(
                 current = cameFrom[current]
             }
             path.reverse()
-            return path.toList()
+            // 与 Java 版 List.copyOf 对齐：返回真正不可变的列表。toList() 在长度 >1 时只做
+            // 防御性拷贝（底层仍是可变 ArrayList），会破坏 PathPlan 可跨线程只读共享的契约。
+            return java.util.List.copyOf(path)
         }
 
         private fun createNeighbors(): Array<IntArray> {
