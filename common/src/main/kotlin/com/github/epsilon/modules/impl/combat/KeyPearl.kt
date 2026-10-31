@@ -16,7 +16,7 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
@@ -98,8 +98,8 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 }
 
                 // 强制给你的转头归位
-                RotationManager.INSTANCE.setRotations(
-                    Rot2f(player.yRot, player.xRot), 180.0, Priority.Highest
+                RotationManager.setRotations(
+                    Rotation(player.yRot, player.xRot), 180.0, Priority.Highest
                 )
 
                 InvUtils.swap(pearl.slot, switchBack)

@@ -222,7 +222,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 val moveVector = player.input.moveVector
                 val n = moveVector.y.toDouble()
                 val n2 = moveVector.x.toDouble()
-                val n3 = RotationManager.INSTANCE.getYaw().toDouble()
+                val n3 = RotationManager.getYaw().toDouble()
                 if (n == 0.0 && n2 == 0.0) {
                     event.x = 0.0
                     event.z = 0.0
@@ -309,7 +309,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         val forward = moveVector.y
         val strafe = moveVector.x
         val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val yaw = Mth.lerp(tickDelta, RotationManager.INSTANCE.getLastRotation().yaw, RotationManager.INSTANCE.getYaw())
+        val yaw = Mth.lerp(tickDelta, RotationManager.getLastRotation().yaw, RotationManager.getYaw())
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO
         }

@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -47,11 +47,11 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private var shouldInteract = false
     private var pendingSlot = -1
 
-    private var lockedRotation: Rot2f? = null
+    private var lockedRotation: Rotation? = null
     private var waitingForRotation = false
 
     private var grimShouldCollect = false
-    private var grimCollectRotation: Rot2f? = null
+    private var grimCollectRotation: Rotation? = null
     private var grimCollectSlot = -1
     private var grimWaitingCollectRotation = false
     private val swapTimer = TimerUtils()
@@ -76,7 +76,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     quickCollectDelayTicks--
                 } else if (grimWaitingCollectRotation && grimCollectRotation != null) {
                     val rotation = grimCollectRotation!!
-                    RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                    RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                     if (isFacing(rotation, 2.0f, 2.5f)) {
                         InvUtils.swap(grimCollectSlot, true)
@@ -107,7 +107,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
                             val rotation = RotationUtils.calculate(hitVec)
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
                             grimWaitingCollectRotation = true
@@ -119,7 +119,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
             if (waitingForRotation && lockedRotation != null) {
                 val locked = lockedRotation!!
-                RotationManager.INSTANCE.setRotations(locked, 180.0, Priority.High)
+                RotationManager.setRotations(locked, 180.0, Priority.High)
 
                 if (!isFacing(locked, 1.6f, 2.0f)) {
                     return@nonNullHandler
@@ -158,7 +158,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
                             val rotation = RotationUtils.calculate(targetVec)
 
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                             if (rotation.pitch > 45) {
                                 val eyesPos = player.eyePosition
@@ -173,7 +173,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 }
 
                                 val preciseRotation = RotationUtils.calculate(hitVec)
-                                RotationManager.INSTANCE.setRotations(preciseRotation, 180.0, Priority.High)
+                                RotationManager.setRotations(preciseRotation, 180.0, Priority.High)
 
                                 val noSlowdown = NoSlowdown
                                 if (NoSlowdown.isWorking()) {
@@ -335,8 +335,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
         return falling
     }
 
-    private fun isFacing(target: Rot2f, yawTolerance: Float, pitchTolerance: Float): Boolean {
-        val current = RotationManager.INSTANCE.getRotation()
+    private fun isFacing(target: Rotation, yawTolerance: Float, pitchTolerance: Float): Boolean {
+        val current = RotationManager.getRotation()
         val yawDiff = abs(Mth.wrapDegrees(current.yaw - target.yaw))
         val pitchDiff = abs(Mth.wrapDegrees(current.pitch - target.pitch))
         return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance

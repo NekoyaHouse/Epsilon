@@ -11,7 +11,7 @@ object JumpReset : Module("Jump Reset", Category.MOVEMENT) {
     init {
         nonNullHandler<KeyboardInputEvent> { event ->
             if (player.onGround() && player.hurtTime == 9) {
-                event.isJump = true
+                event.jump = true
             }
         }
     }

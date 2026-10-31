@@ -5,9 +5,9 @@ import net.minecraft.world.entity.player.Input
 class KeyboardInputEvent(
     var forward: Float,
     var strafe: Float,
-    var isJump: Boolean,
-    var isSneak: Boolean,
-    var isSprint: Boolean,
+    var jump: Boolean,
+    var sneak: Boolean,
+    var sprint: Boolean,
 ) {
 
     fun toNewInput(): Input {
@@ -16,9 +16,9 @@ class KeyboardInputEvent(
             forward < 0.0f,
             strafe > 0.0f,
             strafe < 0.0f,
-            isJump,
-            isSneak,
-            isSprint
+            jump,
+            sneak,
+            sprint
         )
     }
 

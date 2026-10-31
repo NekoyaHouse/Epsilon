@@ -48,7 +48,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         if (shouldJump) {
-            event.isJump = true
+            event.jump = true
             shouldJump = false
         }
     }

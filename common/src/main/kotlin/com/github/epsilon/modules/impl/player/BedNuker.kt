@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -74,14 +74,14 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             if (rotate) {
                 val rot = RotationUtils.calculate(currentAimPoint(bedTargetNow))
                 if (bedTargetNow) {
-                    RotationManager.INSTANCE.setRotations(
+                    RotationManager.setRotations(
                         rot,
                         rotationSpeed.toDouble(),
                         { candidate -> isBedHit(candidate, maxRange) },
                         Priority.Low
                     )
                 } else {
-                    RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Low)
+                    RotationManager.setRotations(rot, rotationSpeed.toDouble(), Priority.Low)
                 }
             }
 
@@ -355,7 +355,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     }
 
     context(nn: NonNullContext)
-    private fun isBedHit(rotation: Rot2f, rayRange: Double): Boolean {
+    private fun isBedHit(rotation: Rotation, rayRange: Double): Boolean {
         val result = RaytraceUtils.raytrace(rotation, rayRange)
         return result is BlockHitResult && isBedBlock(result.blockPos)
     }
@@ -371,7 +371,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     private data class TargetData(
         val pos: BlockPos,
         val face: Direction,
-        val rotation: Rot2f,
+        val rotation: Rotation,
         val distanceSq: Double,
         val priority: Int,
         val bedTarget: Boolean,

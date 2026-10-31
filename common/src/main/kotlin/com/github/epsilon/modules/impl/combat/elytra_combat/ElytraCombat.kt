@@ -25,7 +25,7 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -342,9 +342,9 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         if (!canControlFlight()) return
         event.forward = (input.forwardImpulse())
         event.strafe = (input.strafeImpulse())
-        event.isJump = (input.jump)
-        event.isSneak = (input.sneak)
-        event.isSprint = (false)
+        event.jump = (input.jump)
+        event.sneak = (input.sneak)
+        event.sprint = (false)
     }
 
     private fun onFallFlyingMovement(event: FallFlyingMovementEvent) {
@@ -557,7 +557,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         } else {
             ElytraDirectionSolver.DEFAULT_PITCH_DEVIATION_LIMIT
         }
-        val rotations: Rot2f = ElytraDirectionSolver.solveSafe(player, velocity, pitchTolerance)
+        val rotations: Rotation = ElytraDirectionSolver.solveSafe(player, velocity, pitchTolerance)
         ElytraDirectionSolver.rememberPitch(rotations.pitch)
         val yawDelta = Mth.wrapDegrees(rotations.yaw - player.yRot)
         val direction = directionInput(yawDelta)

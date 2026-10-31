@@ -11,7 +11,7 @@ import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -50,7 +50,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private var startY = 0.0
     private var startZ = 0.0
     private var progress = 0
-    private var rotation: Rot2f? = null
+    private var rotation: Rotation? = null
 
     private val timer = TimerUtils()
 
@@ -62,7 +62,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         nonNullHandler<PlayerTickEvent.Pre> {
             val currentRotation = rotation
             if (currentRotation != null && rotate) {
-                RotationManager.INSTANCE.setRotations(currentRotation, rotationSpeed.toDouble())
+                RotationManager.setRotations(currentRotation, rotationSpeed.toDouble())
             }
         }
 
@@ -193,7 +193,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
         if (rotate) {
             rotation = RotationUtils.calculate(hitVec(pos, side))
-            if (RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos.relative(side))) {
+            if (RaytraceUtils.overBlock(RotationManager.getRotation(), pos.relative(side))) {
                 // 在这个 tick 转头已经到达，无需继续设置转头
                 rotation = null
             } else {

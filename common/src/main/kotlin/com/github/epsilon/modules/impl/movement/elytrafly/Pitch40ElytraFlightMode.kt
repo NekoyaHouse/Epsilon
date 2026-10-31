@@ -9,7 +9,7 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.safety.runSafe
@@ -113,7 +113,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         if (shouldJump) {
-            event.isJump = true
+            event.jump = true
             shouldJump = false
         }
     }
@@ -187,8 +187,8 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     private fun redirectRotation() {
         runSafe {
-            RotationManager.INSTANCE.setRotations(
-                Rot2f(elytraFly.getPitch40Yaw(player.yRot), pitch),
+            RotationManager.setRotations(
+                Rotation(elytraFly.getPitch40Yaw(player.yRot), pitch),
                 180.0,
                 Priority.Highest
             )

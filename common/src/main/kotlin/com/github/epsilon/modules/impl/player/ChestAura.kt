@@ -11,7 +11,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -83,14 +83,14 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             val target = findTarget() ?: return@nonNullHandler
 
             val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 targetRotation,
                 turnSpeed,
                 { rotation -> hitsTarget(rotation, target) },
                 Priority.Lowest,
             )
 
-            val hit = raycastTarget(RotationManager.INSTANCE.getRotation(), target.pos, target.throughWalls)
+            val hit = raycastTarget(RotationManager.getRotation(), target.pos, target.throughWalls)
             if (hit == null || hit.blockPos != target.pos) return@nonNullHandler
 
             val result = interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
@@ -220,13 +220,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     }
 
     context(nn: NonNullContext)
-    private fun hitsTarget(rotation: Rot2f, target: Target): Boolean {
+    private fun hitsTarget(rotation: Rotation, target: Target): Boolean {
         val hit = raycastTarget(rotation, target.pos, target.throughWalls)
         return hit != null && hit.blockPos == target.pos
     }
 
     context(nn: NonNullContext)
-    private fun raycastTarget(rotation: Rot2f, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
+    private fun raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
         val start = player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))

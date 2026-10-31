@@ -85,7 +85,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
                 return@nonNullHandler
             }
 
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 RotationUtils.getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
@@ -106,7 +106,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isReadyToAttack(): Boolean {
-        val hitResult = RotationManager.INSTANCE.getHitResult()
+        val hitResult = RotationManager.getHitResult()
         if (hitResult == null || hitResult.type != HitResult.Type.ENTITY) {
             return false
         }

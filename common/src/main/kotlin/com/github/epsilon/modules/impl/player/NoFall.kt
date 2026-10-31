@@ -68,11 +68,11 @@ object NoFall : Module("No Fall", Category.PLAYER) {
             if (mode != Mode.GrimJump) return@nonNullHandler
 
             if (lastFallDistance >= fallDistance && player.onGround()) {
-                event.isSneak = false
+                event.sneak = false
             }
 
             if (jump) {
-                event.isJump = true
+                event.jump = true
                 jump = false
             }
         }

@@ -1,8 +1,7 @@
 package com.github.epsilon.managers
 
 import com.github.epsilon.Constants.mc
-import com.github.epsilon.events.bus.EventBus
-import com.github.epsilon.events.bus.EventHandler
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.impl.ClientSetting
@@ -11,7 +10,7 @@ import com.github.epsilon.modules.impl.render.FreeCamera
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
@@ -23,14 +22,14 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random
 
-class RotationManager private constructor() {
+object RotationManager {
 
-    private val offset = Rot2f(0f, 0f)
-    var rotations = Rot2f(0f, 0f)
-    var lastRotations = Rot2f(0f, 0f)
-    var targetRotations: Rot2f? = null
-    var animationRotation: Rot2f? = null
-    var lastAnimationRotation: Rot2f? = null
+    private val offset = Rotation(0f, 0f)
+    var rotations = Rotation(0f, 0f)
+    var lastRotations = Rotation(0f, 0f)
+    var targetRotations: Rotation? = null
+    var animationRotation: Rotation? = null
+    var lastAnimationRotation: Rotation? = null
 
     @Volatile
     private var active = false
@@ -40,29 +39,48 @@ class RotationManager private constructor() {
 
     @Volatile
     private var rotationSpeed = 0.0
-    private var raytrace: Function<Rot2f, Boolean>? = null
+    private var raytrace: Function<Rotation, Boolean>? = null
     private var randomAngle = 0f
     private var rotationHitResult: HitResult? = null
     private var calculatingHitResult = false
-    private var useItemRotation: Rot2f? = null
+    private var useItemRotation: Rotation? = null
 
     private var priority = 0
 
-    fun setRotations(rotations: Rot2f?, rotationSpeed: Double) {
+    init {
+        handler<RespawnEvent>(alwaysListening = true) { onRespawn(it) }
+        handler<RaytraceEvent>(alwaysListening = true) { onRaytrace(it) }
+        handler<PlayerTickEvent.Pre>(priority = -1000, alwaysListening = true) { onPlayerTick(it) }
+        handler<RotationAnimationEvent>(alwaysListening = true) { onAnimation(it) }
+        handler<SendPositionEvent>(EventPriority.LOWEST, alwaysListening = true) { onSendPosition(it) }
+        handler<KeyboardInputEvent>(EventPriority.HIGH, alwaysListening = true) { onMoveInput(it) }
+        handler<UseItemRaytraceEvent>(alwaysListening = true) { onItemRaytrace(it) }
+        handler<StrafeEvent>(alwaysListening = true) { onStrafe(it) }
+        handler<JumpEvent>(alwaysListening = true) { onJump(it) }
+        handler<FallFlyingEvent>(alwaysListening = true) { onFallFlying(it) }
+        handler<UseItemEvent>(alwaysListening = true) { onUseItem(it) }
+        handler<FireworkRotationEvent>(alwaysListening = true) { onFireworkUpdate(it) }
+        handler<AttackYawEvent>(alwaysListening = true) { onAttack(it) }
+        handler<PacketEvent.Send>(alwaysListening = true) { onPacketSend(it) }
+    }
+
+    fun setRotations(rotations: Rotation?, rotationSpeed: Double) {
         setRotations(rotations, rotationSpeed, null, Priority.Medium)
     }
 
-    fun setRotations(rotations: Rot2f?, rotationSpeed: Double, priority: Priority) {
+    fun setRotations(rotations: Rotation?, rotationSpeed: Double, priority: Priority) {
         setRotations(rotations, rotationSpeed, null, priority)
     }
 
-    fun setRotations(rotations: Rot2f?, rotationSpeed: Double, raytrace: Function<Rot2f, Boolean>?) {
+    fun setRotations(rotations: Rotation?, rotationSpeed: Double, raytrace: Function<Rotation, Boolean>?) {
         setRotations(rotations, rotationSpeed, raytrace, Priority.Medium)
     }
 
     fun setRotations(
-        rotations: Rot2f?, rotationSpeed: Double,
-        raytrace: Function<Rot2f, Boolean>?, priority: Priority,
+        rotations: Rotation?,
+        rotationSpeed: Double,
+        raytrace: Function<Rotation, Boolean>?,
+        priority: Priority
     ) {
         if (rotations == null) return
 
@@ -88,7 +106,7 @@ class RotationManager private constructor() {
             if (raytrace != null &&
                 (abs(targetYaw - rotations.yaw) > 5 || abs(targetPitch - rotations.pitch) > 5)
             ) {
-                val trueTargetRotations = Rot2f(targetRotations!!.yaw, targetRotations!!.pitch)
+                val trueTargetRotations = Rotation(targetRotations!!.yaw, targetRotations!!.pitch)
 
                 val speed = (Random.nextDouble() * Random.nextDouble() * Random.nextDouble()) * 20
                 randomAngle += (
@@ -105,7 +123,7 @@ class RotationManager private constructor() {
                 targetYaw += offset.yaw
                 targetPitch += offset.pitch
 
-                if (!raytrace.apply(Rot2f(targetYaw, targetPitch))) {
+                if (!raytrace.apply(Rotation(targetYaw, targetPitch))) {
                     randomAngle = ((atan2(
                         (trueTargetRotations.yaw - targetYaw).toDouble(),
                         (targetPitch - trueTargetRotations.pitch).toDouble()
@@ -123,7 +141,7 @@ class RotationManager private constructor() {
                     targetPitch = targetPitch + offset.pitch
                 }
 
-                if (!raytrace.apply(Rot2f(targetYaw, targetPitch))) {
+                if (!raytrace.apply(Rotation(targetYaw, targetPitch))) {
                     offset.set(0f, 0f)
 
                     targetYaw = (targetRotations!!.yaw + Random.nextDouble() * 2).toFloat()
@@ -131,7 +149,7 @@ class RotationManager private constructor() {
                 }
             }
 
-            rotations = RotationUtils.smooth(Rot2f(targetYaw, targetPitch), rotationSpeed + Random.nextDouble())
+            rotations = RotationUtils.smooth(Rotation(targetYaw, targetPitch), rotationSpeed + Random.nextDouble())
         }
 
         smoothed = true
@@ -165,12 +183,8 @@ class RotationManager private constructor() {
         return active
     }
 
-    private fun clampPitch(pitch: Float): Float {
-        return pitch.coerceIn(-90.0f, 90.0f)
-    }
-
     private fun correctDisabledRotations(player: LocalPlayer) {
-        val playerRotation = Rot2f(player.yRot, player.xRot)
+        val playerRotation = Rotation(player.yRot, player.xRot)
         val fixedRotations = RotationUtils.applySensitivityPatch(playerRotation, lastRotations)
         val fixedYaw = fixedRotations.yaw + Mth.wrapDegrees(player.yRot - fixedRotations.yaw)
         player.yRot = fixedYaw
@@ -184,12 +198,12 @@ class RotationManager private constructor() {
         return getRotation().pitch
     }
 
-    fun getRotation(): Rot2f {
+    fun getRotation(): Rotation {
         val player = mc.player!!
-        return if (active) rotations else Rot2f(player.yRot, player.xRot)
+        return if (active) rotations else Rotation(player.yRot, player.xRot)
     }
 
-    fun getLastRotation(): Rot2f {
+    fun getLastRotation(): Rotation {
         return lastRotations
     }
 
@@ -218,11 +232,10 @@ class RotationManager private constructor() {
         this.smoothed = smoothed
     }
 
-    @EventHandler
     private fun onRespawn(event: RespawnEvent) {
         offset.set(0f, 0f)
-        rotations = Rot2f(0f, 0f)
-        lastRotations = Rot2f(0f, 0f)
+        rotations = Rotation(0f, 0f)
+        lastRotations = Rotation(0f, 0f)
         targetRotations = null
         animationRotation = null
         lastAnimationRotation = null
@@ -236,19 +249,17 @@ class RotationManager private constructor() {
         useItemRotation = null
     }
 
-    @EventHandler
     private fun onRaytrace(event: RaytraceEvent) {
         if (!hasActiveRotation() || (!calculatingHitResult && !shouldModifyCrosshair())) return
 
         event.yaw = rotations.yaw
-        event.pitch = clampPitch(rotations.pitch)
+        event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
     }
 
-    @EventHandler(priority = -1000)
     private fun onPlayerTick(event: PlayerTickEvent.Pre) {
         val player = mc.player!!
         if (!active || targetRotations == null) {
-            val current = Rot2f(player.yRot, player.xRot)
+            val current = Rotation(player.yRot, player.xRot)
             rotations = current
             lastRotations = current
             targetRotations = current
@@ -259,7 +270,6 @@ class RotationManager private constructor() {
         }
     }
 
-    @EventHandler
     private fun onAnimation(event: RotationAnimationEvent) {
         val animation = animationRotation
         val lastAnimation = lastAnimationRotation
@@ -271,7 +281,6 @@ class RotationManager private constructor() {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
     private fun onSendPosition(event: SendPositionEvent) {
         val player = mc.player
         if (player == null) {
@@ -295,7 +304,7 @@ class RotationManager private constructor() {
             }
 
             val yaw = rotations.yaw
-            val pitch = clampPitch(rotations.pitch)
+            val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
 
             if (!yaw.isNaN() && !pitch.isNaN()) {
                 event.yaw = yaw
@@ -312,86 +321,77 @@ class RotationManager private constructor() {
 
             lastRotations = rotations
         } else {
-            lastRotations = Rot2f(player.yRot, player.xRot)
+            lastRotations = Rotation(player.yRot, player.xRot)
         }
 
         lastAnimationRotation = animationRotation
-        animationRotation = Rot2f(event.yaw, event.pitch)
-        targetRotations = Rot2f(player.yRot, player.xRot)
+        animationRotation = Rotation(event.yaw, event.pitch)
+        targetRotations = Rotation(player.yRot, player.xRot)
         raytrace = null
         smoothed = false
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
     private fun onMoveInput(event: KeyboardInputEvent) {
         if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             MovementFix.fixMovement(event, rotations.yaw)
         }
     }
 
-    @EventHandler
     private fun onItemRaytrace(event: UseItemRaytraceEvent) {
         if (hasActiveRotation()) {
             event.yaw = rotations.yaw
-            event.pitch = clampPitch(rotations.pitch)
+            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
         }
     }
 
-    @EventHandler
     private fun onStrafe(event: StrafeEvent) {
         if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }
 
-    @EventHandler
     private fun onJump(event: JumpEvent) {
         if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }
 
-    @EventHandler
     private fun onFallFlying(event: FallFlyingEvent) {
         if (MovementFix.isEnabled && hasActiveRotation()) {
             event.yaw = rotations.yaw
-            event.pitch = clampPitch(rotations.pitch)
+            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
         }
     }
 
-    @EventHandler
     private fun onUseItem(event: UseItemEvent) {
         if (hasActiveRotation()) {
             event.yaw = rotations.yaw
-            event.pitch = clampPitch(rotations.pitch)
+            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
         }
     }
 
-    @EventHandler
     private fun onFireworkUpdate(event: FireworkRotationEvent) {
         if (hasActiveRotation()) {
             event.yaw = rotations.yaw
-            event.pitch = clampPitch(rotations.pitch)
+            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
         }
     }
 
-    @EventHandler
     private fun onAttack(event: AttackYawEvent) {
         if (hasActiveRotation()) {
             event.yaw = rotations.yaw
         }
     }
 
-    @EventHandler
     private fun onPacketSend(event: PacketEvent.Send) {
         val packet = event.packet
         if (packet is ServerboundClientTickEndPacket) {
             useItemRotation = null
         } else if (hasActiveRotation() && packet is ServerboundUseItemPacket) {
             val yaw = rotations.yaw
-            val pitch = clampPitch(rotations.pitch)
+            val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
             if (!yaw.isNaN() && !pitch.isNaN()) {
-                useItemRotation = Rot2f(yaw, pitch)
+                useItemRotation = Rotation(yaw, pitch)
                 if (packet.yRot() != yaw || packet.xRot() != pitch) {
                     event.packet = ServerboundUseItemPacket(
                         packet.hand(),
@@ -402,20 +402,6 @@ class RotationManager private constructor() {
                 }
             }
         }
-    }
-
-    companion object {
-
-        /**
-         * 当前托管旋转实例。
-         */
-        @JvmField
-        val INSTANCE: RotationManager = RotationManager()
-
-        init {
-            EventBus.subscribe(INSTANCE)
-        }
-
     }
 
 }

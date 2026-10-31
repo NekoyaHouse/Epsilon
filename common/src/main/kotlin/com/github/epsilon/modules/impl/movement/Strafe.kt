@@ -43,7 +43,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
         }
 
         nonNullHandler<KeyboardInputEvent> { event ->
-            if (autoJump && player.isMoving) event.isJump = true
+            if (autoJump && player.isMoving) event.jump = true
         }
     }
 

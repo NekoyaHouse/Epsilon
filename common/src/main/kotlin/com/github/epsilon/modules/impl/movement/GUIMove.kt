@@ -30,9 +30,9 @@ object GUIMove : Module("GUI Move", Category.MOVEMENT) {
 
             event.forward = forward
             event.strafe = strafe
-            event.isJump = jump
-            if (sneakValue) event.isSneak = sneak
-            event.isSprint = sprint
+            event.jump = jump
+            if (sneakValue) event.sneak = sneak
+            event.sprint = sprint
         }
     }
 

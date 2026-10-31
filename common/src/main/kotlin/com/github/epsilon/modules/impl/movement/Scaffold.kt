@@ -21,7 +21,7 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
@@ -163,7 +163,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private var yLevel = 0
     private var blockPos: BlockPos? = null
     private var direction: Direction? = null
-    private var rotation: Rot2f? = null
+    private var rotation: Rotation? = null
     private var rotateCount = 0
     private var forwardInput = 0.0f
     private var strafeInput = 0.0f
@@ -179,7 +179,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val renderBoxes: MutableList<RenderInfo> = ArrayList()
 
     init {
-        // 原 Java 在构造器里直接 EventBus.subscribe(ConsumerListener)，这里保持「不按启用状态过滤」的语义。
+        // 渲染调试框需要在模块禁用时继续绘制，因此保持常驻监听语义。
         handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
@@ -265,8 +265,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     val pos = blockPos ?: return@nonNullHandler
                     val face = direction ?: return@nonNullHandler
                     val rotation = getRotation(pos, face)
-                    RotationManager.INSTANCE.rotations = rotation
-                    RotationManager.INSTANCE.updateActive(true)
+                    RotationManager.rotations = rotation
+                    RotationManager.updateActive(true)
 
                     // 代替 sendPosition()
                     connection.send(
@@ -329,7 +329,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             )
 
             if (mode == Mode.TellyBridge && player.onGround() && !mc.options.keyJump.isDown && player.isMoving) {
-                event.isJump = true
+                event.jump = true
             }
         }
 
@@ -413,8 +413,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         runSafe {
             if (player.onGround() && (strafeInput != 0.0f || forwardInput != 0.0f)) {
                 val current = rotation
-                RotationManager.INSTANCE.setRotations(
-                    Rot2f(rawInputYaw, current?.pitch ?: player.xRot),
+                RotationManager.setRotations(
+                    Rotation(rawInputYaw, current?.pitch ?: player.xRot),
                     rotationBackSpeed.toDouble()
                 )
                 return@runSafe
@@ -431,7 +431,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             val current = rotation
             if (current != null) {
-                RotationManager.INSTANCE.setRotations(current, speed.toDouble())
+                RotationManager.setRotations(current, speed.toDouble())
             }
 
             if (airTicks > tellyTicks) {
@@ -446,7 +446,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                 rotation = getRotation(blockPos, direction)
                 val current = rotation
                 if (current != null) {
-                    RotationManager.INSTANCE.setRotations(current, rotationSpeed.toDouble())
+                    RotationManager.setRotations(current, rotationSpeed.toDouble())
                 }
             }
             place()
@@ -462,8 +462,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             val face = direction ?: return@runSafe
 
             val skip = when (raytrace) {
-                RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos)
-                RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), pos, face)
+                RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos)
+                RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos, face)
             }
             if (skip) {
                 return@runSafe
@@ -592,10 +592,10 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         false
     }
 
-    private fun getRotation(pos: BlockPos?, direction: Direction?): Rot2f = runSafeOrElse(Rot2f(0.0f, 0.0f)) {
+    private fun getRotation(pos: BlockPos?, direction: Direction?): Rotation = runSafeOrElse(Rotation(0.0f, 0.0f)) {
         val current = rotation
         if (current == null) {
-            return@runSafeOrElse Rot2f(Mth.wrapDegrees(player.yRot - 135.0f), 82.0f)
+            return@runSafeOrElse Rotation(Mth.wrapDegrees(player.yRot - 135.0f), 82.0f)
         }
 
         if (!onAir() || pos == null || direction == null) {
@@ -636,7 +636,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                 continue
             }
             for (pitch in pitchArray) {
-                val candidate = Rot2f(
+                val candidate = Rotation(
                     yaw + MathUtils.getRandom(-0.3f, 0.3f),
                     pitch + MathUtils.getRandom(-0.3f, 0.3f)
                 )
@@ -651,7 +651,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
 
             for (pitch in -90 until 90) {
-                val candidate = Rot2f(yaw, pitch.toFloat())
+                val candidate = Rotation(yaw, pitch.toFloat())
                 val matches = if (raytrace == RaytraceMode.Normal) {
                     RaytraceUtils.overBlock(candidate, pos)
                 } else {

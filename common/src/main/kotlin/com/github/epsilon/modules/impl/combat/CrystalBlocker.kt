@@ -132,11 +132,11 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 self.yRot = rot.yaw
                 self.xRot = rot.pitch.coerceIn(-90.0f, 90.0f)
             } else if (rotate == RotateMode.Silent) {
-                RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
+                RotationManager.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
 
-                if (RotationManager.INSTANCE.rotations != null) {
-                    val yawDiff = abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.yaw).toDouble())
-                    val pitchDiff = abs((RotationManager.INSTANCE.getPitch() - rot.pitch).toDouble())
+                if (RotationManager.rotations != null) {
+                    val yawDiff = abs(Mth.wrapDegrees(RotationManager.getYaw() - rot.yaw).toDouble())
+                    val pitchDiff = abs((RotationManager.getPitch() - rot.pitch).toDouble())
                     if (yawDiff > 15 || pitchDiff > 15) {
                         readyToPlace = false
                     }

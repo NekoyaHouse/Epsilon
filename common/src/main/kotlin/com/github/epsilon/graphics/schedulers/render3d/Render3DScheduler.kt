@@ -2,8 +2,7 @@ package com.github.epsilon.graphics.schedulers.render3d
 
 import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
-import com.github.epsilon.events.bus.EventBus
-import com.github.epsilon.events.bus.EventHandler
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
@@ -32,7 +31,9 @@ object Render3DScheduler {
     private val lines: MutableList<LineCommand> = ArrayList()
 
     init {
-        EventBus.subscribe(this)
+        handler<Render3DEvent>(priority = -999, alwaysListening = true) { event ->
+            flush(event.poseStack)
+        }
     }
 
     fun isEmpty(): Boolean = blurredBoxes.isEmpty() &&
@@ -122,10 +123,6 @@ object Render3DScheduler {
         }
     }
 
-    @EventHandler(priority = -999)
-    private fun onRender3D(event: Render3DEvent) {
-        flush(event.poseStack)
-    }
 
     private fun flushBlur() {
         if (blurredBoxes.isEmpty()) {

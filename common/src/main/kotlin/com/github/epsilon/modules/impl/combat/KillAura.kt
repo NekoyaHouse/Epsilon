@@ -315,9 +315,9 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 }
 
                 if (ignoreWalls) {
-                    RotationManager.INSTANCE.setRotations(calculate, rotationSpeed.toDouble(), rotationPriority)
+                    RotationManager.setRotations(calculate, rotationSpeed.toDouble(), rotationPriority)
                 } else {
-                    RotationManager.INSTANCE.setRotations(
+                    RotationManager.setRotations(
                         calculate,
                         rotationSpeed.toDouble(),
                         { rotation ->
@@ -465,7 +465,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             return if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= aimRange) currentTarget else null
         }
 
-        val hitResult = RotationManager.INSTANCE.getHitResult()
+        val hitResult = RotationManager.getHitResult()
         if (hitResult !is EntityHitResult) return null
 
         val entity = hitResult.entity

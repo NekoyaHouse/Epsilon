@@ -94,7 +94,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
                     val rotation = RotationUtils.calculate(getAimVec(target), false)
 
-                    RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
+                    RotationManager.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
                     val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@nonNullHandler
                     if (hit.type != HitResult.Type.ENTITY) return@nonNullHandler

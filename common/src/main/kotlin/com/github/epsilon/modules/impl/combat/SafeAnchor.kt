@@ -15,7 +15,7 @@ import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -141,9 +141,9 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private var shieldSide: Direction? = null
     private var shieldSidePlacement = false
     private var shieldDiagonal = false
-    private var targetRotation: Rot2f? = null
+    private var targetRotation: Rotation? = null
     private var targetBlockPos: BlockPos? = null
-    private var originalRotation: Rot2f? = null
+    private var originalRotation: Rotation? = null
     private var returningRotation = false
     private var originalSlot = -1
     private var pendingAnchorPos: BlockPos? = null
@@ -179,7 +179,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 resetState()
                 holdingSequenceStarted = true
                 originalSlot = player.inventory.selectedSlot
-                originalRotation = Rot2f(player.yRot, player.xRot)
+                originalRotation = Rotation(player.yRot, player.xRot)
                 stage = Stage.PLACE_ANCHOR
                 scheduleCooldown(anchorPlaceMinDelay, anchorPlaceMaxDelay)
             }
@@ -991,17 +991,17 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val minSpeed = minOf(rotationSpeedMin, rotationSpeedMax)
         val maxSpeed = maxOf(rotationSpeedMin, rotationSpeedMax)
         val speedValue = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1)
-        RotationManager.INSTANCE.setRotations(patchedTarget, speedValue.toDouble(), Priority.High)
+        RotationManager.setRotations(patchedTarget, speedValue.toDouble(), Priority.High)
     }
 
     context(nn: NonNullContext)
     private fun rotationAimed(): Boolean {
         val rotation = targetRotation
         if (rotation == null || !rotate) return true
-        val currentRot = if (RotationManager.INSTANCE.isActive()) {
-            RotationManager.INSTANCE.getRotation()
+        val currentRot = if (RotationManager.isActive()) {
+            RotationManager.getRotation()
         } else {
-            Rot2f(player.yRot, player.xRot)
+            Rotation(player.yRot, player.xRot)
         }
         val yawDiff = abs(Mth.wrapDegrees(rotation.yaw - currentRot.yaw))
         val pitchDiff = abs(rotation.pitch - currentRot.pitch)
@@ -1010,7 +1010,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
 
     context(nn: NonNullContext)
-    private fun getTargetRotation(targetPos: Vec3): Rot2f {
+    private fun getTargetRotation(targetPos: Vec3): Rotation {
         return RotationUtils.calculate(player.eyePosition, targetPos)
     }
 

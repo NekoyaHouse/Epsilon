@@ -49,11 +49,11 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
 
             val physicallySneaking = KeybindUtils.isPressed(mc.options.keyShift)
             if (sneakingOnly && physicallySneaking && shouldSneak()) {
-                event.isSneak = false
+                event.sneak = false
             }
 
-            if (!event.isSneak && shouldSneak() && (sneakDelay > 0 || isOverEdge())) {
-                event.isSneak = true
+            if (!event.sneak && shouldSneak() && (sneakDelay > 0 || isOverEdge())) {
+                event.sneak = true
             }
         }
     }

@@ -37,7 +37,7 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double): HitResult? {
+    fun raytrace(rotation: Rotation, range: Double): HitResult? {
         return raytrace(rotation, range, 0.0f)
     }
 
@@ -50,7 +50,7 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double, expand: Float): HitResult? {
+    fun raytrace(rotation: Rotation, range: Double, expand: Float): HitResult? {
         return raytrace(rotation, range, expand, player)
     }
 
@@ -64,7 +64,7 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double, expand: Float, entity: Entity?): HitResult? {
+    fun raytrace(rotation: Rotation, range: Double, expand: Float, entity: Entity?): HitResult? {
         if (entity == null) return null
         val world = level
 
@@ -147,7 +147,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
+    fun overBlock(rotation: Rotation, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
 
         val eyePos = player.getEyePosition(1.0f)
@@ -176,7 +176,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos, strict: Boolean): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos, strict: Boolean): Boolean {
         return overBlock(rotation, Direction.UP, pos, strict)
     }
 
@@ -188,7 +188,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos): Boolean {
         return overBlock(rotation, Direction.UP, pos, false)
     }
 
@@ -201,7 +201,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos, enumFacing: Direction): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos, enumFacing: Direction): Boolean {
         return overBlock(rotation, enumFacing, pos, true)
     }
 

@@ -19,7 +19,7 @@ import com.github.epsilon.utils.render.esp.CircleESP
 import com.github.epsilon.utils.render.esp.FireflyESP
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
@@ -174,7 +174,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     /**
      * 本 tick 生效的静默瞄准角度；非 null 表示正在瞄准，移动按它结算。
      */
-    private var aimRotations: Rot2f? = null
+    private var aimRotations: Rotation? = null
 
     /**
      * 本 tick 是否允许在没有输入时模拟按 W 沿瞄准方向前进。
@@ -277,7 +277,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 return@nonNullHandler
             }
             aimRotations = rotations
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 rotations,
                 rotationSpeed.toDouble(),
                 { rotation ->
@@ -306,7 +306,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
             event.forward = forward
             event.strafe = strafe
-            event.apply { isSprint = true }
+            event.apply { sprint = true }
         }
 
         nonNullHandler<Render3DEvent> { event ->

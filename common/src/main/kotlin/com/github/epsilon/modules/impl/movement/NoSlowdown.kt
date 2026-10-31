@@ -98,8 +98,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                         ServerboundUseItemPacket(
                             hand,
                             level.blockStatePredictionHandler.startPredicting().currentSequence(),
-                            RotationManager.INSTANCE.getYaw(),
-                            RotationManager.INSTANCE.getPitch()
+                            RotationManager.getYaw(),
+                            RotationManager.getPitch()
                         )
                     )
                 }

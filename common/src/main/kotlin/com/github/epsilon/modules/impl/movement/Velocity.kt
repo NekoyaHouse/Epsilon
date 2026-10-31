@@ -16,7 +16,7 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
@@ -115,8 +115,8 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
 
             if (sprintQueue >= 1 && KillAura.target == null && !Scaffold.isEnabled) {
-                RotationManager.INSTANCE.setRotations(
-                    Rot2f(yaw, RotationManager.INSTANCE.getRotation().pitch),
+                RotationManager.setRotations(
+                    Rotation(yaw, RotationManager.getRotation().pitch),
                     180.0,
                     Priority.Highest
                 )
@@ -138,7 +138,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             if (mode != Mode.Reduce) return@nonNullHandler
 
             if (attackQueue >= 1) {
-                val hitResult = RotationManager.INSTANCE.getHitResult()
+                val hitResult = RotationManager.getHitResult()
                 if (hitResult is EntityHitResult && hitResult.entity is Player) {
                     val target = hitResult.entity as Player
                     if (target.isAlive && !AntiBot.isBot(target)) {
@@ -152,12 +152,12 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
 
         nonNullHandler<KeyboardInputEvent> { event ->
             if (mode == Mode.Delay && jumpReset && player.onGround() && player.hurtTime == 9) {
-                event.isJump = true
+                event.jump = true
             }
 
             if (mode != Mode.Reduce) return@nonNullHandler
 
-            val hitResult = RotationManager.INSTANCE.getHitResult()
+            val hitResult = RotationManager.getHitResult()
             if (delay && player.fallDistance == 0.0 && hitResult is EntityHitResult &&
                 hitResult.entity is Player && !AntiBot.isBot(hitResult.entity as Player)
             ) {
@@ -169,7 +169,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
 
             if (jump && player.onGround()) {
                 if (System.currentTimeMillis() - lag >= 100) {
-                    event.isJump = true
+                    event.jump = true
                     event.forward = 1.0f
                     event.strafe = 0.0f
                 }

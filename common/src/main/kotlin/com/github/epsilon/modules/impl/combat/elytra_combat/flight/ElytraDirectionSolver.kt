@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDirectionSolver.ESCAPE_KEEP_ANGLE
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -41,7 +41,7 @@ object ElytraDirectionSolver {
     /**
      * 上次安全逃逸旋转；仍安全时复用，避免等价解之间切换。
      */
-    private var lastEscapeRotation: Rot2f? = null
+    private var lastEscapeRotation: Rotation? = null
 
     /**
      * 上次提交的俯仰角，用于目标函数近似等价时保持连续性。
@@ -90,7 +90,7 @@ object ElytraDirectionSolver {
      * 只要预演会碰到方块（包括头顶），就在基础解附近寻找差值最小、仍能通过完整预演的旋转，
      * 避免“下体过去但头顶撞方块”。
      */
-    fun solveSafe(player: LocalPlayer, desiredVelocity: Vec3): Rot2f {
+    fun solveSafe(player: LocalPlayer, desiredVelocity: Vec3): Rotation {
         return solveSafe(player, desiredVelocity, DEFAULT_PITCH_DEVIATION_LIMIT)
     }
 
@@ -99,9 +99,9 @@ object ElytraDirectionSolver {
      *
      * @param pitchDeviationLimit 俯仰允许偏离意图的最大角度（度）；精确瞄准应使用较小值
      */
-    fun solveSafe(player: LocalPlayer, desiredVelocity: Vec3, pitchDeviationLimit: Float): Rot2f {
+    fun solveSafe(player: LocalPlayer, desiredVelocity: Vec3, pitchDeviationLimit: Float): Rotation {
         if (desiredVelocity.lengthSqr() < 1.0E-8) {
-            return Rot2f(player.yRot, player.xRot)
+            return Rotation(player.yRot, player.xRot)
         }
 
         val ceilingEscape = shouldAvoidCeilingLift(player, desiredVelocity.y)
@@ -168,11 +168,11 @@ object ElytraDirectionSolver {
      * 将求解俯仰限制在意图俯仰的允许偏差内。
      */
     private fun applyIntentPitchLimit(
-        base: Rot2f,
+        base: Rotation,
         desiredVelocity: Vec3,
         ceilingEscape: Boolean,
         pitchDeviationLimit: Float,
-    ): Rot2f {
+    ): Rotation {
         val desiredPitch = intentPitch(desiredVelocity, ceilingEscape)
         val limited = base.pitch.coerceIn(desiredPitch - pitchDeviationLimit, desiredPitch + pitchDeviationLimit)
         if (limited == base.pitch) {
@@ -185,7 +185,7 @@ object ElytraDirectionSolver {
                     " desired=" + ElytraDebug.fmt(desiredPitch.toDouble()) +
                     " ->" + ElytraDebug.fmt(limited.toDouble()),
         )
-        return Rot2f(base.yaw, limited)
+        return Rotation(base.yaw, limited)
     }
 
     /**
@@ -200,10 +200,10 @@ object ElytraDirectionSolver {
      */
     private fun applyDegenerateFallback(
         player: LocalPlayer,
-        base: Rot2f,
+        base: Rotation,
         desiredVelocity: Vec3,
         ceilingEscape: Boolean,
-    ): Rot2f {
+    ): Rotation {
         val desiredDirection = desiredVelocity.normalize()
         val alignment = velocityAlignment(
             player.deltaMovement,
@@ -224,7 +224,7 @@ object ElytraDirectionSolver {
                     " base=" + ElytraDebug.fmt(base.pitch.toDouble()) +
                     " -> desired=" + ElytraDebug.fmt(desiredPitch.toDouble()),
         )
-        return Rot2f(base.yaw, desiredPitch)
+        return Rotation(base.yaw, desiredPitch)
     }
 
     /**
@@ -233,11 +233,11 @@ object ElytraDirectionSolver {
      */
     private fun applyPitchContinuity(
         player: LocalPlayer,
-        base: Rot2f,
+        base: Rotation,
         desiredVelocity: Vec3,
         ceilingEscape: Boolean,
         pitchDeviationLimit: Float,
-    ): Rot2f {
+    ): Rotation {
         if (lastSolvedPitch.isNaN()) {
             return base
         }
@@ -266,20 +266,20 @@ object ElytraDirectionSolver {
                     " align=" + ElytraDebug.fmt(previousAlignment) +
                     "/" + ElytraDebug.fmt(baseAlignment),
         )
-        return Rot2f(base.yaw, previousPitch)
+        return Rotation(base.yaw, previousPitch)
     }
 
     /**
      * 沿用上一次的逃逸旋转（若仍满足完整预演）。避免在多个等价安全解之间逐 tick 翻转。
      */
-    private fun keepPreviousEscape(player: LocalPlayer, ceilingEscape: Boolean): Rot2f? {
+    private fun keepPreviousEscape(player: LocalPlayer, ceilingEscape: Boolean): Rotation? {
         val previous = lastEscapeRotation ?: return null
         val yaw = Mth.wrapDegrees(previous.yaw)
         val pitch = applyCeilingEscape(previous.pitch.coerceIn(-89.0f, 89.0f), ceilingEscape)
         if (trajectorySafeTicks(player, yaw, pitch) < TRAJECTORY_HORIZON_TICKS) {
             return null
         }
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
     /**
@@ -290,10 +290,10 @@ object ElytraDirectionSolver {
      */
     private fun searchEscape(
         player: LocalPlayer,
-        base: Rot2f,
+        base: Rotation,
         ceilingEscape: Boolean,
         nearPrevious: Boolean,
-    ): Rot2f? {
+    ): Rotation? {
         for (offset in ESCAPE_OFFSETS) {
             val yaw = Mth.wrapDegrees(base.yaw + offset.yawOffset)
             val pitch = applyCeilingEscape(
@@ -304,7 +304,7 @@ object ElytraDirectionSolver {
                 continue
             }
             if (trajectorySafeTicks(player, yaw, pitch) >= TRAJECTORY_HORIZON_TICKS) {
-                return Rot2f(yaw, pitch)
+                return Rotation(yaw, pitch)
             }
         }
         return null
@@ -313,7 +313,7 @@ object ElytraDirectionSolver {
     /**
      * 没有完整安全解时的兜底：取安全 tick 最多的候选。
      */
-    private fun bestEffortEscape(player: LocalPlayer, base: Rot2f, ceilingEscape: Boolean): Rot2f {
+    private fun bestEffortEscape(player: LocalPlayer, base: Rotation, ceilingEscape: Boolean): Rotation {
         var bestYaw = base.yaw
         var bestPitch = base.pitch
         var bestSafeTicks = -1
@@ -330,7 +330,7 @@ object ElytraDirectionSolver {
                 bestPitch = pitch
             }
         }
-        return Rot2f(bestYaw, bestPitch)
+        return Rotation(bestYaw, bestPitch)
     }
 
     /**
@@ -345,16 +345,16 @@ object ElytraDirectionSolver {
     /**
      * 与 input 模式真实执行一致的纯数学解，工作线程的路径预演也调用这一版本。
      */
-    fun solve(player: LocalPlayer, desiredVelocity: Vec3): Rot2f {
+    fun solve(player: LocalPlayer, desiredVelocity: Vec3): Rotation {
         if (desiredVelocity.lengthSqr() < 1.0E-8) {
-            return Rot2f(player.yRot, player.xRot)
+            return Rotation(player.yRot, player.xRot)
         }
         return solve(player.deltaMovement, effectiveGravity(player), desiredVelocity)
     }
 
-    fun solve(movement: Vec3, gravity: Double, desiredVelocity: Vec3): Rot2f {
+    fun solve(movement: Vec3, gravity: Double, desiredVelocity: Vec3): Rotation {
         if (desiredVelocity.lengthSqr() < 1.0E-8) {
-            return Rot2f(0.0f, 0.0f)
+            return Rotation(0.0f, 0.0f)
         }
 
         // yaw 直接取期望方向；pitch 先 5 度粗采样，再在最优区间二分细化。
@@ -386,7 +386,7 @@ object ElytraDirectionSolver {
                 low = mid
             }
         }
-        return Rot2f(yaw, ((low + high) * 0.5f).coerceIn(-89.0f, 89.0f))
+        return Rotation(yaw, ((low + high) * 0.5f).coerceIn(-89.0f, 89.0f))
     }
 
     private fun velocityAlignment(
@@ -445,11 +445,11 @@ object ElytraDirectionSolver {
         return !player.level().noBlockCollision(player, ceilingProbe)
     }
 
-    private fun applyCeilingEscape(rotation: Rot2f, ceilingEscape: Boolean): Rot2f {
+    private fun applyCeilingEscape(rotation: Rotation, ceilingEscape: Boolean): Rotation {
         if (!ceilingEscape || rotation.pitch >= CEILING_ESCAPE_PITCH) {
             return rotation
         }
-        return Rot2f(rotation.yaw, CEILING_ESCAPE_PITCH)
+        return Rotation(rotation.yaw, CEILING_ESCAPE_PITCH)
     }
 
     private fun applyCeilingEscape(pitch: Float, ceilingEscape: Boolean): Float {

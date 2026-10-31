@@ -9,7 +9,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
@@ -32,7 +32,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
             val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
             if (!result.found()) return@nonNullHandler
 
-            RotationManager.INSTANCE.setRotations(Rot2f(player.yRot, 90f), 180.0, Priority.High)
+            RotationManager.setRotations(Rotation(player.yRot, 90f), 180.0, Priority.High)
 
             InvUtils.swap(result.slot, true)
 

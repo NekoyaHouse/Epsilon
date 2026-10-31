@@ -10,7 +10,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
@@ -62,7 +62,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
     private var down = false
     private var isSneaking = false
 
-    private var rotation: Rot2f? = null
+    private var rotation: Rotation? = null
 
     init {
         handler<OpenScreenEvent> {
@@ -99,7 +99,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val currentRotation = rotation
                 if (currentRotation != null) {
-                    RotationManager.INSTANCE.setRotations(currentRotation, 180.0, Priority.Highest)
+                    RotationManager.setRotations(currentRotation, 180.0, Priority.Highest)
                 }
             }
 
@@ -149,7 +149,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
         nonNullHandler<KeyboardInputEvent> {
             if (!player.abilities.flying && staySneaking && isSneaking) {
-                it.isSneak = true
+                it.sneak = true
             }
         }
 

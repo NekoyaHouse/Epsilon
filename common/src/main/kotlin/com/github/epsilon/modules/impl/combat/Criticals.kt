@@ -26,8 +26,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
         }
 
         nonNullHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
-            stopSprinting = fallTicks > 0 &&
-                    fallTicks < 3 &&
+            stopSprinting = fallTicks in 1..<3 &&
                     player.isSprinting &&
                     KillAura.target != null &&
                     Velocity.attackQueue == 0
@@ -37,15 +36,14 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             if (!stopSprinting) return@nonNullHandler
             stopSprinting = false
 
-            if (fallTicks > 0 &&
-                fallTicks < 3 &&
+            if (fallTicks in 1..<3 &&
                 canCrit(player) &&
                 player.isSprinting &&
                 KillAura.target != null &&
                 Velocity.attackQueue == 0 &&
                 event.forward > 0.0f
             ) {
-                event.apply { isSprint = false }
+                event.apply { sprint = false }
                 player.isSprinting = false
                 mc.options.keySprint.isDown = false
             }

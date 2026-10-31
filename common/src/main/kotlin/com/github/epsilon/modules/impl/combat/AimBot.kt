@@ -9,7 +9,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
@@ -131,8 +131,8 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         bowTargetYaw = targetYaw
         bowTargetPitch = targetPitch
 
-        RotationManager.INSTANCE.setRotations(
-            Rot2f(targetYaw, targetPitch),
+        RotationManager.setRotations(
+            Rotation(targetYaw, targetPitch),
             bowSmooth.toDouble(),
             Priority.Medium
         )

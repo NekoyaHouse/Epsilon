@@ -9,7 +9,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.*
 import com.google.gson.JsonObject
 import net.minecraft.network.chat.Component
@@ -66,7 +66,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             event.forward = 1.0f
             event.strafe = 0.0f
             if (autoLaunch && !player.isFallFlying && !player.isInWater) {
-                event.isJump = true
+                event.jump = true
             }
         }
     }
@@ -187,12 +187,12 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             }
 
             val yaw = yawTo(target)
-            val pitch = if (RotationManager.INSTANCE.isActive()) {
-                RotationManager.INSTANCE.getPitch()
+            val pitch = if (RotationManager.isActive()) {
+                RotationManager.getPitch()
             } else {
                 player.xRot
             }
-            RotationManager.INSTANCE.setRotations(Rot2f(yaw, pitch), rotationSpeed.toDouble(), Priority.Highest)
+            RotationManager.setRotations(Rotation(yaw, pitch), rotationSpeed.toDouble(), Priority.Highest)
         }
     }
 

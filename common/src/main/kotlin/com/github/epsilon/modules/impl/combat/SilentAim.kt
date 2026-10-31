@@ -45,9 +45,9 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
             }
 
             val rotations = RotationUtils.calculate(currentTarget.eyePosition)
-            RotationManager.INSTANCE.setRotations(rotations, 180.0, Priority.High)
+            RotationManager.setRotations(rotations, 180.0, Priority.High)
 
-            val hitResult = RotationManager.INSTANCE.getHitResult()
+            val hitResult = RotationManager.getHitResult()
             if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {
                 interaction.attack(player, currentTarget)
                 SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)

@@ -14,7 +14,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
@@ -93,8 +93,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             targetYaw = Mth.wrapDegrees((atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f)
 
-            RotationManager.INSTANCE.setRotations(
-                Rot2f(targetYaw, RotationManager.INSTANCE.getPitch()),
+            RotationManager.setRotations(
+                Rotation(targetYaw, RotationManager.getPitch()),
                 180.0,
                 Priority.Low
             )

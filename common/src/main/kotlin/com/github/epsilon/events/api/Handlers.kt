@@ -2,8 +2,7 @@ package com.github.epsilon.events.api
 
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.bus.listeners.ConsumerListener
-import com.github.epsilon.events.bus.listeners.IListener
+import com.github.epsilon.events.bus.Handler
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.runSafe
 
@@ -11,9 +10,9 @@ import com.github.epsilon.utils.safety.runSafe
 const val DEFAULT_HANDLER_PRIORITY: Int = EventPriority.MEDIUM
 
 /**
- * 为当前对象注册 [E] 事件的 lambda 监听器。
+ * 为当前对象注册 [E] 事件的显式 [Handler]。
  *
- * 隐式 receiver 就是监听器的 owner：默认（[alwaysListening] = false）绑定到该对象，
+ * 隐式 receiver 就是 Handler 的 owner：默认（[alwaysListening] = false）绑定到该对象，
  * 是否生效由 [EventBus.subscribe] / [EventBus.unsubscribe] 决定（Module 即启用时订阅、禁用时注销）；
  * [alwaysListening] = true 时立即订阅并一直监听，不随 owner 的订阅状态变化。
  *
@@ -29,7 +28,7 @@ inline fun <reified E : Any> Any.handler(
     priority: Int = DEFAULT_HANDLER_PRIORITY,
     alwaysListening: Boolean = false,
     noinline function: (E) -> Unit,
-): IListener = handler(this, E::class.java, priority, alwaysListening, function)
+): Handler<E> = handler(this, E::class.java, priority, alwaysListening, function)
 
 /** [handler] 的显式 owner/class 版本，供无法使用 reified 类型参数的场景调用。 */
 fun <E : Any> handler(
@@ -38,14 +37,14 @@ fun <E : Any> handler(
     priority: Int = DEFAULT_HANDLER_PRIORITY,
     alwaysListening: Boolean = false,
     function: (E) -> Unit,
-): IListener {
-    val listener = ConsumerListener(eventClass, priority, function)
+): Handler<E> {
+    val handler = Handler(owner, eventClass, priority, function)
     if (alwaysListening) {
-        EventBus.subscribe(listener)
+        EventBus.subscribe(handler)
     } else {
-        EventBus.attach(owner, listener)
+        EventBus.register(owner, handler)
     }
-    return listener
+    return handler
 }
 
 /**
@@ -67,7 +66,7 @@ inline fun <reified E : Any> Any.nonNullHandler(
     priority: Int = DEFAULT_HANDLER_PRIORITY,
     alwaysListening: Boolean = false,
     noinline function: context(NonNullContext) (E) -> Unit,
-): IListener = nonNullHandler(this, E::class.java, priority, alwaysListening, function)
+): Handler<E> = nonNullHandler(this, E::class.java, priority, alwaysListening, function)
 
 /** [nonNullHandler] 的显式 owner/class 版本，供无法使用 reified 类型参数的场景调用。 */
 fun <E : Any> nonNullHandler(
@@ -76,4 +75,4 @@ fun <E : Any> nonNullHandler(
     priority: Int = DEFAULT_HANDLER_PRIORITY,
     alwaysListening: Boolean = false,
     function: context(NonNullContext) (E) -> Unit,
-): IListener = handler(owner, eventClass, priority, alwaysListening) { event -> runSafe { function(event) } }
+): Handler<E> = handler(owner, eventClass, priority, alwaysListening) { event -> runSafe { function(event) } }
