@@ -1,9 +1,12 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -11,12 +14,8 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
@@ -59,42 +58,42 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     private var openingStartedAt = 0L
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             updateTrackedLevel()
 
             if (opening) {
-                if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
-                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@nonNullHandler
+                if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
+                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@safeEventHandler
                 opening = false
                 timer.reset()
             }
 
-            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@nonNullHandler
+            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@safeEventHandler
 
             if (hasNearbyPlayer()) {
                 if (mc.gui.screen() is AbstractContainerScreen<*>) {
                     player.closeContainer()
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
+            if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
 
-            val target = findTarget() ?: return@nonNullHandler
+            val target = findTarget() ?: return@safeEventHandler
 
             val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 targetRotation,
                 turnSpeed,
                 { rotation -> hitsTarget(rotation, target) },
                 Priority.Lowest,
             )
 
-            val hit = raycastTarget(RotationManager.INSTANCE.getRotation(), target.pos, target.throughWalls)
-            if (hit == null || hit.blockPos != target.pos) return@nonNullHandler
+            val hit = raycastTarget(RotationManager.getRotation(), target.pos, target.throughWalls)
+            if (hit == null || hit.blockPos != target.pos) return@safeEventHandler
 
-            val result = interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-            if (!result.consumesAction()) return@nonNullHandler
+            val result = gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+            if (!result.consumesAction()) return@safeEventHandler
 
             playerClickedContainers.add(target.pos)
             clickedContainers.add(target.pos)
@@ -103,7 +102,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             SwingMode.of(swing).interactSwing(InteractionHand.MAIN_HAND)
         }
 
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundUseItemOnPacket) {
                 val pos = packet.hitResult().blockPos
@@ -116,7 +115,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundBlockEventPacket) {
                 markContainerOpened(packet.pos)
@@ -220,13 +219,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     }
 
     context(nn: NonNullContext)
-    private fun hitsTarget(rotation: Rot2f, target: Target): Boolean {
+    private fun hitsTarget(rotation: Rotation, target: Target): Boolean {
         val hit = raycastTarget(rotation, target.pos, target.throughWalls)
         return hit != null && hit.blockPos == target.pos
     }
 
     context(nn: NonNullContext)
-    private fun raycastTarget(rotation: Rot2f, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
+    private fun raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
         val start = player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))

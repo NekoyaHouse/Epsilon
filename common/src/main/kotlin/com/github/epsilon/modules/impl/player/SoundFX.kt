@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
@@ -25,7 +25,7 @@ object SoundFX : Module("Sound FX", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
-        nonNullHandler<AttackEntityEvent> {
+        safeEventHandler<AttackEntityEvent> {
             if (timer.hasDelayed(delay)) {
                 playHitSound(hitSound)
                 timer.reset()

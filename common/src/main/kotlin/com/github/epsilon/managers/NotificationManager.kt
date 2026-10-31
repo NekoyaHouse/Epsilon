@@ -214,8 +214,8 @@ object NotificationManager {
 
     private fun sendChatMessage(message: Component, hash: Int?) {
         if (!ClientSetting.chatNotify) return
-        if (hash == null) ChatUtils.addChatMessage(message)
-        else ChatUtils.addChatMessage(message, hash)
+        if (hash == null) ChatUtils.sendMessage(message)
+        else ChatUtils.sendMessage(message, hash)
     }
 
     private fun makeRoomIfNeeded() {

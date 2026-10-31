@@ -1,11 +1,10 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.ClickSlotUtils
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Items
 import java.util.*
@@ -24,7 +23,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen is InventoryScreen) {
                 val hoveredSlot = screen.hoveredSlot
@@ -37,7 +36,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                 if (hoveredSlot != null) {
                     val slotIndex = hoveredSlot.index
                     if (slotIndex > 35) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val totemSlot = slot.toInt()
@@ -47,7 +46,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                         if (hotbar && !player.inventory.getItem(totem).`is`(Items.TOTEM_OF_UNDYING)) {
                             if (clock > 0) {
                                 --clock
-                                return@nonNullHandler
+                                return@safeEventHandler
                             }
                             ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, totem)
                             currentDelay = getRandomDelay()
@@ -55,7 +54,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                         } else if (!player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
                             if (clock > 0) {
                                 --clock
-                                return@nonNullHandler
+                                return@safeEventHandler
                             }
                             ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, 40)
                             currentDelay = getRandomDelay()

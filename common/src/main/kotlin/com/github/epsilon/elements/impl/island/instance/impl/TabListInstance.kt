@@ -1,6 +1,5 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
@@ -8,8 +7,9 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.impl.render.ACSpoof
-import com.github.epsilon.utils.safety.NonNullContext
 import net.minecraft.client.gui.components.PlayerTabOverlay
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo
@@ -53,7 +53,7 @@ class TabListInstance(
         resetLayout()
         font = StaticFontLoader.defaultFont()
 
-        val nn = NonNullContext.current
+        val nn = NonNullContext.instance
         val connection: ClientPacketListener? = mc.connection
         val scoreboard: Scoreboard? = nn?.level?.scoreboard
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)

@@ -36,7 +36,7 @@ object ElytraDebug {
         }
         LAST_LABELS[slot] = label
         LAST_TIMES[slot] = now
-        ChatUtils.addChatMessage("[ElytraCombat] $label")
+        ChatUtils.sendMessage("[ElytraCombat] $label")
     }
 
     /** 清空标签与节流时间。 */

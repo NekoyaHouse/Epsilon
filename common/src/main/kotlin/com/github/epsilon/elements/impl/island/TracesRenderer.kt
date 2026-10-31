@@ -1,12 +1,12 @@
 package com.github.epsilon.elements.impl.island
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.world.entity.player.Player
@@ -35,7 +35,7 @@ object TracesRenderer {
         val screenHeight = LuminRenderSystem.getScaledHeight()
         if (screenWidth <= 1.0f || screenHeight <= 1.0f) return 0
 
-        val nn = NonNullContext.current ?: return 0
+        val nn = NonNullContext.instance ?: return 0
         return context(nn) {
             val self = player
             val connection = mc.connection

@@ -1,14 +1,18 @@
 package com.github.epsilon.events.impl
 
+import com.github.epsilon.events.api.EventBus
+import com.github.epsilon.events.api.IEvent
+import com.github.epsilon.events.api.IPosting
 import net.minecraft.world.entity.player.Input
 
 class KeyboardInputEvent(
     var forward: Float,
     var strafe: Float,
-    var isJump: Boolean,
-    var isSneak: Boolean,
-    var isSprint: Boolean,
-) {
+    var jump: Boolean,
+    var sneak: Boolean,
+    var sprint: Boolean,
+) : IEvent<KeyboardInputEvent>, IPosting by Companion {
+    companion object : EventBus()
 
     fun toNewInput(): Input {
         return Input(
@@ -16,9 +20,9 @@ class KeyboardInputEvent(
             forward < 0.0f,
             strafe > 0.0f,
             strafe < 0.0f,
-            isJump,
-            isSneak,
-            isSprint
+            jump,
+            sneak,
+            sprint
         )
     }
 

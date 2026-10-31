@@ -1,11 +1,15 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.ExtrapolationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
@@ -15,12 +19,8 @@ import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.core.BlockPos
@@ -141,9 +141,9 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private var shieldSide: Direction? = null
     private var shieldSidePlacement = false
     private var shieldDiagonal = false
-    private var targetRotation: Rot2f? = null
+    private var targetRotation: Rotation? = null
     private var targetBlockPos: BlockPos? = null
-    private var originalRotation: Rot2f? = null
+    private var originalRotation: Rotation? = null
     private var returningRotation = false
     private var originalSlot = -1
     private var pendingAnchorPos: BlockPos? = null
@@ -160,11 +160,11 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private const val STAGE_TIMEOUT_TICKS = 60
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@safeEventHandler
 
             val key = triggerKey
-            if (key == -1) return@nonNullHandler
+            if (key == -1) return@safeEventHandler
 
             val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
@@ -179,19 +179,19 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 resetState()
                 holdingSequenceStarted = true
                 originalSlot = player.inventory.selectedSlot
-                originalRotation = Rot2f(player.yRot, player.xRot)
+                originalRotation = Rotation(player.yRot, player.xRot)
                 stage = Stage.PLACE_ANCHOR
                 scheduleCooldown(anchorPlaceMinDelay, anchorPlaceMaxDelay)
             }
 
-            if (stage == Stage.IDLE) return@nonNullHandler
+            if (stage == Stage.IDLE) return@safeEventHandler
 
             while (stage != Stage.IDLE && actionTimer.passedMillise(cooldownMs.toLong())) {
                 if (stage != Stage.WAIT_SHIELD && stage != Stage.WAIT_ANCHOR) {
                     stageTicksElapsed++
                     if (stageTicksElapsed > STAGE_TIMEOUT_TICKS) {
                         resetState()
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
                 }
 
@@ -200,7 +200,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                         .`is`(Blocks.RESPAWN_ANCHOR)
                 ) {
                     resetState()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 applyTargetRotation()
@@ -211,12 +211,12 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                         returningRotation = false
                         resetState()
                     }
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 val rotation = targetRotation
                 if (rotation != null && !rotationAimed()) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 when (stage) {
@@ -230,20 +230,20 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
                     Stage.WAIT_SHIELD -> {
                         doWaitShield()
-                        if (stage == Stage.WAIT_SHIELD) return@nonNullHandler
+                        if (stage == Stage.WAIT_SHIELD) return@safeEventHandler
                     }
 
                     Stage.WAIT_ANCHOR -> {
                         doWaitAnchor()
-                        if (stage == Stage.WAIT_ANCHOR) return@nonNullHandler
+                        if (stage == Stage.WAIT_ANCHOR) return@safeEventHandler
                     }
 
-                    Stage.IDLE -> return@nonNullHandler
+                    Stage.IDLE -> return@safeEventHandler
                 }
             }
         }
 
-        nonNullHandler<Render3DEvent> {
+        safeEventHandler<Render3DEvent> {
             val time = System.currentTimeMillis()
             renderBoxes.removeAll { box -> time - box.startTime > 1000 }
 
@@ -264,7 +264,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 )
             }
 
-            if (mode != Mode.Assist || currentAnchorPos == null) return@nonNullHandler
+            if (mode != Mode.Assist || currentAnchorPos == null) return@safeEventHandler
 
             val anchorCenter = Vec3.atCenterOf(currentAnchorPos!!)
             val playerFeet = player.position()
@@ -344,7 +344,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         }
 
         InvUtils.swap(anchor.slot, false)
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, pendingAnchorHit!!)
+        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, pendingAnchorHit!!)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         currentAnchorPos = pendingAnchorPos
         targetRotation = null
@@ -991,17 +991,17 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val minSpeed = minOf(rotationSpeedMin, rotationSpeedMax)
         val maxSpeed = maxOf(rotationSpeedMin, rotationSpeedMax)
         val speedValue = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1)
-        RotationManager.INSTANCE.setRotations(patchedTarget, speedValue.toDouble(), Priority.High)
+        RotationManager.setRotations(patchedTarget, speedValue.toDouble(), Priority.High)
     }
 
     context(nn: NonNullContext)
     private fun rotationAimed(): Boolean {
         val rotation = targetRotation
         if (rotation == null || !rotate) return true
-        val currentRot = if (RotationManager.INSTANCE.isActive()) {
-            RotationManager.INSTANCE.getRotation()
+        val currentRot = if (RotationManager.isActive()) {
+            RotationManager.getRotation()
         } else {
-            Rot2f(player.yRot, player.xRot)
+            Rotation(player.yRot, player.xRot)
         }
         val yawDiff = abs(Mth.wrapDegrees(rotation.yaw - currentRot.yaw))
         val pitchDiff = abs(rotation.pitch - currentRot.pitch)
@@ -1010,7 +1010,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
 
     context(nn: NonNullContext)
-    private fun getTargetRotation(targetPos: Vec3): Rot2f {
+    private fun getTargetRotation(targetPos: Vec3): Rotation {
         return RotationUtils.calculate(player.eyePosition, targetPos)
     }
 
@@ -1039,7 +1039,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             pos.z + 0.5 + side.stepZ * 0.45,
         )
         val hit = BlockHitResult(hitVec, side, pos, false)
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
     }
 

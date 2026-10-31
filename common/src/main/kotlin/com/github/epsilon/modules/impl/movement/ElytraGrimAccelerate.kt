@@ -1,19 +1,19 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
@@ -104,7 +104,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private var lastSetBackPacketTick = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             tickStartX = player.x
             tickStartY = player.y
             tickStartZ = player.z
@@ -118,10 +118,10 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
                     !isFireworkBoosted()
         }
 
-        nonNullHandler<SendPositionEvent>(EventPriority.LOW) { event ->
+        safeEventHandler<SendPositionEvent>(EventPriority.LOW) { event ->
             if (!currentTryWorking || !isSpeedAllowed()) {
                 trackSentPosition(event.x, event.y, event.z)
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             // 回滚到 tick 起点：本地坐标停在服务端最后收到的位置上，拉回才不会把玩家拖走
@@ -133,16 +133,16 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             if (pendingSetBackPacket != null) {
                 // 上一轮的伪造包尚未发出，丢弃它，避免同一 tick 连发两个包
                 pendingSetBackPacket = null
-                return@nonNullHandler
+                return@safeEventHandler
             }
             pendingSetBackPacket = createSetBackPacket(moveX, moveZ)
         }
 
-        nonNullHandler<AfterSendPositionEvent> {
+        safeEventHandler<AfterSendPositionEvent> {
             val packet = pendingSetBackPacket
             pendingSetBackPacket = null
 
-            if (packet == null) return@nonNullHandler
+            if (packet == null) return@safeEventHandler
 
             // 绕过 Epsilon 的发送事件，避免伪造包被其他模块记录或延迟
             NetworkUtils.sendPacketNoEvent(packet)

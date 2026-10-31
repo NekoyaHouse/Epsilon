@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -15,14 +15,14 @@ object Disabler : Module("Disabler", Category.PLAYER) {
     private var lastSlot = -1
 
     init {
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (!duplicateSlot || packet !is ServerboundSetCarriedItemPacket) return@nonNullHandler
+            if (!duplicateSlot || packet !is ServerboundSetCarriedItemPacket) return@safeEventHandler
 
             val nextSlot = packet.slot
             if (nextSlot < 0 || nextSlot > 8 || nextSlot == lastSlot && !fastSwitch) {
                 event.cancel()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (fastSwitch && lastSlot >= 0 && nextSlot != lastSlot && !((lastSlot == 0 && nextSlot == 8) || (lastSlot == 8 && nextSlot == 0))) {
                 event.cancel()

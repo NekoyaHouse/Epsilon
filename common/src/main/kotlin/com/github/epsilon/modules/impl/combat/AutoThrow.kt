@@ -1,9 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
@@ -12,9 +14,6 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
@@ -42,7 +41,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     private var currentTarget: LivingEntity? = null
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             val slot = getThrowSlot()
             if (player.mainHandItem.`is`(Items.SNOWBALL) ||
                 player.mainHandItem.`is`(Items.EGG) ||
@@ -52,7 +51,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             ) {
                 // 搜索并准备投掷
                 if (timer.passedMillise(delay.toLong()) && canWork()) {
-                    val maxRange = this.maxRange
+                    val maxRange = this@AutoThrow.maxRange
                     val maxRangeSq = maxRange * maxRange
 
                     val candidates = ArrayList(
@@ -90,14 +89,14 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
                     }
 
                     currentTarget = best
-                    val target = currentTarget ?: return@nonNullHandler
+                    val target = currentTarget ?: return@safeEventHandler
 
                     val rotation = RotationUtils.calculate(getAimVec(target), false)
 
-                    RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
+                    RotationManager.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
-                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@nonNullHandler
-                    if (hit.type != HitResult.Type.ENTITY) return@nonNullHandler
+                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@safeEventHandler
+                    if (hit.type != HitResult.Type.ENTITY) return@safeEventHandler
 
                     // 准备槽位与投掷状态
                     val off = player.offhandItem
@@ -115,16 +114,16 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (shouldThrow && canWork()) {
                 var used = false
                 val off = player.offhandItem
                 val main = player.mainHandItem
                 if (isThrowable(off)) {
-                    interaction.useItem(player, InteractionHand.OFF_HAND)
+                    gameMode.useItem(player, InteractionHand.OFF_HAND)
                     used = true
                 } else if (isThrowable(main)) {
-                    interaction.useItem(player, InteractionHand.MAIN_HAND)
+                    gameMode.useItem(player, InteractionHand.MAIN_HAND)
                     used = true
                 }
                 if (used) {

@@ -1,15 +1,14 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -38,23 +37,23 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     private var delay = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@safeEventHandler
 
             if (player.isUsingItem || player.isBlocking) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            val target = getCrosshairTarget() ?: return@nonNullHandler
+            val target = getCrosshairTarget() ?: return@safeEventHandler
 
             if (!shouldAttack()) {
                 if (delay > 0) {
                     delay--
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
             }
 
-            interaction.attack(player, target)
+            gameMode.attack(player, target)
             SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
             delay = MathUtils.getRandom(minDelay, maxDelay)
@@ -166,7 +165,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     }
 
     fun getAttackCooldown(): Float {
-        val nn = NonNullContext.current ?: return 0.0f
+        val nn = NonNullContext.instance ?: return 0.0f
         return context(nn) {
             val attackSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
             val cooldownPerTick = 1.0f / attackSpeed * 20.0f

@@ -1,14 +1,17 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.enchantment.Enchantments
@@ -25,26 +28,26 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
     private var lastDestroyTick = -1
 
     init {
-        nonNullHandler<StartDestroyBlockEvent>(EventPriority.LOWEST) { event ->
+        safeEventHandler<StartDestroyBlockEvent>(EventPriority.LOWEST) { event ->
             lastDestroyTick = player.tickCount
             val bestTool = getBestTool(event.blockPos)
             val selectedSlot = player.inventory.selectedSlot
-            if (bestTool == -1 || bestTool == selectedSlot) return@nonNullHandler
+            if (bestTool == -1 || bestTool == selectedSlot) return@safeEventHandler
             if (swapBack) {
                 if (oldSlot == -1) oldSlot = selectedSlot
             } else {
                 oldSlot = -1
             }
             player.inventory.selectedSlot = bestTool
-            interaction.ensureHasSentCarriedItem()
+            gameMode.ensureHasSentCarriedItem()
         }
 
-        nonNullHandler<AfterSendPositionEvent> {
-            if (oldSlot == -1) return@nonNullHandler
+        safeEventHandler<AfterSendPositionEvent> {
+            if (oldSlot == -1) return@safeEventHandler
 
-            if (interaction.isDestroying || BedNuker.isBreakingTarget) {
+            if (gameMode.isDestroying || BedNuker.isBreakingTarget) {
                 lastDestroyTick = player.tickCount
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (player.tickCount - lastDestroyTick >= swapBackDelay) {
@@ -65,7 +68,7 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
     }
 
     fun getBestTool(pos: BlockPos): Int {
-        val nn = NonNullContext.current ?: return -1
+        val nn = NonNullContext.instance ?: return -1
         return context(nn) {
             val blockState = level.getBlockState(pos)
             val block = blockState.block

@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.settings.impl.StringListSetting
 
 class StringListSettingWidget(setting: StringListSetting) : AbstractSetSettingWidget<StringListSetting>(setting) {

@@ -1,13 +1,9 @@
 package com.github.epsilon
 
-import net.minecraft.client.Minecraft
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 object Constants {
-
-    @JvmField
-    val mc: Minecraft = Minecraft.getInstance()
 
     const val NAME: String = "Epsilon"
 

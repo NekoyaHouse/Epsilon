@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.PlaceBlockEvent;
 import com.github.epsilon.modules.impl.render.NoGhostBlocks;
 import net.minecraft.world.item.BlockItem;
@@ -23,7 +22,8 @@ public abstract class MixinBlockItem {
     private void onPlace(BlockPlaceContext context, BlockState placementState, CallbackInfoReturnable<Boolean> cir) {
         if (!context.getLevel().isClientSide()) return;
 
-        if (EventBus.INSTANCE.post(new PlaceBlockEvent(context.getClickedPos(), placementState.getBlock())).isCancelled()) {
+        PlaceBlockEvent event = new PlaceBlockEvent(context.getClickedPos(), placementState.getBlock()).post();
+        if (event.isCancelled()) {
             cir.setReturnValue(true);
         }
     }

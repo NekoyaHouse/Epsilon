@@ -1,12 +1,12 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.BedBlock
@@ -19,8 +19,8 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
     private val vehicles by boolSetting("Vehicles", false)
 
     init {
-        nonNullHandler<PlayerTickEvent.Post> {
-            if (Scaffold.isEnabled) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Post> {
+            if (Scaffold.isEnabled) return@safeEventHandler
 
             val vehicle = player.vehicle
             if (vehicle != null && vehicles) {
@@ -29,7 +29,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
                 }
             } else {
                 if (player.isSuppressingSlidingDownLadder || player.zza == 0.0f && player.xxa == 0.0f) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
                 if (!isOnBed() && canSnap(player)) {
                     player.deltaMovement = Vec3(player.deltaMovement.x, -fallSpeed, player.deltaMovement.z)

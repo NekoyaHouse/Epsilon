@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.interfaces.ChatComponentAccessor
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.ColorUtils
 import net.minecraft.network.chat.Component
@@ -24,25 +24,15 @@ object ChatUtils {
     /**
      * 向客户端聊天栏添加消息。
      */
-    fun addChatMessage(message: String) {
-        addChatMessage(true, Component.literal(message))
+    fun sendMessage(message: String) {
+        sendMessage(true, Component.literal(message))
     }
 
     /**
      * 向客户端聊天栏添加消息。
      */
-    fun addChatMessage(message: Component) {
-        addChatMessage(true, message)
-    }
-
-    /**
-     * 向客户端聊天栏添加消息。
-     *
-     * @param prefix  是否添加 Epsilon 消息前缀
-     * @param message 消息内容
-     */
-    fun addChatMessage(prefix: Boolean, message: String) {
-        addChatMessage(prefix, Component.literal(message))
+    fun sendMessage(message: Component) {
+        sendMessage(true, message)
     }
 
     /**
@@ -51,7 +41,17 @@ object ChatUtils {
      * @param prefix  是否添加 Epsilon 消息前缀
      * @param message 消息内容
      */
-    fun addChatMessage(prefix: Boolean, message: Component) {
+    fun sendMessage(prefix: Boolean, message: String) {
+        sendMessage(prefix, Component.literal(message))
+    }
+
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     */
+    fun sendMessage(prefix: Boolean, message: Component) {
         val component = buildClientMessage(prefix, message)
         if (mc.isSameThread) {
             mc.gui.hud.chat.addClientSystemMessage(component)
@@ -66,8 +66,8 @@ object ChatUtils {
      * @param message 消息内容
      * @param hash    用于替换同一条聊天消息的稳定标识
      */
-    fun addChatMessage(message: String, hash: Int) {
-        addChatMessage(true, Component.literal(message), hash)
+    fun sendMessage(message: String, hash: Int) {
+        sendMessage(true, Component.literal(message), hash)
     }
 
     /**
@@ -76,19 +76,8 @@ object ChatUtils {
      * @param message 消息内容
      * @param hash    用于替换同一条聊天消息的稳定标识
      */
-    fun addChatMessage(message: Component, hash: Int) {
-        addChatMessage(true, message, hash)
-    }
-
-    /**
-     * 向客户端聊天栏添加消息。
-     *
-     * @param prefix  是否添加 Epsilon 消息前缀
-     * @param message 消息内容
-     * @param hash    用于替换同一条聊天消息的稳定标识
-     */
-    fun addChatMessage(prefix: Boolean, message: String, hash: Int) {
-        addChatMessage(prefix, Component.literal(message), hash)
+    fun sendMessage(message: Component, hash: Int) {
+        sendMessage(true, message, hash)
     }
 
     /**
@@ -98,7 +87,18 @@ object ChatUtils {
      * @param message 消息内容
      * @param hash    用于替换同一条聊天消息的稳定标识
      */
-    fun addChatMessage(prefix: Boolean, message: Component, hash: Int) {
+    fun sendMessage(prefix: Boolean, message: String, hash: Int) {
+        sendMessage(prefix, Component.literal(message), hash)
+    }
+
+    /**
+     * 向客户端聊天栏添加消息。
+     *
+     * @param prefix  是否添加 Epsilon 消息前缀
+     * @param message 消息内容
+     * @param hash    用于替换同一条聊天消息的稳定标识
+     */
+    fun sendMessage(prefix: Boolean, message: Component, hash: Int) {
         val component = buildClientMessage(prefix, message)
         if (mc.isSameThread) {
             (mc.gui.hud.chat as ChatComponentAccessor).`epsilon$addClientSystemMessage`(component, hash)

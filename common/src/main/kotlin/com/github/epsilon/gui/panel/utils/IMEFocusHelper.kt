@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.utils
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.client.gui.screens.Screen
 
 /**

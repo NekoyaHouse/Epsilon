@@ -46,7 +46,6 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 
 Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
-- [Orbit](https://github.com/MeteorDevelopment/orbit)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
 - [TrollHack](https://github.com/Luna5ama/TrollHack)
 

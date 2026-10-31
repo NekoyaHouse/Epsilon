@@ -1,11 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.Constants
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.player
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
@@ -24,23 +23,23 @@ object AutoQueue : Module("Auto Queue", Category.PLAYER) {
     private val questions: JsonObject = loadQuestions()
 
     init {
-        nonNullHandler<PacketEvent.Receive> { event ->
-            if (mode != Mode.XIN_2B2T) return@nonNullHandler
+        safeEventHandler<PacketEvent.Receive> { event ->
+            if (mode != Mode.XIN_2B2T) return@safeEventHandler
             val packet = event.packet
-            if (packet !is ClientboundSystemChatPacket) return@nonNullHandler
+            if (packet !is ClientboundSystemChatPacket) return@safeEventHandler
 
             val message = packet.content().string
-            if (!message.contains("丨")) return@nonNullHandler
+            if (!message.contains("丨")) return@safeEventHandler
 
             val parts = message.split("丨")
-            if (parts.size != 2) return@nonNullHandler
+            if (parts.size != 2) return@safeEventHandler
 
             val question = parts[0].replace(Regex("<[^>]*>"), "").trim()
             val options = parts[1].trim()
 
-            if (!questions.has(question)) return@nonNullHandler
+            if (!questions.has(question)) return@safeEventHandler
 
-            val match = Regex(questions.get(question).asString).find(options) ?: return@nonNullHandler
+            val match = Regex(questions.get(question).asString).find(options) ?: return@safeEventHandler
             val answer = match.groupValues[1]
             player.connection.sendChat(answer)
         }

@@ -46,7 +46,6 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
-- [Orbit](https://github.com/MeteorDevelopment/orbit)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
 - [TrollHack](https://github.com/Luna5ama/TrollHack)
 

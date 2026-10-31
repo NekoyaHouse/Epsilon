@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.screen
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.client.ClientPlatform

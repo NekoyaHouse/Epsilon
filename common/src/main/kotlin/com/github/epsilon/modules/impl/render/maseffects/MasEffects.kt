@@ -2,14 +2,12 @@ package com.github.epsilon.modules.impl.render.maseffects
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
 import net.minecraft.gizmos.GizmoStyle
@@ -112,7 +110,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
     private val particleRenderer = MasEffectsParticleRenderer()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             particleRenderer.tick()
 
             if (playerDeathEffect) {
@@ -132,8 +130,8 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
             }
         }
 
-        nonNullHandler<AttackEntityEvent> {
-            if (it.player !== player || !it.player.mainHandItem.`is`(Items.MACE)) return@nonNullHandler
+        safeEventHandler<AttackEntityEvent> {
+            if (it.player !== player || !it.player.mainHandItem.`is`(Items.MACE)) return@safeEventHandler
 
             val victim = it.entity
             val shielding = victim is Player &&

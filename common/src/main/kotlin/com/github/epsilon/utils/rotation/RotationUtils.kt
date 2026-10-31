@@ -1,11 +1,11 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.Constants.mc
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -143,7 +143,7 @@ object RotationUtils {
      * @return 获取或计算得到的结果
      */
     context(nn: NonNullContext)
-    fun getRotationsToEntity(entity: Entity): Rot2f {
+    fun getRotationsToEntity(entity: Entity): Rotation {
         val eyePos = player.eyePosition
         val targetPos = entity.position().add(0.0, entity.bbHeight / 2.0, 0.0)
         val dx = targetPos.x - eyePos.x
@@ -152,7 +152,7 @@ object RotationUtils {
         val dist = sqrt(dx * dx + dz * dz)
         val yaw = (-atan2(dx, dz)).toDegrees().toFloat()
         val pitch = (-atan2(dy, dist)).toDegrees().toFloat()
-        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
+        return Rotation(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -178,12 +178,12 @@ object RotationUtils {
      * @param to   目标位置
      * @return 计算得到的旋转角
      */
-    fun calculate(from: Vec3, to: Vec3): Rot2f {
+    fun calculate(from: Vec3, to: Vec3): Rotation {
         val diff = to.subtract(from)
         val distance = hypot(diff.x, diff.z)
         val yaw = (Mth.atan2(diff.z, diff.x)).toDegrees().toFloat() - 90.0f
         val pitch = (-(Mth.atan2(diff.y, distance)).toDegrees()).toFloat()
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
     /**
@@ -193,11 +193,14 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(entity: Entity): Rot2f {
+    fun calculate(entity: Entity): Rotation {
         return calculate(
             entity.position().add(
                 0.0,
-                (player.y - entity.y + player.eyeHeight).coerceIn(0.0, (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9),
+                (player.y - entity.y + player.eyeHeight).coerceIn(
+                    0.0,
+                    (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
+                ),
                 0.0
             )
         )
@@ -212,7 +215,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(entity: Entity, adaptive: Boolean, range: Double): Rot2f {
+    fun calculate(entity: Entity, adaptive: Boolean, range: Double): Rotation {
         val normalRotations = calculate(entity)
 
         val result = RaytraceUtils.raytrace(normalRotations, range, 0.0f)
@@ -269,7 +272,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(to: BlockPos): Rot2f {
+    fun calculate(to: BlockPos): Rotation {
         return calculate(player.eyePosition, Vec3.atCenterOf(to))
     }
 
@@ -280,7 +283,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(to: Vec3): Rot2f {
+    fun calculate(to: Vec3): Rotation {
         return calculate(player.eyePosition, to)
     }
 
@@ -292,7 +295,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(position: Vec3, direction: Direction): Rot2f {
+    fun calculate(position: Vec3, direction: Direction): Rotation {
         var x = position.x + 0.5
         var y = position.y + 0.5
         var z = position.z + 0.5
@@ -310,7 +313,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(position: BlockPos, direction: Direction): Rot2f {
+    fun calculate(position: BlockPos, direction: Direction): Rotation {
         var x = position.x + 0.5
         var y = position.y + 0.5
         var z = position.z + 0.5
@@ -328,7 +331,7 @@ object RotationUtils {
      * @return 计算得到的旋转角
      */
     context(nn: NonNullContext)
-    fun calculate(vec: Vec3, predict: Boolean): Rot2f {
+    fun calculate(vec: Vec3, predict: Boolean): Rotation {
         var eyesPos = player.eyePosition
 
         if (predict) eyesPos = eyesPos.add(player.deltaMovement)
@@ -342,7 +345,7 @@ object RotationUtils {
             -(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toDegrees().toFloat()
         )
 
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
     /**
@@ -351,10 +354,10 @@ object RotationUtils {
      * @param rotation 旋转角
      * @return 操作结果
      */
-    fun applySensitivityPatch(rotation: Rot2f): Rot2f {
-        val previousRotation = Rot2f(
-            RotationManager.INSTANCE.getLastRotation().yaw,
-            RotationManager.INSTANCE.getLastRotation().pitch
+    fun applySensitivityPatch(rotation: Rotation): Rotation {
+        val previousRotation = Rotation(
+            RotationManager.getLastRotation().yaw,
+            RotationManager.getLastRotation().pitch
         )
         val mouseSensitivity = (
                 mc.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
@@ -364,7 +367,7 @@ object RotationUtils {
                 (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
                 (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
-        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
+        return Rotation(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -374,7 +377,7 @@ object RotationUtils {
      * @param previousRotation 用于量化的基准旋转
      * @return 操作结果
      */
-    fun applySensitivityPatch(rotation: Rot2f, previousRotation: Rot2f): Rot2f {
+    fun applySensitivityPatch(rotation: Rotation, previousRotation: Rotation): Rotation {
         val mouseSensitivity = (
                 mc.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
                 ).toFloat()
@@ -383,7 +386,7 @@ object RotationUtils {
                 (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
                 (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
-        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
+        return Rotation(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -392,13 +395,13 @@ object RotationUtils {
      * @param rotation 旋转角
      * @return 操作结果
      */
-    fun relateToPlayerRotation(rotation: Rot2f): Rot2f {
-        val rotationManager = RotationManager.INSTANCE
+    fun relateToPlayerRotation(rotation: Rotation): Rotation {
+        val rotationManager = RotationManager
         val lastRotation = rotationManager.getLastRotation()
-        val previousRotation = Rot2f(lastRotation.yaw, lastRotation.pitch)
+        val previousRotation = Rotation(lastRotation.yaw, lastRotation.pitch)
         val yaw = previousRotation.yaw + Mth.wrapDegrees(rotation.yaw - previousRotation.yaw)
         val pitch = rotation.pitch.coerceIn(-90f, 90f)
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
     /**
@@ -408,11 +411,11 @@ object RotationUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun resetRotation(rotation: Rot2f?): Rot2f? {
+    fun resetRotation(rotation: Rotation?): Rotation? {
         val target = rotation ?: return null
         val yaw = target.yaw + Mth.wrapDegrees(player.yRot - target.yaw)
         val pitch = player.xRot
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
     /**
@@ -423,13 +426,13 @@ object RotationUtils {
      * @param speed          移动速度或最大旋转速度
      * @return 操作结果
      */
-    fun move(lastRotation: Rot2f, targetRotation: Rot2f, speed: Double): Rot2f {
+    fun move(lastRotation: Rotation, targetRotation: Rotation, speed: Double): Rotation {
         if (speed != 0.0) {
             val deltaYaw = Mth.wrapDegrees(targetRotation.yaw - lastRotation.yaw).toDouble()
             val deltaPitch = (targetRotation.pitch - lastRotation.pitch).toDouble()
 
             val distance = hypot(deltaYaw, deltaPitch)
-            if (!distance.isFinite() || distance < 1.0E-6) return Rot2f(0.0f, 0.0f)
+            if (!distance.isFinite() || distance < 1.0E-6) return Rotation(0.0f, 0.0f)
 
             val distributionYaw = abs(deltaYaw / distance)
             val distributionPitch = abs(deltaPitch / distance)
@@ -440,10 +443,10 @@ object RotationUtils {
             val moveYaw = deltaYaw.coerceIn(-maxYaw, maxYaw).toFloat()
             val movePitch = deltaPitch.coerceIn(-maxPitch, maxPitch).toFloat()
 
-            return Rot2f(moveYaw, movePitch)
+            return Rotation(moveYaw, movePitch)
         }
 
-        return Rot2f(0.0f, 0.0f)
+        return Rotation(0.0f, 0.0f)
     }
 
     /**
@@ -453,8 +456,8 @@ object RotationUtils {
      * @param speed          移动速度或最大旋转速度
      * @return 操作结果
      */
-    fun smooth(targetRotation: Rot2f, speed: Double): Rot2f {
-        return smooth(RotationManager.INSTANCE.lastRotations, targetRotation, speed)
+    fun smooth(targetRotation: Rotation, speed: Double): Rotation {
+        return smooth(RotationManager.lastRotations, targetRotation, speed)
     }
 
     /**
@@ -465,7 +468,7 @@ object RotationUtils {
      * @param speed          移动速度或最大旋转速度
      * @return 操作结果
      */
-    fun smooth(lastRotation: Rot2f, targetRotation: Rot2f, speed: Double): Rot2f {
+    fun smooth(lastRotation: Rotation, targetRotation: Rotation, speed: Double): Rotation {
         var yaw = targetRotation.yaw
         var pitch = targetRotation.pitch
         val lastYaw = lastRotation.yaw
@@ -487,7 +490,7 @@ object RotationUtils {
                 /*
                  * 按鼠标灵敏度修正角度步长
                  */
-                val rotations = Rot2f(yaw, pitch)
+                val rotations = Rotation(yaw, pitch)
                 val fixedRotations = applySensitivityPatch(rotations)
 
                 /*
@@ -498,7 +501,7 @@ object RotationUtils {
             }
         }
 
-        return Rot2f(yaw, pitch)
+        return Rotation(yaw, pitch)
     }
 
 }

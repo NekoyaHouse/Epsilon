@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
@@ -10,8 +10,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
@@ -72,7 +70,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         .build()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             particles.removeAll { particle -> particle.tick() }
 
             for (entity in level.entitiesForRendering()) {

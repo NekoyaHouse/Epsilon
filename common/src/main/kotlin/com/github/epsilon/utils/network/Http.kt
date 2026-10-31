@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.network
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.google.gson.Gson
 import java.io.IOException
 import java.io.InputStream

@@ -1,8 +1,8 @@
 package com.github.epsilon.graphics.text.ttf
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBuffer

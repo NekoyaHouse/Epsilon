@@ -1,8 +1,9 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
@@ -12,7 +13,6 @@ import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.ItemTags
@@ -155,8 +155,8 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private var awaitingBack: Boolean = false
 
     init {
-        nonNullHandler<AttackEntityEvent> { onAttackEntity(it) }
-        nonNullHandler<PlayerTickEvent.Pre> { onTick() }
+        safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onTick() }
     }
 
     override fun onDisable() {

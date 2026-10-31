@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.render.maseffects
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
@@ -545,7 +545,10 @@ class MasEffectsParticleRenderer {
             if (age.toFloat() >= lifetime / 4.0f &&
                 target.position().distanceTo(Vec3(x, y, z)) < 20.0
             ) {
-                alpha = (1.0f - (age.toFloat() - lifetime / 1.5f) / 20.0f).coerceIn(0.0f, 1.0f) * MasEffects.getTotemEffectOpacity()
+                alpha = (1.0f - (age.toFloat() - lifetime / 1.5f) / 20.0f).coerceIn(
+                    0.0f,
+                    1.0f
+                ) * MasEffects.getTotemEffectOpacity()
                 friction = 1.0f
                 val speed = ((age - 15) * 0.05f).toDouble()
                 xd = targetDirection.x * speed

@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.resources
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.Resource
 import org.lwjgl.system.MemoryUtil

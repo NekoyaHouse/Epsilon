@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.AttackSlowdownEvent;
 import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
@@ -15,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(Player.class)
 public class MixinPlayer {
@@ -23,7 +22,7 @@ public class MixinPlayer {
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
     private void onTravelPre(Vec3 input, CallbackInfo ci) {
         if ((Object) this == mc.player) {
-            TravelEvent event = EventBus.INSTANCE.post(new TravelEvent());
+            TravelEvent event = new TravelEvent().post();
             if (event.isCancelled()) {
                 ci.cancel();
             }
@@ -32,13 +31,13 @@ public class MixinPlayer {
 
     @ModifyExpressionValue(method = {"causeExtraKnockback", "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float modifyAttackYaw(float original) {
-        AttackYawEvent event = EventBus.INSTANCE.post(new AttackYawEvent(original));
+        AttackYawEvent event = new AttackYawEvent(original).post();
         return event.getYaw();
     }
 
     @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
     private boolean onAttackSlowdown(Player instance, Vec3 movement, @Share("cancelAttackSlowdown") LocalBooleanRef cancelled) {
-        AttackSlowdownEvent event = EventBus.INSTANCE.post(new AttackSlowdownEvent());
+        AttackSlowdownEvent event = new AttackSlowdownEvent().post();
         cancelled.set(event.isCancelled());
         return !cancelled.get();
     }

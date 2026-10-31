@@ -1,7 +1,7 @@
 package com.github.epsilon.graphics.video
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.GpuTextureView

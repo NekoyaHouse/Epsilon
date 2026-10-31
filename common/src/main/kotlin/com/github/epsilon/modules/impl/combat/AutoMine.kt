@@ -1,8 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -11,9 +14,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.hole.HoleUtils
 import net.minecraft.core.BlockPos
@@ -120,13 +120,13 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private var autoEnabledPacketMine = false
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
-            if (!player.isAlive) return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Pre> {
+            if (!player.isAlive) return@safeEventHandler
 
             if (!PacketMine.isEnabled) {
                 pendingPos = null
                 notifyPacketMinePaused()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             checkPendingBlock()
@@ -135,12 +135,12 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
             // 忙碌期间持续重置计时器，使切换延迟真正从当前方块挖完的时刻开始计算。
             if (PacketMine.isBusy()) {
                 switchTimer.reset()
-                return@nonNullHandler
+                return@safeEventHandler
             }
-            if (!switchTimer.passedMillise(delay.toLong())) return@nonNullHandler
+            if (!switchTimer.passedMillise(delay.toLong())) return@safeEventHandler
 
             val candidates = findCandidates()
-            if (candidates.isEmpty()) return@nonNullHandler
+            if (candidates.isEmpty()) return@safeEventHandler
 
             pendingPos = candidates.first().pos
             PacketMine.mine(pendingPos!!)
@@ -155,7 +155,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         pendingPos = null
         autoEnabledPacketMine = false
 
-        if (NonNullContext.current == null) {
+        if (NonNullContext.instance == null) {
             toggle()
             return
         }

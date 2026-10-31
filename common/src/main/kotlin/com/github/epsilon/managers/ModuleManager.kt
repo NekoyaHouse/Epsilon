@@ -1,10 +1,11 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
+import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Module
@@ -20,7 +21,7 @@ import com.github.epsilon.modules.impl.render.maseffects.MasEffects
 import com.github.epsilon.utils.client.KeybindUtils
 import com.mojang.blaze3d.platform.InputConstants
 
-object ModuleManager {
+object ModuleManager : AlwaysListening {
 
     private val modules = ArrayList<Module>()
 

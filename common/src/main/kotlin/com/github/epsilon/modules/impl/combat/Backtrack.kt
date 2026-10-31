@@ -1,19 +1,19 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet
@@ -83,7 +83,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
-        nonNullHandler<AttackEntityEvent> { event ->
+        safeEventHandler<AttackEntityEvent> { event ->
             val now = System.currentTimeMillis()
             synchronized(packetLock) {
                 lastAttackAt = now
@@ -98,7 +98,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGH) {
+        safeEventHandler<ClientTickEvent.Pre>(EventPriority.HIGH) {
             val now = System.currentTimeMillis()
             if (targetMode == TargetMode.Range) {
                 val rangeTarget = findRangeTarget()
@@ -146,7 +146,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
                         skipSchedule = true
                     }
 
-                    NonNullContext.current == null -> {
+                    NonNullContext.instance == null -> {
                         packetQueue.clear()
                         resetStateLocked(false)
                         skipSchedule = true

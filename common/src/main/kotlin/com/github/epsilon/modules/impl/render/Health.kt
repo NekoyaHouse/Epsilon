@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -48,7 +48,7 @@ object Health : Module("Health", Category.RENDER) {
     private var blinkUntilTick = -1
 
     init {
-        nonNullHandler<Render2DEvent.HUD> { event ->
+        safeEventHandler<Render2DEvent.HUD> { event ->
             runSafe {
                 renderHealth(event.guiGraphics)
             }

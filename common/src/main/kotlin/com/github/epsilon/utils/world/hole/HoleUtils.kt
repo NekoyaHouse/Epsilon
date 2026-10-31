@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.world.hole
 
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.player.Player
 

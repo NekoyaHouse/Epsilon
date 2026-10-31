@@ -1,14 +1,15 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import java.util.concurrent.ConcurrentHashMap
 
-object HealthManager {
+object HealthManager : AlwaysListening {
 
     private val scoreboardHealth = ConcurrentHashMap<String, Int>()
 

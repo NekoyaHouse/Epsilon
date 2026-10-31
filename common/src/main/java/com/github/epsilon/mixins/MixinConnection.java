@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.managers.network.ClientboundPacketManager;
 import com.github.epsilon.managers.network.ServerboundPacketManager;
@@ -23,7 +22,7 @@ public class MixinConnection {
         if (ClientboundPacketManager.INSTANCE.onPacketReceive(packet)) {
             return;
         }
-        PacketEvent.Receive event = EventBus.INSTANCE.post(new PacketEvent.Receive(packet));
+        PacketEvent.Receive event = new PacketEvent.Receive(packet).post();
         if (!event.isCancelled()) {
             original.call(event.getPacket(), listener);
         }
@@ -41,7 +40,7 @@ public class MixinConnection {
                 original.call(instance, filteredPacket, listener, flush);
             }
         } else {
-            PacketEvent.Send event = EventBus.INSTANCE.post(new PacketEvent.Send(packet));
+            PacketEvent.Send event = new PacketEvent.Send(packet).post();
             if (!event.isCancelled()) {
                 Packet<?> filteredPacket = ClientIdentityHider.INSTANCE.filterServerboundPacket(event.getPacket());
                 if (filteredPacket != null) {

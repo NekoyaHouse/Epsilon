@@ -62,7 +62,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - `ModuleManager.initModules()` 与 `HudElementManager.initElements()` 必须在 `ConfigManager.initConfig()` 之前完成。
 - Manager 统一为 `public static final Xxx INSTANCE` 单例，构造函数默认私有（`ModuleManager` 等既有例外遵循现状）；调用方不得为已由 Manager 持有的资源另建实例。
-- `RotationManager.INSTANCE` 是可变静态字段，切换旋转模式会替换实例；每次使用都必须重新读取，不得长期缓存。
 - GPU renderer、render target、字体 atlas 和 shader 必须在渲染线程创建和使用。
 - 字段持有 renderer 时使用 `Suppliers.memoize(Renderer::create)` 延迟创建，或交给 `RendererManager` 注册。
 - 不再使用的 GPU 资源调用 `close()`；全局销毁交给 `RendererManager`、`RenderTargetManager`、`ShaderManager` 等 Manager 生命周期。
@@ -72,21 +71,23 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - 本体模块优先使用 `public static final ... INSTANCE` 和私有构造函数；维护既有例外时遵循现状，不做无关统一。
 - Setting 必须是实例字段，通过 `SettingHost` DSL 自动注册。依赖条件使用 lambda 或方法引用延迟读取，不得在字段初始化时固化结果。
-- 世界内事件处理器先执行 `nullCheck()`；仅依赖主菜单或资源系统的处理器按实际前置条件检查。
+- 世界内事件优先使用 `safeEventHandler`，由 `NonNullContext` 统一保证前置条件；普通 `handler` 中需要世界时先执行 `nullCheck()`。仅依赖主菜单或资源系统的处理器按实际前置条件检查。
 - 模块禁用必须恢复按键、计时器、物品栏、旋转 pending 状态、缓存和其他外部状态。
 - 内置模块必须加入 `ModuleManager.initModules()`；HUD 元素必须加入 `HudElementManager.initElements()`，不得只创建 `INSTANCE` 而漏注册。
 - 仅在确有 Setting 之外的持久状态时重写 `resetCustomState()`、`saveCustomState()`、`loadCustomState(JsonObject)`。
 
 ## 事件与 Mixin 约束
 
-- EventBus 按事件精确运行时 class 分发；不得假设父类型监听器会收到子类型事件。
-- 监听方法必须带 `@EventHandler`、返回 `void`，且只有一个非 primitive 参数。
-- EventBus 通过 `MethodHandles.privateLookupIn` 直接绑定 `@EventHandler` 方法，不需要为监听类注册 lambda factory 或包前缀；监听类不再受包名限制。
-- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `Any.nonNullHandler` / `Any.handler` 扩展：在模块或其它对象的 `init` 中直接 `nonNullHandler<E> { ... }`（`import com.github.epsilon.events.api.nonNullHandler`），隐式 receiver 即 owner，不得再写 `EventBus.nonNullHandler(this, ...)`，也不得为监听器另加模块级转发包装。
-- 默认（`alwaysListening = false`）监听器绑定到 owner，生效与否由 `EventBus.subscribe(owner)` / `EventBus.unsubscribe(owner)` 决定（Module 即 `isEnabled` 切换），不得在处理器内再写 `if (isEnabled)` 之类的重复过滤。
-- 确需在 owner 未订阅（模块禁用）期间继续监听时显式传 `alwaysListening = true`；Manager 等从不 subscribe/unsubscribe 的常驻监听器必须使用 `alwaysListening = true`，否则监听器不会生效。
-- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.utils.safety.NonNullContext`；统一用通配导入 `import com.github.epsilon.utils.safety.*` 一次性引入上下文类型与属性（`NonNullContext`、`player`、`level`、`interaction`、`connection`、`mc`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
-- 在 `context(nn: NonNullContext)` 作用域内直接用上下文属性读取非空值，**不得**写成 `nn.player` / `nn.level` / `nn.interaction` / `nn.connection` / `nn.mc` 这种显式访问：
+- 事件总线位于 `events.api`，遵循 CLion 的独立总线模型：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型，不得恢复旧的全局 `EventBus.post(event)`。
+- 每个具体事件独立派发，不向父类型冒泡；监听 `ClientTickEvent.Pre` / `.Post` 等实际发布的类型，不得监听仅用于分组的基类。
+- EventBus 只接受显式 `Handler`；不得新增注解扫描、反射方法绑定或隐式全局监听。查找事件 Companion / object 总线的反射不用于发现监听方法。
+- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `IListening.safeEventHandler` / `IListening.handler` 扩展，在 owner 的 `init` 中直接注册，不得添加模块级转发包装。`safeEventHandler` 的 lambda receiver 是 `NonNullContext`，访问 owner 的显式 `this` 时须写 `this@模块名`，避免接收者变化引起状态或通知 hash 错误。
+- Module 继承 `ListenerOwner`；默认监听器绑定到 owner，生效与否由 owner 的 `subscribe()` / `unsubscribe()` 决定（Module 即 `isEnabled` 切换），不得在处理器内重复过滤 `isEnabled`。
+- 确需在模块禁用期间继续监听时显式传 `alwaysListening = true`。Manager 等常驻监听器实现 `AlwaysListening`，不能使用未订阅的普通 `ListenerOwner`。
+- 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。旋转在 `PlayerTickEvent.Pre` 的 `-1000` 结算，3D scheduler 在 `Render3DEvent` 的 `-999` flush，不得反转顺序。
+- `NonNullContext` 在公共初始化最先预热；`ClientTickEvent.Pre` 以 `Int.MAX_VALUE` 刷新，主线程队列以 `EventPriority.HIGHEST + 1` 执行。断开连接和世界更新先清空快照，加入游戏和重生后刷新；缺失必需字段时必须清空，不能复用旧世界对象。`hitResult` / `cameraEntity` 可空，不作为上下文可用的前置条件。世界更新的清理监听器使用普通 `handler`，不能因上下文已清空而跳过。
+- 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.kernel.jvm.NonNullContext`；统一用通配导入 `import com.github.epsilon.kernel.jvm.*` 一次性引入上下文类型与属性（`NonNullContext`、`player`、`level`、`gameMode`、`connection`、`mc`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
+- 在 `context(nn: NonNullContext)` 作用域内直接用上下文属性读取非空值，**不得**写成 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 这种显式访问：
 
   ```kotlin
   context(nn: NonNullContext)
@@ -95,12 +96,12 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
   }
   ```
 
-- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接使用 `player` / `level` / `interaction` / `connection` 上下文属性，不得在函数体内自行读取 `NonNullContext.current`；这些函数的调用点必须位于 `nonNullHandler` / `runSafe` / `context(nn) { }` 等上下文作用域内。
-- `utils.safety` 只提供 `NonNullContext`、上述上下文属性与 `runSafe` 系列工具；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
+- 依赖玩家/世界/交互管理器/连接的 `utils` 函数一律声明为 `context(nn: NonNullContext)` 参数形式（参考 `ClickSlotUtils`），函数内部直接使用 `player` / `level` / `gameMode` / `connection` 上下文属性，不得在函数体内自行读取 `NonNullContext.instance`；这些函数的调用点必须位于 `safeEventHandler` / `runSafe` / `context(nn) { }` 等上下文作用域内。
+- `kernel.jvm.NonNullContext.kt` 提供 `NonNullContext`、上述上下文属性与 `runSafe` 系列工具；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
 - 上下文字段命名与 Minecraft 一致：世界用 `level`、连接用 `connection`；不得再使用 `world` / `netHandler` 等别名。
-- `Cancellable` 是类。使用 `cancel()`/`isCancelled()`，不存在 `setCancelled(boolean)`。
+- `Cancellable` 是实现 `ICancellable` 的类。使用 `cancel()` 和 Kotlin 的 `isCancelled` 属性（Java 使用 `isCancelled()`）；取消状态不可逆，不得通过 setter 取消已有的取消状态。
 - 有明确监听顺序时必须设置 priority，不得依赖跨对象的隐式注册顺序。
-- 修改 Minecraft 事件字段、构造参数或触发点前必须核对 `common/src/main/java/com/github/epsilon/events/impl/` 和当前版本参考源码。
+- 修改 Minecraft 事件字段、构造参数或触发点前必须核对 `common/src/main/kotlin/com/github/epsilon/events/impl/` 和当前版本参考源码。
 - 共享 Mixin 目标优先放 `common/src/main/java/com/github/epsilon/mixins`，并在 `common/src/main/resources/epsilon.mixins.json` 注册；仅在加载器字节码或调用链不同时拆到 `fabric/` 或 `neoforge/` 的 mixin 包。
 - 新 Mixin 必须加入对应 JSON；删除或重命名时同步移除旧条目。
 - Mixin 类名使用 `Mixin<目标类名>`；优先使用 `@Inject`、MixinExtras `@WrapOperation` 等局部注入，避免 `@Overwrite`。
@@ -115,7 +116,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Zip 导入必须继续使用 `ConfigManager` 的安全解压逻辑，不得绕过路径穿越校验。
 - 修改配置 schema 时必须同步更新 `ConfigManager.CONFIG_VERSION` 与迁移逻辑；不得直接丢弃旧配置。
 - 影响数据完整性的操作应主动保存，不能只依赖 JVM shutdown hook。
-- Rotation 请求每次从 `RotationManager.INSTANCE` 读取；切换模式会通过 `copyStateFrom()` 替换实例。
 - raytrace 回调会在平滑旋转校验中被多次调用，必须无副作用。
 - 服务端位置/旋转包会重置托管旋转；需要等待命中后攻击或放置时，由模块自行维护 pending 状态并保证动作只执行一次。
 
@@ -149,13 +149,14 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Kotlin 上下文参数使用 2.4 已稳定的 `context(...)` 语法；不得使用已废弃的 context receivers，也不需要为此添加 `-Xcontext-parameters` 等实验性编译参数。
 - 新增 Javadoc 与解释性注释使用中文；只对不明显的约束、线程或算法原因编写注释。
 - Logger 使用 `Constants.LOGGER`。
-- Minecraft 实例使用 `Constants.mc`；Module/HudModule 内优先使用继承的 `mc`。
+- Minecraft 实例统一来自 `MinecraftWrapper.mc`，该单例声明为 `@JvmField`；Java 使用 `import static com.github.epsilon.kernel.MinecraftWrapper.mc;` 后直接访问 `mc`；仅 wrapper 内允许调用 `Minecraft.getInstance()`，不得恢复 `Constants.mc`。Module/HudModule 内优先使用继承的 `mc`，它同样委托给 wrapper。
 - 不得吞异常。边界层隔离单个资源或子系统失败时，记录包含上下文的日志。
 - 不做与任务无关的重构、批量格式化或生成文件改写。
 - 修改 `native/smtc` 时必须同步重建 `common/src/main/resources/natives/windows-x86_64/epsilon_smtc.dll`，并保持 Java 侧 JNI 签名一致。
 
 ## 提交前检查
 
+- EventBus 或 NonNullContext 改动运行 `:common:eventBusRegression`（已接入 `check`），检查优先级、订阅、具体事件总线与自身泛型、链式发布返回原实例、取消/修改传播及上下文失效。
 - 运行与改动范围匹配的任务。共享行为至少检查 Fabric 和 NeoForge 编译；Mixin、资源、启动或 Gradle 变更运行完整 `buildRelease`。
 - 最终执行 `git diff --check`、`git diff -- AGENTS.md` 和 `git status --short`。
 - 文档入口为 [`README.md`](README.md) 与 [`README_zh.md`](README_zh.md)；移动或重命名文档时必须修复仓库内链接。

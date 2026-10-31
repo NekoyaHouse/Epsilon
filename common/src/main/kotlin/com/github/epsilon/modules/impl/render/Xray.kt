@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -12,7 +12,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.core.BlockPos
@@ -62,7 +61,7 @@ object Xray : Module("Xray", Category.RENDER) {
     private var area: AABB = AABB(BlockPos.ZERO)
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (plugin.`is`(Plugin.New)) {
                 checked.forEach { blockMemory ->
                     if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
@@ -80,7 +79,7 @@ object Xray : Module("Xray", Category.RENDER) {
             }
         }
 
-        nonNullHandler<MoveEvent> { event ->
+        safeEventHandler<MoveEvent> { event ->
             if (brutForce) {
                 if (all != done) {
                     event.z = 0.0

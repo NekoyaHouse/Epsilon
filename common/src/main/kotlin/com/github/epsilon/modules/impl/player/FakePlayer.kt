@@ -1,12 +1,12 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.world.entity.Entity
@@ -27,13 +27,13 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
     private val positions: MutableList<PlayerState> = ArrayList()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (record) {
                 positions.add(PlayerState(player.x, player.y, player.z, player.yRot, player.xRot))
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            val fake = fakePlayer ?: return@nonNullHandler
+            val fake = fakePlayer ?: return@safeEventHandler
             if (playback && positions.isNotEmpty()) {
                 if (movementTick >= positions.size) {
                     movementTick = 0
@@ -62,7 +62,7 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
     }
 
     override fun onEnable() {
-        val nn = NonNullContext.current
+        val nn = NonNullContext.instance
         if (nn == null) {
             toggle()
             return

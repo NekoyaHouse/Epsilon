@@ -1,15 +1,15 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -48,10 +48,10 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     private var firstPhase = false
 
     init {
-        // 原实现监听 PlayerTickEvent 基类（按事件精确 class 分发，子类事件不会命中），保持原样。
-        nonNullHandler<PlayerTickEvent> {
+        // 每个具体事件独立派发，蓄力与目标更新必须监听实际发布的 Pre。
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (ElytraCombat.isControllingCombat()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
             updateTarget()
 

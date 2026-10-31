@@ -2,11 +2,10 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.WireframeEntityRenderer
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import java.awt.Color
 

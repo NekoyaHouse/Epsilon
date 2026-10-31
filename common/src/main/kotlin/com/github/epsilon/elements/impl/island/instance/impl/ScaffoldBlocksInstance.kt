@@ -1,17 +1,17 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.color.block.BlockTintSource
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
@@ -112,7 +112,7 @@ class ScaffoldBlocksInstance(
         iconSprite = mc.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
 
         val tintSource: BlockTintSource = mc.blockColors.getTintSource(state, 0) ?: return
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
 
         val tint = context(nn) { tintSource.colorAsTerrainParticle(state, level, player.blockPosition()) }
         iconTint = Color(tint, true)

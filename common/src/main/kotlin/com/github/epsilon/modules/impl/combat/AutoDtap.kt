@@ -1,17 +1,17 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -43,7 +43,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (step != 0) {
                 while (mc.options.keyUse.consumeClick()) {
                 }
@@ -52,7 +52,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
             // 处理延迟
             if (stepDelay > 0) {
                 stepDelay--
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             // 状态机处理
@@ -107,7 +107,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                             pos,
                             false
                         )
-                        interaction.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
+                        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
                         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                         stepDelay = 1 + random.nextInt(2)
@@ -117,7 +117,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                         if (obsidianSlot == -1) return
 
                         InvUtils.swap(obsidianSlot, false)
-                        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+                        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
                         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                         InvUtils.swap(endCrystalSlot, false)
@@ -142,7 +142,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     base,
                     false
                 )
-                interaction.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
+                gameMode.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
                 SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                 stepDelay = 1 + random.nextInt(2)

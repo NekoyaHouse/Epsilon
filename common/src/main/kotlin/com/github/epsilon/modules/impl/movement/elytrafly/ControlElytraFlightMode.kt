@@ -5,13 +5,15 @@ import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
@@ -84,12 +86,12 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         runSafe {
             if (elytraFly.noSprint) {
-                event.isSprint = false
+                event.sprint = false
                 player.isSprinting = false
                 mc.options.keySprint.isDown = false
             }
             if (shouldJump) {
-                event.isJump = true
+                event.jump = true
                 shouldJump = false
             }
         }
@@ -201,7 +203,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                     "yaw=" + ElytraDebug.fmt(calcYaw().toDouble()) + " pitch=" + ElytraDebug.fmt(calcPitch().toDouble())
                 )
             }
-            RotationManager.INSTANCE.setRotations(Rot2f(calcYaw(), calcPitch()), 360.0, Priority.Highest)
+            RotationManager.setRotations(Rotation(calcYaw(), calcPitch()), 360.0, Priority.Highest)
         }
     }
 

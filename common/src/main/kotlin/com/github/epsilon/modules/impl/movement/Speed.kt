@@ -1,19 +1,19 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -77,7 +77,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private val lagTimer = TimerUtils()
 
     init {
-        nonNullHandler<PacketEvent.Receive>(EventPriority.HIGH) { event ->
+        safeEventHandler<PacketEvent.Receive>(EventPriority.HIGH) { event ->
             val packet = event.packet
 
             if (mode == Mode.Strafe) {
@@ -85,17 +85,17 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     if (packet.id == player.id && velocity) {
                         val packetSpeed = hypot(packet.movement.x, packet.movement.z)
 
-                        this.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
+                        this@Speed.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
                             packetSpeed
                         } else {
-                            packetSpeed - this.lastExp
+                            packetSpeed - this@Speed.lastExp
                         }
 
-                        if (this.lastExp > 0) {
+                        if (this@Speed.lastExp > 0) {
                             expTimer.reset()
 
-                            this.speed += this.lastExp * multiplier
-                            this.distance += this.lastExp * multiplier
+                            this@Speed.speed += this@Speed.lastExp * multiplier
+                            this@Speed.distance += this@Speed.lastExp * multiplier
 
                             if (player.deltaMovement.y > 0 && vertical != 0.0) {
                                 setMotionY(player.deltaMovement.y * vertical)
@@ -107,17 +107,17 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                         if (player.position().distanceTo(packet.center) < 15) {
                             val knockback = packet.playerKnockback.orElse(Vec3.ZERO)
                             val packetSpeed = hypot(knockback.x, knockback.z)
-                            this.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
+                            this@Speed.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
                                 packetSpeed
                             } else {
-                                packetSpeed - this.lastExp
+                                packetSpeed - this@Speed.lastExp
                             }
 
-                            if (this.lastExp > 0) {
+                            if (this@Speed.lastExp > 0) {
                                 expTimer.reset()
 
-                                this.speed += this.lastExp * multiplier
-                                this.distance += this.lastExp * multiplier
+                                this@Speed.speed += this@Speed.lastExp * multiplier
+                                this@Speed.distance += this@Speed.lastExp * multiplier
 
                                 if (player.deltaMovement.y > 0) {
                                     setMotionY(player.deltaMovement.y * vertical)
@@ -133,10 +133,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (mode == Mode.Grim) {
                 if (!player.isMoving) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 var collisions = 0
@@ -148,7 +148,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                         val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
                         val boatBoost = boatSpeed
                         player.deltaMovement = Vec3(-sin(yaw) * boatBoost, boatJump, cos(yaw) * boatBoost)
-                        return@nonNullHandler
+                        return@safeEventHandler
                     } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(
                             entityBox
                         )
@@ -163,11 +163,11 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Post> {
+        safeEventHandler<PlayerTickEvent.Post> {
             distance = getDistance2D()
         }
 
-        nonNullHandler<MoveEvent> { event ->
+        safeEventHandler<MoveEvent> { event ->
             if (!player.isMoving && airStop && mode != Mode.Grim) {
                 player.deltaMovement = Vec3(0.0, player.deltaMovement.y, 0.0)
             }
@@ -181,16 +181,16 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             ) {
                 resetStrafe()
                 stop = true
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (mode == Mode.Strafe) {
                 if (stop) {
                     stop = false
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (!lagTimer.passedMillise(lagTime.toLong())) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (stage == 1) {
@@ -222,7 +222,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 val moveVector = player.input.moveVector
                 val n = moveVector.y.toDouble()
                 val n2 = moveVector.x.toDouble()
-                val n3 = RotationManager.INSTANCE.getYaw().toDouble()
+                val n3 = RotationManager.getYaw().toDouble()
                 if (n == 0.0 && n2 == 0.0) {
                     event.x = 0.0
                     event.z = 0.0
@@ -232,7 +232,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 event.cancel()
 
                 stage++
-                return@nonNullHandler
+                return@safeEventHandler
             }
             var speedEffect = 1.0
             var slowEffect = 1.0
@@ -252,13 +252,13 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
             if (mode == Mode.StrafeStrict) {
                 if (!lagTimer.passedMillise(lagTime.toLong())) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
                 if (strafe == 1) {
                     speed = 1.35f * base - 0.01f
                 } else if (strafe == 2) {
                     if (player.input.keyPresses.jump || !player.onGround()) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
                     val jumpMotion = 0.3999999463558197f + jumpEffect
                     event.y = jumpMotion.toDouble()
@@ -309,7 +309,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         val forward = moveVector.y
         val strafe = moveVector.x
         val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val yaw = Mth.lerp(tickDelta, RotationManager.INSTANCE.getLastRotation().yaw, RotationManager.INSTANCE.getYaw())
+        val yaw = Mth.lerp(tickDelta, RotationManager.getLastRotation().yaw, RotationManager.getYaw())
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO
         }

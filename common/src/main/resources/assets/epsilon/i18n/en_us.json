@@ -431,11 +431,6 @@
         "replace minecraft font": "Replace Minecraft Font",
         "close gui on outside": "Close Gui On Outside",
         "dropdown hints": "Dropdown Hints",
-        "rotation mode": {
-          "_value": "Rotation Mode",
-          "silent": "Silent",
-          "snap": "Snap"
-        },
         "modify crosshair": "Modify Crosshair",
         "hide mode": {
           "_value": "Hide Mode",

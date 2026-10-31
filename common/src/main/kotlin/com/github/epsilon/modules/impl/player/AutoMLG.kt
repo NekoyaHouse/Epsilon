@@ -1,10 +1,14 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
@@ -12,12 +16,8 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -47,19 +47,19 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private var shouldInteract = false
     private var pendingSlot = -1
 
-    private var lockedRotation: Rot2f? = null
+    private var lockedRotation: Rotation? = null
     private var waitingForRotation = false
 
     private var grimShouldCollect = false
-    private var grimCollectRotation: Rot2f? = null
+    private var grimCollectRotation: Rotation? = null
     private var grimCollectSlot = -1
     private var grimWaitingCollectRotation = false
     private val swapTimer = TimerUtils()
     private var pendingSwapBack = false
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
-            if (Scaffold.isEmergencyPlacementActive) return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Pre> {
+            if (Scaffold.isEmergencyPlacementActive) return@safeEventHandler
 
             if ((isFalling() || player.isInWater || player.isInLava) && !mlgCompleted) {
                 player.isSprinting = false
@@ -76,7 +76,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     quickCollectDelayTicks--
                 } else if (grimWaitingCollectRotation && grimCollectRotation != null) {
                     val rotation = grimCollectRotation!!
-                    RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                    RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                     if (isFacing(rotation, 2.0f, 2.5f)) {
                         InvUtils.swap(grimCollectSlot, true)
@@ -95,7 +95,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     if (InvUtils.findInHotbar(Items.WATER_BUCKET).found()) {
                         InvUtils.swapBack()
                         completeMlgCycle()
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val bucket = InvUtils.findInHotbar(Items.BUCKET)
@@ -107,22 +107,22 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
                             val rotation = RotationUtils.calculate(hitVec)
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
                             grimWaitingCollectRotation = true
                         }
                     }
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (waitingForRotation && lockedRotation != null) {
                 val locked = lockedRotation!!
-                RotationManager.INSTANCE.setRotations(locked, 180.0, Priority.High)
+                RotationManager.setRotations(locked, 180.0, Priority.High)
 
                 if (!isFacing(locked, 1.6f, 2.0f)) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (shouldInteract && pendingSlot != -1) {
@@ -135,7 +135,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         resetPending()
                     }
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (isFalling() && !grimShouldCollect) {
@@ -149,7 +149,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         if (shouldSkipMlgPlacement(bestPos)) {
                             mlgCompleted = true
                             resetPending()
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
 
                         val dist = player.eyePosition.distanceTo(Vec3.atCenterOf(bestPos).add(0.0, 0.5, 0.0))
@@ -158,7 +158,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
                             val rotation = RotationUtils.calculate(targetVec)
 
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                             if (rotation.pitch > 45) {
                                 val eyesPos = player.eyePosition
@@ -169,11 +169,11 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 val hitVec = Vec3(hitX, neighbor.y + 1.0, hitZ)
 
                                 if (eyesPos.distanceTo(hitVec) > 4.5) {
-                                    return@nonNullHandler
+                                    return@safeEventHandler
                                 }
 
                                 val preciseRotation = RotationUtils.calculate(hitVec)
-                                RotationManager.INSTANCE.setRotations(preciseRotation, 180.0, Priority.High)
+                                RotationManager.setRotations(preciseRotation, 180.0, Priority.High)
 
                                 val noSlowdown = NoSlowdown
                                 if (NoSlowdown.isWorking()) {
@@ -335,8 +335,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
         return falling
     }
 
-    private fun isFacing(target: Rot2f, yawTolerance: Float, pitchTolerance: Float): Boolean {
-        val current = RotationManager.INSTANCE.getRotation()
+    private fun isFacing(target: Rotation, yawTolerance: Float, pitchTolerance: Float): Boolean {
+        val current = RotationManager.getRotation()
         val yawDiff = abs(Mth.wrapDegrees(current.yaw - target.yaw))
         val pitchDiff = abs(Mth.wrapDegrees(current.pitch - target.pitch))
         return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance
@@ -344,7 +344,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun useItem(): Boolean {
-        val result = interaction.useItem(player, InteractionHand.MAIN_HAND)
+        val result = gameMode.useItem(player, InteractionHand.MAIN_HAND)
         return result.consumesAction()
     }
 
