@@ -162,9 +162,12 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 }
                 return@runSafe
             }
+            // 动量不足时把等待从 Boost Delay 缩短到固定 10 tick：按 Boost Delay 等 20 tick 动量
+            // 早就掉光了。这里刻意不再对 Boost Delay 取 min，保证无论配置多小，任何一次补发与
+            // 上一次发射之间都至少间隔 10 tick。
             val lowMomentum = isLowMomentum()
             val waitTicks = if (lowMomentum) {
-                minOf(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay)
+                LOW_MOMENTUM_BOOST_INTERVAL_TICKS
             } else {
                 elytraFly.boostDelay
             }
@@ -206,6 +209,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun calcYaw(): Float = runSafeOrElse(0.0f) {
+        // 自动攻击对准期间，飞行旋转直接面向目标：静默旋转下攻击朝向只能靠发包带出去。
+        ElytraCombat.attackFacing?.let { return@runSafeOrElse it.yaw }
         val combatInput = ElytraCombat.getControlInput()
         if (combatInput != null) {
             return@runSafeOrElse combatInput.yaw
@@ -240,6 +245,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun calcPitch(): Float = runSafeOrElse(0.0f) {
+        // 攻击对准优先保证命中，不套用抬头保护（否则瞄下方目标时会被强制抬高）。
+        ElytraCombat.attackFacing?.let { return@runSafeOrElse it.pitch }
         val combatInput = ElytraCombat.getControlInput()
         if (combatInput != null) {
             return@runSafeOrElse applyCeilingPitchGuard(combatInput.pitch)
@@ -447,9 +454,12 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         private const val LOW_MOMENTUM_SPEED = 0.4
 
         /**
-         * 低动量时的最短烟花补发间隔（tick）。
+         * 动量不足时的补发间隔（tick），即两次补发之间至少间隔这么久。
+         *
+         * 间隔过小会连发（4 tick 时约每秒 5 发），烟花消耗过快；10 tick 相当于每秒最多 2 发，
+         * 既能较快把被打断的动量拉回来，又不至于浪费。
          */
-        private const val LOW_MOMENTUM_BOOST_INTERVAL_TICKS = 4
+        private const val LOW_MOMENTUM_BOOST_INTERVAL_TICKS = 10
 
     }
 

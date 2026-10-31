@@ -94,13 +94,19 @@ object CombatWeaponController {
             if (shieldSwap) {
                 Predicate { stack -> InvHelper.isAxe(stack) }
             } else {
-                Predicate { stack -> stack == (Items.MACE) }
+                // 必须用 ItemStack.is(Item) 判物品：Kotlin 的 == 走 equals，ItemStack 与 Item
+                // 类型不同会恒为 false，导致 selectMainHand 永远返回 null、重锤永不自动攻击。
+                Predicate { stack -> stack.`is`(Items.MACE) }
             }
         ) ?: return false
         try {
             // 只调用原生 attack，攻击距离使用本地实体交互 reach。
             gameMode.attack(player, target)
-            SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
+            // 与 Java 版 if (swingHand) swingHand(...) 对齐：关闭挥手时必须"什么都不做"，
+            // 不能用 SwingMode.of(swingHand)——那会把 false 映射成 Packet，反而多发一个招手包。
+            if (swingHand) {
+                SwingMode.Client.attackSwing(InteractionHand.MAIN_HAND)
+            }
             return true
         } finally {
             selection.restore()
@@ -226,14 +232,16 @@ object CombatWeaponController {
     }
 
     fun stopSpearUse() {
+        // 先松开物品与右键：这两步不依赖背包上下文，必须在上下文缺失时也执行。
+        // 否则退出世界/回主菜单后 keyUse 会一直留在按下状态（模块禁用的恢复路径只有这里）。
+        val player = mc.player
+        if (player != null && isUsingSpear(player)) {
+            mc.gameMode?.releaseUsingItem(player)
+        }
+        releaseSpearKey()
         val nn = NonNullContext.current ?: return
         context(nn) {
-            // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
-            val player = mc.player
-            if (player != null && isUsingSpear(player)) {
-                mc.gameMode?.releaseUsingItem(player)
-            }
-            releaseSpearKey()
+            // 再按栈顺序恢复 inventory swap / hotbar。
             if (spearInventorySwapped) {
                 InvUtils.invSwapBack()
                 spearInventorySwapped = false

@@ -25,7 +25,10 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.toDegrees
+import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -168,6 +171,16 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var controlInput: ElytraCombatInput? = null
     private var latestIntent: FlightIntent = FlightIntent.idle(Vec3.ZERO)
 
+    /**
+     * 本 tick 自动攻击的朝向覆盖（yaw/pitch）；非 null 时飞行旋转改为面向目标。
+     *
+     * 静默旋转下服务端只按"上一 tick 收到的旋转"判定攻击朝向，所以自动攻击必须先把
+     * 朝向目标的旋转发出去一 tick，下一 tick 再出手。由 [faceTargetForAttack] 写入，
+     * 每 tick 开头清空。
+     */
+    var attackFacing: Rot2f? = null
+        private set
+
     /** 记录模块启用前的 ElytraFly 状态，关闭时只恢复被本模块改动过的部分。 */
     private var capturedElytraEnabled: Boolean = false
     private var capturedElytraMode: ElytraFlightModes? = null
@@ -240,6 +253,29 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         return this.controlInput
     }
 
+    /** 开启/关闭 ElytraCombat 的调试输出（按决策点打印到聊天栏）。 */
+    fun toggleDebug() {
+        ElytraDebug.enabled = !ElytraDebug.enabled
+        ElytraDebug.reset()
+        ChatUtils.addChatMessage("ElytraCombat debug " + if (ElytraDebug.enabled) "ON" else "OFF")
+    }
+
+    /**
+     * 请求本 tick 的飞行旋转朝向目标眼睛，供自动攻击对准使用。
+     *
+     * @param entity 攻击目标
+     * @return 目标旋转；调用方结合"已持续几个 tick"决定是否可以出手
+     */
+    fun faceTargetForAttack(entity: LivingEntity?): Rot2f? {
+        val nn = NonNullContext.current
+        this.attackFacing = if (entity == null || nn == null) {
+            null
+        } else {
+            context(nn) { RotationUtils.getRotationsToEntity(entity) }
+        }
+        return this.attackFacing
+    }
+
     /** 本 tick 未截断的意图抬升量，用于飞控的头顶碰撞探测。 */
     fun getCombatIntendedClimb(): Double {
         return this.latestIntent.desiredVelocity.y
@@ -278,11 +314,11 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     }
 
     private fun onPlayerTick() {
-        val player = this.mc.player ?: run {
-            clearControl()
-            return
-        }
-        if (!canControlFlight()) {
+        // 自动攻击的朝向覆盖只对"请求它的那一 tick"有效，进入新 tick 先清空。
+        this.attackFacing = null
+        // 与 Java 版 nullCheck() 对齐：player 或 level 任一缺失都视为无法接管飞行。
+        val player = this.mc.player
+        if (player == null || this.mc.level == null || !canControlFlight()) {
             clearControl()
             return
         }
@@ -371,10 +407,13 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
         val player = this.mc.player ?: return
         val movement = player.deltaMovement
+        // 攻击对准期间发包旋转是"朝向目标"，服务端也按它模拟滑翔，本地复算必须使用同一个旋转。
+        val physicsYaw = this.attackFacing?.yaw ?: input.yaw
+        val physicsPitch = this.attackFacing?.pitch ?: input.pitch
         val corrected = ElytraMotionPredictor.nextFallFlyingMovement(
             movement,
-            input.yaw,
-            input.pitch,
+            physicsYaw,
+            physicsPitch,
             ElytraDirectionSolver.effectiveGravity(player),
         )
         ElytraDebug.log(
@@ -645,6 +684,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         ElytraDirectionSolver.resetEscape()
         this.controlInput = null
         this.latestIntent = FlightIntent.idle(Vec3.ZERO)
+        this.attackFacing = null
         this.currentBehavior.reset()
     }
 
@@ -652,6 +692,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         // 失去目标或无法接管飞行时回到无输入状态，不保留过期路径。
         this.controlInput = null
         this.latestIntent = FlightIntent.idle(Vec3.ZERO)
+        this.attackFacing = null
         this.target = null
         this.flightPlanner.reset()
         ElytraDirectionSolver.resetEscape()

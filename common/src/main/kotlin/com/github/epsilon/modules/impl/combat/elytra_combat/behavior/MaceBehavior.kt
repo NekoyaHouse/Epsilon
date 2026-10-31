@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.behavior
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.MaceBehavior.Companion.RECOVERY_TICKS
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker
+import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
 import com.github.epsilon.utils.math.toRadians
@@ -58,6 +59,11 @@ class MaceBehavior : ElytraCombatBehavior {
      */
     private var strikeTicks: Int = 0
 
+    /**
+     * 已经为自动攻击请求朝向目标的连续 tick 数。
+     */
+    private var attackFacingTicks: Int = 0
+
     override fun reset() {
         this.state = State.NONE
         this.pullUpStartTick = 0
@@ -65,6 +71,7 @@ class MaceBehavior : ElytraCombatBehavior {
         this.lastGroundCandidate = null
         this.recoveryTicks = 0
         this.strikeTicks = 0
+        this.attackFacingTicks = 0
     }
 
     override fun tick(
@@ -149,6 +156,36 @@ class MaceBehavior : ElytraCombatBehavior {
                 } else {
                     follow(bot, targetPos, target)
                 }
+
+                // 重锤自动攻击：先把朝向目标的旋转发出去一个 tick（静默旋转下服务端只按上一 tick
+                // 收到的旋转判定攻击朝向），再出手。
+                if (canAttack(bot, target.entity)) {
+                    bot.faceTargetForAttack(target.entity)
+                    if (++this.attackFacingTicks > ATTACK_FACING_TICKS) {
+                        val attacked = CombatWeaponController.attackMace(
+                            target.entity,
+                            bot.maceAntiShield,
+                            bot.maceSwingHand,
+                            0.5,
+                        )
+                        // 出手失败通常是主手/热栏/背包里没有重锤（selectMainHand 返回 null），
+                        // 其次是 reach 不足。打出来才能区分"根本没出手"和"出手了没命中"。
+                        ElytraDebug.log(
+                            ElytraDebug.SLOT_MACE_STATE,
+                            "mace.attack",
+                            "ok=" + attacked +
+                                    " hand=" + bot.player().mainHandItem.item +
+                                    " fall=" + ElytraDebug.fmt(bot.player().fallDistance) +
+                                    " d=" + ElytraDebug.fmt(bot.player().distanceTo(target.entity).toDouble()),
+                        )
+                        if (attacked) {
+                            this.attackFacingTicks = 0
+                            this.strikeTicks = 0
+                        }
+                    }
+                } else {
+                    this.attackFacingTicks = 0
+                }
             }
         }
 
@@ -194,6 +231,7 @@ class MaceBehavior : ElytraCombatBehavior {
     private fun beginRecoveryPullUp(reason: String) {
         this.state = State.PULL_UP
         this.pullUpStartTick = -1
+        this.attackFacingTicks = 0
         ElytraDebug.log(ElytraDebug.SLOT_MACE_STATE, "mace.trigger", "$reason -> PULL_UP")
     }
 
@@ -278,6 +316,19 @@ class MaceBehavior : ElytraCombatBehavior {
 
         this.strikeTicks = 0
         return groundApproach(bot, target)
+    }
+
+    /**
+     * 重锤自动攻击条件：实体 reach、重锤蓄力阈值、足够下落高度，三者同时满足才出手。
+     */
+    private fun canAttack(bot: ElytraCombat, target: LivingEntity): Boolean {
+        if (!bot.player().isWithinEntityInteractionRange(target, 0.25)) {
+            return false
+        }
+        if (bot.player().getAttackStrengthScale(0.5f) < bot.maceAttackThreshold) {
+            return false
+        }
+        return bot.player().fallDistance > 1.5
     }
 
     private fun inAttackRange(bot: ElytraCombat, target: TargetSnapshot): Boolean {
@@ -404,6 +455,14 @@ class MaceBehavior : ElytraCombatBehavior {
          * 进入攻击距离后等待 KillAura 出手的下压窗口（tick）。
          */
         private const val STRIKE_TICKS = 4
+
+        /**
+         * 自动攻击出手前需要先"朝向目标"发出去的 tick 数。
+         *
+         * 静默旋转不改真实朝向，服务端是用上一 tick 收到的旋转来判定攻击的，因此至少要提前
+         * 一个 tick 把朝向目标的旋转放进发包里，否则这次攻击在服务端看来就是背对目标。
+         */
+        private const val ATTACK_FACING_TICKS = 1
 
         /**
          * 未进入攻击距离时，判定俯冲打空的高度带（格）。
