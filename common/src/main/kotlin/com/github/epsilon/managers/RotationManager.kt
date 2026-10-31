@@ -23,11 +23,6 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random
 
-/**
- * 托管旋转管理器。
- *
- * 所有旋转请求统一提交到 [INSTANCE]，不再按模式创建不同实例。
- */
 class RotationManager private constructor() {
 
     private val offset = Rot2f(0f, 0f)
