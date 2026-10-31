@@ -18,7 +18,7 @@ object ServerboundPacketManager {
     var forceFlush = false
 
     init {
-        EventBus.handler<LevelUpdateEvent> {
+        EventBus.handler<LevelUpdateEvent>(this, alwaysListening = true) {
             forceFlush = true
             blinking = false
         }

@@ -127,7 +127,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
     init {
         // 常驻监听：模块禁用时也需要继续绘制 Deobf ESP 的上升效果。
-        EventBus.handler<Render3DEvent> { event ->
+        EventBus.handler<Render3DEvent>(this, alwaysListening = true) { event ->
             val nn = NonNullContext.current ?: return@handler
             context(nn) {
                 DeobfESP.render(

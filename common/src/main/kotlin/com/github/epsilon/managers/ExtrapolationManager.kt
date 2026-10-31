@@ -19,7 +19,7 @@ object ExtrapolationManager {
     private var motions: Map<AbstractClientPlayer, List<Vec3>> = HashMap()
 
     init {
-        EventBus.handler<ClientTickEvent.Post>(EventPriority.HIGHEST) { onClientTick() }
+        EventBus.handler<ClientTickEvent.Post>(this, EventPriority.HIGHEST, alwaysListening = true) { onClientTick() }
     }
 
     private fun onClientTick() {

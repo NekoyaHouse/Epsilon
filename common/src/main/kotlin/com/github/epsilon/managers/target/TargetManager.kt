@@ -27,7 +27,7 @@ object TargetManager {
     private var sharedTarget: LivingEntity? = null
 
     init {
-        EventBus.handler<ClientTickEvent.Pre> { onClientTick() }
+        EventBus.handler<ClientTickEvent.Pre>(this, alwaysListening = true) { onClientTick() }
     }
 
     private fun onClientTick() {

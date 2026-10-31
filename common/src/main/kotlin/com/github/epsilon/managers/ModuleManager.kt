@@ -143,8 +143,8 @@ object ModuleManager {
     private val modules = ArrayList<Module>()
 
     init {
-        EventBus.handler<KeyPressEvent> { event -> onKeyPress(event) }
-        EventBus.handler<MousePressEvent> { event -> onMousePress(event) }
+        EventBus.handler<KeyPressEvent>(this, alwaysListening = true) { event -> onKeyPress(event) }
+        EventBus.handler<MousePressEvent>(this, alwaysListening = true) { event -> onMousePress(event) }
     }
 
     fun initModules() {

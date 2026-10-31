@@ -30,7 +30,7 @@ object HudElementManager {
     private val scene = UiScene(EpsilonUiTheme)
 
     init {
-        EventBus.handler<Render2DEvent.HUD> { event -> onRender2D(event) }
+        EventBus.handler<Render2DEvent.HUD>(this, alwaysListening = true) { event -> onRender2D(event) }
     }
 
     fun initElements() {

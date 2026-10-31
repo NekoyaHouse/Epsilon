@@ -5,7 +5,6 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.bus.listeners.IListener
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
@@ -48,17 +47,12 @@ open class Module(
                 onEnable()
             } else {
                 EventBus.unsubscribe(this)
-                dynamicListeners.forEach(EventBus::unsubscribe)
-                dynamicListeners.clear()
                 if (!nullCheck()) {
                     NotificationManager.moduleState(translatedName, notificationHash, false)
                 }
                 onDisable()
             }
         }
-
-    /** 运行期动态注册、需要在禁用时统一注销的监听器（例如按条件订阅的渲染事件）。 */
-    private val dynamicListeners: MutableList<IListener> = ArrayList()
 
     var translateComponent: TranslateComponent? = null
 
@@ -91,40 +85,39 @@ open class Module(
     // ---- 事件注册 ----
     // 模块在 object 的 init 块中声明监听器：
     //   init { nonNullListener<ClientTickEvent.Pre> { ... } }
-    // 监听器在模块对象初始化时注册一次，事件派发时按 isEnabled 过滤，
-    // 因此禁用状态下不会执行，与原先「启用才 subscribe」的行为一致；
-    // 依赖玩家/世界的监听器会在上下文缺失时自动跳过。
-
-    /** [EventBus.nonNullHandler] 的模块作用域版本，额外按 [isEnabled] 过滤。 */
-    protected inline fun <reified E : Any> nonNullListener(
-        priority: Int = EventPriority.MEDIUM,
-        noinline block: context(NonNullContext) (E) -> Unit,
-    ) {
-        EventBus.nonNullHandler<E>(priority) { event ->
-            if (isEnabled) {
-                block(event)
-            }
-        }
-    }
-
-    /** 不依赖世界的事件监听器（菜单、渲染、按键等），额外按 [isEnabled] 过滤。 */
-    protected inline fun <reified E : Any> handler(
-        priority: Int = EventPriority.MEDIUM,
-        noinline block: (E) -> Unit,
-    ) {
-        EventBus.handler<E>(priority) { event ->
-            if (isEnabled) {
-                block(event)
-            }
-        }
-    }
+    // 监听器绑定到模块对象本身，是否派发由 isEnabled 的 EventBus.subscribe / unsubscribe 决定，
+    // 因此禁用状态下不会再收到事件；依赖玩家/世界的监听器会在上下文缺失时自动跳过。
+    // alwaysListening = true 用于确实需要在禁用期间继续监听的场景（如残留渲染效果淡出）。
 
     /**
-     * 跟随模块启用状态注销的动态监听器（在 onEnable 中注册）。
+     * 模块作用域的 [EventBus.nonNullHandler]。
+     *
+     * [alwaysListening] 为 false（默认）时监听器只在模块启用期间生效；为 true 时立即订阅并一直监听，
+     * 处理器执行前仍按 [isEnabled] 过滤。
      */
-    protected fun <T : IListener> trackListener(listener: T): T {
-        dynamicListeners += listener
-        return listener
+    protected inline fun <reified E : Any> nonNullListener(
+        priority: Int = EventPriority.MEDIUM,
+        alwaysListening: Boolean = false,
+        noinline block: context(NonNullContext) (E) -> Unit,
+    ) {
+        EventBus.nonNullHandler<E>(this, priority, alwaysListening) { event ->
+            if (!alwaysListening || isEnabled) {
+                block(event)
+            }
+        }
+    }
+
+    /** 模块作用域的 [EventBus.handler]，语义同 [nonNullListener]。 */
+    protected inline fun <reified E : Any> handler(
+        priority: Int = EventPriority.MEDIUM,
+        alwaysListening: Boolean = false,
+        noinline block: (E) -> Unit,
+    ) {
+        EventBus.handler<E>(this, priority, alwaysListening) { event ->
+            if (!alwaysListening || isEnabled) {
+                block(event)
+            }
+        }
     }
 
     fun toggle() {

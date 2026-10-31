@@ -61,7 +61,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
     init {
         // 渲染事件不受模块启用状态过滤：残留方块需要继续淡出。
-        EventBus.handler<Render3DEvent> {
+        EventBus.handler<Render3DEvent>(this, alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()

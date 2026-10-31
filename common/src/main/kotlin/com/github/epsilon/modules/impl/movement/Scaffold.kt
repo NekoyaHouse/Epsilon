@@ -192,7 +192,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     init {
         // 原 Java 在构造器里直接 EventBus.subscribe(ConsumerListener)，这里保持「不按启用状态过滤」的语义。
-        EventBus.handler<Render3DEvent> {
+        EventBus.handler<Render3DEvent>(this, alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
             val time = System.currentTimeMillis()

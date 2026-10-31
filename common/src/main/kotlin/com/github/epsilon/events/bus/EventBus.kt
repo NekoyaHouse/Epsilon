@@ -3,6 +3,8 @@ package com.github.epsilon.events.bus
 import com.github.epsilon.events.bus.listeners.IListener
 import com.github.epsilon.events.bus.listeners.LambdaListener
 import java.lang.reflect.Method
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -12,6 +14,14 @@ object EventBus {
     private val staticListenerCache: MutableMap<Class<*>, MutableList<IListener>> = ConcurrentHashMap()
 
     private val listenerMap: MutableMap<Class<*>, MutableList<IListener>> = ConcurrentHashMap()
+
+    /** owner → 绑定到该对象的 lambda 监听器；随 [subscribe] / [unsubscribe] 一起生效或失效。 */
+    private val ownerListeners: MutableMap<Any, MutableList<IListener>> =
+        Collections.synchronizedMap(IdentityHashMap())
+
+    /** 当前处于已订阅状态的 owner；晚于订阅注册的监听器需要立即补订阅。 */
+    private val subscribedOwners: MutableSet<Any> =
+        Collections.synchronizedSet(Collections.newSetFromMap(IdentityHashMap()))
 
     fun isListening(eventKlass: Class<*>): Boolean {
         val listeners = listenerMap[eventKlass]
@@ -33,7 +43,23 @@ object EventBus {
         return event
     }
 
+    /**
+     * 把 [listener] 绑定到 [owner]：owner 已订阅时立即生效，之后跟随 [subscribe] / [unsubscribe] 切换。
+     */
+    fun attach(owner: Any, listener: IListener) {
+        ownerListeners.computeIfAbsent(owner) { CopyOnWriteArrayList() }.add(listener)
+        if (isSubscribed(owner)) {
+            subscribe(listener, false)
+        }
+    }
+
+    fun isSubscribed(owner: Any): Boolean = subscribedOwners.contains(owner)
+
     fun subscribe(obj: Any) {
+        subscribedOwners.add(obj)
+        for (listener in listenersOf(obj)) {
+            subscribe(listener, false)
+        }
         subscribe(getListeners(obj.javaClass, obj), false)
     }
 
@@ -80,6 +106,10 @@ object EventBus {
     }
 
     fun unsubscribe(obj: Any) {
+        subscribedOwners.remove(obj)
+        for (listener in listenersOf(obj)) {
+            unsubscribe(listener, false)
+        }
         unsubscribe(getListeners(obj.javaClass, obj), false)
     }
 
@@ -110,6 +140,10 @@ object EventBus {
             }
         }
     }
+
+    /** 取 [owner] 绑定的监听器快照，避免订阅/注销期间遍历并发集合。 */
+    private fun listenersOf(owner: Any): List<IListener> =
+        ownerListeners[owner]?.toList() ?: emptyList()
 
     private fun getListeners(klass: Class<*>, obj: Any?): MutableList<IListener> {
         if (obj == null) {

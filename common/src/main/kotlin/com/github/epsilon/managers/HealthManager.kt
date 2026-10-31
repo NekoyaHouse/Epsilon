@@ -14,7 +14,7 @@ object HealthManager {
     private val scoreboardHealth = ConcurrentHashMap<String, Int>()
 
     init {
-        EventBus.handler<PacketEvent.Receive> { event -> onPacket(event) }
+        EventBus.handler<PacketEvent.Receive>(this, alwaysListening = true) { event -> onPacket(event) }
     }
 
     fun getHealth(entity: Entity): Float {

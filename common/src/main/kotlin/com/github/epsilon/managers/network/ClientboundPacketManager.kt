@@ -39,7 +39,7 @@ object ClientboundPacketManager {
     private var shouldFlush = false
 
     init {
-        EventBus.handler<LevelUpdateEvent> {
+        EventBus.handler<LevelUpdateEvent>(this, alwaysListening = true) {
             shouldFlush = true
             tracking = false
         }
