@@ -11,7 +11,6 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.mojang.blaze3d.platform.NativeImage
-import kotlin.math.sin
 import me.sofurry.smtc.SmtcService
 import me.sofurry.smtc.SmtcSnapshot
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -23,9 +22,10 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.IOException
-import java.util.Locale
+import java.util.*
 import java.util.function.Supplier
 import javax.imageio.ImageIO
+import kotlin.math.sin
 
 /**
  * 将 Windows SMTC 当前媒体会话绘制为 Island 内容。
@@ -200,7 +200,7 @@ class MusicInstance(
                 coverTexture = newTexture
                 newTexture = null
             } else {
-                existingTexture.setPixels(image)
+                existingTexture.pixels = image
                 image = null
                 existingTexture.upload()
             }

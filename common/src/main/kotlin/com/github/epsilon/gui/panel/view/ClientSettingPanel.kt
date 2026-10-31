@@ -20,7 +20,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import java.util.EnumMap
+import java.util.*
 
 class ClientSettingPanel(
     protected val state: PanelState,
@@ -125,10 +125,7 @@ class ClientSettingPanel(
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        if (bounds == null) {
-            return false
-        }
-        return getCurrentTabView().mouseScrolled(mouseX, mouseY, scrollX, scrollY)
+        return bounds != null && getCurrentTabView().mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
     fun keyPressed(event: KeyEvent): Boolean {

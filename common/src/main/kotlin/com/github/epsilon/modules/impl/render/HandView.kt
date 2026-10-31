@@ -8,14 +8,9 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
-import kotlin.math.PI
 import net.minecraft.tags.ItemTags
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -25,6 +20,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
 import org.joml.Vector3f
+import kotlin.math.PI
 
 object HandView : Module("Hand View", Category.RENDER) {
 
@@ -111,10 +107,7 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private fun isOffhandBlocking(): Boolean {
         val player = mc.player ?: return false
-        if (!mc.options.keyUse.isDown || !player.offhandItem.`is`(Items.SHIELD)) {
-            return false
-        }
-        return if (!player.isUsingItem) {
+        return !(!mc.options.keyUse.isDown || !player.offhandItem.`is`(Items.SHIELD)) && if (!player.isUsingItem) {
             player.mainHandItem.useAnimation == ItemUseAnimation.NONE
         } else {
             player.usedItemHand == InteractionHand.OFF_HAND
@@ -220,15 +213,15 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private class TransformSettings(prefix: String, group: SettingGroup, enabled: Setting.Dependency) {
 
-        private val scaleX by HandView.doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val scaleY by HandView.doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val scaleZ by HandView.doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionX by HandView.doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionY by HandView.doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionZ by HandView.doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val rotationX by HandView.doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
-        private val rotationY by HandView.doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
-        private val rotationZ by HandView.doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
+        private val scaleX by doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
+        private val scaleY by doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
+        private val scaleZ by doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
+        private val positionX by doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
+        private val positionY by doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
+        private val positionZ by doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
+        private val rotationX by doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
+        private val rotationY by doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
+        private val rotationZ by doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
 
         fun apply(poseStack: PoseStack) {
             poseStack.rotateDegrees(Axis.XP, rotationX.toFloat())

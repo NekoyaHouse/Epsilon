@@ -6,11 +6,9 @@ import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.enchantment.Enchantments

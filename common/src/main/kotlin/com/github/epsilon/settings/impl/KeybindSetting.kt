@@ -5,7 +5,7 @@ import com.github.epsilon.settings.Setting
 class KeybindSetting(
     name: String,
     defaultValue: Int,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
 ) : Setting<Int>(name, dependency, null) {
 
     init {

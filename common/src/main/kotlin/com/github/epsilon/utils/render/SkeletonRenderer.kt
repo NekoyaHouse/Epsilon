@@ -2,7 +2,8 @@ package com.github.epsilon.utils.render
 
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.model.geom.ModelPart
 import net.minecraft.client.model.player.PlayerModel

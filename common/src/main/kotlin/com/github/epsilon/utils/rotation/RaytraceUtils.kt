@@ -1,6 +1,9 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.mc
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -161,11 +164,7 @@ object RaytraceUtils {
             )
         )
 
-        if (result.type == HitResult.Type.MISS) {
-            return false
-        }
-
-        return result.blockPos == pos && (!strict || result.direction == dir)
+        return result.type != HitResult.Type.MISS && result.blockPos == pos && (!strict || result.direction == dir)
     }
 
     /**

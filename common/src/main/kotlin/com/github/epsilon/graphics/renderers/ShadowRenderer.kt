@@ -18,9 +18,7 @@ import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
 import java.nio.ByteBuffer
-import java.util.ArrayList
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 
 // 段数上限同时被 SegmentedShadowUniforms 的 UBO 布局使用，放在文件级以便嵌套类型直接引用。
 private const val MAX_SEGMENTS = 64

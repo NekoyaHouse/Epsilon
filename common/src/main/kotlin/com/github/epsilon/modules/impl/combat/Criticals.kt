@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.player.LocalPlayer
 
 object Criticals : Module("Criticals", Category.COMBAT) {

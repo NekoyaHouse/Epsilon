@@ -4,15 +4,15 @@ import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.modules.impl.render.CameraClip
 import com.github.epsilon.utils.math.toRadians
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.tan
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.state.level.CameraRenderState
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Vector3f
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.tan
 
 object WorldToScreen {
 

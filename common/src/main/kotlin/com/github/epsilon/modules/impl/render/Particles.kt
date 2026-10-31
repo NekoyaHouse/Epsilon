@@ -9,22 +9,12 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
+import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.CompareOp
-import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
@@ -33,7 +23,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
-import java.util.ArrayList
 
 object Particles : Module("Particles", Category.RENDER) {
 
@@ -219,7 +208,7 @@ object Particles : Module("Particles", Category.RENDER) {
                 Trail(
                     Vec3(prevPosX.toDouble(), prevPosY.toDouble(), prevPosZ.toDouble()),
                     Vec3(posX.toDouble(), posY.toDouble(), posZ.toDouble()),
-                    Particles.resolveColor(age * 10)
+                    resolveColor(age * 10)
                 )
             )
 
@@ -239,7 +228,7 @@ object Particles : Module("Particles", Category.RENDER) {
             for (trail in trails) {
                 val position = trail.interpolate(tickDelta)
                 val alpha = (255.0f * (age.toFloat() / maxAge.toFloat()) * trail.animation(tickDelta)).toInt()
-                drawBillboard(poseStack, renderer, position, particleSize, Particles.withAlpha(trail.color, alpha))
+                drawBillboard(poseStack, renderer, position, particleSize, withAlpha(trail.color, alpha))
             }
         }
 
@@ -281,7 +270,7 @@ object Particles : Module("Particles", Category.RENDER) {
             posZ += motionZ
 
             motionX *= 0.9f
-            if (Particles.physics.`is`(Physics.Fly)) {
+            if (physics.`is`(Physics.Fly)) {
                 motionY *= 0.9f
             }
             motionZ *= 0.9f
@@ -291,11 +280,11 @@ object Particles : Module("Particles", Category.RENDER) {
         }
 
         open fun render(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
-            val particleColor = Particles.withAlpha(
-                Particles.resolveColor(age * 2),
+            val particleColor = withAlpha(
+                resolveColor(age * 2),
                 (255.0f * (age.toFloat() / maxAge.toFloat())).toInt()
             )
-            drawBillboard(poseStack, renderer, interpolatePos(), Particles.size.toFloat(), particleColor)
+            drawBillboard(poseStack, renderer, interpolatePos(), size.toFloat(), particleColor)
         }
 
         protected fun interpolatePos(): Vec3 {

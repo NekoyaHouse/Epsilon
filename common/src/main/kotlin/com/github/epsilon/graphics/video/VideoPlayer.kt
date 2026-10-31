@@ -4,7 +4,6 @@ import com.github.epsilon.Constants
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.GpuTextureView
-import kotlin.math.abs
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_RGBA
@@ -18,6 +17,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
+import kotlin.math.abs
 
 object VideoPlayer {
 
@@ -38,7 +38,7 @@ object VideoPlayer {
     private var executor: ExecutorService? = null
     private var decodeFuture: Future<*>? = null
 
-    private val pauseLock: java.lang.Object = java.lang.Object()
+    private val pauseLock: Object = Object()
 
     @Volatile
     private var paused = false
@@ -48,7 +48,7 @@ object VideoPlayer {
 
     private var uploadedFrameId = -1L
 
-    private val GRABBER_LOCK: java.lang.Object = java.lang.Object()
+    private val GRABBER_LOCK: Object = Object()
 
     private val latestFrame = AtomicReference<FrameBuffer?>()
 

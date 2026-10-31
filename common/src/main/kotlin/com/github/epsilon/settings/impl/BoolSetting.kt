@@ -5,7 +5,7 @@ import com.github.epsilon.settings.Setting
 class BoolSetting(
     name: String,
     defaultValue: Boolean,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
     onChanged: ((Boolean) -> Unit)?,
 ) : Setting<Boolean>(name, dependency, onChanged) {
 

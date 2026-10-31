@@ -1,13 +1,8 @@
 package com.github.epsilon.utils.render.animation
 
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.exp
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 import net.minecraft.util.Mth
 import java.util.function.Function
+import kotlin.math.*
 
 enum class Easing(val function: Function<Float, Float>) {
 

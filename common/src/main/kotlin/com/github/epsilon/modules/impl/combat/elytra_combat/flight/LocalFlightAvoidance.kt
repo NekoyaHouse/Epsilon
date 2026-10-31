@@ -2,14 +2,13 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import net.minecraft.client.player.LocalPlayer
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.Vec3
 
 /**
  * 主线程上的有界局部避障。

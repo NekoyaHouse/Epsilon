@@ -2,8 +2,6 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.path
 
 import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -14,6 +12,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * ElytraCombat 的后台单层 A* 路径服务。
@@ -163,11 +163,7 @@ class ElytraPathNavigator {
         }
 
         val age = System.nanoTime() - result.createdNanos
-        if (age < 0L || age > RESULT_MAX_AGE_NANOS) {
-            return false
-        }
-
-        return result.startPos.distanceToSqr(playerPos) <= RESULT_MAX_START_DISTANCE_SQR &&
+        return !(age < 0L || age > RESULT_MAX_AGE_NANOS) && result.startPos.distanceToSqr(playerPos) <= RESULT_MAX_START_DISTANCE_SQR &&
                 result.targetPos.distanceToSqr(targetPos) <= RESULT_MAX_TARGET_DISTANCE_SQR
     }
 
@@ -567,7 +563,7 @@ class ElytraPathNavigator {
             }
 
             val state: BlockState = world.getBlockState(pos)
-            return if (state.getCollisionShape(world, pos, context).isEmpty()) {
+            return if (state.getCollisionShape(world, pos, context).isEmpty) {
                 VoxelCollisionCache.FREE
             } else {
                 VoxelCollisionCache.BLOCKED

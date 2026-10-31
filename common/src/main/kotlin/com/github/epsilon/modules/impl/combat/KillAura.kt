@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
@@ -15,9 +14,6 @@ import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.modules.impl.render.AntiAlias
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.render.esp.CaptureMarkESP
 import com.github.epsilon.utils.render.esp.CircleESP
@@ -26,8 +22,10 @@ import com.github.epsilon.utils.render.esp.FireflyESP
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -36,6 +34,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import java.awt.Color
+import kotlin.math.abs
 
 object KillAura : Module("Kill Aura", Category.COMBAT) {
 

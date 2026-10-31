@@ -9,9 +9,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.modules.impl.render.ACSpoof
-import com.github.epsilon.utils.safety.*
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import com.github.epsilon.utils.safety.NonNullContext
 import net.minecraft.client.gui.components.PlayerTabOverlay
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo
@@ -21,16 +19,13 @@ import net.minecraft.resources.Identifier
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
 import net.minecraft.world.level.GameType
-import net.minecraft.world.scores.DisplaySlot
-import net.minecraft.world.scores.Objective
-import net.minecraft.world.scores.PlayerTeam
-import net.minecraft.world.scores.ReadOnlyScoreInfo
-import net.minecraft.world.scores.ScoreHolder
-import net.minecraft.world.scores.Scoreboard
+import net.minecraft.world.scores.*
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import java.awt.Color
-import java.util.Optional
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 class TabListInstance(
     private val textRendererSupplier: Supplier<TextRenderer>,
@@ -79,7 +74,7 @@ class TabListInstance(
         rows = if (total == 0) 0 else ceil(total / columns.toDouble()).toInt()
 
         val gapsWidth = COL_GAP * maxOf(0, columns - 1)
-        val screenMaxWidth = maxOf(1f, Constants.client.window!!.guiScaledWidth - 50f)
+        val screenMaxWidth = maxOf(1f, Constants.client.window.guiScaledWidth - 50f)
         val maxColumnWidth = maxOf(1f, (screenMaxWidth - gapsWidth) / columns)
         val columnWidth = minOf(computeBaseRowWidth(showScore), maxColumnWidth)
 

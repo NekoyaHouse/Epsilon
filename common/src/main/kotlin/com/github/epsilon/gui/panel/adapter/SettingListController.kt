@@ -4,17 +4,8 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.component.SettingRow
-import com.github.epsilon.gui.panel.component.setting.ColorSettingRow
-import com.github.epsilon.gui.panel.component.setting.DoubleSettingRow
-import com.github.epsilon.gui.panel.component.setting.EnumSettingRow
-import com.github.epsilon.gui.panel.component.setting.IntSettingRow
-import com.github.epsilon.gui.panel.component.setting.RegistryListSettingRow
-import com.github.epsilon.gui.panel.component.setting.StringListSettingRow
-import com.github.epsilon.gui.panel.popup.ColorPickerPopup
-import com.github.epsilon.gui.panel.popup.EnumSelectPopup
-import com.github.epsilon.gui.panel.popup.PanelPopupHost
-import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
-import com.github.epsilon.gui.panel.popup.StringListSelectPopup
+import com.github.epsilon.gui.panel.component.setting.*
+import com.github.epsilon.gui.panel.popup.*
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
@@ -28,8 +19,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import java.awt.Color
-import java.util.ArrayList
-import java.util.HashMap
 
 class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseable {
 

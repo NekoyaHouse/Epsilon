@@ -7,8 +7,6 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers

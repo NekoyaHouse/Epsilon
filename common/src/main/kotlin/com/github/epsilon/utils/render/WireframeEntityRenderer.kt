@@ -4,7 +4,8 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.render.AntiAlias
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.renderpearl.api.pipeline.*
@@ -18,7 +19,6 @@ import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.client.renderer.texture.UvMapping
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import java.awt.Color
@@ -223,7 +223,7 @@ object WireframeEntityRenderer {
             outlineColor: Int,
         ) {
             model.setupAnim(state)
-            model.renderToBuffer(poseStack, WireframeEntityRenderer.vertexConsumer, lightCoords, overlayCoords, tintedColor)
+            model.renderToBuffer(poseStack, vertexConsumer, lightCoords, overlayCoords, tintedColor)
         }
 
         override fun submitCustomGeometry(
@@ -231,7 +231,7 @@ object WireframeEntityRenderer {
             renderType: RenderType,
             customGeometryRenderer: SubmitNodeCollector.CustomGeometryRenderer,
         ) {
-            customGeometryRenderer.render(poseStack.last(), WireframeEntityRenderer.vertexConsumer)
+            customGeometryRenderer.render(poseStack.last(), vertexConsumer)
         }
     }
 
@@ -249,7 +249,7 @@ object WireframeEntityRenderer {
             index++
 
             if (index == 4) {
-                WireframeEntityRenderer.drawQuad(
+                drawQuad(
                     xs[0], ys[0], zs[0],
                     xs[1], ys[1], zs[1],
                     xs[2], ys[2], zs[2],

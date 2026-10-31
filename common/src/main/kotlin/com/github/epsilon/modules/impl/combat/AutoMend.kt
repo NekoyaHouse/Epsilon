@@ -1,18 +1,18 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import net.minecraft.world.item.Items
 
 object AutoMend : Module("Auto Mend", Category.COMBAT) {

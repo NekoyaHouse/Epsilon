@@ -4,13 +4,12 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -20,6 +19,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 object DeobfESP {
 

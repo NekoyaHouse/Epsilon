@@ -5,7 +5,6 @@ import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.BoolSetting
 import com.mojang.blaze3d.Blaze3D
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.CycleButton
@@ -18,6 +17,7 @@ import java.awt.Color
 import java.net.URI
 import java.util.function.Function
 import java.util.function.Supplier
+import kotlin.math.roundToInt
 
 private const val TITLE = "欢迎使用 Epsilon / Welcome to Epsilon"
 
@@ -118,7 +118,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val font = this.font ?: return
+        val font = this.font
         val fade = Mth.clamp((Util.getMillis() - openedAtMs) / 250.0f, 0.0f, 1.0f)
         val alpha = (255.0f * fade).roundToInt()
 
@@ -175,7 +175,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
     }
 
     private fun continueToNextScreen() {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         if (ClientSetting.useMainMenu) {
             minecraft.gui.setScreen(MainMenuScreen)
         } else {
@@ -184,7 +184,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
     }
 
     private fun getCardHeight(): Int {
-        val font = this.font ?: return 0
+        val font = this.font
         val cardWidth = minOf(560, width - CARD_MARGIN * 2)
         val bodyWidth = cardWidth - CARD_PADDING * 2
         var bodyHeight = 0

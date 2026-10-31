@@ -117,7 +117,7 @@ object MicrosoftLogin {
             val newServer = HttpServer.create(InetSocketAddress("127.0.0.1", PORT), 0)
 
             newServer.createContext("/") { exchange -> handleRequest(exchange) }
-            newServer.setExecutor(Executors.newVirtualThreadPerTaskExecutor())
+            newServer.executor = Executors.newVirtualThreadPerTaskExecutor()
             newServer.start()
             server = newServer
         } catch (e: IOException) {

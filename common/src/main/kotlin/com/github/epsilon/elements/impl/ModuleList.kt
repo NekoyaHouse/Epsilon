@@ -7,16 +7,14 @@ import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
-import kotlin.math.abs
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
+import kotlin.math.abs
 
 object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 

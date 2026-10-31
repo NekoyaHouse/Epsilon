@@ -19,7 +19,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.nio.file.Path
-import java.util.ArrayList
 import java.util.function.Supplier
 
 class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
@@ -242,7 +241,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
     override fun keyPressed(event: KeyEvent): Boolean {
         if (!inputField.isFocused) return false
-        if (event.isEscape()) {
+        if (event.isEscape) {
             inputField.blur()
             return true
         }
@@ -311,7 +310,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     private fun tryExport() {
         try {
             val exported = ConfigManager.exportActiveConfigToZip(inputField.text)
-            val fileName = if (exported?.fileName != null) exported.fileName.toString() else exported.toString()
+            val fileName = if (exported.fileName != null) exported.fileName.toString() else exported.toString()
             status = EpsilonTranslations.Gui.DROPDOWN_STATUS_EXPORTED.getTranslatedName() + " " + fileName
             openExportSuccessPopup(exported)
         } catch (exception: Exception) {

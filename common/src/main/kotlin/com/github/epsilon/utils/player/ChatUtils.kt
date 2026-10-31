@@ -4,11 +4,11 @@ import com.github.epsilon.Constants
 import com.github.epsilon.interfaces.ChatComponentAccessor
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.ColorUtils
-import kotlin.math.sin
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
+import kotlin.math.sin
 
 /**
  * 客户端聊天栏消息工具类。
@@ -54,7 +54,7 @@ object ChatUtils {
     fun addChatMessage(prefix: Boolean, message: Component) {
         val component = buildClientMessage(prefix, message)
         val mc = Constants.client
-        if (mc.isSameThread()) {
+        if (mc.isSameThread) {
             mc.gui.hud.chat.addClientSystemMessage(component)
         } else {
             mc.execute { mc.gui.hud.chat.addClientSystemMessage(component) }
@@ -102,7 +102,7 @@ object ChatUtils {
     fun addChatMessage(prefix: Boolean, message: Component, hash: Int) {
         val component = buildClientMessage(prefix, message)
         val mc = Constants.client
-        if (mc.isSameThread()) {
+        if (mc.isSameThread) {
             (mc.gui.hud.chat as ChatComponentAccessor).`epsilon$addClientSystemMessage`(component, hash)
         } else {
             mc.execute {

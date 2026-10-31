@@ -6,7 +6,7 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.util.Mth
-import java.util.Objects
+import java.util.*
 
 /**
  * 轻量滚动条，统一提供绘制、命中测试和拖动值换算。

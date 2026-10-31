@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -9,22 +8,23 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.connection
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.ceil
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.ceil
 
 /**
  * @author Moli

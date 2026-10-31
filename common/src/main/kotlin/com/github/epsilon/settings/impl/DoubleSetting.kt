@@ -9,7 +9,7 @@ class DoubleSetting(
     val min: Double,
     val max: Double,
     val step: Double,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
     onChanged: ((Double) -> Unit)?,
 ) : Setting<Double>(name, dependency, onChanged) {
 

@@ -2,17 +2,10 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.*
-import net.minecraft.core.Direction
+import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult

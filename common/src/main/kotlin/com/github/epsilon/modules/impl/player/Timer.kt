@@ -2,30 +2,19 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.KeyPressEvent
-import com.github.epsilon.events.impl.LevelUpdateEvent
-import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket
-import net.minecraft.network.protocol.game.ClientGamePacketListener
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.*
 import net.minecraft.util.Mth
-import java.util.Queue
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 object Timer : Module("Timer", Category.MOVEMENT) {
@@ -63,7 +52,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                 Mode.Always -> TimerManager.set(multiplier.toFloat())
 
                 Mode.SlowBalance -> {
-                    val moving = player.isMoving()
+                    val moving = player.isMoving
                     if (shouldRelease && balance > 0.1F) {
                         val speed = multiplier.toFloat()
                         if (balance >= speed - 1.0F) {
@@ -100,12 +89,12 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                         return@nonNullHandler
                     }
 
-                    if (!shouldRelease && !lagging && !releasing && !player.isMoving()) {
+                    if (!shouldRelease && !lagging && !releasing && !player.isMoving) {
                         timer.reset()
                         balanceTime = 0L
                         currentTime = System.currentTimeMillis()
                         startBalance()
-                    } else if (lagging && !shouldRelease && !releasing && !player.isMoving() && balanceTime < 0L) {
+                    } else if (lagging && !shouldRelease && !releasing && !player.isMoving && balanceTime < 0L) {
                         balanceTime = 0L
                         currentTime = System.currentTimeMillis()
                     }
@@ -152,7 +141,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             val packet = event.packet
             if (packet is ServerboundMovePlayerPacket) {
                 if (lagging) {
-                    if (!packet.hasPosition() && !packet.hasRotation() && packet.isOnGround() == onGround) {
+                    if (!packet.hasPosition() && !packet.hasRotation() && packet.isOnGround == onGround) {
                         event.cancel()
                     } else {
                         balanceTime -= if (releasing) 100L else 50L
@@ -165,7 +154,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     }
                     currentTime = now
                 }
-                onGround = packet.isOnGround()
+                onGround = packet.isOnGround
             } else if (packet is ServerboundInteractPacket && lagging && packets.isNotEmpty()) {
                 attack = true
                 event.cancel()

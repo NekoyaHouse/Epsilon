@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.DestroyBlockEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.PlaceBlockEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 
 object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
 
@@ -20,7 +20,7 @@ object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
     }
 
     private fun onBreakBlock(event: DestroyBlockEvent) {
-        if (mc.isLocalServer() || !breaking) return
+        if (mc.isLocalServer || !breaking) return
 
         event.cancel()
 

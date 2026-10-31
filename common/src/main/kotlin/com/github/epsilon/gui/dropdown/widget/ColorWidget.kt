@@ -10,9 +10,9 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.awt.Color
+import kotlin.math.roundToInt
 
 class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) {
 

@@ -6,7 +6,6 @@ import com.github.epsilon.graphics.LuminTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBuffer
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.AddressMode
 import com.mojang.renderpearl.api.textures.FilterMode
@@ -15,7 +14,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
-import java.util.OptionalDouble
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 class TtfGlyphAtlas(atlasId: Int) {

@@ -4,8 +4,9 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.network.NetworkUtils
+import com.github.epsilon.utils.safety.connection
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket

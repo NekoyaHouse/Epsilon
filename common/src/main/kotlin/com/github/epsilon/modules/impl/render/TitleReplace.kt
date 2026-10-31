@@ -2,13 +2,8 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.StringSetting
 import com.github.epsilon.utils.render.ColorUtils
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
@@ -33,8 +28,7 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
     }
 
     private fun onPacketReceive(event: PacketEvent.Receive) {
-        val packet = event.packet
-        when (packet) {
+        when (val packet = event.packet) {
             is ClientboundSetTitleTextPacket -> {
                 val replaced = replace(packet.text)
                 if (replaced != null) event.packet = ClientboundSetTitleTextPacket(replaced)

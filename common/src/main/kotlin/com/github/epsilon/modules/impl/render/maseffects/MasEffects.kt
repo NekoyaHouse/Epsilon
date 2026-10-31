@@ -3,24 +3,12 @@ package com.github.epsilon.modules.impl.render.maseffects
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.impl.AttackEntityEvent
-import com.github.epsilon.events.impl.LevelUpdateEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.events.impl.Render2DEvent
-import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.utils.safety.*
-import kotlin.math.roundToInt
-import net.minecraft.client.player.AbstractClientPlayer
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
 import net.minecraft.gizmos.GizmoStyle
@@ -41,6 +29,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments
 import net.minecraft.world.level.block.LevelEvent
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
+import kotlin.math.roundToInt
 
 object MasEffects : Module("Mas Effects", Category.RENDER) {
 
@@ -142,7 +131,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
                     isShielding(it.player, victim)
 
             if (shielding && shieldEffect) {
-                particleRenderer.spawnShieldWave(victim as Player)
+                particleRenderer.spawnShieldWave(victim)
             } else if (victim is LivingEntity &&
                 armorParticles &&
                 it.player.fallDistance > 1.5F &&

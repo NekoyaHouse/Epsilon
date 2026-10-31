@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.AfterRender3DEvent
 import com.github.epsilon.events.impl.GameJoinedEvent
 import com.github.epsilon.events.impl.GameLeftEvent
@@ -11,10 +10,6 @@ import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.graphics.shaders.MotionBlurShader
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
 import net.minecraft.client.renderer.state.level.CameraRenderState
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f

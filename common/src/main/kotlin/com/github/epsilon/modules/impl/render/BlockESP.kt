@@ -3,34 +3,21 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.AirBlock
-import net.minecraft.world.level.block.BarrierBlock
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.ChestBlock
-import net.minecraft.world.level.block.CommandBlock
+import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.ChestType
 import net.minecraft.world.phys.AABB
 import java.awt.Color
-import java.util.ArrayList
-import java.util.Collections
-import java.util.HashSet
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -141,14 +128,11 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
         if (block is CommandBlock || block is BarrierBlock) return true
 
         val level = mc.level
-        if (block === Blocks.BEDROCK && level != null) {
-            return if (Level.NETHER != level.dimension()) {
-                pos.y > 4
-            } else {
-                pos.y > 127 || (pos.y < 123 && pos.y > 4)
-            }
+        return block === Blocks.BEDROCK && level != null && if (Level.NETHER != level.dimension()) {
+            pos.y > 4
+        } else {
+            pos.y > 127 || (pos.y < 123 && pos.y > 4)
         }
-        return false
     }
 
     private fun getConnectedShapeAABB(blockPos: BlockPos, state: BlockState, processed: MutableSet<BlockPos>): AABB {

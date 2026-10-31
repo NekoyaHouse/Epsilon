@@ -14,8 +14,8 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.util.Mth
+import kotlin.math.abs
 
 abstract class AbstractDropdownPanel protected constructor(
     override val id: String,

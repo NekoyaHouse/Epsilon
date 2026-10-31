@@ -12,16 +12,12 @@ import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
-import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -30,7 +26,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.ArrayList
+import kotlin.math.*
 
 object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 

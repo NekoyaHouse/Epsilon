@@ -7,7 +7,6 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import kotlin.math.roundToInt

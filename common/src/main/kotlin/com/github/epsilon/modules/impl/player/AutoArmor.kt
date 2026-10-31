@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
@@ -10,12 +9,13 @@ import com.github.epsilon.gui.troll.TrollGuiScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
-import kotlin.math.ceil
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.connection
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -28,6 +28,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.equipment.Equippable
+import kotlin.math.ceil
 
 object AutoArmor : Module("Auto Armor", Category.PLAYER) {
 
@@ -112,7 +113,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                         InvUtils.swapBack()
                     }
                 } else {
-                    if (player.isMoving() && noMove) return@nonNullHandler
+                    if (player.isMoving && noMove) return@nonNullHandler
 
                     val inventorySlot = if (slot < 9) 36 + slot else slot
                     val armorSlot = 8 - armorPiece.equipmentSlot.index
@@ -243,7 +244,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
 
         fun reset() {
             val player = NonNullContext.current?.player
-            prevProtection = if (player == null) -1 else AutoArmor.getProtection(player.inventory.getItem(inventorySlot))
+            prevProtection = if (player == null) -1 else getProtection(player.inventory.getItem(inventorySlot))
             newSlot = -1
             newProtection = -1
         }

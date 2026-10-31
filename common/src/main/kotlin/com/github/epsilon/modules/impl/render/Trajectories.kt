@@ -2,16 +2,10 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.entity.ProjectileSimulator
 import com.github.epsilon.utils.math.toRadians
@@ -34,7 +28,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
-import java.util.ArrayList
 import java.util.function.Predicate
 
 object Trajectories : Module("Trajectories", Category.RENDER) {

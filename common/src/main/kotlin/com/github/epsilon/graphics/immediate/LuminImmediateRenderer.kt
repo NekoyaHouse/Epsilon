@@ -25,8 +25,7 @@ import org.joml.Vector4f
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteOrder
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 import java.util.function.Consumer
 
 object LuminImmediateRenderer {

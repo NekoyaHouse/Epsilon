@@ -1,7 +1,6 @@
 package com.github.epsilon.managers
 
 import net.minecraft.world.entity.player.Player
-import java.util.HashSet
 
 object FriendManager {
 

@@ -7,17 +7,17 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.HealthManager
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
-import kotlin.math.sign
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import java.awt.Color
-import java.util.Locale
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.abs
+import kotlin.math.sign
 
 class TargetInstance(
     val target: LivingEntity,

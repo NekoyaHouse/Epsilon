@@ -15,16 +15,14 @@ import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTextureView
-import kotlin.math.cos
-import kotlin.math.sin
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
-import java.util.LinkedHashMap
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 class TextureRenderer private constructor() : IRenderer {
 

@@ -2,13 +2,10 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.AfterRender3DEvent
 import com.github.epsilon.graphics.shaders.FilterShader
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.EnumSetting
 import java.awt.Color
 
 object Filter : Module("Filter", Category.RENDER) {

@@ -4,6 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.screen.AssetDownloadScreen
+import com.github.epsilon.managers.AssetManager.ffmpegUrl
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.network.Http
@@ -12,16 +13,9 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import java.io.IOException
-import java.io.InputStream
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.StandardCopyOption
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.EnumSet
-import java.util.Objects
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.LongSupplier
 import java.util.zip.ZipFile

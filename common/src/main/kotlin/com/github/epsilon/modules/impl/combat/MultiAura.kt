@@ -1,16 +1,15 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
 
 object MultiAura : Module("Multi Aura", Category.COMBAT) {

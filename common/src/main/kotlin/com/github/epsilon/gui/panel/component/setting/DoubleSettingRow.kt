@@ -9,12 +9,12 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<DoubleSetting>(doubleSetting) {
 

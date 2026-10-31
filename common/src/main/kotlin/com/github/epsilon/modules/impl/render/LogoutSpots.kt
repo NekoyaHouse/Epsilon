@@ -1,9 +1,8 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
-import com.github.epsilon.Constants
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
@@ -15,15 +14,13 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.render.SkeletonRenderer
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.WorldToScreen
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
@@ -34,12 +31,9 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.Locale
-import java.util.UUID
+import java.util.*
 import java.util.function.Supplier
 
 object LogoutSpots : Module("Logout Spots", Category.RENDER) {
@@ -203,10 +197,10 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
         private val walkPosition: Float
         private val walkSpeed: Float
         private val attackAnimation: Float
-        private val swing: LivingEntity.SwingDescription?
+        private val swing: SwingDescription?
 
         init {
-            setId(player.id)
+            id = player.id
 
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
@@ -222,7 +216,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             yBodyRot = player.yBodyRot
             yBodyRotO = yBodyRot
             attributes.assignAllValues(player.attributes)
-            setPose(player.pose)
+            pose = player.pose
             health = player.health
             absorptionAmount = player.absorptionAmount
             swing = player.currentSwing
@@ -236,7 +230,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
             WireframeEntityRenderer.render(
                 poseStack, this, 1.0,
-                LogoutSpots.sideColor, LogoutSpots.lineColor, 2.0f
+                sideColor, lineColor, 2.0f
             )
         }
 
@@ -244,7 +238,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
         override fun getSwingAnimation(partialTicks: Float): Float = attackAnimation
 
-        override fun getCurrentSwing(): LivingEntity.SwingDescription? = swing
+        override fun getCurrentSwing(): SwingDescription? = swing
 
         override fun belowNameDisplay(): Component? = null
 

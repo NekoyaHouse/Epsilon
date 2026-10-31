@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -10,14 +9,15 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -130,10 +130,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             return false
         }
         val bedPos = trackedBedPos
-        if (bedPos != null && !isBedBlock(target) && !isBedBlock(bedPos)) {
-            return false
-        }
-        return true
+        return !(bedPos != null && !isBedBlock(target) && !isBedBlock(bedPos))
     }
 
     private fun currentAimPoint(bedTarget: Boolean): Vec3 {

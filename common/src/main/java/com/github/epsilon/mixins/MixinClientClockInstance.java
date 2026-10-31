@@ -36,7 +36,7 @@ public class MixinClientClockInstance {
         }
 
         Holder<WorldClock> clock = defaultClock.get();
-        if (level.clockManager().getInstance(clock) != (Object) this) {
+        if (level.clockManager().getInstance(clock) != this) {
             return original;
         }
         return WorldTweaks.INSTANCE.getModifiedClockTime(clock, original);

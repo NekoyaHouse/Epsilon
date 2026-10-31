@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
-import com.github.epsilon.utils.*
 import com.github.epsilon.Constants
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
@@ -8,12 +7,11 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombatInput
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
@@ -189,11 +187,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun isLowMomentum(): Boolean = runSafeOrFalse {
-        if (!player.isFallFlying) {
-            false
-        } else {
-            player.deltaMovement.length() < LOW_MOMENTUM_SPEED
-        }
+        player.isFallFlying && player.deltaMovement.length() < LOW_MOMENTUM_SPEED
     }
 
     private fun isEating(): Boolean = runSafeOrFalse {

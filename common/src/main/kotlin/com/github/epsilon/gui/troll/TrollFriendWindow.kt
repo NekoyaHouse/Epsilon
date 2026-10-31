@@ -13,7 +13,6 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
-import java.util.ArrayList
 
 class TrollFriendWindow : TrollWindow() {
 
@@ -161,16 +160,17 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (!inputField.isFocused) return false
-        return when (event.key()) {
+        return inputField.isFocused && when (event.key()) {
             InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 addFriend()
                 true
             }
+
             InputConstants.KEY_ESCAPE -> {
                 inputField.blur()
                 true
             }
+
             else -> inputField.keyPressed(event)
         }
     }

@@ -9,11 +9,11 @@ import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import kotlin.math.roundToInt
 
 class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>(intSetting) {
 

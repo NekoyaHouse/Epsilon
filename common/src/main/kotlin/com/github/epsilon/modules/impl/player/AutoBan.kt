@@ -4,14 +4,14 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.network.chat.Component
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.Random
+import java.util.*
 
 object AutoBan : Module("Auto Ban", Category.PLAYER) {
 

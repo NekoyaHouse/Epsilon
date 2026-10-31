@@ -6,8 +6,10 @@ import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -17,9 +19,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
-import java.util.ArrayList
-import java.util.Comparator
-import java.util.Objects
+import java.util.*
 
 object TargetManager {
 

@@ -9,7 +9,7 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.mojang.util.UndashedUuid
 import net.minecraft.client.User
-import java.util.Optional
+import java.util.*
 
 class SessionAccount(label: String) : Account<SessionAccount>(AccountType.Session, label), TokenAccount {
 
@@ -53,7 +53,7 @@ class SessionAccount(label: String) : Account<SessionAccount>(AccountType.Sessio
 
         super.login()
 
-        Account.setSession(
+        setSession(
             User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), token, Optional.empty(), Optional.empty())
         )
         return true
@@ -64,8 +64,7 @@ class SessionAccount(label: String) : Account<SessionAccount>(AccountType.Sessio
     }
 
     override fun equals(o: Any?): Boolean {
-        if (o !is SessionAccount) return false
-        return o.name == this.name
+        return o is SessionAccount && o.name == this.name
     }
 
     private class ProfileResponse {

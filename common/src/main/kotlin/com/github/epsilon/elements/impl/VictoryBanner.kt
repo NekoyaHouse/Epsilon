@@ -1,6 +1,5 @@
 package com.github.epsilon.elements.impl
 
-import com.github.epsilon.Constants
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
@@ -14,36 +13,23 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.QQAvatarManager
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.*
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
-import java.util.Locale
-import java.util.function.Consumer
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 private const val IDEAL_WIDTH = 500.0f
 private const val BASE_HEIGHT = 66.0f
@@ -100,7 +86,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     private var currentTitle: String? = null
 
     init {
-        setAnchorState(HudModule.HorizontalAnchor.Center, HudModule.VerticalAnchor.Top, 0.0f, 72.0f)
+        setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
         handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
         nonNullHandler<AttackEntityEvent> { event ->
             val target = event.entity
@@ -120,7 +106,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     override fun reset() {
         super.reset()
-        setAnchorState(HudModule.HorizontalAnchor.Center, HudModule.VerticalAnchor.Top, 0.0f, 72.0f)
+        setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
     }
 
     override fun onEnable() {
@@ -250,7 +236,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val textRenderer = textRendererSupplier.get()
         val uiScale = scale.toFloat()
         val bannerTitle = if (preview) displayTitle(title) else displayTitle(currentTitle)
-        val bannerSubtitle = subtitle ?: ""
+        val bannerSubtitle = subtitle
         val layout = createLayout(textRenderer, bannerTitle, bannerSubtitle, uiScale)
         setBounds(layout.width, layout.height)
 

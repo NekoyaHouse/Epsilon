@@ -3,13 +3,9 @@ package com.github.epsilon.utils.rotation
 import com.github.epsilon.Constants
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.*
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.hypot
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
-import kotlin.random.Random
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -20,6 +16,8 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
+import kotlin.math.*
+import kotlin.random.Random
 
 object RotationUtils {
 
@@ -114,10 +112,7 @@ object RotationUtils {
             player.x, player.y + 0.4, player.z,
             player.x, player.y + 1.62, player.z
         ).inflate(0.0002)
-        if (eyePositions.intersects(collisionBox)) {
-            return true
-        }
-        return !(when (direction) {
+        return eyePositions.intersects(collisionBox) || !(when (direction) {
             Direction.NORTH -> eyePositions.minZ > collisionBox.minZ
             Direction.SOUTH -> eyePositions.maxZ < collisionBox.maxZ
             Direction.EAST -> eyePositions.maxX < collisionBox.maxX

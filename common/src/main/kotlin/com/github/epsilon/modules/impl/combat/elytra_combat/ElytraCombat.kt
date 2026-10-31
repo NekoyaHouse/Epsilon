@@ -4,14 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.AttackEntityEvent
-import com.github.epsilon.events.impl.FallFlyingMovementEvent
-import com.github.epsilon.events.impl.KeyPressEvent
-import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -23,35 +16,16 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.MaceBehavio
 import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.SpearBehavior
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDirectionSolver
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.PredictorMode
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetMotionTracker
-import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.setValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Rot2f
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.roundToInt
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
@@ -62,8 +36,11 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.EnumMap
+import java.util.*
 import java.util.function.Predicate
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
 
 /**
  * 追人、重锤和长矛合并后的 ElytraCombat 模块。

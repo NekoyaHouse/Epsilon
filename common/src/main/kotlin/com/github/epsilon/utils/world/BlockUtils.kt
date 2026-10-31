@@ -1,6 +1,8 @@
 package com.github.epsilon.utils.world
 
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -75,7 +77,7 @@ object BlockUtils {
         val state = level.getBlockState(pos)
         if (state.isAir) return false
         if (canBeReplacedWith(state, ItemStack.EMPTY)) return false
-        return !state.getCollisionShape(level, pos).isEmpty()
+        return !state.getCollisionShape(level, pos).isEmpty
     }
 
     /**

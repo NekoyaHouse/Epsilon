@@ -10,9 +10,7 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
-import java.util.Comparator
-import java.util.HashMap
-import java.util.Locale
+import java.util.*
 
 class CategoryPanel : AbstractDropdownPanel {
 
@@ -92,10 +90,6 @@ class CategoryPanel : AbstractDropdownPanel {
         cachedContentHeightFrameId = frameId
         cachedContentHeight = total
         return total
-    }
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return super.mouseClicked(mouseX, mouseY, button)
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -223,7 +217,7 @@ class CategoryPanel : AbstractDropdownPanel {
         searchTextCache.clear()
         for (button in moduleButtons) {
             val module = button.module
-            val translated = module.translatedName ?: ""
+            val translated = module.translatedName
             val name = module.name
             val categoryName = module.category?.name ?: ""
             searchTextCache[button] = (translated + '\n' + name + '\n' + categoryName).lowercase(Locale.ROOT)

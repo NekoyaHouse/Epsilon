@@ -1,35 +1,15 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Inventory
-import net.minecraft.world.item.ArrowItem
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.BowItem
-import net.minecraft.world.item.CrossbowItem
-import net.minecraft.world.item.ExperienceBottleItem
-import net.minecraft.world.item.FireworkRocketItem
-import net.minecraft.world.item.FishingRodItem
-import net.minecraft.world.item.Item
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.item.KnowledgeBookItem
-import net.minecraft.world.item.PlayerHeadItem
-import net.minecraft.world.item.StandingAndWallBlockItem
-import net.minecraft.world.item.WritableBookItem
-import net.minecraft.world.item.WrittenBookItem
+import net.minecraft.world.item.*
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.BushBlock
-import net.minecraft.world.level.block.CropBlock
-import net.minecraft.world.level.block.FlowerBlock
-import net.minecraft.world.level.block.NetherFungusBlock
-import net.minecraft.world.level.block.SkullBlock
-import net.minecraft.world.level.block.SlabBlock
+import net.minecraft.world.level.block.*
 
 /**
  * 背包辅助逻辑（InvManager 等模块）使用的物品评分与查找工具类。
@@ -160,11 +140,7 @@ object InvHelper {
         }
 
         val item = stack.item
-        if (item is BlockItem) {
-            return item.block is SkullBlock
-        }
-
-        return false
+        return item is BlockItem && item.block is SkullBlock
     }
 
     /**
@@ -929,11 +905,7 @@ object InvHelper {
         }
 
         val block = (stack.item as BlockItem).block
-        if (block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) {
-            return false
-        }
-
-        return block !is SlabBlock && !blacklistedBlocks.contains(block)
+        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(block)
     }
 
 }

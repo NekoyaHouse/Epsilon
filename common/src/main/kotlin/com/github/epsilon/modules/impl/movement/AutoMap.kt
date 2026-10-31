@@ -7,22 +7,15 @@ import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.safety.*
 import com.google.gson.JsonObject
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
+import kotlin.math.*
 
 object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
@@ -274,11 +267,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun needsTakeoffRetarget(): Boolean = runSafeOrFalse {
-        if (activeTakeoffTargetHeight.isNaN() || takeoffBaseY.isNaN()) {
-            true
-        } else {
-            player.onGround() && !player.isFallFlying && abs(player.y - takeoffBaseY) > 0.5
-        }
+        activeTakeoffTargetHeight.isNaN() || takeoffBaseY.isNaN() || player.onGround() && !player.isFallFlying && abs(player.y - takeoffBaseY) > 0.5
     }
 
     private fun writeRecord(notify: Boolean) {

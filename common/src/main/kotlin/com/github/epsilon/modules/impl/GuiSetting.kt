@@ -1,12 +1,6 @@
 package com.github.epsilon.modules.impl
 
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.IntSetting
 import java.awt.Color
 
 object GuiSetting : Module("Gui Setting", null) {

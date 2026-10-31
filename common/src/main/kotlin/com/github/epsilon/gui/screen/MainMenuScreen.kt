@@ -19,9 +19,6 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.PI
-import kotlin.math.roundToInt
-import kotlin.math.sin
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
@@ -35,6 +32,9 @@ import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
 import java.awt.Color
+import kotlin.math.PI
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
@@ -117,11 +117,11 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     private fun reisaShutdownFinalTexture(): Identifier? = AssetManager.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX)
 
     init {
-        entries.add(MenuEntry("Singleplayer", Runnable { minecraft?.gui?.setScreen(SelectWorldScreen(this)) }))
+        entries.add(MenuEntry("Singleplayer", Runnable { minecraft.gui?.setScreen(SelectWorldScreen(this)) }))
         entries.add(
             MenuEntry(
                 "Multiplayer", Runnable {
-                    val minecraft = minecraft ?: return@Runnable
+                    val minecraft = minecraft
                     val screen: Screen = if (minecraft.options.skipMultiplayerWarning) {
                         JoinMultiplayerScreen(this)
                     } else {
@@ -131,19 +131,19 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 }
             )
         )
-        entries.add(MenuEntry("Accounts", Runnable { minecraft?.gui?.setScreen(AccountsScreen) }))
-        entries.add(MenuEntry("GUI", Runnable { minecraft?.gui?.setScreen(ClientSetting.getGuiScreen()) }))
+        entries.add(MenuEntry("Accounts", Runnable { minecraft.gui?.setScreen(AccountsScreen) }))
+        entries.add(MenuEntry("GUI", Runnable { minecraft.gui?.setScreen(ClientSetting.getGuiScreen()) }))
         entries.add(
             MenuEntry(
                 "Options", Runnable {
-                    minecraft?.gui?.setScreen(OptionsScreen(this, minecraft!!.options))
+                    minecraft.gui?.setScreen(OptionsScreen(this, minecraft.options))
                 }
             )
         )
         entries.add(
             MenuEntry(
                 "Quit", Runnable {
-                    if (!requestShutdown()) minecraft?.stop()
+                    if (!requestShutdown()) minecraft.stop()
                 }
             )
         )
@@ -223,7 +223,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             return
         }
         reisaGreetingQueued = true
-        if (initialized && minecraft?.gui?.screen() === this) {
+        if (initialized && minecraft.gui?.screen() === this) {
             startReisaGreeting()
         }
     }
@@ -258,7 +258,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     fun requestShutdown(): Boolean {
         if (!ClientSetting.showReisaOnShutdown || !AssetManager.isReisaReady()) return false
-        val minecraft = this.minecraft ?: return false
+        val minecraft = this.minecraft
         if (!initialized || minecraft.gui.screen() !== this || reisaShutdownCommitted) return false
         if (reisaShutdownStartMs >= 0L) return true
 
@@ -276,7 +276,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     override fun tick() {
         super.tick()
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         if (reisaShutdownStartMs >= 0L) {
             val now = Util.getMillis()
             if (reisaShutdownExitStartMs < 0L) {
@@ -316,7 +316,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     override fun extractBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         val window = minecraft.window
         if (backgroundRenderTarget == null) {
             backgroundRenderTarget =
@@ -353,7 +353,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         val window = minecraft.window
         if (uiRenderTarget == null) {
             uiRenderTarget = LuminRenderSystem.LuminRenderTarget.create("main-menu-ui", window.width, window.height)
@@ -599,7 +599,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 }
 
                 val footerY = layoutHeight - maxOf(27.9f * scale, layoutHeight * 0.045f)
-                val user = this.minecraft!!.user.name
+                val user = this.minecraft.user.name
                 content.layer(-50) { layer ->
                     val userWidth = metrics.getWidth(user, 1.55f * scale)
                     val userX = layoutWidth - rightMargin - userWidth + 50.0f * scale - menuCenterCorrectionX
@@ -1216,10 +1216,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
         initialized = false
         if (reisaWelcomeSound != null) {
-            minecraft?.soundManager?.stop(reisaWelcomeSound!!)
+            minecraft.soundManager?.stop(reisaWelcomeSound!!)
         }
         if (reisaShutdownSound != null) {
-            minecraft?.soundManager?.stop(reisaShutdownSound!!)
+            minecraft.soundManager?.stop(reisaShutdownSound!!)
         }
         clearReisaGreeting()
         clearReisaShutdown()

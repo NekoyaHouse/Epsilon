@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.schedulers.render2d
 
-import java.util.Objects
+import java.util.*
 
 data class Render2DScissor(val x: Int, val y: Int, val width: Int, val height: Int) {
 

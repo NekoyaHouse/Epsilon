@@ -19,7 +19,7 @@ import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.nio.ByteBuffer
-import java.util.Optional
+import java.util.*
 
 /**
  * 整屏 FXAA 后处理，采样主渲染目标并写回，作为 {@code AntiAlias} 的 FXAA 模式使用。

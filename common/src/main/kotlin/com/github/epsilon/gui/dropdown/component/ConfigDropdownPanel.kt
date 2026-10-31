@@ -9,7 +9,6 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants
-import java.util.Objects
 
 class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", EpsilonTranslations.Gui.TAB_CONFIG, "", panelIndex) {
 

@@ -73,11 +73,11 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         val window = minecraft.window
         var target = renderTarget
         if (target == null) {
-            target = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight())
+            target = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.width, window.height)
             renderTarget = target
         }
         target.clear()
-        target.resize(window.getWidth(), window.getHeight())
+        target.resize(window.width, window.height)
 
         LuminRenderSystem.setActiveTarget(target)
         scene.beginFrame()

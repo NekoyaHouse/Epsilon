@@ -22,16 +22,14 @@ import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.nio.file.Path
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.function.Supplier
+import kotlin.math.abs
 
 class ConfigClientSettingTab(
     private val state: PanelState,

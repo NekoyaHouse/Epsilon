@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.network.chat.Style
 import org.joml.Matrix4fc
-import java.util.IdentityHashMap
+import java.util.*
 import java.util.function.Supplier
 
 // 原 Java 版本的 private static final 常量；放在文件级私有时，

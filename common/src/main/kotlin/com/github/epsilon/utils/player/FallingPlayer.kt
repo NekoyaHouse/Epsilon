@@ -1,7 +1,8 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.safety.*
-import kotlin.math.PI
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -9,6 +10,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 /**
  * 玩家下落轨迹模拟器。

@@ -1,15 +1,13 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.MoveUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.player
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.Vec3
 

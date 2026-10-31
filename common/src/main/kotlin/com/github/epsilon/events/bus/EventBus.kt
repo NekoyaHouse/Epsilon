@@ -1,10 +1,11 @@
 package com.github.epsilon.events.bus
 
+import com.github.epsilon.events.bus.EventBus.subscribe
+import com.github.epsilon.events.bus.EventBus.unsubscribe
 import com.github.epsilon.events.bus.listeners.IListener
 import com.github.epsilon.events.bus.listeners.LambdaListener
 import java.lang.reflect.Method
-import java.util.Collections
-import java.util.IdentityHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 

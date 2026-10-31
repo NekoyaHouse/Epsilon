@@ -3,16 +3,7 @@ package com.github.epsilon.managers.rotation
 import com.github.epsilon.Constants
 import com.github.epsilon.events.bus.EventHandler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.AttackYawEvent
-import com.github.epsilon.events.impl.FallFlyingEvent
-import com.github.epsilon.events.impl.FireworkRotationEvent
-import com.github.epsilon.events.impl.JumpEvent
-import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.SendPositionEvent
-import com.github.epsilon.events.impl.StrafeEvent
-import com.github.epsilon.events.impl.UseItemEvent
-import com.github.epsilon.events.impl.UseItemRaytraceEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.movement.MovementFix
 import com.github.epsilon.modules.impl.render.FreeCamera

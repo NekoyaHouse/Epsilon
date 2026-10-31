@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -19,8 +19,7 @@ import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.Locale
-import java.util.Random
+import java.util.*
 
 object Health : Module("Health", Category.RENDER) {
 
@@ -249,34 +248,53 @@ object Health : Module("Health", Category.RENDER) {
         val hardcoreHalfBlinking: Identifier,
     ) {
         CONTAINER(
-            Health.heartSprite("container"), Health.heartSprite("container_blinking"), Health.heartSprite("container"), Health.heartSprite("container_blinking"),
-            Health.heartSprite("container_hardcore"), Health.heartSprite("container_hardcore_blinking"),
-            Health.heartSprite("container_hardcore"), Health.heartSprite("container_hardcore_blinking")
+            heartSprite("container"), heartSprite("container_blinking"), heartSprite("container"),
+            heartSprite("container_blinking"),
+            heartSprite("container_hardcore"),
+            heartSprite("container_hardcore_blinking"),
+            heartSprite("container_hardcore"),
+            heartSprite("container_hardcore_blinking")
         ),
         NORMAL(
-            Health.heartSprite("full"), Health.heartSprite("full_blinking"), Health.heartSprite("half"), Health.heartSprite("half_blinking"),
-            Health.heartSprite("hardcore_full"), Health.heartSprite("hardcore_full_blinking"),
-            Health.heartSprite("hardcore_half"), Health.heartSprite("hardcore_half_blinking")
+            heartSprite("full"), heartSprite("full_blinking"), heartSprite("half"),
+            heartSprite("half_blinking"),
+            heartSprite("hardcore_full"), heartSprite("hardcore_full_blinking"),
+            heartSprite("hardcore_half"), heartSprite("hardcore_half_blinking")
         ),
         POISONED(
-            Health.heartSprite("poisoned_full"), Health.heartSprite("poisoned_full_blinking"), Health.heartSprite("poisoned_half"), Health.heartSprite("poisoned_half_blinking"),
-            Health.heartSprite("poisoned_hardcore_full"), Health.heartSprite("poisoned_hardcore_full_blinking"),
-            Health.heartSprite("poisoned_hardcore_half"), Health.heartSprite("poisoned_hardcore_half_blinking")
+            heartSprite("poisoned_full"), heartSprite("poisoned_full_blinking"),
+            heartSprite("poisoned_half"),
+            heartSprite("poisoned_half_blinking"),
+            heartSprite("poisoned_hardcore_full"),
+            heartSprite("poisoned_hardcore_full_blinking"),
+            heartSprite("poisoned_hardcore_half"),
+            heartSprite("poisoned_hardcore_half_blinking")
         ),
         WITHERED(
-            Health.heartSprite("withered_full"), Health.heartSprite("withered_full_blinking"), Health.heartSprite("withered_half"), Health.heartSprite("withered_half_blinking"),
-            Health.heartSprite("withered_hardcore_full"), Health.heartSprite("withered_hardcore_full_blinking"),
-            Health.heartSprite("withered_hardcore_half"), Health.heartSprite("withered_hardcore_half_blinking")
+            heartSprite("withered_full"), heartSprite("withered_full_blinking"),
+            heartSprite("withered_half"),
+            heartSprite("withered_half_blinking"),
+            heartSprite("withered_hardcore_full"),
+            heartSprite("withered_hardcore_full_blinking"),
+            heartSprite("withered_hardcore_half"),
+            heartSprite("withered_hardcore_half_blinking")
         ),
         ABSORBING(
-            Health.heartSprite("absorbing_full"), Health.heartSprite("absorbing_full_blinking"), Health.heartSprite("absorbing_half"), Health.heartSprite("absorbing_half_blinking"),
-            Health.heartSprite("absorbing_hardcore_full"), Health.heartSprite("absorbing_hardcore_full_blinking"),
-            Health.heartSprite("absorbing_hardcore_half"), Health.heartSprite("absorbing_hardcore_half_blinking")
+            heartSprite("absorbing_full"), heartSprite("absorbing_full_blinking"),
+            heartSprite("absorbing_half"),
+            heartSprite("absorbing_half_blinking"),
+            heartSprite("absorbing_hardcore_full"),
+            heartSprite("absorbing_hardcore_full_blinking"),
+            heartSprite("absorbing_hardcore_half"),
+            heartSprite("absorbing_hardcore_half_blinking")
         ),
         FROZEN(
-            Health.heartSprite("frozen_full"), Health.heartSprite("frozen_full_blinking"), Health.heartSprite("frozen_half"), Health.heartSprite("frozen_half_blinking"),
-            Health.heartSprite("frozen_hardcore_full"), Health.heartSprite("frozen_hardcore_full_blinking"),
-            Health.heartSprite("frozen_hardcore_half"), Health.heartSprite("frozen_hardcore_half_blinking")
+            heartSprite("frozen_full"), heartSprite("frozen_full_blinking"), heartSprite("frozen_half"),
+            heartSprite("frozen_half_blinking"),
+            heartSprite("frozen_hardcore_full"),
+            heartSprite("frozen_hardcore_full_blinking"),
+            heartSprite("frozen_hardcore_half"),
+            heartSprite("frozen_hardcore_half_blinking")
         );
 
         fun getSprite(isHardcore: Boolean, isHalf: Boolean, isBlinking: Boolean): Identifier {

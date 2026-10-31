@@ -7,16 +7,7 @@ import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
+import com.github.epsilon.settings.impl.*
 
 class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
 

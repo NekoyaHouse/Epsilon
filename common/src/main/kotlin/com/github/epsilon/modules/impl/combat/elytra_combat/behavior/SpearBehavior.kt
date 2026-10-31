@@ -3,12 +3,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.behavior
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig
-import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetAction
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
 import net.minecraft.util.Mth
@@ -301,7 +296,7 @@ class SpearBehavior : ElytraCombatBehavior {
                 bot.spearEngageRange + maxOf(0.0, reach) + bot.spearAntiSpearExtra
             )
         )
-        if (bot.player().boundingBox.clip(start, end).isEmpty()) {
+        if (bot.player().boundingBox.clip(start, end).isEmpty) {
             return null
         }
 

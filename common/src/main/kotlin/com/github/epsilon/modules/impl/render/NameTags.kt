@@ -13,22 +13,14 @@ import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
-import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.ArrayList
 import java.util.function.Supplier
+import kotlin.math.roundToInt
 
 object NameTags : Module("Name Tags", Category.RENDER) {
 

@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.world.hole
 
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.player.Player
 
@@ -104,7 +105,7 @@ object HoleUtils {
     context(nn: NonNullContext)
     fun isBlock(pos: BlockPos): Boolean {
         return level.isLoaded(pos)
-            && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+            && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty
     }
 
     context(nn: NonNullContext)

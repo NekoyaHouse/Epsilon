@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
 
 object BreakCooldown : Module("Break Cooldown", Category.PLAYER) {
 

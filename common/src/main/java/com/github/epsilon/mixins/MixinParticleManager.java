@@ -34,7 +34,7 @@ public class MixinParticleManager {
             return true;
         if (NoRender.INSTANCE.isEnabled()) {
             if (NoRender.INSTANCE.getWeather() && type == ParticleTypes.RAIN) return true;
-            if (NoRender.INSTANCE.getFireworkExplosions() && type == ParticleTypes.FIREWORK) return true;
+            return NoRender.INSTANCE.getFireworkExplosions() && type == ParticleTypes.FIREWORK;
         }
         return false;
     }

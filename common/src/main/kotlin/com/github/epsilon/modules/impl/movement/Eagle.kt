@@ -1,30 +1,25 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
-import kotlin.math.PI
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafeOrFalse
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.level.EmptyBlockGetter
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.CarvedPumpkinBlock
-import net.minecraft.world.level.block.EntityBlock
-import net.minecraft.world.level.block.FallingBlock
-import net.minecraft.world.level.block.PumpkinBlock
-import net.minecraft.world.level.block.SlimeBlock
-import net.minecraft.world.level.block.TntBlock
+import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 object Eagle : Module("Eagle", Category.MOVEMENT) {
 

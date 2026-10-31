@@ -7,7 +7,7 @@ class ColorSetting(
     name: String,
     defaultValue: Color,
     private val allowAlpha: Boolean,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
 ) : Setting<Color>(name, dependency, null) {
 
     init {

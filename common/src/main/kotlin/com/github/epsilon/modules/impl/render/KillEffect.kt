@@ -2,12 +2,10 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.core.particles.BlockParticleOption
@@ -20,10 +18,7 @@ import net.minecraft.world.entity.LightningBolt
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.animal.squid.Squid
 import net.minecraft.world.level.block.Blocks
-import java.util.ArrayList
-import java.util.Collections
-import java.util.IdentityHashMap
-import java.util.Iterator
+import java.util.*
 
 object KillEffect : Module("Kill Effect", Category.RENDER) {
 
@@ -111,7 +106,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
         if (lightning) {
             val bolt = LightningBolt(EntityTypes.LIGHTNING_BOLT, level)
-            bolt.setId(nextLocalEntityId())
+            bolt.id = nextLocalEntityId()
             bolt.setVisualOnly(true)
             bolt.setPos(target.x, target.y, target.z)
             bolt.setOldPosAndRot()
@@ -173,14 +168,14 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         init {
             val level = Constants.client.level!!
             entity = Squid(EntityTypes.SQUID, level)
-            entity.setId(KillEffect.nextLocalEntityId())
-            entity.setNoAi(true)
+            entity.id = nextLocalEntityId()
+            entity.isNoAi = true
             baseY = target.y + SQUID_BASE_OFFSET
             entity.setPos(target.x, baseY, target.z)
             entity.setOldPosAndRot()
             animation = Animation(Easing.SMOOTH_STEP, SQUID_RISE_DURATION_MS)
             animation.startValue = 0.0F
-            KillEffect.effectSquids.add(entity)
+            effectSquids.add(entity)
             level.addEntity(entity)
         }
 
@@ -207,7 +202,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
 
         fun remove() {
-            KillEffect.effectSquids.remove(entity)
+            effectSquids.remove(entity)
             val level = Constants.client.level
             if (level != null && level.getEntity(entity.id) === entity) {
                 level.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)

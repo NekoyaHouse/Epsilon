@@ -1,15 +1,6 @@
 package com.github.epsilon.settings
 
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
+import com.github.epsilon.settings.impl.*
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item

@@ -4,11 +4,12 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import kotlin.math.roundToInt
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -16,6 +17,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.roundToInt
 
 object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
 
@@ -50,7 +52,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
 
             if (newPress) {
                 if (phase != Phase.IDLE && originalSlot >= 0) {
-                    player.inventory.setSelectedSlot(originalSlot)
+                    player.inventory.selectedSlot = originalSlot
                 }
                 originalSlot = player.inventory.selectedSlot
                 cooldown = 0
@@ -101,7 +103,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.setSelectedSlot(anchorSlot)
+        player.inventory.selectedSlot = anchorSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(placeCps)
@@ -121,7 +123,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.setSelectedSlot(glowstoneSlot)
+        player.inventory.selectedSlot = glowstoneSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
@@ -141,7 +143,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.setSelectedSlot(anchorSlot)
+        player.inventory.selectedSlot = anchorSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
@@ -162,7 +164,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
             return
         }
 
-        player.inventory.setSelectedSlot(glowstoneSlot)
+        player.inventory.selectedSlot = glowstoneSlot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
@@ -177,7 +179,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
         if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val slot = detonateSlot - 1
-        player.inventory.setSelectedSlot(slot)
+        player.inventory.selectedSlot = slot
         interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
 
@@ -187,7 +189,7 @@ object DoubleAnchor : Module("Double Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun doCleanup() {
         if (originalSlot >= 0) {
-            player.inventory.setSelectedSlot(originalSlot)
+            player.inventory.selectedSlot = originalSlot
         }
         resetState()
     }

@@ -1,12 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.IntSetting
 import net.minecraft.core.Holder
 import net.minecraft.world.clock.WorldClock
 import java.awt.Color

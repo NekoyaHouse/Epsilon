@@ -5,7 +5,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import java.util.Locale
+import java.util.*
 
 object BlockRegistryUtils {
 

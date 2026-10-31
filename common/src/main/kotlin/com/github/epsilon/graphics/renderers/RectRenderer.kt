@@ -8,13 +8,12 @@ import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
-import kotlin.math.sqrt
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
+import kotlin.math.sqrt
 
 class RectRenderer private constructor() : IRenderer {
 

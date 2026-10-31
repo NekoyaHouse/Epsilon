@@ -8,12 +8,9 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.utils.safety.NonNullContext
 import com.google.common.base.Suppliers
-import kotlin.math.roundToInt
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.player.AbstractClientPlayer
@@ -23,8 +20,9 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import java.awt.Color
-import java.util.Locale
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.roundToInt
 
 object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
@@ -222,7 +220,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         if (target is AbstractClientPlayer) {
             val abstractTexture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
             scope.playerHead(
-                LuminTexture(abstractTexture.texture!!, abstractTexture.textureView!!, abstractTexture.sampler!!),
+                LuminTexture(abstractTexture.texture, abstractTexture.textureView, abstractTexture.sampler),
                 finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             )
         }
@@ -385,7 +383,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         if (target is AbstractClientPlayer) {
             val texture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
             scope.playerHead(
-                LuminTexture(texture.texture!!, texture.textureView!!, texture.sampler!!),
+                LuminTexture(texture.texture, texture.textureView, texture.sampler),
                 headX, headY, headSize, 0.0f, headColor
             )
         } else {

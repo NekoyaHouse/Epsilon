@@ -3,13 +3,7 @@ package com.github.epsilon
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager
 import com.github.epsilon.assets.i18n.I18NFileGenerator
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.managers.ExecutorManager
-import com.github.epsilon.managers.ExtrapolationManager
-import com.github.epsilon.managers.HealthManager
-import com.github.epsilon.managers.HudElementManager
-import com.github.epsilon.managers.ModuleManager
-import com.github.epsilon.managers.SkinManager
+import com.github.epsilon.managers.*
 import com.github.epsilon.managers.network.ClientboundPacketManager
 import com.github.epsilon.managers.network.ServerboundPacketManager
 import com.github.epsilon.managers.target.TargetManager

@@ -324,7 +324,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
             return
         }
         val current = getDisplayBuffer()
-        Constants.client.keyboardHandler.setClipboard(current.substring(selectionStart, selectionEnd))
+        Constants.client.keyboardHandler.clipboard = current.substring(selectionStart, selectionEnd)
     }
 
     private fun pasteClipboard() {

@@ -1,12 +1,11 @@
 package com.github.epsilon.settings.impl
 
 import com.github.epsilon.settings.Setting
-import java.util.ArrayList
 
 class StringListSetting(
     name: String,
     defaultValue: Collection<String>,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
 ) : Setting<List<String>>(name, dependency, null) {
 
     init {

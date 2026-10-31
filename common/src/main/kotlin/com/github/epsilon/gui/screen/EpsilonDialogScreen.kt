@@ -71,11 +71,11 @@ abstract class EpsilonDialogScreen protected constructor(
 
     override fun onClose() {
         onDialogClosed()
-        minecraft?.gui?.setScreen(parent)
+        minecraft.gui?.setScreen(parent)
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         val window = minecraft.window
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("epsilon-dialog", window.width, window.height)

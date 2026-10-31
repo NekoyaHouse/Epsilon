@@ -22,15 +22,12 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.Objects
+import kotlin.math.abs
 
 /**
  * 模块列表面板。
@@ -405,7 +402,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         signature = signature * 31L + state.getSelectedCategory().name.hashCode()
         signature = signature * 31L + state.getSearchQuery().hashCode()
         signature = signature * 31L + (if (searchFocused) 1 else 0)
-        signature = signature * 31L + (state.getSelectedModule()?.name?.hashCode() ?: 0)
+        signature = signature * 31L + state.getSelectedModule()?.name.hashCode()
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getModuleScroll())
         for (module in modules) {
             signature = signature * 31L + module.name.hashCode()

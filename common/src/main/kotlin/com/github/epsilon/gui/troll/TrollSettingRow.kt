@@ -11,27 +11,18 @@ import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
+import com.github.epsilon.settings.impl.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.math.BigDecimal
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class TrollSettingRow {
 
@@ -302,7 +293,7 @@ class TrollSettingRow {
     fun keyPressed(event: KeyEvent): Boolean {
         if (listening) {
             listening = false
-            if (!event.isEscape()) {
+            if (!event.isEscape) {
                 setBind(
                     if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) KeybindUtils.NONE else event.key()
                 )
@@ -311,8 +302,8 @@ class TrollSettingRow {
         }
         if (!isEditing()) return false
         val activeInput = input ?: return false
-        if (event.isEscape() || event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
-            finishEditing(!event.isEscape())
+        if (event.isEscape || event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
+            finishEditing(!event.isEscape)
         } else if (activeInput.keyPressed(event)) {
             previewText()
         }
@@ -355,7 +346,7 @@ class TrollSettingRow {
 
     private fun startEditing() {
         if (isEditing()) return
-        val original = if (setting is StringSetting) (setting as StringSetting).value else valueText()
+        val original = if (setting is StringSetting) setting.value else valueText()
         originalText = original
         val created = DropdownTextField(maxOf(256, original.length))
         created.text = original
@@ -446,7 +437,7 @@ class TrollSettingRow {
         dragStartX = mouseX
         var value = minimum() + (fraction * (maximum() - minimum()) / maxOf(0.000001, step)).roundToInt() * step
         value = (value).coerceIn(minimum(), maximum())
-        if (setting!!.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
+        if (setting.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
     }
 
     private fun applyNumber(value: Double) {

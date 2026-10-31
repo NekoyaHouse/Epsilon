@@ -9,7 +9,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.renderer.rendertype.TextureTransform
 import net.minecraft.util.ARGB
 import org.joml.Vector3f
@@ -17,8 +16,7 @@ import org.joml.Vector4f
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 
 class TriangleRenderer private constructor() : IRenderer {
 

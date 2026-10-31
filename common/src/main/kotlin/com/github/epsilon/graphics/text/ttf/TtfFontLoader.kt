@@ -6,9 +6,6 @@ import net.minecraft.resources.Identifier
 import org.lwjgl.stb.STBTruetype
 import org.lwjgl.system.MemoryUtil
 import java.nio.file.Path
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.LinkedHashSet
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

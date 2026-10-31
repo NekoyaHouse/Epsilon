@@ -6,28 +6,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.managers.NotificationManager
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
-import net.minecraft.network.protocol.game.ClientboundBossEventPacket
-import net.minecraft.network.protocol.game.ClientboundClearTitlesPacket
-import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
-import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
-import net.minecraft.network.protocol.game.ClientboundResetScorePacket
-import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket
-import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
-import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
-import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket
-import net.minecraft.network.protocol.game.ClientboundSetScorePacket
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket
-import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
-import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
-import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.game.*
 import java.util.concurrent.LinkedBlockingQueue
 
 object ClientboundPacketManager {

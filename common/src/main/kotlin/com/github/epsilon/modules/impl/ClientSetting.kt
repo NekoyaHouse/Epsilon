@@ -17,17 +17,8 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.StringSetting
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.IconSet
@@ -38,7 +29,6 @@ import java.awt.Color
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Consumer
 
 object ClientSetting : Module("Client Setting", null) {
 

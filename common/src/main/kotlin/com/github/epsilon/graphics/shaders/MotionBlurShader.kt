@@ -16,7 +16,6 @@ import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
-import kotlin.math.roundToInt
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -25,7 +24,8 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Matrix4fc
 import java.nio.ByteBuffer
-import java.util.Optional
+import java.util.*
+import kotlin.math.roundToInt
 
 object MotionBlurShader {
 
@@ -74,7 +74,7 @@ object MotionBlurShader {
             cameraDelta.lengthSqr() <= MAX_CAMERA_DELTA_SQUARED
 
         if (historyValid && settings.render && settings.strength > 0.0f) {
-            renderEffect(target!!, view, projection, cameraDelta, settings, frameTime)
+            renderEffect(target, view, projection, cameraDelta, settings, frameTime)
         }
 
         previousView.set(view)
@@ -82,7 +82,7 @@ object MotionBlurShader {
         previousCameraPosition = cameraPosition
         previousFrameNanos = now
         if (targetValid) {
-            val validTarget = target!!
+            val validTarget = target
             previousWidth = validTarget.width
             previousHeight = validTarget.height
             hasHistory = true
@@ -118,7 +118,7 @@ object MotionBlurShader {
             target.width.toFloat(),
             target.height.toFloat(),
             scaledStrength,
-            RenderSystem.getDevice().deviceInfo.isZZeroToOne(),
+            RenderSystem.getDevice().deviceInfo.isZZeroToOne,
             scaledSamples,
             settings.algorithm,
             settings.depthBlur

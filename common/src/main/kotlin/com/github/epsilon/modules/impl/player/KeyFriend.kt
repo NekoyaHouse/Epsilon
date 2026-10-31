@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
@@ -10,9 +9,8 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult

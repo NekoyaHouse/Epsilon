@@ -2,7 +2,6 @@ package com.github.epsilon.utils.network
 
 import com.github.epsilon.Constants
 import net.minecraft.network.protocol.Packet
-import java.util.HashSet
 
 object NetworkUtils {
 

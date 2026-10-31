@@ -28,13 +28,13 @@ class ConfirmDialogScreen(
     }
 
     override fun cardHeight(): Float {
-        return EpsilonDialogScreen.CARD_PADDING * 2.0f + 36.0f + ROW_HEIGHT * maxOf(1, lines.size) + 24.0f
+        return CARD_PADDING * 2.0f + 36.0f + ROW_HEIGHT * maxOf(1, lines.size) + 24.0f
     }
 
     override fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int) {
         var y = contentTop
         for (line in lines) {
-            scope.text(line, EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE, MD3Theme.TEXT_SECONDARY)
+            scope.text(line, CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_SECONDARY)
             y += ROW_HEIGHT
         }
     }

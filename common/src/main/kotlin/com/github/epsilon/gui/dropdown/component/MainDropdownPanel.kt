@@ -13,11 +13,10 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.ceil
 import net.minecraft.util.Mth
-import java.util.ArrayList
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
+import kotlin.math.ceil
 
 class MainDropdownPanel(
     panelIndex: Int,

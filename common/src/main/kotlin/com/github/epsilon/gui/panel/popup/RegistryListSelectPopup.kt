@@ -19,8 +19,6 @@ import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.world.BlockRegistryUtils
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -37,10 +35,10 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
-import java.util.ArrayList
-import java.util.Collection
-import java.util.Locale
+import java.util.*
 import java.util.function.Predicate
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class RegistryListSelectPopup<T : Any> private constructor(
     private val bounds: UiRect,
@@ -413,8 +411,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
             val actionX = rowBounds.right() - 12.0f
             var textMaxWidth = rowBounds.width - 22.0f
             if (hasIcons) {
-                val previewStack = iconProvider!!(entry)
-                if (!previewStack.isEmpty()) {
+                val previewStack = iconProvider(entry)
+                if (!previewStack.isEmpty) {
                     val previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE
                     val previewY = rowBounds.y + (rowBounds.height - ITEM_PREVIEW_SIZE) * 0.5f
                     itemPreviews.add(ItemPreview(previewStack, previewX, previewY, ITEM_PREVIEW_SIZE))
@@ -555,7 +553,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     }
 
     private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {
-        if (preview.stack.isEmpty()) return
+        if (preview.stack.isEmpty) return
         val scale = preview.size / 16.0f
         val window = Constants.client.window
         val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.guiScale).toFloat()
@@ -685,7 +683,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
                 bounds, setting, BuiltInRegistries.SOUND_EVENT,
                 { sound ->
                     val key = BuiltInRegistries.SOUND_EVENT.getKey(sound)
-                    key?.getPath() ?: ""
+                    key?.path ?: ""
                 },
                 { value -> setting.add(value) }, { value -> setting.remove(value) }
             )
@@ -733,7 +731,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             return level.registryAccess().lookup(Registries.ENCHANTMENT)
                 .flatMap { registry -> registry.get(ResourceKey.create(Registries.ENCHANTMENT, identifier)) }
                 .map { holder -> holder.value().description().string }
-                .orElseGet { formatPath(identifier.getPath()) }
+                .orElseGet { formatPath(identifier.path) }
         }
 
         private fun itemDisplayName(item: Item?): String {
@@ -744,7 +742,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
                 return item.defaultInstance.hoverName.string
             }
             val key = BuiltInRegistries.ITEM.getKey(item)
-            return if (key != null) formatPath(key.getPath()) else ""
+            return if (key != null) formatPath(key.path) else ""
         }
 
         private fun blockPreviewStack(block: Block?): ItemStack {
@@ -763,12 +761,11 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         private fun entityTypePreviewStack(entityType: EntityType<*>): ItemStack {
             val key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
-                ?: return ItemStack.EMPTY
-            val eggId = Identifier.tryParse(key.namespace + ":" + key.getPath() + "_spawn_egg")
+            val eggId = Identifier.tryParse(key.namespace + ":" + key.path + "_spawn_egg")
             if (eggId != null) {
                 val egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null)
                 val eggStack = itemPreviewStack(egg)
-                if (!eggStack.isEmpty()) {
+                if (!eggStack.isEmpty) {
                     return eggStack
                 }
             }

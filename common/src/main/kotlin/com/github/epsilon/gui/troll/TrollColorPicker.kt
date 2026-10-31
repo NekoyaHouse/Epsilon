@@ -7,9 +7,9 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.impl.ColorSetting
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.roundToInt
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
+import kotlin.math.roundToInt
 
 class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : TrollWindow() {
 

@@ -3,12 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.AttackEntityEvent
-import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.GameLeftEvent
-import com.github.epsilon.events.impl.LevelUpdateEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
@@ -16,25 +11,15 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
-import kotlin.math.roundToInt
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
-import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
-import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
-import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
-import net.minecraft.network.protocol.game.VecDelta
+import net.minecraft.network.protocol.game.*
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.animal.Animal
@@ -45,8 +30,9 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.ArrayDeque
+import java.util.*
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.roundToInt
 
 object Backtrack : Module("Backtrack", Category.COMBAT) {
 
@@ -345,10 +331,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     }
 
     private fun isPassThrough(packet: Packet<*>): Boolean {
-        if (packet is ClientboundSystemChatPacket || packet is ClientboundPlayerChatPacket) {
-            return true
-        }
-        return packet is ClientboundSoundPacket && packet.sound.value() === SoundEvents.PLAYER_HURT
+        return packet is ClientboundSystemChatPacket || packet is ClientboundPlayerChatPacket || packet is ClientboundSoundPacket && packet.sound.value() === SoundEvents.PLAYER_HURT
     }
 
     private fun trackTargetPosition(packet: Packet<*>): Vec3? {

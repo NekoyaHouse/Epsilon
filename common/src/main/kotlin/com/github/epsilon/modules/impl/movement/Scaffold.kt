@@ -1,9 +1,8 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -14,16 +13,8 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.FallingPlayer
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
@@ -32,33 +23,26 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.roundToInt
+import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.util.Mth
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.StandingAndWallBlockItem
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.BushBlock
-import net.minecraft.world.level.block.CropBlock
-import net.minecraft.world.level.block.FlowerBlock
-import net.minecraft.world.level.block.NetherFungusBlock
-import net.minecraft.world.level.block.SlabBlock
+import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.ArrayList
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
 
 object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
@@ -780,11 +764,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         }
 
         val block = (stack.item as BlockItem).block
-        if (block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) {
-            return false
-        }
-
-        return block !is SlabBlock && !blacklistedBlocks.contains(block)
+        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(block)
     }
 
     val isEmergencyPlacementActive: Boolean

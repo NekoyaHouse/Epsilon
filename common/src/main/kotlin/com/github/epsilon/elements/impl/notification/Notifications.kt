@@ -7,10 +7,7 @@ import com.github.epsilon.elements.impl.notification.style.NVIDIANotification
 import com.github.epsilon.elements.impl.notification.style.QuantumNotification
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.render.animation.Animation
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.util.function.Supplier

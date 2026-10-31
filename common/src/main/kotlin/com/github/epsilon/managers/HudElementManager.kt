@@ -3,15 +3,7 @@ package com.github.epsilon.managers
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
 import com.github.epsilon.elements.HudModule
-import com.github.epsilon.elements.impl.Hotkey
-import com.github.epsilon.elements.impl.Inventory
-import com.github.epsilon.elements.impl.MTF
-import com.github.epsilon.elements.impl.ModuleList
-import com.github.epsilon.elements.impl.PlayerInfo
-import com.github.epsilon.elements.impl.ScaffoldBlock
-import com.github.epsilon.elements.impl.TargetHUD
-import com.github.epsilon.elements.impl.VictoryBanner
-import com.github.epsilon.elements.impl.Watermark
+import com.github.epsilon.elements.impl.*
 import com.github.epsilon.elements.impl.island.Island
 import com.github.epsilon.elements.impl.notification.Notifications
 import com.github.epsilon.events.api.handler
@@ -21,7 +13,6 @@ import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.utils.client.ClientUtils
-import java.util.ArrayList
 
 object HudElementManager {
 

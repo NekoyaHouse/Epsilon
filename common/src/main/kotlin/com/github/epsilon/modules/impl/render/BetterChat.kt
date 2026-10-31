@@ -2,28 +2,23 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.interfaces.ChatComponentAccessor
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.screens.ChatScreen
 import java.awt.Color
 import java.util.function.Supplier
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 object BetterChat : Module("Better Chat", Category.RENDER) {
 

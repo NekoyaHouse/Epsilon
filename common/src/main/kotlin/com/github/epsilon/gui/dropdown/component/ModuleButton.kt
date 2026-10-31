@@ -6,39 +6,20 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.widget.BoolWidget
-import com.github.epsilon.gui.dropdown.widget.ButtonWidget
-import com.github.epsilon.gui.dropdown.widget.ColorWidget
-import com.github.epsilon.gui.dropdown.widget.DoubleSliderWidget
-import com.github.epsilon.gui.dropdown.widget.EnumWidget
-import com.github.epsilon.gui.dropdown.widget.IntSliderWidget
-import com.github.epsilon.gui.dropdown.widget.KeybindWidget
-import com.github.epsilon.gui.dropdown.widget.RegistryListSettingWidget
-import com.github.epsilon.gui.dropdown.widget.SettingWidget
-import com.github.epsilon.gui.dropdown.widget.StringListSettingWidget
-import com.github.epsilon.gui.dropdown.widget.StringWidget
+import com.github.epsilon.gui.dropdown.widget.*
 import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
+import com.github.epsilon.settings.impl.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.util.Mth
 import java.awt.Color
-import java.util.Locale
+import java.util.*
 
 class ModuleButton(val module: Module) : Component() {
 
@@ -292,10 +273,7 @@ class ModuleButton(val module: Module) : Component() {
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (expanded) {
-            return sectionRenderer.mouseReleased(mouseX, mouseY, button)
-        }
-        return false
+        return expanded && sectionRenderer.mouseReleased(mouseX, mouseY, button)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
@@ -319,10 +297,7 @@ class ModuleButton(val module: Module) : Component() {
     }
 
     override fun charTyped(typedText: String): Boolean {
-        if (expanded) {
-            return sectionRenderer.charTyped(typedText)
-        }
-        return false
+        return expanded && sectionRenderer.charTyped(typedText)
     }
 
     val isExpanded: Boolean

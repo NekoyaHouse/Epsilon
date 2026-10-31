@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.resources.Identifier
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
-import java.util.IdentityHashMap
+import java.util.*
 
 object ClientIdentityHider {
 
@@ -66,7 +66,7 @@ object ClientIdentityHider {
 
     private fun shouldHideAsVanilla(id: Identifier): Boolean {
         if ("minecraft" == id.namespace) {
-            return VANILLA_HIDDEN_MINECRAFT_PAYLOADS.contains(id.getPath())
+            return VANILLA_HIDDEN_MINECRAFT_PAYLOADS.contains(id.path)
         }
         return VANILLA_HIDDEN_NAMESPACES.contains(id.namespace)
     }
@@ -91,7 +91,7 @@ object ClientIdentityHider {
         }
 
         val payloadId = payload.type().id()
-        if (filteredChannels.isEmpty() && "minecraft" == payloadId.namespace && "register" != payloadId.getPath()) {
+        if (filteredChannels.isEmpty() && "minecraft" == payloadId.namespace && "register" != payloadId.path) {
             return null
         }
         if (filteredChannels.isEmpty() && mode == ClientSetting.HideMode.Hide && "minecraft" == payloadId.namespace) {

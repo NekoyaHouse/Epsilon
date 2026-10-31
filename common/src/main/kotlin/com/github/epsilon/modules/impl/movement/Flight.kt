@@ -1,13 +1,12 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.MoveUtils
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.world.phys.Vec3
 
 object Flight : Module("Flight", Category.MOVEMENT) {

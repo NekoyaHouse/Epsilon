@@ -154,13 +154,11 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     }
 
     fun charTyped(event: CharacterEvent): Boolean {
-        if (!isFocused) return false
-        return insertText(event.codepointAsString())
+        return isFocused && insertText(event.codepointAsString())
     }
 
     fun charTyped(typedText: String): Boolean {
-        if (!isFocused) return false
-        return insertText(typedText)
+        return isFocused && insertText(typedText)
     }
 
     fun getCursorIndex(): Int {

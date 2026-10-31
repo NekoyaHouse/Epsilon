@@ -6,10 +6,10 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen
 import net.minecraft.client.player.RemotePlayer
@@ -19,8 +19,7 @@ import net.minecraft.network.protocol.handshake.ClientIntentionPacket
 import net.minecraft.network.protocol.login.ServerboundHelloPacket
 import net.minecraft.world.entity.Entity
 import java.nio.charset.StandardCharsets
-import java.util.Queue
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 object Blink : Module("Blink", Category.MOVEMENT) {

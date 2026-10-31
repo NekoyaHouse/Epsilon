@@ -12,10 +12,10 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.MouseButtonEvent
+import kotlin.math.roundToInt
 
 object DownloadJobOverlay : AutoCloseable {
 
@@ -56,10 +56,10 @@ object DownloadJobOverlay : AutoCloseable {
         val window = minecraft.window
         if (scene == null) scene = UiScene(EpsilonUiTheme)
         if (renderTarget == null) {
-            renderTarget = LuminRenderSystem.LuminRenderTarget.create("download-job-overlay", window.getWidth(), window.getHeight())
+            renderTarget = LuminRenderSystem.LuminRenderTarget.create("download-job-overlay", window.width, window.height)
         }
         val target = renderTarget!!
-        target.resize(window.getWidth(), window.getHeight())
+        target.resize(window.width, window.height)
         target.clear()
         val previousTarget = LuminRenderSystem.getActiveTarget()
         LuminRenderSystem.setActiveTarget(target)

@@ -37,7 +37,6 @@ import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import java.awt.Color
-import java.util.ArrayList
 import java.util.concurrent.atomic.AtomicReference
 
 object AccountsScreen : Screen(Component.literal("Accounts")) {
@@ -105,7 +104,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         val window = minecraft.window
         var currentTarget = this.renderTarget
         if (currentTarget == null) {
@@ -561,7 +560,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
     override fun keyPressed(event: KeyEvent): Boolean {
         if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) {
-            if (event.isEscape()) {
+            if (event.isEscape) {
                 exitAddMode()
                 return true
             }
@@ -610,7 +609,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             return true
         }
 
-        if (event.isEscape()) {
+        if (event.isEscape) {
             if (!searchField.isEmpty()) {
                 searchField.clear()
                 scroll = 0.0f
@@ -647,7 +646,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
     override fun onClose() {
         exitAddMode()
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         minecraft.gui.setScreen(MainMenuScreen)
     }
 
@@ -791,7 +790,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     private fun close() {
-        val minecraft = this.minecraft ?: return
+        val minecraft = this.minecraft
         minecraft.gui.setScreen(MainMenuScreen)
     }
 

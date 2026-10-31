@@ -21,8 +21,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import java.awt.Color
 import java.nio.ByteBuffer
-import java.util.EnumMap
-import java.util.Optional
+import java.util.*
 
 object CustomSkyShader {
 

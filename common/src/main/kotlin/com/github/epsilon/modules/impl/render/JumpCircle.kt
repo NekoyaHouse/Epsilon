@@ -3,27 +3,17 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.CompareOp
-import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.roundToInt
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -32,8 +22,10 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
-import java.util.ArrayList
-import java.util.UUID
+import java.util.*
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 object JumpCircle : Module("Jump Circle", Category.RENDER) {
 

@@ -1,7 +1,7 @@
 package com.github.epsilon.settings
 
 import com.github.epsilon.assets.i18n.TranslateComponent
-import java.util.Collections
+import java.util.*
 
 /**
  * Setting 的显式分组模型。

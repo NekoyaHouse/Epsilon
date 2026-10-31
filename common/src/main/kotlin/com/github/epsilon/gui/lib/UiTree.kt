@@ -9,7 +9,6 @@ import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.utils.render.animation.Animation
 import net.minecraft.resources.Identifier
 import java.awt.Color
-import java.util.ArrayList
 
 /**
  * 与具体 Screen 无关的声明式 UI 节点树。

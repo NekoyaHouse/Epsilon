@@ -1,18 +1,13 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.managers.ShaderManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MobCategory
@@ -121,58 +116,58 @@ object Shaders : Module("Shaders", Category.RENDER) {
         targetEnabled: Setting.Dependency,
     ) {
 
-        val mode: EnumSetting<ShaderManager.Shader> = Shaders.enumSetting(prefix + "Mode", ShaderManager.Shader.Default, dependency = targetEnabled).apply { group(group) }
-        val outlineMode: EnumSetting<OutlineMode> = Shaders.enumSetting(prefix + "Outline Mode", OutlineMode.Outline, dependency = targetEnabled).apply { group(group) }
+        val mode: EnumSetting<ShaderManager.Shader> = enumSetting(prefix + "Mode", ShaderManager.Shader.Default, dependency = targetEnabled).apply { group(group) }
+        val outlineMode: EnumSetting<OutlineMode> = enumSetting(prefix + "Outline Mode", OutlineMode.Outline, dependency = targetEnabled).apply { group(group) }
 
         private val outlineAvailable: Setting.Dependency =
             { targetEnabled.check() && outlineMode.`is`(OutlineMode.Outline) }
         private val glowAvailable: Setting.Dependency =
             { targetEnabled.check() && outlineMode.`is`(OutlineMode.Glow) }
 
-        val glowColorMode: EnumSetting<GlowColorMode> = Shaders.enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, dependency = glowAvailable).apply { group(group) }
-        val glowRadius by Shaders.intSetting(prefix + "Glow Radius", 4, 2, 30, 1, dependency = glowAvailable).apply { group(group) }
-        val glowExposure by Shaders.doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, dependency = glowAvailable).apply { group(group) }
-        var glowColor by Shaders.colorSetting(
+        val glowColorMode: EnumSetting<GlowColorMode> = enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, dependency = glowAvailable).apply { group(group) }
+        val glowRadius by intSetting(prefix + "Glow Radius", 4, 2, 30, 1, dependency = glowAvailable).apply { group(group) }
+        val glowExposure by doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, dependency = glowAvailable).apply { group(group) }
+        var glowColor by colorSetting(
             prefix + "Glow Color", Color(255, 183, 197),
             dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Solid) }
         ).apply { group(group) }
-        val glowColor1 by Shaders.colorSetting(
+        val glowColor1 by colorSetting(
             prefix + "Glow Color 1", Color(255, 183, 197),
             dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
-        val glowColor2 by Shaders.colorSetting(
+        val glowColor2 by colorSetting(
             prefix + "Glow Color 2", Color(0, 255, 200),
             dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
-        val glowGradientSpeed by Shaders.doubleSetting(
+        val glowGradientSpeed by doubleSetting(
             prefix + "Glow Gradient Speed", 2.0, 0.1, 10.0, 0.1,
             dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Gradient) }
         ).apply { group(group) }
-        val factor by Shaders.doubleSetting(
+        val factor by doubleSetting(
             prefix + "Gradient Factor", 2.0, 0.0, 20.0, 0.1,
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
-        val gradient by Shaders.doubleSetting(
+        val gradient by doubleSetting(
             prefix + "Gradient", 2.0, 0.0, 20.0, 0.1,
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
-        val gradientAlpha by Shaders.intSetting(
+        val gradientAlpha by intSetting(
             prefix + "Gradient Alpha", 170, 0, 255, 1,
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
-        val lineWidth by Shaders.intSetting(
+        val lineWidth by intSetting(
             prefix + "Line Width", 2, 0, 500, 1,
             dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
         ).apply { group(group) }
-        val quality by Shaders.intSetting(prefix + "Quality", 3, 0, 6, 1, dependency = outlineAvailable).apply { group(group) }
-        val octaves by Shaders.intSetting(
+        val quality by intSetting(prefix + "Quality", 3, 0, 6, 1, dependency = outlineAvailable).apply { group(group) }
+        val octaves by intSetting(
             prefix + "Smoke Octaves", 10, 5, 30, 1,
             dependency = {
                 outlineAvailable.check() &&
                         (mode.`is`(ShaderManager.Shader.Smoke) || mode.`is`(ShaderManager.Shader.Gradient))
             }
         ).apply { group(group) }
-        val fillAlpha by Shaders.intSetting(
+        val fillAlpha by intSetting(
             prefix + "Fill Alpha", 170, 0, 255, 1,
             dependency = {
                 outlineAvailable.check() &&
@@ -181,36 +176,36 @@ object Shaders : Module("Shaders", Category.RENDER) {
                                 mode.`is`(ShaderManager.Shader.Fade))
             }
         ).apply { group(group) }
-        val glow by Shaders.boolSetting(
+        val glow by boolSetting(
             prefix + "Smoke Glow", true,
             dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Snow) }
         ).apply { group(group) }
-        val outlineColor by Shaders.colorSetting(
+        val outlineColor by colorSetting(
             prefix + "Outline", Color(255, 255, 255, 136),
             dependency = {
                 outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Gradient) && !mode.`is`(ShaderManager.Shader.Snow)
             }
         ).apply { group(group) }
-        val smokeOutlineColor1 by Shaders.colorSetting(
+        val smokeOutlineColor1 by colorSetting(
             prefix + "Smoke Outline", Color(255, 255, 255, 136),
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }
-        val smokeOutlineColor2 by Shaders.colorSetting(
+        val smokeOutlineColor2 by colorSetting(
             prefix + "Smoke Outline 2", Color(250, 250, 250, 136),
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }
-        val fillColor1 by Shaders.colorSetting(
+        val fillColor1 by colorSetting(
             prefix + "Fill", Color(255, 255, 255, 136),
             dependency = { outlineAvailable.check() && !mode.`is`(ShaderManager.Shader.Gradient) }
         ).apply { group(group) }
-        val fillColor2 by Shaders.colorSetting(
+        val fillColor2 by colorSetting(
             prefix + "Smoke Fill", Color(255, 255, 255, 136),
             dependency = {
                 outlineAvailable.check() &&
                         (mode.`is`(ShaderManager.Shader.Smoke) || mode.`is`(ShaderManager.Shader.Fade))
             }
         ).apply { group(group) }
-        val fillColor3 by Shaders.colorSetting(
+        val fillColor3 by colorSetting(
             prefix + "Smoke Fill 2", Color(255, 255, 255, 136),
             dependency = { outlineAvailable.check() && mode.`is`(ShaderManager.Shader.Smoke) }
         ).apply { group(group) }

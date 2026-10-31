@@ -1,14 +1,15 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDirectionSolver.ESCAPE_KEEP_ANGLE
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Rot2f
-import kotlin.math.abs
-import kotlin.math.atan2
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
+import kotlin.math.atan2
 
 /**
  * 将期望速度反解为 input 模式可用的 yaw/pitch。

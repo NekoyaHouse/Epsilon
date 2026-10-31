@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
@@ -10,31 +9,23 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.CompareOp
-import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.item.PrimedTnt
-import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
-import java.util.Locale
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 object TNTTimer : Module("TNT Timer", Category.RENDER) {
 

@@ -6,7 +6,7 @@ import net.minecraft.client.resources.sounds.SoundInstance
 import net.minecraft.client.sounds.SoundEngine
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
-import java.util.Optional
+import java.util.*
 
 object SoundManager {
 

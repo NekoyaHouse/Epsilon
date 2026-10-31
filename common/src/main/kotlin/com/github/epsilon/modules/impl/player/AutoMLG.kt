@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.rotation.RotationManager
@@ -10,15 +9,16 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -33,6 +33,7 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
@@ -61,8 +62,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
             if (Scaffold.isEmergencyPlacementActive) return@nonNullHandler
 
             if ((isFalling() || player.isInWater || player.isInLava) && !mlgCompleted) {
-                player.setSprinting(false)
-                mc.options.keySprint.setDown(false)
+                player.isSprinting = false
+                mc.options.keySprint.isDown = false
             }
 
             if (pendingSwapBack && swapTimer.passedMillise(200L)) {
@@ -249,8 +250,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private fun canSeePosition(from: Vec3, to: Vec3, targetBlock: BlockPos): Boolean {
         val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, player)
         val result: BlockHitResult = level.clip(clipContext)
-        if (result.type == HitResult.Type.MISS) return true
-        return result.blockPos == targetBlock
+        return result.type == HitResult.Type.MISS || result.blockPos == targetBlock
     }
 
     context(nn: NonNullContext)

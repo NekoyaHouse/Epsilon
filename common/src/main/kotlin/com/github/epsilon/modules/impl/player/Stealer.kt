@@ -1,28 +1,20 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.ChestMenu
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.BowItem
-import net.minecraft.world.item.CrossbowItem
-import net.minecraft.world.item.FishingRodItem
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.item.StandingAndWallBlockItem
+import net.minecraft.world.item.*
 
 object Stealer : Module("Stealer", Category.PLAYER) {
 

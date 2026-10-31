@@ -4,7 +4,7 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.player
 
 object JumpReset : Module("Jump Reset", Category.MOVEMENT) {
 

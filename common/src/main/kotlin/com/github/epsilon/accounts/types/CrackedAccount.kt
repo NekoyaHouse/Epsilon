@@ -4,7 +4,7 @@ import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import net.minecraft.client.User
 import net.minecraft.core.UUIDUtil
-import java.util.Optional
+import java.util.*
 
 class CrackedAccount(name: String) : Account<CrackedAccount>(AccountType.Cracked, name) {
 
@@ -16,13 +16,12 @@ class CrackedAccount(name: String) : Account<CrackedAccount>(AccountType.Cracked
     override fun login(): Boolean {
         super.login()
 
-        Account.setSession(User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty()))
+        setSession(User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty()))
         return true
     }
 
     override fun equals(o: Any?): Boolean {
-        if (o !is CrackedAccount) return false
-        return o.username == this.username
+        return o is CrackedAccount && o.username == this.username
     }
 
 }

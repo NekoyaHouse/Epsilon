@@ -1,12 +1,9 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState

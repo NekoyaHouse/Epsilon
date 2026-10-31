@@ -7,8 +7,7 @@ import com.github.epsilon.graphics.PlayerHeadTexture
 import com.github.epsilon.utils.network.Http
 import com.google.gson.Gson
 import java.io.IOException
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 object SkinManager {
 

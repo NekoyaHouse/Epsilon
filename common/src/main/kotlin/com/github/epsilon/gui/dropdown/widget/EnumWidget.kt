@@ -289,7 +289,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
     }
 
     private fun getHiddenModes(): Array<Enum<*>> {
-        val selected: Enum<*>? = setting.value
+        val selected: Enum<*> = setting.value
         val modes = modes()
         val hiddenModes = arrayOfNulls<Enum<*>>(getHiddenModeCount())
         var hiddenIndex = 0

@@ -5,15 +5,8 @@ import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.textures.FilterMode
-import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTexture
-import com.mojang.renderpearl.api.textures.GpuTextureView
-import java.awt.AlphaComposite
-import java.awt.Color
-import java.awt.Font
-import java.awt.FontFormatException
-import java.awt.Graphics2D
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.image.BufferedImage
 import java.io.IOException
@@ -21,8 +14,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.LinkedHashMap
-import java.util.Locale
+import java.util.*
 
 /**
  * @author 06789
@@ -80,7 +72,7 @@ object SystemEmojiAtlas : AutoCloseable {
         nextCell = 0
         val graphics = atlasImage!!.createGraphics()
         try {
-            graphics.setComposite(AlphaComposite.Clear)
+            graphics.composite = AlphaComposite.Clear
             graphics.fillRect(0, 0, ATLAS_SIZE, ATLAS_SIZE)
         } finally {
             graphics.dispose()
@@ -90,13 +82,13 @@ object SystemEmojiAtlas : AutoCloseable {
     private fun drawEmojiToAtlas(emoji: String, x: Int, y: Int) {
         val graphics = atlasImage!!.createGraphics()
         try {
-            graphics.setComposite(AlphaComposite.Clear)
+            graphics.composite = AlphaComposite.Clear
             graphics.fillRect(x, y, CELL_SIZE, CELL_SIZE)
-            graphics.setComposite(AlphaComposite.SrcOver)
+            graphics.composite = AlphaComposite.SrcOver
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
             graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON)
-            graphics.setFont(emojiFont)
+            graphics.font = emojiFont
 
             val context = graphics.fontRenderContext
             val glyphVector = emojiFont.createGlyphVector(context, emoji)

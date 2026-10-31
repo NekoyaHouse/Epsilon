@@ -7,16 +7,15 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.RotationUtils
-import kotlin.math.roundToInt
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.roundToInt
 
 object SpearKill : Module("Spear Kill", Category.COMBAT) {
 

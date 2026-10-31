@@ -10,7 +10,6 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
-import java.util.ArrayList
 import java.util.function.Predicate
 
 class RegistryListSetting<T : Any>(
@@ -18,7 +17,7 @@ class RegistryListSetting<T : Any>(
     defaultValue: Collection<T>?,
     val registryType: Type,
     filter: Predicate<T>?,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
 ) : Setting<List<T>>(name, dependency, null) {
 
     enum class Type {
@@ -69,7 +68,7 @@ class RegistryListSetting<T : Any>(
 
     private val registry: Registry<T>? = registryType.registry<T>()
 
-    private val filterRef: Predicate<T>? = filter ?: registryType.defaultFilter()
+    private val filterRef: Predicate<T> = filter ?: registryType.defaultFilter()
 
     init {
         val normalized = normalize(defaultValue)
@@ -152,7 +151,7 @@ class RegistryListSetting<T : Any>(
         val result = ArrayList<T>()
         for (entry in source) {
             if (canUse(entry) && !result.contains(entry)) {
-                result.add(entry as T)
+                result.add(entry)
             }
         }
         return result

@@ -7,15 +7,13 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
-import kotlin.math.pow
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
+import kotlin.math.pow
 
 object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 

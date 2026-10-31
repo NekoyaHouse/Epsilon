@@ -11,10 +11,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
-import java.util.Comparator
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
-import java.util.Locale
+import java.util.*
 
 object StaticFontLoader {
 
@@ -323,7 +320,7 @@ object StaticFontLoader {
             for (font in Font.createFonts(path.toFile())) {
                 putFontLookupKey(lookup, font.getFontName(Locale.ROOT), path)
                 putFontLookupKey(lookup, font.getFamily(Locale.ROOT), path)
-                putFontLookupKey(lookup, font.getPSName(), path)
+                putFontLookupKey(lookup, font.psName, path)
             }
         } catch (ignored: FontFormatException) {
         } catch (ignored: IOException) {

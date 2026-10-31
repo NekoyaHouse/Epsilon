@@ -5,13 +5,15 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.BlockPos
@@ -58,7 +60,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
 
         nonNullHandler<RightClickEvent> { event ->
-            if (!mc.mouseHandler.isRightPressed()) return@nonNullHandler
+            if (!mc.mouseHandler.isRightPressed) return@nonNullHandler
             if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return@nonNullHandler
 
             val hit = mc.hitResult

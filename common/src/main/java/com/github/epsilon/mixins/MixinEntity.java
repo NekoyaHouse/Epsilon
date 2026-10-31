@@ -23,7 +23,7 @@ public class MixinEntity {
 
     @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
     private void updateTurn(double xo, double yo, CallbackInfo ci) {
-        if ((Entity) (Object) this == mc.player) {
+        if ((Object) this == mc.player) {
             FreeCamera freeCamera = FreeCamera.INSTANCE;
             if (freeCamera.isEnabled()) {
                 freeCamera.changeLookDirection(xo * 0.15, yo * 0.15);
@@ -34,7 +34,7 @@ public class MixinEntity {
 
     @WrapOperation(method = "getViewVector", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectGetViewYRot(float xRot, float yRot, Operation<Vec3> original) {
-        if ((Entity) (Object) this == mc.player) {
+        if ((Object) this == mc.player) {
             RaytraceEvent event = EventBus.INSTANCE.post(new RaytraceEvent(yRot, xRot));
             return original.call(event.getPitch(), event.getYaw());
         }
@@ -52,7 +52,7 @@ public class MixinEntity {
 
     @ModifyArgs(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;push(DDD)V"))
     private void pushAwayFromHook(Args args) {
-        if ((Entity) (Object) this == mc.player) {
+        if ((Object) this == mc.player) {
             if (Velocity.INSTANCE.isEnabled() && Velocity.INSTANCE.getMode() == Velocity.Mode.Cancel && Velocity.INSTANCE.getEntityPush()) {
                 args.set(0, 0.0);
                 args.set(1, 0.0);

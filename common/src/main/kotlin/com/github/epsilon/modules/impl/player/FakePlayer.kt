@@ -4,13 +4,14 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.world.entity.Entity
 import java.nio.charset.StandardCharsets
-import java.util.UUID
+import java.util.*
 
 object FakePlayer : Module("Fake Player", Category.PLAYER) {
 
@@ -42,8 +43,8 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
                 movementTick++
 
                 fake.snapTo(state.x, state.y, state.z, state.yaw, state.pitch)
-                fake.setYRot(state.yaw)
-                fake.setXRot(state.pitch)
+                fake.yRot = state.yaw
+                fake.xRot = state.pitch
                 fake.setYHeadRot(state.yaw)
             } else {
                 movementTick = 0
@@ -77,13 +78,13 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
             val fake = RemotePlayer(level, GameProfile(uuid, nameSetting))
             fakePlayer = fake
-            fake.setId(-66123666)
+            fake.id = -66123666
             fake.copyPosition(player)
-            fake.setYRot(player.yRot)
-            fake.setXRot(player.xRot)
+            fake.yRot = player.yRot
+            fake.xRot = player.xRot
             fake.setYHeadRot(player.yHeadRot)
-            fake.setHealth(player.health)
-            fake.setAbsorptionAmount(player.absorptionAmount)
+            fake.health = player.health
+            fake.absorptionAmount = player.absorptionAmount
 
             if (copyInventory) {
                 fake.inventory.replaceWith(player.inventory)

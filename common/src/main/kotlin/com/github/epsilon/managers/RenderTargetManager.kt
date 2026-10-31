@@ -1,7 +1,6 @@
 package com.github.epsilon.managers
 
 import com.github.epsilon.graphics.LuminRenderSystem
-import java.util.ArrayList
 
 object RenderTargetManager {
 

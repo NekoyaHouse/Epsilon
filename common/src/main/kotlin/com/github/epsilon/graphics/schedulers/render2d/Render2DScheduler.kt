@@ -2,15 +2,7 @@ package com.github.epsilon.graphics.schedulers.render2d
 
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.ArcRenderer
-import com.github.epsilon.graphics.renderers.IRenderer
-import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.graphics.renderers.RoundRectOutlineRenderer
-import com.github.epsilon.graphics.renderers.RoundRectRenderer
-import com.github.epsilon.graphics.renderers.ShadowRenderer
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.renderers.TextureRenderer
-import com.github.epsilon.graphics.renderers.TriangleRenderer
+import com.github.epsilon.graphics.renderers.*
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.modules.impl.ClientSetting
@@ -22,9 +14,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.awt.Color
-import java.util.LinkedHashMap
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 

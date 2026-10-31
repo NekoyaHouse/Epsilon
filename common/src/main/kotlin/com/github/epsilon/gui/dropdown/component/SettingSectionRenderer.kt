@@ -13,7 +13,6 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import java.util.HashMap
 
 /**
  * Dropdown 侧 Setting section 树的共用渲染器。

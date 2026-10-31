@@ -5,7 +5,7 @@ import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.MicrosoftLogin
 import com.mojang.util.UndashedUuid
 import net.minecraft.client.User
-import java.util.Optional
+import java.util.*
 
 class MicrosoftAccount(refreshToken: String) : Account<MicrosoftAccount>(AccountType.Microsoft, refreshToken) {
 
@@ -21,7 +21,7 @@ class MicrosoftAccount(refreshToken: String) : Account<MicrosoftAccount>(Account
 
         super.login()
 
-        Account.setSession(
+        setSession(
             User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), currentToken, Optional.empty(), Optional.empty())
         )
         return true
@@ -39,8 +39,7 @@ class MicrosoftAccount(refreshToken: String) : Account<MicrosoftAccount>(Account
     }
 
     override fun equals(o: Any?): Boolean {
-        if (o !is MicrosoftAccount) return false
-        return o.name == this.name
+        return o is MicrosoftAccount && o.name == this.name
     }
 
 }

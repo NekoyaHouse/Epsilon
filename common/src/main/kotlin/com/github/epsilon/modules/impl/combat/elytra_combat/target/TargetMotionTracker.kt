@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.target
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
 import com.github.epsilon.utils.math.toDegrees
-import kotlin.math.abs
-import kotlin.math.acos
 import net.minecraft.client.Minecraft
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
-import java.util.ArrayDeque
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.acos
 
 /**
  * 维护单个目标的最近位置历史，并提供预测和动作分类。

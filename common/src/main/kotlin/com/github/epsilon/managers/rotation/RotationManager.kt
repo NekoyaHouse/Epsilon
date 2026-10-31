@@ -4,23 +4,19 @@ import com.github.epsilon.Constants
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventHandler
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.events.impl.RaytraceEvent
-import com.github.epsilon.events.impl.RespawnEvent
-import com.github.epsilon.events.impl.RotationAnimationEvent
-import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.random.Random
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.HitResult
 import java.util.function.Function
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.random.Random
 
 /**
  * 托管旋转管理器基类。
@@ -190,7 +186,7 @@ abstract class RotationManager {
         val playerRotation = Rot2f(player.yRot, player.xRot)
         val fixedRotations = RotationUtils.applySensitivityPatch(playerRotation, lastRotations)
         val fixedYaw = fixedRotations.yaw + Mth.wrapDegrees(player.yRot - fixedRotations.yaw)
-        player.setYRot(fixedYaw)
+        player.yRot = fixedYaw
     }
 
     fun getYaw(): Float {

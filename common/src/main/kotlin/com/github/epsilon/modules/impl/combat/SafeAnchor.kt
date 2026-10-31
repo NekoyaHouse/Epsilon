@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -9,29 +8,20 @@ import com.github.epsilon.managers.ExtrapolationManager
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.combat.DamageUtils
-import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.BlockUtils
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.sign
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -48,6 +38,9 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.sign
 
 object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
@@ -341,8 +334,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun canPlaceAnchor(pos: BlockPos, item: ItemStack): Boolean {
-        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), item)) return false
-        return !BlockUtils.hasBlockingEntity(AABB(pos))
+        return BlockUtils.canBeReplacedWith(level.getBlockState(pos), item) && !BlockUtils.hasBlockingEntity(AABB(pos))
     }
 
     context(nn: NonNullContext)
@@ -891,8 +883,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun isExistingShield(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
         val state = level.getBlockState(pos)
-        if (BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance)) return false
-        return Block.isShapeFullBlock(state.getCollisionShape(level, pos))
+        return !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance) && Block.isShapeFullBlock(state.getCollisionShape(level, pos))
     }
 
     context(nn: NonNullContext)
@@ -939,8 +930,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isHotbarSlotSafe(slot: Int): Boolean {
-        if (slot < 0 || slot > 8) return false
-        return isExplosionHandSafe(player.inventory.getItem(slot))
+        return !(slot < 0 || slot > 8) && isExplosionHandSafe(player.inventory.getItem(slot))
     }
 
     private fun isExplosionHandSafe(stack: ItemStack): Boolean {
@@ -1029,7 +1019,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun setShiftState(state: Boolean) {
-        player.setShiftKeyDown(state)
+        player.isShiftKeyDown = state
     }
 
     private fun addRenderBox(pos: BlockPos) {
@@ -1200,10 +1190,9 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     }
 
     private fun shouldPlaceExtraShield(): Boolean {
-        if (mode == Mode.Assist) return false
-        return multiShield &&
-            placedShields.size < maxExtraShields &&
-            ThreadLocalRandom.current().nextInt(100) < multiShieldChance
+        return mode != Mode.Assist && multiShield &&
+                placedShields.size < maxExtraShields &&
+                ThreadLocalRandom.current().nextInt(100) < multiShieldChance
     }
 
     private fun randomInclusive(min: Int, max: Int): Int {

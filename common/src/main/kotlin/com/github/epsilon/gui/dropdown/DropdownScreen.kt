@@ -4,12 +4,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.dropdown.component.AbstractDropdownPanel
-import com.github.epsilon.gui.dropdown.component.CategoryPanel
-import com.github.epsilon.gui.dropdown.component.ConfigDropdownPanel
-import com.github.epsilon.gui.dropdown.component.DropdownPanel
-import com.github.epsilon.gui.dropdown.component.FriendDropdownPanel
-import com.github.epsilon.gui.dropdown.component.MainDropdownPanel
+import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTextMetrics
@@ -41,7 +36,6 @@ import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import java.awt.Color
-import java.util.HashSet
 import java.util.function.Consumer
 
 class DropdownScreen private constructor() : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
@@ -90,7 +84,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val window = minecraft!!.window
+        val window = minecraft.window
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.width, window.height)
         }
@@ -666,7 +660,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             minOf(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
             minOf(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
-        popupHost.open(StringListSelectPopup(bounds, setting, { it -> setting.add(it) }, { it -> setting.remove(it) }))
+        popupHost.open(StringListSelectPopup(bounds, setting, { setting.add(it) }, { setting.remove(it) }))
         react(ReisaDropdownCompanion.Action.PANEL_OPEN)
     }
 

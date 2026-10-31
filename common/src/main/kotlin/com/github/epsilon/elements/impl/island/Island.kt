@@ -3,11 +3,7 @@ package com.github.epsilon.elements.impl.island
 import com.github.epsilon.Constants
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
-import com.github.epsilon.elements.impl.island.instance.impl.BalanceInstance
-import com.github.epsilon.elements.impl.island.instance.impl.MusicInstance
-import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInstance
-import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance
-import com.github.epsilon.elements.impl.island.instance.impl.TargetInstance
+import com.github.epsilon.elements.impl.island.instance.impl.*
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
@@ -17,13 +13,11 @@ import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
 import me.sofurry.smtc.SmtcService
 import net.minecraft.client.DeltaTracker
@@ -227,7 +221,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
         if (music && ClientPlatform.isWindowsX64()) {
             SmtcService.INSTANCE.start()
             val snapshot = SmtcService.INSTANCE.snapshot()
-            if (!snapshot.available() || !snapshot.isPlaying()) {
+            if (!snapshot.available() || !snapshot.isPlaying) {
                 LandController.removeInstances(MusicInstance::class.java)
                 return
             }
@@ -240,7 +234,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
                         CheckPattern(
                             Supplier {
                                 val current = SmtcService.INSTANCE.snapshot()
-                                !music || !current.available() || !current.isPlaying()
+                                !music || !current.available() || !current.isPlaying
                             }
                         )
                     )

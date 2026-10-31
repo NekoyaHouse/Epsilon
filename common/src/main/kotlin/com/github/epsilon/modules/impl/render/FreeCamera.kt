@@ -2,31 +2,19 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.ChunkOcclusionEvent
-import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.GameLeftEvent
-import com.github.epsilon.events.impl.KeyPressEvent
-import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.events.impl.MouseScrollEvent
-import com.github.epsilon.events.impl.OpenScreenEvent
-import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.sqrt
 import net.minecraft.client.CameraType
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket
@@ -37,6 +25,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
+import kotlin.math.sqrt
 
 object FreeCamera : Module("Free Camera", Category.RENDER) {
 
@@ -87,7 +76,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
         nonNullHandler<ClientTickEvent.Post> {
             val cameraEntity = mc.cameraEntity ?: return@nonNullHandler
             if (cameraEntity.isInWall) cameraEntity.noPhysics = true
-            if (perspective?.isFirstPerson != true) mc.options.setCameraType(CameraType.FIRST_PERSON)
+            if (perspective?.isFirstPerson != true) mc.options.cameraType = CameraType.FIRST_PERSON
 
             val forwardDir = Vec3.directionFromRotation(0.0f, yaw)
             val rightDir = Vec3.directionFromRotation(0.0f, yaw + 90)
@@ -262,7 +251,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
         }
 
         val persp = perspective
-        if (persp != null) mc.options.setCameraType(persp)
+        if (persp != null) mc.options.cameraType = persp
 
         if (staticView) {
             mc.options.fovEffectScale().set(fovScale)
@@ -273,33 +262,33 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
     }
 
     private fun unpress() {
-        mc.options.keyUp.setDown(false)
-        mc.options.keyDown.setDown(false)
-        mc.options.keyRight.setDown(false)
-        mc.options.keyLeft.setDown(false)
-        mc.options.keyJump.setDown(false)
-        mc.options.keyShift.setDown(false)
+        mc.options.keyUp.isDown = false
+        mc.options.keyDown.isDown = false
+        mc.options.keyRight.isDown = false
+        mc.options.keyLeft.isDown = false
+        mc.options.keyJump.isDown = false
+        mc.options.keyShift.isDown = false
     }
 
     private fun onInput(key: Int, action: Int): Boolean {
         if (KeybindUtils.getKey(mc.options.keyUp) == key) {
             forward = action != InputConstants.RELEASE
-            mc.options.keyUp.setDown(false)
+            mc.options.keyUp.isDown = false
         } else if (KeybindUtils.getKey(mc.options.keyDown) == key) {
             backward = action != InputConstants.RELEASE
-            mc.options.keyDown.setDown(false)
+            mc.options.keyDown.isDown = false
         } else if (KeybindUtils.getKey(mc.options.keyRight) == key) {
             right = action != InputConstants.RELEASE
-            mc.options.keyRight.setDown(false)
+            mc.options.keyRight.isDown = false
         } else if (KeybindUtils.getKey(mc.options.keyLeft) == key) {
             left = action != InputConstants.RELEASE
-            mc.options.keyLeft.setDown(false)
+            mc.options.keyLeft.isDown = false
         } else if (KeybindUtils.getKey(mc.options.keyJump) == key) {
             up = action != InputConstants.RELEASE
-            mc.options.keyJump.setDown(false)
+            mc.options.keyJump.isDown = false
         } else if (KeybindUtils.getKey(mc.options.keyShift) == key) {
             down = action != InputConstants.RELEASE
-            mc.options.keyShift.setDown(false)
+            mc.options.keyShift.isDown = false
         } else {
             return false
         }

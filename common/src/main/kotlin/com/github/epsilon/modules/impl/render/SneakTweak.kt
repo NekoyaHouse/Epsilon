@@ -1,13 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
 
 object SneakTweak : Module("Sneak Tweak", Category.RENDER) {
 

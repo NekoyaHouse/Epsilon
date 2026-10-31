@@ -10,13 +10,10 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.core.BlockPos
@@ -27,7 +24,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import java.awt.Color
-import java.util.ArrayList
 import java.util.concurrent.ThreadLocalRandom
 
 object Xray : Module("Xray", Category.RENDER) {
@@ -91,7 +87,7 @@ object Xray : Module("Xray", Category.RENDER) {
                     event.z = 0.0
                     event.x = 0.0
                     event.cancel()
-                    if (player.tickCount % 8 == 0 && player.isMoving()) {
+                    if (player.tickCount % 8 == 0 && player.isMoving) {
                         log("Don't move while deobf!")
                     }
                 } else {
@@ -177,7 +173,7 @@ object Xray : Module("Xray", Category.RENDER) {
 
         if (toCheck.isEmpty() || !brutForce) return
 
-        if (mc.isLocalServer()) {
+        if (mc.isLocalServer) {
             log("单人游戏你反你老冯呢")
             toggle()
             return

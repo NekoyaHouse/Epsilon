@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
-import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.impl.FallFlyingEvent
@@ -8,13 +7,16 @@ import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.rotation.RotationManager
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.utils.safety.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.random.Random
 import net.minecraft.world.item.Items
+import kotlin.random.Random
 
 class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 

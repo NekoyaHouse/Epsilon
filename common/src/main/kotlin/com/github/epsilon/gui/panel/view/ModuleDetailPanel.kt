@@ -20,19 +20,17 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
-import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
-import java.util.HashMap
-import java.util.Locale
+import java.util.*
+import kotlin.math.abs
 
 class ModuleDetailPanel(
     protected val state: PanelState,
@@ -588,10 +586,7 @@ class ModuleDetailPanel(
             return true
         }
         val visibleSettings = settings.map { setting -> setting.name }
-        if (lastVisibleSettings != visibleSettings) {
-            return true
-        }
-        return lastContentSignature != contentSignature
+        return lastVisibleSettings != visibleSettings || lastContentSignature != contentSignature
     }
 
     private fun rememberSnapshot(
@@ -621,7 +616,7 @@ class ModuleDetailPanel(
         signature = signature * 31L + (if (module.isHidden) 1 else 0)
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getDetailScroll())
         val listening = state.getListeningKeybindSetting()
-        signature = signature * 31L + (listening?.name?.hashCode() ?: 0)
+        signature = signature * 31L + listening?.name.hashCode()
         for (setting in settings) {
             signature = signature * 31L + setting.name.hashCode()
             signature = signature * 31L + (if (setting.isAvailable) 1 else 0)

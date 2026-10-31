@@ -3,7 +3,6 @@ package com.github.epsilon.gui.screen.accounts
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import java.util.Comparator
 
 enum class AccountSortMode(
     private val label: TranslateComponent,

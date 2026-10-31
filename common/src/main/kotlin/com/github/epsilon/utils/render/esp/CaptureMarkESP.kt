@@ -7,16 +7,15 @@ import com.github.epsilon.utils.render.ColorUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
-import kotlin.math.PI
-import kotlin.math.sin
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
+import kotlin.math.PI
+import kotlin.math.sin
 
 object CaptureMarkESP {
 

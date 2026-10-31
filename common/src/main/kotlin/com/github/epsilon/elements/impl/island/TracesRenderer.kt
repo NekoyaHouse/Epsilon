@@ -3,16 +3,17 @@ package com.github.epsilon.elements.impl.island
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.WorldToScreen
-import kotlin.math.abs
-import kotlin.math.sqrt
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 object TracesRenderer {
 

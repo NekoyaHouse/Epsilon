@@ -13,7 +13,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
-import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.BlendFactor
 import com.mojang.renderpearl.api.pipeline.BlendFunction
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
@@ -34,8 +33,7 @@ import org.joml.Matrix4fc
 import org.joml.Vector4f
 import java.awt.Color
 import java.nio.ByteBuffer
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 
 object ShaderManager {
 

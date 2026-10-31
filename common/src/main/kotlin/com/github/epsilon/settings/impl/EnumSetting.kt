@@ -7,7 +7,7 @@ import com.github.epsilon.utils.client.PlatformRequirement
 class EnumSetting<E : Enum<E>>(
     name: String,
     defaultValue: E,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
     onChanged: ((E) -> Unit)?,
 ) : Setting<E>(name, dependency, onChanged) {
 

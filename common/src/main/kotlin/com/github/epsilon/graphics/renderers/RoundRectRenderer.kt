@@ -12,8 +12,7 @@ import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 
 class RoundRectRenderer private constructor() : IRenderer {
 

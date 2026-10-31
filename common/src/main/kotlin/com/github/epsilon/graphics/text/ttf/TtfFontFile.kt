@@ -1,9 +1,6 @@
 package com.github.epsilon.graphics.text.ttf
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
-import kotlin.math.abs
-import kotlin.math.hypot
-import kotlin.math.roundToInt
 import net.minecraft.resources.Identifier
 import org.lwjgl.stb.STBTTFontinfo
 import org.lwjgl.stb.STBTruetype
@@ -13,6 +10,9 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 /**
  * 缺字占位框（口字形）的尺寸比例：高度取 ascent 的 2/3，宽度与笔画由高度推导。

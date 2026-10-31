@@ -26,7 +26,6 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
@@ -37,6 +36,7 @@ import net.minecraft.client.input.PreeditEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import java.awt.Color
+import kotlin.math.abs
 
 object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopupScreen {
 
@@ -76,8 +76,8 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         val window = minecraft.window
-        val target = getRenderTarget(window.getWidth(), window.getHeight())
-        target.resize(window.getWidth(), window.getHeight())
+        val target = getRenderTarget(window.width, window.height)
+        target.resize(window.width, window.height)
         target.clear()
 
         LuminRenderSystem.setActiveTarget(target)
@@ -102,13 +102,13 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             0,
             0,
             0.0f,
-            window.getHeight().toFloat(),
+            window.height.toFloat(),
             window.guiScaledWidth,
             window.guiScaledHeight,
-            window.getWidth(),
-            -window.getHeight(),
-            window.getWidth(),
-            window.getHeight()
+            window.width,
+            -window.height,
+            window.width,
+            window.height
         )
         if (popupHost.activePopup == null) {
             drawElementOverlays(graphics)
@@ -387,7 +387,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         if (panel != null && panel.hasActiveInput() && panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
             return true
         }
-        if (event.isEscape()) {
+        if (event.isEscape) {
             onClose()
             return true
         }
@@ -406,10 +406,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         }
         val typed = event.codepointAsString()
         val panel = hudPanel
-        if (panel != null && !typed.isEmpty() && panel.charTyped(typed)) {
-            return true
-        }
-        return super.charTyped(event)
+        return panel != null && !typed.isEmpty() && panel.charTyped(typed) || super.charTyped(event)
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
@@ -455,10 +452,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             return true
         }
         val panel = hudPanel
-        if (panel != null && panel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
-            return true
-        }
-        return super.mouseReleased(epsilonEvent)
+        return panel != null && panel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button()) || super.mouseReleased(epsilonEvent)
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {

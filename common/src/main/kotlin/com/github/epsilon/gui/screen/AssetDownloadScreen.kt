@@ -4,11 +4,10 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
-import java.util.EnumSet
-import java.util.Locale
+import java.util.*
+import kotlin.math.roundToInt
 
 /**
  * 运行时资源下载界面。
@@ -45,8 +44,8 @@ class AssetDownloadScreen(
     }
 
     override fun cardHeight(): Float {
-        return EpsilonDialogScreen.CARD_PADDING * 2.0f + 36.0f + maxOf(1, assets.size) * ROW_HEIGHT +
-                STATUS_BLOCK_HEIGHT + EpsilonDialogScreen.BUTTON_HEIGHT + 10.0f
+        return CARD_PADDING * 2.0f + 36.0f + maxOf(1, assets.size) * ROW_HEIGHT +
+                STATUS_BLOCK_HEIGHT + BUTTON_HEIGHT + 10.0f
     }
 
     override fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int) {
@@ -57,10 +56,10 @@ class AssetDownloadScreen(
         var y = contentTop
         for (asset in assets) {
             val ready = manager.isReady(asset)
-            val downloading = running && job!!.currentAsset() == asset
+            val downloading = running && job.currentAsset() == asset
 
             scope.text(
-                label(asset), EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE,
+                label(asset), CARD_PADDING, y, BODY_SCALE,
                 if (ready) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_SECONDARY
             )
 
@@ -68,17 +67,17 @@ class AssetDownloadScreen(
             val status = if (downloading) {
                 String.format(
                     Locale.ROOT, "%s %d%%", EpsilonTranslations.Resources.STATUS_DOWNLOADING.getTranslatedName(),
-                    (job!!.currentProgress() * 100.0f).roundToInt()
+                    (job.currentProgress() * 100.0f).roundToInt()
                 )
             } else {
                 if (ready) EpsilonTranslations.Resources.STATUS_READY.getTranslatedName()
                 else EpsilonTranslations.Resources.STATUS_MISSING.getTranslatedName()
             }
             val trailing = "$size  ·  $status"
-            val trailingWidth = textMetrics().getWidth(trailing, EpsilonDialogScreen.BODY_SCALE)
+            val trailingWidth = textMetrics().getWidth(trailing, BODY_SCALE)
             scope.text(
-                trailing, cardBounds().width - EpsilonDialogScreen.CARD_PADDING - trailingWidth, y,
-                EpsilonDialogScreen.BODY_SCALE,
+                trailing, cardBounds().width - CARD_PADDING - trailingWidth, y,
+                BODY_SCALE,
                 if (ready) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
             )
             y += ROW_HEIGHT
@@ -86,28 +85,28 @@ class AssetDownloadScreen(
 
         y += 6.0f
         if (running) {
-            val barWidth = cardBounds().width - EpsilonDialogScreen.CARD_PADDING * 2.0f
-            scope.roundRect(EpsilonDialogScreen.CARD_PADDING, y, barWidth, 6.0f, 3.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
-            val filled = maxOf(2.0f, barWidth * job!!.progress())
-            scope.roundRect(EpsilonDialogScreen.CARD_PADDING, y, filled, 6.0f, 3.0f, MD3Theme.PRIMARY_CONTAINER)
+            val barWidth = cardBounds().width - CARD_PADDING * 2.0f
+            scope.roundRect(CARD_PADDING, y, barWidth, 6.0f, 3.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
+            val filled = maxOf(2.0f, barWidth * job.progress())
+            scope.roundRect(CARD_PADDING, y, filled, 6.0f, 3.0f, MD3Theme.PRIMARY_CONTAINER)
             y += 12.0f
-            val current = job!!.currentAsset()
+            val current = job.currentAsset()
             val line = if (current == null) {
                 EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName()
             } else {
                 String.format(
                     Locale.ROOT, "%s %s %d%%",
                     EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName(),
-                    label(current), (job!!.currentProgress() * 100.0f).roundToInt()
+                    label(current), (job.currentProgress() * 100.0f).roundToInt()
                 )
             }
-            scope.text(line, EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE, MD3Theme.TEXT_SECONDARY)
+            scope.text(line, CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_SECONDARY)
             return
         }
 
         if (job != null && job.status() == AssetManager.DownloadJob.Status.FAILED) {
             val error = String.format(EpsilonTranslations.Resources.FAILED.getTranslatedName(), job.error())
-            scope.text(error, EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE, MD3Theme.ERROR)
+            scope.text(error, CARD_PADDING, y, BODY_SCALE, MD3Theme.ERROR)
             return
         }
 
@@ -115,7 +114,7 @@ class AssetDownloadScreen(
         scope.text(
             if (allReady) EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_MESSAGE.getTranslatedName()
             else EpsilonTranslations.Resources.HINT.getTranslatedName(),
-            EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE, MD3Theme.TEXT_MUTED
+            CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_MUTED
         )
     }
 

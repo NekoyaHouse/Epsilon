@@ -1,21 +1,22 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 

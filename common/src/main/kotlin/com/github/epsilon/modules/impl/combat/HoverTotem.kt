@@ -1,17 +1,15 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
-import kotlin.math.ceil
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Items
-import java.util.Random
+import java.util.*
+import kotlin.math.ceil
 
 object HoverTotem : Module("Hover Totem", Category.COMBAT) {
 
@@ -33,7 +31,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
 
                 if (autoSwitch) {
                     val slotValue = slot.toInt()
-                    player.inventory.setSelectedSlot(slotValue - 1)
+                    player.inventory.selectedSlot = slotValue - 1
                 }
 
                 if (hoveredSlot != null) {

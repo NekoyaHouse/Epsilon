@@ -4,12 +4,11 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
-import kotlin.math.pow
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.player
 import net.minecraft.client.KeyMapping
+import kotlin.math.pow
 
 /**
  * @author Moli
@@ -136,7 +135,7 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     }
 
     private fun isButtonPressed(clickButton: ClickButton): Boolean {
-        return if (clickButton == ClickButton.LEFT) mc.mouseHandler.isLeftPressed() else mc.mouseHandler.isRightPressed()
+        return if (clickButton == ClickButton.LEFT) mc.mouseHandler.isLeftPressed else mc.mouseHandler.isRightPressed
     }
 
     private fun performClick(clickButton: ClickButton) {
@@ -145,8 +144,7 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     }
 
     private fun shouldMiss(): Boolean {
-        if (!enableMiss) return false
-        return MathUtils.getRandom(1, 100) <= missChance
+        return enableMiss && MathUtils.getRandom(1, 100) <= missChance
     }
 
     private fun scheduleDoubleClick(state: ButtonState, currentTime: Long) {

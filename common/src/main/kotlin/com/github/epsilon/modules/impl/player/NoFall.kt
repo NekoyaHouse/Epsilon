@@ -9,9 +9,8 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.*
+import com.github.epsilon.utils.safety.player
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 object NoFall : Module("No Fall", Category.PLAYER) {

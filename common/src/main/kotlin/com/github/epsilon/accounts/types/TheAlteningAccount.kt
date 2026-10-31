@@ -11,8 +11,7 @@ import com.mojang.authlib.Environment
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.mojang.util.UndashedUuid
 import net.minecraft.client.User
-import java.util.Optional
-import java.util.UUID
+import java.util.*
 
 class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountType.TheAltening, token), TokenAccount {
 
@@ -42,10 +41,10 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
     override fun login(): Boolean {
         val currentAccessToken = accessToken
         if (currentAccessToken == null || cache.username.isEmpty() || cache.uuid.isEmpty()) return false
-        Account.applyLoginEnvironment(SERVICE)
+        applyLoginEnvironment(SERVICE)
 
         try {
-            Account.setSession(
+            setSession(
                 User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), currentAccessToken, Optional.empty(), Optional.empty())
             )
             return true

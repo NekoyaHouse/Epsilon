@@ -6,7 +6,6 @@ import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.timer.TimerUtils
 

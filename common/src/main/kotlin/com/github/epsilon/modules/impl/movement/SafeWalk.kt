@@ -6,24 +6,19 @@ import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
-import kotlin.math.abs
-import kotlin.math.sign
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.level.EmptyBlockGetter
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.CarvedPumpkinBlock
-import net.minecraft.world.level.block.EntityBlock
-import net.minecraft.world.level.block.FallingBlock
-import net.minecraft.world.level.block.PumpkinBlock
-import net.minecraft.world.level.block.SlimeBlock
-import net.minecraft.world.level.block.TntBlock
+import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
+import kotlin.math.sign
 
 object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
@@ -135,8 +130,7 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
     }
 
     private fun isMovementInputPressed(): Boolean {
-        if (mc.options.keyUp.isDown != mc.options.keyDown.isDown) return true
-        return mc.options.keyLeft.isDown != mc.options.keyRight.isDown
+        return mc.options.keyUp.isDown != mc.options.keyDown.isDown || mc.options.keyLeft.isDown != mc.options.keyRight.isDown
     }
 
     context(nn: NonNullContext)

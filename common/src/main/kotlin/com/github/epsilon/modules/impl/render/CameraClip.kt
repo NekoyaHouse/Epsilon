@@ -1,14 +1,10 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import kotlin.math.exp
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
+import kotlin.math.exp
 
 object CameraClip : Module("Camera Clip", Category.RENDER) {
 

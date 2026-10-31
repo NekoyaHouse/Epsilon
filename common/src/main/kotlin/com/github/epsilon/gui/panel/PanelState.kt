@@ -5,8 +5,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.KeybindSetting
-import java.util.ArrayList
-import java.util.Comparator
 
 class PanelState {
 
@@ -187,7 +185,7 @@ class PanelState {
     private fun normalizedName(module: Module): String {
         val translated = module.translatedName
         if (translated != null && !translated.isBlank()) return translated
-        return module.name ?: ""
+        return module.name
     }
 
     private fun matchesSearch(module: Module, loweredSearch: String): Boolean {

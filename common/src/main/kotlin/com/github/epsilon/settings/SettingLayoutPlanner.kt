@@ -1,9 +1,6 @@
 package com.github.epsilon.settings
 
-import java.util.Collections
-import java.util.IdentityHashMap
-import java.util.LinkedList
-import java.util.Locale
+import java.util.*
 
 /**
  * 将显式 SettingGroup 转换为 GUI 可消费的 section 树。

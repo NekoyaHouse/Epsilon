@@ -1,9 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import kotlin.math.abs

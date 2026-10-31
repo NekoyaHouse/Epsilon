@@ -6,17 +6,12 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.ItemTags
@@ -209,8 +204,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun canSwapByWeapon(): Boolean {
-        if (!onlyOnWeapon) return true
-        return InvUtils.testInMainHand { item ->
+        return !onlyOnWeapon || InvUtils.testInMainHand { item ->
             (sword && item == (ItemTags.SWORDS)) ||
                     (axe && item == (ItemTags.AXES)) ||
                     (pickaxe && item == (ItemTags.PICKAXES)) ||

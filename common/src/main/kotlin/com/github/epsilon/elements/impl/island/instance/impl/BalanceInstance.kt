@@ -7,9 +7,9 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.util.function.Supplier
+import kotlin.math.roundToInt
 
 class BalanceInstance(
     private val balanceSupplier: Supplier<Long>,

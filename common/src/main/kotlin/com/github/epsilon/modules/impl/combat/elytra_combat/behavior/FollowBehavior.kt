@@ -5,7 +5,6 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntent
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentPlanner
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
-import net.minecraft.world.phys.Vec3
 
 /**
  * 直接追击目标预测位置。

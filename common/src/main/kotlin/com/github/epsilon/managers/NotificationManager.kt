@@ -9,9 +9,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.util.FormattedCharSequence
 import org.apache.commons.lang3.StringUtils
-import java.util.ArrayDeque
-import java.util.HashMap
-import java.util.Queue
+import java.util.*
 
 /**
  * 管理客户端 HUD 通知及其聊天栏镜像。

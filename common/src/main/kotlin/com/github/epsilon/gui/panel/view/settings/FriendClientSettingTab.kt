@@ -18,13 +18,11 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import java.util.ArrayList
-import java.util.HashMap
+import kotlin.math.abs
 
 class FriendClientSettingTab(
     private val state: PanelState,
@@ -212,11 +210,7 @@ class FriendClientSettingTab(
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (!inputField.isFocused()) {
-            return false
-        }
-
-        return when (event.key()) {
+        return inputField.isFocused() && when (event.key()) {
             InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 addFriendFromInput()
                 true

@@ -7,13 +7,12 @@ import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.roundToInt
 import net.minecraft.client.color.block.BlockTintSource
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.util.Mth
@@ -22,6 +21,9 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import java.awt.Color
 import java.util.function.Supplier
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 class ScaffoldBlocksInstance(
     private val countSupplier: Supplier<Int>,

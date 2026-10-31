@@ -1,18 +1,16 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.utils.player.ClickSlotUtils
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
@@ -104,11 +102,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     }
 
     protected fun canGlide(hasElytraInInventory: Boolean): Boolean = runSafeOrFalse {
-        if (elytraFly.armored && hasElytraInInventory) {
-            true
-        } else {
-            EquipmentSlot.VALUES.any { LivingEntity.canGlideUsing(player.getItemBySlot(it), it) }
-        }
+        elytraFly.armored && hasElytraInInventory || EquipmentSlot.VALUES.any { LivingEntity.canGlideUsing(player.getItemBySlot(it), it) }
     }
 
     protected fun useFirework(): Boolean = runSafeOrFalse {

@@ -3,8 +3,8 @@ package com.github.epsilon.utils.render
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.mojang.renderpearl.api.commands.RenderPass
-import kotlin.math.roundToInt
 import net.minecraft.client.renderer.state.WindowRenderState
+import kotlin.math.roundToInt
 
 object ScissorUtils {
 

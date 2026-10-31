@@ -17,16 +17,14 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
-import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import java.util.HashMap
+import kotlin.math.abs
 
 class GeneralClientSettingTab(
     private val state: PanelState,
@@ -275,10 +273,7 @@ class GeneralClientSettingTab(
             return true
         }
         val visibleSettings = settings.map { setting -> setting.name }
-        if (lastVisibleSettings != visibleSettings) {
-            return true
-        }
-        return lastContentSignature != contentSignature
+        return lastVisibleSettings != visibleSettings || lastContentSignature != contentSignature
     }
 
     private fun rememberSnapshot(
@@ -296,7 +291,7 @@ class GeneralClientSettingTab(
         var signature = 17L
         signature = signature * 31L + TranslationManager.getRevision()
         signature = signature * 31L + java.lang.Float.floatToIntBits(state.getClientSettingScroll())
-        signature = signature * 31L + (state.getListeningKeybindSetting()?.name?.hashCode() ?: 0)
+        signature = signature * 31L + state.getListeningKeybindSetting()?.name.hashCode()
         for (setting in settings) {
             signature = signature * 31L + setting.name.hashCode()
             signature = signature * 31L + (if (setting.isAvailable) 1 else 0)

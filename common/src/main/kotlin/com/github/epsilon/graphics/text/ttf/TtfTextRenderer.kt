@@ -17,18 +17,15 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import kotlin.math.cos
-import kotlin.math.sin
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
 import java.nio.ByteBuffer
-import java.util.LinkedHashMap
-import java.util.Objects
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 private const val DEFAULT_SCALE = 0.35f
 private const val SPACING = 0f

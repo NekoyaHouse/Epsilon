@@ -5,7 +5,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.Resource
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
-import java.util.Optional
+import java.util.*
 
 object ResourceLocationUtils {
 

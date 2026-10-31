@@ -2,13 +2,8 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
-import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.events.impl.*
 import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -16,9 +11,6 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.render.AntiAlias
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
@@ -29,6 +21,9 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.KeyMapping
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
@@ -479,7 +474,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         }
 
         when (maceSwapMode) {
-            MaceSwapMode.Normal, MaceSwapMode.Silent -> player.inventory.setSelectedSlot(maceResult.slot)
+            MaceSwapMode.Normal, MaceSwapMode.Silent -> player.inventory.selectedSlot = maceResult.slot
             MaceSwapMode.InvSwitch -> InvUtils.invSwap(maceResult.slot)
         }
 
@@ -489,7 +484,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             MaceSwapMode.Normal -> {
             }
 
-            MaceSwapMode.Silent -> player.inventory.setSelectedSlot(selectedSlot)
+            MaceSwapMode.Silent -> player.inventory.selectedSlot = selectedSlot
             MaceSwapMode.InvSwitch -> InvUtils.invSwapBack()
         }
     }

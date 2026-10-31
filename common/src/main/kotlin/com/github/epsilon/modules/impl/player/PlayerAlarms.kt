@@ -1,24 +1,21 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.elements.impl.notification.NotificationMode
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ChatUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.connection
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
@@ -28,9 +25,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
-import java.util.HashMap
-import java.util.HashSet
-import java.util.UUID
+import java.util.*
 
 object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
 
@@ -121,8 +116,8 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             handleRing(gamemodeRing) { playSound(gamemodeVolume, gamemodePitch, gamemodeSound.value) }
 
             // Detect world/server changes and re-scan online target players
-            val currentConnection: Any? = connection
-            val currentLevel: Any? = level
+            val currentConnection: Any = connection
+            val currentLevel: Any = level
             val reconnected = currentConnection !== lastConnection
             val worldChanged = currentLevel !== lastLevel
             if (reconnected || worldChanged) {
@@ -262,8 +257,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
 
     private fun shouldAlarm(playerName: String): Boolean {
         val nameList = names
-        if (nameList.isEmpty()) return false
-        return nameList.any { it.equals(playerName, ignoreCase = true) }
+        return nameList.isNotEmpty() && nameList.any { it.equals(playerName, ignoreCase = true) }
     }
 
     private fun startRing(rs: RingState, rings: Int, delay: Int) {
@@ -340,7 +334,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             // fallback: try to get from network player list
             val entry = connection.getPlayerInfo(id)
             if (entry != null) {
-                val profile = entry.profile ?: return@context null
+                val profile = entry.profile
                 return@context profile.name()
             }
             null

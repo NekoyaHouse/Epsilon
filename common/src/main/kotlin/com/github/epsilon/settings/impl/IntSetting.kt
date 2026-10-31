@@ -9,7 +9,7 @@ class IntSetting(
     val min: Int,
     val max: Int,
     val step: Int,
-    dependency: Setting.Dependency?,
+    dependency: Dependency?,
     onChanged: ((Int) -> Unit)?,
 ) : Setting<Int>(name, dependency, onChanged) {
 

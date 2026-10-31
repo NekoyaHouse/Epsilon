@@ -9,8 +9,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import net.minecraft.client.input.MouseButtonEvent
-import java.util.Comparator
-import java.util.IdentityHashMap
+import java.util.*
 
 class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 

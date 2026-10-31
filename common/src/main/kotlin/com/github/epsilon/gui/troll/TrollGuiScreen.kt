@@ -25,10 +25,10 @@ import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
+import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
@@ -38,8 +38,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import java.awt.Color
-import java.util.ArrayList
-import com.google.common.base.Supplier
+import kotlin.math.roundToInt
 
 class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
 
@@ -588,7 +587,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         }
         val colorPicker = this.colorPicker
         if (colorPicker != null) {
-            if (event.isEscape()) {
+            if (event.isEscape) {
                 colorPicker.cancel()
             } else if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
                 colorPicker.confirm()
@@ -598,14 +597,14 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         }
         val settingsWindow = this.settingsWindow
         if (settingsWindow != null) {
-            if (!settingsWindow.keyPressed(event) && event.isEscape()) closeSettings()
+            if (!settingsWindow.keyPressed(event) && event.isEscape) closeSettings()
             return true
         }
         for (i in windows.indices.reversed()) {
             val window = windows[i]
             if (isWindowVisible(window) && window.keyPressed(event)) return true
         }
-        if (event.isEscape()) onClose()
+        if (event.isEscape) onClose()
         return true
     }
 

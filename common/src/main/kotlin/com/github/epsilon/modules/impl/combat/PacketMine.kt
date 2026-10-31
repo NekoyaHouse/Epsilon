@@ -6,22 +6,13 @@ import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -30,18 +21,17 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import java.awt.Color
-import java.util.Timer
-import java.util.TimerTask
+import java.util.*
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
@@ -190,8 +180,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
     /** 判断是否还有尚未被破坏的挖掘目标。 */
     fun isBusy(): Boolean {
-        if (!isEnabled || this.mc.level == null) return false
-        return isPendingBreak(targetPos) || isPendingBreak(secondPos)
+        return !(!isEnabled || this.mc.level == null) && (isPendingBreak(targetPos) || isPendingBreak(secondPos))
     }
 
     private fun isPendingBreak(pos: BlockPos?): Boolean {
@@ -607,8 +596,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val player = this.mc.player ?: return false
         val level = this.mc.level ?: return false
         val state = level.getBlockState(blockPos)
-        if (!player.isCreative && state.getDestroySpeed(level, blockPos) < 0) return false
-        return state.getCollisionShape(level, blockPos) !== Shapes.empty()
+        return !(!player.isCreative && state.getDestroySpeed(level, blockPos) < 0) && state.getCollisionShape(level, blockPos) !== Shapes.empty()
     }
 
     private fun updateFadeProgress(delta: Double) {

@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.DoubleSetting
-import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.text.DecimalFormat
 import java.util.function.Predicate
+import kotlin.math.roundToInt
 
 class DoubleSliderWidget(setting: DoubleSetting) :
     AbstractSliderWidget<DoubleSetting, Double>(setting, 16, Predicate { value -> value.matches(Regex("[0-9.\\-]")) }) {

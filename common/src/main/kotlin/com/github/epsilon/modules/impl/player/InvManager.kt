@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
@@ -10,31 +9,19 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.connection
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.network.protocol.game.ServerboundAttackPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.*
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.item.BowItem
-import net.minecraft.world.item.CrossbowItem
-import net.minecraft.world.item.FishingRodItem
-import net.minecraft.world.item.Item
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.item.StandingAndWallBlockItem
+import net.minecraft.world.item.*
 
 object InvManager : Module("Inv Manager", Category.PLAYER) {
 
@@ -150,7 +137,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 return@nonNullHandler
             }
 
-            if (player.isMoving()) {
+            if (player.isMoving) {
                 this.noMoveTicks = 0
             } else {
                 this.noMoveTicks++
@@ -444,7 +431,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
         nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (shouldStopSprinting() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
-                player.setSprinting(false)
+                player.isSprinting = false
                 if (!player.wasSprinting) {
                     actionState = ActionState.READY_TO_EXECUTE
                 }
@@ -471,7 +458,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         actionConsumed = false
         delayMs = 0
         if (closeSilentInventory) {
-            connection!!.send(ServerboundContainerClosePacket(player!!.inventoryMenu.containerId))
+            connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
         }
     }
 
@@ -597,7 +584,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         val player = mc.player ?: return true
         if (player.isSprinting || player.wasSprinting) {
             actionState = ActionState.WAITING_FOR_SPRINT_STOP
-            player.setSprinting(false)
+            player.isSprinting = false
             return false
         }
 

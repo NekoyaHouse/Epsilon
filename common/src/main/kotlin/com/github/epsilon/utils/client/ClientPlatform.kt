@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.client
 
-import java.util.Locale
+import java.util.*
 
 /**
  * 客户端运行平台的统一判定入口。

@@ -10,15 +10,10 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
-import java.util.IdentityHashMap
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
+import java.util.*
+import kotlin.math.*
 
 class QuantumNotification(private val owner: Notifications) {
 

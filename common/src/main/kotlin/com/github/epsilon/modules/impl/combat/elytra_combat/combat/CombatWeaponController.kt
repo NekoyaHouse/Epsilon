@@ -2,11 +2,10 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
-import com.github.epsilon.utils.safety.*
-import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
@@ -16,7 +15,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.world.item.component.KineticWeapon
 import java.util.function.Predicate
 
 /**
@@ -178,10 +176,7 @@ object CombatWeaponController {
      */
     private fun isSpearWindowExpired(player: LocalPlayer): Boolean {
         val weapon = player.useItem.get(DataComponents.KINETIC_WEAPON) ?: return false
-        if (weapon.damageConditions().isEmpty()) {
-            return false
-        }
-        return player.ticksUsingItem >= weapon.computeDamageUseDuration()
+        return !weapon.damageConditions().isEmpty && player.ticksUsingItem >= weapon.computeDamageUseDuration()
     }
 
     fun canUseSpearAttack(): Boolean {

@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
@@ -10,22 +9,22 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
@@ -198,11 +197,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         }
 
         val killAuraTarget = KillAura.target
-        if (KillAura.isEnabled && killAuraTarget != null && RotationUtils.getEyeDistanceToEntity(killAuraTarget) > KillAura.aimRange) {
-            return false
-        }
-
-        return mc.options.keyUse.isDown || !mc.options.keyAttack.isDown
+        return !(KillAura.isEnabled && killAuraTarget != null && RotationUtils.getEyeDistanceToEntity(killAuraTarget) > KillAura.aimRange) && (mc.options.keyUse.isDown || !mc.options.keyAttack.isDown)
     }
 
     // 通过离散模拟计算可行的命中方向，移植自现有实现并适配 Vec3

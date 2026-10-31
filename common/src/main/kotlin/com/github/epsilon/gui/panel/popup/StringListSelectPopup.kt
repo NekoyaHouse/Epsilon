@@ -15,13 +15,12 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.util.Mth
-import java.util.ArrayList
+import kotlin.math.abs
 
 class StringListSelectPopup(
     private val bounds: UiRect,

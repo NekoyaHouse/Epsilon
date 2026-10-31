@@ -4,7 +4,6 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.network.NetworkUtils
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 

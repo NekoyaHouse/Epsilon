@@ -2,7 +2,7 @@ package com.github.epsilon.assets.i18n
 
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
-import java.util.Locale
+import java.util.*
 
 /**
  * Epsilon 内置界面文案的集中注册表。

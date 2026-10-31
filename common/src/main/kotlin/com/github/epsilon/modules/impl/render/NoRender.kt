@@ -1,10 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
 import net.minecraft.world.entity.EntityType
 
 object NoRender : Module("No Render", Category.RENDER) {

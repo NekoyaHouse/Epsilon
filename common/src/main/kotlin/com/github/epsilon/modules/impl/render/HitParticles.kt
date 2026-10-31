@@ -9,35 +9,24 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.CompareOp
-import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import kotlin.math.sqrt
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import java.awt.Color
-import java.util.ArrayList
+import kotlin.math.sqrt
 
 object HitParticles : Module("Hit Particles", Category.RENDER) {
 
@@ -149,13 +138,13 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         private var prevY: Float = y
         private var prevZ: Float = z
         private var motionX: Float =
-            MathUtils.getRandom(-HitParticles.speed / 50.0f, HitParticles.speed / 50.0f)
+            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private var motionY: Float =
-            MathUtils.getRandom(-HitParticles.speed / 50.0f, HitParticles.speed / 50.0f)
+            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private var motionZ: Float =
-            MathUtils.getRandom(-HitParticles.speed / 50.0f, HitParticles.speed / 50.0f)
+            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private val spawnTime: Long = System.currentTimeMillis()
         private var lastRenderTime: Long = spawnTime
@@ -171,7 +160,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             y += motionY
             z += motionZ
 
-            if (isSolidBlock(x.toDouble(), (y - HitParticles.scale.toFloat() / 10.0f).toDouble(), z.toDouble())) {
+            if (isSolidBlock(x.toDouble(), (y - scale.toFloat() / 10.0f).toDouble(), z.toDouble())) {
                 motionY = -motionY / 1.1f
                 motionX /= 1.1f
                 motionZ /= 1.1f
@@ -188,7 +177,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
                 motionZ = -motionZ
             }
 
-            if (HitParticles.physics.`is`(Physics.Fall)) {
+            if (physics.`is`(Physics.Fall)) {
                 motionY -= 0.035f
             }
 
@@ -196,13 +185,13 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             motionY /= 1.005f
             motionZ /= 1.005f
 
-            return System.currentTimeMillis() - spawnTime > HitParticles.lifeTime * 1000L
+            return System.currentTimeMillis() - spawnTime > lifeTime * 1000L
         }
 
         fun renderTexture(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
             val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleScale = 0.07f
-            val size = HitParticles.scale.toFloat()
+            val size = scale.toFloat()
             val position = interpolatedCameraRelativePosition(partialTick)
 
             poseStack.pushPose()

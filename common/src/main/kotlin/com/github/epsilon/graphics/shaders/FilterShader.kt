@@ -20,7 +20,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.awt.Color
 import java.nio.ByteBuffer
-import java.util.Optional
+import java.util.*
 
 object FilterShader {
 

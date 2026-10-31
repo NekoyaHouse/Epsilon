@@ -1,27 +1,9 @@
 package com.github.epsilon.gui.panel.adapter
 
 import com.github.epsilon.gui.panel.component.SettingRow
-import com.github.epsilon.gui.panel.component.setting.BoolSettingRow
-import com.github.epsilon.gui.panel.component.setting.ButtonSettingRow
-import com.github.epsilon.gui.panel.component.setting.ColorSettingRow
-import com.github.epsilon.gui.panel.component.setting.DoubleSettingRow
-import com.github.epsilon.gui.panel.component.setting.EnumSettingRow
-import com.github.epsilon.gui.panel.component.setting.IntSettingRow
-import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow
-import com.github.epsilon.gui.panel.component.setting.RegistryListSettingRow
-import com.github.epsilon.gui.panel.component.setting.StringListSettingRow
-import com.github.epsilon.gui.panel.component.setting.StringSettingRow
+import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.settings.impl.KeybindSetting
-import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.settings.impl.StringSetting
+import com.github.epsilon.settings.impl.*
 
 object SettingViewFactory {
 

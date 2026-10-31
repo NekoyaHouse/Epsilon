@@ -39,31 +39,31 @@ class PlatformNoticeScreen private constructor(
     }
 
     override fun cardHeight(): Float {
-        return EpsilonDialogScreen.CARD_PADDING * 2.0f + 36.0f + ROW_HEIGHT * 4.0f + 24.0f
+        return CARD_PADDING * 2.0f + 36.0f + ROW_HEIGHT * 4.0f + 24.0f
     }
 
     override fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int) {
         var y = contentTop
-        val labelScale = EpsilonDialogScreen.BODY_SCALE
+        val labelScale = BODY_SCALE
 
         scope.text(
             String.format(EpsilonTranslations.PlatformOnly.FEATURE.getTranslatedName(), featureName),
-            EpsilonDialogScreen.CARD_PADDING, y, labelScale, MD3Theme.TEXT_PRIMARY
+            CARD_PADDING, y, labelScale, MD3Theme.TEXT_PRIMARY
         )
         y += ROW_HEIGHT
         scope.text(
             String.format(EpsilonTranslations.PlatformOnly.REQUIREMENT.getTranslatedName(), requirement.displayName()),
-            EpsilonDialogScreen.CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
+            CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
         )
         y += ROW_HEIGHT
         scope.text(
             String.format(EpsilonTranslations.PlatformOnly.CURRENT.getTranslatedName(), ClientPlatform.displayName()),
-            EpsilonDialogScreen.CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
+            CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
         )
         y += ROW_HEIGHT + 6.0f
         scope.text(
             EpsilonTranslations.PlatformOnly.HINT.getTranslatedName(),
-            EpsilonDialogScreen.CARD_PADDING, y, labelScale, MD3Theme.TEXT_MUTED
+            CARD_PADDING, y, labelScale, MD3Theme.TEXT_MUTED
         )
     }
 

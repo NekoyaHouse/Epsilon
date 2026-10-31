@@ -1,11 +1,12 @@
 package com.github.epsilon.utils.combat
 
 import com.github.epsilon.Constants
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import kotlin.math.floor
-import kotlin.math.sqrt
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
@@ -22,6 +23,8 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.floor
+import kotlin.math.sqrt
 
 /**
  * 用于计算实体所受爆炸伤害的工具类。

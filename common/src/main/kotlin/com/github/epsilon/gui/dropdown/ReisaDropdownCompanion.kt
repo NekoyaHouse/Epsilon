@@ -4,11 +4,11 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import kotlin.math.sin
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
 import java.awt.Color
+import kotlin.math.sin
 
 class ReisaDropdownCompanion {
 

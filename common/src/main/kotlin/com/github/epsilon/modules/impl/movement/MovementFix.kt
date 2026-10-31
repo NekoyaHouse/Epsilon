@@ -3,9 +3,10 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.*
-import kotlin.math.abs
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.util.Mth
+import kotlin.math.abs
 
 object MovementFix : Module("Movement Fix", Category.MOVEMENT) {
 

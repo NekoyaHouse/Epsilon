@@ -1,21 +1,20 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.world.BlockUtils
-import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -27,6 +26,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
@@ -67,7 +67,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                     if (swapBackTicks > 0) return@nonNullHandler
                 }
                 if (savedOldSlot >= 0) {
-                    player.inventory.setSelectedSlot(savedOldSlot)
+                    player.inventory.selectedSlot = savedOldSlot
                 }
                 waitingSwapBack = false
                 savedOldSlot = -1
@@ -102,7 +102,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 )
             )
             if (hit.type == HitResult.Type.BLOCK) {
-                val hitPos = (hit as BlockHitResult).blockPos
+                val hitPos = hit.blockPos
                 if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullHandler
             }
 

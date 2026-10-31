@@ -1,12 +1,10 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.modules.Category
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.modules.Module
 import net.minecraft.ChatFormatting
-import net.minecraft.util.FormattedCharSequence
 import net.minecraft.network.chat.Style
-import java.util.ArrayList
+import net.minecraft.util.FormattedCharSequence
 
 object ACSpoof : Module("AC Spoof", Category.RENDER) {
 

@@ -13,7 +13,7 @@ import net.minecraft.util.GsonHelper
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.Locale
+import java.util.*
 import java.util.regex.Pattern
 
 object EpsilonLanguageManager {

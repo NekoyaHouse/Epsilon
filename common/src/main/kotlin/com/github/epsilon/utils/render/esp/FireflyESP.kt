@@ -4,13 +4,12 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.ColorUtils
+import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.safety.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
-import kotlin.math.cos
-import kotlin.math.sin
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -18,6 +17,8 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import org.joml.Matrix4f
 import java.awt.Color
+import kotlin.math.cos
+import kotlin.math.sin
 
 object FireflyESP {
 

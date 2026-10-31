@@ -15,15 +15,7 @@ import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.FindItemResult
@@ -34,14 +26,10 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.hypot
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundEvents
@@ -70,12 +58,12 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import org.joml.Vector3f
 import java.awt.Color
-import java.util.ArrayDeque
-import java.util.Deque
-import java.util.HashMap
-import java.util.HashSet
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.hypot
 
 /**
  * Zealot Crystal+：客户端水晶放置/破坏计算模块。
@@ -1741,8 +1729,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         if (!isCrystalSupport(level, pos)) return false
 
         val crystalPos = pos.above()
-        if (!level.getBlockState(crystalPos).canBeReplaced()) return false
-        return level.getBlockState(crystalPos.above()).canBeReplaced()
+        return level.getBlockState(crystalPos).canBeReplaced() && level.getBlockState(crystalPos.above()).canBeReplaced()
     }
 
     private fun isCrystalSupport(pos: BlockPos): Boolean {
@@ -1885,11 +1872,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         val player = this.mc.player
-        if (player == null || !player.hasEffect(MobEffects.WEAKNESS) || isHoldingTool()) {
-            return true
-        }
-
-        return antiWeakness != SwitchMode.Off && findWeaponSlot() != -1
+        return player == null || !player.hasEffect(MobEffects.WEAKNESS) || isHoldingTool() || antiWeakness != SwitchMode.Off && findWeaponSlot() != -1
     }
 
     private fun isRotationReady(targetRotation: Rot2f): Boolean {

@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec3
 
 /**
  * 26.3 滑翔运动方程工具。

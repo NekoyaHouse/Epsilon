@@ -4,21 +4,19 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
-import kotlin.random.Random
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.EntityHitResult
-import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.*
+import kotlin.random.Random
 
 object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
@@ -53,7 +51,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
         placeCooldown = 0
     }
 
-    override fun getInfo(): String? {
+    override fun getInfo(): String {
         if (autoBreak && autoPlace) return "Break+Place"
         if (autoBreak) return "Break"
         if (autoPlace) return "Place"

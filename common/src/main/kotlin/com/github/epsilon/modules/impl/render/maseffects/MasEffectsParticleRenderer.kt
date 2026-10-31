@@ -4,15 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.CompareOp
-import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.sin
-import kotlin.math.sqrt
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -33,10 +25,12 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector3f
-import java.util.ArrayList
-import java.util.EnumMap
-import java.util.LinkedHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class MasEffectsParticleRenderer {
 
@@ -202,7 +196,7 @@ class MasEffectsParticleRenderer {
 
     private fun randomInclusive(min: Int, max: Int): Int = min + random.nextInt(max - min + 1)
 
-    private abstract inner class EffectParticle internal constructor(
+    private abstract class EffectParticle(
         position: Vec3,
         protected val lifetime: Int,
         private val frames: Array<out Identifier>,
@@ -229,7 +223,7 @@ class MasEffectsParticleRenderer {
         protected var removed: Boolean = false
         private var stoppedByCollision = false
 
-        internal fun tick(): Boolean {
+        fun tick(): Boolean {
             xo = x
             yo = y
             zo = z
@@ -247,9 +241,9 @@ class MasEffectsParticleRenderer {
         protected open fun afterTick() {
         }
 
-        internal fun shouldRender(): Boolean = alpha > 0.0f && size > 0.0f
+        fun shouldRender(): Boolean = alpha > 0.0f && size > 0.0f
 
-        internal fun texture(): Identifier {
+        fun texture(): Identifier {
             if (frames.size == 1) return frames[0]
             val max = maxOf(1, frameDuration())
             val index = Mth.clamp(frameAge(), 0, max) * (frames.size - 1) / max
@@ -260,7 +254,7 @@ class MasEffectsParticleRenderer {
 
         protected open fun frameDuration(): Int = lifetime
 
-        internal open fun render(
+        open fun render(
             poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads, partialTick: Float,
         ) {
             renderPlane(poseStack, renderer, partialTick, Constants.client.gameRenderer.mainCamera().rotation())

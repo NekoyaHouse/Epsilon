@@ -2,13 +2,11 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.AfterRender3DEvent
-import com.github.epsilon.settings.getValue
 import com.github.epsilon.events.impl.GameLeftEvent
 import com.github.epsilon.graphics.shaders.FXAAShader
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 
 object AntiAlias : Module("Anti Alias", Category.RENDER) {
 

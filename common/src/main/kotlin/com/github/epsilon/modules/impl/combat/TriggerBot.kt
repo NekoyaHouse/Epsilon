@@ -1,15 +1,15 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import kotlin.math.PI
+import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.utils.safety.interaction
+import com.github.epsilon.utils.safety.level
+import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
@@ -89,7 +90,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             endPos,
             searchBox,
             { entity ->
-                !entity.isSpectator() && entity.isPickable() &&
+                !entity.isSpectator && entity.isPickable &&
                     entity is LivingEntity && entity.isAlive && entity !== player
             },
             maxDistance
@@ -110,7 +111,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     }
 
     context(nn: NonNullContext)
-    private fun rayTrace(distance: Double, yaw: Float, pitch: Float): HitResult? {
+    private fun rayTrace(distance: Double, yaw: Float, pitch: Float): HitResult {
         val eyePos: Vec3 = player.eyePosition
         val lookVec = getRotationVector(pitch, yaw)
         val endPos = eyePos.add(lookVec.scale(distance))

@@ -11,7 +11,6 @@ import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import kotlin.math.ceil
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.font.TextRenderable
@@ -19,19 +18,10 @@ import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.GuiItemAtlas
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.gui.render.pip.OversizedItemRenderer
-import net.minecraft.client.renderer.CubeMap
-import net.minecraft.client.renderer.Projection
-import net.minecraft.client.renderer.ProjectionMatrixBuffer
-import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.client.renderer.StagedVertexBuffer
+import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
-import net.minecraft.client.renderer.state.WindowRenderState
-import net.minecraft.client.renderer.state.gui.BlitRenderState
-import net.minecraft.client.renderer.state.gui.GlyphRenderState
-import net.minecraft.client.renderer.state.gui.GuiElementRenderState
-import net.minecraft.client.renderer.state.gui.GuiItemRenderState
-import net.minecraft.client.renderer.state.gui.GuiRenderState
+import net.minecraft.client.renderer.state.gui.*
 import net.minecraft.client.renderer.state.gui.pip.OversizedItemRenderState
 import net.minecraft.client.renderer.texture.TextureManager
 import net.minecraft.resources.Identifier
@@ -43,10 +33,9 @@ import org.joml.Matrix4f
 import org.joml.Vector4f
 import org.joml.Vector4fc
 import org.slf4j.Logger
-import java.util.Comparator
-import java.util.Optional
-import java.util.OptionalDouble
+import java.util.*
 import java.util.function.Supplier
+import kotlin.math.ceil
 
 class EpsilonGuiRenderer(
     private val renderState: GuiRenderState,
@@ -356,11 +345,7 @@ class EpsilonGuiRenderer(
     }
 
     private fun scissorChanged(newScissor: ScreenRectangle?, oldScissor: ScreenRectangle?): Boolean {
-        if (newScissor === oldScissor) {
-            return false
-        } else {
-            return newScissor == null || newScissor != oldScissor
-        }
+        return newScissor !== oldScissor && (newScissor == null || newScissor != oldScissor)
     }
 
     private fun enableScissor(rectangle: ScreenRectangle, renderPass: RenderPass): Boolean {

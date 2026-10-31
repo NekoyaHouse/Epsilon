@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.IntSetting
-import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.util.function.Predicate
+import kotlin.math.roundToInt
 
 class IntSliderWidget(setting: IntSetting) :
     AbstractSliderWidget<IntSetting, Int>(setting, 12, Predicate { value -> value.matches(Regex("[0-9-]")) }) {
