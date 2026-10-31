@@ -16,9 +16,9 @@ import net.minecraft.world.item.Items
 object AutoFirework : Module("Auto Firework", Category.PLAYER) {
 
     private val activateKey by keybindSetting("Activate Key", -1)
-    private val delay by intSetting("Delay", 0, 0, 20, 1)
+    private val delay by intSetting("Delay", 0, 0..20, 1)
     private val switchBack by boolSetting("Switch Back", true)
-    private val switchDelay by intSetting("Switch Delay", 0, 0, 20, 1)
+    private val switchDelay by intSetting("Switch Delay", 0, 0..20, 1)
 
     private var hasUsedFirework = false
     private var useDelayCounter = 0

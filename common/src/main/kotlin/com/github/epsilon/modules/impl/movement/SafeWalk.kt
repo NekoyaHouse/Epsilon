@@ -22,8 +22,8 @@ import kotlin.math.sign
 
 object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
-    private val motion by doubleSetting("Motion", 1.0, 0.5, 1.0, 0.05)
-    private val speedMotion by doubleSetting("Speed Motion", 1.0, 0.5, 1.5, 0.05)
+    private val motion by doubleSetting("Motion", 1.0, 0.5..1.0, 0.05)
+    private val speedMotion by doubleSetting("Speed Motion", 1.0, 0.5..1.5, 0.05)
     private val air by boolSetting("Air", false)
     private val directionCheck by boolSetting("Direction Check", true)
     private val pitchCheck by boolSetting("Pitch Check", true)

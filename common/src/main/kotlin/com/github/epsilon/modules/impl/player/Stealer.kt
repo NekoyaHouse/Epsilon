@@ -18,10 +18,10 @@ import net.minecraft.world.item.*
 
 object Stealer : Module("Stealer", Category.PLAYER) {
 
-    private val minDelay by intSetting("Min Delay", 110, 0, 1000, 50)
-    private val maxDelay by intSetting("Max Delay", 140, 0, 1000, 50)
+    private val minDelay by intSetting("Min Delay", 110, 0..1000, 50)
+    private val maxDelay by intSetting("Max Delay", 140, 0..1000, 50)
     private val autoClose by boolSetting("Auto Close", true)
-    private val closeDelay by intSetting("Close Delay", 100, 0, 1000, 1, dependency = { autoClose })
+    private val closeDelay by intSetting("Close Delay", 100, 0..1000, 1, { autoClose })
     private val pickEnderChest by boolSetting("Ender Chest", false)
 
     private var lastTickScreen: Screen? = null

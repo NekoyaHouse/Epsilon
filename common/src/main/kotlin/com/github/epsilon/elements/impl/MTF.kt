@@ -7,8 +7,8 @@ import java.awt.Color
 
 object MTF : HudModule("MTF", 0f, 0f, 36f, 36f) {
 
-    private val size by doubleSetting("Size", 32.0, 12.0, 96.0, 1.0)
-    private val speed by doubleSetting("Speed", 160.0, -720.0, 720.0, 5.0)
+    private val size by doubleSetting("Size", 32.0, 12.0..96.0, 1.0)
+    private val speed by doubleSetting("Speed", 160.0, -720.0..720.0, 5.0)
     private val color by colorSetting("Color", Color(255, 255, 255, 255), true)
 
     override fun render(deltaTracker: DeltaTracker) {

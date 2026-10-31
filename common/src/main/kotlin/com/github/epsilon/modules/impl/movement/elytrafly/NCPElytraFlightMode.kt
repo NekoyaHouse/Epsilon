@@ -156,7 +156,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             }
 
             if (jumping) {
-                if (motionDist > elytraFly.ncpUpFactor / elytraFly.ncpUpFactorSetting.max) {
+                if (motionDist > elytraFly.ncpUpFactor / elytraFly.ncpUpFactorSetting.range.endInclusive) {
                     val rawUpSpeed = motionDist * 0.01325
                     y += rawUpSpeed * 3.2
                     x -= lookVec.x * rawUpSpeed / lookDist

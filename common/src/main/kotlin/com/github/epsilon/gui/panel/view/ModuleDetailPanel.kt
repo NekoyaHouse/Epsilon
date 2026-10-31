@@ -122,7 +122,7 @@ class ModuleDetailPanel(
         renderBatch.render(controlTree)
 
         val viewport = getViewport()
-        val settings = module.settings.filter { setting -> setting.isAvailable }
+        val settings = module.settings.filter { setting -> setting.isVisible }
         val settingOwnerKey = getSettingOwnerKey(module)
         val contentHeight = settingListController.getContentHeight(settingOwnerKey, settings)
         state.setMaxDetailScroll(contentHeight - viewport.height)
@@ -632,7 +632,7 @@ class ModuleDetailPanel(
         signature = signature * 31L + listening?.name.hashCode()
         for (setting in settings) {
             signature = signature * 31L + setting.name.hashCode()
-            signature = signature * 31L + (if (setting.isAvailable) 1 else 0)
+            signature = signature * 31L + (if (setting.isVisible) 1 else 0)
         }
         signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings)
         return signature

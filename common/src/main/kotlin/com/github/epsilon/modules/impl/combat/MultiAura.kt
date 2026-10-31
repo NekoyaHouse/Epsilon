@@ -14,10 +14,10 @@ import net.minecraft.world.InteractionHand
 
 object MultiAura : Module("Multi Aura", Category.COMBAT) {
 
-    private val range by doubleSetting("Range", 5.0, 1.0, 6.0, 0.05)
-    private val minCPS by intSetting("Min CPS", 10, 1, 20, 1)
-    private val maxCPS by intSetting("Max CPS", 12, 1, 20, 1)
-    private val fov by intSetting("FOV", 360, 30, 360, 10)
+    private val range by doubleSetting("Range", 5.0, 1.0..6.0, 0.05)
+    private val minCPS by intSetting("Min CPS", 10, 1..20, 1)
+    private val maxCPS by intSetting("Max CPS", 12, 1..20, 1)
+    private val fov by intSetting("FOV", 360, 30..360, 10)
     private val swingHand by boolSetting("Swing Hand", true)
     private val pauseOnContainers by boolSetting("Pause On Containers", false)
 

@@ -41,8 +41,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
 
     private val mode by enumSetting("Mode", Mode.Default)
     private val easeOut by boolSetting("Ease Out", true)
-    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5, 5.0, 0.1)
-    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5, 5.0, 0.1)
+    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5..5.0, 0.1)
+    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5..5.0, 0.1)
     private val onlySelf by boolSetting("Only Self", false)
 
     private val circles: MutableList<Circle> = ArrayList()

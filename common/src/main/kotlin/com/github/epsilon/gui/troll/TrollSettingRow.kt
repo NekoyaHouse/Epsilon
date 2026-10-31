@@ -436,16 +436,16 @@ class TrollSettingRow {
 
     private fun minimum(): Double {
         return when (val s = setting) {
-            is IntSetting -> s.min.toDouble()
-            is DoubleSetting -> s.min
+            is IntSetting -> s.range.first.toDouble()
+            is DoubleSetting -> s.range.start
             else -> 0.0
         }
     }
 
     private fun maximum(): Double {
         return when (val s = setting) {
-            is IntSetting -> s.max.toDouble()
-            is DoubleSetting -> s.max
+            is IntSetting -> s.range.last.toDouble()
+            is DoubleSetting -> s.range.endInclusive
             else -> 0.0
         }
     }

@@ -26,11 +26,11 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
 
     private val blockListValue by blockListSetting("Block List", defaultBlocks())
     private val illegals by boolSetting("Illegals", false)
-    private val range by doubleSetting("Range", 64.0, 1.0, 128.0, 1.0)
+    private val range by doubleSetting("Range", 64.0, 1.0..128.0, 1.0)
     private val sideColor by colorSetting("Side Color", Color(160, 210, 255, 30))
     private val lineColor by colorSetting("Line Color", Color(160, 210, 255, 180))
     private val blur by boolSetting("Blur", true)
-    private val blurStrength by doubleSetting("Blur Strength", 8.0, 0.0, 16.0, 0.5, dependency = { blur })
+    private val blurStrength by doubleSetting("Blur Strength", 8.0, 0.0..16.0, 0.5, { blur })
 
     private val searchThread: ExecutorService = Executors.newSingleThreadExecutor()
     private val searchTimer = TimerUtils()

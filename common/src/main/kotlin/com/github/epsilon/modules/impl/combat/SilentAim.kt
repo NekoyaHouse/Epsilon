@@ -26,8 +26,8 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
     private val animal by boolSetting("Animal", false)
     private val villagers by boolSetting("Villagers", false)
     private val invisible by boolSetting("Invisible", false)
-    private val range by doubleSetting("Range", 3.0, 1.0, 6.0, 0.1)
-    private val fov by intSetting("FOV", 360, 10, 360, 1)
+    private val range by doubleSetting("Range", 3.0, 1.0..6.0, 0.1)
+    private val fov by intSetting("FOV", 360, 10..360, 1)
 
     private var redirecting = false
     private var target: LivingEntity? = null

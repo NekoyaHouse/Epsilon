@@ -32,38 +32,37 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     }
 
     private val style by enumSetting("Style", Style.Modern)
-    private val scale by doubleSetting("Scale", 0.9, 0.5, 2.0, 0.1)
-    private val panelWidthSetting by doubleSetting("Width", 150.0, 100.0, 300.0, 1.0)
-    private val panelHeightSetting by doubleSetting("Height", 52.0, 30.0, 100.0, 1.0)
-    private val radius by doubleSetting("Radius", 5.0, 0.0, 20.0, 1.0)
-    private val blurStrength by doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0)
-    private val healthBarHeight by doubleSetting("Bar Height", 5.0, 2.0, 20.0, 1.0)
-    private val healthBarRadius by doubleSetting("Bar Radius", 2.0, 0.0, 15.0, 1.0)
-    private val nameSize by doubleSetting("Name Size", 10.5, 8.0, 18.0, 0.5)
+    private val scale by doubleSetting("Scale", 0.9, 0.5..2.0, 0.1)
+    private val panelWidthSetting by doubleSetting("Width", 150.0, 100.0..300.0, 1.0)
+    private val panelHeightSetting by doubleSetting("Height", 52.0, 30.0..100.0, 1.0)
+    private val radius by doubleSetting("Radius", 5.0, 0.0..20.0, 1.0)
+    private val blurStrength by doubleSetting("Blur Strength", 5.0, 1.0..20.0, 1.0)
+    private val healthBarHeight by doubleSetting("Bar Height", 5.0, 2.0..20.0, 1.0)
+    private val healthBarRadius by doubleSetting("Bar Radius", 2.0, 0.0..15.0, 1.0)
+    private val nameSize by doubleSetting("Name Size", 10.5, 8.0..18.0, 0.5)
     private val delayBar by boolSetting("Delay Bar", true)
-    private val delayWait by boolSetting("Delay Wait", true, dependency = { delayBar })
+    private val delayWait by boolSetting("Delay Wait", true, { delayBar })
     private val delayTime by doubleSetting(
-        "Delay Time", 250.0, 0.0, 500.0, 50.0,
-        dependency = { delayBar && delayWait }
+        "Delay Time", 250.0, 0.0..500.0, 50.0,
+        { delayBar && delayWait }
     )
-    private val delaySpeed by doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, dependency = { delayBar })
+    private val delaySpeed by doubleSetting("Delay Speed", 2.0, 0.1..10.0, 0.1, { delayBar })
     private val barOutline by boolSetting("Bar Outline", true)
     private val barOutlineWidth by doubleSetting(
-        "Bar Outline Width", 1.0, 0.5, 5.0, 0.5,
-        dependency = { barOutline }
+        "Bar Outline Width", 1.0, 0.5..5.0, 0.5,
+        { barOutline }
     )
     private val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 50))
     private val barBackgroundColor by colorSetting("Bar Background Color", Color(255, 255, 255, 55))
     private val barFillColor by colorSetting("Bar Fill Color", Color(255, 236, 248, 235))
-    private val delayBarColor by colorSetting("Delay Bar Color", Color(190, 190, 190, 100), dependency = { delayBar })
+    private val delayBarColor by colorSetting("Delay Bar Color", Color(190, 190, 190, 100), true, { delayBar })
     private val barOutlineColor by colorSetting(
         "Bar Outline Color",
-        Color(255, 255, 255, 85),
-        dependency = { barOutline })
+        Color(255, 255, 255, 85), true, { barOutline })
     private val textColor by colorSetting("Text Color", Color(255, 255, 255, 235))
     private val drawShadow by boolSetting("Drop Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0..32.0, 1.0, { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), true, { drawShadow })
 
     private var lastTargetId: Int = Int.MIN_VALUE
     private var displayedHealth: Float = 0.0f

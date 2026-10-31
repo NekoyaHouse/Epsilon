@@ -11,6 +11,7 @@ import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.NonNullContext
@@ -37,46 +38,38 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private val sgHole: SettingGroup = settingGroup("Hole")
     private val sgRender: SettingGroup = settingGroup("Render")
 
-    private val step by boolSetting("Use Step", true).apply { group(sgGeneral) }
-    private val disableStep by boolSetting("Toggle Step", true).apply { group(sgGeneral) }
-    private val jump by boolSetting("Jump", false).apply { group(sgGeneral) }
+    private val step by boolSetting("Use Step", true).group(sgGeneral)
+    private val disableStep by boolSetting("Toggle Step", true).group(sgGeneral)
+    private val jump by boolSetting("Jump", false).group(sgGeneral)
     private val jumpCooldown by intSetting(
         "Jump Cooldown",
         5,
-        0,
-        100,
-        1,
-        dependency = { jump }).apply { group(sgGeneral) }
-    private val range by intSetting("Range", 3, 0, 10, 1).apply { group(sgGeneral) }
-    private val downRange by intSetting("Down Range", 3, 0, 5, 1).apply { group(sgGeneral) }
-    private val collisionLimit by intSetting("Collisions To Disable", 15, 0, 100, 1).apply { group(sgGeneral) }
-    private val rubberbandLimit by intSetting("Rubberbands To Disable", 1, 0, 100, 1).apply { group(sgGeneral) }
+        0..100,
+        1, { jump }).group(sgGeneral)
+    private val range by intSetting("Range", 3, 0..10, 1).group(sgGeneral)
+    private val downRange by intSetting("Down Range", 3, 0..5, 1).group(sgGeneral)
+    private val collisionLimit by intSetting("Collisions To Disable", 15, 0..100, 1).group(sgGeneral)
+    private val rubberbandLimit by intSetting("Rubberbands To Disable", 1, 0..100, 1).group(sgGeneral)
 
-    private val speed by doubleSetting("Speed", 0.2873, 0.0, 1.0, 0.0001).apply { group(sgSpeed) }
-    private val boost by boolSetting("Speed Boost", false).apply { group(sgSpeed) }
+    private val speed by doubleSetting("Speed", 0.2873, 0.0..1.0, 0.0001).group(sgSpeed)
+    private val boost by boolSetting("Speed Boost", false).group(sgSpeed)
     private val boostedSpeed by doubleSetting(
         "Boosted Speed",
         0.5,
-        0.0,
-        1.0,
-        0.01,
-        dependency = { boost }).apply { group(sgSpeed) }
-    private val boostTicks by intSetting("Boost Ticks", 3, 1, 10, 1, dependency = { boost }).apply { group(sgSpeed) }
-    private val timer by doubleSetting("Timer", 1.5, 0.1, 100.0, 0.1).apply { group(sgSpeed) }
+        0.0..1.0,
+        0.01, { boost }).group(sgSpeed)
+    private val boostTicks by intSetting("Boost Ticks", 3, 1..10, 1, { boost }).group(sgSpeed)
+    private val timer by doubleSetting("Timer", 1.5, 0.1..100.0, 0.1).group(sgSpeed)
 
-    private val singleTarget by boolSetting("Single Target", true).apply { group(sgHole) }
-    private val depth by intSetting("Hole Depth", 3, 1, 5, 1).apply { group(sgHole) }
-    private val singleHoles by boolSetting("Single Holes", true).apply { group(sgHole) }
-    private val doubleHoles by boolSetting("Double Holes", true).apply { group(sgHole) }
-    private val quadHoles by boolSetting("Quad Holes", true).apply { group(sgHole) }
+    private val singleTarget by boolSetting("Single Target", true).group(sgHole)
+    private val depth by intSetting("Hole Depth", 3, 1..5, 1).group(sgHole)
+    private val singleHoles by boolSetting("Single Holes", true).group(sgHole)
+    private val doubleHoles by boolSetting("Double Holes", true).group(sgHole)
+    private val quadHoles by boolSetting("Quad Holes", true).group(sgHole)
 
-    private val render by boolSetting("Render", true).apply { group(sgRender) }
-    private val lineWidth by doubleSetting("Line Width", 2.0, 1.0, 4.0, 0.1, dependency = { render }).apply {
-        group(
-            sgRender
-        )
-    }
-    private val color by colorSetting("Color", Color.WHITE, dependency = { render }).apply { group(sgRender) }
+    private val render by boolSetting("Render", true).group(sgRender)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 1.0..4.0, 0.1, { render }).group(sgRender)
+    private val color by colorSetting("Color", Color.WHITE, true, { render }).group(sgRender)
 
     private var singleHole: Hole? = null
     private var targetHole: Hole? = null

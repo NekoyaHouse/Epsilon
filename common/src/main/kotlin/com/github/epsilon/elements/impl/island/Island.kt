@@ -34,39 +34,59 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     private val tabList by boolSetting("Tab List", true)
     private val music by boolSetting("Music", true).platformOnly(PlatformRequirement.WINDOWS_X64)
     private val traces by boolSetting("Traces", true)
-    private val traceRange by doubleSetting("Trace Range", 128.0, 8.0, 256.0, 1.0, dependency = { traces })
-    private val traceWidth by doubleSetting("Trace Width", 1.5, 0.5, 5.0, 0.25, dependency = { traces })
-    private val traceColor by colorSetting("Trace Color", Color(111, 224, 211, 180), dependency = { traces })
+    private val traceRange by doubleSetting("Trace Range", 128.0, 8.0..256.0, 1.0, { traces })
+    private val traceWidth by doubleSetting("Trace Width", 1.5, 0.5..5.0, 0.25, { traces })
+    private val traceColor by colorSetting("Trace Color", Color(111, 224, 211, 180), true, { traces })
     val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 50))
     val drawShadow by boolSetting("Drop Shadow", true)
     val backgroundBlur by boolSetting("Background Blur", true)
-    val blurStrength by doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0, dependency = { backgroundBlur })
-    val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
-    val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { drawShadow })
+    val blurStrength by doubleSetting("Blur Strength", 5.0, 1.0..20.0, 1.0, { backgroundBlur })
+    val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0..32.0, 1.0, { drawShadow })
+    val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), true, { drawShadow })
     val outline by boolSetting("Outline", false)
-    val outlineWidth by doubleSetting("Outline Width", 1.0, 0.1, 3.0, 0.1, dependency = { outline })
+    val outlineWidth by doubleSetting("Outline Width", 1.0, 0.1..3.0, 0.1, { outline })
     val outlineColor by colorSetting("Outline Color", Color(0, 0, 0, 125))
     val textGlitch by boolSetting("Text Glitch", false)
-    val glitchColor by colorSetting("Glitch Color", Color.WHITE, false, dependency = { textGlitch })
-    val chromaticX by doubleSetting("Chromatic X", 0.8, 0.0, 6.0, 0.1, dependency = { textGlitch })
-    val chromaticY by doubleSetting("Chromatic Y", 0.0, 0.0, 6.0, 0.1, dependency = { textGlitch })
-    val glitchGlowRadius by doubleSetting("Glitch Glow Radius", 1.5, 0.0, 10.0, 0.1, dependency = { textGlitch })
-    val glitchGlowIntensity by doubleSetting("Glitch Glow Intensity", 0.9, 0.0, 3.0, 0.1, dependency = { textGlitch })
-    val sliceHeight by doubleSetting("Slice Height", 4.0, 1.0, 32.0, 0.5, dependency = { textGlitch })
-    val sliceAmount by doubleSetting("Slice Amount", 1.2, 0.0, 10.0, 0.1, dependency = { textGlitch })
-    val glitchStrength by doubleSetting("Glitch Strength", 0.35, 0.0, 1.0, 0.05, dependency = { textGlitch })
-    val scanlineStrength by doubleSetting("Scanline Strength", 0.2, 0.0, 1.0, 0.05, dependency = { textGlitch })
-    val noiseStrength by doubleSetting("Noise Strength", 0.1, 0.0, 1.0, 0.05, dependency = { textGlitch })
+    val glitchColor by colorSetting("Glitch Color", Color.WHITE, false, { textGlitch })
+    val chromaticX by doubleSetting("Chromatic X", 0.8, 0.0..6.0, 0.1, { textGlitch })
+    val chromaticY by doubleSetting("Chromatic Y", 0.0, 0.0..6.0, 0.1, { textGlitch })
+    val glitchGlowRadius by doubleSetting("Glitch Glow Radius", 1.5, 0.0..10.0, 0.1, { textGlitch })
+    val glitchGlowIntensity by doubleSetting("Glitch Glow Intensity", 0.9, 0.0..3.0, 0.1, { textGlitch })
+    val sliceHeight by doubleSetting("Slice Height", 4.0, 1.0..32.0, 0.5, { textGlitch })
+    val sliceAmount by doubleSetting("Slice Amount", 1.2, 0.0..10.0, 0.1, { textGlitch })
+    val glitchStrength by doubleSetting("Glitch Strength", 0.35, 0.0..1.0, 0.05, { textGlitch })
+    val scanlineStrength by doubleSetting("Scanline Strength", 0.2, 0.0..1.0, 0.05, { textGlitch })
+    val noiseStrength by doubleSetting("Noise Strength", 0.1, 0.0..1.0, 0.05, { textGlitch })
 
-    private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
     private val landRenderer = LandRenderer(LandController, 48.0f, 48.0f)
     private var rectRenderer: RectRenderer? = null
 
     private var target: LivingEntity? = null
 
     init {
-        handler<Render2DEvent.Level> { renderTraces() }
+        handler<Render2DEvent.Level> {
+            if (!traces || nullCheck() || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
+                rectRenderer?.clear()
+                return@handler
+            }
+
+            var renderer = rectRenderer
+            if (renderer == null) {
+                renderer = RectRenderer.create()
+                rectRenderer = renderer
+            }
+            renderer.clear()
+            val activeRenderer = renderer
+            val traceCount = TracesRenderer.render(
+                activeRenderer,
+                landRenderer.x, landRenderer.y, landRenderer.width, landRenderer.height,
+                traceRange, traceWidth.toFloat(), traceColor
+            )
+            if (traceCount > 0) {
+                OverlayAntiAlias.render(4, Runnable { activeRenderer.drawAndClear() })
+            }
+        }
     }
 
     override fun onEnable() {
@@ -82,29 +102,6 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
         SmtcService.INSTANCE.stop()
         rectRenderer?.clear()
         target = null
-    }
-
-    private fun renderTraces() {
-        if (!traces || nullCheck() || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
-            rectRenderer?.clear()
-            return
-        }
-
-        var renderer = rectRenderer
-        if (renderer == null) {
-            renderer = RectRenderer.create()
-            rectRenderer = renderer
-        }
-        renderer.clear()
-        val activeRenderer = renderer
-        val traceCount = TracesRenderer.render(
-            activeRenderer,
-            landRenderer.x, landRenderer.y, landRenderer.width, landRenderer.height,
-            traceRange, traceWidth.toFloat(), traceColor
-        )
-        if (traceCount > 0) {
-            OverlayAntiAlias.render(4, Runnable { activeRenderer.drawAndClear() })
-        }
     }
 
     override fun render(deltaTracker: DeltaTracker) {

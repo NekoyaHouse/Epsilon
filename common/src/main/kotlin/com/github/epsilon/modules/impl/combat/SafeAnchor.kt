@@ -9,6 +9,7 @@ import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.InvUtils
@@ -78,81 +79,61 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private val order by enumSetting("Order", Order.ShieldFirst)
 
     private val rotate by boolSetting("Rotate", true)
-    private val rotationSpeedMin by intSetting("Rotation Speed Min", 15, 1, 360, 1)
-    private val rotationSpeedMax by intSetting("Rotation Speed Max", 30, 1, 360, 1)
+    private val rotationSpeedMin by intSetting("Rotation Speed Min", 15, 1..360, 1)
+    private val rotationSpeedMax by intSetting("Rotation Speed Max", 30, 1..360, 1)
     private val strict by boolSetting("Strict", true)
     private val breakCrystal by boolSetting("Break Crystal", false)
     private val swapBack by boolSetting("SwapBack", true)
 
-    private val anchorPlaceMinDelay by doubleSetting("Anchor Place Min Delay", 0.0, 0.0, 50.0, 0.1)
-    private val anchorPlaceMaxDelay by doubleSetting("Anchor Place Max Delay", 2.5, 0.0, 50.0, 0.1)
+    private val anchorPlaceMinDelay by doubleSetting("Anchor Place Min Delay", 0.0, 0.0..50.0, 0.1)
+    private val anchorPlaceMaxDelay by doubleSetting("Anchor Place Max Delay", 2.5, 0.0..50.0, 0.1)
 
     private val sgShield: SettingGroup = settingGroup("Shield")
-    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0, 50.0, 0.1).apply {
-        group(
-            sgShield
-        )
-    }
-    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0, 50.0, 0.1).apply {
-        group(
-            sgShield
-        )
-    }
-    private val multiShield by boolSetting("Multi Shield", false, dependency = { mode == Mode.Auto }).apply {
-        group(
-            sgShield
-        )
-    }
+    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0..50.0, 0.1).group(sgShield)
+    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0..50.0, 0.1).group(sgShield)
+    private val multiShield by boolSetting("Multi Shield", false, { mode == Mode.Auto }).group(sgShield)
     private val multiShieldChance by intSetting(
         "Multi Shield Chance",
         50,
-        0,
-        100,
-        1,
-        dependency = { multiShield }).apply { group(sgShield) }
+        0..100,
+        1, { multiShield }).group(sgShield)
     private val maxExtraShields by intSetting(
         "Max Extra Shields",
         1,
-        1,
-        5,
-        1,
-        dependency = { multiShield }).apply { group(sgShield) }
+        1..5,
+        1, { multiShield }).group(sgShield)
     private val shieldDistanceMin by intSetting(
         "Shield Distance Min",
         1,
-        1,
-        3,
-        1,
-        dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+        1..3,
+        1, { mode == Mode.Auto }).group(sgShield)
     private val shieldDistanceMax by intSetting(
         "Shield Distance Max",
         1,
-        1,
-        3,
-        1,
-        dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+        1..3,
+        1, { mode == Mode.Auto }).group(sgShield)
 
-    private val chargeMinDelay by doubleSetting("Charge Min Delay", 0.0, 0.0, 50.0, 0.1)
-    private val chargeMaxDelay by doubleSetting("Charge Max Delay", 2.5, 0.0, 50.0, 0.1)
+    private val chargeMinDelay by doubleSetting("Charge Min Delay", 0.0, 0.0..50.0, 0.1)
+    private val chargeMaxDelay by doubleSetting("Charge Max Delay", 2.5, 0.0..50.0, 0.1)
 
-    private val detonateMinDelay by doubleSetting("Detonate Min Delay", 0.0, 0.0, 50.0, 0.1)
-    private val detonateMaxDelay by doubleSetting("Detonate Max Delay", 2.5, 0.0, 50.0, 0.1)
-    private val detonateSlot by intSetting("Detonate Slot", 1, 1, 9, 1)
-    private val minHealth by doubleSetting("Min Health", 4.0, 0.0, 20.0, 0.5)
+    private val detonateMinDelay by doubleSetting("Detonate Min Delay", 0.0, 0.0..50.0, 0.1)
+    private val detonateMaxDelay by doubleSetting("Detonate Max Delay", 2.5, 0.0..50.0, 0.1)
+    private val detonateSlot by intSetting("Detonate Slot", 1, 1..9, 1)
+    private val minHealth by doubleSetting("Min Health", 4.0, 0.0..20.0, 0.5)
 
     val prediction by boolSetting("Prediction", false)
-    val predictionStrength by doubleSetting("Prediction Strength", 3.0, 0.5, 20.0, 0.1, dependency = { prediction })
+    val predictionStrength by doubleSetting("Prediction Strength", 3.0, 0.5..20.0, 0.1, { prediction })
 
     private val multiCharge by boolSetting("Multi Charge", false)
-    private val multiChargeChance by intSetting("Multi Charge Chance", 50, 0, 100, 1, dependency = { multiCharge })
-    private val minExtraCharges by intSetting("Min Extra Charges", 1, 1, 3, 1, dependency = { multiCharge })
-    private val maxExtraCharges by intSetting("Max Extra Charges", 1, 1, 3, 1, dependency = { multiCharge })
+    private val multiChargeChance by intSetting("Multi Charge Chance", 50, 0..100, 1, { multiCharge })
+    private val minExtraCharges by intSetting("Min Extra Charges", 1, 1..3, 1, { multiCharge })
+    private val maxExtraCharges by intSetting("Max Extra Charges", 1, 1..3, 1, { multiCharge })
 
     private val render by boolSetting("Render", true)
 
-    private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 255), dependency = { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 50), dependency = { render })
-    private val lineWidth by doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.1, dependency = { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 255), true, { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 50), true, { render })
+    private val lineWidth by doubleSetting("Line Width", 1.0, 0.0..5.0, 0.1, { render })
 
     private var stage = Stage.IDLE
     private var currentAnchorPos: BlockPos? = null

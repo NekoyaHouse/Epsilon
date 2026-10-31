@@ -16,6 +16,7 @@ import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.FindItemResult
@@ -155,187 +156,145 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private val sgRender: SettingGroup = settingGroup("Render")
 
     // General
-    private var players by boolSetting("Players", true).apply { group(sgGeneral) }
-    private var mobs by boolSetting("Mobs", false).apply { group(sgGeneral) }
-    private var animals by boolSetting("Animals", false).apply { group(sgGeneral) }
-    private var maxTargets by intSetting("Max Targets", 4, 1, 10, 1).apply { group(sgGeneral) }
-    private var targetRange by doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5).apply { group(sgGeneral) }
-    private var yawSpeed by doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).apply { group(sgGeneral) }
-    private var preRotation by boolSetting("Pre Rotation", true).apply { group(sgGeneral) }
-    private var placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).apply {
-        group(
-            sgGeneral
-        )
-    }
-    private var breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).apply {
-        group(
-            sgGeneral
-        )
-    }
-    private var eatingPause by boolSetting("Eating Pause", false).apply { group(sgGeneral) }
-    private var updateDelay by intSetting("Update Delay", 5, 0, 250, 1).apply { group(sgGeneral) }
+    private var players by boolSetting("Players", true).group(sgGeneral)
+    private var mobs by boolSetting("Mobs", false).group(sgGeneral)
+    private var animals by boolSetting("Animals", false).group(sgGeneral)
+    private var maxTargets by intSetting("Max Targets", 4, 1..10, 1).group(sgGeneral)
+    private var targetRange by doubleSetting("Target Range", 16.0, 0.0..32.0, 0.5).group(sgGeneral)
+    private var yawSpeed by doubleSetting("Yaw Speed", 45.0, 5.0..180.0, 5.0).group(sgGeneral)
+    private var preRotation by boolSetting("Pre Rotation", true).group(sgGeneral)
+    private var placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0..180.0, 5.0).group(sgGeneral)
+    private var breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0..180.0, 5.0).group(sgGeneral)
+    private var eatingPause by boolSetting("Eating Pause", false).group(sgGeneral)
+    private var updateDelay by intSetting("Update Delay", 5, 0..250, 1).group(sgGeneral)
     private var globalDelay by intSetting(
         "Global Delay",
         1_000_000,
-        1_000,
-        10_000_000,
+        1_000..10_000_000,
         1_000
-    ).apply { group(sgGeneral) }
+    ).group(sgGeneral)
 
     // Force Place
     private var forcePlaceHealth by doubleSetting(
         "Force Place Health",
         8.0,
-        0.0,
-        20.0,
+        0.0..20.0,
         0.5
-    ).apply { group(sgForcePlace) }
-    private var forcePlaceArmorRate by intSetting("Force Place Armor Rate", 3, 0, 25, 1).apply { group(sgForcePlace) }
-    private var forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).apply {
-        group(
-            sgForcePlace
-        )
-    }
+    ).group(sgForcePlace)
+    private var forcePlaceArmorRate by intSetting("Force Place Armor Rate", 3, 0..25, 1).group(sgForcePlace)
+    private var forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0..10.0, 0.25).group(sgForcePlace)
     private var forcePlaceMotion by doubleSetting(
         "Force Place Motion",
         4.0,
-        0.0,
-        10.0,
+        0.0..10.0,
         0.25
-    ).apply { group(sgForcePlace) }
-    private var forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).apply {
-        group(
-            sgForcePlace
-        )
-    }
+    ).group(sgForcePlace)
+    private var forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0..10.0, 0.25).group(sgForcePlace)
     private var forcePlaceWhileSwording by boolSetting(
         "Force Place While Swording",
         false
-    ).apply { group(sgForcePlace) }
+    ).group(sgForcePlace)
 
     // Calculation
-    private var assumeInstantMine by boolSetting("Assume Instant Mine", true).apply { group(sgCalculation) }
-    private var noSuicide by doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25).apply { group(sgCalculation) }
-    private var wallRange by doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1).apply { group(sgCalculation) }
-    private var motionPredict by boolSetting("Motion Predict", true).apply { group(sgCalculation) }
-    private var predictTicks by intSetting("Predict Ticks", 8, 0, 20, 1, dependency = { motionPredict }).apply {
-        group(
-            sgCalculation
-        )
-    }
+    private var assumeInstantMine by boolSetting("Assume Instant Mine", true).group(sgCalculation)
+    private var noSuicide by doubleSetting("No Suicide", 2.0, 0.0..20.0, 0.25).group(sgCalculation)
+    private var wallRange by doubleSetting("Wall Range", 3.0, 0.0..8.0, 0.1).group(sgCalculation)
+    private var motionPredict by boolSetting("Motion Predict", true).group(sgCalculation)
+    private var predictTicks by intSetting("Predict Ticks", 8, 0..20, 1, { motionPredict }).group(sgCalculation)
     private var damagePriority by enumSetting(
         "Damage Priority",
         DamagePriority.Efficient
-    ).apply { group(sgCalculation) }
-    private var armorMode by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).apply {
-        group(
-            sgCalculation
-        )
-    }
-    private var lethalOverride by boolSetting("Lethal Override", true).apply { group(sgCalculation) }
+    ).group(sgCalculation)
+    private var armorMode by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).group(sgCalculation)
+    private var lethalOverride by boolSetting("Lethal Override", true).group(sgCalculation)
     private var lethalThresholdAddition by doubleSetting(
         "Lethal Threshold Addition",
         0.5,
-        -5.0,
-        5.0,
-        0.1,
-        dependency = { lethalOverride }).apply { group(sgCalculation) }
+        -5.0..5.0,
+        0.1, { lethalOverride }).group(sgCalculation)
     private var lethalMaxSelfDamage by doubleSetting(
         "Lethal Max Self Damage",
         16.0,
-        0.0,
-        20.0,
-        0.25,
-        dependency = { lethalOverride }).apply { group(sgCalculation) }
+        0.0..20.0,
+        0.25, { lethalOverride }).group(sgCalculation)
     private var safeMaxTargetDamageReduction by doubleSetting(
         "Safe Max Target Damage Reduction",
         1.0,
-        0.0,
-        10.0,
+        0.0..10.0,
         0.1
-    ).apply { group(sgCalculation) }
+    ).group(sgCalculation)
     private var safeMinSelfDamageReduction by doubleSetting(
         "Safe Min Self Damage Reduction",
         2.0,
-        0.0,
-        10.0,
+        0.0..10.0,
         0.1
-    ).apply { group(sgCalculation) }
+    ).group(sgCalculation)
     private var collidingCrystalExtraSelfDamageThreshold by doubleSetting(
         "Colliding Crystal Extra Self Damage Threshold",
         4.0,
-        0.0,
-        10.0,
+        0.0..10.0,
         0.1
-    ).apply { group(sgCalculation) }
+    ).group(sgCalculation)
 
     // Place
-    private var placeMode by enumSetting("Place Mode", PlaceMode.Single).apply { group(sgPlace) }
-    private var packetPlace by enumSetting("Packet Place", PacketPlaceMode.Weak).apply { group(sgPlace) }
-    private var spamPlace by boolSetting("Spam Place", false).apply { group(sgPlace) }
-    private var placeSwitchMode by enumSetting("Place Switch Mode", SwitchMode.Off).apply { group(sgPlace) }
-    private var placeSwing by boolSetting("Place Swing", false).apply { group(sgPlace) }
-    private var placeSideBypass by enumSetting("Place Side Bypass", PlaceBypass.Up).apply { group(sgPlace) }
-    private var placeMinDamage by doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).apply { group(sgPlace) }
+    private var placeMode by enumSetting("Place Mode", PlaceMode.Single).group(sgPlace)
+    private var packetPlace by enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace)
+    private var spamPlace by boolSetting("Spam Place", false).group(sgPlace)
+    private var placeSwitchMode by enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace)
+    private var placeSwing by boolSetting("Place Swing", false).group(sgPlace)
+    private var placeSideBypass by enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace)
+    private var placeMinDamage by doubleSetting("Place Min Damage", 5.0, 0.0..20.0, 0.25).group(sgPlace)
     private var placeMaxSelfDamage by doubleSetting(
         "Place Max Self Damage",
         6.0,
-        0.0,
-        20.0,
+        0.0..20.0,
         0.25
-    ).apply { group(sgPlace) }
-    private var placeBalance by doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).apply { group(sgPlace) }
-    private var placeDelay by intSetting("Place Delay", 50, 0, 500, 1).apply { group(sgPlace) }
-    private var placeRange by doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).apply { group(sgPlace) }
-    private var placeRangeMode by enumSetting("Place Range Mode", RangeMode.Feet).apply { group(sgPlace) }
+    ).group(sgPlace)
+    private var placeBalance by doubleSetting("Place Balance", -3.0, -10.0..10.0, 0.25).group(sgPlace)
+    private var placeDelay by intSetting("Place Delay", 50, 0..500, 1).group(sgPlace)
+    private var placeRange by doubleSetting("Place Range", 5.0, 0.0..8.0, 0.1).group(sgPlace)
+    private var placeRangeMode by enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace)
 
     // Break
-    private var breakMode by enumSetting("Break Mode", BreakMode.Smart).apply { group(sgBreak) }
-    private var bbtt by boolSetting("2B2T", false).apply { group(sgBreak) }
+    private var breakMode by enumSetting("Break Mode", BreakMode.Smart).group(sgBreak)
+    private var bbtt by boolSetting("2B2T", false).group(sgBreak)
     private var bbttFactor by intSetting(
         "2B2T Factor",
         200,
-        0,
-        1000,
-        25,
-        dependency = { bbtt }).apply { group(sgBreak) }
-    private var packetBreak by enumSetting("Packet Break", BreakMode.Target, dependency = { !bbtt }).apply {
-        group(
-            sgBreak
-        )
-    }
+        0..1000,
+        25, { bbtt }).group(sgBreak)
+    private var packetBreak by enumSetting("Packet Break", BreakMode.Target, { !bbtt }).group(sgBreak)
     private var ownTimeout by intSetting(
-        "Own Timeout", 100, 0, 2000, 25,
-        dependency = { breakMode == BreakMode.Own || packetBreak == BreakMode.Own },
-    ).apply { group(sgBreak) }
-    private var antiWeakness by enumSetting("Anti Weakness", SwitchMode.Off).apply { group(sgBreak) }
-    private var swapDelay by intSetting("Swap Delay", 0, 0, 20, 1).apply { group(sgBreak) }
-    private var breakMinDamage by doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25).apply { group(sgBreak) }
+        "Own Timeout", 100, 0..2000, 25,
+        { breakMode == BreakMode.Own || packetBreak == BreakMode.Own },
+    ).group(sgBreak)
+    private var antiWeakness by enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak)
+    private var swapDelay by intSetting("Swap Delay", 0, 0..20, 1).group(sgBreak)
+    private var breakMinDamage by doubleSetting("Break Min Damage", 4.0, 0.0..20.0, 0.25).group(sgBreak)
     private var breakMaxSelfDamage by doubleSetting(
         "Break Max Self Damage",
         8.0,
-        0.0,
-        20.0,
+        0.0..20.0,
         0.25
-    ).apply { group(sgBreak) }
-    private var breakBalance by doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).apply { group(sgBreak) }
-    private var breakDelay by intSetting("Break Delay", 100, 0, 500, 1).apply { group(sgBreak) }
-    private var breakRange by doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).apply { group(sgBreak) }
-    private var breakRangeMode by enumSetting("Break Range Mode", RangeMode.Feet).apply { group(sgBreak) }
+    ).group(sgBreak)
+    private var breakBalance by doubleSetting("Break Balance", -4.0, -10.0..10.0, 0.25).group(sgBreak)
+    private var breakDelay by intSetting("Break Delay", 100, 0..500, 1).group(sgBreak)
+    private var breakRange by doubleSetting("Break Range", 5.0, 0.0..8.0, 0.1).group(sgBreak)
+    private var breakRangeMode by enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak)
 
     // Render
-    private var swingMode by enumSetting("Swing Mode", SwingMode.Client).apply { group(sgRender) }
-    private var swingHand by enumSetting("Swing Hand", SwingHand.Auto).apply { group(sgRender) }
-    private var renderPredict by enumSetting("Render Predict", RenderPredictMode.Off).apply { group(sgRender) }
-    private var hudInfo by enumSetting("Hud Info", HudInfo.Speed).apply { group(sgRender) }
-    private var filledAlpha by intSetting("Filled Alpha", 63, 0, 255, 1).apply { group(sgRender) }
-    private var outlineAlpha by intSetting("Outline Alpha", 200, 0, 255, 1).apply { group(sgRender) }
-    private var renderTargetDamage by boolSetting("Target Damage", true).apply { group(sgRender) }
-    private var renderSelfDamage by boolSetting("Self Damage", true).apply { group(sgRender) }
-    private var renderColor by colorSetting("Render Color", Color(255, 150, 120, 255), true).apply { group(sgRender) }
-    private var outlineWidth by doubleSetting("Outline Width", 3.0, 1.0, 10.0, 0.5).apply { group(sgRender) }
-    private var movingLength by intSetting("Moving Length", 400, 0, 1000, 50).apply { group(sgRender) }
-    private var fadeLength by intSetting("Fade Length", 200, 0, 1000, 50).apply { group(sgRender) }
+    private var swingMode by enumSetting("Swing Mode", SwingMode.Client).group(sgRender)
+    private var swingHand by enumSetting("Swing Hand", SwingHand.Auto).group(sgRender)
+    private var renderPredict by enumSetting("Render Predict", RenderPredictMode.Off).group(sgRender)
+    private var hudInfo by enumSetting("Hud Info", HudInfo.Speed).group(sgRender)
+    private var filledAlpha by intSetting("Filled Alpha", 63, 0..255, 1).group(sgRender)
+    private var outlineAlpha by intSetting("Outline Alpha", 200, 0..255, 1).group(sgRender)
+    private var renderTargetDamage by boolSetting("Target Damage", true).group(sgRender)
+    private var renderSelfDamage by boolSetting("Self Damage", true).group(sgRender)
+    private var renderColor by colorSetting("Render Color", Color(255, 150, 120, 255), true).group(sgRender)
+    private var outlineWidth by doubleSetting("Outline Width", 3.0, 1.0..10.0, 0.5).group(sgRender)
+    private var movingLength by intSetting("Moving Length", 400, 0..1000, 50).group(sgRender)
+    private var fadeLength by intSetting("Fade Length", 200, 0..1000, 50).group(sgRender)
 
     private val placeTimer = TimerUtils()
     private val breakTimer = TimerUtils()

@@ -49,13 +49,14 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
     private val physics: EnumSetting<Physics> = enumSetting("Physics", Physics.Fall)
     private val colorMode: EnumSetting<ColorMode> = enumSetting("Color Mode", ColorMode.Sync)
     private val color by colorSetting(
-        "Color", Color(255, 255, 255, 53), true, dependency = { colorMode.`is`(ColorMode.Custom) }
+        "Color", Color(255, 255, 255, 53), true,
+        { colorMode.`is`(ColorMode.Custom) }
     )
     private val onlySelf by boolSetting("Only Self", false)
-    private val amount by intSetting("Amount", 2, 1, 5, 1)
-    private val lifeTime by intSetting("Life Time", 2, 1, 10, 1)
-    private val speed by intSetting("Speed", 2, 1, 20, 1)
-    private val scale by doubleSetting("Scale", 3.0, 1.0, 10.0, 0.1)
+    private val amount by intSetting("Amount", 2, 1..5, 1)
+    private val lifeTime by intSetting("Life Time", 2, 1..10, 1)
+    private val speed by intSetting("Speed", 2, 1..20, 1)
+    private val scale by doubleSetting("Scale", 3.0, 1.0..10.0, 0.1)
 
     private val particles: MutableList<Particle> = ArrayList()
 

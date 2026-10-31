@@ -29,19 +29,19 @@ import kotlin.math.sin
 
 object TNTTimer : Module("TNT Timer", Category.RENDER) {
 
-    private val dangerRadius by doubleSetting("Danger Radius", 7.0, 0.5, 12.0, 0.1)
-    private val lethalRadius by doubleSetting("Lethal Radius", 4.0, 0.5, 12.0, 0.1)
-    private val outerThickness by doubleSetting("Outer Thickness", 0.12, 0.01, 1.0, 0.01)
-    private val innerThickness by doubleSetting("Inner Thickness", 0.16, 0.01, 1.0, 0.01)
-    private val alphaSetting by intSetting("Alpha", 16, 16, 255, 1)
-    private val segmentsSetting by intSetting("Segments", 360, 16, 360, 1)
-    private val ringsSetting by intSetting("Sphere Rings", 10, 2, 64, 1)
+    private val dangerRadius by doubleSetting("Danger Radius", 7.0, 0.5..12.0, 0.1)
+    private val lethalRadius by doubleSetting("Lethal Radius", 4.0, 0.5..12.0, 0.1)
+    private val outerThickness by doubleSetting("Outer Thickness", 0.12, 0.01..1.0, 0.01)
+    private val innerThickness by doubleSetting("Inner Thickness", 0.16, 0.01..1.0, 0.01)
+    private val alphaSetting by intSetting("Alpha", 16, 16..255, 1)
+    private val segmentsSetting by intSetting("Segments", 360, 16..360, 1)
+    private val ringsSetting by intSetting("Sphere Rings", 10, 2..64, 1)
     private val filledSphere by boolSetting("Filled Sphere", true)
     private val wireframeSphere by boolSetting("Wireframe Sphere", false)
     private val pulse by boolSetting("Pulse Near Explosion", true)
-    private val pulseThresholdSec by doubleSetting("Pulse Threshold (s)", 2.0, 0.2, 10.0, 0.1)
-    private val pulseAmplitude by doubleSetting("Pulse Amplitude", 0.12, 0.0, 0.5, 0.01)
-    private val pulseSpeedHz by doubleSetting("Pulse Speed (Hz)", 2.0, 0.2, 8.0, 0.1)
+    private val pulseThresholdSec by doubleSetting("Pulse Threshold (s)", 2.0, 0.2..10.0, 0.1)
+    private val pulseAmplitude by doubleSetting("Pulse Amplitude", 0.12, 0.0..0.5, 0.01)
+    private val pulseSpeedHz by doubleSetting("Pulse Speed (Hz)", 2.0, 0.2..8.0, 0.1)
 
     private val scheduler: Supplier<Render2DScheduler> = Suppliers.memoize { Render2DScheduler() }
 

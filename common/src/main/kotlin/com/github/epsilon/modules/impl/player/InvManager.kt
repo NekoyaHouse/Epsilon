@@ -55,74 +55,63 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     private val pauseOnEat by boolSetting("Pause On Eat", true)
     private val pauseOnKillAura by boolSetting("Pause On KillAura", true)
     private val pauseOnScaffold by boolSetting("Pause On Scaffold", true)
-    private val stopSprinting by boolSetting("Stop Sprinting", true, dependency = { mode == Mode.Silent })
-    private val minDelay by intSetting("Min Delay", 95, 0, 1000, 50)
-    private val maxDelay by intSetting("Max Delay", 135, 0, 1000, 50)
+    private val stopSprinting by boolSetting("Stop Sprinting", true, { mode == Mode.Silent })
+    private val minDelay by intSetting("Min Delay", 95, 0..1000, 50)
+    private val maxDelay by intSetting("Max Delay", 135, 0..1000, 50)
     private val offhandItem by enumSetting("Offhand Item", OffhandItemMode.None)
     private val autoArmor by boolSetting("Auto Armor", true)
     private val switchSword by boolSetting("Switch Sword", true)
-    private val swordSlot by intSetting("Sword Slot", 1, 1, 9, 1, dependency = { switchSword })
-    private val switchBlock by boolSetting("Switch Block", true, dependency = { offhandItem != OffhandItemMode.Block })
+    private val swordSlot by intSetting("Sword Slot", 1, 1..9, 1, { switchSword })
+    private val switchBlock by boolSetting("Switch Block", true, { offhandItem != OffhandItemMode.Block })
     private val blockSlot by intSetting(
         "Block Slot",
         2,
-        1,
-        9,
-        1,
-        dependency = { switchBlock && offhandItem != OffhandItemMode.Block })
-    val maxBlockSize by intSetting("Max Block Size", 256, 64, 512, 64, dependency = { switchBlock })
+        1..9,
+        1, { switchBlock && offhandItem != OffhandItemMode.Block })
+    val maxBlockSize by intSetting("Max Block Size", 256, 64..512, 64, { switchBlock })
     private val switchPickaxe by boolSetting("Switch Pickaxe", true)
-    private val pickaxeSlot by intSetting("Pickaxe Slot", 3, 1, 9, 1, dependency = { switchPickaxe })
+    private val pickaxeSlot by intSetting("Pickaxe Slot", 3, 1..9, 1, { switchPickaxe })
     private val switchAxe by boolSetting("Switch Axe", true)
-    private val axeSlot by intSetting("Axe Slot", 4, 1, 9, 1, dependency = { switchAxe })
+    private val axeSlot by intSetting("Axe Slot", 4, 1..9, 1, { switchAxe })
     private val switchBow by boolSetting("Switch Bow or Crossbow", true)
-    private val bowSlot by intSetting("Bow Slot", 5, 1, 9, 1, dependency = { switchBow })
-    private val preferBow by enumSetting("Bow Priority", BowPriorityMode.Crossbow, dependency = { switchBow })
-    val maxArrowSize by intSetting("Max Arrow Size", 256, 64, 512, 64, dependency = { switchBow })
+    private val bowSlot by intSetting("Bow Slot", 5, 1..9, 1, { switchBow })
+    private val preferBow by enumSetting("Bow Priority", BowPriorityMode.Crossbow, { switchBow })
+    val maxArrowSize by intSetting("Max Arrow Size", 256, 64..512, 64, { switchBow })
     private val switchWaterBucket by boolSetting("Switch Water Bucket", true)
-    private val waterBucketSlot by intSetting("Water Bucket Slot", 6, 1, 9, 1, dependency = { switchWaterBucket })
+    private val waterBucketSlot by intSetting("Water Bucket Slot", 6, 1..9, 1, { switchWaterBucket })
     private val switchEnderPearl by boolSetting("Switch Ender Pearl", true)
-    private val enderPearlSlot by intSetting("Ender Pearl Slot", 7, 1, 9, 1, dependency = { switchEnderPearl })
+    private val enderPearlSlot by intSetting("Ender Pearl Slot", 7, 1..9, 1, { switchEnderPearl })
     private val switchFireball by boolSetting("Switch Fireball", true)
-    private val fireballSlot by intSetting("Fireball Slot", 8, 1, 9, 1, dependency = { switchFireball })
+    private val fireballSlot by intSetting("Fireball Slot", 8, 1..9, 1, { switchFireball })
     private val switchGoldenApple by boolSetting(
         "Switch Golden Apple",
-        true,
-        dependency = { offhandItem != OffhandItemMode.GoldenApple })
+        true, { offhandItem != OffhandItemMode.GoldenApple })
     private val goldenAppleSlot by intSetting(
         "Golden Apple Slot",
         9,
-        1,
-        9,
-        1,
-        dependency = { switchGoldenApple && offhandItem != OffhandItemMode.GoldenApple })
+        1..9,
+        1, { switchGoldenApple && offhandItem != OffhandItemMode.GoldenApple })
     private val throwItems by boolSetting("Throw Items", true)
-    val waterBucketCount by intSetting("Keep Water Buckets", 1, 0, 5, 1, dependency = { throwItems })
-    val lavaBucketCount by intSetting("Keep Lava Buckets", 1, 0, 5, 1, dependency = { throwItems })
+    val waterBucketCount by intSetting("Keep Water Buckets", 1, 0..5, 1, { throwItems })
+    val lavaBucketCount by intSetting("Keep Lava Buckets", 1, 0..5, 1, { throwItems })
     val keepProjectile by boolSetting("Keep Eggs & Snowballs", true)
     private val switchProjectile by boolSetting(
         "Switch Eggs & Snowballs",
-        false,
-        dependency = { keepProjectile && offhandItem != OffhandItemMode.Projectile })
+        false, { keepProjectile && offhandItem != OffhandItemMode.Projectile })
     private val projectileSlot by intSetting(
         "Eggs & Snowballs Slot",
         9,
-        1,
-        9,
-        1,
-        dependency = { switchProjectile && keepProjectile && offhandItem != OffhandItemMode.Projectile })
-    val maxProjectileSize by intSetting("Max Eggs & Snowballs Size", 64, 16, 256, 16, dependency = { keepProjectile })
+        1..9,
+        1, { switchProjectile && keepProjectile && offhandItem != OffhandItemMode.Projectile })
+    val maxProjectileSize by intSetting("Max Eggs & Snowballs Size", 64, 16..256, 16, { keepProjectile })
     private val switchRod by boolSetting(
         "Switch Rod",
-        false,
-        dependency = { offhandItem != OffhandItemMode.FishingRod })
+        false, { offhandItem != OffhandItemMode.FishingRod })
     private val rodSlot by intSetting(
         "Rod Slot",
         9,
-        1,
-        9,
-        1,
-        dependency = { switchRod && offhandItem != OffhandItemMode.FishingRod })
+        1..9,
+        1, { switchRod && offhandItem != OffhandItemMode.FishingRod })
 
     private var noMoveTicks = 0
     private var clickOffHand = false

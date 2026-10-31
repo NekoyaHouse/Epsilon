@@ -23,8 +23,8 @@ import kotlin.math.PI
 
 object Eagle : Module("Eagle", Category.MOVEMENT) {
 
-    private val minDelay by intSetting("Min Delay", 2, 0, 10, 1)
-    private val maxDelay by intSetting("Max Delay", 3, 0, 10, 1)
+    private val minDelay by intSetting("Min Delay", 2, 0..10, 1)
+    private val maxDelay by intSetting("Max Delay", 3, 0..10, 1)
     private val directionCheck by boolSetting("Direction Check", true)
     private val jumpCheck by boolSetting("Jump Check", true)
     private val pitchCheck by boolSetting("Pitch Check", true)

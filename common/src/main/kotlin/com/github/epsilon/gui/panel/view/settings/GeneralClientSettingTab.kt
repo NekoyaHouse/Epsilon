@@ -60,7 +60,7 @@ class GeneralClientSettingTab(
             markDirty()
         }
 
-        val settings = ClientSetting.settings.filter { setting -> setting.isAvailable }
+        val settings = ClientSetting.settings.filter { setting -> setting.isVisible }
         val contentHeight = settingListController.getContentHeight(SETTING_OWNER_KEY, settings)
         state.setMaxClientSettingScroll(contentHeight - bounds.height)
         val maxScroll = maxOf(0.0f, contentHeight - bounds.height)
@@ -305,7 +305,7 @@ class GeneralClientSettingTab(
         signature = signature * 31L + state.getListeningKeybindSetting()?.name.hashCode()
         for (setting in settings) {
             signature = signature * 31L + setting.name.hashCode()
-            signature = signature * 31L + (if (setting.isAvailable) 1 else 0)
+            signature = signature * 31L + (if (setting.isVisible) 1 else 0)
         }
         signature = signature * 31L + SettingLayoutPlanner.signature(SETTING_OWNER_KEY, settings)
         return signature

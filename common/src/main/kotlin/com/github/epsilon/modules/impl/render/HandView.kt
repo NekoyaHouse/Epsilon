@@ -6,8 +6,8 @@ import com.github.epsilon.events.impl.HeldItemRenderEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
@@ -44,21 +44,24 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private val blockingAnimation by boolSetting("Blocking Animation", true)
     private val blockingMode: EnumSetting<BlockMode> = enumSetting(
-        "Blocking Mode", BlockMode.NewExhibition, dependency = { blockingAnimation }
+        "Blocking Mode", BlockMode.NewExhibition,
+        { blockingAnimation }
     )
 
     val swingMode: EnumSetting<SwingMode> = enumSetting("Swing Mode", SwingMode.Vanilla)
     val onlyWeapon by boolSetting(
-        "Only Weapon", true, dependency = { swingMode.`is`(SwingMode.Flux) }
+        "Only Weapon", true,
+        { swingMode.`is`(SwingMode.Flux) }
     )
 
     val modifySwingDuration by boolSetting("Modify Swing Duration", false)
     val swingDuration by intSetting(
-        "Swing Duration", 6, 0, 20, 1, dependency = { modifySwingDuration }
+        "Swing Duration", 6, 0..20, 1,
+        { modifySwingDuration }
     )
 
     val swingWhileUsing by boolSetting("Visual Swing On Use", true)
-    val onlyOnBlock by boolSetting("Only On Block", true, dependency = { swingWhileUsing })
+    val onlyOnBlock by boolSetting("Only On Block", true, { swingWhileUsing })
 
     private val mainHandGroup: SettingGroup = settingGroup("Main Hand")
     private val offHandGroup: SettingGroup = settingGroup("Off Hand")
@@ -211,80 +214,71 @@ object HandView : Module("Hand View", Category.RENDER) {
         poseStack.rotateDegrees(Axis.ZP, side * rotateZ)
     }
 
-    private class TransformSettings(prefix: String, group: SettingGroup, enabled: Setting.Dependency) {
+    private class TransformSettings(prefix: String, group: SettingGroup, enabled: () -> Boolean) {
 
         private val scaleX by doubleSetting(
             "$prefix Scale X",
             1.0,
-            0.0,
-            5.0,
+            0.0..5.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val scaleY by doubleSetting(
             "$prefix Scale Y",
             1.0,
-            0.0,
-            5.0,
+            0.0..5.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val scaleZ by doubleSetting(
             "$prefix Scale Z",
             1.0,
-            0.0,
-            5.0,
+            0.0..5.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val positionX by doubleSetting(
             "$prefix Position X",
             0.0,
-            -3.0,
-            3.0,
+            -3.0..3.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val positionY by doubleSetting(
             "$prefix Position Y",
             0.0,
-            -3.0,
-            3.0,
+            -3.0..3.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val positionZ by doubleSetting(
             "$prefix Position Z",
             0.0,
-            -3.0,
-            3.0,
+            -3.0..3.0,
             0.1,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val rotationX by doubleSetting(
             "$prefix Rotation X",
             0.0,
-            -180.0,
-            180.0,
+            -180.0..180.0,
             1.0,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val rotationY by doubleSetting(
             "$prefix Rotation Y",
             0.0,
-            -180.0,
-            180.0,
+            -180.0..180.0,
             1.0,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
         private val rotationZ by doubleSetting(
             "$prefix Rotation Z",
             0.0,
-            -180.0,
-            180.0,
+            -180.0..180.0,
             1.0,
-            dependency = enabled
-        ).apply { group(group) }
+            { enabled() }
+        ).group(group)
 
         fun apply(poseStack: PoseStack) {
             poseStack.rotateDegrees(Axis.XP, rotationX.toFloat())

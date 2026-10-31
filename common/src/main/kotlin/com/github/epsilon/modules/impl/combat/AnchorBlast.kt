@@ -22,9 +22,9 @@ import kotlin.math.roundToInt
 object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
 
     private val triggerKey by keybindSetting("Trigger Key", -1)
-    private val detonateSlot by intSetting("Detonate Slot", 1, 1, 9, 1)
-    private val placeCps by intSetting("Place CPS", 10, 1, 30, 1)
-    private val chargeCps by intSetting("Charge CPS", 10, 1, 30, 1)
+    private val detonateSlot by intSetting("Detonate Slot", 1, 1..9, 1)
+    private val placeCps by intSetting("Place CPS", 10, 1..30, 1)
+    private val chargeCps by intSetting("Charge CPS", 10, 1..30, 1)
 
     private enum class Phase {
         IDLE,

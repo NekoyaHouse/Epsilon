@@ -27,7 +27,7 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     }
 
     private val mode by enumSetting("Mode", Mode.TXT)
-    private val delay by intSetting("Delay", 1000, 100, 10000, 100)
+    private val delay by intSetting("Delay", 1000, 100..10000, 100)
     private val customPath by stringSetting("Custom Path", "")
 
     private val allSentences: MutableList<String> = ArrayList()

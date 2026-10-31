@@ -14,6 +14,7 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.group
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.player
@@ -50,28 +51,29 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     private val appearanceGroup: SettingGroup = settingGroup("Appearance")
     private val triggerMode by enumSetting(
         "Trigger Mode", TriggerMode.Kill,
-        { _: TriggerMode -> recentTargets.clear() }
+        onChanged = { _: TriggerMode -> recentTargets.clear() }
     ).group(triggerGroup)
     private val titleTriggers by stringListSetting(
         "Title Triggers", listOf("胜利", "挑战成功", "Victory"),
-        dependency = { triggerMode == TriggerMode.Title }
+        { triggerMode == TriggerMode.Title }
     )
     private val chatTriggers by stringListSetting(
         "Chat Triggers", listOf("获胜", "胜利", "挑战成功", "Victory"),
-        dependency = { triggerMode == TriggerMode.Chat }
+        { triggerMode == TriggerMode.Chat }
     )
     private val title by stringSetting("Title", "TARGET ELIMINATED").group(generalGroup)
     private val subtitle by stringSetting("Subtitle", "ELIMINATION CONFIRMED").group(generalGroup)
-    private val holdTime by doubleSetting("Hold Time", 1.9, 0.2, 10.0, 0.1).group(generalGroup)
-    private val scale by doubleSetting("Scale", 0.75, 0.5, 2.0, 0.05).group(appearanceGroup)
-    private val titleScale by doubleSetting("Title Scale", 1.5, 0.8, 1.8, 0.05).group(appearanceGroup)
-    private val subtitleScale by doubleSetting("Subtitle Scale", 0.7, 0.6, 1.2, 0.05).group(appearanceGroup)
+    private val holdTime by doubleSetting("Hold Time", 1.9, 0.2..10.0, 0.1).group(generalGroup)
+    private val scale by doubleSetting("Scale", 0.75, 0.5..2.0, 0.05).group(appearanceGroup)
+    private val titleScale by doubleSetting("Title Scale", 1.5, 0.8..1.8, 0.05).group(appearanceGroup)
+    private val subtitleScale by doubleSetting("Subtitle Scale", 0.7, 0.6..1.2, 0.05).group(appearanceGroup)
     private val accentColor by colorSetting("Accent Color", Color(244, 244, 20, 255)).group(appearanceGroup)
     private val subtitleColor by colorSetting("Subtitle Color", Color(141, 145, 148, 255)).group(appearanceGroup)
     private val backgroundColor by colorSetting("Background Color", Color(14, 15, 17, 158)).group(appearanceGroup)
     private val backgroundBlur by boolSetting("Background Blur", true).group(appearanceGroup)
     private val blurStrength by doubleSetting(
-        "Blur Strength", 8.0, 1.0, 20.0, 1.0, dependency = { backgroundBlur }
+        "Blur Strength", 8.0, 1.0..20.0, 1.0,
+        { backgroundBlur }
     ).group(appearanceGroup)
 
     private val textRendererSupplier: Supplier<TextRenderer> =

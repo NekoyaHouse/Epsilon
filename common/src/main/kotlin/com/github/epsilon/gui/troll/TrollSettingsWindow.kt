@@ -98,7 +98,7 @@ class TrollSettingsWindow(
         for (element in section.elements()) {
             when (element) {
                 is SettingLayoutPlanner.Section.SettingElement -> {
-                    if (element.setting().isAvailable) {
+                    if (element.setting().isVisible) {
                         val row = rows.getOrPut(element.setting()) {
                             val created = TrollSettingRow(element.setting())
                             created.startOpenAnimation()

@@ -21,7 +21,7 @@ object NoFall : Module("No Fall", Category.PLAYER) {
     }
 
     private val mode by enumSetting("Mode", Mode.GroundSpoof)
-    private val fallDistance by doubleSetting("Fall Distance", 3.0, 3.0, 15.0, 0.1)
+    private val fallDistance by doubleSetting("Fall Distance", 3.0, 3.0..15.0, 0.1)
 
     private var jump = false
     private var lastFallDistance = 0.0

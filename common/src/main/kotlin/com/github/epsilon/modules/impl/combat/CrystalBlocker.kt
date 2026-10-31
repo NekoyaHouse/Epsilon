@@ -30,16 +30,14 @@ import kotlin.math.abs
 
 object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
-    private val range by doubleSetting("Range", 4.0, 1.0, 6.0, 0.1)
+    private val range by doubleSetting("Range", 4.0, 1.0..6.0, 0.1)
     private val rotate by enumSetting("Rotate", RotateMode.Silent)
     private val switchMode by enumSetting("Switch", SwitchMode.Visible)
-    private val delay by intSetting("Delay", 2, 0, 20, 1)
+    private val delay by intSetting("Delay", 2, 0..20, 1)
     private val visibleSwapBackDelay by intSetting(
-        "Swap Back Delay", 0, 0, 20, 1,
-        dependency = { switchMode == SwitchMode.Visible })
+        "Swap Back Delay", 0, 0..20, 1, { switchMode == SwitchMode.Visible })
     private val rotationSpeed by intSetting(
-        "Rotation Speed", 180, 10, 180, 10,
-        dependency = { rotate == RotateMode.Silent })
+        "Rotation Speed", 180, 10..180, 10, { rotate == RotateMode.Silent })
 
     private var timer = 0
     private var waitingSwapBack = false

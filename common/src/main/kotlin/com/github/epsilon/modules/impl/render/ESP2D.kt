@@ -41,17 +41,19 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
     private val others by boolSetting("Others", false)
     private val renderHealth by boolSetting("Render Health", true)
     private val healthBarWidth by doubleSetting(
-        "Health Bar Width", 2.0, 0.5, 6.0, 0.5, dependency = { renderHealth }
+        "Health Bar Width", 2.0, 0.5..6.0, 0.5,
+        { renderHealth }
     )
     private val healthBarOutline by boolSetting(
-        "Health Bar Outline", true, dependency = { renderHealth }
+        "Health Bar Outline", true,
+        { renderHealth }
     )
     private val healthBarOutlineWidth by doubleSetting(
-        "Health Bar Outline Width", 1.0, 0.5, 3.0, 0.5,
-        dependency = { renderHealth && healthBarOutline }
+        "Health Bar Outline Width", 1.0, 0.5..3.0, 0.5,
+        { renderHealth && healthBarOutline }
     )
     private val renderBox by boolSetting("Render Box", true)
-    private val boxOutline by boolSetting("Box Outline", true, dependency = { renderBox })
+    private val boxOutline by boolSetting("Box Outline", true, { renderBox })
 
     private val playersColor by colorSetting("Players Color", Color(0xFF9200), false)
     private val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false)
@@ -60,7 +62,8 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
     private val ambientsColor by colorSetting("Ambients Color", Color(0x7B00FF), false)
     private val othersColor by colorSetting("Others Color", Color(0xFF0062), false)
     private val healthColor by colorSetting(
-        "Health Color", Color(0x2FFF00), false, dependency = { renderHealth }
+        "Health Color", Color(0x2FFF00), false,
+        { renderHealth }
     )
 
     private val rectRendererSupplier: Supplier<RectRenderer> = Suppliers.memoize { RectRenderer.create() }

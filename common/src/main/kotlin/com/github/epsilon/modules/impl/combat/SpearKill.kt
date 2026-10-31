@@ -25,14 +25,14 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     }
 
     private val lungeMode by enumSetting("Lunge Mode", LungeMode.DirectionBased)
-    private val maxRange by doubleSetting("Max Range", 6.0, 1.0, 16.0, 0.1)
-    private val lungeStrength by doubleSetting("Lunge Strength", 3.7, 0.5, 15.0, 0.1)
+    private val maxRange by doubleSetting("Max Range", 6.0, 1.0..16.0, 0.1)
+    private val lungeStrength by doubleSetting("Lunge Strength", 3.7, 0.5..15.0, 0.1)
     private val aboveHeight by doubleSetting(
-        "Above Height", 10.0, 3.0, 30.0, 0.1, dependency = { lungeMode == LungeMode.Above })
+        "Above Height", 10.0, 3.0..30.0, 0.1, { lungeMode == LungeMode.Above })
     private val aboveHeightDistance by doubleSetting(
-        "Above Height Distance", 3.0, 1.0, 10.0, 0.1, dependency = { lungeMode == LungeMode.Above })
-    private val stopDistance by doubleSetting("Stop Distance", 0.6, 0.0, 10.0, 0.1)
-    private val chargeTimeModifier by intSetting("Charge Time", 100, 0, 100, 1)
+        "Above Height Distance", 3.0, 1.0..10.0, 0.1, { lungeMode == LungeMode.Above })
+    private val stopDistance by doubleSetting("Stop Distance", 0.6, 0.0..10.0, 0.1)
+    private val chargeTimeModifier by intSetting("Charge Time", 100, 0..100, 1)
     private val stopOnTarget by boolSetting("Stop On Target", true)
     private val autoSwitch by boolSetting("Auto Switch", true)
     private val rotate by boolSetting("Rotate", true)

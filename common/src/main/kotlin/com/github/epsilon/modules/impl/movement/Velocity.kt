@@ -43,23 +43,23 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         Delay,
     }
 
-    private val modeSetting: EnumSetting<Mode> = enumSetting("Mode", Mode.Cancel, ::onModeChanged)
+    private val modeSetting: EnumSetting<Mode> = enumSetting("Mode", Mode.Cancel, onChanged = ::onModeChanged)
     val mode by modeSetting
-    private val serverMotion by boolSetting("Server Motion", true, dependency = { mode == Mode.Cancel })
-    private val explosion by boolSetting("Explosion", true, dependency = { mode == Mode.Cancel })
+    private val serverMotion by boolSetting("Server Motion", true, { mode == Mode.Cancel })
+    private val explosion by boolSetting("Explosion", true, { mode == Mode.Cancel })
     private val explosionOnlyBlock by boolSetting(
         "Explosion Only Block", false,
-        dependency = { mode == Mode.Cancel && explosion }
+        { mode == Mode.Cancel && explosion }
     )
-    val waterPush by boolSetting("No Water Push", true, dependency = { mode == Mode.Cancel })
-    val entityPush by boolSetting("No Entity Push", true, dependency = { mode == Mode.Cancel })
-    val blockPush by boolSetting("No Block Push", true, dependency = { mode == Mode.Cancel })
-    private val attackCounts by intSetting("Attack Counts", 1, 1, 5, 1, dependency = { mode == Mode.Reduce })
-    private val sprintTicks by intSetting("Sprint Ticks", 3, 1, 5, 1, dependency = { mode == Mode.Reduce })
-    private val maxDelay by intSetting("Max Delay", 1000, 0, 1000, 50, dependency = { mode == Mode.Reduce })
-    private val swingHand by boolSetting("Swing Hand", false, dependency = { mode == Mode.Reduce })
-    private val delayTicks by intSetting("Delay Ticks", 3, 1, 5, 1, dependency = { mode == Mode.Delay })
-    private val jumpReset by boolSetting("Jump Reset", false, dependency = { mode == Mode.Delay })
+    val waterPush by boolSetting("No Water Push", true, { mode == Mode.Cancel })
+    val entityPush by boolSetting("No Entity Push", true, { mode == Mode.Cancel })
+    val blockPush by boolSetting("No Block Push", true, { mode == Mode.Cancel })
+    private val attackCounts by intSetting("Attack Counts", 1, 1..5, 1, { mode == Mode.Reduce })
+    private val sprintTicks by intSetting("Sprint Ticks", 3, 1..5, 1, { mode == Mode.Reduce })
+    private val maxDelay by intSetting("Max Delay", 1000, 0..1000, 50, { mode == Mode.Reduce })
+    private val swingHand by boolSetting("Swing Hand", false, { mode == Mode.Reduce })
+    private val delayTicks by intSetting("Delay Ticks", 3, 1..5, 1, { mode == Mode.Delay })
+    private val jumpReset by boolSetting("Jump Reset", false, { mode == Mode.Delay })
 
     @Volatile
     private var lag = 0L

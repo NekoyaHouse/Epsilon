@@ -18,8 +18,8 @@ object SoundFX : Module("Sound FX", Category.PLAYER) {
         OFF,
     }
 
-    private val volume by intSetting("Volume", 100, 1, 100, 5)
-    private val delay by intSetting("Delay", 0, 0, 20, 1)
+    private val volume by intSetting("Volume", 100, 1..100, 5)
+    private val delay by intSetting("Delay", 0, 0..20, 1)
     private val hitSound by enumSetting("Hit Sound", HitSound.OFF)
 
     private val timer = TimerUtils()

@@ -30,8 +30,8 @@ import kotlin.math.*
 
 object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
-    private val radius by doubleSetting("Radius", 1.0, 0.0, 6.0, 0.1)
-    private val points by intSetting("Points", 6, 3, 24, 1)
+    private val radius by doubleSetting("Radius", 1.0, 0.0..6.0, 0.1)
+    private val points by intSetting("Points", 6, 3..24, 1)
     private val requireJump by boolSetting("Require Jump", true)
     private val speedOnly by boolSetting("Speed Only", true)
     private val drawRadius by boolSetting("Draw Radius", true)

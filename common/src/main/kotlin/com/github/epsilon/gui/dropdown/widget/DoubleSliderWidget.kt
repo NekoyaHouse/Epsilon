@@ -10,14 +10,14 @@ class DoubleSliderWidget(setting: DoubleSetting) :
     AbstractSliderWidget<DoubleSetting, Double>(setting, 16, Predicate { value -> value.matches(Regex("[0-9.\\-]")) }) {
 
     override fun getRatio(): Float {
-        return ((getVisibleValue() - setting.min) / (setting.max - setting.min)).toFloat()
+        return ((getVisibleValue() - setting.range.start) / (setting.range.endInclusive - setting.range.start)).toFloat()
     }
 
     override fun updateValueFromRatio(rawRatio: Float) {
-        val range = setting.max - setting.min
+        val range = setting.range.endInclusive - setting.range.start
         val step = setting.step
-        val value = setting.min + (rawRatio * range / step).roundToInt() * step
-        previewValue(Mth.clamp(value, setting.min, setting.max))
+        val value = setting.range.start + (rawRatio * range / step).roundToInt() * step
+        previewValue(Mth.clamp(value, setting.range.start, setting.range.endInclusive))
     }
 
     override fun formatValue(value: Double): String {
@@ -59,11 +59,11 @@ class DoubleSliderWidget(setting: DoubleSetting) :
     }
 
     override fun getMin(): Double {
-        return setting.min
+        return setting.range.start
     }
 
     override fun getMax(): Double {
-        return setting.max
+        return setting.range.endInclusive
     }
 
     companion object {

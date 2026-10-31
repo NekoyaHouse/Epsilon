@@ -22,8 +22,8 @@ object MotionBlur : Module("Motion Blur", Category.RENDER) {
         Centered
     }
 
-    private val strength by doubleSetting("Strength", 1.0, 0.0, 5.0, 0.05)
-    private val samples by intSetting("Samples", 100, 4, 256, 4)
+    private val strength by doubleSetting("Strength", 1.0, 0.0..5.0, 0.05)
+    private val samples by intSetting("Samples", 100, 4..256, 4)
     private val algorithm by enumSetting("Algorithm", Algorithm.Centered)
     private val depthBlur by boolSetting("Depth Blur", true)
     private val renderThirdPerson by boolSetting("Third Person", true)

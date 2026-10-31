@@ -6,7 +6,7 @@ import kotlin.reflect.KProperty
  * 设置属性的 Kotlin 委托：直接暴露设置的值，读写都不需要经过 `.value`。
  *
  * ```kotlin
- * private var aimStrength by intSetting("Aim Strength", 10, 1, 20, 1)
+ * private var aimStrength by intSetting("Aim Strength", 10, 1..20, 1)
  *
  * fun use() {
  *     if (aimStrength > 10) aimStrength = 10

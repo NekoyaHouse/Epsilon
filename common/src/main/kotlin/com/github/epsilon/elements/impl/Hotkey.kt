@@ -30,17 +30,15 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     }
 
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
-    private val singleColor by colorSetting("Color", Color.WHITE, false, dependency = { colorMode == ColorMode.Single })
+    private val singleColor by colorSetting("Color", Color.WHITE, false, { colorMode == ColorMode.Single })
     private val doubleColor1 by colorSetting(
         "Color 1",
         Color.WHITE,
-        false,
-        dependency = { colorMode == ColorMode.Double })
+        false, { colorMode == ColorMode.Double })
     private val doubleColor2 by colorSetting(
         "Color 2",
         Color.RED,
-        false,
-        dependency = { colorMode == ColorMode.Double })
+        false, { colorMode == ColorMode.Double })
     private val shadowColorMode by enumSetting("Shadow Color", ShadowColorMode.Black)
     private val showSuffix by boolSetting("Show Suffix", true)
 

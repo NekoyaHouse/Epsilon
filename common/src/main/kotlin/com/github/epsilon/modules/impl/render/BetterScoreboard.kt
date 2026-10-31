@@ -15,14 +15,14 @@ import kotlin.math.roundToInt
 object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
 
     private val backgroundColor by colorSetting("Background Color", Color(16, 17, 20, 90))
-    private var radius by doubleSetting("Radius", 4.5, 0.0, 12.0, 0.5)
-    private val xOffset by doubleSetting("X Offset", 0.0, -500.0, 500.0, 1.0)
-    private val yOffset by doubleSetting("Y Offset", 0.0, -500.0, 500.0, 1.0)
+    private var radius by doubleSetting("Radius", 4.5, 0.0..12.0, 0.5)
+    private val xOffset by doubleSetting("X Offset", 0.0, -500.0..500.0, 1.0)
+    private val yOffset by doubleSetting("Y Offset", 0.0, -500.0..500.0, 1.0)
     private val backgroundBlur by boolSetting("Background Blur", true)
-    private val blurStrength by doubleSetting("Blur Strength", 8.0, 1.0, 20.0, 0.5, dependency = { backgroundBlur })
+    private val blurStrength by doubleSetting("Blur Strength", 8.0, 1.0..20.0, 0.5, { backgroundBlur })
     private val drawShadow by boolSetting("Draw Shadow", true)
-    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 24.0, 1.0, dependency = { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), dependency = { drawShadow })
+    private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0..24.0, 1.0, { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), true, { drawShadow })
 
     private var pendingBounds: ScoreboardBounds? = null
 

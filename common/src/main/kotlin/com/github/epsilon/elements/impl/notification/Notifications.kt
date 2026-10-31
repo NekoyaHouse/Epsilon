@@ -21,8 +21,8 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
     }
 
     private val style by enumSetting("Style", Style.Quantum, onChanged = { _: Style -> clearQuantum() })
-    private val scale by doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05)
-    private val fontScale by doubleSetting("Font Scale", 0.8, 0.5, 2.0, 0.05)
+    private val scale by doubleSetting("Scale", 1.0, 0.5..2.0, 0.05)
+    private val fontScale by doubleSetting("Font Scale", 0.8, 0.5..2.0, 0.05)
 
     private val nvidia = NVIDIANotification(this)
     private val quantum = QuantumNotification(this)

@@ -17,8 +17,8 @@ class RegistryListSetting<T : Any>(
     defaultValue: Collection<T>?,
     val registryType: Type,
     filter: Predicate<T>?,
-    dependency: Dependency?,
-) : Setting<List<T>>(name, dependency, null) {
+    visible: Visibility?,
+) : Setting<List<T>>(name, visible, null) {
 
     enum class Type {
         BLOCK,

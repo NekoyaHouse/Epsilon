@@ -37,8 +37,8 @@ import kotlin.math.abs
 
 object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
-    private val interactDelay by intSetting("Interact Delay", 60, 0, 300, 5)
-    private val collectDelayTicks by intSetting("Collect Delay Ticks", 2, 0, 10, 1)
+    private val interactDelay by intSetting("Interact Delay", 60, 0..300, 5)
+    private val collectDelayTicks by intSetting("Collect Delay Ticks", 2, 0..10, 1)
 
     private var mlgCompleted = true
     private val interactTimer = TimerUtils()

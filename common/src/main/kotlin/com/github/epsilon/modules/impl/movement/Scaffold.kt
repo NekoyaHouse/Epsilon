@@ -126,38 +126,38 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val selfRescue by boolSetting("Self Rescue", true)
     private val mode by enumSetting("Mode", Mode.TellyBridge)
     private val swapMode by enumSetting("Swap Mode", SwapMode.Normal)
-    private val swapBack by boolSetting("Swap Back", true, dependency = { swapMode == SwapMode.Normal })
-    private val snap by boolSetting("Snap", false, dependency = { mode == Mode.GodBridge })
+    private val swapBack by boolSetting("Swap Back", true, { swapMode == SwapMode.Normal })
+    private val snap by boolSetting("Snap", false, { mode == Mode.GodBridge })
     private val degrees45 by boolSetting("45 Degrees", false)
     private val rotationMode by enumSetting("Rotation Mode", RotationMode.Static)
     private val raytrace by enumSetting("Raytrace Mode", RaytraceMode.Normal)
     private val rotationSpeed by intSetting(
-        "Rotation Speed", 127, 10, 180, 10,
-        dependency = { rotationMode != RotationMode.Hypixel }
+        "Rotation Speed", 127, 10..180, 10,
+        { rotationMode != RotationMode.Hypixel }
     )
     private val rotationSpeed2 by intSetting(
-        "Rotation Speed 2", 36, 10, 180, 10,
-        dependency = { rotationMode == RotationMode.Heypixel }
+        "Rotation Speed 2", 36, 10..180, 10,
+        { rotationMode == RotationMode.Heypixel }
     )
     private val rotationBackSpeed by intSetting(
-        "Rotation Back Speed", 180, 10, 180, 10,
-        dependency = { mode == Mode.TellyBridge }
+        "Rotation Back Speed", 180, 10..180, 10,
+        { mode == Mode.TellyBridge }
     )
     private val tellyTicks by intSetting(
-        "Telly Ticks", 1, 0, 6, 1,
-        dependency = { mode == Mode.TellyBridge }
+        "Telly Ticks", 1, 0..6, 1,
+        { mode == Mode.TellyBridge }
     )
 
     private val swingHand by boolSetting("Swing Hand", true)
     private val render by boolSetting("Render", true)
-    private val fade by boolSetting("Fade", true, dependency = { render })
+    private val fade by boolSetting("Fade", true, { render })
     private val fadeTime by intSetting(
-        "Fade Time", 500, 0, 3000, 50,
-        dependency = { render && fade }
+        "Fade Time", 500, 0..3000, 50,
+        { render && fade }
     )
-    private val shrink by boolSetting("Shrink", false, dependency = { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), dependency = { render })
-    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), dependency = { render })
+    private val shrink by boolSetting("Shrink", false, { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), true, { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), true, { render })
 
     private var airTicks = 0
     private var yLevel = 0

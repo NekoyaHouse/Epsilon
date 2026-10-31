@@ -5,8 +5,8 @@ import com.github.epsilon.settings.Setting
 class ButtonSetting(
     name: String,
     func: Runnable,
-    dependency: Dependency?,
-) : Setting<Runnable>(name, dependency, null) {
+    visible: Visibility?,
+) : Setting<Runnable>(name, visible, null) {
 
     init {
         initializeValue(func)

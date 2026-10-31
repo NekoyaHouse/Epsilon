@@ -7,8 +7,8 @@ class ColorSetting(
     name: String,
     defaultValue: Color,
     private val allowAlpha: Boolean,
-    dependency: Dependency?,
-) : Setting<Color>(name, dependency, null) {
+    visible: Visibility?,
+) : Setting<Color>(name, visible, null) {
 
     init {
         initializeValue(defaultValue)

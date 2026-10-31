@@ -7,7 +7,6 @@ import com.github.epsilon.elements.impl.notification.Notifications
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import kotlin.math.roundToInt
@@ -17,23 +16,22 @@ import kotlin.math.roundToInt
  */
 class AkarinNotification(private val owner: Notifications) {
 
-    private val active: Setting.Dependency = { owner.isStyle(Notifications.Style.Akarin) }
+    private val active: () -> Boolean = { owner.isStyle(Notifications.Style.Akarin) }
 
-    private val backgroundBlur by owner.boolSetting("Akarin Background Blur", true, dependency = active)
+    private val backgroundBlur by owner.boolSetting("Akarin Background Blur", true, { active() })
     private val blurStrength by owner.doubleSetting(
-        "Akarin Blur Strength", 15.0, 1.0, 30.0, 1.0,
-        dependency = { active.check() && backgroundBlur }
+        "Akarin Blur Strength", 15.0, 1.0..30.0, 1.0,
+        { active() && backgroundBlur }
     )
-    private val backgroundAlpha by owner.intSetting("Akarin Background Alpha", 80, 0, 255, 1, dependency = active)
+    private val backgroundAlpha by owner.intSetting("Akarin Background Alpha", 80, 0..255, 1, { active() })
     private val radius by owner.doubleSetting(
         "Akarin Radius",
         CARD_RADIUS.toDouble(),
-        0.0,
-        14.0,
+        0.0..14.0,
         0.5,
-        dependency = active
+        { active() }
     )
-    private val displayTimeMs by owner.intSetting("Akarin Display Time", 800, 500, 10000, 100, dependency = active)
+    private val displayTimeMs by owner.intSetting("Akarin Display Time", 800, 500..10000, 100, { active() })
 
     fun getDisplayTime(): Int {
         return displayTimeMs

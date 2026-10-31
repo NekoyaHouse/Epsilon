@@ -1,17 +1,15 @@
 package com.github.epsilon.settings.impl
 
 import com.github.epsilon.settings.Setting
-import net.minecraft.util.Mth
 
 class IntSetting(
     name: String,
     defaultValue: Int,
-    val min: Int,
-    val max: Int,
+    val range: IntRange,
     val step: Int,
-    dependency: Dependency?,
+    visible: Visibility?,
     onChanged: ((Int) -> Unit)?,
-) : Setting<Int>(name, dependency, onChanged) {
+) : Setting<Int>(name, visible, onChanged) {
 
     init {
         initializeValue(defaultValue)
@@ -20,7 +18,7 @@ class IntSetting(
     override var value: Int
         get() = super.value
         set(newValue) {
-            writeValue(Mth.clamp(newValue, min, max))
+            writeValue(newValue.coerceIn(range))
         }
 
     fun setUnboundedValue(newValue: Int) {

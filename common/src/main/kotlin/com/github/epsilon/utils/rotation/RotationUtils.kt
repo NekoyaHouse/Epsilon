@@ -422,17 +422,6 @@ object RotationUtils {
     /**
      * 以最大角速度将当前旋转移向目标旋转。
      *
-     * @param targetRotation 目标旋转
-     * @param speed          移动速度或最大旋转速度
-     * @return 操作结果
-     */
-    fun move(targetRotation: Rot2f, speed: Double): Rot2f {
-        return move(RotationManager.INSTANCE.lastRotations, targetRotation, speed)
-    }
-
-    /**
-     * 以最大角速度将当前旋转移向目标旋转。
-     *
      * @param lastRotation   当前或上一次旋转
      * @param targetRotation 目标旋转
      * @param speed          移动速度或最大旋转速度
@@ -443,7 +432,9 @@ object RotationUtils {
             val deltaYaw = Mth.wrapDegrees(targetRotation.yaw - lastRotation.yaw).toDouble()
             val deltaPitch = (targetRotation.pitch - lastRotation.pitch).toDouble()
 
-            val distance = sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch)
+            val distance = hypot(deltaYaw, deltaPitch)
+            if (!distance.isFinite() || distance < 1.0E-6) return Rot2f(0.0f, 0.0f)
+
             val distributionYaw = abs(deltaYaw / distance)
             val distributionPitch = abs(deltaPitch / distance)
 
@@ -485,7 +476,7 @@ object RotationUtils {
         val lastPitch = lastRotation.pitch
 
         if (speed != 0.0) {
-            val move = move(targetRotation, speed)
+            val move = move(lastRotation, targetRotation, speed)
 
             yaw = lastYaw + move.yaw
             pitch = lastPitch + move.pitch

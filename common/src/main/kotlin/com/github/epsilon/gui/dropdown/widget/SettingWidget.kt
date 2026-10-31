@@ -6,7 +6,7 @@ import com.github.epsilon.settings.Setting
 abstract class SettingWidget<S : Setting<*>>(val setting: S) : Component() {
 
     fun isVisible(): Boolean {
-        return setting.isAvailable
+        return setting.isVisible
     }
 
 }

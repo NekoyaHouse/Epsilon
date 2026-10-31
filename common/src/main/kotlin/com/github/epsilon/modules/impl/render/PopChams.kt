@@ -27,10 +27,10 @@ import kotlin.math.roundToInt
 object PopChams : Module("Pop Chams", Category.RENDER) {
 
     private val ignoreSelf by boolSetting("Ignore Self", true)
-    private val renderTime by doubleSetting("Render Time", 1.0, 0.1, 6.0, 0.1)
-    private val yModifier by doubleSetting("Y Modifier", 0.75, -4.0, 4.0, 0.05)
+    private val renderTime by doubleSetting("Render Time", 1.0, 0.1..6.0, 0.1)
+    private val yModifier by doubleSetting("Y Modifier", 0.75, -4.0..4.0, 0.05)
     private val yEasing: EnumSetting<Easing> = enumSetting("Y Easing", Easing.EASE_IN_OUT_EXPO)
-    private val scaleModifier by doubleSetting("Scale Modifier", -0.25, -4.0, 4.0, 0.05)
+    private val scaleModifier by doubleSetting("Scale Modifier", -0.25, -4.0..4.0, 0.05)
     private val fadeOut by boolSetting("Fade Out", true)
     private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 25))
     private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 127))
