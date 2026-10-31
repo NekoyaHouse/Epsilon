@@ -282,11 +282,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
     private fun getVisibleValue(): Double = pendingValue ?: doubleSetting.value
 
     private fun previewValue(value: Double) {
-        if (doubleSetting.isApplyWhenRelease) {
-            pendingValue = value
-        } else {
-            doubleSetting.value = value
-        }
+        pendingValue = value
     }
 
     private fun applyValueNow(value: Double) {

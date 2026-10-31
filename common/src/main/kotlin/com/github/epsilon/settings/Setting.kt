@@ -38,8 +38,6 @@ abstract class Setting<V>(
 
     var isGlobalSetting: Boolean = false
 
-    var isApplyWhenRelease: Boolean = false
-
     var groupRef: SettingGroup? = null
 
     var platformRequirement: PlatformRequirement = PlatformRequirement.ANY
@@ -148,13 +146,5 @@ fun <T : Setting<*>> T.platformOnly(requirement: PlatformRequirement?): T {
  */
 fun <T : Setting<*>> T.globalSetting(): T {
     this.isGlobalSetting = true
-    return this
-}
-
-/**
- * 将设置标记为释放时应用，并保留具体设置类型。
- */
-fun <T : Setting<*>> T.applyWhenRelease(): T {
-    this.isApplyWhenRelease = true
     return this
 }

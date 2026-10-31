@@ -101,11 +101,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
     }
 
     protected fun previewValue(value: T) {
-        if (setting.isApplyWhenRelease) {
-            pendingValue = value
-        } else {
-            applyValue(value)
-        }
+        pendingValue = value
     }
 
     protected fun applyValueNow(value: T) {

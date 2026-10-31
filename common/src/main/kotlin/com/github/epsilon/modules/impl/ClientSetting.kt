@@ -18,7 +18,6 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.applyWhenRelease
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.globalSetting
@@ -138,11 +137,11 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Language",
         "", { language.`is`(EpsilonLanguage.Custom) },
         onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
-    ).group(sgGeneral).applyWhenRelease()
+    ).group(sgGeneral)
 
     private val renderScale by doubleSetting("Render Scale", 2.0, 1.0..6.0, 0.5)
         .group(sgGeneral)
-        .applyWhenRelease()
+
 
     val i18nFallback by boolSetting(
         "I18n Fallback",
@@ -158,7 +157,7 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Font",
         "",
         { font.`is`(FontMode.Custom) }
-    ).group(sgGeneral).applyWhenRelease()
+    ).group(sgGeneral)
 
     val fontGlyphsPerFrame by intSetting(
         "Font Glyphs Per Frame",

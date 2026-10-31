@@ -326,8 +326,8 @@ class TrollSettingRow {
         val activeInput = input ?: return false
         if (event.isEscape || event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
             finishEditing(!event.isEscape)
-        } else if (activeInput.keyPressed(event)) {
-            previewText()
+        } else {
+            activeInput.keyPressed(event)
         }
         return true
     }
@@ -335,7 +335,7 @@ class TrollSettingRow {
     fun charTyped(event: CharacterEvent): Boolean {
         if (!isEditing()) return false
         val activeInput = input ?: return false
-        if (activeInput.charTyped(event)) previewText()
+        activeInput.charTyped(event)
         return true
     }
 
@@ -393,14 +393,6 @@ class TrollSettingRow {
             } catch (exception: NumberFormatException) {
                 Constants.LOGGER.debug("Troll GUI 数值输入无效: {} = {}", setting?.name, text, exception)
             }
-        }
-    }
-
-    private fun previewText() {
-        val activeInput = input ?: return
-        val setting = this.setting
-        if (setting is StringSetting && !setting.isApplyWhenRelease && setting.value != activeInput.text) {
-            setting.value = activeInput.text
         }
     }
 
@@ -465,7 +457,7 @@ class TrollSettingRow {
         dragStartX = mouseX
         var value = minimum() + (fraction * (maximum() - minimum()) / maxOf(0.000001, step)).roundToInt() * step
         value = (value).coerceIn(minimum(), maximum())
-        if (setting.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
+        pendingNumber = value
     }
 
     private fun applyNumber(value: Double) {

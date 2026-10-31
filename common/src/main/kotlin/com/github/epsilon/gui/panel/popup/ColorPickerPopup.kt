@@ -472,11 +472,7 @@ class ColorPickerPopup(
     }
 
     private fun previewColor(color: Color) {
-        if (setting.isApplyWhenRelease) {
-            pendingValue = color
-        } else {
-            setting.value = color
-        }
+        pendingValue = color
     }
 
     private fun applyColorNow(color: Color) {

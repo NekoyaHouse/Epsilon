@@ -22,7 +22,6 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetMotionT
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.SettingGroup
-import com.github.epsilon.settings.applyWhenRelease
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.toDegrees
@@ -105,7 +104,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var maxNodes by intSetting("Max Nodes", 1200, 100..6000, 100, { pathfinding }).group(sgFollow)
     private var dataSize by intSetting(
         "Data Size", 50, 25..100, 5, { pathfinding },
-        onChanged = { size -> setPathDataSize(size) }).applyWhenRelease().group(sgFollow)
+        onChanged = { size -> setPathDataSize(size) }).group(sgFollow)
 
     var maceEngageRange by doubleSetting("Mace Range", 10.0, 2.0..16.0, 0.5).group(sgMace)
     var maceHeight by doubleSetting("Mace Height", 10.0, 2.0..32.0, 0.5).group(sgMace)
@@ -664,7 +663,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     }
 
     private fun setPathDataSize(size: Int) {
-        // Data Size 修改后由导航器重建体素窗口；需要 applyWhenRelease 防止拖动时反复重建。
+        // Data Size 修改后由导航器重建体素窗口；现在统一在拖动结束后提交，防止拖动时反复重建。
         this.flightPlanner.setDataSize(size)
     }
 
