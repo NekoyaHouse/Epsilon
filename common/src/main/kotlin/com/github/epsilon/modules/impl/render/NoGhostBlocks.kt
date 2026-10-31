@@ -1,13 +1,11 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.DestroyBlockEvent
 import com.github.epsilon.events.impl.PlaceBlockEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 
 object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
 
@@ -15,8 +13,8 @@ object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
     val placing by boolSetting("Placing", true)
 
     init {
-        nonNullHandler<DestroyBlockEvent> { onBreakBlock(it) }
-        nonNullHandler<PlaceBlockEvent> { onPlaceBlock(it) }
+        safeEventHandler<DestroyBlockEvent> { onBreakBlock(it) }
+        safeEventHandler<PlaceBlockEvent> { onPlaceBlock(it) }
     }
 
     private fun onBreakBlock(event: DestroyBlockEvent) {

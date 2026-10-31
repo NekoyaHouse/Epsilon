@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.renderpearl.api.commands.RenderPass
 import net.minecraft.client.renderer.state.WindowRenderState
 import kotlin.math.roundToInt

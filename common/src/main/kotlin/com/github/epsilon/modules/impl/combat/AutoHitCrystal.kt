@@ -1,11 +1,12 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.RightClickEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
@@ -13,10 +14,6 @@ import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
@@ -89,8 +86,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@safeEventHandler
 
             if (switchClock > 0) --switchClock
             if (placeClock > 0) --placeClock
@@ -102,7 +99,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                     if (hitResult.type == HitResult.Type.BLOCK && !active &&
                         !level.getBlockState(hitResult.blockPos).canBeReplaced() && checkPlace
                     ) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
                 }
 
@@ -113,14 +110,14 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                             (workWithPickaxe && mainHandStack.`is`(ItemTags.PICKAXES)) ||
                             active)
                 ) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 active = true
 
                 if (!crystalling && hitResult is BlockHitResult) {
                     if (hitResult.type == HitResult.Type.MISS) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val renderPos = hitResult.blockPos.relative(hitResult.direction)
@@ -132,14 +129,14 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                     } else if (!level.getBlockState(renderPos).`is`(Blocks.OBSIDIAN)) {
                         val state = level.getBlockState(hitResult.blockPos)
                         if (state.`is`(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0) {
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
 
                         mc.options.keyUse.isDown = false
 
                         if (!player.isHolding(Items.OBSIDIAN)) {
                             if (switchClock > 0) {
-                                return@nonNullHandler
+                                return@safeEventHandler
                             }
                             if (MathUtils.getRandom(1, 100) <= switchChance.toInt()) {
                                 switchClock = switchDelay.toInt()
@@ -149,7 +146,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
                         if (player.isHolding(Items.OBSIDIAN)) {
                             if (placeClock > 0) {
-                                return@nonNullHandler
+                                return@safeEventHandler
                             }
 
                             if (MathUtils.getRandom(1, 100) <= placeChance.toInt()) {
@@ -164,7 +161,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 if (crystalling) {
                     if (!player.isHolding(Items.END_CRYSTAL)) {
                         if (switchClock > 0) {
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
                         if (MathUtils.getRandom(1, 100) <= switchChance.toInt()) {
                             if (selectItemFromHotbar(Items.END_CRYSTAL)) {
@@ -182,8 +179,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<RightClickEvent> { event ->
-            if (!active) return@nonNullHandler
+        safeEventHandler<RightClickEvent> { event ->
+            if (!active) return@safeEventHandler
 
             val mainHandStack = player.mainHandItem
             val crosshairTarget = mc.hitResult
@@ -227,8 +224,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun placeBlock(hit: BlockHitResult, renderPos: BlockPos) {
         val hand =
-            if (player.offhandItem.`is`(Items.OBSIDIAN)) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
-        val result: InteractionResult = interaction.useItemOn(player, hand, hit)
+            if (nn.player.offhandItem.`is`(Items.OBSIDIAN)) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
+        val result: InteractionResult = nn.gameMode.useItemOn(nn.player, hand, hit)
         if (result.consumesAction()) {
             SwingMode.of(swingHand).interactSwing(hand)
             renderBoxes.add(RenderBox(AABB(renderPos), lineColor, sideColor, System.currentTimeMillis()))
@@ -236,8 +233,6 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     }
 
     private fun resetState() {
-// this.placeClock = this.placeDelay.intValue();
-// this.switchClock = this.switchDelay.intValue();
         switchClock = 0
         placeClock = 0
         active = false

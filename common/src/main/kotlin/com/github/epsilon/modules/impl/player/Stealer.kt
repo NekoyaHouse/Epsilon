@@ -1,14 +1,13 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -29,7 +28,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val currentScreen = mc.gui.screen()
             if (currentScreen is AbstractContainerScreen<*>) {
                 val menu = currentScreen.menu

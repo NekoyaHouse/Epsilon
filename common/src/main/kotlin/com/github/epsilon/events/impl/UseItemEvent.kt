@@ -1,6 +1,11 @@
 package com.github.epsilon.events.impl
 
-class UseItemEvent(initialYaw: Float, initialPitch: Float) {
+import com.github.epsilon.events.api.EventBus
+import com.github.epsilon.events.api.IEvent
+import com.github.epsilon.events.api.IPosting
+
+class UseItemEvent(initialYaw: Float, initialPitch: Float) : IEvent<UseItemEvent>, IPosting by Companion {
+    companion object : EventBus()
 
     var yaw: Float = initialYaw
         set(value) {

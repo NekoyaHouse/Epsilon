@@ -1,9 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -11,12 +12,8 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
@@ -59,42 +56,42 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     private var openingStartedAt = 0L
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             updateTrackedLevel()
 
             if (opening) {
-                if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
-                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@nonNullHandler
+                if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
+                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@safeEventHandler
                 opening = false
                 timer.reset()
             }
 
-            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@nonNullHandler
+            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@safeEventHandler
 
             if (hasNearbyPlayer()) {
                 if (mc.gui.screen() is AbstractContainerScreen<*>) {
                     player.closeContainer()
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            if (mc.gui.screen() is AbstractContainerScreen<*>) return@nonNullHandler
+            if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
 
-            val target = findTarget() ?: return@nonNullHandler
+            val target = findTarget() ?: return@safeEventHandler
 
             val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 targetRotation,
                 turnSpeed,
                 { rotation -> hitsTarget(rotation, target) },
                 Priority.Lowest,
             )
 
-            val hit = raycastTarget(RotationManager.INSTANCE.getRotation(), target.pos, target.throughWalls)
-            if (hit == null || hit.blockPos != target.pos) return@nonNullHandler
+            val hit = raycastTarget(RotationManager.getRotation(), target.pos, target.throughWalls)
+            if (hit == null || hit.blockPos != target.pos) return@safeEventHandler
 
-            val result = interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-            if (!result.consumesAction()) return@nonNullHandler
+            val result = gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+            if (!result.consumesAction()) return@safeEventHandler
 
             playerClickedContainers.add(target.pos)
             clickedContainers.add(target.pos)
@@ -103,7 +100,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             SwingMode.of(swing).interactSwing(InteractionHand.MAIN_HAND)
         }
 
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundUseItemOnPacket) {
                 val pos = packet.hitResult().blockPos
@@ -116,7 +113,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundBlockEventPacket) {
                 markContainerOpened(packet.pos)
@@ -155,8 +152,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         if (distance <= 0.0) return false
 
         val distanceSq = distance * distance
-        for (other in level.players()) {
-            if (other !== player && other.distanceToSqr(player) <= distanceSq) {
+        for (other in nn.level.players()) {
+            if (other !== nn.player && other.distanceToSqr(nn.player) <= distanceSq) {
                 return true
             }
         }
@@ -166,8 +163,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun findTarget(): Target? {
         val radius = ceil(range).toInt()
-        val origin = player.blockPosition()
-        val eyes = player.eyePosition
+        val origin = nn.player.blockPosition()
+        val eyes = nn.player.eyePosition
 
         var best: Target? = null
         var bestDistance = Double.MAX_VALUE
@@ -177,7 +174,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             origin.offset(radius, radius, radius)
         )) {
             val immutable = pos.immutable()
-            if (!isSelectedContainer(level.getBlockEntity(immutable))) continue
+            if (!isSelectedContainer(nn.level.getBlockEntity(immutable))) continue
             if (isBlockedChest(immutable)) continue
             if (wasAlreadyOpened(immutable)) continue
 
@@ -198,13 +195,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val maxRange = range
         if (distanceSq > maxRange * maxRange) return null
 
-        val visibleHit = level.clip(
+        val visibleHit = nn.level.clip(
             ClipContext(
                 eyes,
                 Vec3.atCenterOf(pos),
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                player,
+                nn.player,
             )
         )
         if (visibleHit.type == HitResult.Type.BLOCK && visibleHit.blockPos == pos) {
@@ -220,32 +217,32 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     }
 
     context(nn: NonNullContext)
-    private fun hitsTarget(rotation: Rot2f, target: Target): Boolean {
+    private fun hitsTarget(rotation: Rotation, target: Target): Boolean {
         val hit = raycastTarget(rotation, target.pos, target.throughWalls)
         return hit != null && hit.blockPos == target.pos
     }
 
     context(nn: NonNullContext)
-    private fun raycastTarget(rotation: Rot2f, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
-        val start = player.getEyePosition(1.0F)
+    private fun raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
+        val start = nn.player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))
 
         if (!throughWalls) {
-            val hit = level.clip(
+            val hit = nn.level.clip(
                 ClipContext(
                     start,
                     end,
                     ClipContext.Block.OUTLINE,
                     ClipContext.Fluid.NONE,
-                    player,
+                    nn.player,
                 )
             )
             return if (hit.type == HitResult.Type.BLOCK) hit else null
         }
 
-        val state: BlockState = level.getBlockState(pos)
-        val shape = state.getShape(level, pos)
+        val state: BlockState = nn.level.getBlockState(pos)
+        val shape = state.getShape(nn.level, pos)
         return if (shape.isEmpty) null else shape.clip(start, end, pos)
     }
 
@@ -260,8 +257,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun isBlockedChest(pos: BlockPos): Boolean {
         val above = pos.above()
-        return level.getBlockEntity(pos) is ChestBlockEntity && level.getBlockState(above)
-            .isRedstoneConductor(level, above)
+        return nn.level.getBlockEntity(pos) is ChestBlockEntity && nn.level.getBlockState(above)
+            .isRedstoneConductor(nn.level, above)
     }
 
     private fun wasAlreadyOpened(pos: BlockPos): Boolean {
@@ -274,7 +271,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun markContainerOpened(pos: BlockPos) {
-        if (isSelectedContainer(level.getBlockEntity(pos))) {
+        if (isSelectedContainer(nn.level.getBlockEntity(pos))) {
             clickedContainers.add(pos.immutable())
         }
     }
@@ -297,12 +294,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun isInLobby(): Boolean {
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity.name.string.contains("\u00A7e\u00A7lCLICK TO PLAY")) {
                 return true
             }
         }
-        return player.inventory.getItem(8).`is`(Items.NETHER_STAR) && player.inventory.getItem(0).`is`(Items.COMPASS)
+        return nn.player.inventory.getItem(8).`is`(Items.NETHER_STAR) && nn.player.inventory.getItem(0)
+            .`is`(Items.COMPASS)
     }
 
     private data class Target(

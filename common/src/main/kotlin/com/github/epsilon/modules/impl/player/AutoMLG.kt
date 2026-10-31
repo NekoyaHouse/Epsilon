@@ -1,10 +1,11 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
@@ -12,12 +13,8 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -47,19 +44,19 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private var shouldInteract = false
     private var pendingSlot = -1
 
-    private var lockedRotation: Rot2f? = null
+    private var lockedRotation: Rotation? = null
     private var waitingForRotation = false
 
     private var grimShouldCollect = false
-    private var grimCollectRotation: Rot2f? = null
+    private var grimCollectRotation: Rotation? = null
     private var grimCollectSlot = -1
     private var grimWaitingCollectRotation = false
     private val swapTimer = TimerUtils()
     private var pendingSwapBack = false
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
-            if (Scaffold.isEmergencyPlacementActive) return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Pre> {
+            if (Scaffold.isEmergencyPlacementActive) return@safeEventHandler
 
             if ((isFalling() || player.isInWater || player.isInLava) && !mlgCompleted) {
                 player.isSprinting = false
@@ -76,7 +73,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     quickCollectDelayTicks--
                 } else if (grimWaitingCollectRotation && grimCollectRotation != null) {
                     val rotation = grimCollectRotation!!
-                    RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                    RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                     if (isFacing(rotation, 2.0f, 2.5f)) {
                         InvUtils.swap(grimCollectSlot, true)
@@ -95,7 +92,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     if (InvUtils.findInHotbar(Items.WATER_BUCKET).found()) {
                         InvUtils.swapBack()
                         completeMlgCycle()
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val bucket = InvUtils.findInHotbar(Items.BUCKET)
@@ -107,22 +104,22 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
                             val rotation = RotationUtils.calculate(hitVec)
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
                             grimWaitingCollectRotation = true
                         }
                     }
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (waitingForRotation && lockedRotation != null) {
                 val locked = lockedRotation!!
-                RotationManager.INSTANCE.setRotations(locked, 180.0, Priority.High)
+                RotationManager.setRotations(locked, 180.0, Priority.High)
 
                 if (!isFacing(locked, 1.6f, 2.0f)) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (shouldInteract && pendingSlot != -1) {
@@ -135,7 +132,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         resetPending()
                     }
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (isFalling() && !grimShouldCollect) {
@@ -149,7 +146,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                         if (shouldSkipMlgPlacement(bestPos)) {
                             mlgCompleted = true
                             resetPending()
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
 
                         val dist = player.eyePosition.distanceTo(Vec3.atCenterOf(bestPos).add(0.0, 0.5, 0.0))
@@ -158,7 +155,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
                             val rotation = RotationUtils.calculate(targetVec)
 
-                            RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, Priority.High)
 
                             if (rotation.pitch > 45) {
                                 val eyesPos = player.eyePosition
@@ -169,11 +166,11 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 val hitVec = Vec3(hitX, neighbor.y + 1.0, hitZ)
 
                                 if (eyesPos.distanceTo(hitVec) > 4.5) {
-                                    return@nonNullHandler
+                                    return@safeEventHandler
                                 }
 
                                 val preciseRotation = RotationUtils.calculate(hitVec)
-                                RotationManager.INSTANCE.setRotations(preciseRotation, 180.0, Priority.High)
+                                RotationManager.setRotations(preciseRotation, 180.0, Priority.High)
 
                                 val noSlowdown = NoSlowdown
                                 if (NoSlowdown.isWorking()) {
@@ -220,8 +217,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun grimFindCollectableWater(): BlockPos? {
-        val eyesPos = player.eyePosition
-        val base = BlockPos.containing(player.x, player.y, player.z)
+        val eyesPos = nn.player.eyePosition
+        val base = BlockPos.containing(nn.player.x, nn.player.y, nn.player.z)
         var bestPos: BlockPos? = null
         var bestDistance = Double.MAX_VALUE
 
@@ -229,7 +226,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
             for (y in -1..1) {
                 for (z in -1..1) {
                     val check = base.offset(x, y, z)
-                    val fluidState: FluidState = level.getFluidState(check)
+                    val fluidState: FluidState = nn.level.getFluidState(check)
                     if (!fluidState.isSourceOfType(Fluids.WATER)) continue
 
                     val hitX = eyesPos.x.coerceIn(check.x.toDouble(), check.x + 1.0)
@@ -251,15 +248,15 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun canSeePosition(from: Vec3, to: Vec3, targetBlock: BlockPos): Boolean {
-        val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, player)
-        val result: BlockHitResult = level.clip(clipContext)
+        val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, nn.player)
+        val result: BlockHitResult = nn.level.clip(clipContext)
         return result.type == HitResult.Type.MISS || result.blockPos == targetBlock
     }
 
     context(nn: NonNullContext)
     private fun shouldSkipMlgPlacement(bestPos: BlockPos): Boolean {
         val landingPos = bestPos.below()
-        val landingState: BlockState = level.getBlockState(landingPos)
+        val landingState: BlockState = nn.level.getBlockState(landingPos)
         if (landingState.isAir) return false
         if (!landingState.hasProperty(BlockStateProperties.WATERLOGGED)) return false
 
@@ -285,22 +282,22 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getBestPos(): BlockPos? {
-        val velocity = player.deltaMovement
-        val predictedPos = Vec3(player.x + velocity.x * 3, player.y, player.z + velocity.z * 3)
+        val velocity = nn.player.deltaMovement
+        val predictedPos = Vec3(nn.player.x + velocity.x * 3, nn.player.y, nn.player.z + velocity.z * 3)
 
-        val base = BlockPos.containing(predictedPos.x, player.y - 1, predictedPos.z)
-        val direct = BlockPos.containing(player.x, player.y - 1, player.z)
+        val base = BlockPos.containing(predictedPos.x, nn.player.y - 1, predictedPos.z)
+        val direct = BlockPos.containing(nn.player.x, nn.player.y - 1, nn.player.z)
 
-        if (!level.getBlockState(base).isAir) {
+        if (!nn.level.getBlockState(base).isAir) {
             return base.above()
         }
-        if (!level.getBlockState(direct).isAir) {
+        if (!nn.level.getBlockState(direct).isAir) {
             return direct.above()
         }
 
         for (i in 0..20) {
             val check = base.below(i)
-            if (!level.getBlockState(check).isAir) {
+            if (!nn.level.getBlockState(check).isAir) {
                 return check.above()
             }
         }
@@ -310,17 +307,17 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 if (x == 0 && z == 0) continue
                 for (i in 0..20) {
                     val check = base.offset(x, -i, z)
-                    if (!level.getBlockState(check).isAir) {
+                    if (!nn.level.getBlockState(check).isAir) {
                         return check.above()
                     }
                 }
             }
         }
 
-        val fallbackBase = BlockPos.containing(player.x, player.y - 1, player.z)
+        val fallbackBase = BlockPos.containing(nn.player.x, nn.player.y - 1, nn.player.z)
         for (i in 0..20) {
             val check = fallbackBase.below(i)
-            if (!level.getBlockState(check).isAir) {
+            if (!nn.level.getBlockState(check).isAir) {
                 return check.above()
             }
         }
@@ -330,13 +327,13 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun isFalling(): Boolean {
-        val falling = player.fallDistance > 3.0 && !player.onGround()
-        if (player.deltaMovement.y > 0) return false
+        val falling = nn.player.fallDistance > 3.0 && !nn.player.onGround()
+        if (nn.player.deltaMovement.y > 0) return false
         return falling
     }
 
-    private fun isFacing(target: Rot2f, yawTolerance: Float, pitchTolerance: Float): Boolean {
-        val current = RotationManager.INSTANCE.getRotation()
+    private fun isFacing(target: Rotation, yawTolerance: Float, pitchTolerance: Float): Boolean {
+        val current = RotationManager.getRotation()
         val yawDiff = abs(Mth.wrapDegrees(current.yaw - target.yaw))
         val pitchDiff = abs(Mth.wrapDegrees(current.pitch - target.pitch))
         return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance
@@ -344,7 +341,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun useItem(): Boolean {
-        val result = interaction.useItem(player, InteractionHand.MAIN_HAND)
+        val result = nn.gameMode.useItem(nn.player, InteractionHand.MAIN_HAND)
         return result.consumesAction()
     }
 

@@ -1,8 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
+import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -61,7 +59,7 @@ class FallingPlayer(
             }
 
             var fixedJumpFactor = jumpMovementFactor
-            if (player.isSprinting) {
+            if (nn.player.isSprinting) {
                 fixedJumpFactor *= 1.3F
             }
 
@@ -109,7 +107,7 @@ class FallingPlayer(
             val start = Vec3(x, y, z)
             calculateForTick()
             val end = Vec3(x, y, z)
-            val halfWidth = player.bbWidth / 2.0F
+            val halfWidth = nn.player.bbWidth / 2.0F
 
             raytrace(start, end)?.let { return it }
             raytrace(start.add(halfWidth.toDouble(), 0.0, halfWidth.toDouble()), end)?.let { return it }
@@ -127,13 +125,13 @@ class FallingPlayer(
 
     context(nn: NonNullContext)
     private fun raytrace(start: Vec3, end: Vec3): BlockPos? {
-        val result = level.clip(
+        val result = nn.level.clip(
             ClipContext(
                 start,
                 end,
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
-                player,
+                nn.player,
             )
         )
 

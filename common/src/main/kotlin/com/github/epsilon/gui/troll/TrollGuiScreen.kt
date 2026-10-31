@@ -84,7 +84,6 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         layoutWindows()
         if (!guiAnimationStarted) {
             guiAnimationStarted = true
-            // 26.3 的 SDL 文本输入只在获得焦点时产生 charTyped；Troll GUI 允许无文本框直接搜索。
             IMEFocusHelper.activate()
             guiOpenAnimation.value = 0.0f
             guiOpenAnimation.reset()

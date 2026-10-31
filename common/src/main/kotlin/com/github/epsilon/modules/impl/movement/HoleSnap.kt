@@ -1,12 +1,14 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -14,10 +16,6 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
 import com.github.epsilon.utils.world.hole.HoleUtils
@@ -91,13 +89,13 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<MoveEvent>(EventPriority.HIGHEST) { event ->
+        safeEventHandler<MoveEvent>(EventPriority.HIGHEST) { event ->
             val hole = if (singleTarget) singleHole else findHole()
             targetHole = hole
 
             if (hole == null || singleBlocked()) {
                 toggle()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             TimerManager.set(timer.toFloat())
@@ -118,7 +116,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                     event.z = 0.0
                     event.cancel()
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (step && !Step.isEnabled) {
@@ -134,7 +132,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                 collisions++
                 if (collisionLimit > 0 && collisions >= collisionLimit) {
                     toggle()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
             } else {
                 collisions = 0
@@ -153,10 +151,10 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             event.cancel()
         }
 
-        nonNullHandler<Render3DEvent> {
-            if (!render || targetHole == null) return@nonNullHandler
+        safeEventHandler<Render3DEvent> {
+            if (!render || targetHole == null) return@safeEventHandler
 
-            val hole = targetHole ?: return@nonNullHandler
+            val hole = targetHole ?: return@safeEventHandler
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val playerPos = player.getPosition(partialTick)
             val topEdge = getTopEdge(hole, playerPos)
@@ -227,8 +225,8 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun findHole(): Hole? {
         var closest: Hole? = null
-        val playerPos = player.position()
-        val playerBlockPos = player.blockPosition()
+        val playerPos = nn.player.position()
+        val playerBlockPos = nn.player.blockPosition()
 
         for (x in -range..range) {
             for (y in -downRange..0) {
@@ -251,7 +249,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun inHole(hole: Hole): Boolean {
-        val playerBlockPos = player.blockPosition()
+        val playerBlockPos = nn.player.blockPosition()
         for (pos in hole.positions) {
             if (playerBlockPos == pos) return true
         }
@@ -260,10 +258,10 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun getAngle(pos: Vec3): Float {
-        val deltaX = pos.x - player.x
-        val deltaZ = pos.z - player.z
+        val deltaX = pos.x - nn.player.x
+        val deltaZ = pos.z - nn.player.z
         val targetYaw = (atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f
-        return player.yRot + Mth.wrapDegrees(targetYaw - player.yRot)
+        return nn.player.yRot + Mth.wrapDegrees(targetYaw - nn.player.yRot)
     }
 
     private fun speedValue(): Double {

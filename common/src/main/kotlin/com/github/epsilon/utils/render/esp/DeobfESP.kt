@@ -1,16 +1,14 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
@@ -71,19 +69,17 @@ object DeobfESP {
     fun retainRisingEffects() {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
-        val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val world = level
         val iterator = effects.values.iterator()
 
         while (iterator.hasNext()) {
             val effect = iterator.next()
             val target = effect.target
 
-            if (target.level() !== world) {
+            if (target.level() !== nn.level) {
                 iterator.remove()
             } else if (effect.killedAtMs < 0L) {
                 if (target.isDeadOrDying) {
-                    effect.beginKill(now, partialTick)
+                    effect.beginKill(now)
                 } else {
                     iterator.remove()
                 }
@@ -103,10 +99,8 @@ object DeobfESP {
     context(nn: NonNullContext)
     fun render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
         if (effects.isEmpty()) return
+
         val now = System.currentTimeMillis()
-        val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val camera: Camera = mc.gameRenderer.mainCamera()
-        val world = level
         val texture = KillAura.deobfMode.texture
         val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
         val iterator = effects.values.iterator()
@@ -115,13 +109,13 @@ object DeobfESP {
             val effect = iterator.next()
             val target = effect.target
 
-            if (target.level() !== world) {
+            if (target.level() !== nn.level) {
                 iterator.remove()
                 continue
             }
 
             if (effect.killedAtMs < 0L && target.isDeadOrDying) {
-                effect.beginKill(now, partialTick)
+                effect.beginKill(now)
             } else if (effect.killedAtMs < 0L && target.isRemoved) {
                 iterator.remove()
                 continue
@@ -132,7 +126,7 @@ object DeobfESP {
                 continue
             }
 
-            renderEffect(poseStack, renderer, camera, effect, now, partialTick, size, spins, wobble, flyHeight)
+            renderEffect(poseStack, renderer, effect, now, size, spins, wobble, flyHeight)
         }
 
         renderer.end()
@@ -141,10 +135,8 @@ object DeobfESP {
     private fun renderEffect(
         poseStack: PoseStack,
         renderer: LuminImmediateRenderer.PosTexColorQuads,
-        camera: Camera,
         effect: Effect,
         now: Long,
-        partialTick: Float,
         size: Float,
         spins: Float,
         wobble: Float,
@@ -175,7 +167,7 @@ object DeobfESP {
             offsetY =
                 -abs(Mth.sin((reactionProgress * Mth.PI * 8.0f).toDouble())) * damping * baseWidth * 0.08f * wobble
             tint = hitTint(reactionProgress, 255)
-            anchor = livingAnchor(effect.target, partialTick)
+            anchor = effect.target.getEyePosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
         } else {
             val killProgress = progress(now - effect.killedAtMs, KILL_DURATION_MS)
             val flyProgress = Easing.EASE_IN_CUBIC.function.apply(killProgress)
@@ -196,6 +188,7 @@ object DeobfESP {
             anchor = effect.deathAnchor!!.add(0.0, (drawHeight / 2.0f + flyProgress * flyHeight).toDouble(), 0.0)
         }
 
+        val camera = mc.gameRenderer.mainCamera()
         val relative = anchor.subtract(camera.position())
         poseStack.pushPose()
         poseStack.translate(relative.x, relative.y, relative.z)
@@ -215,10 +208,6 @@ object DeobfESP {
         renderer.vertex(matrix, -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f, argb)
 
         poseStack.popPose()
-    }
-
-    private fun livingAnchor(target: LivingEntity, partialTick: Float): Vec3 {
-        return target.getEyePosition(partialTick)
     }
 
     private fun aliveRotation(effect: Effect, now: Long, spins: Float, wobble: Float): Float {
@@ -248,15 +237,14 @@ object DeobfESP {
     }
 
     private class Effect(val target: LivingEntity, now: Long) {
-
         val createdAtMs: Long = now
         val lastHitAtMs: Long = now
         var killedAtMs: Long = -1L
         var deathAnchor: Vec3? = null
 
-        fun beginKill(now: Long, partialTick: Float) {
+        fun beginKill(now: Long) {
             this.killedAtMs = now
-            this.deathAnchor = target.getEyePosition(partialTick)
+            this.deathAnchor = target.getEyePosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
         }
     }
 

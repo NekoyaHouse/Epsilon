@@ -1,8 +1,9 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.FindItemResult
@@ -10,10 +11,6 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -56,20 +53,20 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
     }
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (!player.onGround()) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (!player.onGround()) return@safeEventHandler
 
             if (waitingSwapBack) {
                 if (swapBackTicks > 0) {
                     swapBackTicks--
-                    if (swapBackTicks > 0) return@nonNullHandler
+                    if (swapBackTicks > 0) return@safeEventHandler
                 }
                 if (savedOldSlot >= 0) {
                     player.inventory.selectedSlot = savedOldSlot
                 }
                 waitingSwapBack = false
                 savedOldSlot = -1
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (timer > 0) {
@@ -85,7 +82,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 { crystal -> abs(crystal.y - playerY) < 1.0 }
             ).minByOrNull { crystal -> self.distanceTo(crystal) }
 
-            if (targetCrystal == null) return@nonNullHandler
+            if (targetCrystal == null) return@safeEventHandler
 
             // 2.1 Check if already blocked by obsidian
             val eyes: Vec3 = self.eyePosition
@@ -101,7 +98,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             )
             if (hit.type == HitResult.Type.BLOCK) {
                 val hitPos = hit.blockPos
-                if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullHandler
+                if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@safeEventHandler
             }
 
             // 2. Calculate placement position
@@ -117,12 +114,12 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
 
             // 3. Check if placeable
-            if (!BlockUtils.canPlaceAt(placePos)) return@nonNullHandler
-            if (!level.getBlockState(placePos.below()).isSolid) return@nonNullHandler
+            if (!BlockUtils.canPlaceAt(placePos)) return@safeEventHandler
+            if (!level.getBlockState(placePos.below()).isSolid) return@safeEventHandler
 
             // 4. Find obsidian
             val obsidian: FindItemResult = InvUtils.findInHotbar(Items.OBSIDIAN)
-            if (!obsidian.found()) return@nonNullHandler
+            if (!obsidian.found()) return@safeEventHandler
 
             // 5. Rotation and placement
             val rot = RotationUtils.calculate(self.eyePosition, Vec3.atCenterOf(placePos))
@@ -132,11 +129,11 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 self.yRot = rot.yaw
                 self.xRot = rot.pitch.coerceIn(-90.0f, 90.0f)
             } else if (rotate == RotateMode.Silent) {
-                RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
+                RotationManager.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
 
-                if (RotationManager.INSTANCE.rotations != null) {
-                    val yawDiff = abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.yaw).toDouble())
-                    val pitchDiff = abs((RotationManager.INSTANCE.getPitch() - rot.pitch).toDouble())
+                if (RotationManager.rotations != null) {
+                    val yawDiff = abs(Mth.wrapDegrees(RotationManager.getYaw() - rot.yaw).toDouble())
+                    val pitchDiff = abs((RotationManager.getPitch() - rot.pitch).toDouble())
                     if (yawDiff > 15 || pitchDiff > 15) {
                         readyToPlace = false
                     }
@@ -152,7 +149,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun placeBlock(pos: BlockPos, item: FindItemResult) {
-        val oldSlot = player.inventory.selectedSlot
+        val oldSlot = nn.player.inventory.selectedSlot
 
         val side: Direction = RotationUtils.getDirection(pos)
         val bhr = BlockHitResult(Vec3.atCenterOf(pos), side, pos, false)
@@ -164,7 +161,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 InvUtils.swap(target, true)
             }
 
-            interaction.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
+            nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, bhr)
             SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
             if (needSwitch) {
@@ -179,7 +176,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             }
         } else {
             InvUtils.invSwap(item.slot)
-            interaction.useItemOn(player, InteractionHand.MAIN_HAND, bhr)
+            nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, bhr)
             SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
             InvUtils.invSwapBack()
         }

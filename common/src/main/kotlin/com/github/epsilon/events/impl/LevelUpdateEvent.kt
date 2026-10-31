@@ -1,3 +1,9 @@
 package com.github.epsilon.events.impl
 
-class LevelUpdateEvent
+import com.github.epsilon.events.api.EventBus
+import com.github.epsilon.events.api.IEvent
+import com.github.epsilon.events.api.IPosting
+
+class LevelUpdateEvent : IEvent<LevelUpdateEvent>, IPosting by Companion {
+    companion object : EventBus()
+}

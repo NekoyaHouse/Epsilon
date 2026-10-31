@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.overlay
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.lib.UiRect
@@ -10,6 +9,7 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.screen.EpsilonDialogScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.AssetManager
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor

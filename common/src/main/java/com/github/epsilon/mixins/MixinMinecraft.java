@@ -1,11 +1,11 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.video.VideoPlayer;
 import com.github.epsilon.gui.screen.MainMenuScreen;
+import com.github.epsilon.kernel.jvm.NonNullContext;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -68,12 +68,13 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onPreTick(CallbackInfo info) {
-        EventBus.INSTANCE.post(new ClientTickEvent.Pre());
+        NonNullContext.update();
+        new ClientTickEvent.Pre().post();
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void onPostTick(CallbackInfo info) {
-        EventBus.INSTANCE.post(new ClientTickEvent.Post());
+        new ClientTickEvent.Post().post();
     }
 
     @ModifyArg(method = "updateTitle", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setTitle(Ljava/lang/String;)V"))
@@ -94,14 +95,20 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
     private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
+        NonNullContext.reset();
         if (level != null) {
-            EventBus.INSTANCE.post(new GameLeftEvent());
+            new GameLeftEvent().post();
         }
+    }
+
+    @Inject(method = "clearClientLevel", at = @At("HEAD"))
+    private void onClearClientLevel(Screen screen, CallbackInfo ci) {
+        NonNullContext.reset();
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void onHandleKeybinds(CallbackInfo ci) {
-        RightClickEvent event = EventBus.INSTANCE.post(new RightClickEvent());
+        RightClickEvent event = new RightClickEvent().post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -109,7 +116,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/InteractionHand;values()[Lnet/minecraft/world/InteractionHand;"), cancellable = true)
     private void onStartUseItemBeforeHands(CallbackInfo ci) {
-        StartUseItemEvent event = EventBus.INSTANCE.post(new StartUseItemEvent());
+        StartUseItemEvent event = new StartUseItemEvent().post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -148,7 +155,8 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
     private void onUpdateLevelInEngines(ClientLevel level, boolean stopSound, CallbackInfo ci) {
-        EventBus.INSTANCE.post(new LevelUpdateEvent());
+        NonNullContext.reset();
+        new LevelUpdateEvent().post();
     }
 
     @Inject(method = "close", at = @At("HEAD"))

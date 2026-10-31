@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.client
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 
 object ClientUtils {
 

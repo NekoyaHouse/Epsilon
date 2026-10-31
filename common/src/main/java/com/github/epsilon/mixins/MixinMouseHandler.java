@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.MouseScrollEvent;
 import com.github.epsilon.gui.overlay.DownloadJobOverlay;
@@ -25,7 +24,7 @@ public class MixinMouseHandler {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onButton(long handle, MouseButtonInfo rawButtonInfo, int action, CallbackInfo ci) {
-        MousePressEvent event = EventBus.INSTANCE.post(new MousePressEvent(rawButtonInfo.button(), action, rawButtonInfo.modifiers()));
+        MousePressEvent event = new MousePressEvent(rawButtonInfo.button(), action, rawButtonInfo.modifiers()).post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -33,7 +32,7 @@ public class MixinMouseHandler {
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void onMouseScroll(long handle, double xoffset, double yoffset, CallbackInfo ci) {
-        MouseScrollEvent event = EventBus.INSTANCE.post(new MouseScrollEvent(yoffset));
+        MouseScrollEvent event = new MouseScrollEvent(yoffset).post();
         if (event.isCancelled()) {
             ci.cancel();
         }

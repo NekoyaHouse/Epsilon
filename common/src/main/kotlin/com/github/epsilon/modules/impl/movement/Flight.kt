@@ -1,12 +1,11 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.world.phys.Vec3
 
 object Flight : Module("Flight", Category.MOVEMENT) {
@@ -16,7 +15,7 @@ object Flight : Module("Flight", Category.MOVEMENT) {
     private val verticalSpeed by doubleSetting("Vertical Speed", 1.0, 0.1..5.0, 0.1)
 
     init {
-        nonNullHandler<SendPositionEvent> {
+        safeEventHandler<SendPositionEvent> {
             var y = 0.0
 
             if (mc.options.keyJump.isDown) {

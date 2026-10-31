@@ -1,19 +1,17 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
@@ -104,7 +102,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private var lastSetBackPacketTick = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             tickStartX = player.x
             tickStartY = player.y
             tickStartZ = player.z
@@ -118,10 +116,10 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
                     !isFireworkBoosted()
         }
 
-        nonNullHandler<SendPositionEvent>(EventPriority.LOW) { event ->
+        safeEventHandler<SendPositionEvent>(EventPriority.LOW) { event ->
             if (!currentTryWorking || !isSpeedAllowed()) {
                 trackSentPosition(event.x, event.y, event.z)
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             // 回滚到 tick 起点：本地坐标停在服务端最后收到的位置上，拉回才不会把玩家拖走
@@ -133,16 +131,16 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             if (pendingSetBackPacket != null) {
                 // 上一轮的伪造包尚未发出，丢弃它，避免同一 tick 连发两个包
                 pendingSetBackPacket = null
-                return@nonNullHandler
+                return@safeEventHandler
             }
             pendingSetBackPacket = createSetBackPacket(moveX, moveZ)
         }
 
-        nonNullHandler<AfterSendPositionEvent> {
+        safeEventHandler<AfterSendPositionEvent> {
             val packet = pendingSetBackPacket
             pendingSetBackPacket = null
 
-            if (packet == null) return@nonNullHandler
+            if (packet == null) return@safeEventHandler
 
             // 绕过 Epsilon 的发送事件，避免伪造包被其他模块记录或延迟
             NetworkUtils.sendPacketNoEvent(packet)
@@ -222,18 +220,18 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             // 区块未加载时服务端会忽略移动，发送伪造包只会换来踢出
             if (isFacingUnloadedChunk(moveX, moveZ)) return null
             // 已经在等待上一次拉回结果时不再继续发，避免刷包
-            if (player.tickCount < lastSetBackPacketTick + setbackWait) return null
+            if (nn.player.tickCount < lastSetBackPacketTick + setbackWait) return null
         }
 
-        val y = player.y + SIMULATION_Y_OFFSETS[player.tickCount % SIMULATION_Y_OFFSETS.size]
-        val yRot = player.yRot
-        val xRot = player.xRot
-        val onGround = player.onGround()
-        val horizontalCollision = player.horizontalCollision
+        val y = nn.player.y + SIMULATION_Y_OFFSETS[nn.player.tickCount % SIMULATION_Y_OFFSETS.size]
+        val yRot = nn.player.yRot
+        val xRot = nn.player.xRot
+        val onGround = nn.player.onGround()
+        val horizontalCollision = nn.player.horizontalCollision
 
         return when (mode) {
             SetBackTrigger.Simulation -> ServerboundMovePlayerPacket.PosRot(
-                player.x, y, player.z, yRot, xRot, onGround, horizontalCollision
+                nn.player.x, y, nn.player.z, yRot, xRot, onGround, horizontalCollision
             )
 
             SetBackTrigger.CrashPackets -> ServerboundMovePlayerPacket.PosRot(
@@ -250,7 +248,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
         var directionX = moveX
         var directionZ = moveZ
         if (abs(directionX) < 1.0E-3 && abs(directionZ) < 1.0E-3) {
-            val velocity = player.deltaMovement
+            val velocity = nn.player.deltaMovement
             directionX = velocity.x
             directionZ = velocity.z
         }
@@ -259,11 +257,11 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
         val signZ = sign(directionZ).toInt()
         if (signX == 0 && signZ == 0) return false
 
-        val chunkX = SectionPos.blockToSectionCoord(player.x)
-        val chunkZ = SectionPos.blockToSectionCoord(player.z)
+        val chunkX = SectionPos.blockToSectionCoord(nn.player.x)
+        val chunkZ = SectionPos.blockToSectionCoord(nn.player.z)
         for (x in 0..1) {
             for (z in 0..1) {
-                if (!level.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
+                if (!nn.level.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
                     return true
                 }
             }
@@ -278,8 +276,8 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
      */
     context(nn: NonNullContext)
     private fun isFireworkBoosted(): Boolean {
-        val box: AABB = player.boundingBox.inflate(1.0)
-        for (rocket in level.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
+        val box: AABB = nn.player.boundingBox.inflate(1.0)
+        for (rocket in nn.level.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
             if (rocket.isAlive) {
                 return true
             }

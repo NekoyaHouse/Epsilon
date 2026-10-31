@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.player.KeyboardInput;
@@ -21,7 +20,7 @@ public class MixinKeyboardInput {
     private Input redirectKeyPresses(Input original) {
         float forwardImpulse = calculateImpulse(original.forward(), original.backward());
         float leftImpulse = calculateImpulse(original.left(), original.right());
-        KeyboardInputEvent event = EventBus.INSTANCE.post(new KeyboardInputEvent(forwardImpulse, leftImpulse, original.jump(), original.shift(), original.sprint()));
+        KeyboardInputEvent event = new KeyboardInputEvent(forwardImpulse, leftImpulse, original.jump(), original.shift(), original.sprint()).post();
         return event.toNewInput();
     }
 

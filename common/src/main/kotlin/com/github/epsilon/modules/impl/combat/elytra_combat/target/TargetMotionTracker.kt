@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.target
 
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
 import com.github.epsilon.utils.math.toDegrees
-import net.minecraft.client.Minecraft
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.util.*
@@ -166,7 +166,7 @@ class TargetMotionTracker {
             return TargetAction.CIRCLING
         }
 
-        val localPlayer = Minecraft.getInstance().player ?: return TargetAction.TOWARDS
+        val localPlayer = mc.player ?: return TargetAction.TOWARDS
         val toPlayer = localPlayer.position().subtract(pos2)
         val moveDot = bc.normalize().dot(toPlayer.normalize())
         return if (moveDot > 0.0) TargetAction.TOWARDS else TargetAction.ESCAPING

@@ -1,20 +1,21 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.*
 import com.github.epsilon.elements.impl.island.Island
 import com.github.epsilon.elements.impl.notification.Notifications
+import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.theme.EpsilonUiTheme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.utils.client.ClientUtils
 
-object HudElementManager {
+object HudElementManager : AlwaysListening {
 
     private val elements = ArrayList<HudModule>()
     private val scene = UiScene(EpsilonUiTheme)

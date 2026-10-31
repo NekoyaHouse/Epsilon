@@ -1,16 +1,16 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.core.BlockPos
@@ -112,8 +112,8 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     private val instantTimer = TimerUtils()
 
     init {
-        nonNullHandler<StartDestroyBlockEvent> { onStartBreakingBlock(it) }
-        nonNullHandler<Render3DEvent> { onRender(it) }
+        safeEventHandler<StartDestroyBlockEvent> { onStartBreakingBlock(it) }
+        safeEventHandler<Render3DEvent> { onRender(it) }
     }
 
     override fun onEnable() {
@@ -143,7 +143,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     override fun onDisable() {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) {
             if (hasSwitch) {
                 InvUtils.swap(oldSlot, false)

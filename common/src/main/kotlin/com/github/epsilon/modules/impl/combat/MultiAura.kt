@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -8,8 +8,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
 
 object MultiAura : Module("Multi Aura", Category.COMBAT) {
@@ -33,12 +31,12 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
     private var attacks = 0.0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (pauseOnContainers && mc.gui.screen() != null) return@nonNullHandler
-            if (player.isUsingItem || player.isBlocking) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (pauseOnContainers && mc.gui.screen() != null) return@safeEventHandler
+            if (player.isUsingItem || player.isBlocking) return@safeEventHandler
 
             attacks += MathUtils.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
-            if (attacks < 1.0) return@nonNullHandler
+            if (attacks < 1.0) return@safeEventHandler
 
             val targets = TargetManager.acquireTargets(
                 TargetRequest.of(
@@ -56,11 +54,11 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
                 )
             )
 
-            if (targets.isEmpty()) return@nonNullHandler
+            if (targets.isEmpty()) return@safeEventHandler
 
             while (attacks >= 1.0) {
                 for (target in targets) {
-                    interaction.attack(player, target)
+                    gameMode.attack(player, target)
                 }
                 attacks -= 1.0
             }

@@ -1,10 +1,10 @@
 package com.github.epsilon.accounts.types
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.TokenAccount
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.utils.network.Http
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName

@@ -1,9 +1,6 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.mc
-import com.github.epsilon.utils.safety.player
+import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -24,8 +21,8 @@ object RaytraceUtils {
      */
     context(nn: NonNullContext)
     fun canSeePointFrom(eyes: Vec3, vec3: Vec3): Boolean {
-        return level.clip(
-            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
+        return nn.level.clip(
+            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player)
         ).type == HitResult.Type.MISS
     }
 
@@ -37,7 +34,7 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double): HitResult? {
+    fun raytrace(rotation: Rotation, range: Double): HitResult? {
         return raytrace(rotation, range, 0.0f)
     }
 
@@ -50,8 +47,8 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double, expand: Float): HitResult? {
-        return raytrace(rotation, range, expand, player)
+    fun raytrace(rotation: Rotation, range: Double, expand: Float): HitResult? {
+        return raytrace(rotation, range, expand, nn.player)
     }
 
     /**
@@ -64,11 +61,11 @@ object RaytraceUtils {
      * @return 操作结果
      */
     context(nn: NonNullContext)
-    fun raytrace(rotation: Rot2f, range: Double, expand: Float, entity: Entity?): HitResult? {
+    fun raytrace(rotation: Rotation, range: Double, expand: Float, entity: Entity?): HitResult? {
         if (entity == null) return null
-        val world = level
+        val world = nn.level
 
-        val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val partialTicks = nn.mc.deltaTracker.getGameTimeDeltaPartialTick(true)
 
         val eyePos = entity.getEyePosition(partialTicks)
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
@@ -147,20 +144,20 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
+    fun overBlock(rotation: Rotation, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
 
-        val eyePos = player.getEyePosition(1.0f)
+        val eyePos = nn.player.getEyePosition(1.0f)
         val reach = 4.5
         val endVec = eyePos.add(lookVec.scale(reach))
 
-        val result: BlockHitResult = level.clip(
+        val result: BlockHitResult = nn.level.clip(
             ClipContext(
                 eyePos,
                 endVec,
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                player
+                nn.player
             )
         )
 
@@ -176,7 +173,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos, strict: Boolean): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos, strict: Boolean): Boolean {
         return overBlock(rotation, Direction.UP, pos, strict)
     }
 
@@ -188,7 +185,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos): Boolean {
         return overBlock(rotation, Direction.UP, pos, false)
     }
 
@@ -201,7 +198,7 @@ object RaytraceUtils {
      * @return 判断结果
      */
     context(nn: NonNullContext)
-    fun overBlock(rotation: Rot2f, pos: BlockPos, enumFacing: Direction): Boolean {
+    fun overBlock(rotation: Rotation, pos: BlockPos, enumFacing: Direction): Boolean {
         return overBlock(rotation, enumFacing, pos, true)
     }
 

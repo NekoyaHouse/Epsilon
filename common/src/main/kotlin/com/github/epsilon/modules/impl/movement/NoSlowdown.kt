@@ -2,16 +2,17 @@ package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.*
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -49,9 +50,9 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     private val packets: Queue<Packet<*>> = LinkedBlockingQueue()
 
     init {
-        nonNullHandler<SendPositionEvent> {
+        safeEventHandler<SendPositionEvent> {
             if (mode != Mode.GrimBlink) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (eating) {
@@ -98,8 +99,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                         ServerboundUseItemPacket(
                             hand,
                             level.blockStatePredictionHandler.startPredicting().currentSequence(),
-                            RotationManager.INSTANCE.getYaw(),
-                            RotationManager.INSTANCE.getPitch()
+                            RotationManager.getYaw(),
+                            RotationManager.getPitch()
                         )
                     )
                 }
@@ -118,14 +119,14 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
-            if (player.tickCount < 30 || !eating || mode != Mode.GrimBlink) return@nonNullHandler
+        safeEventHandler<PacketEvent.Receive> { event ->
+            if (player.tickCount < 30 || !eating || mode != Mode.GrimBlink) return@safeEventHandler
 
             val packet = event.packet
 
             if (packet is ClientboundPlayerPositionPacket) {
                 flush()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (packet is ClientboundSetHealthPacket ||
@@ -137,7 +138,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                 packet is ClientboundBlockUpdatePacket ||
                 packet is ClientboundBlockEventPacket
             ) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (packet.type().flow() == PacketFlow.CLIENTBOUND) {
@@ -164,10 +165,10 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<SlowdownEvent> { event ->
-            if (!food && player.useItem.has(DataComponents.FOOD)) return@nonNullHandler
-            if ((!bow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@nonNullHandler
-            if ((!crossbow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@nonNullHandler
+        safeEventHandler<SlowdownEvent> { event ->
+            if (!food && player.useItem.has(DataComponents.FOOD)) return@safeEventHandler
+            if ((!bow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.BOW)) return@safeEventHandler
+            if ((!crossbow || mode == Mode.GrimBlink) && player.useItem.`is`(Items.CROSSBOW)) return@safeEventHandler
 
             when (mode) {
                 Mode.Vanilla -> cancel(event)
@@ -185,7 +186,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     fun stop() {
         runSafe {
             mc.options.keyUse.isDown = false
-            interaction.releaseUsingItem(player)
+            gameMode.releaseUsingItem(player)
         }
     }
 
@@ -199,30 +200,30 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun cancel(event: SlowdownEvent) {
         event.isSlowdown = false
-        if (!player.horizontalCollision && player.input.hasForwardImpulse()) player.isSprinting = true
+        if (!nn.player.horizontalCollision && nn.player.input.hasForwardImpulse()) nn.player.isSprinting = true
     }
 
     context(nn: NonNullContext)
     private fun grimBlink(event: SlowdownEvent) {
-        if (player.isUsingItem && player.useItemRemainingTicks < 30 &&
-            !(isFoodOrDrink(player.mainHandItem) && isFoodOrDrink(player.offhandItem)) &&
-            isFoodOrDrink(player.useItem)
+        if (nn.player.isUsingItem && nn.player.useItemRemainingTicks < 30 &&
+            !(isFoodOrDrink(nn.player.mainHandItem) && isFoodOrDrink(nn.player.offhandItem)) &&
+            isFoodOrDrink(nn.player.useItem)
         ) {
             event.isSlowdown = false
-            player.isSprinting = true
+            nn.player.isSprinting = true
         }
     }
 
     context(nn: NonNullContext)
     private fun grim50(event: SlowdownEvent) {
-        if (player.useItemRemainingTicks % 2 == 0 && player.useItemRemainingTicks <= 30) {
+        if (nn.player.useItemRemainingTicks % 2 == 0 && nn.player.useItemRemainingTicks <= 30) {
             event.isSlowdown = false
         }
     }
 
     context(nn: NonNullContext)
     private fun grim33(event: SlowdownEvent) {
-        if (player.useItemRemainingTicks % 3 == 0 && player.useItemRemainingTicks <= 30) {
+        if (nn.player.useItemRemainingTicks % 3 == 0 && nn.player.useItemRemainingTicks <= 30) {
             event.isSlowdown = false
         }
     }

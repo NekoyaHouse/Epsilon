@@ -1,15 +1,14 @@
 package com.github.epsilon.managers.target
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -21,22 +20,20 @@ import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
 import java.util.*
 
-object TargetManager {
+object TargetManager : AlwaysListening {
 
     private var sharedTarget: LivingEntity? = null
 
     init {
-        handler<ClientTickEvent.Pre>(alwaysListening = true) { onClientTick() }
-    }
+        handler<ClientTickEvent.Pre>(alwaysListening = true) {
+            if (mc.player == null || mc.level == null) {
+                sharedTarget = null
+                return@handler
+            }
 
-    private fun onClientTick() {
-        if (mc.player == null || mc.level == null) {
-            sharedTarget = null
-            return
-        }
-
-        if (!isSharedTargetAlive()) {
-            sharedTarget = null
+            if (!isSharedTargetAlive()) {
+                sharedTarget = null
+            }
         }
     }
 
@@ -46,7 +43,7 @@ object TargetManager {
     }
 
     fun acquireTargets(request: TargetRequest): List<LivingEntity> {
-        val nn = NonNullContext.current ?: return emptyList()
+        val nn = NonNullContext.instance ?: return emptyList()
         return context(nn) {
             val candidates = collectTargets(request)
             if (candidates.isEmpty()) {
@@ -86,9 +83,9 @@ object TargetManager {
     private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === player) continue
+            if (entity === nn.player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }

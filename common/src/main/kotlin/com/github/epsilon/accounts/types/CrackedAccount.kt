@@ -20,8 +20,8 @@ class CrackedAccount(name: String) : Account<CrackedAccount>(AccountType.Cracked
         return true
     }
 
-    override fun equals(o: Any?): Boolean {
-        return o is CrackedAccount && o.username == this.username
+    override fun equals(other: Any?): Boolean {
+        return other is CrackedAccount && other.username == this.username
     }
 
 }

@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.troll.TrollGuiScreen;
@@ -20,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(GuiRenderer.class)
 public class MixinGuiRenderer {
@@ -82,12 +81,12 @@ public class MixinGuiRenderer {
         HudEditorScreen.INSTANCE.renderPendingHudElements();
 
         GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
+        new Render2DEvent.Level(levelGuiGraphics).post();
         epsilon$levelGuiRenderer.render();
         epsilon$levelGuiRenderer.endFrame();
 
         GuiGraphicsExtractor guiGraphics = new GuiGraphicsExtractor(mc, epsilon$renderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
+        new Render2DEvent.HUD(guiGraphics).post();
 
         epsilon$guiRenderer.render();
 

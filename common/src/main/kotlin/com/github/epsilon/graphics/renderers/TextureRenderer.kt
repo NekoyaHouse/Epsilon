@@ -1,10 +1,10 @@
 package com.github.epsilon.graphics.renderers
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.RendererManager
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ScissorUtils

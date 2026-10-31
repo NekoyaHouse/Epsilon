@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.screen.accounts
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.MicrosoftLogin
@@ -24,6 +23,7 @@ import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.screen.MainMenuScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.AccountManager
 import com.github.epsilon.managers.ExecutorManager
 import com.mojang.blaze3d.platform.InputConstants

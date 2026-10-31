@@ -1,8 +1,8 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.utils.render.ColorUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis

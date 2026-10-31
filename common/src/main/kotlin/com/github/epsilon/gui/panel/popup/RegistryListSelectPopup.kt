@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel.popup
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -13,6 +12,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.render.animation.Animation

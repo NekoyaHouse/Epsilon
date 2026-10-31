@@ -1,12 +1,9 @@
 package com.github.epsilon.utils.combat
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
@@ -187,7 +184,7 @@ object DamageUtils {
                     val z = Mth.lerp(zz, bb.minZ, bb.maxZ)
                     val from = Vec3(x + xOffset, y, z + zOffset)
 
-                    if (level.clip(
+                    if (nn.level.clip(
                             ClipContext(
                                 from, center,
                                 ClipContext.Block.COLLIDER,
@@ -325,7 +322,7 @@ object DamageUtils {
      */
     context(nn: NonNullContext)
     fun selfCrystalDamage(crystalPos: Vec3, selfPos: Vec3?, mode: ArmorEnchantmentMode): Float {
-        return crystalDamage(player, crystalPos, selfPos, mode)
+        return crystalDamage(nn.player, crystalPos, selfPos, mode)
     }
 
     /**
@@ -354,9 +351,9 @@ object DamageUtils {
     fun breakCrosshairCrystal(): Boolean {
         if (mc.cameraEntity == null) return false
 
-        val world = level
-        val eye = player.eyePosition
-        val look = player.lookAngle
+        val world = nn.level
+        val eye = nn.player.eyePosition
+        val look = nn.player.lookAngle
         val end = eye.add(look.scale(4.0))
 
         var placePos: BlockPos? = null
@@ -392,7 +389,7 @@ object DamageUtils {
         }
 
         if (target != null) {
-            interaction.attack(player, target)
+            nn.gameMode.attack(nn.player, target)
             SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
             return true
         }

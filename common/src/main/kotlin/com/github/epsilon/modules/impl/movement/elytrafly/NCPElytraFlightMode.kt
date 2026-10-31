@@ -2,13 +2,12 @@ package com.github.epsilon.modules.impl.movement.elytrafly
 
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
@@ -48,7 +47,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         if (shouldJump) {
-            event.isJump = true
+            event.jump = true
             shouldJump = false
         }
     }
@@ -210,7 +209,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
     private fun directionSpeed(speed: Double): DoubleArray {
         var forward = (if (mc.options.keyUp.isDown) 1.0f else 0.0f) - (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
         var side = (if (mc.options.keyLeft.isDown) 1.0f else 0.0f) - (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
-        var yaw = player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
+        var yaw = nn.player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
 
         if (forward != 0.0f) {
             if (side > 0.0f) {

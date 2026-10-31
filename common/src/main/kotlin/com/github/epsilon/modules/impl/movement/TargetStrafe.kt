@@ -1,23 +1,21 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.rotation.Rotation
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -41,7 +39,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     private var direction = 1
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
             val left = mc.options.keyLeft.isDown
             val right = mc.options.keyRight.isDown
             if (left != right) {
@@ -50,12 +48,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (speedOnly && !Speed.isEnabled && !Flight.isEnabled) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (requireJump && (mc.gui.screen() != null || !mc.options.keyJump.isDown)) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (KillAura.isEnabled && !Scaffold.isEnabled && !player.isUsingItem && !player.isBlocking) {
@@ -66,14 +64,14 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (target == null) {
                 targetYaw = Float.NaN
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val offsets = createOrbitOffsets()
             var closestIndex = findClosestIndex(offsets)
             if (closestIndex < 0) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (player.horizontalCollision) {
@@ -93,8 +91,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             targetYaw = Mth.wrapDegrees((atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f)
 
-            RotationManager.INSTANCE.setRotations(
-                Rot2f(targetYaw, RotationManager.INSTANCE.getPitch()),
+            RotationManager.setRotations(
+                Rotation(targetYaw, RotationManager.getPitch()),
                 180.0,
                 Priority.Low
             )
@@ -136,7 +134,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         var closestIndex = -1
         for (i in offsets.indices) {
             val position = getOrbitPosition(offsets[i])
-            val distance = player.distanceToSqr(position.x, player.y, position.z)
+            val distance = nn.player.distanceToSqr(position.x, nn.player.y, position.z)
             if (distance < closestDistance) {
                 closestDistance = distance
                 closestIndex = i
@@ -147,23 +145,23 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun getOrbitPosition(offset: OrbitOffset): Vec3 {
-        return Vec3(target!!.x + offset.x, player.y, target!!.z + offset.z)
+        return Vec3(target!!.x + offset.x, nn.player.y, target!!.z + offset.z)
     }
 
     context(nn: NonNullContext)
     private fun isOverVoid(x: Double, z: Double): Boolean {
-        if (player.isInWater || player.isInLava) return false
+        if (nn.player.isInWater || nn.player.isInLava) return false
 
         val box = AABB(
             x - 0.015,
-            player.y,
+            nn.player.y,
             z - 0.015,
             x + 0.015,
-            player.y + player.bbHeight,
+            nn.player.y + nn.player.bbHeight,
             z + 0.015
         )
         val minY = Mth.floor(box.minY)
-        if (minY < level.minY) return true
+        if (minY < nn.level.minY) return true
 
         val minX = Mth.floor(box.minX)
         val maxX = Mth.floor(box.maxX + 1.0)
@@ -174,8 +172,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         for (blockX in minX until maxX) {
             for (blockZ in minZ until maxZ) {
                 var blockY = minY
-                while (blockY >= level.minY) {
-                    val state: BlockState = level.getBlockState(pos.set(blockX, blockY, blockZ))
+                while (blockY >= nn.level.minY) {
+                    val state: BlockState = nn.level.getBlockState(pos.set(blockX, blockY, blockZ))
                     if (!state.canBeReplaced()) {
                         return false
                     }

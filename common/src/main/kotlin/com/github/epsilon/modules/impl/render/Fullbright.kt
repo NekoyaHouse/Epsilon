@@ -1,18 +1,17 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 
 object Fullbright : Module("Fullbright", Category.RENDER) {
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     private enum class Mode {

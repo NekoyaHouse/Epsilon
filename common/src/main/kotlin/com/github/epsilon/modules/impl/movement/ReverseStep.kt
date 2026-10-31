@@ -1,12 +1,10 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.BedBlock
@@ -19,8 +17,8 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
     private val vehicles by boolSetting("Vehicles", false)
 
     init {
-        nonNullHandler<PlayerTickEvent.Post> {
-            if (Scaffold.isEnabled) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Post> {
+            if (Scaffold.isEnabled) return@safeEventHandler
 
             val vehicle = player.vehicle
             if (vehicle != null && vehicles) {
@@ -29,7 +27,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
                 }
             } else {
                 if (player.isSuppressingSlidingDownLadder || player.zza == 0.0f && player.xxa == 0.0f) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
                 if (!isOnBed() && canSnap(player)) {
                     player.deltaMovement = Vec3(player.deltaMovement.x, -fallSpeed, player.deltaMovement.z)
@@ -40,7 +38,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun canSnap(entity: Entity): Boolean {
-        return !(!entity.onGround() || entity.isUnderWater || entity.isInLava || mc.options.keyJump.isDown || entity.noPhysics) && !level.noCollision(
+        return !(!entity.onGround() || entity.isUnderWater || entity.isInLava || mc.options.keyJump.isDown || entity.noPhysics) && !nn.level.noCollision(
             entity,
             entity.boundingBox.move(0.0, (-(fallDistance + 0.01)).toFloat().toDouble(), 0.0)
         )
@@ -48,12 +46,12 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun isOnBed(): Boolean {
-        val blockPos = player.blockPosition().mutable()
+        val blockPos = nn.player.blockPosition().mutable()
 
         if (check(blockPos, 0, 0)) return true
 
-        val xa = player.x - blockPos.x
-        val za = player.z - blockPos.z
+        val xa = nn.player.x - blockPos.x
+        val za = nn.player.z - blockPos.z
 
         if (xa >= 0 && xa <= 0.3 && check(blockPos, -1, 0)) return true
         if (xa >= 0.7 && check(blockPos, 1, 0)) return true
@@ -69,7 +67,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun check(blockPos: BlockPos.MutableBlockPos, x: Int, z: Int): Boolean {
         blockPos.move(x, 0, z)
-        val isBed = level.getBlockState(blockPos).block is BedBlock
+        val isBed = nn.level.getBlockState(blockPos).block is BedBlock
         blockPos.move(-x, 0, -z)
         return isBed
     }

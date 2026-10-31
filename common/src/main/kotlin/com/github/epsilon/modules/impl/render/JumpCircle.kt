@@ -2,14 +2,13 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
@@ -30,7 +29,7 @@ import kotlin.math.roundToInt
 object JumpCircle : Module("Jump Circle", Category.RENDER) {
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> { onTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onTick(it) }
         handler<Render3DEvent> { onRender3D(it) }
     }
 

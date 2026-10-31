@@ -1,15 +1,12 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -40,9 +37,9 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private var cooldown = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val key = triggerKey
-            if (key == -1) return@nonNullHandler
+            if (key == -1) return@safeEventHandler
 
             val keyDown = KeybindUtils.isPressed(key)
             val newPress = keyDown && !wasKeyDown
@@ -50,7 +47,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
 
             if (newPress) {
                 if (SafeAnchor.isActive() || DoubleAnchor.isActive()) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (phase != Phase.IDLE && originalSlot >= 0) {
@@ -61,11 +58,11 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
                 phase = Phase.PLACE_ANCHOR
             }
 
-            if (phase == Phase.IDLE) return@nonNullHandler
+            if (phase == Phase.IDLE) return@safeEventHandler
 
             if (cooldown > 0) {
                 cooldown--
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             when (phase) {
@@ -93,7 +90,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
 
         // Already an anchor at crosshair? Skip placement, go straight to charge.
-        if (level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
+        if (nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
             phase = Phase.CHARGE
             return
         }
@@ -104,8 +101,8 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = anchorSlot
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = anchorSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(placeCps)
 
@@ -116,7 +113,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private fun doCharge() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val glowstoneSlot = findHotbarSlot(Items.GLOWSTONE)
         if (glowstoneSlot == -1) {
@@ -124,8 +121,8 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
             return
         }
 
-        player.inventory.selectedSlot = glowstoneSlot
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = glowstoneSlot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
         cooldown = humanizedCooldownTicks(chargeCps)
 
@@ -136,11 +133,11 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private fun doDetonate() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!nn.level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val slot = detonateSlot - 1
-        player.inventory.selectedSlot = slot
-        interaction.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+        nn.player.inventory.selectedSlot = slot
+        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
         phase = Phase.CLEANUP
@@ -149,7 +146,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun doCleanup() {
         if (originalSlot >= 0) {
-            player.inventory.selectedSlot = originalSlot
+            nn.player.inventory.selectedSlot = originalSlot
         }
         resetState()
     }
@@ -157,7 +154,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun findHotbarSlot(item: Item): Int {
         for (i in 0 until 9) {
-            if (player.inventory.getItem(i).`is`(item)) return i
+            if (nn.player.inventory.getItem(i).`is`(item)) return i
         }
         return -1
     }

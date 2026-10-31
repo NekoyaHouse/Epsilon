@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
@@ -10,7 +10,8 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
@@ -25,9 +26,8 @@ import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.Rot2f
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -359,7 +359,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         workerThread.isDaemon = true
         workerThread.start()
 
-        nonNullHandler<PlayerTickEvent.Pre> { onTick() }
+        safeEventHandler<PlayerTickEvent.Pre> { onTick() }
         handler<PacketEvent.Receive> { onPacketReceive(it) }
         handler<Render3DEvent> { onRender3D() }
         handler<Render2DEvent.Level> { onRender2D(it) }
@@ -583,7 +583,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
                 lastProcessedId = snapshot.id
                 val start = System.nanoTime()
-                val nn = NonNullContext.current
+                val nn = NonNullContext.instance
                 if (nn == null) {
                     waitForSignal(50L, 0)
                     continue
@@ -719,7 +719,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         level: net.minecraft.client.multiplayer.ClientLevel,
         armorMode: DamageUtils.ArmorEnchantmentMode,
     ): SelfSnapshot {
-        val currentRotation = RotationManager.INSTANCE.rotations
+        val currentRotation = RotationManager.rotations
         return SelfSnapshot(
             player,
             player.position(),
@@ -1264,7 +1264,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val hitResult = BlockHitResult(placeInfo.hitVec, placeInfo.side, placeInfo.blockPos, false)
 
         val rotation = placeInfo.rotation
-        RotationManager.INSTANCE.setRotations(rotation, getRotationSpeed(), null, Priority.High)
+        RotationManager.setRotations(rotation, getRotationSpeed(), null, Priority.High)
         if (preRotation && !isRotationReady(rotation)) {
             return true
         }
@@ -1326,7 +1326,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         val rotation = RotationUtils.calculate(breakPlan.pos)
-        RotationManager.INSTANCE.setRotations(rotation, getRotationSpeed(), null, Priority.High)
+        RotationManager.setRotations(rotation, getRotationSpeed(), null, Priority.High)
         if (preRotation && !isRotationReady(rotation)) {
             return true
         }
@@ -1379,7 +1379,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleSpawnPacket(packet: ClientboundAddEntityPacket) {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) { handleSpawnPacketImpl(packet) }
     }
 
@@ -1430,7 +1430,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleExplosionPacket(packet: ClientboundSoundPacket) {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) { handleExplosionPacketImpl(packet) }
     }
 
@@ -1789,11 +1789,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun checkPlaceRotation(pos: BlockPos): Boolean {
         if (placeRotationRange <= 0.0) return true
-        return checkPlaceRotation(pos, RotationManager.INSTANCE.rotations)
+        return checkPlaceRotation(pos, RotationManager.rotations)
     }
 
     context(nn: NonNullContext)
-    private fun checkPlaceRotation(pos: BlockPos, currentRotation: Rot2f): Boolean {
+    private fun checkPlaceRotation(pos: BlockPos, currentRotation: Rotation): Boolean {
         if (placeRotationRange <= 0.0) return true
         return getRotationDelta(currentRotation, RotationUtils.calculate(getCrystalPos(pos))) <= placeRotationRange
     }
@@ -1801,11 +1801,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun checkCrystalRotation(crystalPos: Vec3, range: Double): Boolean {
         if (range <= 0.0) return true
-        return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.rotations)
+        return checkCrystalRotation(crystalPos, range, RotationManager.rotations)
     }
 
     context(nn: NonNullContext)
-    private fun checkCrystalRotation(crystalPos: Vec3, range: Double, currentRotation: Rot2f): Boolean {
+    private fun checkCrystalRotation(crystalPos: Vec3, range: Double, currentRotation: Rotation): Boolean {
         if (range <= 0.0) return true
         return getRotationDelta(currentRotation, RotationUtils.calculate(crystalPos)) <= range
     }
@@ -1949,7 +1949,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun prepareRotation(breakPlan: BreakPlan?, placeInfo: PlaceInfo?) {
         if (breakPlan != null && shouldPrioritizeBreak(breakPlan)) {
-            RotationManager.INSTANCE.setRotations(
+            RotationManager.setRotations(
                 RotationUtils.calculate(breakPlan.pos),
                 getRotationSpeed(),
                 null,
@@ -1959,7 +1959,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         if (placeMode != PlaceMode.Off && placeInfo != null) {
-            RotationManager.INSTANCE.setRotations(placeInfo.rotation, getRotationSpeed(), null, Priority.High)
+            RotationManager.setRotations(placeInfo.rotation, getRotationSpeed(), null, Priority.High)
         }
     }
 
@@ -1983,11 +1983,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return player == null || !player.hasEffect(MobEffects.WEAKNESS) || isHoldingTool() || antiWeakness != SwitchMode.Off && findWeaponSlot() != -1
     }
 
-    private fun isRotationReady(targetRotation: Rot2f): Boolean {
-        return getRotationDelta(RotationManager.INSTANCE.rotations, targetRotation) <= ROTATION_READY_EPSILON
+    private fun isRotationReady(targetRotation: Rotation): Boolean {
+        return getRotationDelta(RotationManager.rotations, targetRotation) <= ROTATION_READY_EPSILON
     }
 
-    private fun getRotationDelta(from: Rot2f, to: Rot2f): Float {
+    private fun getRotationDelta(from: Rotation, to: Rotation): Float {
         val yawDiff = abs(Mth.wrapDegrees(to.yaw - from.yaw).toDouble())
         val pitchDiff = abs((to.pitch - from.pitch).toDouble())
         return hypot(yawDiff, pitchDiff).toFloat()
@@ -2355,7 +2355,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val swording: Boolean,
         val reduction: DamageReductionData,
         val difficulty: Difficulty,
-        val currentRotation: Rot2f,
+        val currentRotation: Rotation,
     )
 
     private data class TargetSnapshot(
@@ -2415,7 +2415,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 false,
                 DamageReductionData.DEFAULT,
                 Difficulty.NORMAL,
-                Rot2f(0.0f, 0.0f),
+                Rotation(0.0f, 0.0f),
             )
 
             val EMPTY: SnapshotData = SnapshotData(
@@ -2458,7 +2458,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val targetDamage: Float,
         val side: Direction,
         val hitVec: Vec3,
-        val rotation: Rot2f,
+        val rotation: Rotation,
     )
 
     private data class BreakPlan(

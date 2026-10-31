@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.player.InvManager;
@@ -46,7 +45,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
     private void onPreTick(CallbackInfo ci) {
-        PlayerTickEvent.Pre event = EventBus.INSTANCE.post(new PlayerTickEvent.Pre());
+        PlayerTickEvent.Pre event = new PlayerTickEvent.Pre().post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -54,22 +53,22 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.AFTER, ordinal = 0))
     private void onPostTick(CallbackInfo ci) {
-        EventBus.INSTANCE.post(new PlayerTickEvent.Post());
+        new PlayerTickEvent.Post().post();
     }
 
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        epsilon$sendPositionEvent = EventBus.INSTANCE.post(new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()));
+        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()).post();
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
-            EventBus.INSTANCE.post(new AfterSendPositionEvent());
+            new AfterSendPositionEvent().post();
         }
     }
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
     private void onPostSendPosition(CallbackInfo ci) {
-        EventBus.INSTANCE.post(new AfterSendPositionEvent());
+        new AfterSendPositionEvent().post();
     }
 
     @Inject(method = "displayItemActivation(Lnet/minecraft/world/item/ItemStack;)V", at = @At("HEAD"), cancellable = true)
@@ -124,13 +123,13 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @WrapOperation(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean onSlowdown(LocalPlayer localPlayer, Operation<Boolean> original) {
-        SlowdownEvent event = EventBus.INSTANCE.post(new SlowdownEvent(original.call(localPlayer)));
+        SlowdownEvent event = new SlowdownEvent(original.call(localPlayer)).post();
         return event.isSlowdown();
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"), cancellable = true)
     private void onMove(MoverType moverType, Vec3 delta, CallbackInfo ci) {
-        MoveEvent event = EventBus.INSTANCE.post(new MoveEvent(delta.x, delta.y, delta.z));
+        MoveEvent event = new MoveEvent(delta.x, delta.y, delta.z).post();
         if (event.isCancelled()) {
             super.move(moverType, new Vec3(event.getX(), event.getY(), event.getZ()));
             ci.cancel();

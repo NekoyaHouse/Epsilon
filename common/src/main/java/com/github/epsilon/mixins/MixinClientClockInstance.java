@@ -11,15 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Optional;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
-/**
- * 修改客户端世界时钟时间。
- *
- * <p>26.3 移除了 {@code ClientClockManager#getTotalTicks(Holder)}，时钟值改由
- * {@code ClientClockManager.ClientClockInstance#totalTicks()} 提供。这里用当前维度默认时钟的实例
- * 做身份判断，保持 WorldTweaks 只修改当前维度默认时钟的行为。
- */
 @Mixin(ClientClockManager.ClientClockInstance.class)
 public class MixinClientClockInstance {
 

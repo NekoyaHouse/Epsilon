@@ -5,15 +5,14 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
-import com.github.epsilon.utils.safety.runSafeOrFalse
+import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.item.Items
 import kotlin.random.Random
@@ -32,7 +31,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     override fun onEnable() {
         resetState()
 
-        if (NonNullContext.current == null) {
+        if (NonNullContext.instance == null) {
             pendingActivationCheck = true
             return
         }
@@ -113,7 +112,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     override fun onKeyboardInput(event: KeyboardInputEvent) {
         if (shouldJump) {
-            event.isJump = true
+            event.jump = true
             shouldJump = false
         }
     }
@@ -187,8 +186,8 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     private fun redirectRotation() {
         runSafe {
-            RotationManager.INSTANCE.setRotations(
-                Rot2f(elytraFly.getPitch40Yaw(player.yRot), pitch),
+            RotationManager.setRotations(
+                Rotation(elytraFly.getPitch40Yaw(player.yRot), pitch),
                 180.0,
                 Priority.Highest
             )

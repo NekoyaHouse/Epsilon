@@ -1,15 +1,14 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -48,10 +47,10 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     private var firstPhase = false
 
     init {
-        // 原实现监听 PlayerTickEvent 基类（按事件精确 class 分发，子类事件不会命中），保持原样。
-        nonNullHandler<PlayerTickEvent> {
+        // 每个具体事件独立派发，蓄力与目标更新必须监听实际发布的 Pre。
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (ElytraCombat.isControllingCombat()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
             updateTarget()
 
@@ -131,7 +130,7 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isUsingSpear(): Boolean {
-        val item: Item = player.useItem.item
+        val item: Item = nn.player.useItem.item
         return item === Items.WOODEN_SPEAR || item === Items.STONE_SPEAR || item === Items.COPPER_SPEAR ||
                 item === Items.IRON_SPEAR || item === Items.GOLDEN_SPEAR || item === Items.DIAMOND_SPEAR ||
                 item === Items.NETHERITE_SPEAR
@@ -155,23 +154,23 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     private fun lunge() {
         val currentTarget = killtarget ?: return
 
-        val readyTicks = getReadyTicks(player.useItem.item)
+        val readyTicks = getReadyTicks(nn.player.useItem.item)
 
         if (rotate) {
             rotateToTarget(currentTarget)
         }
 
-        val useTime = player.ticksUsingItem
+        val useTime = nn.player.ticksUsingItem
         if (useTime > readyTicks) {
-            val playerBox: AABB = player.boundingBox.inflate(stopDistance)
+            val playerBox: AABB = nn.player.boundingBox.inflate(stopDistance)
             val targetBox: AABB = currentTarget.boundingBox
             val atTarget = playerBox.intersects(targetBox)
 
             if (atTarget) {
                 if (stopOnTarget) {
                     killtarget = null
-                    player.deltaMovement = Vec3.ZERO
-                    player.isSprinting = false
+                    nn.player.deltaMovement = Vec3.ZERO
+                    nn.player.isSprinting = false
                 }
                 firstPhase = false
                 aboveTargetPos = null
@@ -182,10 +181,10 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
 
             when (lungeMode) {
                 LungeMode.DirectionBased -> {
-                    val targetDir = currentTarget.boundingBox.center.subtract(player.position()).normalize()
+                    val targetDir = currentTarget.boundingBox.center.subtract(nn.player.position()).normalize()
 
-                    player.isSprinting = true
-                    player.deltaMovement = Vec3(
+                    nn.player.isSprinting = true
+                    nn.player.deltaMovement = Vec3(
                         targetDir.x() * lungeSpeed,
                         targetDir.y() * lungeSpeed,
                         targetDir.z() * lungeSpeed
@@ -201,7 +200,7 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
                         firstPhase = true
                     }
 
-                    val playerPos = player.position()
+                    val playerPos = nn.player.position()
                     val distToAbove = playerPos.distanceTo(abovePos)
 
                     val viewDir: Vec3
@@ -212,8 +211,8 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
                         viewDir = abovePos.subtract(playerPos).normalize()
                     }
 
-                    player.isSprinting = true
-                    player.deltaMovement = Vec3(
+                    nn.player.isSprinting = true
+                    nn.player.deltaMovement = Vec3(
                         viewDir.x() * lungeSpeed,
                         viewDir.y() * lungeSpeed,
                         viewDir.z() * lungeSpeed
@@ -226,9 +225,9 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun rotateToTarget(target: LivingEntity) {
         val rotations = RotationUtils.getRotationsToEntity(target)
-        player.yRot = rotations.yaw
-        player.yHeadRot = rotations.yaw
-        player.xRot = rotations.pitch
+        nn.player.yRot = rotations.yaw
+        nn.player.yHeadRot = rotations.yaw
+        nn.player.xRot = rotations.pitch
     }
 
 }

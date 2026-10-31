@@ -497,7 +497,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             ((introElapsed - COLUMBINA_TITLE_DELAY_MS) / COLUMBINA_TITLE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         )
         val subtitleProgress = Easing.EASE_OUT_CUBIC.function.apply(
-            ((introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat()).coerceIn(0.0f, 1.0f)
+            ((introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat()).coerceIn(
+                0.0f,
+                1.0f
+            )
         )
         val shutdownElapsed = if (reisaShutdownStartMs < 0L) 0.0f else (now - reisaShutdownStartMs).toFloat()
         val exit = Easing.EASE_IN_OUT_CUBIC.function.apply(
@@ -942,7 +945,11 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     ) {
         val elapsed = maxOf(0L, now - reisaShutdownStartMs)
         val exitElapsed = if (reisaShutdownExitStartMs < 0L) -1L else maxOf(0L, now - reisaShutdownExitStartMs)
-        val entranceProgress = ((elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS) / REISA_SHUTDOWN_ENTRANCE_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
+        val entranceProgress =
+            ((elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS) / REISA_SHUTDOWN_ENTRANCE_DURATION_MS.toFloat()).coerceIn(
+                0.0f,
+                1.0f
+            )
         val entranceEase = Easing.EASE_OUT_BACK.function.apply(entranceProgress)
         val exitProgress = if (exitElapsed < 0L) 0.0f
         else (exitElapsed / REISA_SHUTDOWN_EXIT_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
@@ -1069,7 +1076,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val bubbleY = imageY + imageHeight * 0.22f + (1.0f - bubbleIn) * 18.6f * scale
         val radius = 9.3f * scale
         val speechProgress = ((elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) /
-                    (REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS - REISA_SHUTDOWN_BUBBLE_DELAY_MS).toFloat()).coerceIn(0.0f, 1.0f)
+                (REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS - REISA_SHUTDOWN_BUBBLE_DELAY_MS).toFloat()).coerceIn(
+            0.0f,
+            1.0f
+        )
 
         val surface = applyAlpha(Color(29, 31, 42), visibility * 0.97f)
         val outline = applyAlpha(Color(229, 194, 255), visibility * 0.54f)

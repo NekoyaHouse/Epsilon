@@ -3,18 +3,16 @@ package com.github.epsilon.elements.impl
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.GameLeftEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel
@@ -60,8 +58,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private var rowsInitialized: Boolean = false
 
     init {
-        nonNullHandler<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
-        nonNullHandler<PlayerTickEvent.Post> { refreshRows() }
+        safeEventHandler<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
+        safeEventHandler<PlayerTickEvent.Post> { refreshRows() }
         handler<GameLeftEvent> {
             popCounts.clear()
             nameScrollStartTimes.clear()
@@ -85,7 +83,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     override fun render(deltaTracker: DeltaTracker) {
-        if (NonNullContext.current == null) return
+        if (NonNullContext.instance == null) return
 
         val textRenderer = textRendererSupplier.get()
         if (!rowsInitialized) {
@@ -154,7 +152,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     private fun refreshRows() {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         cachedRows = context(nn) { collectRows() }
         rowsInitialized = true
         pruneNameScrollState(cachedRows)
@@ -165,8 +163,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val maxDistanceSquared = Mth.square(playerRange)
         val players: MutableList<AbstractClientPlayer> = ArrayList()
 
-        val self = player
-        for (player in level.players()) {
+        val self = nn.player
+        for (player in nn.level.players()) {
             if ((!showSelf && player === self) || player.isRemoved) continue
             if (self.distanceToSqr(player) > maxDistanceSquared) continue
             players.add(player)
@@ -178,11 +176,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val rows: MutableList<PlayerRow> = ArrayList(count)
         for (i in 0 until count) {
             val player = players[i]
-            val health = if (HealthManager != null) {
-                HealthManager.getHealth(player)
-            } else {
-                player.health + player.absorptionAmount
-            }
+            val health = HealthManager.getHealth(player)
             val maxHealth = maxOf(1.0f, player.maxHealth + maxOf(0.0f, player.absorptionAmount))
             val distance = (self.distanceTo(player)).roundToInt()
             val direction = (Mth.wrapDegrees(player.yRot)).roundToInt()

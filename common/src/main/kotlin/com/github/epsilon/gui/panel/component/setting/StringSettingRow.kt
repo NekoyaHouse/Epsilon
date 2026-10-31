@@ -1,12 +1,12 @@
 package com.github.epsilon.gui.panel.component.setting
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.settings.impl.StringSetting
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -376,7 +376,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         if (buffer != null && cursorIndex > 0) {
             inputBuffer = buffer.substring(0, cursorIndex - 1) + buffer.substring(cursorIndex)
             cursorIndex--
-            }
+        }
     }
 
     private fun deleteForward() {
@@ -387,7 +387,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         val buffer = inputBuffer
         if (buffer != null && cursorIndex < buffer.length) {
             inputBuffer = buffer.substring(0, cursorIndex) + buffer.substring(cursorIndex + 1)
-            }
+        }
     }
 
     private fun applyValue(value: String) {

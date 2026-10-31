@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.render.CameraClip
 import com.github.epsilon.utils.math.toRadians
 import net.minecraft.client.Camera

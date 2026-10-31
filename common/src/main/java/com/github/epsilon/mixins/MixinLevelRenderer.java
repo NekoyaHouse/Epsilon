@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.AfterRender3DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.shaders.CustomSkyShader;
@@ -48,8 +47,8 @@ public class MixinLevelRenderer {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(modelViewMatrix);
 
-        EventBus.INSTANCE.post(new Render3DEvent(poseStack));
-        EventBus.INSTANCE.post(new AfterRender3DEvent());
+        new Render3DEvent(poseStack).post();
+        new AfterRender3DEvent().post();
 
         if (this.currentFrameRendersEntityOutline) {
             ShaderManager.INSTANCE.processEntityOutlineTarget(((LevelRenderer) (Object) this).entityOutlineTarget);

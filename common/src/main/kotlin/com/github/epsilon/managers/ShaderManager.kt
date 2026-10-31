@@ -1,9 +1,9 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.render.Shaders
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator

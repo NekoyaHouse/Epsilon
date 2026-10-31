@@ -1,13 +1,12 @@
 package com.github.epsilon.modules.impl.movement.elytrafly
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
 import com.mojang.blaze3d.platform.InputConstants
 import java.util.*
 
@@ -127,7 +126,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         modes[ElytraFlightModes.Pitch40] = Pitch40ElytraFlightMode(this)
         modes[ElytraFlightModes.NCP] = NCPElytraFlightMode(this)
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (sprintSuppressTicks > 0) {
                 sprintSuppressTicks--
             }
@@ -137,19 +136,19 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<TravelEvent> {
+        safeEventHandler<TravelEvent> {
             getActiveMode().onTravel(it)
         }
 
-        nonNullHandler<KeyboardInputEvent> {
+        safeEventHandler<KeyboardInputEvent> {
             getActiveMode().onKeyboardInput(it)
         }
 
-        nonNullHandler<FallFlyingEvent> {
+        safeEventHandler<FallFlyingEvent> {
             getActiveMode().onFallFlying(it)
         }
 
-        nonNullHandler<FireworkRotationEvent> {
+        safeEventHandler<FireworkRotationEvent> {
             getActiveMode().onFireworkUpdate(it)
         }
 
@@ -163,7 +162,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<RightClickEvent> {
+        safeEventHandler<RightClickEvent> {
             getActiveMode().onRightClick()
         }
     }

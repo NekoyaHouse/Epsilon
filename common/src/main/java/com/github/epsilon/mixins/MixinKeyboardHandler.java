@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.KeyPressEvent;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.input.KeyEvent;
@@ -14,7 +13,7 @@ public class MixinKeyboardHandler {
 
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void keyPress(long handle, int action, KeyEvent keyEvent, CallbackInfo ci) {
-        KeyPressEvent event = EventBus.INSTANCE.post(new KeyPressEvent(keyEvent, action));
+        KeyPressEvent event = new KeyPressEvent(keyEvent, action).post();
         if (event.isCancelled()) {
             ci.cancel();
         }

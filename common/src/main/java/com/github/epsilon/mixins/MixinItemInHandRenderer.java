@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.ArmRenderEvent;
 import com.github.epsilon.events.impl.HeldItemRenderEvent;
 import com.github.epsilon.managers.ShaderManager;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(FirstPersonHandsAndItemsRenderer.class)
 public abstract class MixinItemInHandRenderer {
@@ -96,7 +95,7 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V", shift = At.Shift.BEFORE))
     private void beforeRenderHeldItem(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        EventBus.INSTANCE.post(new HeldItemRenderEvent(hand, poseStack));
+        new HeldItemRenderEvent(hand, poseStack).post();
         if (epsilon$blocked) {
             HumanoidArm arm = resolveArm(playerState, hand);
             if (arm != null) {
@@ -107,7 +106,7 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;renderPlayerArm(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IFFLnet/minecraft/world/entity/HumanoidArm;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;)V"))
     private void beforeRenderArm(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        EventBus.INSTANCE.post(new ArmRenderEvent(hand, poseStack));
+        new ArmRenderEvent(hand, poseStack).post();
     }
 
     @WrapOperation(method = "swingArm", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))

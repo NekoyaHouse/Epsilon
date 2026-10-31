@@ -1,14 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -30,7 +27,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
     private const val MAX_ATTACK_DISTANCE = 3.6
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (autoBreak) {
                 handleAutoCrystalBreak()
             }
@@ -60,7 +57,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun handleAutoCrystalBreak() {
-        if (player.health < antiSuicide.toFloat()) return
+        if (nn.player.health < antiSuicide.toFloat()) return
         if (attackCooldown > 0) {
             attackCooldown--
             return
@@ -71,21 +68,21 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
         val crystal = hit.entity as? EndCrystal ?: return
 
-        if (player.distanceTo(crystal) > MAX_ATTACK_DISTANCE) return
+        if (nn.player.distanceTo(crystal) > MAX_ATTACK_DISTANCE) return
 
-        val playerHigherOrEqual = player.y >= crystal.y
+        val playerHigherOrEqual = nn.player.y >= crystal.y
 
         if (playerHigherOrEqual) {
-            val start: Vec3 = player.eyePosition
+            val start: Vec3 = nn.player.eyePosition
             val end: Vec3 = crystal.position()
 
-            val blockHit = level.clip(
+            val blockHit = nn.level.clip(
                 ClipContext(
                     start,
                     end,
                     ClipContext.Block.COLLIDER,
                     ClipContext.Fluid.NONE,
-                    player
+                    nn.player
                 )
             )
 
@@ -94,7 +91,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
             }
         }
 
-        interaction.attack(player, crystal)
+        nn.gameMode.attack(nn.player, crystal)
         SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
         attackCooldown = 1 + (Random.nextDouble() * 2).toInt()
@@ -112,29 +109,29 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
         val base: BlockPos = hit.blockPos
 
-        if (!level.getBlockState(base).`is`(Blocks.OBSIDIAN) &&
-            !level.getBlockState(base).`is`(Blocks.BEDROCK)
+        if (!nn.level.getBlockState(base).`is`(Blocks.OBSIDIAN) &&
+            !nn.level.getBlockState(base).`is`(Blocks.BEDROCK)
         ) {
             return
         }
 
         val above = base.above()
 
-        if (!level.getBlockState(above).isAir) return
+        if (!nn.level.getBlockState(above).isAir) return
 
         val box = AABB(
             above.x.toDouble(), above.y.toDouble(), above.z.toDouble(),
             above.x + 1.0, above.y + 2.0, above.z + 1.0
         )
 
-        if (!level.getEntities(null, box).isEmpty()) {
+        if (!nn.level.getEntities(null, box).isEmpty()) {
             return
         }
 
         val crystalHand = getCrystalHand() ?: return
 
-        interaction.useItemOn(
-            player,
+        nn.gameMode.useItemOn(
+            nn.player,
             crystalHand,
             hit
         )
@@ -146,11 +143,11 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun getCrystalHand(): InteractionHand? {
-        if (player.mainHandItem.`is`(Items.END_CRYSTAL)) {
+        if (nn.player.mainHandItem.`is`(Items.END_CRYSTAL)) {
             return InteractionHand.MAIN_HAND
         }
 
-        if (player.offhandItem.`is`(Items.END_CRYSTAL)) {
+        if (nn.player.offhandItem.`is`(Items.END_CRYSTAL)) {
             return InteractionHand.OFF_HAND
         }
 

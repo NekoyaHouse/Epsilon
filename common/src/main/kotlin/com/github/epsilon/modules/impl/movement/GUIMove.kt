@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -30,9 +30,9 @@ object GUIMove : Module("GUI Move", Category.MOVEMENT) {
 
             event.forward = forward
             event.strafe = strafe
-            event.isJump = jump
-            if (sneakValue) event.isSneak = sneak
-            event.isSprint = sprint
+            event.jump = jump
+            if (sneakValue) event.sneak = sneak
+            event.sprint = sprint
         }
     }
 

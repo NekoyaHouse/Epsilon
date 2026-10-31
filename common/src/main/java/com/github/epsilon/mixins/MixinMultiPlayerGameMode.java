@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.player.BreakCooldown;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -34,7 +33,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "useItem", at = @At("HEAD"))
     private void preUseItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        UseItemEvent event = EventBus.INSTANCE.post(new UseItemEvent(player.getYRot(), player.getXRot()));
+        UseItemEvent event = new UseItemEvent(player.getYRot(), player.getXRot()).post();
         if (event.isModified()) {
             epsilon$oldYaw = player.getYRot();
             epsilon$oldPitch = player.getXRot();
@@ -55,7 +54,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttackEntity(Player player, Entity entity, CallbackInfo ci) {
-        AttackEntityEvent event = EventBus.INSTANCE.post(new AttackEntityEvent(player, entity));
+        AttackEntityEvent event = new AttackEntityEvent(player, entity).post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -63,7 +62,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void onStartDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        StartDestroyBlockEvent event = EventBus.INSTANCE.post(new StartDestroyBlockEvent(pos, direction));
+        StartDestroyBlockEvent event = new StartDestroyBlockEvent(pos, direction).post();
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
@@ -71,7 +70,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "destroyBlock", at = @At("HEAD"), cancellable = true)
     private void onDestroyBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        DestroyBlockEvent event = EventBus.INSTANCE.post(new DestroyBlockEvent(pos));
+        DestroyBlockEvent event = new DestroyBlockEvent(pos).post();
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
@@ -79,7 +78,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "destroyBlock", at = @At("RETURN"))
     private void onDestroyedBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        EventBus.INSTANCE.post(new DestroyedBlockEvent(pos));
+        new DestroyedBlockEvent(pos).post();
     }
 
     @WrapOperation(method = "continueDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.PUTFIELD, ordinal = 2))

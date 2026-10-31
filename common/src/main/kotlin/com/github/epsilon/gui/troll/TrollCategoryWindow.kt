@@ -90,7 +90,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     private fun matchesSearch(module: Module): Boolean {
         return normalizeSearchText(module.name).contains(searchFilter, ignoreCase = true) ||
-            normalizeSearchText(module.translatedName).contains(searchFilter, ignoreCase = true)
+                normalizeSearchText(module.translatedName).contains(searchFilter, ignoreCase = true)
     }
 
     private fun normalizeSearchText(value: String): String {

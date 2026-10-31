@@ -1,12 +1,13 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.AntiBot
@@ -16,10 +17,7 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
+import com.github.epsilon.utils.rotation.Rotation
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -92,7 +90,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     private val delayPackets: Queue<Packet<*>> = ArrayDeque()
 
     init {
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             synchronized(packetLock) {
                 when (mode) {
                     Mode.Cancel -> cancelPacket(event)
@@ -102,8 +100,8 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre> {
-            if (mode != Mode.Reduce) return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Pre> {
+            if (mode != Mode.Reduce) return@safeEventHandler
 
             if (delay && (player.onGround() || System.currentTimeMillis() - lag < 100 ||
                         System.currentTimeMillis() - startDelay >= maxDelay) && flush()
@@ -115,18 +113,18 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
 
             if (sprintQueue >= 1 && KillAura.target == null && !Scaffold.isEnabled) {
-                RotationManager.INSTANCE.setRotations(
-                    Rot2f(yaw, RotationManager.INSTANCE.getRotation().pitch),
+                RotationManager.setRotations(
+                    Rotation(yaw, RotationManager.getRotation().pitch),
                     180.0,
                     Priority.Highest
                 )
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
             var pending: List<Packet<*>> = emptyList()
             synchronized(packetLock) {
-                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@nonNullHandler
+                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@safeEventHandler
                 if (--delayTicksRemaining == 0) {
                     pending = drain(delayPackets)
                 }
@@ -134,15 +132,15 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             handlePackets(pending)
         }
 
-        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
-            if (mode != Mode.Reduce) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
+            if (mode != Mode.Reduce) return@safeEventHandler
 
             if (attackQueue >= 1) {
-                val hitResult = RotationManager.INSTANCE.getHitResult()
+                val hitResult = RotationManager.getHitResult()
                 if (hitResult is EntityHitResult && hitResult.entity is Player) {
                     val target = hitResult.entity as Player
                     if (target.isAlive && !AntiBot.isBot(target)) {
-                        interaction.attack(player, target)
+                        gameMode.attack(player, target)
                         SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
                     }
                 }
@@ -150,14 +148,14 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<KeyboardInputEvent> { event ->
+        safeEventHandler<KeyboardInputEvent> { event ->
             if (mode == Mode.Delay && jumpReset && player.onGround() && player.hurtTime == 9) {
-                event.isJump = true
+                event.jump = true
             }
 
-            if (mode != Mode.Reduce) return@nonNullHandler
+            if (mode != Mode.Reduce) return@safeEventHandler
 
-            val hitResult = RotationManager.INSTANCE.getHitResult()
+            val hitResult = RotationManager.getHitResult()
             if (delay && player.fallDistance == 0.0 && hitResult is EntityHitResult &&
                 hitResult.entity is Player && !AntiBot.isBot(hitResult.entity as Player)
             ) {
@@ -169,7 +167,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
 
             if (jump && player.onGround()) {
                 if (System.currentTimeMillis() - lag >= 100) {
-                    event.isJump = true
+                    event.jump = true
                     event.forward = 1.0f
                     event.strafe = 0.0f
                 }
@@ -215,7 +213,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun cancelPacket(event: PacketEvent.Receive) {
         val packet = event.packet
-        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
             event.cancel()
             return
         }
@@ -260,7 +258,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             lag = System.currentTimeMillis()
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
             val movement = packet.movement
             if (System.currentTimeMillis() - lag >= 100L) {
                 val knockback = movement.y > 0.0 && (movement.x != 0.0 || movement.z != 0.0)
@@ -294,7 +292,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             return
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id &&
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id &&
             System.currentTimeMillis() - delayLag >= 100L
         ) {
             val movement = packet.movement

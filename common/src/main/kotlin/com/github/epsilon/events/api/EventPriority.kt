@@ -1,8 +1,9 @@
-package com.github.epsilon.events.bus
+package com.github.epsilon.events.api
 
 /**
- * Default event priorities.
+ * Priority 越高越先执行
  */
+
 object EventPriority {
 
     const val HIGHEST = 200

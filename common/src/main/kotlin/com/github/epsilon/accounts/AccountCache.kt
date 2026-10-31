@@ -1,7 +1,7 @@
 package com.github.epsilon.accounts
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.PlayerHeadTexture
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.ExecutorManager
 import com.github.epsilon.managers.SkinManager
 import com.google.gson.JsonObject
