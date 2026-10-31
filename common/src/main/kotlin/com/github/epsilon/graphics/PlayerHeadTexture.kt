@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.utils.network.Http
 import com.mojang.blaze3d.platform.NativeImage
@@ -34,7 +34,7 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
 
         private fun loadSteveHead(): NativeImage {
             return try {
-                Constants.client.resourceManager
+                mc.resourceManager
                     .getResourceOrThrow(ResourceLocationUtils.getIdentifier("textures/gui/steve.png"))
                     .open()
                     .use { stream -> NativeImage.read(stream) }

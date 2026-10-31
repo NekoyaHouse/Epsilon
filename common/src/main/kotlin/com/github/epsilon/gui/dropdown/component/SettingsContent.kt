@@ -63,7 +63,14 @@ class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
         )
     }
 
-    fun mouseClicked(mouseX: Double, mouseY: Double, button: Int, panelX: Float, contentY: Float, panelWidth: Float): Boolean {
+    fun mouseClicked(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+        panelX: Float,
+        contentY: Float,
+        panelWidth: Float
+    ): Boolean {
         if (renderer.mouseClicked(
                 mouseX, mouseY, button, panelX, contentY + DropdownTheme.SETTING_GAP,
                 panelWidth, 0.0f, 0.0f
@@ -75,7 +82,14 @@ class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
         return false
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int, panelX: Float, contentY: Float, panelWidth: Float): Boolean {
+    fun mouseReleased(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+        panelX: Float,
+        contentY: Float,
+        panelWidth: Float
+    ): Boolean {
         return renderer.mouseReleased(mouseX, mouseY, button)
     }
 

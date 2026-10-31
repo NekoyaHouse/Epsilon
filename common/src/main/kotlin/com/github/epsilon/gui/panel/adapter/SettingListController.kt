@@ -595,7 +595,11 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             minOf(300.0f, popupBounds.width - 24.0f), minOf(220.0f, popupBounds.height - 24.0f)
         )
         val setting = row.getSetting()
-        return StringListSelectPopup(bounds, setting, { value -> setting.add(value) }, { value -> setting.remove(value) })
+        return StringListSelectPopup(
+            bounds,
+            setting,
+            { value -> setting.add(value) },
+            { value -> setting.remove(value) })
     }
 
     private fun createRegistryListSettingPopup(row: RegistryListSettingRow, popupBounds: UiRect): PanelPopupHost.Popup {

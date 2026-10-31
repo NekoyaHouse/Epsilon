@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
 import com.github.epsilon.settings.impl.StringListSetting
@@ -16,7 +16,7 @@ class StringListSettingWidget(setting: StringListSetting) : AbstractSetSettingWi
     }
 
     override fun openPopup() {
-        val screen = Constants.client.gui.screen()
+        val screen = mc.gui.screen()
         if (screen is ListSettingPopupScreen) {
             screen.openStringListSettingPopup(setting)
         }

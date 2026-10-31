@@ -162,34 +162,112 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private var targetRange by doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5).apply { group(sgGeneral) }
     private var yawSpeed by doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).apply { group(sgGeneral) }
     private var preRotation by boolSetting("Pre Rotation", true).apply { group(sgGeneral) }
-    private var placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).apply { group(sgGeneral) }
-    private var breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).apply { group(sgGeneral) }
+    private var placeRotationRange by doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).apply {
+        group(
+            sgGeneral
+        )
+    }
+    private var breakRotationRange by doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).apply {
+        group(
+            sgGeneral
+        )
+    }
     private var eatingPause by boolSetting("Eating Pause", false).apply { group(sgGeneral) }
     private var updateDelay by intSetting("Update Delay", 5, 0, 250, 1).apply { group(sgGeneral) }
-    private var globalDelay by intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000).apply { group(sgGeneral) }
+    private var globalDelay by intSetting(
+        "Global Delay",
+        1_000_000,
+        1_000,
+        10_000_000,
+        1_000
+    ).apply { group(sgGeneral) }
 
     // Force Place
-    private var forcePlaceHealth by doubleSetting("Force Place Health", 8.0, 0.0, 20.0, 0.5).apply { group(sgForcePlace) }
+    private var forcePlaceHealth by doubleSetting(
+        "Force Place Health",
+        8.0,
+        0.0,
+        20.0,
+        0.5
+    ).apply { group(sgForcePlace) }
     private var forcePlaceArmorRate by intSetting("Force Place Armor Rate", 3, 0, 25, 1).apply { group(sgForcePlace) }
-    private var forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).apply { group(sgForcePlace) }
-    private var forcePlaceMotion by doubleSetting("Force Place Motion", 4.0, 0.0, 10.0, 0.25).apply { group(sgForcePlace) }
-    private var forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).apply { group(sgForcePlace) }
-    private var forcePlaceWhileSwording by boolSetting("Force Place While Swording", false).apply { group(sgForcePlace) }
+    private var forcePlaceMinDamage by doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).apply {
+        group(
+            sgForcePlace
+        )
+    }
+    private var forcePlaceMotion by doubleSetting(
+        "Force Place Motion",
+        4.0,
+        0.0,
+        10.0,
+        0.25
+    ).apply { group(sgForcePlace) }
+    private var forcePlaceBalance by doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).apply {
+        group(
+            sgForcePlace
+        )
+    }
+    private var forcePlaceWhileSwording by boolSetting(
+        "Force Place While Swording",
+        false
+    ).apply { group(sgForcePlace) }
 
     // Calculation
     private var assumeInstantMine by boolSetting("Assume Instant Mine", true).apply { group(sgCalculation) }
     private var noSuicide by doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25).apply { group(sgCalculation) }
     private var wallRange by doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1).apply { group(sgCalculation) }
     private var motionPredict by boolSetting("Motion Predict", true).apply { group(sgCalculation) }
-    private var predictTicks by intSetting("Predict Ticks", 8, 0, 20, 1, dependency = { motionPredict }).apply { group(sgCalculation) }
-    private var damagePriority by enumSetting("Damage Priority", DamagePriority.Efficient).apply { group(sgCalculation) }
-    private var armorMode by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).apply { group(sgCalculation) }
+    private var predictTicks by intSetting("Predict Ticks", 8, 0, 20, 1, dependency = { motionPredict }).apply {
+        group(
+            sgCalculation
+        )
+    }
+    private var damagePriority by enumSetting(
+        "Damage Priority",
+        DamagePriority.Efficient
+    ).apply { group(sgCalculation) }
+    private var armorMode by enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).apply {
+        group(
+            sgCalculation
+        )
+    }
     private var lethalOverride by boolSetting("Lethal Override", true).apply { group(sgCalculation) }
-    private var lethalThresholdAddition by doubleSetting("Lethal Threshold Addition", 0.5, -5.0, 5.0, 0.1, dependency = { lethalOverride }).apply { group(sgCalculation) }
-    private var lethalMaxSelfDamage by doubleSetting("Lethal Max Self Damage", 16.0, 0.0, 20.0, 0.25, dependency = { lethalOverride }).apply { group(sgCalculation) }
-    private var safeMaxTargetDamageReduction by doubleSetting("Safe Max Target Damage Reduction", 1.0, 0.0, 10.0, 0.1).apply { group(sgCalculation) }
-    private var safeMinSelfDamageReduction by doubleSetting("Safe Min Self Damage Reduction", 2.0, 0.0, 10.0, 0.1).apply { group(sgCalculation) }
-    private var collidingCrystalExtraSelfDamageThreshold by doubleSetting("Colliding Crystal Extra Self Damage Threshold", 4.0, 0.0, 10.0, 0.1).apply { group(sgCalculation) }
+    private var lethalThresholdAddition by doubleSetting(
+        "Lethal Threshold Addition",
+        0.5,
+        -5.0,
+        5.0,
+        0.1,
+        dependency = { lethalOverride }).apply { group(sgCalculation) }
+    private var lethalMaxSelfDamage by doubleSetting(
+        "Lethal Max Self Damage",
+        16.0,
+        0.0,
+        20.0,
+        0.25,
+        dependency = { lethalOverride }).apply { group(sgCalculation) }
+    private var safeMaxTargetDamageReduction by doubleSetting(
+        "Safe Max Target Damage Reduction",
+        1.0,
+        0.0,
+        10.0,
+        0.1
+    ).apply { group(sgCalculation) }
+    private var safeMinSelfDamageReduction by doubleSetting(
+        "Safe Min Self Damage Reduction",
+        2.0,
+        0.0,
+        10.0,
+        0.1
+    ).apply { group(sgCalculation) }
+    private var collidingCrystalExtraSelfDamageThreshold by doubleSetting(
+        "Colliding Crystal Extra Self Damage Threshold",
+        4.0,
+        0.0,
+        10.0,
+        0.1
+    ).apply { group(sgCalculation) }
 
     // Place
     private var placeMode by enumSetting("Place Mode", PlaceMode.Single).apply { group(sgPlace) }
@@ -199,7 +277,13 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private var placeSwing by boolSetting("Place Swing", false).apply { group(sgPlace) }
     private var placeSideBypass by enumSetting("Place Side Bypass", PlaceBypass.Up).apply { group(sgPlace) }
     private var placeMinDamage by doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).apply { group(sgPlace) }
-    private var placeMaxSelfDamage by doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).apply { group(sgPlace) }
+    private var placeMaxSelfDamage by doubleSetting(
+        "Place Max Self Damage",
+        6.0,
+        0.0,
+        20.0,
+        0.25
+    ).apply { group(sgPlace) }
     private var placeBalance by doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).apply { group(sgPlace) }
     private var placeDelay by intSetting("Place Delay", 50, 0, 500, 1).apply { group(sgPlace) }
     private var placeRange by doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).apply { group(sgPlace) }
@@ -208,8 +292,18 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     // Break
     private var breakMode by enumSetting("Break Mode", BreakMode.Smart).apply { group(sgBreak) }
     private var bbtt by boolSetting("2B2T", false).apply { group(sgBreak) }
-    private var bbttFactor by intSetting("2B2T Factor", 200, 0, 1000, 25, dependency = { bbtt }).apply { group(sgBreak) }
-    private var packetBreak by enumSetting("Packet Break", BreakMode.Target, dependency = { !bbtt }).apply { group(sgBreak) }
+    private var bbttFactor by intSetting(
+        "2B2T Factor",
+        200,
+        0,
+        1000,
+        25,
+        dependency = { bbtt }).apply { group(sgBreak) }
+    private var packetBreak by enumSetting("Packet Break", BreakMode.Target, dependency = { !bbtt }).apply {
+        group(
+            sgBreak
+        )
+    }
     private var ownTimeout by intSetting(
         "Own Timeout", 100, 0, 2000, 25,
         dependency = { breakMode == BreakMode.Own || packetBreak == BreakMode.Own },
@@ -217,7 +311,13 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private var antiWeakness by enumSetting("Anti Weakness", SwitchMode.Off).apply { group(sgBreak) }
     private var swapDelay by intSetting("Swap Delay", 0, 0, 20, 1).apply { group(sgBreak) }
     private var breakMinDamage by doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25).apply { group(sgBreak) }
-    private var breakMaxSelfDamage by doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).apply { group(sgBreak) }
+    private var breakMaxSelfDamage by doubleSetting(
+        "Break Max Self Damage",
+        8.0,
+        0.0,
+        20.0,
+        0.25
+    ).apply { group(sgBreak) }
     private var breakBalance by doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).apply { group(sgBreak) }
     private var breakDelay by intSetting("Break Delay", 100, 0, 500, 1).apply { group(sgBreak) }
     private var breakRange by doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).apply { group(sgBreak) }
@@ -381,7 +481,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
 
         if (!acted && (snapshot == null ||
-                (preBreak == null && prePlace == null && actionBreak == null && actionPlace == null))
+                    (preBreak == null && prePlace == null && actionBreak == null && actionPlace == null))
         ) {
             if (System.currentTimeMillis() - lastActiveTime > 250L) {
                 deactivateRenderTarget()
@@ -444,7 +544,6 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun onRender2D(event: Render2DEvent.Level) {
-        if (nullCheck()) return
         val prevPos = renderPrevPos ?: return
         val currentPos = renderCurrentPos ?: return
         if (!renderTargetDamage && !renderSelfDamage) return
@@ -628,7 +727,16 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val self = captureSelfSnapshot(player, level, settings.armorMode)
         val targets = captureTargets(level, settings.armorMode)
         if (targets.isEmpty()) {
-            return SnapshotData(System.nanoTime(), settings, self, emptyList(), emptyList(), emptyList(), ResistantBlockCache.EMPTY, System.currentTimeMillis())
+            return SnapshotData(
+                System.nanoTime(),
+                settings,
+                self,
+                emptyList(),
+                emptyList(),
+                emptyList(),
+                ResistantBlockCache.EMPTY,
+                System.currentTimeMillis()
+            )
         }
 
         val placePositions = capturePlacePositions(level)
@@ -864,12 +972,24 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val breakPlan = evaluateBreak(snapshot, placeInfo, true)
         val targets = snapshot.targets
         val primary = when {
-            placeInfo != null -> targets.firstOrNull { targetInfo -> targetInfo.entity === placeInfo.target } ?: targets.first()
-            rotationPlaceInfo != null -> targets.firstOrNull { targetInfo -> targetInfo.entity === rotationPlaceInfo.target } ?: targets.first()
+            placeInfo != null -> targets.firstOrNull { targetInfo -> targetInfo.entity === placeInfo.target }
+                ?: targets.first()
+
+            rotationPlaceInfo != null -> targets.firstOrNull { targetInfo -> targetInfo.entity === rotationPlaceInfo.target }
+                ?: targets.first()
+
             else -> targets.first()
         }
 
-        return AsyncResult(snapshot.id, rotationPlaceInfo, placeInfo, rotationBreakPlan, breakPlan, primary, System.nanoTime() - startTime)
+        return AsyncResult(
+            snapshot.id,
+            rotationPlaceInfo,
+            placeInfo,
+            rotationBreakPlan,
+            breakPlan,
+            primary,
+            System.nanoTime() - startTime
+        )
     }
 
     context(nn: NonNullContext)
@@ -888,7 +1008,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
             val selfDamage = calcDamage(snapshot.self, crystalPos, snapshot.resistantBlocks)
             val collidingDamage = calcCollidingCrystalDamage(snapshot, placeBox)
-            val adjustedDamage = maxOf(selfDamage, collidingDamage - snapshot.settings.collidingCrystalExtraSelfDamageThreshold)
+            val adjustedDamage =
+                maxOf(selfDamage, collidingDamage - snapshot.settings.collidingCrystalExtraSelfDamageThreshold)
 
             if (snapshot.self.totalHealth - adjustedDamage <= snapshot.settings.noSuicide) continue
             if (snapshot.self.totalHealth - collidingDamage <= snapshot.settings.noSuicide) continue
@@ -896,7 +1017,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
             for (targetInfo in snapshot.targets) {
                 if (targetInfo.box.intersects(placeBox)) continue
-                val targetDamage = calcDamage(targetInfo, crystalPos, snapshot.resistantBlocks, snapshot.self.difficulty)
+                val targetDamage =
+                    calcDamage(targetInfo, crystalPos, snapshot.resistantBlocks, snapshot.self.difficulty)
 
                 if (snapshot.settings.lethalOverride &&
                     targetDamage - targetInfo.totalHealth > snapshot.settings.lethalThresholdAddition &&
@@ -983,7 +1105,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val selfDamage = calcDamage(snapshot.self, crystal.pos, snapshot.resistantBlocks)
         var targetDamage = 0.0f
         if (snapshot.targets.isNotEmpty()) {
-            targetDamage = calcDamage(snapshot.targets.first(), crystal.pos, snapshot.resistantBlocks, snapshot.self.difficulty)
+            targetDamage =
+                calcDamage(snapshot.targets.first(), crystal.pos, snapshot.resistantBlocks, snapshot.self.difficulty)
         }
         return BreakPlan(crystal.entity, crystal.id, crystal.pos, selfDamage, targetDamage)
     }
@@ -1001,7 +1124,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             if (!snapshot.settings.lethalOverride && selfDamage > snapshot.settings.breakMaxSelfDamage) continue
 
             for (targetInfo in snapshot.targets) {
-                val targetDamage = calcDamage(targetInfo, crystal.pos, snapshot.resistantBlocks, snapshot.self.difficulty)
+                val targetDamage =
+                    calcDamage(targetInfo, crystal.pos, snapshot.resistantBlocks, snapshot.self.difficulty)
                 if (snapshot.settings.lethalOverride &&
                     targetDamage - targetInfo.totalHealth > snapshot.settings.lethalThresholdAddition &&
                     selfDamage < lethal.selfDamage &&
@@ -1113,7 +1237,13 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         if (placeInfo == null || nullCheck()) return null
         val player = this.mc.player ?: return null
         if (this.mc.level == null) return null
-        if (placeDistanceSq(player, placeInfo.hitVec.x, placeInfo.hitVec.y, placeInfo.hitVec.z) > placeRange * placeRange) {
+        if (placeDistanceSq(
+                player,
+                placeInfo.hitVec.x,
+                placeInfo.hitVec.y,
+                placeInfo.hitVec.z
+            ) > placeRange * placeRange
+        ) {
             return null
         }
         if (!isCrystalSupport(placeInfo.blockPos)) {
@@ -1276,7 +1406,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         updateRenderTarget(current.blockPosition().below(), breakPlan.targetDamage, breakPlan.selfDamage)
 
         val placeInfo = getActionPlaceInfo()
-        if (packetPlace.onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos, current.boundingBox)) {
+        if (packetPlace.onBreak && placeInfo != null && crystalPlaceBoxIntersects(
+                placeInfo.blockPos,
+                current.boundingBox
+            )
+        ) {
             placeDirect(placeInfo, true)
         }
 
@@ -1307,7 +1441,10 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         val shouldBreak = when (packetBreak) {
             BreakMode.Target -> crystalPlaceBoxIntersects(placeInfo.blockPos, getCrystalBoundingBox(crystalPos))
             BreakMode.Own -> crystalPlaceBoxIntersects(placeInfo.blockPos, getCrystalBoundingBox(crystalPos)) ||
-                    (placedPosMap.containsKey(toLong(packet.x, packet.y - 1.0, packet.z)) && checkBreakDamage(snapshot, crystalPos))
+                    (placedPosMap.containsKey(toLong(packet.x, packet.y - 1.0, packet.z)) && checkBreakDamage(
+                        snapshot,
+                        crystalPos
+                    ))
 
             BreakMode.Smart -> crystalPlaceBoxIntersects(placeInfo.blockPos, getCrystalBoundingBox(crystalPos)) ||
                     checkBreakDamage(snapshot, crystalPos)
@@ -1323,7 +1460,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             packet.id,
             crystalPos,
             calcDamage(snapshot.self, crystalPos, snapshot.resistantBlocks),
-            if (snapshot.targets.isEmpty()) 0.0f else calcDamage(snapshot.targets.first(), crystalPos, snapshot.resistantBlocks, snapshot.self.difficulty),
+            if (snapshot.targets.isEmpty()) 0.0f else calcDamage(
+                snapshot.targets.first(),
+                crystalPos,
+                snapshot.resistantBlocks,
+                snapshot.self.difficulty
+            ),
         )
         breakDirect(immediate)
     }
@@ -1418,7 +1560,15 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         resistantBlocks: ResistantBlockCache,
         difficulty: Difficulty,
     ): Float {
-        return calcDamage(target.pos, target.box, target.reduction, target.player, difficulty, crystalPos, resistantBlocks)
+        return calcDamage(
+            target.pos,
+            target.box,
+            target.reduction,
+            target.player,
+            difficulty,
+            crystalPos,
+            resistantBlocks
+        )
     }
 
     private fun calcDamage(
@@ -1449,7 +1599,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
-    private fun calcRawDamage(entityPos: Vec3, entityBox: AABB, crystalPos: Vec3, resistantBlocks: ResistantBlockCache): Float {
+    private fun calcRawDamage(
+        entityPos: Vec3,
+        entityBox: AABB,
+        crystalPos: Vec3,
+        resistantBlocks: ResistantBlockCache
+    ): Float {
         val scaledDist = (entityPos.distanceTo(crystalPos) / DOUBLE_SIZE).toFloat()
         if (scaledDist > 1.0f) return 0.0f
 
@@ -1606,7 +1761,11 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                     if (!isPotentialPlacePosition(level, pos)) continue
 
                     val feetDistSq = feetPos.distanceToSqr(crystalX, crystalY, crystalZ)
-                    if (feetDistSq > wallRangeSq && !RaytraceUtils.canSeePointFrom(eyePos, Vec3(crystalX, crystalY + 1.7, crystalZ))) {
+                    if (feetDistSq > wallRangeSq && !RaytraceUtils.canSeePointFrom(
+                            eyePos,
+                            Vec3(crystalX, crystalY + 1.7, crystalZ)
+                        )
+                    ) {
                         continue
                     }
 
@@ -1637,7 +1796,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         for (entity in level.entitiesForRendering()) {
             if (!entity.isAlive) continue
 
-            val adjustedRange = Mth.ceil(rangeSq) - ceil(((entity.bbWidth / 2.0f) * (entity.bbWidth / 2.0f) * 2.0f).toDouble())
+            val adjustedRange =
+                Mth.ceil(rangeSq) - ceil(((entity.bbWidth / 2.0f) * (entity.bbWidth / 2.0f) * 2.0f).toDouble())
             val dist = entity.distanceToSqr(feetX + 0.5, feetY + 0.5, feetZ + 0.5)
             if (dist > adjustedRange) continue
 
@@ -1723,7 +1883,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         if (!isCrystalSupport(level, pos)) return false
 
         val crystalPos = pos.above()
-        return level.getBlockState(crystalPos).canBeReplaced() && level.getBlockState(crystalPos.above()).canBeReplaced()
+        return level.getBlockState(crystalPos).canBeReplaced() && level.getBlockState(crystalPos.above())
+            .canBeReplaced()
     }
 
     private fun isCrystalSupport(pos: BlockPos): Boolean {
@@ -2126,7 +2287,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                     DamageUtils.ArmorEnchantmentMode.PPBP -> 20
                     DamageUtils.ArmorEnchantmentMode.None -> {
                         var actualEpf = 0
-                        for (slot in arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                        for (slot in arrayOf(
+                            EquipmentSlot.HEAD,
+                            EquipmentSlot.CHEST,
+                            EquipmentSlot.LEGS,
+                            EquipmentSlot.FEET
+                        )) {
                             val stack = entity.getItemBySlot(slot)
                             actualEpf += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.PROTECTION)
                             actualEpf += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.BLAST_PROTECTION) * 2

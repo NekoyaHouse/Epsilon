@@ -91,7 +91,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             searchBox,
             { entity ->
                 !entity.isSpectator && entity.isPickable &&
-                    entity is LivingEntity && entity.isAlive && entity !== player
+                        entity is LivingEntity && entity.isAlive && entity !== player
             },
             maxDistance
         )
@@ -133,9 +133,9 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun shouldAttack(): Boolean {
         val canCrit = !player.abilities.flying &&
-            !player.isFallFlying &&
-            !player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
-            level.getBlockState(player.blockPosition()).block !== Blocks.COBWEB
+                !player.isFallFlying &&
+                !player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
+                level.getBlockState(player.blockPosition()).block !== Blocks.COBWEB
 
         if (player.fallDistance > MIN_CRIT_FALL.toDouble() && player.fallDistance < MAX_CRIT_FALL.toDouble()) {
             return false

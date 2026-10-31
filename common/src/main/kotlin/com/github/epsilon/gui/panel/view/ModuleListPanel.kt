@@ -133,7 +133,9 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
                         toggleAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_ELASTIC, 620L) }
                     val toggleHoverAnimation =
                         toggleHoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
-                    hoverAnimation.run(if (row.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
+                    hoverAnimation.run(
+                        if (row.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
+                    )
                     selectionAnimation.run(if (state.getSelectedModule() === module) 1.0f else 0.0f)
                     toggleAnimation.run(if (module.isEnabled) 1.0f else 0.0f)
                     toggleHoverAnimation.run(
@@ -441,7 +443,8 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
 
     private fun buildSearchField(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
         val searchBounds = getSearchBounds()
-        val hoverProgress = scope.animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val hoverProgress =
+            scope.animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         val focusProgress = scope.animate(searchFocusAnimation, searchFocused)
         val fieldHover = maxOf(hoverProgress, focusProgress * 0.85f)
 

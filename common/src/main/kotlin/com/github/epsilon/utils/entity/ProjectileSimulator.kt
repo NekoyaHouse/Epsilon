@@ -124,7 +124,8 @@ class ProjectileSimulator(private val level: Level) {
         setMotion(data, projectile.tickCount, 0, projectile.isInWater)
         dimensions = projectile.getDimensions(projectile.pose)
         if (projectile.isNoGravity) {
-            motion = MotionData(data.power, data.roll, 0.0, data.airDrag, data.waterDrag, data.entityType, data.updateOrder)
+            motion =
+                MotionData(data.power, data.roll, 0.0, data.airDrag, data.waterDrag, data.entityType, data.updateOrder)
         }
         return velocity.lengthSqr() > 1.0E-8
     }
@@ -145,14 +146,16 @@ class ProjectileSimulator(private val level: Level) {
 
         when (motion.updateOrder) {
             UpdateOrder.GRAVITY_DRAG_POSITION -> {
-                velocity = velocity.add(0.0, -motion.gravity, 0.0).scale(if (inWater) motion.waterDrag else motion.airDrag)
+                velocity =
+                    velocity.add(0.0, -motion.gravity, 0.0).scale(if (inWater) motion.waterDrag else motion.airDrag)
                 positionVec = positionVec.add(velocity)
                 updateWaterState()
             }
 
             UpdateOrder.POSITION_DRAG_GRAVITY -> {
                 positionVec = positionVec.add(velocity)
-                velocity = velocity.scale(if (inWater) motion.waterDrag else motion.airDrag).add(0.0, -motion.gravity, 0.0)
+                velocity =
+                    velocity.scale(if (inWater) motion.waterDrag else motion.airDrag).add(0.0, -motion.gravity, 0.0)
                 updateWaterState()
             }
 
@@ -165,7 +168,10 @@ class ProjectileSimulator(private val level: Level) {
         }
 
         if (positionVec.y < level.minY ||
-            !level.chunkSource.hasChunk(SectionPos.posToSectionCoord(positionVec.x), SectionPos.posToSectionCoord(positionVec.z))
+            !level.chunkSource.hasChunk(
+                SectionPos.posToSectionCoord(positionVec.x),
+                SectionPos.posToSectionCoord(positionVec.z)
+            )
         ) {
             return Step(positionVec, null, true)
         }
@@ -192,7 +198,8 @@ class ProjectileSimulator(private val level: Level) {
             val axis = user.getUpVector(partialTick).normalize()
             val cos = cos(angleOffset)
             val sin = sin(angleOffset)
-            direction = direction.scale(cos).add(axis.cross(direction).scale(sin)).add(axis.scale(axis.dot(direction) * (1.0 - cos)))
+            direction = direction.scale(cos).add(axis.cross(direction).scale(sin))
+                .add(axis.scale(axis.dot(direction) * (1.0 - cos)))
         }
 
         velocity = direction.normalize().scale(data.power)

@@ -157,7 +157,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
                     }
 
                     packet is ClientboundPlayerPositionPacket ||
-                        (packet is ClientboundSetHealthPacket && packet.health <= 0.0f) -> {
+                            (packet is ClientboundSetHealthPacket && packet.health <= 0.0f) -> {
                         pending = drainAllLocked()
                         clearTargetLocked(true)
                     }
@@ -275,12 +275,12 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             lastAttackAt != Long.MIN_VALUE && now - lastAttackAt <= lastAttackTime
 
         return (inRange || withinTrackingBuffer) &&
-            player.tickCount > 10 &&
-            chancePassed &&
-            now >= nextAllowedAt &&
-            attackedRecently &&
-            !Velocity.blocksBacktrack() &&
-            (!pauseOnHurtTime || candidate.hurtTime < hurtTime)
+                player.tickCount > 10 &&
+                chancePassed &&
+                now >= nextAllowedAt &&
+                attackedRecently &&
+                !Velocity.blocksBacktrack() &&
+                (!pauseOnHurtTime || candidate.hurtTime < hurtTime)
     }
 
     context(nn: NonNullContext)

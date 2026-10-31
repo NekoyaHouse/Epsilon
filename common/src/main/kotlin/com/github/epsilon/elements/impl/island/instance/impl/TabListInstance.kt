@@ -1,6 +1,6 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
@@ -54,7 +54,7 @@ class TabListInstance(
         font = StaticFontLoader.defaultFont()
 
         val nn = NonNullContext.current
-        val connection: ClientPacketListener? = Constants.client.connection
+        val connection: ClientPacketListener? = mc.connection
         val scoreboard: Scoreboard? = nn?.level?.scoreboard
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)
         val showScore = objective != null && objective.renderType != ObjectiveCriteria.RenderType.HEARTS
@@ -74,20 +74,22 @@ class TabListInstance(
         rows = if (total == 0) 0 else ceil(total / columns.toDouble()).toInt()
 
         val gapsWidth = COL_GAP * maxOf(0, columns - 1)
-        val screenMaxWidth = maxOf(1f, Constants.client.window.guiScaledWidth - 50f)
+        val screenMaxWidth = maxOf(1f, mc.window.guiScaledWidth - 50f)
         val maxColumnWidth = maxOf(1f, (screenMaxWidth - gapsWidth) / columns)
         val columnWidth = minOf(computeBaseRowWidth(showScore), maxColumnWidth)
 
         columnWidths.fill(columnWidth)
         contentWidth = columnWidth * columns + gapsWidth
 
-        val overlay: PlayerTabOverlay = Constants.client.gui.hud.tabList
+        val overlay: PlayerTabOverlay = mc.gui.hud.tabList
         val textRenderer = textRendererSupplier.get()
         splitComponentByNewline(overlay.header, TEXT_HEADER, HEADER_SCALE, headerLines, textRenderer)
         splitComponentByNewline(overlay.footer, TEXT_HEADER, HEADER_SCALE, footerLines, textRenderer)
 
-        headerBoxHeight = if (headerLines.isEmpty()) 0f else headerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
-        footerBoxHeight = if (footerLines.isEmpty()) 0f else footerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
+        headerBoxHeight =
+            if (headerLines.isEmpty()) 0f else headerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
+        footerBoxHeight =
+            if (footerLines.isEmpty()) 0f else footerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
 
         listWidth = maxOf(contentWidth, computeMaxLineWidth() + INNER_PADDING * 2f)
         if (listWidth > contentWidth && columns > 0) {
@@ -133,8 +135,13 @@ class TabListInstance(
         return sorted
     }
 
-    private fun rebuildEntries(players: List<PlayerInfo>, scoreboard: Scoreboard?, objective: Objective?, showScore: Boolean) {
-        val overlay: PlayerTabOverlay = Constants.client.gui.hud.tabList
+    private fun rebuildEntries(
+        players: List<PlayerInfo>,
+        scoreboard: Scoreboard?,
+        objective: Objective?,
+        showScore: Boolean
+    ) {
+        val overlay: PlayerTabOverlay = mc.gui.hud.tabList
         val textRenderer = textRendererSupplier.get()
 
         for (info in players) {
@@ -147,7 +154,8 @@ class TabListInstance(
             var scoreText: String? = null
             var scoreWidth = 0f
             if (showScore && scoreboard != null && objective != null) {
-                val score: ReadOnlyScoreInfo? = scoreboard.getPlayerScoreInfo(ScoreHolder.fromGameProfile(info.profile), objective)
+                val score: ReadOnlyScoreInfo? =
+                    scoreboard.getPlayerScoreInfo(ScoreHolder.fromGameProfile(info.profile), objective)
                 if (score != null) {
                     scoreText = score.value().toString()
                     scoreWidth = textRenderer.getWidth(scoreText, ROW_SCALE, font)
@@ -487,14 +495,26 @@ class TabListInstance(
         return merged
     }
 
-    private fun addMergedSegment(output: MutableList<TextSegment>, builder: StringBuilder, color: Color, scale: Float, renderer: TextRenderer) {
+    private fun addMergedSegment(
+        output: MutableList<TextSegment>,
+        builder: StringBuilder,
+        color: Color,
+        scale: Float,
+        renderer: TextRenderer
+    ) {
         if (builder.isEmpty()) return
         val text = builder.toString()
         builder.setLength(0)
         output.add(TextSegment(text, color, renderer.getWidth(text, scale, font)))
     }
 
-    private fun flushSegment(output: MutableList<TextSegment>, builder: StringBuilder, color: Color, scale: Float, renderer: TextRenderer) {
+    private fun flushSegment(
+        output: MutableList<TextSegment>,
+        builder: StringBuilder,
+        color: Color,
+        scale: Float,
+        renderer: TextRenderer
+    ) {
         if (builder.isEmpty()) return
         val text = builder.toString()
         builder.setLength(0)

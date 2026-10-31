@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.shaders.FXAAShader
 import com.github.epsilon.graphics.shaders.MotionBlurShader
@@ -91,12 +91,12 @@ object LuminRenderSystem {
     }
 
     fun getScaledWidth(): Float {
-        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = mc.gameRenderer.gameRenderState().windowRenderState
         return (windowState.width / getGuiScale()).toFloat()
     }
 
     fun getScaledHeight(): Float {
-        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = mc.gameRenderer.gameRenderState().windowRenderState
         return (windowState.height / getGuiScale()).toFloat()
     }
 
@@ -109,19 +109,19 @@ object LuminRenderSystem {
     }
 
     fun toEpsilonMouseX(mouseX: Double): Double {
-        return mouseX * Constants.client.window.guiScale / getGuiScale()
+        return mouseX * mc.window.guiScale / getGuiScale()
     }
 
     fun toEpsilonMouseY(mouseY: Double): Double {
-        return mouseY * Constants.client.window.guiScale / getGuiScale()
+        return mouseY * mc.window.guiScale / getGuiScale()
     }
 
     fun toMinecraftGuiX(epsilonX: Double): Double {
-        return epsilonX * getGuiScale() / Constants.client.window.guiScale
+        return epsilonX * getGuiScale() / mc.window.guiScale
     }
 
     fun toMinecraftGuiY(epsilonY: Double): Double {
-        return epsilonY * getGuiScale() / Constants.client.window.guiScale
+        return epsilonY * getGuiScale() / mc.window.guiScale
     }
 
     fun toEpsilonMouseX(mouseX: Int): Int {
@@ -172,13 +172,13 @@ object LuminRenderSystem {
     fun resolveColorView(): GpuTextureView? {
         val target = activeTarget
         if (target != null) return target.colorView()
-        return Constants.client.gameRenderer.mainRenderTarget().colorTextureView
+        return mc.gameRenderer.mainRenderTarget().colorTextureView
     }
 
     fun resolveDepthView(): GpuTextureView? {
         val target = activeTarget
         if (target != null) return target.depthView()
-        return Constants.client.gameRenderer.mainRenderTarget().depthTextureView
+        return mc.gameRenderer.mainRenderTarget().depthTextureView
     }
 
     fun prepareQuadRendering(vertexCount: Int): QuadRenderingInfo? {
@@ -345,7 +345,7 @@ object LuminRenderSystem {
 
             this.colorTexture = LuminTexture(colorTexture, colorView, sampler)
 
-            Constants.client.textureManager.register(identifier, getColorTexture())
+            mc.textureManager.register(identifier, getColorTexture())
         }
 
         fun resize(newWidth: Int, newHeight: Int) {
@@ -404,7 +404,7 @@ object LuminRenderSystem {
                 return
             }
             closed = true
-            Constants.client.textureManager.release(identifier)
+            mc.textureManager.release(identifier)
             depthView?.close()
             depthTexture?.close()
             colorTexture = null

@@ -10,7 +10,8 @@ import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants
 
-class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", EpsilonTranslations.Gui.TAB_CONFIG, "", panelIndex) {
+class ConfigDropdownPanel(panelIndex: Int) :
+    AbstractDropdownPanel("config", EpsilonTranslations.Gui.TAB_CONFIG, "", panelIndex) {
 
     private val inputField: DropdownTextField = DropdownTextField(160)
     private var status = ""

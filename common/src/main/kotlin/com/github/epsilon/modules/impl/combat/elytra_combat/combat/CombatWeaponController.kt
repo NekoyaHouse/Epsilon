@@ -1,12 +1,11 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
-import net.minecraft.client.Minecraft
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -21,9 +20,6 @@ import java.util.function.Predicate
  * ElytraCombat 独立武器控制器，不依赖 AutoWeapon、MaceAura 或 SpearKill。
  */
 object CombatWeaponController {
-
-    private val mc: Minecraft
-        get() = Constants.client
 
     /**
      * 26.3 全部长矛材质；识别 kinetic 组件时不依赖具体物品名硬编码延迟。
@@ -93,7 +89,7 @@ object CombatWeaponController {
                 target.isBlocking &&
                 target.isUsingItem
         // 对方举盾时优先切斧破盾，否则切重锤；Selection 负责 finally 中恢复原槽位。
-        val gameMode = this.mc.gameMode ?: return false
+        val gameMode = mc.gameMode ?: return false
         val selection = selectMainHand(
             if (shieldSwap) {
                 Predicate { stack -> InvHelper.isAxe(stack) }

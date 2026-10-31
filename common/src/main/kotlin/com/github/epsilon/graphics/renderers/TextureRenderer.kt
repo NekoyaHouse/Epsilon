@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
@@ -330,7 +330,10 @@ class TextureRenderer private constructor() : IRenderer {
     override fun draw(pass: RenderPass) {
         if (sharedDynamicUniforms == null || sharedMaxIndexCount == 0) return
 
-        pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount), LuminRenderSystem.getQuadIndexType())
+        pass.setIndexBuffer(
+            LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount),
+            LuminRenderSystem.getQuadIndexType()
+        )
         pass.setUniform("DynamicTransforms", sharedDynamicUniforms!!)
         drawPrepared(pass)
     }
@@ -355,7 +358,7 @@ class TextureRenderer private constructor() : IRenderer {
     private fun resolveTexture(key: TextureKey): PreparedTexture? {
         val texture = key.texture
         if (texture is Identifier) {
-            val abstractTexture = Constants.client.textureManager.getTexture(texture)
+            val abstractTexture = mc.textureManager.getTexture(texture)
             val sampler = if (key.linearFilter) {
                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
             } else {

@@ -27,12 +27,25 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
         val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(btnX), absoluteY(btnY), btnW, btnH)
         hoverAnim.run(if (hovered) 1.0f else 0.0f)
 
-        scope.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.value))
+        scope.roundRect(
+            btnX,
+            btnY,
+            btnW,
+            btnH,
+            DropdownTheme.BUTTON_RADIUS,
+            DropdownTheme.buttonSurface(hoverAnim.value)
+        )
 
         val label = setting.displayName
         val textW = textMetrics.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE)
         val textY = btnY + (btnH - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f
-        scope.text(label, btnX + (btnW - textW) * 0.5f, textY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.buttonText())
+        scope.text(
+            label,
+            btnX + (btnW - textW) * 0.5f,
+            textY,
+            DropdownTheme.SETTING_TEXT_SCALE,
+            DropdownTheme.buttonText()
+        )
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

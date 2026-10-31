@@ -168,6 +168,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
      * 本 tick 生效的静默瞄准角度；非 null 表示正在瞄准，移动按它结算。
      */
     private var aimRotations: Rot2f? = null
+
     /**
      * 本 tick 是否允许在没有输入时模拟按 W 沿瞄准方向前进。
      */
@@ -182,20 +183,24 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     @Volatile
     private var localPlayerId = -1
+
     /**
      * 长矛命中后延迟 1 tick 再补重锤，避免和 kinetic 命中同一 tick 处理。
      */
     private var spearMaceDelay = 0
+
     /**
      * 命中后暂停瞄准/移动，等待目标无敌帧结束。
      */
     private var hitPauseTicks = 0
 
     private var autoChargeWanted = false
+
     /**
      * 本模块是否替玩家按住了右键；只有本字段为 true 时才允许松开按键。
      */
     private var autoChargeKeyHeld = false
+
     /**
      * 蓄力期间被原版消耗的左键点击，使用状态结束后补发；0 表示无待补点击。
      */
@@ -283,9 +288,9 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             if (!aimActive || !move || aimRotations == null) return@nonNullHandler
 
             var forward = (if (mc.options.keyUp.isDown) 1.0f else 0.0f) -
-                (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
+                    (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
             val strafe = (if (mc.options.keyLeft.isDown) 1.0f else 0.0f) -
-                (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
+                    (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
 
             if (forward == 0.0f && strafe == 0.0f) {
                 if (!forceForward) return@nonNullHandler

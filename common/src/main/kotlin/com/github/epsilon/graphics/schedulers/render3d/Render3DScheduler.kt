@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.schedulers.render3d
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventHandler
@@ -143,9 +143,9 @@ object Render3DScheduler {
         }
 
         val builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE)
-        val matrix = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
+        val matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
         // 3D 渲染阶段 camera 必然已由 GameRenderer 准备好；原 Java 同样直接解引用，这里保留相同的 NPE 时机。
-        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
+        val camPos = mc.entityRenderDispatcher.camera!!.position()
 
         for (command in filledBoxes) {
             emitFilledBox(builder, matrix, camPos, command)
@@ -164,7 +164,7 @@ object Render3DScheduler {
         }
 
         val builder = LuminImmediateRenderer.beginLines(LINES_PIPELINE)
-        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
+        val camPos = mc.entityRenderDispatcher.camera!!.position()
         val pose = stack.last()
         val matrix = pose.pose()
 
@@ -195,41 +195,53 @@ object Render3DScheduler {
         val maxY = (box.maxY - camPos.y).toFloat()
         val maxZ = (box.maxZ - camPos.z).toFloat()
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             minX, minY, minZ, command.bottomColor,
             minX, minY, maxZ, command.bottomColor,
             maxX, minY, maxZ, command.bottomColor,
-            maxX, minY, minZ, command.bottomColor)
+            maxX, minY, minZ, command.bottomColor
+        )
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             minX, maxY, minZ, command.topColor,
             maxX, maxY, minZ, command.topColor,
             maxX, maxY, maxZ, command.topColor,
-            minX, maxY, maxZ, command.topColor)
+            minX, maxY, maxZ, command.topColor
+        )
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             minX, minY, minZ, command.bottomColor,
             maxX, minY, minZ, command.bottomColor,
             maxX, maxY, minZ, command.topColor,
-            minX, maxY, minZ, command.topColor)
+            minX, maxY, minZ, command.topColor
+        )
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             maxX, minY, minZ, command.bottomColor,
             maxX, minY, maxZ, command.bottomColor,
             maxX, maxY, maxZ, command.topColor,
-            maxX, maxY, minZ, command.topColor)
+            maxX, maxY, minZ, command.topColor
+        )
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             minX, minY, maxZ, command.bottomColor,
             minX, maxY, maxZ, command.topColor,
             maxX, maxY, maxZ, command.topColor,
-            maxX, minY, maxZ, command.bottomColor)
+            maxX, minY, maxZ, command.bottomColor
+        )
 
-        quad(builder, matrix,
+        quad(
+            builder, matrix,
             minX, minY, minZ, command.bottomColor,
             minX, maxY, minZ, command.topColor,
             minX, maxY, maxZ, command.topColor,
-            minX, minY, maxZ, command.bottomColor)
+            minX, minY, maxZ, command.bottomColor
+        )
     }
 
     private fun emitFilledSide(
@@ -245,41 +257,53 @@ object Render3DScheduler {
         val maxZ = (box.maxZ - camPos.z).toFloat()
 
         when (command.direction) {
-            Direction.DOWN -> quad(builder, matrix,
+            Direction.DOWN -> quad(
+                builder, matrix,
                 minX, minY, minZ, command.color,
                 maxX, minY, minZ, command.color,
                 maxX, minY, maxZ, command.color,
-                minX, minY, maxZ, command.color)
+                minX, minY, maxZ, command.color
+            )
 
-            Direction.NORTH -> quad(builder, matrix,
+            Direction.NORTH -> quad(
+                builder, matrix,
                 minX, minY, minZ, command.color,
                 minX, maxY, minZ, command.color,
                 maxX, maxY, minZ, command.color,
-                maxX, minY, minZ, command.color)
+                maxX, minY, minZ, command.color
+            )
 
-            Direction.EAST -> quad(builder, matrix,
+            Direction.EAST -> quad(
+                builder, matrix,
                 maxX, minY, minZ, command.color,
                 maxX, maxY, minZ, command.color,
                 maxX, maxY, maxZ, command.color,
-                maxX, minY, maxZ, command.color)
+                maxX, minY, maxZ, command.color
+            )
 
-            Direction.SOUTH -> quad(builder, matrix,
+            Direction.SOUTH -> quad(
+                builder, matrix,
                 minX, minY, maxZ, command.color,
                 maxX, minY, maxZ, command.color,
                 maxX, maxY, maxZ, command.color,
-                minX, maxY, maxZ, command.color)
+                minX, maxY, maxZ, command.color
+            )
 
-            Direction.WEST -> quad(builder, matrix,
+            Direction.WEST -> quad(
+                builder, matrix,
                 minX, minY, minZ, command.color,
                 minX, minY, maxZ, command.color,
                 minX, maxY, maxZ, command.color,
-                minX, maxY, minZ, command.color)
+                minX, maxY, minZ, command.color
+            )
 
-            Direction.UP -> quad(builder, matrix,
+            Direction.UP -> quad(
+                builder, matrix,
                 minX, maxY, minZ, command.color,
                 minX, maxY, maxZ, command.color,
                 maxX, maxY, maxZ, command.color,
-                maxX, maxY, minZ, command.color)
+                maxX, maxY, minZ, command.color
+            )
         }
     }
 
@@ -374,10 +398,12 @@ object Render3DScheduler {
     ) {
         val from = command.from.subtract(camPos)
         val to = command.to.subtract(camPos)
-        vertexLine(builder, matrix, pose,
+        vertexLine(
+            builder, matrix, pose,
             from.x.toFloat(), from.y.toFloat(), from.z.toFloat(),
             to.x.toFloat(), to.y.toFloat(), to.z.toFloat(),
-            command.color, command.thickness)
+            command.color, command.thickness
+        )
     }
 
     private fun quad(

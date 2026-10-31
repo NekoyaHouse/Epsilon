@@ -149,7 +149,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                         val boatBoost = boatSpeed
                         player.deltaMovement = Vec3(-sin(yaw) * boatBoost, boatJump, cos(yaw) * boatBoost)
                         return@nonNullHandler
-                    } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(entityBox)) {
+                    } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(
+                            entityBox
+                        )
+                    ) {
                         collisions++
                     }
                 }
@@ -203,7 +206,11 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
                     boost = !boost
                 } else {
-                    if ((canCollide(null, player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)) || player.minorHorizontalCollision) && stage > 0) {
+                    if ((canCollide(
+                            null,
+                            player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)
+                        ) || player.minorHorizontalCollision) && stage > 0
+                    ) {
                         stage = 1
                     }
 
@@ -262,7 +269,11 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     val moveSpeed = 0.66 * (distance - base)
                     speed = distance - moveSpeed
                 } else {
-                    if ((!level.noCollision(player, player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)) || player.verticalCollision) && strafe > 0) {
+                    if ((!level.noCollision(
+                            player,
+                            player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)
+                        ) || player.verticalCollision) && strafe > 0
+                    ) {
                         strafe = 1
                     }
                     speed = distance - distance / 159.0

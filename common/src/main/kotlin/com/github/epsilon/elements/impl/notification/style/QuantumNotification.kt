@@ -168,7 +168,15 @@ class QuantumNotification(private val owner: Notifications) {
         }
     }
 
-    private fun drawIcon(scope: UiTree.Scope, metrics: TextRenderer, mode: NotificationMode, x: Float, y: Float, scale: Float, alpha: Int) {
+    private fun drawIcon(
+        scope: UiTree.Scope,
+        metrics: TextRenderer,
+        mode: NotificationMode,
+        x: Float,
+        y: Float,
+        scale: Float,
+        alpha: Int
+    ) {
         val iconScale = ICON_SIZE * scale / 48.0f
         val centerX = x + ICON_SIZE * scale * 0.5f
         val centerY = y + ICON_SIZE * scale * 0.5f
@@ -183,15 +191,42 @@ class QuantumNotification(private val owner: Notifications) {
         }
     }
 
-    private fun drawSuccess(scope: UiTree.Scope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
-        drawDashedCircle(scope, cx, cy, 22.0f * s, 2.0f * s, 16.0f, 12.0f, 0.0f, withAlpha(color, (alpha * 0.2f).roundToInt()))
+    private fun drawSuccess(
+        scope: UiTree.Scope,
+        cx: Float,
+        cy: Float,
+        s: Float,
+        time: Float,
+        color: Color,
+        alpha: Int
+    ) {
+        drawDashedCircle(
+            scope,
+            cx,
+            cy,
+            22.0f * s,
+            2.0f * s,
+            16.0f,
+            12.0f,
+            0.0f,
+            withAlpha(color, (alpha * 0.2f).roundToInt())
+        )
 
         val phase = positiveModulo(time, 2.5f) / 2.5f
         if (phase < 0.4f) {
             val local = if (phase < 0.15f) phase / 0.15f else (phase - 0.15f) / 0.25f
             val ringScale = if (phase < 0.15f) 0.8f + 0.3f * local else 1.1f + 0.2f * local
             val ringAlpha = if (phase < 0.15f) 0.4f * local else 0.4f * (1.0f - local)
-            scope.arc(cx, cy, 18.0f * s * ringScale, maxOf(0.5f * s, 2.0f * s), 0.0f, 360.0f, true, withAlpha(color, (alpha * ringAlpha).roundToInt()))
+            scope.arc(
+                cx,
+                cy,
+                18.0f * s * ringScale,
+                maxOf(0.5f * s, 2.0f * s),
+                0.0f,
+                360.0f,
+                true,
+                withAlpha(color, (alpha * ringAlpha).roundToInt())
+            )
         }
 
         val checkProgress = minOf(1.0f, positiveModulo(time, 3.0f) / 0.7f)
@@ -210,15 +245,31 @@ class QuantumNotification(private val owner: Notifications) {
 
         val angle = positiveModulo(time, 4.0f) / 4.0f * 360.0f
         scope.gradientArc(
-            cx, cy, 15.5f * s, 9.0f * s, angle - 90.0f, 78.0f, false, angle,
-            withAlpha(color, 0), withAlpha(color, (alpha * 0.12f).roundToInt()), withAlpha(color, (alpha * 0.38f).roundToInt())
+            cx,
+            cy,
+            15.5f * s,
+            9.0f * s,
+            angle - 90.0f,
+            78.0f,
+            false,
+            angle,
+            withAlpha(color, 0),
+            withAlpha(color, (alpha * 0.12f).roundToInt()),
+            withAlpha(color, (alpha * 0.38f).roundToInt())
         )
 
-        val points = arrayOf(floatArrayOf(14.0f, -6.0f, 0.2f), floatArrayOf(-14.0f, 6.0f, 0.8f), floatArrayOf(4.0f, 16.0f, 1.4f))
+        val points =
+            arrayOf(floatArrayOf(14.0f, -6.0f, 0.2f), floatArrayOf(-14.0f, 6.0f, 0.8f), floatArrayOf(4.0f, 16.0f, 1.4f))
         for (point in points) {
             val pointPhase = positiveModulo(time - point[2], 2.0f) / 2.0f
             val pulse = if (pointPhase < 0.5f) pointPhase * 2.0f else (1.0f - pointPhase) * 2.0f
-            dot(scope, cx + point[0] * s, cy + point[1] * s, (0.75f + pulse * 0.45f) * s, withAlpha(color, (alpha * pulse).roundToInt()))
+            dot(
+                scope,
+                cx + point[0] * s,
+                cy + point[1] * s,
+                (0.75f + pulse * 0.45f) * s,
+                withAlpha(color, (alpha * pulse).roundToInt())
+            )
         }
         dot(scope, cx, cy, 1.5f * s, color)
     }
@@ -234,14 +285,41 @@ class QuantumNotification(private val owner: Notifications) {
         alpha: Int,
     ) {
         val renderScale = s * 48.0f / ICON_SIZE
-        scope.arc(cx, cy, 10.2f * renderScale, 0.45f * renderScale, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.16f).roundToInt()))
-        scope.arc(cx, cy, 8.0f * renderScale, 0.35f * renderScale, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.09f).roundToInt()))
+        scope.arc(
+            cx,
+            cy,
+            10.2f * renderScale,
+            0.45f * renderScale,
+            0.0f,
+            360.0f,
+            false,
+            withAlpha(color, (alpha * 0.16f).roundToInt())
+        )
+        scope.arc(
+            cx,
+            cy,
+            8.0f * renderScale,
+            0.35f * renderScale,
+            0.0f,
+            360.0f,
+            false,
+            withAlpha(color, (alpha * 0.09f).roundToInt())
+        )
 
         val sweep = 58.0f + 10.0f * (0.5f + 0.5f * sin((time * 1.4f).toDouble()).toFloat())
         val angle = positiveModulo(time * 38.0f, 360.0f)
         scope.gradientArc(
-            cx, cy, 11.0f * renderScale, 1.15f * renderScale, angle, sweep, true, angle - 90.0f,
-            withAlpha(color, 0), withAlpha(color, (alpha * 0.12f).roundToInt()), withAlpha(color, (alpha * 0.32f).roundToInt())
+            cx,
+            cy,
+            11.0f * renderScale,
+            1.15f * renderScale,
+            angle,
+            sweep,
+            true,
+            angle - 90.0f,
+            withAlpha(color, 0),
+            withAlpha(color, (alpha * 0.12f).roundToInt()),
+            withAlpha(color, (alpha * 0.32f).roundToInt())
         )
 
         val pulse = positiveModulo(time, 2.8f) / 2.8f
@@ -253,7 +331,14 @@ class QuantumNotification(private val owner: Notifications) {
 
         val iconWidth = metrics.getWidth(IconChars.WARNING_AMBER, renderScale, StaticFontLoader.ICONS)
         val iconHeight = metrics.getHeight(renderScale, StaticFontLoader.ICONS)
-        scope.text(IconChars.WARNING_AMBER, cx - iconWidth * 0.5f, cy - iconHeight * 0.5f, renderScale, color, StaticFontLoader.ICONS)
+        scope.text(
+            IconChars.WARNING_AMBER,
+            cx - iconWidth * 0.5f,
+            cy - iconHeight * 0.5f,
+            renderScale,
+            color,
+            StaticFontLoader.ICONS
+        )
     }
 
     private fun drawError(scope: UiTree.Scope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
@@ -262,7 +347,17 @@ class QuantumNotification(private val owner: Notifications) {
             val local = if (phase < 0.3f) phase / 0.3f else (phase - 0.3f) / 0.3f
             val ringScale = if (phase < 0.3f) 1.4f - 0.4f * local else 1.0f - 0.3f * local
             val ringAlpha = if (phase < 0.3f) 0.4f * local else 0.4f * (1.0f - local)
-            drawDashedCircle(scope, cx, cy, 20.0f * s * ringScale, 1.0f * s, 22.0f, 18.0f, 0.0f, withAlpha(color, (alpha * ringAlpha).roundToInt()))
+            drawDashedCircle(
+                scope,
+                cx,
+                cy,
+                20.0f * s * ringScale,
+                1.0f * s,
+                22.0f,
+                18.0f,
+                0.0f,
+                withAlpha(color, (alpha * ringAlpha).roundToInt())
+            )
         }
 
         val crossTime = positiveModulo(time, 2.0f)
@@ -367,7 +462,12 @@ class QuantumNotification(private val owner: Notifications) {
         private const val SLIDE_MARGIN = 12.0f
         private const val TRANSITION_DURATION = 200L
 
-        private fun fitTextScale(metrics: TextRenderer, text: String, desiredScale: Float, availableWidth: Float): Float {
+        private fun fitTextScale(
+            metrics: TextRenderer,
+            text: String,
+            desiredScale: Float,
+            availableWidth: Float
+        ): Float {
             if (text.isEmpty()) return desiredScale
             val width = metrics.getWidth(text, desiredScale)
             if (width <= availableWidth) return desiredScale
@@ -384,7 +484,12 @@ class QuantumNotification(private val owner: Notifications) {
         }
 
         private fun withAlpha(color: Color, alpha: Int): Color {
-            return Color(color.red, color.green, color.blue, (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
+            return Color(
+                color.red,
+                color.green,
+                color.blue,
+                (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt()
+            )
         }
 
         private fun positiveModulo(value: Float, divisor: Float): Float {

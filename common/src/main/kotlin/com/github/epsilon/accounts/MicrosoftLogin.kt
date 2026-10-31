@@ -52,8 +52,8 @@ object MicrosoftLogin {
 
         startServer()
         val url = "https://login.live.com/oauth20_authorize.srf?client_id=" + CLIENT_ID +
-            "&response_type=code&redirect_uri=http://127.0.0.1:" + PORT +
-            "&scope=XboxLive.signin%20offline_access&prompt=select_account"
+                "&response_type=code&redirect_uri=http://127.0.0.1:" + PORT +
+                "&scope=XboxLive.signin%20offline_access&prompt=select_account"
         Blaze3D.openUri(URI.create(url))
 
         return url
@@ -94,9 +94,10 @@ object MicrosoftLogin {
         if (mcRes == null) return LoginData()
 
         // Check game ownership
-        val gameOwnershipRes: GameOwnershipResponse? = Http.get("https://api.minecraftservices.com/entitlements/mcstore")
-            .bearer(mcRes.access_token ?: "")
-            .sendJson(GameOwnershipResponse::class.java)
+        val gameOwnershipRes: GameOwnershipResponse? =
+            Http.get("https://api.minecraftservices.com/entitlements/mcstore")
+                .bearer(mcRes.access_token ?: "")
+                .sendJson(GameOwnershipResponse::class.java)
 
         if (gameOwnershipRes == null || !gameOwnershipRes.hasGameOwnership()) return LoginData()
 
@@ -221,7 +222,12 @@ object MicrosoftLogin {
             }
 
             if (name.isNotEmpty()) {
-                query.add(com.mojang.datafixers.util.Pair.of(urlDecode(name.toString()), urlDecode(value.toString()) ?: ""))
+                query.add(
+                    com.mojang.datafixers.util.Pair.of(
+                        urlDecode(name.toString()),
+                        urlDecode(value.toString()) ?: ""
+                    )
+                )
             }
         }
 

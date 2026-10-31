@@ -1,6 +1,5 @@
 package com.github.epsilon.elements.impl.island
 
-import com.github.epsilon.Constants
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
 import com.github.epsilon.elements.impl.island.instance.impl.*
@@ -13,13 +12,13 @@ import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
+import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
-import com.github.epsilon.smtc.SmtcService
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.world.entity.LivingEntity
@@ -59,7 +58,8 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     val scanlineStrength by doubleSetting("Scanline Strength", 0.2, 0.0, 1.0, 0.05, dependency = { textGlitch })
     val noiseStrength by doubleSetting("Noise Strength", 0.1, 0.0, 1.0, 0.05, dependency = { textGlitch })
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
     private val landRenderer = LandRenderer(LandController, 48.0f, 48.0f)
     private var rectRenderer: RectRenderer? = null
 
@@ -85,7 +85,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     }
 
     private fun renderTraces() {
-        if (!traces || nullCheck() || Constants.client.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
+        if (!traces || nullCheck() || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
             rectRenderer?.clear()
             return
         }

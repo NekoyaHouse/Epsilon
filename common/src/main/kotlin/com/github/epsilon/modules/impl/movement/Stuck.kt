@@ -52,6 +52,7 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
                         ticks = 20
                     }
                 }
+
                 1 -> stage = 2
                 2 -> {
                     while (packets.isNotEmpty()) {

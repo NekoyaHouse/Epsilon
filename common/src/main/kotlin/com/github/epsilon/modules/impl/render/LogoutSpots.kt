@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
@@ -204,7 +203,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+                else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             walkPosition = player.walkAnimation.position(tickDelta)
             walkSpeed = player.walkAnimation.speed(tickDelta)
             attackAnimation = player.getSwingAnimation(tickDelta)
@@ -225,7 +224,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
         fun render(poseStack: PoseStack) {
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+                else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             (walkAnimation as WalkAnimationStateAccessor).`epsilon$freeze`(walkPosition, walkSpeed, tickDelta)
 
             WireframeEntityRenderer.render(

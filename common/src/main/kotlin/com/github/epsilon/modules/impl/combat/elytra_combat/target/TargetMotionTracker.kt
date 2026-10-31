@@ -33,7 +33,13 @@ class TargetMotionTracker {
         this.samples.clear()
     }
 
-    fun update(target: LivingEntity, tick: Int, mode: PredictorMode, ticksLater: Int, historyTicks: Int): TargetSnapshot {
+    fun update(
+        target: LivingEntity,
+        tick: Int,
+        mode: PredictorMode,
+        ticksLater: Int,
+        historyTicks: Int
+    ): TargetSnapshot {
         if (target !== this.trackedTarget || this.teleportPending) {
             // 目标切换或传送后旧速度/相位不再可信，直接清空历史。
             this.trackedTarget = target

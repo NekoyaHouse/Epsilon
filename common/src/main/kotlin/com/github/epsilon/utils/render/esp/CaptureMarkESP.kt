@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.utils.render.ColorUtils
@@ -39,12 +39,20 @@ object CaptureMarkESP {
      * @param color1    第一种颜色
      * @param color2    第二种颜色
      */
-    fun render(poseStack: PoseStack, target: LivingEntity, espSize: Double, rotSpeed: Double, waveSpeed: Double, color1: Color, color2: Color) {
+    fun render(
+        poseStack: PoseStack,
+        target: LivingEntity,
+        espSize: Double,
+        rotSpeed: Double,
+        waveSpeed: Double,
+        color1: Color,
+        color2: Color
+    ) {
         val timeSeconds = System.nanoTime() * 1.0E-9
         val rotation = (-((timeSeconds * rotSpeed * 60.0) % 360.0)).toFloat()
 
-        val cameraPos = Constants.client.entityRenderDispatcher.camera!!.position()
-        val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val cameraPos = mc.entityRenderDispatcher.camera!!.position()
+        val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val ex = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - cameraPos.x
         val ey = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - cameraPos.y
         val ez = Mth.lerp(tickDelta.toDouble(), target.zOld, target.z) - cameraPos.z
@@ -54,7 +62,7 @@ object CaptureMarkESP {
         poseStack.pushPose()
         poseStack.translate(ex, ey + target.bbHeight * 0.5, ez)
 
-        val camera: Camera = Constants.client.gameRenderer.mainCamera()
+        val camera: Camera = mc.gameRenderer.mainCamera()
         poseStack.rotateDegrees(Axis.YP, -camera.yRot())
         poseStack.rotateDegrees(Axis.XP, camera.xRot())
         poseStack.rotateDegrees(Axis.ZP, rotation)
@@ -77,7 +85,13 @@ object CaptureMarkESP {
         poseStack.popPose()
     }
 
-    private fun getColorForProgress(progress: Float, waveSpeed: Double, color1: Color, color2: Color, timeSeconds: Double): Color {
+    private fun getColorForProgress(
+        progress: Float,
+        waveSpeed: Double,
+        color1: Color,
+        color2: Color,
+        timeSeconds: Double
+    ): Color {
         var wave = sin((progress * PI * 2.0) + (timeSeconds * waveSpeed)).toFloat()
         wave = (wave + 1f) / 2f
         return ColorUtils.interpolateColor(color1, color2, wave)

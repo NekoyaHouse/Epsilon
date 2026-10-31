@@ -73,7 +73,12 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
                 movementZ -= stepZ
             }
 
-            while (movementX != 0.0 && movementZ != 0.0 && canFallAtLeast(movementX, movementZ, maxDownStep.toDouble())) {
+            while (movementX != 0.0 && movementZ != 0.0 && canFallAtLeast(
+                    movementX,
+                    movementZ,
+                    maxDownStep.toDouble()
+                )
+            ) {
                 if (abs(movementX) <= 0.05) {
                     movementX = 0.0
                 } else {

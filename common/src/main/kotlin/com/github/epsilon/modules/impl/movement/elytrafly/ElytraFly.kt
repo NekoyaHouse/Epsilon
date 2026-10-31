@@ -221,7 +221,12 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         )
     }
 
-    fun applyPitch40Control(autoTakeoff: Boolean, autoFirework: Boolean, lowerBounds: Double, takeoffTargetHeight: Double) {
+    fun applyPitch40Control(
+        autoTakeoff: Boolean,
+        autoFirework: Boolean,
+        lowerBounds: Double,
+        takeoffTargetHeight: Double
+    ) {
         applyPitch40Control(autoTakeoff, autoFirework, lowerBounds, takeoffTargetHeight, null)
     }
 

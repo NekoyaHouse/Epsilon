@@ -23,7 +23,8 @@ object DropdownLayoutState {
             val parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8))
             if (parsed == null || !parsed.isJsonObject) return
             val root = parsed.asJsonObject
-            val panelStates: JsonObject = if (root.has("panels") && root.get("panels").isJsonObject) root.getAsJsonObject("panels") else JsonObject()
+            val panelStates: JsonObject =
+                if (root.has("panels") && root.get("panels").isJsonObject) root.getAsJsonObject("panels") else JsonObject()
             for (panel in panels) {
                 val element: JsonElement = panelStates.get(panel.id) ?: continue
                 if (!element.isJsonObject) continue

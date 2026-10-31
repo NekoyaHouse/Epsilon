@@ -174,16 +174,16 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isClickable(state: BlockState, pos: BlockPos): Boolean {
         return player.isSecondaryUseActive || !(
-            state.getMenuProvider(level, pos) != null ||
-                state.block is EntityBlock ||
-                state.`is`(BlockTags.BUTTONS) ||
-                state.`is`(BlockTags.PRESSURE_PLATES) ||
-                state.`is`(BlockTags.BEDS) ||
-                state.`is`(BlockTags.FENCE_GATES) ||
-                state.`is`(BlockTags.DOORS) ||
-                state.`is`(BlockTags.TRAPDOORS) ||
-                state.block is NoteBlock
-            )
+                state.getMenuProvider(level, pos) != null ||
+                        state.block is EntityBlock ||
+                        state.`is`(BlockTags.BUTTONS) ||
+                        state.`is`(BlockTags.PRESSURE_PLATES) ||
+                        state.`is`(BlockTags.BEDS) ||
+                        state.`is`(BlockTags.FENCE_GATES) ||
+                        state.`is`(BlockTags.DOORS) ||
+                        state.`is`(BlockTags.TRAPDOORS) ||
+                        state.block is NoteBlock
+                )
     }
 
     context(nn: NonNullContext)

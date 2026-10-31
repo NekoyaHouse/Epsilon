@@ -106,7 +106,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             if (mode != Mode.Reduce) return@nonNullHandler
 
             if (delay && (player.onGround() || System.currentTimeMillis() - lag < 100 ||
-                    System.currentTimeMillis() - startDelay >= maxDelay) && flush()
+                        System.currentTimeMillis() - startDelay >= maxDelay) && flush()
             ) {
                 if (System.currentTimeMillis() - lag >= 100L) {
                     attackQueue = attackCounts
@@ -246,11 +246,11 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
 
         if (delay && (packet is ClientboundSetEntityMotionPacket ||
-                packet is ClientboundMoveEntityPacket ||
-                packet is ClientboundTeleportEntityPacket ||
-                packet is ClientboundPingPacket ||
-                packet is ClientboundPlayerLookAtPacket ||
-                packet is ClientboundPlayerPositionPacket)
+                    packet is ClientboundMoveEntityPacket ||
+                    packet is ClientboundTeleportEntityPacket ||
+                    packet is ClientboundPingPacket ||
+                    packet is ClientboundPlayerLookAtPacket ||
+                    packet is ClientboundPlayerPositionPacket)
         ) {
             event.cancel()
             packets.add(packet)

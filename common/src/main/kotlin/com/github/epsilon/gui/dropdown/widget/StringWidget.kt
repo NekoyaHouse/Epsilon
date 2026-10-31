@@ -17,7 +17,13 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
     }
 
     override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
-        scope.text(setting.displayName, DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel())
+        scope.text(
+            setting.displayName,
+            DropdownTheme.SETTING_PADDING_X,
+            1.0f,
+            DropdownTheme.SETTING_TEXT_SCALE,
+            DropdownTheme.settingLabel()
+        )
 
         val fieldX = DropdownTheme.SETTING_PADDING_X
         val fieldY = DropdownTheme.SETTING_HEIGHT
@@ -27,7 +33,18 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         if (!inputField.isFocused && inputField.text != setting.value) {
             inputField.text = setting.value
         }
-        inputField.draw(scope, textMetrics, fieldX, fieldY, fieldW, fieldH, mouseX, mouseY, "...", DropdownTheme.SETTING_TEXT_SCALE)
+        inputField.draw(
+            scope,
+            textMetrics,
+            fieldX,
+            fieldY,
+            fieldW,
+            fieldH,
+            mouseX,
+            mouseY,
+            "...",
+            DropdownTheme.SETTING_TEXT_SCALE
+        )
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

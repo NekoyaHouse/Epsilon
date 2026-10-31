@@ -49,7 +49,11 @@ object Shaders : Module("Shaders", Category.RENDER) {
     ).apply { group(sgTargets) }
 
     val entityShader: ShaderSettings = ShaderSettings("", sgEntityShader, { hasEntityTargets() })
-    val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false, dependency = { friends }).apply { group(sgEntityShader) }
+    val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false, dependency = { friends }).apply {
+        group(
+            sgEntityShader
+        )
+    }
     val handsShader: ShaderSettings = ShaderSettings("Hands ", sgHandsShader, { hands })
     val chestShader: ShaderSettings = ShaderSettings("Chest ", sgChestShader, { chests })
 
@@ -116,17 +120,37 @@ object Shaders : Module("Shaders", Category.RENDER) {
         targetEnabled: Setting.Dependency,
     ) {
 
-        val mode: EnumSetting<ShaderManager.Shader> = enumSetting(prefix + "Mode", ShaderManager.Shader.Default, dependency = targetEnabled).apply { group(group) }
-        val outlineMode: EnumSetting<OutlineMode> = enumSetting(prefix + "Outline Mode", OutlineMode.Outline, dependency = targetEnabled).apply { group(group) }
+        val mode: EnumSetting<ShaderManager.Shader> = enumSetting(
+            prefix + "Mode",
+            ShaderManager.Shader.Default,
+            dependency = targetEnabled
+        ).apply { group(group) }
+        val outlineMode: EnumSetting<OutlineMode> =
+            enumSetting(prefix + "Outline Mode", OutlineMode.Outline, dependency = targetEnabled).apply { group(group) }
 
         private val outlineAvailable: Setting.Dependency =
             { targetEnabled.check() && outlineMode.`is`(OutlineMode.Outline) }
         private val glowAvailable: Setting.Dependency =
             { targetEnabled.check() && outlineMode.`is`(OutlineMode.Glow) }
 
-        val glowColorMode: EnumSetting<GlowColorMode> = enumSetting(prefix + "Glow Color Mode", GlowColorMode.Solid, dependency = glowAvailable).apply { group(group) }
-        val glowRadius by intSetting(prefix + "Glow Radius", 4, 2, 30, 1, dependency = glowAvailable).apply { group(group) }
-        val glowExposure by doubleSetting(prefix + "Glow Exposure", 2.2, 0.5, 3.5, 0.1, dependency = glowAvailable).apply { group(group) }
+        val glowColorMode: EnumSetting<GlowColorMode> = enumSetting(
+            prefix + "Glow Color Mode",
+            GlowColorMode.Solid,
+            dependency = glowAvailable
+        ).apply { group(group) }
+        val glowRadius by intSetting(prefix + "Glow Radius", 4, 2, 30, 1, dependency = glowAvailable).apply {
+            group(
+                group
+            )
+        }
+        val glowExposure by doubleSetting(
+            prefix + "Glow Exposure",
+            2.2,
+            0.5,
+            3.5,
+            0.1,
+            dependency = glowAvailable
+        ).apply { group(group) }
         var glowColor by colorSetting(
             prefix + "Glow Color", Color(255, 183, 197),
             dependency = { glowAvailable.check() && glowColorMode.`is`(GlowColorMode.Solid) }

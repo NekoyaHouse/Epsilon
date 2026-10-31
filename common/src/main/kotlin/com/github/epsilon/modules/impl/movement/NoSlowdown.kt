@@ -56,7 +56,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
             if (eating) {
                 ticks++
-                if (Math.toIntExact(packets.stream().filter { it is ClientboundPingPacket }.count()) > 150 && ticks > 1) {
+                if (Math.toIntExact(packets.stream().filter { it is ClientboundPingPacket }
+                        .count()) > 150 && ticks > 1) {
                     NotificationManager.error(
                         translatedName,
                         EpsilonTranslations.Notifications.TRANSACTION_COUNT_TOO_HIGH.getTranslatedName()
@@ -91,7 +92,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                     )
                 }
                 if (ticks == 2) {
-                    val hand = if (player.usedItemHand == InteractionHand.OFF_HAND) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
+                    val hand =
+                        if (player.usedItemHand == InteractionHand.OFF_HAND) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
                     connection.send(
                         ServerboundUseItemPacket(
                             hand,

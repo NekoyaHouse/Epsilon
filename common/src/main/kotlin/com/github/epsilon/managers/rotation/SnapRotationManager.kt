@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.rotation
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.utils.rotation.Rot2f
@@ -20,7 +20,7 @@ class SnapRotationManager : RotationManager() {
             restoreSnappedRotation(snapped, false)
         }
 
-        snappedRot = Rot2f(Constants.client.player!!.yRot, Constants.client.player!!.xRot)
+        snappedRot = Rot2f(mc.player!!.yRot, mc.player!!.xRot)
         sendRotationPacket(rotations)
     }
 
@@ -33,7 +33,7 @@ class SnapRotationManager : RotationManager() {
         if (finishRotation) {
             active = false
             priority = 0
-            targetRotations = Rot2f(Constants.client.player!!.yRot, Constants.client.player!!.xRot)
+            targetRotations = Rot2f(mc.player!!.yRot, mc.player!!.xRot)
         }
     }
 
@@ -44,8 +44,8 @@ class SnapRotationManager : RotationManager() {
         val pitch = rotation.pitch
         if (yaw.isNaN() || pitch.isNaN()) return
 
-        val player = Constants.client.player!!
-        Constants.client.connection!!.send(
+        val player = mc.player!!
+        mc.connection!!.send(
             ServerboundMovePlayerPacket.PosRot(
                 player.position(), yaw, pitch,
                 player.onGround(), player.horizontalCollision

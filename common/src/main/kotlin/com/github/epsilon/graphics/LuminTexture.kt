@@ -20,7 +20,7 @@ open class LuminTexture(
     }
 
     constructor(texture: GpuTexture, textureView: GpuTextureView, sampler: GpuSampler) :
-        this(texture, textureView, sampler, true, true)
+            this(texture, textureView, sampler, true, true)
 
     override fun close() {
         if (closeSampler) {

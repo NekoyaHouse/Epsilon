@@ -39,13 +39,21 @@ object NoFall : Module("No Fall", Category.PLAYER) {
                     if (lastFallDistance >= fallDistance) {
                         val noSlowdown = NoSlowdown
                         if (NoSlowdown.isWorking()) {
-                            NotificationManager.warning(noSlowdown.translatedName, EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_FALLING.getTranslatedName())
+                            NotificationManager.warning(
+                                noSlowdown.translatedName,
+                                EpsilonTranslations.Notifications.NO_SLOWDOWN_DISABLED_FALLING.getTranslatedName()
+                            )
                             noSlowdown.stop()
                         }
 
                         if (event.isOnGround) {
                             event.isOnGround = false
-                            NetworkUtils.sendPacketNoEvent(ServerboundMovePlayerPacket.StatusOnly(true, player.horizontalCollision))
+                            NetworkUtils.sendPacketNoEvent(
+                                ServerboundMovePlayerPacket.StatusOnly(
+                                    true,
+                                    player.horizontalCollision
+                                )
+                            )
                             Constants.skipTicks++
                             jump = true
                         }

@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.shaders
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -61,7 +61,7 @@ object FilterShader {
     }
 
     fun renderToMainTarget(color: Color?) {
-        render(Constants.client.gameRenderer.mainRenderTarget(), color)
+        render(mc.gameRenderer.mainRenderTarget(), color)
     }
 
     fun render(framebuffer: RenderTarget?, color: Color?) {
@@ -106,7 +106,11 @@ object FilterShader {
             renderPass.setPipeline(RenderSystem.getCompiledPipeline(this.pipeline!!))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("FilterColor", filterColor)
-            renderPass.setUniform("InputSampler", inputTarget.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+            renderPass.setUniform(
+                "InputSampler",
+                inputTarget.colorTextureView,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+            )
             renderPass.draw(3, 1, 0, 0)
         }
     }
@@ -114,7 +118,12 @@ object FilterShader {
     private data class FilterColor(val red: Float, val green: Float, val blue: Float, val alpha: Float) :
         DynamicGpuDataStorage.DynamicGpuData {
 
-        constructor(color: Color) : this(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, color.alpha / 255.0f)
+        constructor(color: Color) : this(
+            color.red / 255.0f,
+            color.green / 255.0f,
+            color.blue / 255.0f,
+            color.alpha / 255.0f
+        )
 
         override fun write(buffer: ByteBuffer) {
             Std140Builder.intoBuffer(buffer).putVec4(red, green, blue, alpha)

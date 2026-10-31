@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
@@ -324,11 +324,11 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
             return
         }
         val current = getDisplayBuffer()
-        Constants.client.keyboardHandler.clipboard = current.substring(selectionStart, selectionEnd)
+        mc.keyboardHandler.clipboard = current.substring(selectionStart, selectionEnd)
     }
 
     private fun pasteClipboard() {
-        val clipboard = Constants.client.keyboardHandler.clipboard
+        val clipboard = mc.keyboardHandler.clipboard
         if (clipboard.isEmpty()) {
             return
         }

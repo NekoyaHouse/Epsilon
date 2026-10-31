@@ -77,7 +77,11 @@ object DropdownTheme {
     }
 
     fun moduleEnabled(hoverProgress: Float): Color {
-        return MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, 0.15f), hoverProgress)
+        return MD3Theme.lerp(
+            MD3Theme.PRIMARY_CONTAINER,
+            MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, 0.15f),
+            hoverProgress
+        )
     }
 
     fun moduleDisabled(hoverProgress: Float): Color {
@@ -125,7 +129,11 @@ object DropdownTheme {
     }
 
     fun inputSurface(focused: Boolean): Color {
-        return if (focused) MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.PRIMARY_CONTAINER, 0.3f) else MD3Theme.SURFACE_CONTAINER_HIGH
+        return if (focused) MD3Theme.lerp(
+            MD3Theme.SURFACE_CONTAINER_HIGH,
+            MD3Theme.PRIMARY_CONTAINER,
+            0.3f
+        ) else MD3Theme.SURFACE_CONTAINER_HIGH
     }
 
     fun inputText(): Color {
@@ -137,7 +145,11 @@ object DropdownTheme {
     }
 
     fun buttonSurface(hoverProgress: Float): Color {
-        return MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, 0.12f), hoverProgress)
+        return MD3Theme.lerp(
+            MD3Theme.SECONDARY_CONTAINER,
+            MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, 0.12f),
+            hoverProgress
+        )
     }
 
     fun buttonText(): Color {
@@ -181,7 +193,13 @@ object DropdownTheme {
      */
     fun groupCardBackground(depth: Int): Color {
         val ratio = depthRatio(depth)
-        return MD3Theme.withAlpha(MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_LOW, MD3Theme.SURFACE_CONTAINER_HIGH, ratio * 0.65f), 200)
+        return MD3Theme.withAlpha(
+            MD3Theme.lerp(
+                MD3Theme.SURFACE_CONTAINER_LOW,
+                MD3Theme.SURFACE_CONTAINER_HIGH,
+                ratio * 0.65f
+            ), 200
+        )
     }
 
     /**

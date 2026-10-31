@@ -282,7 +282,16 @@ class UiTree private constructor(
             )
         }
 
-        fun shadow(layer: Int, x: Float, y: Float, width: Float, height: Float, radius: Float, blurRadius: Float, color: Color) {
+        fun shadow(
+            layer: Int,
+            x: Float,
+            y: Float,
+            width: Float,
+            height: Float,
+            radius: Float,
+            blurRadius: Float,
+            color: Color
+        ) {
             addNode(
                 layer,
                 ShadowNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, blurRadius, color)
@@ -348,7 +357,10 @@ class UiTree private constructor(
         }
 
         fun roundRect(layer: Int, x: Float, y: Float, width: Float, height: Float, radius: Float, color: Color) {
-            addNode(layer, RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color))
+            addNode(
+                layer,
+                RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color)
+            )
         }
 
         fun roundRect(
@@ -446,7 +458,15 @@ class UiTree private constructor(
             nodes.add(RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color))
         }
 
-        fun rectOutline(layer: Int, x: Float, y: Float, width: Float, height: Float, outlineWidth: Float, color: Color) {
+        fun rectOutline(
+            layer: Int,
+            x: Float,
+            y: Float,
+            width: Float,
+            height: Float,
+            outlineWidth: Float,
+            color: Color
+        ) {
             addNode(layer, RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color))
         }
 
@@ -454,14 +474,28 @@ class UiTree private constructor(
             x: Float, y: Float, width: Float, height: Float,
             topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color
         ) {
-            nodes.add(RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight))
+            nodes.add(
+                RectGradientNode(
+                    resolveX(x),
+                    resolveY(y),
+                    width,
+                    height,
+                    topLeft,
+                    bottomLeft,
+                    bottomRight,
+                    topRight
+                )
+            )
         }
 
         fun rectGradient(
             layer: Int, x: Float, y: Float, width: Float, height: Float,
             topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color
         ) {
-            addNode(layer, RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight))
+            addNode(
+                layer,
+                RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight)
+            )
         }
 
         fun rectVerticalGradient(x: Float, y: Float, width: Float, height: Float, top: Color, bottom: Color) {
@@ -554,7 +588,15 @@ class UiTree private constructor(
             nodes.add(GradientTextNode(text, resolveX(x), resolveY(y), scale, startColor, endColor, fontLoader))
         }
 
-        fun blurredText(text: String, x: Float, y: Float, scale: Float, blurRadius: Float, intensity: Int, color: Color) {
+        fun blurredText(
+            text: String,
+            x: Float,
+            y: Float,
+            scale: Float,
+            blurRadius: Float,
+            intensity: Int,
+            color: Color
+        ) {
             nodes.add(BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, null))
         }
 
@@ -565,7 +607,16 @@ class UiTree private constructor(
             nodes.add(BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader))
         }
 
-        fun blurredText(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, blurRadius: Float, intensity: Int) {
+        fun blurredText(
+            layer: Int,
+            text: String,
+            x: Float,
+            y: Float,
+            scale: Float,
+            color: Color,
+            blurRadius: Float,
+            intensity: Int
+        ) {
             blurredText(layer, text, x, y, scale, color, blurRadius, intensity, null)
         }
 
@@ -573,7 +624,10 @@ class UiTree private constructor(
             layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, blurRadius: Float, intensity: Int,
             fontLoader: TtfFontLoader?
         ) {
-            addNode(layer, BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader))
+            addNode(
+                layer,
+                BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader)
+            )
         }
 
         fun glitchText(text: String, x: Float, y: Float, scale: Float, color: Color, effect: TextGlitchEffect?) {
@@ -705,7 +759,23 @@ class UiTree private constructor(
             radius: Float, u0: Float, v0: Float, u1: Float, v1: Float, color: Color,
             originX: Float, originY: Float, rotationDegrees: Float
         ) {
-            rotatedRoundedTexture(texture, x, y, width, height, radius, u0, v0, u1, v1, color, originX, originY, rotationDegrees, false)
+            rotatedRoundedTexture(
+                texture,
+                x,
+                y,
+                width,
+                height,
+                radius,
+                u0,
+                v0,
+                u1,
+                v1,
+                color,
+                originX,
+                originY,
+                rotationDegrees,
+                false
+            )
         }
 
         fun rotatedRoundedTexture(
@@ -790,13 +860,61 @@ class UiTree private constructor(
         }
 
         fun playerHead(texture: LuminTexture, x: Float, y: Float, size: Float, radius: Float, color: Color) {
-            roundedTexture(texture, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color)
-            roundedTexture(texture, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color)
+            roundedTexture(
+                texture,
+                x,
+                y,
+                size,
+                size,
+                radius,
+                8.0f / 64.0f,
+                8.0f / 64.0f,
+                16.0f / 64.0f,
+                16.0f / 64.0f,
+                color
+            )
+            roundedTexture(
+                texture,
+                x,
+                y,
+                size,
+                size,
+                radius,
+                40.0f / 64.0f,
+                8.0f / 64.0f,
+                48.0f / 64.0f,
+                16.0f / 64.0f,
+                color
+            )
         }
 
         fun playerHead(identifier: Identifier, x: Float, y: Float, size: Float, radius: Float, color: Color) {
-            roundedTexture(identifier, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color)
-            roundedTexture(identifier, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color)
+            roundedTexture(
+                identifier,
+                x,
+                y,
+                size,
+                size,
+                radius,
+                8.0f / 64.0f,
+                8.0f / 64.0f,
+                16.0f / 64.0f,
+                16.0f / 64.0f,
+                color
+            )
+            roundedTexture(
+                identifier,
+                x,
+                y,
+                size,
+                size,
+                radius,
+                40.0f / 64.0f,
+                8.0f / 64.0f,
+                48.0f / 64.0f,
+                16.0f / 64.0f,
+                color
+            )
         }
 
         fun button(
@@ -806,7 +924,14 @@ class UiTree private constructor(
             button(ButtonElement(UiRect(x, y, width, height), radius, background, label, labelScale, labelColor))
         }
 
-        fun button(bounds: UiRect, radius: Float, background: Color, label: String, labelScale: Float, labelColor: Color) {
+        fun button(
+            bounds: UiRect,
+            radius: Float,
+            background: Color,
+            label: String,
+            labelScale: Float,
+            labelColor: Color
+        ) {
             button(ButtonElement(bounds, radius, background, label, labelScale, labelColor))
         }
 
@@ -909,14 +1034,35 @@ class UiTree private constructor(
             bounds: UiRect, label: String, textScale: Float, background: Color, foreground: Color,
             trailingIcon: String?, trailingIconScale: Float, trailingIconFont: TtfFontLoader?
         ) {
-            assistChip(bounds, label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont)
+            assistChip(
+                bounds,
+                label,
+                textScale,
+                background,
+                foreground,
+                trailingIcon,
+                trailingIconScale,
+                trailingIconFont
+            )
         }
 
-        fun segmentedControl(bounds: UiRect, leadingLabel: String, trailingLabel: String, progress: Float, hoverProgress: Float) {
+        fun segmentedControl(
+            bounds: UiRect,
+            leadingLabel: String,
+            trailingLabel: String,
+            progress: Float,
+            hoverProgress: Float
+        ) {
             nodes.add(SegmentedControlNode(resolveRect(bounds), leadingLabel, trailingLabel, progress, hoverProgress))
         }
 
-        fun segmented(bounds: UiRect, leadingLabel: String, trailingLabel: String, progress: Float, hoverProgress: Float) {
+        fun segmented(
+            bounds: UiRect,
+            leadingLabel: String,
+            trailingLabel: String,
+            progress: Float,
+            hoverProgress: Float
+        ) {
             segmentedControl(bounds, leadingLabel, trailingLabel, progress, hoverProgress)
         }
 

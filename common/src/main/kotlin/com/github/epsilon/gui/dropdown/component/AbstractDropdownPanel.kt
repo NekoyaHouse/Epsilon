@@ -103,20 +103,45 @@ abstract class AbstractDropdownPanel protected constructor(
         updateScroll(contentHeight, visibleHeight, true)
         val panelHeight = cachedPanelHeight
 
-        scope.shadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow())
+        scope.shadow(
+            x,
+            y,
+            width,
+            panelHeight,
+            DropdownTheme.PANEL_RADIUS,
+            DropdownTheme.PANEL_SHADOW_BLUR,
+            DropdownTheme.panelShadow()
+        )
         scope.roundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
 
         val iconX = x + 7.5f
         val textX = if (icon == null || icon.isBlank()) x + 10.0f else iconX + 16.0f
-        val textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
+        val textY =
+            y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
         val iconText = icon
         if (iconText != null && !iconText.isBlank()) {
-            val iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
-            scope.text(iconText, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS)
+            val iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(
+                DropdownTheme.HEADER_ICON_SCALE,
+                StaticFontLoader.ICONS
+            )) * 0.5f
+            scope.text(
+                iconText,
+                iconX,
+                iconY,
+                DropdownTheme.HEADER_ICON_SCALE,
+                MD3Theme.PRIMARY,
+                StaticFontLoader.ICONS
+            )
         }
         val headerTitle = getTitle()
         scope.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY)
-        scope.triangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f))
+        scope.triangle(
+            x + width - 10.0f,
+            y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f,
+            3.0f,
+            expand,
+            DropdownTheme.groupChevron(0.0f)
+        )
     }
 
     override fun drawContent(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
@@ -127,7 +152,14 @@ abstract class AbstractDropdownPanel protected constructor(
         val visibleHeight = cachedVisibleContentHeight
         updateScroll(contentHeight, visibleHeight, false)
         val scrollbarViewport = getScrollbarViewport()
-        val scrollbarHovered = scrollBar.isHovered(mouseX.toDouble(), mouseY.toDouble(), scrollbarViewport, scroll, maxScroll, contentHeight)
+        val scrollbarHovered = scrollBar.isHovered(
+            mouseX.toDouble(),
+            mouseY.toDouble(),
+            scrollbarViewport,
+            scroll,
+            maxScroll,
+            contentHeight
+        )
         val contentMouseX = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseX
         val contentMouseY = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseY
         drawPanelContent(scope, textMetrics, contentMouseX, contentMouseY, visibleHeight)
@@ -175,7 +207,15 @@ abstract class AbstractDropdownPanel protected constructor(
             }
         }
 
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && scrollBar.mouseClicked(mouseX, mouseY, getScrollbarViewport(), scroll, maxScroll, cachedContentHeight)) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && scrollBar.mouseClicked(
+                mouseX,
+                mouseY,
+                getScrollbarViewport(),
+                scroll,
+                maxScroll,
+                cachedContentHeight
+            )
+        ) {
             val newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight)
             if (newScroll >= 0.0f) {
                 setScrollImmediate(newScroll)
@@ -249,7 +289,13 @@ abstract class AbstractDropdownPanel protected constructor(
 
     protected abstract fun computeContentHeight(): Float
 
-    protected abstract fun drawPanelContent(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, visibleHeight: Float)
+    protected abstract fun drawPanelContent(
+        scope: UiTree.Scope,
+        textMetrics: UiTextMetrics,
+        mouseX: Int,
+        mouseY: Int,
+        visibleHeight: Float
+    )
 
     protected open fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
         return false
@@ -269,7 +315,8 @@ abstract class AbstractDropdownPanel protected constructor(
     }
 
     protected fun computeVisibleContentHeight(contentHeight: Float): Float {
-        val maxContentHeight = maxOf(0.0f, maxPanelHeight - DropdownTheme.PANEL_HEADER_HEIGHT - DropdownTheme.PANEL_BOTTOM_PADDING)
+        val maxContentHeight =
+            maxOf(0.0f, maxPanelHeight - DropdownTheme.PANEL_HEADER_HEIGHT - DropdownTheme.PANEL_BOTTOM_PADDING)
         return minOf(contentHeight, maxContentHeight)
     }
 
@@ -285,7 +332,8 @@ abstract class AbstractDropdownPanel protected constructor(
         cachedExpand = openAnim.value
         cachedContentHeight = computeContentHeight()
         cachedVisibleContentHeight = computeVisibleContentHeight(cachedContentHeight)
-        cachedPanelHeight = DropdownTheme.PANEL_HEADER_HEIGHT + (cachedVisibleContentHeight + DropdownTheme.PANEL_BOTTOM_PADDING) * cachedExpand
+        cachedPanelHeight =
+            DropdownTheme.PANEL_HEADER_HEIGHT + (cachedVisibleContentHeight + DropdownTheme.PANEL_BOTTOM_PADDING) * cachedExpand
         cachedMetricsFrameId = renderFrameId
     }
 

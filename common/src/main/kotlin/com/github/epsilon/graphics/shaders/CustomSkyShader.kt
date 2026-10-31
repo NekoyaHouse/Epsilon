@@ -77,7 +77,11 @@ object CustomSkyShader {
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("CustomSky", uniforms)
             if (mode == CustomSky.ShaderMode.Local) {
-                renderPass.setUniform("InputSampler", input!!.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+                renderPass.setUniform(
+                    "InputSampler",
+                    input!!.colorTextureView,
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+                )
             }
             renderPass.draw(3, 1, 0, 0)
         }
@@ -102,7 +106,8 @@ object CustomSkyShader {
     private fun ensureInput(target: RenderTarget) {
         var inputTarget = input
         if (inputTarget == null) {
-            inputTarget = TextureTarget("Epsilon Custom Sky Input", target.width, target.height, GpuFormat.RGBA8_UNORM, null)
+            inputTarget =
+                TextureTarget("Epsilon Custom Sky Input", target.width, target.height, GpuFormat.RGBA8_UNORM, null)
             input = inputTarget
         } else if (inputTarget.width != target.width || inputTarget.height != target.height) {
             inputTarget.resize(target.width, target.height)

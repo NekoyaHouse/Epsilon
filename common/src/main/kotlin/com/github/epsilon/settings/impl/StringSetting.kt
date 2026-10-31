@@ -10,7 +10,7 @@ class StringSetting(
 ) : Setting<String>(name, dependency, onChanged) {
 
     constructor(name: String, defaultValue: String, dependency: Dependency?) :
-        this(name, defaultValue, dependency, null)
+            this(name, defaultValue, dependency, null)
 
     init {
         initializeValue(defaultValue)

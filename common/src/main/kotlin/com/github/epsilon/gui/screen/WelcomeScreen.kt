@@ -169,7 +169,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
 
     private fun confirmDoNotShowAgain() {
         (ClientSetting.settings.firstOrNull { setting -> setting.name == "Show Welcome Screen" }
-            as? BoolSetting)?.value = false
+                as? BoolSetting)?.value = false
         ConfigManager.saveNow()
         continueToNextScreen()
     }
@@ -195,7 +195,10 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         if (bodyHeight > 0) {
             bodyHeight -= BODY_BLOCK_GAP
         }
-        return minOf(height - CARD_MARGIN * 2, TITLE_TOP + TITLE_TO_BODY_GAP + bodyHeight + BUTTON_BOTTOM_PADDING + BUTTON_BLOCK_HEIGHT)
+        return minOf(
+            height - CARD_MARGIN * 2,
+            TITLE_TOP + TITLE_TO_BODY_GAP + bodyHeight + BUTTON_BOTTOM_PADDING + BUTTON_BLOCK_HEIGHT
+        )
     }
 
     private fun getCardY(cardHeight: Int): Int {

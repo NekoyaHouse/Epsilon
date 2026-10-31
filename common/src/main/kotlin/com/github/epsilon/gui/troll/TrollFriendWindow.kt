@@ -102,10 +102,17 @@ class TrollFriendWindow : TrollWindow() {
                     Color(255, 255, 255, if (hovered) 30 else 16)
                 )
                 content.textWithShadow(
-                    2, TrollTheme.trim(row.name, metrics, TrollTheme.TEXT_SCALE, row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f),
+                    2,
+                    TrollTheme.trim(
+                        row.name,
+                        metrics,
+                        TrollTheme.TEXT_SCALE,
+                        row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f
+                    ),
                     row.bounds.x + 5.0f,
                     row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
-                    TrollTheme.TEXT_SCALE, TrollTheme.text()
+                    TrollTheme.TEXT_SCALE,
+                    TrollTheme.text()
                 )
 
                 val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
@@ -117,8 +124,15 @@ class TrollFriendWindow : TrollWindow() {
                 val iconScale = TrollTheme.VALUE_SCALE
                 content.textWithShadow(
                     4, IconChars.CLOSE,
-                    row.removeBounds.centerX() - metrics.getWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS) / 2.0f,
-                    row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f,
+                    row.removeBounds.centerX() - metrics.getWidth(
+                        IconChars.CLOSE,
+                        iconScale,
+                        StaticFontLoader.ICONS
+                    ) / 2.0f,
+                    row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(
+                        iconScale,
+                        StaticFontLoader.ICONS
+                    )) / 2.0f,
                     iconScale, TrollTheme.text(), StaticFontLoader.ICONS
                 )
             }

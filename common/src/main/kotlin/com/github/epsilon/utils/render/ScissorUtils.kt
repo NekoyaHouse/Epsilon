@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.mojang.renderpearl.api.commands.RenderPass
 import net.minecraft.client.renderer.state.WindowRenderState
@@ -37,7 +37,13 @@ object ScissorUtils {
      * @param guiHeight GUI 坐标系高度
      * @return 操作结果
      */
-    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Float): LuminRenderSystem.ScissorRect {
+    fun toFramebufferScissor(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        guiHeight: Float
+    ): LuminRenderSystem.ScissorRect {
         val scale = LuminRenderSystem.getGuiScale()
         val sx = (x * scale).roundToInt()
         val sy = ((guiHeight - y - height) * scale).roundToInt()
@@ -57,7 +63,14 @@ object ScissorUtils {
      * @param framebufferHeight 帧缓冲高度
      * @return 操作结果
      */
-    fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, scale: Double, framebufferHeight: Int): LuminRenderSystem.ScissorRect {
+    fun toFramebufferScissor(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        scale: Double,
+        framebufferHeight: Int
+    ): LuminRenderSystem.ScissorRect {
         val sx = (x * scale).roundToInt()
         val sy = (framebufferHeight - (y + height) * scale).roundToInt()
         val sw = maxOf(0, (width * scale).roundToInt())
@@ -79,8 +92,10 @@ object ScissorUtils {
         val areaHeight = getFramebufferHeight()
         val left = (x.toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
         val top = (y.toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
-        val right = ((x + width).toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
-        val bottom = ((y + height).toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
+        val right =
+            ((x + width).toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
+        val bottom =
+            ((y + height).toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
         return LuminRenderSystem.ScissorRect(left, top, maxOf(0, right - left), maxOf(0, bottom - top))
     }
 
@@ -141,7 +156,7 @@ object ScissorUtils {
             return activeTarget.width()
         }
 
-        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = mc.gameRenderer.gameRenderState().windowRenderState
         return windowState.width
     }
 
@@ -151,7 +166,7 @@ object ScissorUtils {
             return activeTarget.height()
         }
 
-        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = mc.gameRenderer.gameRenderState().windowRenderState
         return windowState.height
     }
 

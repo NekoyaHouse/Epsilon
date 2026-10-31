@@ -48,7 +48,12 @@ object AutoQueue : Module("Auto Queue", Category.PLAYER) {
 
     private fun loadQuestions(): JsonObject {
         try {
-            BufferedReader(InputStreamReader(requireNotNull(javaClass.classLoader.getResourceAsStream("assets/epsilon/xinqueue_questions.json")), StandardCharsets.UTF_8)).use { reader ->
+            BufferedReader(
+                InputStreamReader(
+                    requireNotNull(javaClass.classLoader.getResourceAsStream("assets/epsilon/xinqueue_questions.json")),
+                    StandardCharsets.UTF_8
+                )
+            ).use { reader ->
                 val content = reader.lineSequence().joinToString("\n")
                 return JsonParser.parseString(content).asJsonObject
             }

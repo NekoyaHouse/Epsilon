@@ -387,7 +387,11 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             if (player.containerMenu != player.inventoryMenu) return@runSafe
 
             val chestStack = player.containerMenu.getSlot(CHEST_MENU_SLOT).item
-            if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST) || !isChestEquippable(player.containerMenu.getSlot(slot).item)) {
+            if (!LivingEntity.canGlideUsing(
+                    chestStack,
+                    EquipmentSlot.CHEST
+                ) || !isChestEquippable(player.containerMenu.getSlot(slot).item)
+            ) {
                 eatGlideElytraSlot = -1
                 Constants.LOGGER.warn(
                     "Elytra Fly: 胸甲或鞘翅槽位已被改动，跳过装备还原（记录槽位 {}，当前胸甲槽物品 {}）",

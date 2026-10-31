@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -71,7 +71,7 @@ object DeobfESP {
     fun retainRisingEffects() {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
-        val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val world = level
         val iterator = effects.values.iterator()
 
@@ -104,8 +104,8 @@ object DeobfESP {
     fun render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
-        val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val camera: Camera = Constants.client.gameRenderer.mainCamera()
+        val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val camera: Camera = mc.gameRenderer.mainCamera()
         val world = level
         val texture = KillAura.deobfMode.texture
         val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
@@ -151,7 +151,8 @@ object DeobfESP {
         flyHeight: Float,
     ) {
         val baseWidth = maxOf(0.01f, size)
-        val baseHeight = baseWidth * (if (KillAura.deobfMode == TextureMode.Niuren) 751.0f / 376.0f else 1280.0f / 1073.0f)
+        val baseHeight =
+            baseWidth * (if (KillAura.deobfMode == TextureMode.Niuren) 751.0f / 376.0f else 1280.0f / 1073.0f)
         val drawWidth: Float
         val drawHeight: Float
         val rotation: Float
@@ -171,7 +172,8 @@ object DeobfESP {
             drawHeight = baseHeight * pop * (1.0f - squash * 0.55f)
             rotation = aliveRotation(effect, now, spins, wobble)
             offsetX = Mth.sin((reactionProgress * Mth.PI * 24.0f).toDouble()) * damping * baseWidth * 0.09f * wobble
-            offsetY = -abs(Mth.sin((reactionProgress * Mth.PI * 8.0f).toDouble())) * damping * baseWidth * 0.08f * wobble
+            offsetY =
+                -abs(Mth.sin((reactionProgress * Mth.PI * 8.0f).toDouble())) * damping * baseWidth * 0.08f * wobble
             tint = hitTint(reactionProgress, 255)
             anchor = livingAnchor(effect.target, partialTick)
         } else {
@@ -187,7 +189,8 @@ object DeobfESP {
             offsetY = 0.0f
 
             val fadeProgress = Mth.clamp((killProgress - 0.58f) / 0.42f, 0.0f, 1.0f)
-            val alpha = Mth.clamp((255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))).roundToInt(), 0, 255)
+            val alpha =
+                Mth.clamp((255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))).roundToInt(), 0, 255)
             val redProgress = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(killProgress)
             tint = redTint(redProgress, alpha)
             anchor = effect.deathAnchor!!.add(0.0, (drawHeight / 2.0f + flyProgress * flyHeight).toDouble(), 0.0)
@@ -230,7 +233,8 @@ object DeobfESP {
     }
 
     private fun hitTint(reactionProgress: Float, alpha: Int): Color {
-        val redProgress = Mth.clamp(Mth.sin((Mth.clamp(reactionProgress / 0.72f, 0.0f, 1.0f) * Mth.PI).toDouble()), 0.0f, 1.0f)
+        val redProgress =
+            Mth.clamp(Mth.sin((Mth.clamp(reactionProgress / 0.72f, 0.0f, 1.0f) * Mth.PI).toDouble()), 0.0f, 1.0f)
         return redTint(redProgress, alpha)
     }
 

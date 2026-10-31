@@ -1,6 +1,6 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
@@ -110,9 +110,9 @@ class ScaffoldBlocksInstance(
         val blockItem = stack.item as? BlockItem ?: return
 
         val state: BlockState = blockItem.block.defaultBlockState()
-        iconSprite = Constants.client.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
+        iconSprite = mc.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
 
-        val tintSource: BlockTintSource = Constants.client.blockColors.getTintSource(state, 0) ?: return
+        val tintSource: BlockTintSource = mc.blockColors.getTintSource(state, 0) ?: return
         val nn = NonNullContext.current ?: return
 
         val tint = context(nn) { tintSource.colorAsTerrainParticle(state, level, player.blockPosition()) }

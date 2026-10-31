@@ -374,7 +374,8 @@ object EpsilonTranslations {
 
     object ElytraFly {
         val PITCH40_TAKEOFF_COMPLETE: TranslateComponent = create("modules.elytra fly", "pitch40_takeoff_complete")
-        val PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS: TranslateComponent = create("modules.elytra fly", "pitch40_too_close_to_lower_bounds")
+        val PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS: TranslateComponent =
+            create("modules.elytra fly", "pitch40_too_close_to_lower_bounds")
         val PITCH40_NO_USABLE_ELYTRA: TranslateComponent = create("modules.elytra fly", "pitch40_no_usable_elytra")
     }
 
@@ -409,8 +410,10 @@ object EpsilonTranslations {
         val TRANSACTION_COUNT_TOO_HIGH: TranslateComponent = create("notification", "transaction_count_too_high")
         val SCAFFOLD_FLYING_WARNING: TranslateComponent = create("notification", "scaffold_flying_warning")
         val SCAFFOLD_TOGGLE_ON_TELEPORT: TranslateComponent = create("notification", "scaffold_toggle_on_teleport")
-        val SERVERBOUND_PACKET_FLUSH_FAILED: TranslateComponent = create("notification", "serverbound_packet_flush_failed")
-        val CLIENTBOUND_PACKET_FLUSH_FAILED: TranslateComponent = create("notification", "clientbound_packet_flush_failed")
+        val SERVERBOUND_PACKET_FLUSH_FAILED: TranslateComponent =
+            create("notification", "serverbound_packet_flush_failed")
+        val CLIENTBOUND_PACKET_FLUSH_FAILED: TranslateComponent =
+            create("notification", "clientbound_packet_flush_failed")
         val KEY_FRIEND_ADDED: TranslateComponent = create("notification", "key_friend_added")
         val KEY_FRIEND_REMOVED: TranslateComponent = create("notification", "key_friend_removed")
     }

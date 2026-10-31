@@ -320,10 +320,12 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             forwardInput = event.forward
             strafeInput = event.strafe
             inputYaw = Mth.wrapDegrees(
-                ((player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees().toFloat()) / 45.0f).roundToInt() * 45.0f
+                ((player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees()
+                    .toFloat()) / 45.0f).roundToInt() * 45.0f
             )
             rawInputYaw = Mth.wrapDegrees(
-                (player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees().toFloat()).roundToInt().toFloat()
+                (player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees()
+                    .toFloat()).roundToInt().toFloat()
             )
 
             if (mode == Mode.TellyBridge && player.onGround() && !mc.options.keyJump.isDown && player.isMoving) {
@@ -562,7 +564,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             val baseBlockPos = pos.relative(dir)
 
             val state: BlockState = level.getBlockState(baseBlockPos)
-            if (state.getCollisionShape(level, baseBlockPos).isEmpty || state.getMenuProvider(level, baseBlockPos) != null) {
+            if (state.getCollisionShape(level, baseBlockPos).isEmpty || state.getMenuProvider(
+                    level,
+                    baseBlockPos
+                ) != null
+            ) {
                 continue
             }
 
@@ -760,7 +766,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         }
 
         val block = (stack.item as BlockItem).block
-        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(block)
+        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(
+            block
+        )
     }
 
     val isEmergencyPlacementActive: Boolean

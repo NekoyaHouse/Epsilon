@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.target
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.FriendManager
@@ -30,7 +30,7 @@ object TargetManager {
     }
 
     private fun onClientTick() {
-        if (Constants.client.player == null || Constants.client.level == null) {
+        if (mc.player == null || mc.level == null) {
             sharedTarget = null
             return
         }
@@ -99,9 +99,9 @@ object TargetManager {
 
     private fun isSharedTargetAlive(): Boolean {
         val shared = sharedTarget ?: return false
-        if (shared === Constants.client.player) return false
+        if (shared === mc.player) return false
         if (!shared.isAlive || shared.isDeadOrDying) return false
-        if (shared.level() !== Constants.client.level) return false
+        if (shared.level() !== mc.level) return false
         return !AntiBot.isBot(shared)
     }
 
@@ -157,16 +157,16 @@ object TargetManager {
         }
         if (entity is Player) {
             return if (teams.`is`(ClientSetting.Teams.Color)) {
-                entity.teamColor == Constants.client.player!!.teamColor
+                entity.teamColor == mc.player!!.teamColor
             } else {
-                Objects.equals(getTeam(entity), getTeam(Constants.client.player!!))
+                Objects.equals(getTeam(entity), getTeam(mc.player!!))
             }
         }
         return false
     }
 
     private fun getTeam(entity: Entity): String? {
-        val playerInfo: PlayerInfo = Constants.client.connection!!.getPlayerInfo(entity.uuid) ?: return null
+        val playerInfo: PlayerInfo = mc.connection!!.getPlayerInfo(entity.uuid) ?: return null
         val team = playerInfo.team ?: return null
         return team.name
     }

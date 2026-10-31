@@ -53,7 +53,19 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val sectionWidth = sectionWidth(width)
         var cursor = y
         for (node in nodes) {
-            drawNode(scope, textMetrics, mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth, hitOffsetX, hitOffsetY)
+            drawNode(
+                scope,
+                textMetrics,
+                mouseX,
+                mouseY,
+                node,
+                0,
+                sectionX,
+                cursor,
+                sectionWidth,
+                hitOffsetX,
+                hitOffsetY
+            )
             cursor += nodeHeight(node)
         }
     }
@@ -124,6 +136,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                         height += widget.getHeight() + DropdownTheme.SETTING_GAP
                     }
                 }
+
                 is ChildElement -> height += nodeHeight(element.node)
             }
         }
@@ -149,7 +162,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val radius = DropdownTheme.groupCardRadius(progress)
 
         scope.roundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
-        scope.outline(cardBounds.x, y, cardBounds.width, cardHeight, radius, 0.8f, DropdownTheme.groupCardOutline(depth))
+        scope.outline(
+            cardBounds.x,
+            y,
+            cardBounds.width,
+            cardHeight,
+            radius,
+            0.8f,
+            DropdownTheme.groupCardOutline(depth)
+        )
 
         val hoverAnimation = hoverAnimations.getOrPut(node.key()) { createAnimation(DropdownTheme.ANIM_HOVER, 0.0f) }
         val hovered = isHovered(
@@ -169,14 +190,18 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             node.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE,
             cardBounds.width - 74.0f, textMetrics
         )
-        val labelY = y + (DropdownTheme.GROUP_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
+        val labelY =
+            y + (DropdownTheme.GROUP_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
         scope.text(
             label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
             DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
         )
 
         val countLabel = node.totalSettingCount().toString()
-        val countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f
+        val countWidth = textMetrics.textWidth(
+            countLabel,
+            DropdownTheme.GROUP_COUNT_TEXT_SCALE
+        ) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f
         val countX = cardBounds.x + cardBounds.width - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f
         val chipHeight = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT
         val countY = y + (DropdownTheme.GROUP_HEADER_HEIGHT - chipHeight) * 0.5f
@@ -230,6 +255,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     }
                     cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
                 }
+
                 is ChildElement -> {
                     val child = element.node
                     drawNode(scope, textMetrics, mouseX, mouseY, child, depth, x, cursor, width, hitOffsetX, hitOffsetY)
@@ -261,7 +287,16 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
         val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
         val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
-        return clickElements(node, depth + 1, innerX, contentY + DropdownTheme.GROUP_INSET, innerWidth, mouseX, mouseY, button)
+        return clickElements(
+            node,
+            depth + 1,
+            innerX,
+            contentY + DropdownTheme.GROUP_INSET,
+            innerWidth,
+            mouseX,
+            mouseY,
+            button
+        )
     }
 
     private fun clickElements(
@@ -281,6 +316,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     }
                     cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
                 }
+
                 is ChildElement -> {
                     val child = element.node
                     if (clickNode(child, depth, x, cursor, width, mouseX, mouseY, button)) {
@@ -334,6 +370,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                         return true
                     }
                 }
+
                 is ChildElement -> {
                     if (visitWidget(element.node, action, skipCollapsed)) {
                         return true
@@ -454,7 +491,10 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             return SettingSectionRenderer(nodes)
         }
 
-        private fun buildNode(section: SettingLayoutPlanner.Section, widgetFactory: (Setting<*>) -> SettingWidget<*>?): Node? {
+        private fun buildNode(
+            section: SettingLayoutPlanner.Section,
+            widgetFactory: (Setting<*>) -> SettingWidget<*>?
+        ): Node? {
             val elements = ArrayList<Element>()
             for (element in section.elements()) {
                 when (element) {
@@ -465,6 +505,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                         }
                         elements.add(WidgetElement(widget))
                     }
+
                     is SettingLayoutPlanner.Section.GroupElement -> {
                         val child = buildNode(element.section(), widgetFactory)
                         if (child == null) {
@@ -472,6 +513,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                         }
                         elements.add(ChildElement(child))
                     }
+
                     else -> {
                     }
                 }

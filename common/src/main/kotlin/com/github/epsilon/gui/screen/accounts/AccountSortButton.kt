@@ -34,7 +34,14 @@ class AccountSortButton {
         val hovered = bounds.contains(mouseX, mouseY)
         val hoverProgress = scope.animate(hoverAnimation, hovered)
 
-        scope.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, MD3Theme.CONTROL_RADIUS.toFloat(), MD3Theme.SECONDARY_CONTAINER)
+        scope.roundRect(
+            bounds.x,
+            bounds.y,
+            bounds.width,
+            bounds.height,
+            MD3Theme.CONTROL_RADIUS.toFloat(),
+            MD3Theme.SECONDARY_CONTAINER
+        )
         if (hoverProgress > 0.01f) {
             scope.roundRect(
                 bounds.x, bounds.y, bounds.width, bounds.height,
@@ -57,7 +64,13 @@ class AccountSortButton {
 
         val label = mode.getLabel()
         val labelHeight = textRenderer.getHeight(LABEL_SCALE)
-        scope.text(label, bounds.x + INSET + iconWidth + GAP, bounds.y + (bounds.height - labelHeight) / 2.0f, LABEL_SCALE, fg)
+        scope.text(
+            label,
+            bounds.x + INSET + iconWidth + GAP,
+            bounds.y + (bounds.height - labelHeight) / 2.0f,
+            LABEL_SCALE,
+            fg
+        )
     }
 
     fun hasActiveAnimations(): Boolean {

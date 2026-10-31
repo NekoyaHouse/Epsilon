@@ -1,6 +1,7 @@
 package com.github.epsilon.managers
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.screen.AssetDownloadScreen
@@ -333,12 +334,12 @@ object AssetManager {
                 selected.add(asset)
             }
         }
-        Constants.client.execute {
-            if (Constants.client.gui.screen() is AssetDownloadScreen) {
+        mc.execute {
+            if (mc.gui.screen() is AssetDownloadScreen) {
                 return@execute
             }
             normalizeFfmpegDownloadUrl()
-            Constants.client.gui.setScreen(AssetDownloadScreen(Constants.client.gui.screen(), selected, declineOnClose))
+            mc.gui.setScreen(AssetDownloadScreen(mc.gui.screen(), selected, declineOnClose))
         }
     }
 
@@ -412,7 +413,7 @@ object AssetManager {
     }
 
     private fun notifyResult(success: Boolean, error: String?) {
-        Constants.client.execute {
+        mc.execute {
             if (success) {
                 NotificationManager.success(
                     EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_TITLE.getTranslatedName(),
@@ -623,7 +624,7 @@ object AssetManager {
                 val image = NativeImage.read(input)
                 val texture = DynamicTexture({ "Epsilon $label" }, image)
                 val identifier = Identifier.fromNamespaceAndPath("epsilon_assets", resourcePath)
-                Constants.client.textureManager.register(identifier, texture)
+                mc.textureManager.register(identifier, texture)
                 registeredTextures[key] = identifier
                 return identifier
             }
@@ -639,7 +640,7 @@ object AssetManager {
         if (registered.isEmpty() || !RenderSystem.isOnRenderThread()) {
             return
         }
-        registered.values.forEach { identifier -> Constants.client.textureManager.release(identifier) }
+        registered.values.forEach { identifier -> mc.textureManager.release(identifier) }
     }
 
     /**
@@ -686,7 +687,7 @@ object AssetManager {
                 if (Files.exists(videoFile)) {
                     return
                 }
-                val legacy = Constants.client.gameDirectory.toPath().resolve("epsilon-video").resolve(VIDEO_FILE_NAME)
+                val legacy = mc.gameDirectory.toPath().resolve("epsilon-video").resolve(VIDEO_FILE_NAME)
                 if (Files.notExists(legacy) || Files.size(legacy) < MIN_VIDEO_BYTES) {
                     return
                 }

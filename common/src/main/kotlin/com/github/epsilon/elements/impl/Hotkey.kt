@@ -31,13 +31,22 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
 
     private val colorMode by enumSetting("Color Mode", ColorMode.Single)
     private val singleColor by colorSetting("Color", Color.WHITE, false, dependency = { colorMode == ColorMode.Single })
-    private val doubleColor1 by colorSetting("Color 1", Color.WHITE, false, dependency = { colorMode == ColorMode.Double })
-    private val doubleColor2 by colorSetting("Color 2", Color.RED, false, dependency = { colorMode == ColorMode.Double })
+    private val doubleColor1 by colorSetting(
+        "Color 1",
+        Color.WHITE,
+        false,
+        dependency = { colorMode == ColorMode.Double })
+    private val doubleColor2 by colorSetting(
+        "Color 2",
+        Color.RED,
+        false,
+        dependency = { colorMode == ColorMode.Double })
     private val shadowColorMode by enumSetting("Shadow Color", ShadowColorMode.Black)
     private val showSuffix by boolSetting("Show Suffix", true)
 
     private val moduleAnimations: MutableMap<Module, ToggleAnimation> = HashMap()
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun render(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
@@ -123,7 +132,15 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
             val rowColor = resolveTextColor(colorIndex++)
             val shadowColor = resolveShadowColor(rowColor, animation)
             scope.shadow(rowX, rowY, ICON_SIZE, animatedHeight, animatedRadius, SHADOW_BLUR, shadowColor)
-            scope.shadow(textBackgroundX, rowY, textBackgroundWidth, animatedHeight, animatedRadius, SHADOW_BLUR, shadowColor)
+            scope.shadow(
+                textBackgroundX,
+                rowY,
+                textBackgroundWidth,
+                animatedHeight,
+                animatedRadius,
+                SHADOW_BLUR,
+                shadowColor
+            )
 
             val iconHeight = textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)
             val iconWidth = textRenderer.getWidth(entry.icon, ICON_SCALE, StaticFontLoader.ICONS)

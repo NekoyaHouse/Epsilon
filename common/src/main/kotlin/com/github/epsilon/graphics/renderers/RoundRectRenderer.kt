@@ -59,7 +59,15 @@ class RoundRectRenderer private constructor() : IRenderer {
         addRoundRectGradient(x, y, width, height, rTL, rTR, rBR, rBL, top, bottom, bottom, top)
     }
 
-    fun addHorizontalGradient(x: Float, y: Float, width: Float, height: Float, radius: Float, left: Color, right: Color) {
+    fun addHorizontalGradient(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        left: Color,
+        right: Color
+    ) {
         addRoundRectGradient(x, y, width, height, radius, radius, radius, radius, left, left, right, right)
     }
 

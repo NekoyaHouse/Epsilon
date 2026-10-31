@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.network
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import net.minecraft.network.protocol.Packet
 
 object NetworkUtils {
@@ -13,7 +13,7 @@ object NetworkUtils {
      * @param packet 待发送或过滤的网络包
      */
     fun sendPacketNoEvent(packet: Packet<*>) {
-        val connection = Constants.client.connection ?: return
+        val connection = mc.connection ?: return
         bypassedPackets.add(packet)
         connection.send(packet)
     }

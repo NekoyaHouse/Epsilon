@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.utils.math.toRadians
@@ -81,8 +81,8 @@ object FireflyESP {
         runSafe {
             val canSee = player.hasLineOfSight(target)
 
-            val camera: Camera = Constants.client.gameRenderer.mainCamera()
-            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val camera: Camera = mc.gameRenderer.mainCamera()
+            val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
 
             val tPosX = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - camera.position().x
             val tPosY = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - camera.position().y
@@ -94,7 +94,8 @@ object FireflyESP {
 
             for (j in 0 until 3) {
                 for (i in 0..espLength) {
-                    val radians = ((((i.toFloat() / 1.5f + iAge) * factor + (j * 120)) % (factor * 360)).toDouble()).toRadians()
+                    val radians =
+                        ((((i.toFloat() / 1.5f + iAge) * factor + (j * 120)) % (factor * 360)).toDouble()).toRadians()
                     val sinQuad = sin(((iAge * 2.5f + i * (j + 1)).toDouble()).toRadians() * amplitude) / shaking
 
                     val offset = i.toFloat() / espLength.toFloat()
@@ -159,14 +160,19 @@ object FireflyESP {
 
         return when (mode) {
             ColorMode.Blend -> {
-                val wave = (Mth.sin(((age * blendSpeed * 0.25f) + (progress * 6.2831855f) + ringIndex).toDouble()) + 1.0f) * 0.5f
+                val wave =
+                    (Mth.sin(((age * blendSpeed * 0.25f) + (progress * 6.2831855f) + ringIndex).toDouble()) + 1.0f) * 0.5f
                 val blendProgress = Mth.clamp(wave * clampedMix, 0.0f, 1.0f)
                 ColorUtils.interpolateColor(primaryColor, secondaryColor, blendProgress)
             }
 
             ColorMode.Rainbow -> {
                 val hue = Mth.frac((age * 0.01f * rainbowSpeed) + progress + ringIndex * 0.17f)
-                val rainbow = Color.getHSBColor(hue, Mth.clamp(rainbowSaturation, 0.0f, 1.0f), Mth.clamp(rainbowBrightness, 0.0f, 1.0f))
+                val rainbow = Color.getHSBColor(
+                    hue,
+                    Mth.clamp(rainbowSaturation, 0.0f, 1.0f),
+                    Mth.clamp(rainbowBrightness, 0.0f, 1.0f)
+                )
                 Color(rainbow.red, rainbow.green, rainbow.blue, primaryColor.alpha)
             }
 

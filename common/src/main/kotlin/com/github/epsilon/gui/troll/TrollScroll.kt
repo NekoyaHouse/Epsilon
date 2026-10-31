@@ -1,4 +1,5 @@
 package com.github.epsilon.gui.troll
+
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.ln

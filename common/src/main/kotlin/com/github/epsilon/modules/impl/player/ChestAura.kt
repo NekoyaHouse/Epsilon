@@ -172,7 +172,10 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         var best: Target? = null
         var bestDistance = Double.MAX_VALUE
 
-        for (pos in BlockPos.betweenClosed(origin.offset(-radius, -radius, -radius), origin.offset(radius, radius, radius))) {
+        for (pos in BlockPos.betweenClosed(
+            origin.offset(-radius, -radius, -radius),
+            origin.offset(radius, radius, radius)
+        )) {
             val immutable = pos.immutable()
             if (!isSelectedContainer(level.getBlockEntity(immutable))) continue
             if (isBlockedChest(immutable)) continue
@@ -257,7 +260,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun isBlockedChest(pos: BlockPos): Boolean {
         val above = pos.above()
-        return level.getBlockEntity(pos) is ChestBlockEntity && level.getBlockState(above).isRedstoneConductor(level, above)
+        return level.getBlockEntity(pos) is ChestBlockEntity && level.getBlockState(above)
+            .isRedstoneConductor(level, above)
     }
 
     private fun wasAlreadyOpened(pos: BlockPos): Boolean {

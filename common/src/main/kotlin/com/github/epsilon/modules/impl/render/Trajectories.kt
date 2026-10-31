@@ -44,7 +44,10 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     ).apply { group(generalGroup) }
     private val otherPlayers by boolSetting("Other Players", true).apply { group(generalGroup) }
     private val firedProjectiles by boolSetting("Fired Projectiles", false).apply { group(generalGroup) }
-    private val ignoreWitherSkulls by boolSetting("Ignore Wither Skulls", true, dependency = { firedProjectiles }).apply { group(generalGroup) }
+    private val ignoreWitherSkulls by boolSetting(
+        "Ignore Wither Skulls",
+        true,
+        dependency = { firedProjectiles }).apply { group(generalGroup) }
     private val simulationSteps by intSetting("Simulation Steps", 500, 0, 5000, 25).apply { group(generalGroup) }
     private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0, 20, 1).apply { group(renderGroup) }
     private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).apply { group(renderGroup) }

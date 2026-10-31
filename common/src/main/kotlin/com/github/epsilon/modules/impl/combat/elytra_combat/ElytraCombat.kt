@@ -67,14 +67,16 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private val sgRender: SettingGroup = settingGroup("Render")
 
     var mode by enumSetting("Mode", ElytraCombatMode.Follow, onChanged = { newMode ->
-        onModeChanged(newMode) }).apply { group(sgGeneral) }
+        onModeChanged(newMode)
+    }).apply { group(sgGeneral) }
 
     private var switchModeKey by keybindSetting("Switch Mode Key", -1).apply { group(sgGeneral) }
 
     /** 战斗决策调试输出开关。 */
     var debug by boolSetting("Debug", false, onChanged = { value ->
         ElytraDebug.enabled = value
-        ElytraDebug.reset() }).apply { group(sgGeneral) }
+        ElytraDebug.reset()
+    }).apply { group(sgGeneral) }
 
     var targetRange by intSetting("Target Range", 80, 8, 256, 1).apply { group(sgGeneral) }
     var dynamicTarget by boolSetting("Dynamic Target", false).apply { group(sgGeneral) }
@@ -97,8 +99,16 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     var stopDistance by doubleSetting("Stop Distance", 6.0, 1.0, 32.0, 0.5).apply { group(sgFollow) }
     var followGroundHeight by doubleSetting("Follow Ground Height", 2.0, 0.0, 12.0, 0.5).apply { group(sgFollow) }
     private var pathfinding by boolSetting("Pathfinding", true).apply { group(sgFollow) }
-    private var searchRadius by intSetting("Search Radius", 24, 6, 64, 1, dependency = { pathfinding }).apply { group(sgFollow) }
-    private var maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, dependency = { pathfinding }).apply { group(sgFollow) }
+    private var searchRadius by intSetting("Search Radius", 24, 6, 64, 1, dependency = { pathfinding }).apply {
+        group(
+            sgFollow
+        )
+    }
+    private var maxNodes by intSetting("Max Nodes", 1200, 100, 6000, 100, dependency = { pathfinding }).apply {
+        group(
+            sgFollow
+        )
+    }
     private var dataSize by intSetting(
         "Data Size", 50, 25, 100, 5,
         dependency = { pathfinding },
@@ -116,7 +126,13 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     var maceAntiShield by boolSetting("Mace Anti Shield", true).apply { group(sgMace) }
     var maceSmoothFlight by boolSetting("Mace Smooth Flight", true).apply { group(sgMace) }
     var maceAngleOptimize by boolSetting("Mace Angle Optimize", false).apply { group(sgMace) }
-    var maceDownAngle by doubleSetting("Mace Down Angle", 30.5, 5.0, 80.0, 0.5, dependency = { maceAngleOptimize }).apply { group(sgMace) }
+    var maceDownAngle by doubleSetting(
+        "Mace Down Angle",
+        30.5,
+        5.0,
+        80.0,
+        0.5,
+        dependency = { maceAngleOptimize }).apply { group(sgMace) }
 
     var spearEngageRange by doubleSetting("Spear Range", 8.0, 2.0, 24.0, 0.5).apply { group(sgSpear) }
     var spearMinRange by doubleSetting("Spear Min Range", 1.0, 0.0, 8.0, 0.5).apply { group(sgSpear) }
@@ -124,7 +140,13 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     var spearPullOverTicks by intSetting("Spear Pull Over Ticks", 6, 1, 40, 1).apply { group(sgSpear) }
     var spearUsePredictor by boolSetting("Spear Use Predictor", true).apply { group(sgSpear) }
     var spearAntiSpear by boolSetting("Spear Anti Spear", true).apply { group(sgSpear) }
-    var spearAntiSpearExtra by doubleSetting("Spear Anti Extra Distance", 1.0, 0.0, 8.0, 0.5, dependency = { spearAntiSpear }).apply { group(sgSpear) }
+    var spearAntiSpearExtra by doubleSetting(
+        "Spear Anti Extra Distance",
+        1.0,
+        0.0,
+        8.0,
+        0.5,
+        dependency = { spearAntiSpear }).apply { group(sgSpear) }
     private var logSpearHit by boolSetting("Log Spear Hit", false).apply { group(sgSpear) }
 
     var controlMode by enumSetting("Control Mode", ControlMode.Input).apply { group(sgFlight) }
@@ -135,8 +157,15 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var allowFirework by boolSetting("Allow Firework", true).apply { group(sgFlight) }
 
     private var render by boolSetting("Render Vector", true).apply { group(sgRender) }
-    private var renderColor by colorSetting("Render Color", Color(255, 133, 161, 210), dependency = { render }).apply { group(sgRender) }
-    private var renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, dependency = { render }).apply { group(sgRender) }
+    private var renderColor by colorSetting(
+        "Render Color",
+        Color(255, 133, 161, 210),
+        dependency = { render }).apply { group(sgRender) }
+    private var renderWidth by doubleSetting("Render Width", 2.0, 0.5, 8.0, 0.5, dependency = { render }).apply {
+        group(
+            sgRender
+        )
+    }
 
     /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */
     private val behaviors: EnumMap<ElytraCombatMode, ElytraCombatBehavior> =
@@ -489,7 +518,8 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         val previousDirection = previous.normalize()
         val nextDirection = desired.normalize()
         val previousYaw = (atan2(-previousDirection.x, previousDirection.z)).toDegrees().toFloat()
-        val previousPitch = -(atan2(previousDirection.y, maxOf(1.0E-4, previousDirection.horizontalDistance()))).toDegrees().toFloat()
+        val previousPitch =
+            -(atan2(previousDirection.y, maxOf(1.0E-4, previousDirection.horizontalDistance()))).toDegrees().toFloat()
 
         // 目标方向接近垂直时 yaw 没有意义，保持上一 tick 的 yaw，只允许俯仰变化。
         val yaw: Float
@@ -508,7 +538,8 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             }
         }
 
-        val nextPitch = -(atan2(nextDirection.y, maxOf(1.0E-4, nextDirection.horizontalDistance()))).toDegrees().toFloat()
+        val nextPitch =
+            -(atan2(nextDirection.y, maxOf(1.0E-4, nextDirection.horizontalDistance()))).toDegrees().toFloat()
         val pitchDelta = nextPitch - previousPitch
         if (abs(Mth.wrapDegrees(yaw - previousYaw).toDouble()) < TURN_DEAD_ZONE_DEGREES &&
             abs(pitchDelta.toDouble()) < TURN_DEAD_ZONE_DEGREES

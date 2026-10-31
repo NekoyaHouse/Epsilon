@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.network
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.LevelUpdateEvent
@@ -26,7 +26,7 @@ object ServerboundPacketManager {
     fun flush() {
         while (packets.isNotEmpty()) {
             try {
-                Constants.client.connection!!.send(packets.poll())
+                mc.connection!!.send(packets.poll())
             } catch (e: Exception) {
                 NotificationManager.error(
                     "Serverbound Packet",
@@ -53,7 +53,7 @@ object ServerboundPacketManager {
 
         if (!blinking) return false
 
-        if (Constants.client.player == null || Constants.client.level == null) return false
+        if (mc.player == null || mc.level == null) return false
 
         packets.add(packet)
         return true

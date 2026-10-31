@@ -153,15 +153,19 @@ object ClientIdentityHider {
         }
     }
 
-    private fun recreateChannelPayload(payload: CustomPacketPayload, filteredChannels: List<Identifier>): CustomPacketPayload {
+    private fun recreateChannelPayload(
+        payload: CustomPacketPayload,
+        filteredChannels: List<Identifier>
+    ): CustomPacketPayload {
         try {
             val type: Any = payload.type()
             val version = readAccessor(payload, "version")
             val protocol = readAccessor(payload, "protocol")
 
             for (constructor in payload.javaClass.constructors) {
-                val args = createConstructorArguments(constructor.parameterTypes, type, version, protocol, filteredChannels)
-                    ?: continue
+                val args =
+                    createConstructorArguments(constructor.parameterTypes, type, version, protocol, filteredChannels)
+                        ?: continue
                 return constructor.newInstance(*args) as CustomPacketPayload
             }
         } catch (exception: ReflectiveOperationException) {

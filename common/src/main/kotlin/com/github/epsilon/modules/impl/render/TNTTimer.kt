@@ -80,7 +80,14 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
                 val label = String.format(Locale.US, "%.1fs", maxOf(0, entity.fuse) / 20.0f)
                 val scale = maxOf(0.45f, WorldToScreen.calcScale(anchor) * 0.7f)
                 val width = render.textMetrics().getWidth(label, scale)
-                layer.addText(label, screen.x - width * 0.5f, screen.y, scale, Color.WHITE, StaticFontLoader.defaultFont())
+                layer.addText(
+                    label,
+                    screen.x - width * 0.5f,
+                    screen.y,
+                    scale,
+                    Color.WHITE,
+                    StaticFontLoader.defaultFont()
+                )
             }
             render.flushAndClear()
         }

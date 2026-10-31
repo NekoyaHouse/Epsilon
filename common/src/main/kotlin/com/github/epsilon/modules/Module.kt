@@ -9,12 +9,6 @@ import com.github.epsilon.settings.SettingHost
 import com.google.gson.JsonObject
 import net.minecraft.client.Minecraft
 
-/**
- * 模块基类。
- *
- * 保留原 Java 版本的 getter 语义（`getName`/`getCategory`/`isEnabled`/`setEnabled` 等），
- * 以便 ModuleManager、GUI 等尚未迁移的 Java 调用方逐步过渡。
- */
 open class Module(
     val name: String,
     val category: Category?,

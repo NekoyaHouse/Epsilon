@@ -265,7 +265,17 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             endPendingFrame()
             throw error
         }
-        graphics.blit(renderTarget.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
+        graphics.blit(
+            renderTarget.getIdentifier(),
+            0,
+            0,
+            window.guiScaledWidth,
+            window.guiScaledHeight,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f
+        )
         popupHost.extractOverlay(graphics, mx, my, partialTick)
         val preeditOverlay = this.preeditOverlay
         if (preeditOverlay != null) {
@@ -313,8 +323,24 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private fun renderToggleButtons(frame: UiScene, mouseX: Int, mouseY: Int) {
         if (friendToggleBounds.width <= 0.0f || configToggleBounds.width <= 0.0f) return
         val tree = UiTree.build { scope ->
-            drawToggleButton(scope, friendToggleBounds, IconChars.PEOPLE, friendWindowOpen, mouseX, mouseY, friendToggleHover)
-            drawToggleButton(scope, configToggleBounds, IconChars.SETTINGS, configWindowOpen, mouseX, mouseY, configToggleHover)
+            drawToggleButton(
+                scope,
+                friendToggleBounds,
+                IconChars.PEOPLE,
+                friendWindowOpen,
+                mouseX,
+                mouseY,
+                friendToggleHover
+            )
+            drawToggleButton(
+                scope,
+                configToggleBounds,
+                IconChars.SETTINGS,
+                configWindowOpen,
+                mouseX,
+                mouseY,
+                configToggleHover
+            )
         }
         val left = minOf(friendToggleBounds.x, configToggleBounds.x)
         val top = minOf(friendToggleBounds.y, configToggleBounds.y)
@@ -328,7 +354,16 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             friendToggleBounds.width * 0.5f,
             configToggleBounds.width * 0.5f
         )
-        queueWindow(frame, UiLayer.FLOATING, -90, UiRect(left, top, right - left, bottom - top), tree, blurRects, blurRadii, 2)
+        queueWindow(
+            frame,
+            UiLayer.FLOATING,
+            -90,
+            UiRect(left, top, right - left, bottom - top),
+            tree,
+            blurRects,
+            blurRadii,
+            2
+        )
     }
 
     private fun drawToggleButton(
@@ -372,10 +407,28 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                 return true
             }
             RenderSystem.getDevice().createCommandEncoder()
-                .copyTextureToTexture(source, renderTarget.colorTexture(), 0, 0, 0, 0, 0, mainTarget.width, mainTarget.height)
+                .copyTextureToTexture(
+                    source,
+                    renderTarget.colorTexture(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    mainTarget.width,
+                    mainTarget.height
+                )
             LuminRenderSystem.setActiveTarget(renderTarget)
             if (pendingFullscreenBlurStrength > 0.0f) {
-                BlurShader.render(renderTarget, 0.0f, 0.0f, pendingFrameWidth, pendingFrameHeight, 0.0f, pendingFullscreenBlurStrength)
+                BlurShader.render(
+                    renderTarget,
+                    0.0f,
+                    0.0f,
+                    pendingFrameWidth,
+                    pendingFrameHeight,
+                    0.0f,
+                    pendingFullscreenBlurStrength
+                )
             }
             pendingBackground?.flushAndClear()
             for (pass in pendingWindows) {

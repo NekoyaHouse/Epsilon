@@ -147,7 +147,14 @@ class UiScrollBar(theme: UiTheme) {
         private fun draw(scope: UiTree.Scope, geometry: Geometry, hoverProgress: Float, theme: UiTheme) {
             val thumbWidth = geometry.thumbWidth + (HOVER_WIDTH - geometry.thumbWidth) * hoverProgress
             val thumbX = geometry.thumbX - (thumbWidth - geometry.thumbWidth) * 0.5f
-            scope.roundRect(thumbX, geometry.thumbY, thumbWidth, geometry.thumbHeight, thumbWidth * 0.5f, theme.scrollBar(hoverProgress))
+            scope.roundRect(
+                thumbX,
+                geometry.thumbY,
+                thumbWidth,
+                geometry.thumbHeight,
+                thumbWidth * 0.5f,
+                theme.scrollBar(hoverProgress)
+            )
         }
 
     }

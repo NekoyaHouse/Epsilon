@@ -102,7 +102,13 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
     }
 
     protected fun canGlide(hasElytraInInventory: Boolean): Boolean = runSafeOrFalse {
-        elytraFly.armored && hasElytraInInventory || EquipmentSlot.VALUES.any { LivingEntity.canGlideUsing(player.getItemBySlot(it), it) }
+        elytraFly.armored && hasElytraInInventory || EquipmentSlot.VALUES.any {
+            LivingEntity.canGlideUsing(
+                player.getItemBySlot(
+                    it
+                ), it
+            )
+        }
     }
 
     protected fun useFirework(): Boolean = runSafeOrFalse {

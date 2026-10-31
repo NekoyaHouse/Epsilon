@@ -33,10 +33,34 @@ class MainDropdownPanel(
         settingsContent = SettingsContent("client-settings:dropdown-main", ClientSetting.settings)
         isVisible = true
         isOpened = true
-        add(LabelSupplier { Category.COMBAT.name }, Category.COMBAT.icon, "category:combat", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.PLAYER.name }, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.MOVEMENT.name }, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.RENDER.name }, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver)
+        add(
+            LabelSupplier { Category.COMBAT.name },
+            Category.COMBAT.icon,
+            "category:combat",
+            togglePanel,
+            panelVisibleResolver
+        )
+        add(
+            LabelSupplier { Category.PLAYER.name },
+            Category.PLAYER.icon,
+            "category:player",
+            togglePanel,
+            panelVisibleResolver
+        )
+        add(
+            LabelSupplier { Category.MOVEMENT.name },
+            Category.MOVEMENT.icon,
+            "category:movement",
+            togglePanel,
+            panelVisibleResolver
+        )
+        add(
+            LabelSupplier { Category.RENDER.name },
+            Category.RENDER.icon,
+            "category:render",
+            togglePanel,
+            panelVisibleResolver
+        )
         add(
             LabelSupplier { EpsilonTranslations.Gui.TAB_FRIEND.getTranslatedName() },
             IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver
@@ -60,7 +84,14 @@ class MainDropdownPanel(
         togglePanel: Consumer<String>,
         panelVisibleResolver: PanelVisibleResolver,
     ) {
-        entries.add(Entry(labelSupplier, icon, panelId, togglePanel, BooleanSupplier { panelVisibleResolver.getAsBoolean(panelId) }))
+        entries.add(
+            Entry(
+                labelSupplier,
+                icon,
+                panelId,
+                togglePanel,
+                BooleanSupplier { panelVisibleResolver.getAsBoolean(panelId) })
+        )
     }
 
     override fun drawBackground(scope: UiTree.Scope, textMetrics: UiTextMetrics) {
@@ -73,8 +104,10 @@ class MainDropdownPanel(
 
         val version = trimToWidth(Constants.VERSION, versionScale, versionMaxWidth, textMetrics)
         if (version.isNotEmpty()) {
-            val nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
-            val versionY = nameY + textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE) - textMetrics.textHeight(versionScale)
+            val nameY =
+                y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
+            val versionY =
+                nameY + textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE) - textMetrics.textHeight(versionScale)
             scope.text(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED)
         }
     }

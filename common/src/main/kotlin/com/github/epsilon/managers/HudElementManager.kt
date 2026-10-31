@@ -1,6 +1,6 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.*
@@ -47,8 +47,8 @@ object HudElementManager {
     }
 
     private fun onRender2D(event: Render2DEvent.HUD) {
-        if (ClientUtils.isLoading() || Constants.client.level == null ||
-            Constants.client.gui.screen() is HudEditorScreen
+        if (ClientUtils.isLoading() || mc.level == null ||
+            mc.gui.screen() is HudEditorScreen
         ) return
 
         scene.beginFrame()
@@ -56,14 +56,14 @@ object HudElementManager {
             if (element.isEnabled) {
                 element.updateLayout()
                 // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
-                element.renderWithBatch(Constants.client.deltaTracker, scene.batch(UiLayer.CONTENT))
+                element.renderWithBatch(mc.deltaTracker, scene.batch(UiLayer.CONTENT))
             }
         }
         scene.endFrame()
 
         for (element in elements) {
             if (element.isEnabled) {
-                element.renderOverlay(event.guiGraphics, Constants.client.deltaTracker)
+                element.renderOverlay(event.guiGraphics, mc.deltaTracker)
             }
         }
     }

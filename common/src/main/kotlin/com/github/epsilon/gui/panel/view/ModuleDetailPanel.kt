@@ -245,7 +245,11 @@ class ModuleDetailPanel(
             return true
         }
 
-        val intercepted = settingListController.mouseClicked(event, isDoubleClick, currentBounds) { row, rowBounds, clickEvent, doubleClick ->
+        val intercepted = settingListController.mouseClicked(
+            event,
+            isDoubleClick,
+            currentBounds
+        ) { row, rowBounds, clickEvent, doubleClick ->
             if (row is KeybindSettingRow && row.mouseClicked(rowBounds, clickEvent, doubleClick)) {
                 state.setListeningKeybindSetting(row.getSetting())
                 true
@@ -444,7 +448,8 @@ class ModuleDetailPanel(
     private fun buildBindModeControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
         val bindModeBounds = getBindModeBounds()
         val bindProgress = scope.animate(bindModeAnimation, module.bindMode == Module.BindMode.Hold)
-        val hoverProgress = scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val hoverProgress =
+            scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         PanelElements.buildSegmentedControl(
             scope, textRenderer, bindModeBounds,
             EpsilonTranslations.Keybind.TOGGLE.getTranslatedName(),
@@ -456,20 +461,27 @@ class ModuleDetailPanel(
     private fun buildKeybindControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
         val keybindBounds = getKeybindBounds()
         val listening = state.getListeningKeyBindModule() === module
-        val hoverProgress = scope.animate(keybindHoverAnimation, keybindBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val hoverProgress =
+            scope.animate(keybindHoverAnimation, keybindBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         val focusProgress = scope.animate(keybindFocusAnimation, listening)
         val radius = getKeybindControlRadius()
         scope.pushAbsolute(keybindBounds) { keybind ->
             val haloInset = 1.5f * focusProgress
             if (haloInset > 0.01f) {
                 keybind.roundRect(
-                    -haloInset, -haloInset, keybindBounds.width + haloInset * 2.0f, keybindBounds.height + haloInset * 2.0f,
-                    radius + haloInset, MD3Theme.withAlpha(MD3Theme.PRIMARY, (28 * focusProgress).toInt())
+                    -haloInset,
+                    -haloInset,
+                    keybindBounds.width + haloInset * 2.0f,
+                    keybindBounds.height + haloInset * 2.0f,
+                    radius + haloInset,
+                    MD3Theme.withAlpha(MD3Theme.PRIMARY, (28 * focusProgress).toInt())
                 )
             }
 
-            val background: Color = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, focusProgress)
-            val foreground: Color = MD3Theme.lerp(MD3Theme.ON_SECONDARY_CONTAINER, MD3Theme.ON_PRIMARY_CONTAINER, focusProgress)
+            val background: Color =
+                MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, focusProgress)
+            val foreground: Color =
+                MD3Theme.lerp(MD3Theme.ON_SECONDARY_CONTAINER, MD3Theme.ON_PRIMARY_CONTAINER, focusProgress)
             keybind.roundRect(0.0f, 0.0f, keybindBounds.width, keybindBounds.height, radius, background)
             if (hoverProgress > 0.01f) {
                 keybind.roundRect(
@@ -491,7 +503,8 @@ class ModuleDetailPanel(
     private fun buildHiddenControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
         val hiddenBounds = getHiddenBounds()
         val hiddenProgress = scope.animate(hiddenAnimation, module.isHidden)
-        val hoverProgress = scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val hoverProgress =
+            scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         PanelElements.buildSegmentedControl(
             scope, textRenderer, hiddenBounds,
             EpsilonTranslations.Module.VISIBLE.getTranslatedName(),

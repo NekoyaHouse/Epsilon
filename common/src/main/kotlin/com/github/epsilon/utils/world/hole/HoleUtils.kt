@@ -105,7 +105,7 @@ object HoleUtils {
     context(nn: NonNullContext)
     fun isBlock(pos: BlockPos): Boolean {
         return level.isLoaded(pos)
-            && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty
+                && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty
     }
 
     context(nn: NonNullContext)
@@ -152,9 +152,9 @@ object HoleUtils {
 
         // 四格坑洞
         return getHole(pos, 1).type == HoleType.Quad
-            || getHole(pos.offset(-1, 0, -1), 1).type == HoleType.Quad
-            || getHole(pos.offset(-1, 0, 0), 1).type == HoleType.Quad
-            || getHole(pos.offset(0, 0, -1), 1).type == HoleType.Quad
+                || getHole(pos.offset(-1, 0, -1), 1).type == HoleType.Quad
+                || getHole(pos.offset(-1, 0, 0), 1).type == HoleType.Quad
+                || getHole(pos.offset(0, 0, -1), 1).type == HoleType.Quad
     }
 
 }

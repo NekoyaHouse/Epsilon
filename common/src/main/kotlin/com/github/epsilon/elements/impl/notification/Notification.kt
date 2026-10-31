@@ -12,7 +12,13 @@ class Notification(
 
     private var skipIntroAnim: Boolean = false
 
-    constructor(title: String, subTitle: String, mode: NotificationMode, replaceable: Boolean) : this(0, title, subTitle, mode, replaceable)
+    constructor(title: String, subTitle: String, mode: NotificationMode, replaceable: Boolean) : this(
+        0,
+        title,
+        subTitle,
+        mode,
+        replaceable
+    )
 
     fun refresh(newTitle: String, newSubTitle: String, newMode: NotificationMode) {
         this.title = newTitle

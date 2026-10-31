@@ -66,7 +66,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             val hit = mc.hitResult
             if (hit is BlockHitResult) {
                 if ((level.getBlockState(hit.blockPos).`is`(Blocks.OBSIDIAN) ||
-                        level.getBlockState(hit.blockPos).`is`(Blocks.BEDROCK)) &&
+                            level.getBlockState(hit.blockPos).`is`(Blocks.BEDROCK)) &&
                     canPlaceCrystalAssumeObsidian(hit.blockPos)
                 ) {
                     event.cancel()
@@ -122,7 +122,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             if (!dontPlace &&
                 randomInt <= placeChance.toInt() &&
                 (level.getBlockState(blockHit.blockPos).`is`(Blocks.OBSIDIAN) ||
-                    level.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
+                        level.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
                 canPlaceCrystalAssumeObsidian(blockHit.blockPos)
             ) {
 
@@ -219,16 +219,16 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         val strength: MobEffectInstance? = player.getEffect(MobEffects.STRENGTH)
 
         return weakness != null &&
-            (strength == null || strength.amplifier <= weakness.amplifier) &&
-            !isToolLike(player.mainHandItem)
+                (strength == null || strength.amplifier <= weakness.amplifier) &&
+                !isToolLike(player.mainHandItem)
     }
 
     private fun isToolLike(stack: ItemStack): Boolean {
         return stack.`is`(ItemTags.SWORDS) ||
-            stack.`is`(ItemTags.AXES) ||
-            stack.`is`(ItemTags.PICKAXES) ||
-            stack.`is`(ItemTags.SHOVELS) ||
-            stack.`is`(ItemTags.HOES)
+                stack.`is`(ItemTags.AXES) ||
+                stack.`is`(ItemTags.PICKAXES) ||
+                stack.`is`(ItemTags.SHOVELS) ||
+                stack.`is`(ItemTags.HOES)
     }
 
     context(nn: NonNullContext)

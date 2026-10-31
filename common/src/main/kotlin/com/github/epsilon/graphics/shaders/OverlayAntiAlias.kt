@@ -101,7 +101,11 @@ object OverlayAntiAlias {
         ).use { pass ->
             pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) RESOLVE_16 else RESOLVE_4))
             RenderSystem.bindDefaultUniforms(pass)
-            pass.setUniform("InputSampler", currentOverlay.colorView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+            pass.setUniform(
+                "InputSampler",
+                currentOverlay.colorView(),
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+            )
             pass.draw(3, 1, 0, 0)
         }
     }
@@ -112,7 +116,11 @@ object OverlayAntiAlias {
             .withDepthAttachment(currentOverlay.depthView()!!)
             .build()
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor).use { pass ->
-            pass.setUniform("InputSampler", sourceDepth, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+            pass.setUniform(
+                "InputSampler",
+                sourceDepth,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
+            )
             pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) DEPTH_16 else DEPTH_4))
             pass.draw(3, 1, 0, 0)
         }

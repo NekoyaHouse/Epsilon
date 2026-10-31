@@ -29,12 +29,14 @@ class TtfFontLoader : IFontLoader {
 
     private var currentAtlas: TtfGlyphAtlas? = null
     private var atlasId = 0
+
     // 缺字占位字形（口字形方框）与 atlas 同生命周期：首次需要时生成并上传，之后所有缺字共用一个 atlas 单元。
     private var fallbackAtlas: TtfGlyphAtlas? = null
     private var fallbackUv: TtfGlyphAtlas.GlyphUV? = null
     private var fallbackWidth = 0
     private var fallbackHeight = 0
     private var fallbackYOffset = 0
+
     // glyphRevision 驱动未完成布局重建，atlasRevision 驱动已释放 atlas 的布局失效。
     private var glyphRevision = 0L
     private var atlasRevision = 0L
@@ -133,7 +135,10 @@ class TtfFontLoader : IFontLoader {
                 continue
             }
 
-            putPendingGlyph(codepoint, CompletableFuture.supplyAsync({ fontFile.generateGlyph(codepoint) }, GLYPH_WORKER))
+            putPendingGlyph(
+                codepoint,
+                CompletableFuture.supplyAsync({ fontFile.generateGlyph(codepoint) }, GLYPH_WORKER)
+            )
         }
     }
 

@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.Constants
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -77,7 +76,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     private fun processRemovedTargets() {
         if (pendingTargets.isEmpty()) return
 
-        val level = Constants.client.level ?: return
+        val level = mc.level ?: return
         val iterator = pendingTargets.iterator()
         while (iterator.hasNext()) {
             val target = iterator.next()
@@ -100,7 +99,6 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     }
 
     private fun killEffect(target: LivingEntity) {
-        val mc = Constants.client
         val level = mc.level ?: return
         val player = mc.player ?: return
 
@@ -166,7 +164,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         private val animation: Animation
 
         init {
-            val level = Constants.client.level!!
+            val level = mc.level!!
             entity = Squid(EntityTypes.SQUID, level)
             entity.id = nextLocalEntityId()
             entity.isNoAi = true
@@ -180,7 +178,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
 
         fun tick(): Boolean {
-            val level = Constants.client.level
+            val level = mc.level
             if (entity.isRemoved || level == null || level.getEntity(entity.id) !== entity) {
                 return true
             }
@@ -194,7 +192,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
             if (animation.isFinished) {
                 for (i in 0..8) {
-                    Constants.client.particleEngine.createTrackingEmitter(entity, ParticleTypes.FLAME)
+                    mc.particleEngine.createTrackingEmitter(entity, ParticleTypes.FLAME)
                 }
                 return true
             }
@@ -203,7 +201,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
         fun remove() {
             effectSquids.remove(entity)
-            val level = Constants.client.level
+            val level = mc.level
             if (level != null && level.getEntity(entity.id) === entity) {
                 level.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
             }

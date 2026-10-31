@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
@@ -41,7 +41,15 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float, textShadow: Boolean,
     ) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
-        scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90))
+        scope.outline(
+            x,
+            y,
+            width,
+            height,
+            DropdownTheme.INPUT_RADIUS,
+            0.7f,
+            if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
+        )
 
         val showPlaceholder = text.isEmpty() && !isFocused
         val display = if (showPlaceholder) placeholder else text
@@ -69,7 +77,15 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float,
     ) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
-        scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90))
+        scope.outline(
+            x,
+            y,
+            width,
+            height,
+            DropdownTheme.INPUT_RADIUS,
+            0.7f,
+            if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
+        )
 
         val showPlaceholder = text.isEmpty() && !isFocused
         val display = if (showPlaceholder) placeholder else text
@@ -79,7 +95,13 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         val textX = x + (width - textMetrics.textWidth(visibleText, textScale)) * 0.5f
         val caretBaseX = x + (width - textMetrics.textWidth(text, textScale)) * 0.5f
         updateCursorLayout(textMetrics, caretBaseX, textScale)
-        scope.text(visibleText, textX, textY, textScale, if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY)
+        scope.text(
+            visibleText,
+            textX,
+            textY,
+            textScale,
+            if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
+        )
 
         if (isFocused) {
             val safeCursor = minOf(cursor, text.length)
@@ -100,7 +122,14 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         return true
     }
 
-    fun focusIfContainsCentered(mouseX: Double, mouseY: Double, x: Float, y: Float, width: Float, height: Float): Boolean {
+    fun focusIfContainsCentered(
+        mouseX: Double,
+        mouseY: Double,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float
+    ): Boolean {
         if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
             return false
         }
@@ -140,28 +169,34 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
                 }
                 true
             }
+
             InputConstants.KEY_DELETE -> {
                 if (cursor < text.length) {
                     text = text.substring(0, cursor) + text.substring(cursor + 1)
                 }
                 true
             }
+
             InputConstants.KEY_LEFT -> {
                 cursor = maxOf(0, cursor - 1)
                 true
             }
+
             InputConstants.KEY_RIGHT -> {
                 cursor = minOf(text.length, cursor + 1)
                 true
             }
+
             InputConstants.KEY_HOME -> {
                 cursor = 0
                 true
             }
+
             InputConstants.KEY_END -> {
                 cursor = text.length
                 true
             }
+
             else -> false
         }
     }
@@ -210,13 +245,14 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
                 cursor = text.length
                 true
             }
-            InputConstants.KEY_V -> insertText(Constants.client.keyboardHandler.clipboard)
+
+            InputConstants.KEY_V -> insertText(mc.keyboardHandler.clipboard)
             else -> false
         }
     }
 
     private fun isControlDown(): Boolean {
-        val window = Constants.client.window
+        val window = mc.window
         return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL)
     }
 

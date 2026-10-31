@@ -49,7 +49,11 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
 
                 if (level.getBlockState(pos).hasBlockEntity()) {
                     for (hand in InteractionHand.values()) {
-                        val result = interaction.useItemOn(player, hand, BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true))
+                        val result = interaction.useItemOn(
+                            player,
+                            hand,
+                            BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true)
+                        )
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
                             SwingMode.Both.interactSwing(hand)
                             event.cancel()

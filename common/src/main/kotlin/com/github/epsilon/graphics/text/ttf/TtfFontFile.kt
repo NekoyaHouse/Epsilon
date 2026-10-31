@@ -20,6 +20,7 @@ import kotlin.math.roundToInt
 private const val FALLBACK_HEIGHT_RATIO = 2.0f / 3.0f
 private const val FALLBACK_WIDTH_RATIO = 0.72f
 private const val FALLBACK_STROKE_RATIO = 1.0f / 8.0f
+
 /**
  * 占位框位图四周外扩的像素数，保住墨迹边缘之外的一圈 SDF 过渡带。
  */
@@ -74,10 +75,10 @@ class TtfFontFile private constructor(
     }
 
     constructor(ttfFile: Identifier, totalHeight: Int, padding: Int) :
-        this(ResourceLocationUtils.loadResource(ttfFile), totalHeight, padding, ttfFile.toString())
+            this(ResourceLocationUtils.loadResource(ttfFile), totalHeight, padding, ttfFile.toString())
 
     constructor(ttfFile: Path, totalHeight: Int, padding: Int) :
-        this(loadFontFile(ttfFile), totalHeight, padding, ttfFile.toString())
+            this(loadFontFile(ttfFile), totalHeight, padding, ttfFile.toString())
 
     @Synchronized
     fun generateGlyph(ch: Char): TtfGlyph {
@@ -189,7 +190,10 @@ class TtfFontFile private constructor(
         val boxWidth = maxOf(3, (boxHeight * FALLBACK_WIDTH_RATIO).roundToInt())
         // 笔画不能太细（缩放后会消失），也不能填满方框（环会退化成实心块）。
         val maxStroke = maxOf(1, (minOf(boxWidth, boxHeight) - 1) / 2)
-        val stroke = ((boxHeight * FALLBACK_STROKE_RATIO).roundToInt().toLong()).coerceIn(((1).toLong()).toLong(), ((maxStroke).toLong()).toLong()).toInt().toInt()
+        val stroke = ((boxHeight * FALLBACK_STROKE_RATIO).roundToInt().toLong()).coerceIn(
+            ((1).toLong()).toLong(),
+            ((maxStroke).toLong()).toLong()
+        ).toInt().toInt()
 
         val bitmapWidth = boxWidth + FALLBACK_PADDING * 2
         val bitmapHeight = boxHeight + FALLBACK_PADDING * 2

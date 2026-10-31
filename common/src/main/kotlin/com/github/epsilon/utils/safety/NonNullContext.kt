@@ -1,6 +1,5 @@
 package com.github.epsilon.utils.safety
 
-import com.github.epsilon.Constants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -36,7 +35,7 @@ class NonNullContext private constructor(
 ) {
 
     val mc: Minecraft
-        get() = Constants.client
+        get() = Minecraft.getInstance()
 
     companion object {
 
@@ -48,11 +47,11 @@ class NonNullContext private constructor(
          */
         val current: NonNullContext?
             get() {
-                val mc = Constants.mc ?: return clear()
-                val level = mc.level ?: return clear()
-                val player = mc.player ?: return clear()
-                val interaction = mc.gameMode ?: return clear()
-                val connection = mc.connection ?: return clear()
+                val minecraft = Minecraft.getInstance()
+                val level = minecraft.level ?: return clear()
+                val player = minecraft.player ?: return clear()
+                val interaction = minecraft.gameMode ?: return clear()
+                val connection = minecraft.connection ?: return clear()
 
                 val previous = cached
                 if (previous != null

@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.lib.control
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
@@ -208,7 +208,7 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_V -> {
-                val clipboard = Constants.client.keyboardHandler.clipboard
+                val clipboard = mc.keyboardHandler.clipboard
                 if (!clipboard.isEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }

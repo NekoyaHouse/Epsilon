@@ -36,7 +36,12 @@ object LuminUiRenderer {
                     continue
                 }
                 if (node is UiTree.ScissorNode) {
-                    renderNodesIntoLayeredBatch(node.children, batch, layer, intersect(activeScissor, toScissor(node.clip)))
+                    renderNodesIntoLayeredBatch(
+                        node.children,
+                        batch,
+                        layer,
+                        intersect(activeScissor, toScissor(node.clip))
+                    )
                     continue
                 }
                 renderNode(node, target)
@@ -220,7 +225,8 @@ object LuminUiRenderer {
                 layer.addText(node.label, bounds.x + 8.0f, textY, node.textScale, node.foreground)
                 if (trailingIcon != null && !trailingIcon.isEmpty() && trailingIconFont != null) {
                     val iconWidth = metrics.getWidth(trailingIcon, node.trailingIconScale, trailingIconFont)
-                    val iconY = bounds.y + (bounds.height - metrics.getHeight(node.trailingIconScale, trailingIconFont)) / 2.0f
+                    val iconY =
+                        bounds.y + (bounds.height - metrics.getHeight(node.trailingIconScale, trailingIconFont)) / 2.0f
                     layer.addText(
                         trailingIcon, bounds.right() - 8.0f - iconWidth, iconY,
                         node.trailingIconScale, node.foreground, trailingIconFont
@@ -468,8 +474,13 @@ object LuminUiRenderer {
                 val selection = element.selection
                 val selectionColor = element.selectionColor
                 if (selection != null && selectionColor != null) {
-                    val start = (selection.start.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
-                    val end = (selection.end.toLong()).coerceIn(((start).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
+                    val start =
+                        (selection.start.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong())
+                            .toInt().toInt()
+                    val end = (selection.end.toLong()).coerceIn(
+                        ((start).toLong()).toLong(),
+                        ((text.length).toLong()).toLong()
+                    ).toInt().toInt()
                     if (end > start) {
                         val selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale)
                         val selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale)
@@ -483,7 +494,9 @@ object LuminUiRenderer {
             val caretIndex = element.caretIndex
             val caretColor = element.caretColor
             if (caretIndex != null && caretColor != null) {
-                val safeCaretIndex = (caretIndex.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
+                val safeCaretIndex =
+                    (caretIndex.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt()
+                        .toInt()
                 val caretX = textX + metrics.getWidth(text.substring(0, safeCaretIndex), element.textScale)
                 layer.addRect(caretX, bounds.y + 4.0f, 1.0f, bounds.height - 8.0f, caretColor)
             }

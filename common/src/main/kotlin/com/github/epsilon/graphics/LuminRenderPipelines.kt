@@ -46,16 +46,30 @@ object LuminRenderPipelines {
         textPipeline("pipelines/ttf_font_no_aa", "ttf_font_no_aa", DefaultVertexFormat.POSITION_TEX_COLOR, null)
 
     val TTF_FONT_BLUR: RenderPipeline =
-        textPipeline("pipelines/ttf_font_blur", "ttf_font_blur", LuminVertexFormats.FONT_BLUR, LuminBindGroupLayouts.FONT_BLUR)
+        textPipeline(
+            "pipelines/ttf_font_blur",
+            "ttf_font_blur",
+            LuminVertexFormats.FONT_BLUR,
+            LuminBindGroupLayouts.FONT_BLUR
+        )
 
     val TTF_FONT_GLITCH: RenderPipeline =
-        textPipeline("pipelines/ttf_font_glitch", "ttf_font_glitch", LuminVertexFormats.FONT_BLUR, LuminBindGroupLayouts.GLITCH_DATA)
+        textPipeline(
+            "pipelines/ttf_font_glitch",
+            "ttf_font_glitch",
+            LuminVertexFormats.FONT_BLUR,
+            LuminBindGroupLayouts.GLITCH_DATA
+        )
 
     val ROUND_RECT: RenderPipeline =
         shapePipeline("pipelines/round_rectangle", "round_rectangle", LuminVertexFormats.ROUND_RECT)
 
     val ROUND_RECT_OUTLINE: RenderPipeline =
-        shapePipeline("pipelines/round_rectangle_outline", "round_rectangle_outline", LuminVertexFormats.ROUND_RECT_OUTLINE)
+        shapePipeline(
+            "pipelines/round_rectangle_outline",
+            "round_rectangle_outline",
+            LuminVertexFormats.ROUND_RECT_OUTLINE
+        )
 
     val SHADOW: RenderPipeline = shapePipeline("pipelines/shadow", "shadow", LuminVertexFormats.ROUND_RECT)
 

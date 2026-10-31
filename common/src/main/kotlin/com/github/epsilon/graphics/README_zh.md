@@ -4,8 +4,8 @@
 
 Lumin Graphics 是一个为现代 Minecraft 模组开发设计的轻量化、高性能渲染框架。
 
-本包已使用 Kotlin 实现（`common/src/main/kotlin/com/github/epsilon/graphics`），并保持原有 Java 可见 API，
-Kotlin 与 Java 调用方都可以直接使用。
+本包已使用 Kotlin 实现（`common/src/main/kotlin/com/github/epsilon/graphics`），并保持原有 Java 可见 API， Kotlin 与 Java
+调用方都可以直接使用。
 
 ---
 

@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.overlay
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.lib.UiRect
@@ -31,7 +31,7 @@ object DownloadJobOverlay : AutoCloseable {
     private var renderedJob: AssetManager.DownloadJob? = null
 
     fun extractRenderState(screen: Screen, graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
-        val minecraft = Constants.mc ?: return
+        val minecraft = mc ?: return
         val job = AssetManager.activeJob()
         if (screen != minecraft.gui.screen() || screen is EpsilonDialogScreen || job == null || !job.isRunning()) {
             close()
@@ -56,7 +56,8 @@ object DownloadJobOverlay : AutoCloseable {
         val window = minecraft.window
         if (scene == null) scene = UiScene(EpsilonUiTheme)
         if (renderTarget == null) {
-            renderTarget = LuminRenderSystem.LuminRenderTarget.create("download-job-overlay", window.width, window.height)
+            renderTarget =
+                LuminRenderSystem.LuminRenderTarget.create("download-job-overlay", window.width, window.height)
         }
         val target = renderTarget!!
         target.resize(window.width, window.height)
@@ -120,7 +121,13 @@ object DownloadJobOverlay : AutoCloseable {
                 0.8f, if (hovered) MD3Theme.PRIMARY else MD3Theme.OUTLINE_SOFT
             )
             scope.pushAbsolute(cardBounds) { card ->
-                card.text(title, PADDING, 10.0f, fitScale(title, 0.68f, contentWidth - percentWidth - 10.0f), MD3Theme.TEXT_PRIMARY)
+                card.text(
+                    title,
+                    PADDING,
+                    10.0f,
+                    fitScale(title, 0.68f, contentWidth - percentWidth - 10.0f),
+                    MD3Theme.TEXT_PRIMARY
+                )
                 card.text(percent, cardBounds.width - PADDING - percentWidth, 10.0f, 0.68f, MD3Theme.PRIMARY)
                 card.roundRect(PADDING, 31.0f, contentWidth, 4.0f, 2.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
                 if (progress > 0.0f) {
@@ -151,7 +158,7 @@ object DownloadJobOverlay : AutoCloseable {
     }
 
     fun mouseClicked(screen: Screen, event: MouseButtonEvent): Boolean {
-        val minecraft = Constants.mc ?: return false
+        val minecraft = mc ?: return false
         val cardBounds = bounds
         if (minecraft.gui.screen() != screen || screen != renderedScreen || cardBounds == null ||
             event.button() != InputConstants.MOUSE_BUTTON_LEFT

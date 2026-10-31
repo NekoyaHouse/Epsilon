@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.resources
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.Resource
 import org.lwjgl.system.MemoryUtil
@@ -14,7 +14,7 @@ object ResourceLocationUtils {
     }
 
     fun loadResource(identifier: Identifier): ByteBuffer {
-        val manager = Constants.client.resourceManager
+        val manager = mc.resourceManager
         val resource: Optional<Resource> = manager.getResource(identifier)
 
         if (resource.isEmpty) {

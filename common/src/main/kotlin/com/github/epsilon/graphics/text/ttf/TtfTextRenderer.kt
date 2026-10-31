@@ -54,12 +54,15 @@ class TtfTextRenderer : ITextRenderer {
     private val glyphBytes: Long
 
     private val batches: MutableMap<BatchKey, Batch> = LinkedHashMap()
+
     // 缓存与 scale 无关的布局数据，绘制时只做平移和缩放。
-    private val layoutCache: MutableMap<LayoutKey, TextLayout> = object : LinkedHashMap<LayoutKey, TextLayout>(64, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, TextLayout>): Boolean {
-            return size > LAYOUT_CACHE_LIMIT
+    private val layoutCache: MutableMap<LayoutKey, TextLayout> =
+        object : LinkedHashMap<LayoutKey, TextLayout>(64, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, TextLayout>): Boolean {
+                return size > LAYOUT_CACHE_LIMIT
+            }
         }
-    }
+
     // 宽度测量调用很密集，单独缓存避免为了布局缓存而请求/上传字形。
     private val widthCache: MutableMap<LayoutKey, Float> = object : LinkedHashMap<LayoutKey, Float>(64, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, Float>): Boolean {
@@ -78,7 +81,7 @@ class TtfTextRenderer : ITextRenderer {
     constructor(bufferSize: Long) : this(bufferSize, Mode.STANDARD)
 
     constructor(bufferSize: Long, fontBlur: Boolean) :
-        this(bufferSize, if (fontBlur) Mode.FONT_BLUR else Mode.STANDARD)
+            this(bufferSize, if (fontBlur) Mode.FONT_BLUR else Mode.STANDARD)
 
     constructor(bufferSize: Long, mode: Mode) {
         this.bufferSize = bufferSize
@@ -245,7 +248,14 @@ class TtfTextRenderer : ITextRenderer {
         }
     }
 
-    private fun emitGlitchLayout(layout: TextLayout, x: Float, y: Float, scale: Float, argb: Int, effect: TextGlitchEffect) {
+    private fun emitGlitchLayout(
+        layout: TextLayout,
+        x: Float,
+        y: Float,
+        scale: Float,
+        argb: Int,
+        effect: TextGlitchEffect
+    ) {
         if (layout.glyphCount == 0) return
 
         val padding = effect.requiredPadding()
@@ -566,7 +576,8 @@ class TtfTextRenderer : ITextRenderer {
         }
     }
 
-    private data class GlitchUniforms(val effect: TextGlitchEffect, val time: Float) : DynamicGpuDataStorage.DynamicGpuData {
+    private data class GlitchUniforms(val effect: TextGlitchEffect, val time: Float) :
+        DynamicGpuDataStorage.DynamicGpuData {
         override fun write(buffer: ByteBuffer) {
             val color = effect.neonColor
             Std140Builder.intoBuffer(buffer)
@@ -641,7 +652,16 @@ private fun hasNoInk(codepoint: Int): Boolean {
             type == Character.SURROGATE.toInt()
 }
 
-private fun writeGlyph(p: Long, x: Float, y: Float, scale: Float, data: FloatArray, base: Int, leftArgb: Int, rightArgb: Int) {
+private fun writeGlyph(
+    p: Long,
+    x: Float,
+    y: Float,
+    scale: Float,
+    data: FloatArray,
+    base: Int,
+    leftArgb: Int,
+    rightArgb: Int
+) {
     val x1 = x + data[base] * scale
     val y1 = y + data[base + 1] * scale
     val x2 = x + data[base + 2] * scale

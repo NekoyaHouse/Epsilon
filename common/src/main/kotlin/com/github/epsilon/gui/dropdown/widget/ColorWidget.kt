@@ -379,7 +379,8 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     private fun updateChannelFromMouse(channel: Channel, mouseX: Double) {
         val trackX = trackX
         val trackW = trackWidth
-        val value = Mth.clamp((Mth.clamp(((mouseX - trackX) / trackW).toFloat(), 0.0f, 1.0f) * 255.0f).roundToInt(), 0, 255)
+        val value =
+            Mth.clamp((Mth.clamp(((mouseX - trackX) / trackW).toFloat(), 0.0f, 1.0f) * 255.0f).roundToInt(), 0, 255)
         setChannelValue(channel, value, true)
     }
 

@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.screen.accounts
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.MicrosoftLogin
@@ -173,7 +173,12 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         panelX = (w - panelW) / 2.0f
         panelY = (h - panelH) / 2.0f
 
-        headerBackBtn = UiRect(panelX + 10.0f, panelY + (HEADER_HEIGHT - BACK_BUTTON_SIZE) / 2.0f, BACK_BUTTON_SIZE, BACK_BUTTON_SIZE)
+        headerBackBtn = UiRect(
+            panelX + 10.0f,
+            panelY + (HEADER_HEIGHT - BACK_BUTTON_SIZE) / 2.0f,
+            BACK_BUTTON_SIZE,
+            BACK_BUTTON_SIZE
+        )
 
         val contentTop = panelY + HEADER_HEIGHT
         val contentBottom = panelY + panelH - PAD
@@ -197,7 +202,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
         val contentHeight = visible.size * (AccountRow.HEIGHT + AccountRow.GAP)
         maxScroll = maxOf(0.0f, contentHeight - (listViewport?.height ?: 0.0f))
-        rowWidth = if (maxScroll > 0.0f) (listViewport?.width ?: 0.0f) - UiScrollBar.TOTAL_WIDTH else (listViewport?.width ?: 0.0f)
+        rowWidth =
+            if (maxScroll > 0.0f) (listViewport?.width ?: 0.0f) - UiScrollBar.TOTAL_WIDTH else (listViewport?.width
+                ?: 0.0f)
     }
 
     private fun syncRows() {
@@ -243,6 +250,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         return account.username.lowercase().contains(query) ||
                 account.type.name.lowercase().contains(query)
     }
+
     private fun focusedAccount(): Account<*>? {
         if (focusedIndex < 0 || focusedIndex >= visible.size) return null
         return visible[focusedIndex].getAccount()
@@ -251,7 +259,14 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun drawHeader(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
         val backBtn = headerBackBtn ?: return
         val backHovered = backBtn.contains(mouseX.toDouble(), mouseY.toDouble())
-        drawIconGlyph(scope, backBtn, IconChars.ARROW_BACK, 1.0f, MD3Theme.TEXT_PRIMARY, if (backHovered) 0.9f else 0.0f)
+        drawIconGlyph(
+            scope,
+            backBtn,
+            IconChars.ARROW_BACK,
+            1.0f,
+            MD3Theme.TEXT_PRIMARY,
+            if (backHovered) 0.9f else 0.0f
+        )
 
         val title = EpsilonTranslations.Gui.ACCOUNTS_TITLE.getTranslatedName()
         val titleScale = 1.2f
@@ -261,7 +276,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             titleScale, MD3Theme.TEXT_PRIMARY, StaticFontLoader.JURA_LIGHT,
         )
 
-        val currentName = Constants.client.user.name
+        val currentName = mc.user.name
         if (currentName.isNotBlank()) {
             val scale = 0.6f
             val labelWidth = textRenderer.getWidth(currentName, scale)
@@ -722,7 +737,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         microsoftError = false
         val session = ++microsoftSession
         MicrosoftLogin.getRefreshToken { token ->
-            Constants.client.execute {
+            mc.execute {
                 if (session != microsoftSession) return@execute
 
                 microsoftWaiting = false
@@ -783,10 +798,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun isCurrent(account: Account<*>): Boolean {
         val cachedUuid = account.cache.uuid
         if (!cachedUuid.isNullOrBlank()) {
-            val currentUuid = Constants.client.user.profileId.toString().replace("-", "")
+            val currentUuid = mc.user.profileId.toString().replace("-", "")
             return currentUuid.equals(cachedUuid.replace("-", ""), ignoreCase = true)
         }
-        return Constants.client.user.name.equals(account.username, ignoreCase = true)
+        return mc.user.name.equals(account.username, ignoreCase = true)
     }
 
     private fun close() {

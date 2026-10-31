@@ -532,6 +532,7 @@ object ConfigManager {
                 setting is StringSetting -> setting.value = value.asString
                 setting === ClientSetting.guiMode && setting is EnumSetting<*> ->
                     (setting as EnumSetting<*>).setModeSilently(value.asString)
+
                 setting is EnumSetting<*> -> setting.setMode(value.asString)
                 setting is ColorSetting -> {
                     val argb = value.asInt
@@ -793,10 +794,10 @@ object ConfigManager {
 
     private fun isValidConfigName(configName: String?): Boolean {
         return configName != null &&
-            configName.isNotBlank() &&
-            configName != "." &&
-            !configName.contains("..") &&
-            !INVALID_CONFIG_NAME_PATTERN.matcher(configName).find()
+                configName.isNotBlank() &&
+                configName != "." &&
+                !configName.contains("..") &&
+                !INVALID_CONFIG_NAME_PATTERN.matcher(configName).find()
     }
 
     private fun resolveExportZipPath(rawPath: String?, configName: String): Path {

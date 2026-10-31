@@ -65,7 +65,13 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        TrollTheme.window(scope, bounds, headerHeight, EpsilonTranslations.TrollGui.COLOR_PICKER.getTranslatedName(), metrics)
+        TrollTheme.window(
+            scope,
+            bounds,
+            headerHeight,
+            EpsilonTranslations.TrollGui.COLOR_PICKER.getTranslatedName(),
+            metrics
+        )
         val hueColor = Color.getHSBColor(hue, 1.0f, 1.0f)
         scope.rectGradient(1, field.x, field.y, field.width, field.height, Color.WHITE, Color.WHITE, hueColor, hueColor)
         scope.rectGradient(
@@ -93,15 +99,30 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         for (i in 0 until channelCount()) {
             val slider = sliders[i]
             scope.rect(1, slider.x, slider.y, slider.width, slider.height, Color(0, 0, 0, 40))
-            scope.rect(1, slider.x, slider.y, slider.width * values[i] / 255.0f, slider.height, TrollTheme.alpha(fills[i], 200))
+            scope.rect(
+                1,
+                slider.x,
+                slider.y,
+                slider.width * values[i] / 255.0f,
+                slider.height,
+                TrollTheme.alpha(fills[i], 200)
+            )
             scope.textWithShadow(
-                3, TrollTheme.trim(CHANNELS[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, slider.width - 33.0f),
-                slider.x + 3.0f, slider.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
+                3,
+                TrollTheme.trim(CHANNELS[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, slider.width - 33.0f),
+                slider.x + 3.0f,
+                slider.y + 2.25f,
+                TrollTheme.TEXT_SCALE,
+                TrollTheme.text()
             )
             val value = values[i].toString()
             scope.textWithShadow(
-                3, value, slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
-                slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f, TrollTheme.VALUE_SCALE, TrollTheme.text()
+                3,
+                value,
+                slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
+                slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
+                TrollTheme.VALUE_SCALE,
+                TrollTheme.text()
             )
         }
         drawPreview(scope, previousColor, original)
@@ -115,9 +136,13 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
             val button = buttons[i]
             scope.rect(
                 1, button.x, button.y, button.width, button.height,
-                TrollTheme.alpha(TrollTheme.primary(), if (button.contains(mouseX.toDouble(), mouseY.toDouble())) 180 else 70)
+                TrollTheme.alpha(
+                    TrollTheme.primary(),
+                    if (button.contains(mouseX.toDouble(), mouseY.toDouble())) 180 else 70
+                )
             )
-            val label = TrollTheme.trim(labels[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, button.width - 6.0f)
+            val label =
+                TrollTheme.trim(labels[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, button.width - 6.0f)
             scope.textWithShadow(
                 3, label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
                 button.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()

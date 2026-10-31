@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.NonNullContext
@@ -361,13 +361,13 @@ object RotationUtils {
             RotationManager.INSTANCE.getLastRotation().pitch
         )
         val mouseSensitivity = (
-            Constants.client.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
-        ).toFloat()
+                mc.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
+                ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
-            (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
+                (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
-            (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
+                (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
         return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
     }
 
@@ -380,13 +380,13 @@ object RotationUtils {
      */
     fun applySensitivityPatch(rotation: Rot2f, previousRotation: Rot2f): Rot2f {
         val mouseSensitivity = (
-            Constants.client.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
-        ).toFloat()
+                mc.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
+                ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
-            (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
+                (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
-            (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
+                (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
         return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
     }
 
@@ -490,7 +490,7 @@ object RotationUtils {
             yaw = lastYaw + move.yaw
             pitch = lastPitch + move.pitch
 
-            val iterations = (Constants.client.fps / 20f + Random.nextDouble() * 10).toInt()
+            val iterations = (mc.fps / 20f + Random.nextDouble() * 10).toInt()
             for (i in 1..iterations) {
                 if (abs(move.yaw) + abs(move.pitch) > 0.0001) {
                     yaw += ((Random.nextDouble() - 0.5) / 1000).toFloat()

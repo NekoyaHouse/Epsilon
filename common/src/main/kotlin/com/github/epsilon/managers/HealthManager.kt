@@ -1,6 +1,6 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.PacketEvent
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket
@@ -26,7 +26,7 @@ object HealthManager {
     }
 
     private fun onPacket(event: PacketEvent.Receive) {
-        if (Constants.client.player == null || Constants.client.level == null) return
+        if (mc.player == null || mc.level == null) return
 
         val packet = event.packet
         if (packet is ClientboundSetScorePacket) {

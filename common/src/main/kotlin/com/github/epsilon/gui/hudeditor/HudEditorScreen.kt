@@ -384,7 +384,12 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             return true
         }
         val panel = hudPanel
-        if (panel != null && panel.hasActiveInput() && panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
+        if (panel != null && panel.hasActiveInput() && panel.keyPressed(
+                event.key(),
+                event.keycode(),
+                event.modifiers()
+            )
+        ) {
             return true
         }
         if (event.isEscape) {
@@ -452,7 +457,11 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             return true
         }
         val panel = hudPanel
-        return panel != null && panel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button()) || super.mouseReleased(epsilonEvent)
+        return panel != null && panel.mouseReleased(
+            epsilonEvent.x(),
+            epsilonEvent.y(),
+            epsilonEvent.button()
+        ) || super.mouseReleased(epsilonEvent)
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
@@ -469,7 +478,10 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             moveElementTo(dragging, epsilonEventX.toFloat() - dragOffsetX, epsilonEventY.toFloat() - dragOffsetY, true)
             return true
         }
-        hudPanel?.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()))
+        hudPanel?.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseX(event.x()),
+            LuminRenderSystem.toEpsilonMouseY(event.y())
+        )
         return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)
     }
 
@@ -670,7 +682,13 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             minOf(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
             minOf(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
-        popupHost.open(StringListSelectPopup(bounds, setting, { value -> setting.add(value) }, { value -> setting.remove(value) }))
+        popupHost.open(
+            StringListSelectPopup(
+                bounds,
+                setting,
+                { value -> setting.add(value) },
+                { value -> setting.remove(value) })
+        )
     }
 
     private fun ensureHudPanel(): CategoryPanel {

@@ -229,34 +229,80 @@ class Render2DScheduler : AutoCloseable {
                     if (command.rotationDegrees == 0.0f) {
                         renderers.textureRenderer().addRoundedTexture(
                             texture.identifier,
-                            command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                            command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
-                            command.u0, command.v0, command.u1, command.v1, command.color, texture.linearFilter
+                            command.bounds.x,
+                            command.bounds.y,
+                            command.bounds.width,
+                            command.bounds.height,
+                            command.radiusTopLeft,
+                            command.radiusTopRight,
+                            command.radiusBottomRight,
+                            command.radiusBottomLeft,
+                            command.u0,
+                            command.v0,
+                            command.u1,
+                            command.v1,
+                            command.color,
+                            texture.linearFilter
                         )
                     } else {
                         renderers.textureRenderer().addRotatedRoundedTexture(
                             texture.identifier,
-                            command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                            command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
-                            command.u0, command.v0, command.u1, command.v1, command.color,
-                            command.originX, command.originY, command.rotationDegrees, texture.linearFilter
+                            command.bounds.x,
+                            command.bounds.y,
+                            command.bounds.width,
+                            command.bounds.height,
+                            command.radiusTopLeft,
+                            command.radiusTopRight,
+                            command.radiusBottomRight,
+                            command.radiusBottomLeft,
+                            command.u0,
+                            command.v0,
+                            command.u1,
+                            command.v1,
+                            command.color,
+                            command.originX,
+                            command.originY,
+                            command.rotationDegrees,
+                            texture.linearFilter
                         )
                     }
                 } else if (texture is Render2DTexture.LuminRef) {
                     if (command.rotationDegrees == 0.0f) {
                         renderers.textureRenderer().addRoundedTexture(
                             texture.texture,
-                            command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                            command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
-                            command.u0, command.v0, command.u1, command.v1, command.color
+                            command.bounds.x,
+                            command.bounds.y,
+                            command.bounds.width,
+                            command.bounds.height,
+                            command.radiusTopLeft,
+                            command.radiusTopRight,
+                            command.radiusBottomRight,
+                            command.radiusBottomLeft,
+                            command.u0,
+                            command.v0,
+                            command.u1,
+                            command.v1,
+                            command.color
                         )
                     } else {
                         renderers.textureRenderer().addRotatedRoundedTexture(
                             texture.texture,
-                            command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                            command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
-                            command.u0, command.v0, command.u1, command.v1, command.color,
-                            command.originX, command.originY, command.rotationDegrees
+                            command.bounds.x,
+                            command.bounds.y,
+                            command.bounds.width,
+                            command.bounds.height,
+                            command.radiusTopLeft,
+                            command.radiusTopRight,
+                            command.radiusBottomRight,
+                            command.radiusBottomLeft,
+                            command.u0,
+                            command.v0,
+                            command.u1,
+                            command.v1,
+                            command.color,
+                            command.originX,
+                            command.originY,
+                            command.rotationDegrees
                         )
                     }
                 }
@@ -435,7 +481,20 @@ class Render2DScheduler : AutoCloseable {
             x: Float, y: Float, width: Float, height: Float, topLeft: Float, topRight: Float,
             bottomRight: Float, bottomLeft: Float, color: Color,
         ) {
-            addRoundRectGradient(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, color, color, color, color)
+            addRoundRectGradient(
+                x,
+                y,
+                width,
+                height,
+                topLeft,
+                topRight,
+                bottomRight,
+                bottomLeft,
+                color,
+                color,
+                color,
+                color
+            )
         }
 
         fun addRoundRectGradient(
@@ -453,7 +512,15 @@ class Render2DScheduler : AutoCloseable {
             )
         }
 
-        fun addOutline(x: Float, y: Float, width: Float, height: Float, radius: Float, outlineWidth: Float, color: Color) {
+        fun addOutline(
+            x: Float,
+            y: Float,
+            width: Float,
+            height: Float,
+            radius: Float,
+            outlineWidth: Float,
+            color: Color
+        ) {
             addOutline(x, y, width, height, radius, radius, radius, radius, outlineWidth, color)
         }
 
@@ -607,7 +674,8 @@ class Render2DScheduler : AutoCloseable {
             fontLoader: TtfFontLoader?,
         ) {
             val metrics = scheduler.textMetrics()
-            val width = if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
+            val width =
+                if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
             val height = if (fontLoader != null) metrics.getHeight(scale, fontLoader) else metrics.getHeight(scale)
             scheduler.add(
                 Render2DCommand.GradientText(
@@ -633,7 +701,8 @@ class Render2DScheduler : AutoCloseable {
             }
             val clampedBlur = minOf(blurRadius, MAX_FONT_BLUR_RADIUS)
             val metrics = scheduler.textMetrics()
-            val width = if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
+            val width =
+                if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
             val height = if (fontLoader != null) metrics.getHeight(scale, fontLoader) else metrics.getHeight(scale)
             val padding = clampedBlur + 2.0f
             scheduler.add(
@@ -660,7 +729,8 @@ class Render2DScheduler : AutoCloseable {
                 return
             }
             val metrics = scheduler.textMetrics()
-            val width = if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
+            val width =
+                if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
             val height = if (fontLoader != null) metrics.getHeight(scale, fontLoader) else metrics.getHeight(scale)
             val padding = effect.requiredPadding()
             scheduler.add(
@@ -694,7 +764,8 @@ class Render2DScheduler : AutoCloseable {
             originX: Float, originY: Float, rotationDegrees: Float,
         ) {
             val metrics = scheduler.textMetrics()
-            val width = if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
+            val width =
+                if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
             val height = if (fontLoader != null) metrics.getHeight(scale, fontLoader) else metrics.getHeight(scale)
             val bounds = if (rotationDegrees == 0.0f) {
                 Render2DBounds.of(x, y, width, height)
@@ -825,7 +896,8 @@ class Render2DScheduler : AutoCloseable {
         private fun promoteToQuadTree() {
             // 命令数量超过阈值后才升级为空间桶，为后续可见性裁剪和脏区重建预留结构。
             val currentBounds = bounds
-            val rootBounds = if (currentBounds == null) Render2DBounds.of(0.0f, 0.0f, 1.0f, 1.0f) else padded(currentBounds)
+            val rootBounds =
+                if (currentBounds == null) Render2DBounds.of(0.0f, 0.0f, 1.0f, 1.0f) else padded(currentBounds)
             val tree = QuadTreeBucket(rootBounds, 0, DEFAULT_QUADTREE_MAX_DEPTH)
             quadTree = tree
             for (command in flatCommands) {

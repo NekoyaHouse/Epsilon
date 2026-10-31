@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.utils.safety.player
@@ -66,8 +66,8 @@ object CircleESP {
             val ticks = (System.currentTimeMillis() % 1000000).toFloat() * 0.004f
             val alpha = 0.35f + 0.65f * ((Mth.sin((ticks * 1.8f).toDouble()) + 1.0f) * 0.5f) * alphaFactor
 
-            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val cameraPos = Constants.client.entityRenderDispatcher.camera!!.position()
+            val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val cameraPos = mc.entityRenderDispatcher.camera!!.position()
 
             val x = Mth.lerp(tickDelta.toDouble(), target.xo, target.x) - cameraPos.x
             val y = Mth.lerp(tickDelta.toDouble(), target.yo, target.y) - cameraPos.y + sin(ticks.toDouble()) + 1
@@ -98,7 +98,12 @@ object CircleESP {
                 )
                 triBuilder.vertex(
                     matrix, vecX, 0.0f, vecZ,
-                    Color(sideColor.alpha / 255.0f, sideColor.green / 255.0f, sideColor.blue / 255.0f, 0.52f * alpha).rgb
+                    Color(
+                        sideColor.alpha / 255.0f,
+                        sideColor.green / 255.0f,
+                        sideColor.blue / 255.0f,
+                        0.52f * alpha
+                    ).rgb
                 )
 
                 i += (PI.toFloat() * 2) / 64.0f
@@ -140,7 +145,10 @@ object CircleESP {
     }
 
     private fun getPoint(radAngle: Float, radius: Float): FloatArray {
-        return floatArrayOf((-sin(radAngle.toDouble()) * radius).toFloat(), (cos(radAngle.toDouble()) * radius).toFloat())
+        return floatArrayOf(
+            (-sin(radAngle.toDouble()) * radius).toFloat(),
+            (cos(radAngle.toDouble()) * radius).toFloat()
+        )
     }
 
     private fun getNormal(radAngle: Float): FloatArray {

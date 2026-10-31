@@ -100,7 +100,15 @@ class StringListSelectPopup(
                 hoveredMoveUp = null
                 hoveredMoveDown = null
                 val localViewport = animatedViewport.relativeTo(animatedBounds)
-                popup.viewport(contentBuffer, localViewport, scroll, maxScroll, contentHeight, mouseX, mouseY) { content ->
+                popup.viewport(
+                    contentBuffer,
+                    localViewport,
+                    scroll,
+                    maxScroll,
+                    contentHeight,
+                    mouseX,
+                    mouseY
+                ) { content ->
                     buildEntryList(
                         content, entries, animatedViewport.x, animatedViewport.y - scroll,
                         localViewport, mouseX, mouseY, animatedViewport

@@ -119,7 +119,12 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                     val armorSlot = 8 - armorPiece.equipmentSlot.index
 
                     if (strict) {
-                        connection.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+                        connection.send(
+                            ServerboundPlayerCommandPacket(
+                                player,
+                                ServerboundPlayerCommandPacket.Action.STOP_SPRINTING
+                            )
+                        )
                     }
 
                     ClickSlotUtils.click(inventorySlot)
@@ -163,10 +168,10 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
             if (!LivingEntity.canGlideUsing(stack, slot)) return 0
 
             val elytraFlyActive = elytraPriority == ElytraPriority.ElytraPlus &&
-                ElytraFly.isEnabled &&
-                !ElytraFly.isArmorMode
+                    ElytraFly.isEnabled &&
+                    !ElytraFly.isArmorMode
             val preserveEquippedElytra = elytraPriority == ElytraPriority.Ignore &&
-                player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
+                    player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
 
             if (elytraFlyActive || preserveEquippedElytra || elytraPriority == ElytraPriority.Always) {
                 enchantmentScore = 999

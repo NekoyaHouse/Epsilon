@@ -67,7 +67,8 @@ class FriendClientSettingTab(
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
         val contentSignature = buildContentSignature(friends)
-        val rebuildContent = shouldRebuild(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature)
+        val rebuildContent =
+            shouldRebuild(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature)
 
         if (rebuildContent) {
             contentBuffer.clear()
@@ -82,7 +83,15 @@ class FriendClientSettingTab(
                 scope, inputBounds, mouseX, mouseY, textRenderer,
                 EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵"
             )
-            scope.viewport(contentBuffer, listViewport, state.getFriendScroll(), maxScroll, contentHeight, mouseX, mouseY) { content ->
+            scope.viewport(
+                contentBuffer,
+                listViewport,
+                state.getFriendScroll(),
+                maxScroll,
+                contentHeight,
+                mouseX,
+                mouseY
+            ) { content ->
                 if (!rebuildContent) {
                     return@viewport
                 }

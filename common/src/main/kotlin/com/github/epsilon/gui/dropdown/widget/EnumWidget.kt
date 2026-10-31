@@ -121,7 +121,17 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
 
         val hiddenModes = getHiddenModes()
         for (optionIndex in hiddenModes.indices) {
-            drawOption(scope, textMetrics, mouseX, mouseY, listX, fieldW, visibleBottom, optionIndex, hiddenModes[optionIndex])
+            drawOption(
+                scope,
+                textMetrics,
+                mouseX,
+                mouseY,
+                listX,
+                fieldW,
+                visibleBottom,
+                optionIndex,
+                hiddenModes[optionIndex]
+            )
         }
     }
 
@@ -223,7 +233,11 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         } else {
             DropdownTheme.settingLabelMuted()
         }
-        textColor = MD3Theme.withAlpha(textColor, ((textColor.alpha * alpha).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
+        textColor = MD3Theme.withAlpha(
+            textColor,
+            ((textColor.alpha * alpha).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong())
+                .toInt().toInt()
+        )
         scope.text(
             setting.getTranslatedValueUnchecked(mode),
             listX + FIELD_TEXT_PADDING_X,

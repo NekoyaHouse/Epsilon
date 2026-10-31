@@ -49,8 +49,12 @@ enum class Easing(val function: Function<Float, Float>) {
     EASE_IN_SINE(Function<Float, Float> { x -> 1.0f - Mth.cos((x.toDouble() * PI * 0.5).toFloat().toDouble()) }),
     EASE_OUT_SINE(Function<Float, Float> { x -> Mth.sin((x.toDouble() * PI * 0.5).toFloat().toDouble()) }),
     EASE_IN_OUT_SINE(Function<Float, Float> { x -> 1.0f - Mth.cos((PI * x.toDouble() * 0.5).toFloat().toDouble()) }),
-    EASE_IN_EXPO(Function<Float, Float> { x -> if (x == 0.0f) 0.0f else (2.0).pow((10.0f * x - 10.0f).toDouble()).toFloat() }),
-    EASE_OUT_EXPO(Function<Float, Float> { x -> if (x == 1.0f) 1.0f else 1.0f - (2.0).pow((-10.0f * x).toDouble()).toFloat() }),
+    EASE_IN_EXPO(Function<Float, Float> { x ->
+        if (x == 0.0f) 0.0f else (2.0).pow((10.0f * x - 10.0f).toDouble()).toFloat()
+    }),
+    EASE_OUT_EXPO(Function<Float, Float> { x ->
+        if (x == 1.0f) 1.0f else 1.0f - (2.0).pow((-10.0f * x).toDouble()).toFloat()
+    }),
     EASE_IN_OUT_EXPO(Function<Float, Float> { x ->
         when {
             x == 0.0f -> 0.0f
@@ -77,10 +81,10 @@ enum class Easing(val function: Function<Float, Float>) {
             x == 0.0f -> 0.0f
             x == 1.0f -> 1.0f
             else -> (
-                (2.0).pow((-10.0f * x).toDouble())
-                    * sin((x * 10.0f - 0.75) * ((2 * PI) / 3))
-                    * 0.5f + 1.0f
-                ).toFloat()
+                    (2.0).pow((-10.0f * x).toDouble())
+                            * sin((x * 10.0f - 0.75) * ((2 * PI) / 3))
+                            * 0.5f + 1.0f
+                    ).toFloat()
         }
     }),
     EASE_IN_BACK(Function<Float, Float> { x -> (1.70158f + 1.0f) * x * x * x - 1.70158f * x * x }),
@@ -90,9 +94,9 @@ enum class Easing(val function: Function<Float, Float>) {
     }),
     DYNAMIC_ISLAND(Function<Float, Float> { x ->
         (
-            1.0 - cos(x.toDouble() * PI * (0.2 + 2.5 * (x.toDouble()).pow(3.0)))
-                * exp((-x * 5.0f).toDouble())
-            ).toFloat()
+                1.0 - cos(x.toDouble() * PI * (0.2 + 2.5 * (x.toDouble()).pow(3.0)))
+                        * exp((-x * 5.0f).toDouble())
+                ).toFloat()
     });
 
 }

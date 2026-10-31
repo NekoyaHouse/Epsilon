@@ -54,7 +54,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
     private val popCounts: ConcurrentHashMap<UUID, Int> = ConcurrentHashMap()
     private val nameScrollStartTimes: MutableMap<UUID, Long> = HashMap()
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
     private var cachedRows: List<PlayerRow> = emptyList()
     private var rowsInitialized: Boolean = false
 
@@ -100,7 +101,14 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val scope = renderScope()
 
         if (backgroundBlur) {
-            BlurShader.render(panelX, panelY, layout.panelWidth, layout.panelHeight, panelRadius, blurStrength.toFloat())
+            BlurShader.render(
+                panelX,
+                panelY,
+                layout.panelWidth,
+                layout.panelHeight,
+                panelRadius,
+                blurStrength.toFloat()
+            )
         }
         if (drawShadow) {
             scope.shadow(
@@ -218,10 +226,12 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val columnGap = COLUMN_GAP * scale
         val headerBodyGap = HEADER_BODY_GAP * scale
 
-        var distanceWidth = textRenderer.getWidth(EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), headerScale)
+        var distanceWidth =
+            textRenderer.getWidth(EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), headerScale)
         var healthWidth = textRenderer.getWidth(EpsilonTranslations.PlayerInfo.HEALTH.getTranslatedName(), headerScale)
         var popsWidth = textRenderer.getWidth(EpsilonTranslations.PlayerInfo.POPS.getTranslatedName(), headerScale)
-        var directionWidth = textRenderer.getWidth(EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), headerScale)
+        var directionWidth =
+            textRenderer.getWidth(EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), headerScale)
 
         for (row in rows) {
             distanceWidth = maxOf(distanceWidth, textRenderer.getWidth(row.distance, textScale))
@@ -232,7 +242,8 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
         val panelWidth = panelWidthSetting.toFloat() * scale
         val tableWidth = panelWidth - paddingX * 2.0f
-        val nameWidth = maxOf(0.0f, tableWidth - distanceWidth - healthWidth - popsWidth - directionWidth - columnGap * 4.0f)
+        val nameWidth =
+            maxOf(0.0f, tableWidth - distanceWidth - healthWidth - popsWidth - directionWidth - columnGap * 4.0f)
         val headerHeight = textRenderer.getHeight(headerScale)
         val bodyHeight = maxOf(1, rows.size) * rowHeight
         val panelHeight = paddingY * 2.0f + headerHeight + headerBodyGap + bodyHeight
@@ -244,7 +255,13 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         )
     }
 
-    private fun drawHeaders(scope: UiTree.Scope, textRenderer: TextRenderer, layout: Layout, panelX: Float, panelY: Float) {
+    private fun drawHeaders(
+        scope: UiTree.Scope,
+        textRenderer: TextRenderer,
+        layout: Layout,
+        panelX: Float,
+        panelY: Float
+    ) {
         var x = panelX + layout.paddingX
         val y = panelY + layout.paddingY
         val color = headerColor

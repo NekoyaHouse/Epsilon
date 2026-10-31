@@ -329,7 +329,17 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         if (ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina) && drawColumbinaBackground()) {
             LuminRenderSystem.setActiveTarget(null)
-            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
+            graphics.blit(
+                backgroundRenderTarget!!.getIdentifier(),
+                0,
+                0,
+                window.guiScaledWidth,
+                window.guiScaledHeight,
+                0.0f,
+                1.0f,
+                1.0f,
+                0.0f
+            )
         } else {
             val background = when (ClientSetting.mainMenuBackground.value) {
                 Background.SEA_LEVEL -> GlslSandBox.SEA_LEVEL
@@ -348,7 +358,17 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             )
 
             LuminRenderSystem.setActiveTarget(null)
-            graphics.blit(backgroundRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
+            graphics.blit(
+                backgroundRenderTarget!!.getIdentifier(),
+                0,
+                0,
+                window.guiScaledWidth,
+                window.guiScaledHeight,
+                0.0f,
+                1.0f,
+                1.0f,
+                0.0f
+            )
         }
     }
 
@@ -372,7 +392,17 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
 
         LuminRenderSystem.setActiveTarget(null)
-        graphics.blit(uiRenderTarget!!.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f)
+        graphics.blit(
+            uiRenderTarget!!.getIdentifier(),
+            0,
+            0,
+            window.guiScaledWidth,
+            window.guiScaledHeight,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f
+        )
     }
 
     private fun drawColumbinaBackground(): Boolean {
@@ -413,7 +443,19 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     finalU0, finalV0, finalU1, finalV1, Color.WHITE, true
                 )
                 if (lightTrails != null) {
-                    layer.texture(lightTrails, 0.0f, 0.0f, width.toFloat(), height.toFloat(), 0.0f, 0.0f, 1.0f, 1.0f, Color.WHITE, true)
+                    layer.texture(
+                        lightTrails,
+                        0.0f,
+                        0.0f,
+                        width.toFloat(),
+                        height.toFloat(),
+                        0.0f,
+                        0.0f,
+                        1.0f,
+                        1.0f,
+                        Color.WHITE,
+                        true
+                    )
                 }
             }
             scope.layer(1) { layer ->
@@ -421,7 +463,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     width * 0.42f, 0.0f, width * 0.58f, height.toFloat(),
                     Color(14, 20, 45, 0), Color(7, 11, 30, 150)
                 )
-                layer.rectVerticalGradient(0.0f, 0.0f, width.toFloat(), height.toFloat(), Color(7, 10, 25, 20), Color(4, 7, 18, 88))
+                layer.rectVerticalGradient(
+                    0.0f,
+                    0.0f,
+                    width.toFloat(),
+                    height.toFloat(),
+                    Color(7, 10, 25, 20),
+                    Color(4, 7, 18, 88)
+                )
             }
         }
         scene.beginFrame()
@@ -449,7 +498,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         )
         val subtitleProgress = Easing.EASE_OUT_CUBIC.function.apply(
             Mth.clamp(
-                (introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat(), 0.0f, 1.0f
+                (introElapsed - COLUMBINA_TITLE_DELAY_MS - 70L) / (COLUMBINA_TITLE_DURATION_MS - 70L).toFloat(),
+                0.0f,
+                1.0f
             )
         )
         val shutdownElapsed = if (reisaShutdownStartMs < 0L) 0.0f else (now - reisaShutdownStartMs).toFloat()
@@ -475,7 +526,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val subtitleScale = 1.705f * scale
         val subtitle = "COLUMBINA / " + Constants.VERSION
         val subtitleWidth = metrics.getWidth(subtitle, subtitleScale)
-        val subtitleX = titleCenterX - subtitleWidth * 0.5f + (1.0f - subtitleProgress) * 18.6f * scale + exit * 27.9f * scale
+        val subtitleX =
+            titleCenterX - subtitleWidth * 0.5f + (1.0f - subtitleProgress) * 18.6f * scale + exit * 27.9f * scale
         val subtitleBaseY = titleBaseY + titleHeight - 6.2f * scale
         val subtitleY = subtitleBaseY + (1.0f - subtitleProgress) * 4.65f * scale
         val menuTop = maxOf(layoutHeight * 0.315f, subtitleBaseY + 52.7f * scale)
@@ -493,7 +545,17 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         reisaShutdownTexturesPrewarmed = true
                     }
                     if (reisaShutdownStartMs >= 0L) {
-                        drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX, -layoutY.toFloat(), width, height)
+                        drawReisaShutdown(
+                            content,
+                            layoutWidth,
+                            layoutHeight,
+                            scale,
+                            now,
+                            -layoutX,
+                            -layoutY.toFloat(),
+                            width,
+                            height
+                        )
                     } else {
                         drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                     }
@@ -517,8 +579,24 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         clientName, titleX, titleY, titleScale, titleInnerGlow, titleScale * 0.90f, 4,
                         StaticFontLoader.CINZEL_DECORATIVE
                     )
-                    layer.gradientText(clientName, titleX, titleY, titleScale, titleStart, titleEnd, StaticFontLoader.CINZEL_DECORATIVE)
-                    layer.blurredText(subtitle, subtitleX, subtitleY, subtitleScale, subtitleScale * 1.25f, 2, subtitleGlow)
+                    layer.gradientText(
+                        clientName,
+                        titleX,
+                        titleY,
+                        titleScale,
+                        titleStart,
+                        titleEnd,
+                        StaticFontLoader.CINZEL_DECORATIVE
+                    )
+                    layer.blurredText(
+                        subtitle,
+                        subtitleX,
+                        subtitleY,
+                        subtitleScale,
+                        subtitleScale * 1.25f,
+                        2,
+                        subtitleGlow
+                    )
                     layer.gradientText(subtitle, subtitleX, subtitleY, subtitleScale, subtitleStart, subtitleEnd)
                 }
 
@@ -541,7 +619,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         )
                     }
                     val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
-                    entry.hoverProgress = Mth.lerp(if (hovered) 0.26f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
+                    entry.hoverProgress =
+                        Mth.lerp(if (hovered) 0.26f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
                     val hover = entry.hoverProgress
                     val animatedRowX = rowX + hover * 7.75f * scale
                     val labelStart = MD3Theme.lerp(
@@ -582,8 +661,24 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     val labelX = animatedRowX + 46.5f * scale
                     val labelWidth = metrics.getWidth(labelText, labelScale)
                     content.layer(-50) { layer ->
-                        layer.blurredText(numberLabel, animatedRowX, numberY + 1.55f * scale, numberScale, numberShadowBlur, 1, numberShadow)
-                        layer.blurredText(numberLabel, animatedRowX, numberY, numberScale, numberScale * 0.85f, 1, numberGlow)
+                        layer.blurredText(
+                            numberLabel,
+                            animatedRowX,
+                            numberY + 1.55f * scale,
+                            numberScale,
+                            numberShadowBlur,
+                            1,
+                            numberShadow
+                        )
+                        layer.blurredText(
+                            numberLabel,
+                            animatedRowX,
+                            numberY,
+                            numberScale,
+                            numberScale * 0.85f,
+                            1,
+                            numberGlow
+                        )
                         layer.gradientText(numberLabel, animatedRowX, numberY, numberScale, numberStart, numberEnd)
                         layer.blurredText(labelText, labelX, textY, labelScale, labelScale * 1.35f, 1, labelGlow)
                         layer.gradientText(labelText, labelX, textY, labelScale, labelStart, labelEnd)
@@ -682,7 +777,13 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                 }
                 content.layer(0) { layer ->
-                    layer.rect(titleX, titleY + titleHeight + titleAccentGap, titleAccentWidth, titleAccentHeight, accentColor)
+                    layer.rect(
+                        titleX,
+                        titleY + titleHeight + titleAccentGap,
+                        titleAccentWidth,
+                        titleAccentHeight,
+                        accentColor
+                    )
                 }
                 content.layer(10) { layer ->
                     layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT)
@@ -700,7 +801,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     val drawX = buttonColumnX - (1.0f - appear) * buttonRevealDistance
                     val buttonY = buttonsY + index * buttonStride
                     val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
-                    entry.hoverProgress = Mth.lerp(if (hovered) 0.24f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
+                    entry.hoverProgress =
+                        Mth.lerp(if (hovered) 0.24f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
 
                     val hover = entry.hoverProgress
                     val hoveredX = drawX + hover * buttonHoverShiftX
@@ -725,7 +827,13 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                             hoveredX + 1.55f * scale, lineY + 1.55f * scale, buttonWidth + scale * 0.775f,
                             buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear)
                         )
-                        layer.rect(hoveredX, lineY, buttonWidth, buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover))
+                        layer.rect(
+                            hoveredX,
+                            lineY,
+                            buttonWidth,
+                            buttonLineHeight,
+                            MD3Theme.lerp(lineBase, lineHover, hover)
+                        )
                     }
 
                     val label = localizedTitle(entry.title)
@@ -796,7 +904,17 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         drawReisaFloatingBase(scope, height, drawX, drawWidth, baseAlpha, baseWidth, scale)
 
         if (exitElapsed >= 0L) {
-            drawReisaExitAfterimages(scope, drawX, drawY, drawWidth, drawHeight, imageAlpha, poseEase, moveProgress, scale)
+            drawReisaExitAfterimages(
+                scope,
+                drawX,
+                drawY,
+                drawWidth,
+                drawHeight,
+                imageAlpha,
+                poseEase,
+                moveProgress,
+                scale
+            )
             if (poseEase < 0.999f) {
                 drawReisa(scope, reisaWelcomeTexture(), drawX, drawY, drawWidth, drawHeight, imageAlpha)
                 if (poseEase > 0.001f) {
@@ -838,7 +956,11 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val imageHeight = minOf(height * 0.80f, width * 0.60f)
         val imageWidth = imageHeight * REISA_ASPECT_RATIO
         val targetX = width - imageWidth - maxOf(4.0f, 15.5f * scale)
-        val imageX = Mth.lerp(entranceEase, width + imageWidth * 0.12f, targetX) + exitEase * (imageWidth * 0.56f + 65.1f * scale)
+        val imageX = Mth.lerp(
+            entranceEase,
+            width + imageWidth * 0.12f,
+            targetX
+        ) + exitEase * (imageWidth * 0.56f + 65.1f * scale)
         val bob = if (entranceProgress >= 1.0f && exitProgress <= 0.0f) {
             sin(((elapsed - REISA_SHUTDOWN_ENTRANCE_DURATION_MS) * 0.0031f).toDouble()).toFloat() * 2.48f * scale
         } else {
@@ -853,11 +975,25 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val imageAlpha = Easing.EASE_OUT_CUBIC.function.apply(entranceProgress) * (1.0f - exitEase)
 
         scope.layer(-40) { layer ->
-            layer.rect(maskX, maskY, maskWidth.toFloat(), maskHeight.toFloat(), applyAlpha(Color(8, 9, 16), imageAlpha * 0.62f))
+            layer.rect(
+                maskX,
+                maskY,
+                maskWidth.toFloat(),
+                maskHeight.toFloat(),
+                applyAlpha(Color(8, 9, 16), imageAlpha * 0.62f)
+            )
         }
 
         drawReisaShutdownTrails(scope, drawX, drawY, drawWidth, drawHeight, exitProgress, scale)
-        drawReisa(scope, reisaShutdownTexture(elapsed, exitElapsed >= 0L), drawX, drawY, drawWidth, drawHeight, imageAlpha)
+        drawReisa(
+            scope,
+            reisaShutdownTexture(elapsed, exitElapsed >= 0L),
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight,
+            imageAlpha
+        )
         drawReisaShutdownBubble(scope, elapsed, exitElapsed, width, drawX, drawY, drawHeight, scale)
     }
 
@@ -877,7 +1013,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val bright = applyAlpha(Color(235, 211, 255), trailEnvelope * 0.62f)
         val soft = applyAlpha(Color(183, 146, 245), 0.0f)
         scope.layer(-22) { layer ->
-            layer.rectHorizontalGradient(startX, imageY + imageHeight * 0.24f, maxWidth, maxOf(1.0f, 2.325f * scale), bright, soft)
+            layer.rectHorizontalGradient(
+                startX,
+                imageY + imageHeight * 0.24f,
+                maxWidth,
+                maxOf(1.0f, 2.325f * scale),
+                bright,
+                soft
+            )
             layer.rectHorizontalGradient(
                 startX + imageWidth * 0.08f, imageY + imageHeight * 0.49f, maxWidth * 0.78f,
                 maxOf(1.0f, 1.55f * scale), applyAlpha(bright, 0.68f), soft
@@ -915,7 +1058,13 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val availableTextWidth = maxOf(1.0f, maxBubbleWidth - contentInset * 2.0f)
         val nameScale = 0.961f * scale
         val messageScale = fitTextScale(farewell, 1.054f * scale, availableTextWidth)
-        val bubbleWidth = minOf(maxBubbleWidth, maxOf(metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT), metrics.getWidth(farewell, messageScale)) + contentInset * 2.0f)
+        val bubbleWidth = minOf(
+            maxBubbleWidth,
+            maxOf(
+                metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT),
+                metrics.getWidth(farewell, messageScale)
+            ) + contentInset * 2.0f
+        )
         val topPadding = 11.625f * scale
         val rowGap = 3.875f * scale
         val bottomPadding = 13.95f * scale
@@ -1005,7 +1154,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val line = applyAlpha(Color(239, 220, 255), alpha * 0.78f)
 
         scope.layer(-24) { layer ->
-            layer.rectVerticalGradient(centerX - lineWidth * 0.5f, lineY - glowHeight, lineWidth, glowHeight, transparent, glow)
+            layer.rectVerticalGradient(
+                centerX - lineWidth * 0.5f,
+                lineY - glowHeight,
+                lineWidth,
+                glowHeight,
+                transparent,
+                glow
+            )
         }
         scope.layer(-23) { layer ->
             layer.roundRect(centerX - lineWidth * 0.5f, lineY, lineWidth, lineHeight, lineHeight * 0.5f, line)
@@ -1042,7 +1198,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
     }
 
-    private fun drawReisaPoseOverlay(scope: UiTree.Scope, imageX: Float, imageY: Float, imageWidth: Float, imageHeight: Float, alpha: Float) {
+    private fun drawReisaPoseOverlay(
+        scope: UiTree.Scope,
+        imageX: Float,
+        imageY: Float,
+        imageWidth: Float,
+        imageHeight: Float,
+        alpha: Float
+    ) {
         val exit = reisaExitTexture() ?: return
         scope.layer(-20) { layer ->
             layer.texture(
@@ -1059,10 +1222,30 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
     }
 
-    private fun drawReisa(scope: UiTree.Scope, texture: Identifier?, imageX: Float, imageY: Float, imageWidth: Float, imageHeight: Float, alpha: Float) {
+    private fun drawReisa(
+        scope: UiTree.Scope,
+        texture: Identifier?,
+        imageX: Float,
+        imageY: Float,
+        imageWidth: Float,
+        imageHeight: Float,
+        alpha: Float
+    ) {
         if (texture == null) return
         scope.layer(-21) { layer ->
-            layer.texture(texture, imageX, imageY, imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true)
+            layer.texture(
+                texture,
+                imageX,
+                imageY,
+                imageWidth,
+                imageHeight,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                applyAlpha(Color.WHITE, alpha),
+                true
+            )
         }
     }
 
@@ -1122,7 +1305,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         imageHeight: Float,
         scale: Float,
     ) {
-        val bubbleIn = Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp((elapsed - REISA_BUBBLE_DELAY_MS) / 380.0f, 0.0f, 1.0f))
+        val bubbleIn =
+            Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp((elapsed - REISA_BUBBLE_DELAY_MS) / 380.0f, 0.0f, 1.0f))
         val bubbleExit = if (exitElapsed < 0L) 0.0f
         else Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(exitElapsed / 260.0f, 0.0f, 1.0f))
         val bubbleOut = 1.0f - bubbleExit
@@ -1140,7 +1324,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val messageScale = fitTextScale(greeting, 1.054f * scale, availableTextWidth)
         val nameWidth = metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT)
         val messageWidth = metrics.getWidth(greeting, messageScale)
-        val bubbleWidth = Mth.clamp(maxOf(nameWidth, messageWidth) + contentInset * 2.0f, minBubbleWidth, maxBubbleWidth)
+        val bubbleWidth =
+            Mth.clamp(maxOf(nameWidth, messageWidth) + contentInset * 2.0f, minBubbleWidth, maxBubbleWidth)
         val topPadding = 11.625f * scale
         val rowGap = 3.875f * scale
         val bottomPadding = 12.4f * scale

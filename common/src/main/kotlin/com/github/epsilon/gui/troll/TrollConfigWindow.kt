@@ -120,7 +120,8 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 1, button.bounds.x, button.bounds.y, button.bounds.width, button.bounds.height,
                 TrollTheme.alpha(TrollTheme.primary(), if (hovered) 190 else 70)
             )
-            val label = TrollTheme.trim(button.type.label(), metrics, TrollTheme.VALUE_SCALE, button.bounds.width - 8.0f)
+            val label =
+                TrollTheme.trim(button.type.label(), metrics, TrollTheme.VALUE_SCALE, button.bounds.width - 8.0f)
             scope.textWithShadow(
                 2, label,
                 button.bounds.centerX() - metrics.getWidth(label, TrollTheme.VALUE_SCALE) / 2.0f,
@@ -131,9 +132,12 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
         if (status.isNotBlank()) {
             scope.textWithShadow(
-                2, TrollTheme.trim(status, metrics, TrollTheme.VALUE_SCALE, statusBounds.width),
-                statusBounds.x, statusBounds.y + (statusBounds.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
-                TrollTheme.VALUE_SCALE, TrollTheme.text()
+                2,
+                TrollTheme.trim(status, metrics, TrollTheme.VALUE_SCALE, statusBounds.width),
+                statusBounds.x,
+                statusBounds.y + (statusBounds.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
+                TrollTheme.VALUE_SCALE,
+                TrollTheme.text()
             )
         }
 
@@ -175,10 +179,17 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                     EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
                 }
                 content.textWithShadow(
-                    2, TrollTheme.trim(hint, metrics, TrollTheme.VALUE_SCALE * 0.82f, row.bounds.width - DELETE_BUTTON_SIZE - 18.0f),
+                    2,
+                    TrollTheme.trim(
+                        hint,
+                        metrics,
+                        TrollTheme.VALUE_SCALE * 0.82f,
+                        row.bounds.width - DELETE_BUTTON_SIZE - 18.0f
+                    ),
                     row.bounds.x + 5.0f,
                     row.bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
-                    TrollTheme.VALUE_SCALE * 0.82f, TrollTheme.alpha(TrollTheme.text(), 180)
+                    TrollTheme.VALUE_SCALE * 0.82f,
+                    TrollTheme.alpha(TrollTheme.text(), 180)
                 )
 
                 val deleteHovered = row.deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())
@@ -190,8 +201,15 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 val iconScale = TrollTheme.VALUE_SCALE
                 content.textWithShadow(
                     4, IconChars.CLOSE,
-                    row.deleteBounds.centerX() - metrics.getWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS) / 2.0f,
-                    row.deleteBounds.y + (row.deleteBounds.height - metrics.getHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f,
+                    row.deleteBounds.centerX() - metrics.getWidth(
+                        IconChars.CLOSE,
+                        iconScale,
+                        StaticFontLoader.ICONS
+                    ) / 2.0f,
+                    row.deleteBounds.y + (row.deleteBounds.height - metrics.getHeight(
+                        iconScale,
+                        StaticFontLoader.ICONS
+                    )) / 2.0f,
                     iconScale, TrollTheme.text(), StaticFontLoader.ICONS
                 )
             }

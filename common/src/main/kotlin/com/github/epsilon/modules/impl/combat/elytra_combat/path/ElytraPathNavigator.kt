@@ -286,7 +286,10 @@ class ElytraPathNavigator {
         val limitedTarget = limitTarget(request.playerPos, request.targetPos, request.searchRadius)
         // A* 只能搜索当前体素窗口；超出窗口的目标先裁剪到窗口边界。
         val goal = grid.clampToWindow(BlockPos.containing(limitedTarget))
-        val profile = ElytraMotionPredictor.PlayerCollisionProfile(request.playerWidth.toDouble(), request.playerHeight.toDouble())
+        val profile = ElytraMotionPredictor.PlayerCollisionProfile(
+            request.playerWidth.toDouble(),
+            request.playerHeight.toDouble()
+        )
         val search = AStarSearch(
             grid,
             profile,

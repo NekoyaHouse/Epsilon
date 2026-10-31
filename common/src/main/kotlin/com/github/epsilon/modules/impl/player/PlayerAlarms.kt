@@ -53,7 +53,8 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val joinRingDelay by intSetting("Join Ring Delay", 20, 1, 100, 1).apply { group(sgJoin) }
     private val joinVolume by doubleSetting("Join Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgJoin) }
     private val joinPitch by doubleSetting("Join Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgJoin) }
-    private val joinSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Join Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgJoin) }
+    private val joinSound: RegistryListSetting<SoundEvent> =
+        soundEventListSetting("Join Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgJoin) }
     private val joinChatMessage by boolSetting("Join Chat Message", true).apply { group(sgJoin) }
 
     // Leave Settings
@@ -61,23 +62,52 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val leaveRingDelay by intSetting("Leave Ring Delay", 20, 1, 100, 1).apply { group(sgLeave) }
     private val leaveVolume by doubleSetting("Leave Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgLeave) }
     private val leavePitch by doubleSetting("Leave Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgLeave) }
-    private val leaveSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Leave Sound", listOf(SoundEvents.ANVIL_LAND)).apply { group(sgLeave) }
+    private val leaveSound: RegistryListSetting<SoundEvent> =
+        soundEventListSetting("Leave Sound", listOf(SoundEvents.ANVIL_LAND)).apply { group(sgLeave) }
     private val leaveChatMessage by boolSetting("Leave Chat Message", true).apply { group(sgLeave) }
 
     // Enter RD Settings
     private val enterRDRings by intSetting("Enter Render Distance Rings", 2, 1, 10, 1).apply { group(sgEnterRD) }
-    private val enterRDRingDelay by intSetting("Enter Render Distance Ring Delay", 20, 1, 100, 1).apply { group(sgEnterRD) }
-    private val enterRDVolume by doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgEnterRD) }
-    private val enterRDPitch by doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgEnterRD) }
-    private val enterRDSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Enter Render Distance Sound", listOf(SoundEvents.ANVIL_DESTROY)).apply { group(sgEnterRD) }
+    private val enterRDRingDelay by intSetting("Enter Render Distance Ring Delay", 20, 1, 100, 1).apply {
+        group(
+            sgEnterRD
+        )
+    }
+    private val enterRDVolume by doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply {
+        group(
+            sgEnterRD
+        )
+    }
+    private val enterRDPitch by doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply {
+        group(
+            sgEnterRD
+        )
+    }
+    private val enterRDSound: RegistryListSetting<SoundEvent> = soundEventListSetting(
+        "Enter Render Distance Sound",
+        listOf(SoundEvents.ANVIL_DESTROY)
+    ).apply { group(sgEnterRD) }
     private val enterRDChatMessage by boolSetting("Enter Render Distance Chat Message", true).apply { group(sgEnterRD) }
 
     // Leave RD Settings
     private val leaveRDRings by intSetting("Leave Render Distance Rings", 2, 1, 10, 1).apply { group(sgLeaveRD) }
-    private val leaveRDRingDelay by intSetting("Leave Render Distance Ring Delay", 20, 1, 100, 1).apply { group(sgLeaveRD) }
-    private val leaveRDVolume by doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgLeaveRD) }
-    private val leaveRDPitch by doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgLeaveRD) }
-    private val leaveRDSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Leave Render Distance Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgLeaveRD) }
+    private val leaveRDRingDelay by intSetting("Leave Render Distance Ring Delay", 20, 1, 100, 1).apply {
+        group(
+            sgLeaveRD
+        )
+    }
+    private val leaveRDVolume by doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).apply {
+        group(
+            sgLeaveRD
+        )
+    }
+    private val leaveRDPitch by doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).apply {
+        group(
+            sgLeaveRD
+        )
+    }
+    private val leaveRDSound: RegistryListSetting<SoundEvent> =
+        soundEventListSetting("Leave Render Distance Sound", listOf(SoundEvents.BELL_BLOCK)).apply { group(sgLeaveRD) }
     private val leaveRDChatMessage by boolSetting("Leave Render Distance Chat Message", true).apply { group(sgLeaveRD) }
 
     // Gamemode Change Settings
@@ -85,7 +115,8 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val gamemodeRingDelay by intSetting("Gamemode Ring Delay", 20, 1, 100, 1).apply { group(sgGamemode) }
     private val gamemodeVolume by doubleSetting("Gamemode Volume", 1.0, 0.0, 1.0, 0.05).apply { group(sgGamemode) }
     private val gamemodePitch by doubleSetting("Gamemode Pitch", 1.0, 0.5, 2.0, 0.05).apply { group(sgGamemode) }
-    private val gamemodeSound: RegistryListSetting<SoundEvent> = soundEventListSetting("Gamemode Sound", listOf(SoundEvents.ARROW_HIT_PLAYER)).apply { group(sgGamemode) }
+    private val gamemodeSound: RegistryListSetting<SoundEvent> =
+        soundEventListSetting("Gamemode Sound", listOf(SoundEvents.ARROW_HIT_PLAYER)).apply { group(sgGamemode) }
     private val gamemodeChatMessage by boolSetting("Gamemode Chat Message", true).apply { group(sgGamemode) }
 
     private val playersInRender: MutableSet<UUID> = HashSet()
@@ -129,7 +160,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                     val playerName = entry.profile.name()
                     if (shouldAlarm(playerName)) {
                         startRing(joinRing, joinRings, joinRingDelay)
-                        sendAlert(joinChatMessage, EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT, playerName, id, ChatFormatting.RED)
+                        sendAlert(
+                            joinChatMessage,
+                            EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT,
+                            playerName,
+                            id,
+                            ChatFormatting.RED
+                        )
                         alarmedJoinPlayers.add(id)
                     }
                 }
@@ -149,7 +186,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                     val playerName = getPlayerName(id)
                     if (playerName != null && shouldAlarm(playerName)) {
                         startRing(enterRDRing, enterRDRings, enterRDRingDelay)
-                        sendAlert(enterRDChatMessage, EpsilonTranslations.PlayerAlarms.ENTER_RD_ALERT_TEXT, playerName, id, ChatFormatting.DARK_RED)
+                        sendAlert(
+                            enterRDChatMessage,
+                            EpsilonTranslations.PlayerAlarms.ENTER_RD_ALERT_TEXT,
+                            playerName,
+                            id,
+                            ChatFormatting.DARK_RED
+                        )
                     }
                 }
             }
@@ -160,7 +203,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                     val playerName = getPlayerName(id)
                     if (playerName != null && shouldAlarm(playerName)) {
                         startRing(leaveRDRing, leaveRDRings, leaveRDRingDelay)
-                        sendAlert(leaveRDChatMessage, EpsilonTranslations.PlayerAlarms.LEAVE_RD_ALERT_TEXT, playerName, id, ChatFormatting.DARK_GREEN)
+                        sendAlert(
+                            leaveRDChatMessage,
+                            EpsilonTranslations.PlayerAlarms.LEAVE_RD_ALERT_TEXT,
+                            playerName,
+                            id,
+                            ChatFormatting.DARK_GREEN
+                        )
                     }
                 }
             }
@@ -181,7 +230,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                         gamemodeCache[entry.profileId()] = entry.gameMode()
                         if (!alarmedJoinPlayers.contains(entry.profileId()) && shouldAlarm(playerName)) {
                             startRing(joinRing, joinRings, joinRingDelay)
-                            sendAlert(joinChatMessage, EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT, playerName, entry.profileId(), ChatFormatting.RED)
+                            sendAlert(
+                                joinChatMessage,
+                                EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT,
+                                playerName,
+                                entry.profileId(),
+                                ChatFormatting.RED
+                            )
                             alarmedJoinPlayers.add(entry.profileId())
                         }
                     }
@@ -207,7 +262,9 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{new_gamemode}", translateGamemode(newMode))
                                     val mode = alertMode.value
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-                                        ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW))
+                                        ChatUtils.addChatMessage(
+                                            Component.literal(msg).withStyle(ChatFormatting.YELLOW)
+                                        )
                                     }
                                     if (mode == AlertMode.Notification || mode == AlertMode.Both) {
                                         val hash = java.util.Objects.hash(playerName, "gamemode")
@@ -226,7 +283,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                     val playerName = getPlayerName(id) ?: id.toString()
                     if (shouldAlarm(playerName)) {
                         startRing(leaveRing, leaveRings, leaveRingDelay)
-                        sendAlert(leaveChatMessage, EpsilonTranslations.PlayerAlarms.LEAVE_ALERT_TEXT, playerName, id, ChatFormatting.GREEN)
+                        sendAlert(
+                            leaveChatMessage,
+                            EpsilonTranslations.PlayerAlarms.LEAVE_ALERT_TEXT,
+                            playerName,
+                            id,
+                            ChatFormatting.GREEN
+                        )
                     }
                     gamemodeCache.remove(id)
                     playersInRender.remove(id)
@@ -290,7 +353,13 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         return 20
     }
 
-    private fun sendAlert(enabled: Boolean, template: TranslateComponent, playerName: String, playerId: UUID?, color: ChatFormatting) {
+    private fun sendAlert(
+        enabled: Boolean,
+        template: TranslateComponent,
+        playerName: String,
+        playerId: UUID?,
+        color: ChatFormatting
+    ) {
         if (!enabled) return
         val mode = alertMode.value
         // Build full message
@@ -322,7 +391,14 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         if (sounds.isEmpty()) return
         val sound = sounds[0]
         context(nn) {
-            level.playLocalSound(player.blockPosition(), sound, SoundSource.PLAYERS, vol.toFloat(), pitch.toFloat(), false)
+            level.playLocalSound(
+                player.blockPosition(),
+                sound,
+                SoundSource.PLAYERS,
+                vol.toFloat(),
+                pitch.toFloat(),
+                false
+            )
         }
     }
 

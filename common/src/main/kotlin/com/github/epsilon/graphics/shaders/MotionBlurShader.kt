@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.shaders
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -54,24 +54,30 @@ object MotionBlurShader {
     private var previousHeight: Int = 0
     private var hasHistory: Boolean = false
 
-    fun render(target: RenderTarget?, view: Matrix4fc, projection: Matrix4fc, cameraPosition: Vec3, settings: Settings) {
+    fun render(
+        target: RenderTarget?,
+        view: Matrix4fc,
+        projection: Matrix4fc,
+        cameraPosition: Vec3,
+        settings: Settings
+    ) {
         val now = System.nanoTime()
         val frameTime = if (previousFrameNanos == 0L) 0.0 else (now - previousFrameNanos) / 1_000_000_000.0
         val cameraDelta = cameraPosition.subtract(previousCameraPosition)
         val targetValid = target != null &&
-            target.width > 0 &&
-            target.height > 0 &&
-            target.colorTexture != null &&
-            target.colorTextureView != null &&
-            target.depthTextureView != null
+                target.width > 0 &&
+                target.height > 0 &&
+                target.colorTexture != null &&
+                target.colorTextureView != null &&
+                target.depthTextureView != null
         val historyValid = hasHistory &&
-            targetValid &&
-            target != null &&
-            target.width == previousWidth &&
-            target.height == previousHeight &&
-            frameTime > 0.0 &&
-            frameTime <= MAX_FRAME_TIME_SECONDS &&
-            cameraDelta.lengthSqr() <= MAX_CAMERA_DELTA_SQUARED
+                targetValid &&
+                target != null &&
+                target.width == previousWidth &&
+                target.height == previousHeight &&
+                frameTime > 0.0 &&
+                frameTime <= MAX_FRAME_TIME_SECONDS &&
+                cameraDelta.lengthSqr() <= MAX_CAMERA_DELTA_SQUARED
 
         if (historyValid && settings.render && settings.strength > 0.0f) {
             renderEffect(target, view, projection, cameraDelta, settings, frameTime)
@@ -91,7 +97,14 @@ object MotionBlurShader {
         }
     }
 
-    private fun renderEffect(target: RenderTarget, view: Matrix4fc, projection: Matrix4fc, cameraDelta: Vec3, settings: Settings, frameTime: Double) {
+    private fun renderEffect(
+        target: RenderTarget,
+        view: Matrix4fc,
+        projection: Matrix4fc,
+        cameraDelta: Vec3,
+        settings: Settings,
+        frameTime: Double
+    ) {
         ensureProgram()
         ensureInput(target.width, target.height)
         val inputTarget = input
@@ -100,7 +113,7 @@ object MotionBlurShader {
         var frameScale = 1.0f
         if (settings.refreshRateScaling) {
             // 26.3 的 Window 不再直接暴露刷新率，需要从当前显示模式读取。
-            val activeMode: VideoMode? = Constants.client.window.activeVideoMode
+            val activeMode: VideoMode? = mc.window.activeVideoMode
             val refreshRate = if (activeMode == null) 0.0F else activeMode.refreshRate
             if (refreshRate > 0.0F) {
                 frameScale = maxOf(1.0f, (1.0 / frameTime).toFloat() / refreshRate)
@@ -147,8 +160,16 @@ object MotionBlurShader {
             pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!))
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("MotionBlurData", uniforms)
-            pass.setUniform("InputSampler", inputTarget.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
-            pass.setUniform("DepthSampler", target.depthTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+            pass.setUniform(
+                "InputSampler",
+                inputTarget.colorTextureView,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+            )
+            pass.setUniform(
+                "DepthSampler",
+                target.depthTextureView,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
+            )
             pass.draw(3, 1, 0, 0)
         }
     }

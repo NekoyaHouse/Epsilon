@@ -213,15 +213,78 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private class TransformSettings(prefix: String, group: SettingGroup, enabled: Setting.Dependency) {
 
-        private val scaleX by doubleSetting(prefix + " Scale X", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val scaleY by doubleSetting(prefix + " Scale Y", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val scaleZ by doubleSetting(prefix + " Scale Z", 1.0, 0.0, 5.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionX by doubleSetting(prefix + " Position X", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionY by doubleSetting(prefix + " Position Y", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val positionZ by doubleSetting(prefix + " Position Z", 0.0, -3.0, 3.0, 0.1, dependency = enabled).apply { group(group) }
-        private val rotationX by doubleSetting(prefix + " Rotation X", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
-        private val rotationY by doubleSetting(prefix + " Rotation Y", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
-        private val rotationZ by doubleSetting(prefix + " Rotation Z", 0.0, -180.0, 180.0, 1.0, dependency = enabled).apply { group(group) }
+        private val scaleX by doubleSetting(
+            "$prefix Scale X",
+            1.0,
+            0.0,
+            5.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val scaleY by doubleSetting(
+            "$prefix Scale Y",
+            1.0,
+            0.0,
+            5.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val scaleZ by doubleSetting(
+            "$prefix Scale Z",
+            1.0,
+            0.0,
+            5.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val positionX by doubleSetting(
+            "$prefix Position X",
+            0.0,
+            -3.0,
+            3.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val positionY by doubleSetting(
+            "$prefix Position Y",
+            0.0,
+            -3.0,
+            3.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val positionZ by doubleSetting(
+            "$prefix Position Z",
+            0.0,
+            -3.0,
+            3.0,
+            0.1,
+            dependency = enabled
+        ).apply { group(group) }
+        private val rotationX by doubleSetting(
+            "$prefix Rotation X",
+            0.0,
+            -180.0,
+            180.0,
+            1.0,
+            dependency = enabled
+        ).apply { group(group) }
+        private val rotationY by doubleSetting(
+            "$prefix Rotation Y",
+            0.0,
+            -180.0,
+            180.0,
+            1.0,
+            dependency = enabled
+        ).apply { group(group) }
+        private val rotationZ by doubleSetting(
+            "$prefix Rotation Z",
+            0.0,
+            -180.0,
+            180.0,
+            1.0,
+            dependency = enabled
+        ).apply { group(group) }
 
         fun apply(poseStack: PoseStack) {
             poseStack.rotateDegrees(Axis.XP, rotationX.toFloat())

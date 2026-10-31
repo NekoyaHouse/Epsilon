@@ -31,10 +31,34 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private val mode by enumSetting("Mode", DisplayMode.Normal)
-    private val lineSpacing by doubleSetting("Line Spacing", 0.0, -3.0, 3.0, 0.5, dependency = { mode == DisplayMode.Simple })
-    private val horizontalPadding by doubleSetting("Horizontal Padding", 3.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
-    private val verticalPadding by doubleSetting("Vertical Padding", 2.0, 0.0, 20.0, 0.5, dependency = { mode == DisplayMode.Normal })
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.0, 5.0, 0.5, dependency = { mode == DisplayMode.Normal })
+    private val lineSpacing by doubleSetting(
+        "Line Spacing",
+        0.0,
+        -3.0,
+        3.0,
+        0.5,
+        dependency = { mode == DisplayMode.Simple })
+    private val horizontalPadding by doubleSetting(
+        "Horizontal Padding",
+        3.0,
+        0.0,
+        20.0,
+        0.5,
+        dependency = { mode == DisplayMode.Normal })
+    private val verticalPadding by doubleSetting(
+        "Vertical Padding",
+        2.0,
+        0.0,
+        20.0,
+        0.5,
+        dependency = { mode == DisplayMode.Normal })
+    private val lineWidth by doubleSetting(
+        "Line Width",
+        2.0,
+        0.0,
+        5.0,
+        0.5,
+        dependency = { mode == DisplayMode.Normal })
     private val showSuffix by boolSetting("Show Suffix", true)
     private val fontSize by doubleSetting("Font Size", 13.0, 8.0, 32.0, 1.0)
     private val textShadow by boolSetting("Text Shadow", true)
@@ -83,10 +107,34 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     )
     private val rainbowSpeed by doubleSetting("Rainbow Speed", 1.0, 0.1, 5.0, 0.1, dependency = { usesRainbow() })
     private val rainbowSpread by doubleSetting("Rainbow Spread", 8.0, 0.0, 60.0, 1.0, dependency = { usesRainbow() })
-    private val rainbowHueOffset by doubleSetting("Rainbow Hue Offset", 0.0, 0.0, 360.0, 1.0, dependency = { usesRainbow() })
-    private val rainbowSaturation by doubleSetting("Rainbow Saturation", 0.5, 0.0, 1.0, 0.05, dependency = { usesRainbow() })
-    private val rainbowBrightness by doubleSetting("Rainbow Brightness", 1.0, 0.1, 1.0, 0.05, dependency = { usesRainbow() })
-    private val rainbowAlpha by intSetting("Rainbow Alpha", 255, 0, 255, 1, dependency = { colorMode == ColorMode.Rainbow })
+    private val rainbowHueOffset by doubleSetting(
+        "Rainbow Hue Offset",
+        0.0,
+        0.0,
+        360.0,
+        1.0,
+        dependency = { usesRainbow() })
+    private val rainbowSaturation by doubleSetting(
+        "Rainbow Saturation",
+        0.5,
+        0.0,
+        1.0,
+        0.05,
+        dependency = { usesRainbow() })
+    private val rainbowBrightness by doubleSetting(
+        "Rainbow Brightness",
+        1.0,
+        0.1,
+        1.0,
+        0.05,
+        dependency = { usesRainbow() })
+    private val rainbowAlpha by intSetting(
+        "Rainbow Alpha",
+        255,
+        0,
+        255,
+        1,
+        dependency = { colorMode == ColorMode.Rainbow })
     private val shadowRainbowAlpha by intSetting(
         "Shadow Rainbow Alpha", 90, 0, 255, 1,
         dependency = {
@@ -111,7 +159,8 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private val moduleYPositions: MutableMap<Module, Float> = HashMap()
     private var lastSortedModules: MutableList<Module> = ArrayList()
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun render(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
@@ -198,7 +247,8 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 
             val backgroundWidth = entry.displayWidth + horizontalPadding * 2.0f
             val slideOffset = backgroundWidth * (1.0f - animation)
-            val textX = if (rightSide) baseTextX + maxTextWidth - entry.displayWidth + slideOffset else baseTextX - slideOffset
+            val textX =
+                if (rightSide) baseTextX + maxTextWidth - entry.displayWidth + slideOffset else baseTextX - slideOffset
             val backgroundX = textX - horizontalPadding
             val backgroundY = y + layout.renderY[i]
             val backgroundHeight = lineHeight * animation
@@ -324,7 +374,11 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         }
     }
 
-    private fun collectRenderEntries(textRenderer: TextRenderer, textScale: Float, showSuffix: Boolean): List<RenderEntry> {
+    private fun collectRenderEntries(
+        textRenderer: TextRenderer,
+        textScale: Float,
+        showSuffix: Boolean
+    ): List<RenderEntry> {
         val entries: MutableList<RenderEntry> = ArrayList()
         for (animationEntry in moduleAnimations.entries) {
             val animation = animationEntry.value.progress()

@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.rotation
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventHandler
 import com.github.epsilon.events.bus.EventPriority
@@ -108,10 +108,10 @@ abstract class RotationManager {
 
                 val speed = (Random.nextDouble() * Random.nextDouble() * Random.nextDouble()) * 20
                 randomAngle += (
-                    (20 + (Random.nextDouble() - 0.5).toFloat() *
-                        (Random.nextDouble() * Random.nextDouble() * Random.nextDouble() * 360).toFloat()) *
-                        (if (Constants.client.player!!.tickCount / 10 % 2 == 0) -1 else 1)
-                    ).toFloat()
+                        (20 + (Random.nextDouble() - 0.5).toFloat() *
+                                (Random.nextDouble() * Random.nextDouble() * Random.nextDouble() * 360).toFloat()) *
+                                (if (mc.player!!.tickCount / 10 % 2 == 0) -1 else 1)
+                        ).toFloat()
 
                 offset.set(
                     (offset.yaw + -Mth.sin((randomAngle.toDouble()).toRadians()) * speed).toFloat(),
@@ -122,7 +122,10 @@ abstract class RotationManager {
                 targetPitch += offset.pitch
 
                 if (!raytrace.apply(Rot2f(targetYaw, targetPitch))) {
-                    randomAngle = ((atan2((trueTargetRotations.yaw - targetYaw).toDouble(), (targetPitch - trueTargetRotations.pitch).toDouble())).toDegrees() - 180).toFloat()
+                    randomAngle = ((atan2(
+                        (trueTargetRotations.yaw - targetYaw).toDouble(),
+                        (targetPitch - trueTargetRotations.pitch).toDouble()
+                    )).toDegrees() - 180).toFloat()
 
                     targetYaw -= offset.yaw
                     targetPitch -= offset.pitch
@@ -151,13 +154,13 @@ abstract class RotationManager {
 
         updateHitResult()
         if (shouldModifyCrosshair()) {
-            Constants.client.pick(1.0f)
+            mc.pick(1.0f)
         }
     }
 
     private fun updateHitResult() {
-        val player = Constants.client.player
-        if (!hasActiveRotation() || player == null || Constants.client.level == null) {
+        val player = mc.player
+        if (!hasActiveRotation() || player == null || mc.level == null) {
             rotationHitResult = null
             return
         }
@@ -198,7 +201,7 @@ abstract class RotationManager {
     }
 
     fun getRotation(): Rot2f {
-        val player = Constants.client.player!!
+        val player = mc.player!!
         return if (active) rotations else Rot2f(player.yRot, player.xRot)
     }
 
@@ -212,7 +215,7 @@ abstract class RotationManager {
      * @return 当前逻辑命中结果
      */
     fun getHitResult(): HitResult? {
-        return if (hasActiveRotation() && rotationHitResult != null) rotationHitResult else Constants.client.hitResult
+        return if (hasActiveRotation() && rotationHitResult != null) rotationHitResult else mc.hitResult
     }
 
     fun isActive(): Boolean {
@@ -273,7 +276,7 @@ abstract class RotationManager {
 
     @EventHandler(priority = -1000)
     protected open fun onPlayerTick(event: PlayerTickEvent.Pre) {
-        val player = Constants.client.player!!
+        val player = mc.player!!
         if (!active || targetRotations == null) {
             val current = Rot2f(player.yRot, player.xRot)
             rotations = current
@@ -304,7 +307,7 @@ abstract class RotationManager {
 
     @EventHandler(priority = EventPriority.LOWEST)
     protected open fun onSendPosition(event: SendPositionEvent) {
-        val player = Constants.client.player
+        val player = mc.player
         if (player == null) {
             active = false
             priority = 0

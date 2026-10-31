@@ -38,7 +38,12 @@ object TrollTheme {
     }
 
     fun alpha(color: Color, alpha: Int): Color {
-        return Color(color.red, color.green, color.blue, (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
+        return Color(
+            color.red,
+            color.green,
+            color.blue,
+            (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt()
+        )
     }
 
     fun window(scope: UiTree.Scope, bounds: UiRect, headerHeight: Float, title: String, metrics: TextRenderer) {
@@ -48,7 +53,14 @@ object TrollTheme {
         if (titleBar) {
             scope.rect(bounds.x, bounds.y, bounds.width, headerHeight, primary())
         }
-        scope.textWithShadow(3, trim(title, metrics, TEXT_SCALE, bounds.width - 9.0f), bounds.x + 4.5f, bounds.y + 4.5f, TEXT_SCALE, text())
+        scope.textWithShadow(
+            3,
+            trim(title, metrics, TEXT_SCALE, bounds.width - 9.0f),
+            bounds.x + 4.5f,
+            bounds.y + 4.5f,
+            TEXT_SCALE,
+            text()
+        )
         if (GuiSetting.windowOutline) {
             scope.rectOutline(4, bounds.x, bounds.y, bounds.width, bounds.height, 0.5f, alpha(primary(), 255))
         }

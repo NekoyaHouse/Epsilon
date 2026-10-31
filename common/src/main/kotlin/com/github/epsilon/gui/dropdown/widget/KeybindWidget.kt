@@ -28,7 +28,13 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
     override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
         val lineHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)
         val labelTextY = (getHeight() - lineHeight) * 0.5f
-        scope.text(setting.displayName, DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel())
+        scope.text(
+            setting.displayName,
+            DropdownTheme.SETTING_PADDING_X,
+            labelTextY,
+            DropdownTheme.SETTING_TEXT_SCALE,
+            DropdownTheme.settingLabel()
+        )
 
         val keyText = if (listening) "..." else KeybindUtils.format(setting.value)
         val textW = textMetrics.textWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE)
@@ -39,22 +45,54 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
         buttonX = absoluteX(localButtonX)
         buttonY = absoluteY(localButtonY)
 
-        val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), buttonX - 2.0f, buttonY - 2.0f, buttonW + 4.0f, buttonH + 4.0f)
+        val hovered = isHovered(
+            mouseX.toDouble(),
+            mouseY.toDouble(),
+            buttonX - 2.0f,
+            buttonY - 2.0f,
+            buttonW + 4.0f,
+            buttonH + 4.0f
+        )
         hoverAnim.run(if (hovered || listening) 1.0f else 0.0f)
 
         val outline = if (listening) {
             MD3Theme.withAlpha(MD3Theme.PRIMARY, 200)
         } else {
-            MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.OUTLINE, 96), MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 136), hoverAnim.value * 0.55f)
+            MD3Theme.lerp(
+                MD3Theme.withAlpha(MD3Theme.OUTLINE, 96),
+                MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 136),
+                hoverAnim.value * 0.55f
+            )
         }
 
-        scope.roundRect(localButtonX, localButtonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening))
+        scope.roundRect(
+            localButtonX,
+            localButtonY,
+            buttonW,
+            buttonH,
+            DropdownTheme.KEYBIND_RADIUS,
+            DropdownTheme.keybindSurface(listening)
+        )
         scope.outline(localButtonX, localButtonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, 0.7f, outline)
-        scope.text(keyText, localButtonX + (buttonW - textW) * 0.5f, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening))
+        scope.text(
+            keyText,
+            localButtonX + (buttonW - textW) * 0.5f,
+            labelTextY,
+            DropdownTheme.SETTING_TEXT_SCALE,
+            DropdownTheme.keybindText(listening)
+        )
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && isHovered(mouseX, mouseY, buttonX, buttonY, buttonW, buttonH)) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && isHovered(
+                mouseX,
+                mouseY,
+                buttonX,
+                buttonY,
+                buttonW,
+                buttonH
+            )
+        ) {
             listening = !listening
             DropdownScreen.react(
                 if (listening) ReisaDropdownCompanion.Action.KEY_BIND else ReisaDropdownCompanion.Action.CANCEL

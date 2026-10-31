@@ -74,7 +74,8 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         "Blur Strength", 8.0, 1.0, 20.0, 1.0, dependency = { backgroundBlur }
     ).group(appearanceGroup)
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     @Volatile
     private var animationStartMs: Long = 0L
@@ -259,12 +260,27 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
         scope.scissor(UiRect(visibleX, y, visibleWidth, layout.height)) { clipped ->
             drawIdentityModule(clipped, layout, contentAlpha, offset, uiScale)
-            drawMessage(clipped, textRenderer, layout, bannerTitle, bannerSubtitle, contentAlpha, offset, uiScale, preview)
+            drawMessage(
+                clipped,
+                textRenderer,
+                layout,
+                bannerTitle,
+                bannerSubtitle,
+                contentAlpha,
+                offset,
+                uiScale,
+                preview
+            )
             drawStatusModule(clipped, textRenderer, layout, contentAlpha, offset, uiScale, preview)
         }
     }
 
-    private fun createLayout(renderer: TextRenderer, bannerTitle: String, bannerSubtitle: String, uiScale: Float): Layout {
+    private fun createLayout(
+        renderer: TextRenderer,
+        bannerTitle: String,
+        bannerSubtitle: String,
+        uiScale: Float
+    ): Layout {
         val requestedTitleScale = titleScale.toFloat() * uiScale
         val requestedSubtitleScale = subtitleScale.toFloat() * uiScale
         val titleWidth = renderer.getWidth(bannerTitle, requestedTitleScale)
@@ -316,7 +332,8 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val eyebrowHeight = renderer.getHeight(eyebrowScale)
         val titleHeight = renderer.getHeight(fittedTitleScale)
         val subtitleHeight = if (hasSubtitle) renderer.getHeight(fittedSubtitleScale) else 0.0f
-        val blockHeight = eyebrowHeight + 3.0f * uiScale + titleHeight + (if (hasSubtitle) 2.0f * uiScale + subtitleHeight else 0.0f)
+        val blockHeight =
+            eyebrowHeight + 3.0f * uiScale + titleHeight + (if (hasSubtitle) 2.0f * uiScale + subtitleHeight else 0.0f)
         var lineY = y + (layout.height - blockHeight) * 0.5f + offset
 
         scope.text(eyebrow, left, lineY, eyebrowScale, withAlpha(MUTED, alpha))
@@ -325,7 +342,13 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
         if (hasSubtitle) {
             lineY += titleHeight + 1.0f * uiScale
-            scope.text(bannerSubtitle.uppercase(Locale.ROOT), left, lineY, fittedSubtitleScale, withAlpha(subtitleColor, alpha))
+            scope.text(
+                bannerSubtitle.uppercase(Locale.ROOT),
+                left,
+                lineY,
+                fittedSubtitleScale,
+                withAlpha(subtitleColor, alpha)
+            )
         }
     }
 
@@ -358,7 +381,13 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
             if (preview) "TEST" else "KILL", moduleX + 30.0f * uiScale,
             groupY + (primaryHeight - labelHeight) * 0.5f, labelScale, withAlpha(accentColor, alpha)
         )
-        scope.text("STATUS / OK", moduleX + 9.0f * uiScale, groupY + primaryHeight + 3.0f * uiScale, statusScale, withAlpha(MUTED, alpha))
+        scope.text(
+            "STATUS / OK",
+            moduleX + 9.0f * uiScale,
+            groupY + primaryHeight + 3.0f * uiScale,
+            statusScale,
+            withAlpha(MUTED, alpha)
+        )
     }
 
     private fun frameProgress(elapsed: Long): Float {
@@ -440,7 +469,13 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         return if (value == null || value.isBlank()) "TARGET ELIMINATED" else value
     }
 
-    private fun fitScale(renderer: TextRenderer, text: String?, requested: Float, maxWidth: Float, font: TtfFontLoader?): Float {
+    private fun fitScale(
+        renderer: TextRenderer,
+        text: String?,
+        requested: Float,
+        maxWidth: Float,
+        font: TtfFontLoader?
+    ): Float {
         if (text == null || text.isEmpty()) return requested
         val natural = if (font == null) renderer.getWidth(text, 1.0f) else renderer.getWidth(text, 1.0f, font)
         if (natural <= 0.0f) return requested

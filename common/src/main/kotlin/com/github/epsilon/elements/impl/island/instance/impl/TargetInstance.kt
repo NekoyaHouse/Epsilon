@@ -49,8 +49,10 @@ class TargetInstance(
 
         val healthTextWidth = textRenderer.getWidth(formatHealth(health), HEALTH_SCALE)
         val maxHealthTextWidth = textRenderer.getWidth(formatHealth(maxHealth), HEALTH_SCALE)
-        val maxBarWidth = maxOf(1f, targetWidth - HEALTH_TEXT_INSET * 2f
-                    - healthTextWidth - maxHealthTextWidth - HEALTH_BAR_GAP * 2f)
+        val maxBarWidth = maxOf(
+            1f, targetWidth - HEALTH_TEXT_INSET * 2f
+                    - healthTextWidth - maxHealthTextWidth - HEALTH_BAR_GAP * 2f
+        )
         val currentBarWidth = maxOf(1f, maxBarWidth * (health / maxHealth))
 
         if (!healthInitialized) {
@@ -82,7 +84,8 @@ class TargetInstance(
         scope.text(name, textX, headY + 2f, NAME_SCALE, fade(IslandPalette.TEXT_PRIMARY))
 
         val self = NonNullContext.current?.player
-        val distanceText = if (self == null) "" else String.format(Locale.ROOT, "distance: %.1f", self.distanceTo(target))
+        val distanceText =
+            if (self == null) "" else String.format(Locale.ROOT, "distance: %.1f", self.distanceTo(target))
         val nameHeight = textRenderer.getHeight(NAME_SCALE)
         scope.text(distanceText, textX, headY + 2f + nameHeight + 3f, INFO_SCALE, fade(IslandPalette.TEXT_MUTED))
 
@@ -122,7 +125,13 @@ class TargetInstance(
         }
 
         scope.text(healthText, HEALTH_TEXT_INSET, healthY, HEALTH_SCALE, fade(IslandPalette.TEXT_SECONDARY))
-        scope.text(maxHealthText, width - HEALTH_TEXT_INSET - maxHealthTextWidth, healthY, HEALTH_SCALE, fade(IslandPalette.TEXT_SECONDARY))
+        scope.text(
+            maxHealthText,
+            width - HEALTH_TEXT_INSET - maxHealthTextWidth,
+            healthY,
+            HEALTH_SCALE,
+            fade(IslandPalette.TEXT_SECONDARY)
+        )
     }
 
     private fun drawTargetIcon(scope: UiTree.Scope, centerX: Float, centerY: Float) {

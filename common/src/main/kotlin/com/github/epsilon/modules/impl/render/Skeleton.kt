@@ -31,7 +31,9 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
             for (candidate in level.players()) {
                 if (!candidate.isAlive || candidate.isSpectator) continue
                 if (candidate.isInvisible && !invisibles) continue
-                if (candidate.position().distanceToSqr(mc.gameRenderer.mainCamera().position()) > distance * distance) continue
+                if (candidate.position()
+                        .distanceToSqr(mc.gameRenderer.mainCamera().position()) > distance * distance
+                ) continue
                 if (candidate === player && !self) continue
                 if (candidate === mc.cameraEntity && mc.options.cameraType.isFirstPerson) continue
 

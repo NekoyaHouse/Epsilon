@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics.video
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.GpuTextureView
@@ -61,7 +62,7 @@ object VideoPlayer {
         if (registeredTexture == null) {
             return
         }
-        Constants.client.textureManager.release(GUI_TEXTURE_ID)
+        mc.textureManager.release(GUI_TEXTURE_ID)
         registeredTexture = null
     }
 
@@ -212,7 +213,7 @@ object VideoPlayer {
         if (texture == null) return null
 
         if (registeredTexture !== texture) {
-            Constants.client.textureManager.register(GUI_TEXTURE_ID, texture)
+            mc.textureManager.register(GUI_TEXTURE_ID, texture)
             registeredTexture = texture
         }
 

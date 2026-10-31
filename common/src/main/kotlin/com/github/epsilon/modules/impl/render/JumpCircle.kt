@@ -129,10 +129,42 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
         val scale = sizeAnim * 2.0f
         val matrix: Matrix4f = poseStack.last().pose()
 
-        renderer.vertex(matrix, -sizeAnim, -sizeAnim + scale, 0.0f, 0.0f, 1.0f, applyOpacity(syncColor(270), 1.0f - colorAnim).rgb)
-        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim + scale, 0.0f, 1.0f, 1.0f, applyOpacity(syncColor(0), 1.0f - colorAnim).rgb)
-        renderer.vertex(matrix, -sizeAnim + scale, -sizeAnim, 0.0f, 1.0f, 0.0f, applyOpacity(syncColor(180), 1.0f - colorAnim).rgb)
-        renderer.vertex(matrix, -sizeAnim, -sizeAnim, 0.0f, 0.0f, 0.0f, applyOpacity(syncColor(90), 1.0f - colorAnim).rgb)
+        renderer.vertex(
+            matrix,
+            -sizeAnim,
+            -sizeAnim + scale,
+            0.0f,
+            0.0f,
+            1.0f,
+            applyOpacity(syncColor(270), 1.0f - colorAnim).rgb
+        )
+        renderer.vertex(
+            matrix,
+            -sizeAnim + scale,
+            -sizeAnim + scale,
+            0.0f,
+            1.0f,
+            1.0f,
+            applyOpacity(syncColor(0), 1.0f - colorAnim).rgb
+        )
+        renderer.vertex(
+            matrix,
+            -sizeAnim + scale,
+            -sizeAnim,
+            0.0f,
+            1.0f,
+            0.0f,
+            applyOpacity(syncColor(180), 1.0f - colorAnim).rgb
+        )
+        renderer.vertex(
+            matrix,
+            -sizeAnim,
+            -sizeAnim,
+            0.0f,
+            0.0f,
+            0.0f,
+            applyOpacity(syncColor(90), 1.0f - colorAnim).rgb
+        )
 
         poseStack.popPose()
     }

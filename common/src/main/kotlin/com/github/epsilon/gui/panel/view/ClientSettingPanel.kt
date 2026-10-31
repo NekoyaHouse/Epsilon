@@ -28,7 +28,8 @@ class ClientSettingPanel(
     popupHost: PanelPopupHost,
 ) : AutoCloseable {
 
-    private val tabViews = EnumMap<PanelState.ClientSettingTab, ClientSettingTabView>(PanelState.ClientSettingTab::class.java)
+    private val tabViews =
+        EnumMap<PanelState.ClientSettingTab, ClientSettingTabView>(PanelState.ClientSettingTab::class.java)
     private val tabHoverAnimations =
         EnumMap<PanelState.ClientSettingTab, Animation>(PanelState.ClientSettingTab::class.java)
     private val tabIndicatorAnimation = Animation(Easing.EASE_OUT_CUBIC, 200L)
@@ -152,7 +153,8 @@ class ClientSettingPanel(
                 val active = tab.tab == state.getClientSettingTab()
 
                 val hoverAnimation = tabHoverAnimations[tab.tab]!!
-                val hover = tabs.animate(hoverAnimation, absoluteTabBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+                val hover =
+                    tabs.animate(hoverAnimation, absoluteTabBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
                 if (hover > 0.01f) {
                     tabs.roundRect(
                         tabBounds.x, tabBounds.y, tabBounds.width, tabBounds.height, 6.0f,

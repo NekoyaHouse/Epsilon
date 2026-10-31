@@ -16,7 +16,13 @@ class SettingsListPanel : AbstractDropdownPanel {
         this.settingsContent = SettingsContent("dropdown-panel:$id", settings)
     }
 
-    constructor(id: String, titleComponent: TranslateComponent, icon: String?, panelIndex: Int, settings: List<Setting<*>>) :
+    constructor(
+        id: String,
+        titleComponent: TranslateComponent,
+        icon: String?,
+        panelIndex: Int,
+        settings: List<Setting<*>>
+    ) :
             super(id, titleComponent, icon, panelIndex) {
         this.settingsContent = SettingsContent("dropdown-panel:$id", settings)
     }
@@ -35,11 +41,25 @@ class SettingsListPanel : AbstractDropdownPanel {
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return settingsContent.mouseClicked(mouseX, mouseY, button, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll, width)
+        return settingsContent.mouseClicked(
+            mouseX,
+            mouseY,
+            button,
+            x,
+            y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
+            width
+        )
     }
 
     override fun mouseReleasedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return settingsContent.mouseReleased(mouseX, mouseY, button, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll, width)
+        return settingsContent.mouseReleased(
+            mouseX,
+            mouseY,
+            button,
+            x,
+            y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
+            width
+        )
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {

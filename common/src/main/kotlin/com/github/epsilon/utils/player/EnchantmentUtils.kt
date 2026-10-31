@@ -59,7 +59,10 @@ object EnchantmentUtils {
      * @param itemEnchantments 已读取的附魔映射
      * @param enchantment      附魔注册表键
      */
-    fun getEnchantmentLevel(itemEnchantments: Object2IntMap<Holder<Enchantment>>, enchantment: ResourceKey<Enchantment>): Int {
+    fun getEnchantmentLevel(
+        itemEnchantments: Object2IntMap<Holder<Enchantment>>,
+        enchantment: ResourceKey<Enchantment>
+    ): Int {
         for (entry in Object2IntMaps.fastIterable(itemEnchantments)) {
             if (entry.key.`is`(enchantment)) return entry.intValue
         }
@@ -96,7 +99,10 @@ object EnchantmentUtils {
         return hasEnchantment(itemEnchantments, enchantmentKey)
     }
 
-    private fun hasEnchantment(itemEnchantments: Object2IntMap<Holder<Enchantment>>, enchantmentKey: ResourceKey<Enchantment>): Boolean {
+    private fun hasEnchantment(
+        itemEnchantments: Object2IntMap<Holder<Enchantment>>,
+        enchantmentKey: ResourceKey<Enchantment>
+    ): Boolean {
         for (entry in Object2IntMaps.fastIterable(itemEnchantments)) {
             if (entry.key.`is`(enchantmentKey)) return true
         }

@@ -76,7 +76,10 @@ class EpsilonFontGlyph private constructor(
             RenderType.create(
                 name,
                 RenderSetup.builder(pipeline)
-                    .withTexture("Sampler0", descriptor.atlas.getTextureId(), Supplier { descriptor.atlas.getTexture().sampler })
+                    .withTexture(
+                        "Sampler0",
+                        descriptor.atlas.getTextureId(),
+                        Supplier { descriptor.atlas.getTexture().sampler })
                     .createRenderSetup()
             )
         }
@@ -176,7 +179,16 @@ class EpsilonFontGlyph private constructor(
         override fun render(pose: Matrix4fc, buffer: VertexConsumer, packedLightCoords: Int, flat: Boolean) {
             val depth: Float
             if (this.hasShadow()) {
-                this.glyph.renderGlyph(pose, buffer, this, this.shadowOffset, this.shadowOffset, 0.0f, this.shadowColor, this.glyphStyle.isBold)
+                this.glyph.renderGlyph(
+                    pose,
+                    buffer,
+                    this,
+                    this.shadowOffset,
+                    this.shadowOffset,
+                    0.0f,
+                    this.shadowColor,
+                    this.glyphStyle.isBold
+                )
                 depth = if (flat) 0.0f else Font.SHADOW_DEPTH
             } else {
                 depth = 0.0f
@@ -184,7 +196,16 @@ class EpsilonFontGlyph private constructor(
 
             this.glyph.renderGlyph(pose, buffer, this, 0.0f, 0.0f, depth, this.color, this.glyphStyle.isBold)
             if (this.glyphStyle.isBold) {
-                this.glyph.renderGlyph(pose, buffer, this, this.boldOffset, 0.0f, depth + (if (flat) 0.0f else 0.001f), this.color, true)
+                this.glyph.renderGlyph(
+                    pose,
+                    buffer,
+                    this,
+                    this.boldOffset,
+                    0.0f,
+                    depth + (if (flat) 0.0f else 0.001f),
+                    this.color,
+                    true
+                )
             }
         }
 
@@ -225,7 +246,13 @@ class EpsilonFontGlyph private constructor(
         }
 
         override fun right(): Float {
-            return this.glyph.right(this.x, this.hasShadow(), this.shadowOffset, this.glyphStyle.isBold, this.glyphStyle.isItalic)
+            return this.glyph.right(
+                this.x,
+                this.hasShadow(),
+                this.shadowOffset,
+                this.glyphStyle.isBold,
+                this.glyphStyle.isItalic
+            )
         }
 
         override fun activeRight(): Float {

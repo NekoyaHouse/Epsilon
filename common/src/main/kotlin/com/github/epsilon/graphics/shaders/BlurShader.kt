@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.shaders
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -82,32 +82,79 @@ object BlurShader {
         }
     }
 
-    fun render(x: Float, y: Float, width: Float, height: Float, rTL: Float, rTR: Float, rBR: Float, rBL: Float, blurStrength: Float) {
+    fun render(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        rTL: Float,
+        rTR: Float,
+        rBR: Float,
+        rBL: Float,
+        blurStrength: Float
+    ) {
         render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, null, null, 0)
     }
 
-    fun render(x: Float, y: Float, width: Float, height: Float, rTL: Float, rTR: Float, rBR: Float, rBL: Float, blurStrength: Float, segmentRects: FloatArray?, segmentRadii: FloatArray?, segmentCount: Int) {
+    fun render(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        rTL: Float,
+        rTR: Float,
+        rBR: Float,
+        rBL: Float,
+        blurStrength: Float,
+        segmentRects: FloatArray?,
+        segmentRadii: FloatArray?,
+        segmentCount: Int
+    ) {
         render(null, x, y, width, height, rTL, rTR, rBR, rBL, blurStrength, segmentRects, segmentRadii, segmentCount)
     }
 
-    fun render(source: LuminRenderSystem.LuminRenderTarget?, x: Float, y: Float, width: Float, height: Float, radius: Float, blurStrength: Float) {
+    fun render(
+        source: LuminRenderSystem.LuminRenderTarget?,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        blurStrength: Float
+    ) {
         render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0)
     }
 
-    fun render(source: LuminRenderSystem.LuminRenderTarget?, x: Float, y: Float, width: Float, height: Float, rTL: Float, rTR: Float, rBR: Float, rBL: Float, blurStrength: Float, segmentRects: FloatArray?, segmentRadii: FloatArray?, segmentCount: Int) {
+    fun render(
+        source: LuminRenderSystem.LuminRenderTarget?,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        rTL: Float,
+        rTR: Float,
+        rBR: Float,
+        rBL: Float,
+        blurStrength: Float,
+        segmentRects: FloatArray?,
+        segmentRadii: FloatArray?,
+        segmentCount: Int
+    ) {
         this.ensureProgram()
 
         if (width <= 0.0f || height <= 0.0f) {
             return
         }
 
-        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+        val mainTarget = mc.gameRenderer.mainRenderTarget()
         val activeTarget = LuminRenderSystem.getActiveTarget()
         val sourceTexture: GpuTexture? = if (source == null) mainTarget.colorTexture else source.colorTexture()
         val sourceWidth: Int = if (source == null) mainTarget.width else source.width()
         val sourceHeight: Int = if (source == null) mainTarget.height else source.height()
-        val targetTexture: GpuTexture? = if (activeTarget == null) mainTarget.colorTexture else activeTarget.colorTexture()
-        val targetView: GpuTextureView? = if (activeTarget == null) mainTarget.colorTextureView else activeTarget.colorView()
+        val targetTexture: GpuTexture? =
+            if (activeTarget == null) mainTarget.colorTexture else activeTarget.colorTexture()
+        val targetView: GpuTextureView? =
+            if (activeTarget == null) mainTarget.colorTextureView else activeTarget.colorView()
         val targetWidth: Int = if (activeTarget == null) mainTarget.width else activeTarget.width()
         val targetHeight: Int = if (activeTarget == null) mainTarget.height else activeTarget.height()
 
@@ -172,7 +219,11 @@ object BlurShader {
             renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("BlurUniforms", blurUniforms)
-            renderPass.setUniform("InputSampler", inputTarget.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+            renderPass.setUniform(
+                "InputSampler",
+                inputTarget.colorTextureView,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+            )
             renderPass.draw(3, 1, 0, 0)
         }
     }
@@ -181,14 +232,37 @@ object BlurShader {
         render(x, y, width, height, radius, radius, radius, radius, blurStrength)
     }
 
-    fun render(x: Float, y: Float, width: Float, height: Float, radius: Float, blurStrength: Float, segmentRects: FloatArray?, segmentRadii: FloatArray?, segmentCount: Int) {
-        render(x, y, width, height, radius, radius, radius, radius, blurStrength, segmentRects, segmentRadii, segmentCount)
+    fun render(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        blurStrength: Float,
+        segmentRects: FloatArray?,
+        segmentRadii: FloatArray?,
+        segmentCount: Int
+    ) {
+        render(
+            x,
+            y,
+            width,
+            height,
+            radius,
+            radius,
+            radius,
+            radius,
+            blurStrength,
+            segmentRects,
+            segmentRadii,
+            segmentCount
+        )
     }
 
     fun render3DBox(box: AABB, blurStrength: Double) {
         this.ensureBoxProgram()
 
-        val fb: RenderTarget = Constants.client.gameRenderer.mainRenderTarget()
+        val fb: RenderTarget = mc.gameRenderer.mainRenderTarget()
         if (fb.width <= 0 || fb.height <= 0) {
             return
         }
@@ -228,16 +302,21 @@ object BlurShader {
             BoxBlurUniforms(fb.width.toFloat(), fb.height.toFloat(), quality)
         )
 
-        val renderer: LuminImmediateRenderer.PosColorQuads = LuminImmediateRenderer.beginPosColorQuads(boxPipeline!!) { pass ->
-            pass.setUniform("BoxBlurUniforms", boxBlurUniforms)
-            pass.setUniform("InputSampler", inputTarget.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
-        }
+        val renderer: LuminImmediateRenderer.PosColorQuads =
+            LuminImmediateRenderer.beginPosColorQuads(boxPipeline!!) { pass ->
+                pass.setUniform("BoxBlurUniforms", boxBlurUniforms)
+                pass.setUniform(
+                    "InputSampler",
+                    inputTarget.colorTextureView,
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+                )
+            }
         addBoxVertices(renderer, box)
         renderer.end()
     }
 
     private fun addBoxVertices(renderer: LuminImmediateRenderer.PosColorQuads, box: AABB) {
-        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
+        val camPos = mc.entityRenderDispatcher.camera!!.position()
 
         val minX = (box.minX - camPos.x).toFloat()
         val minY = (box.minY - camPos.y).toFloat()
@@ -246,7 +325,8 @@ object BlurShader {
         val maxY = (box.maxY - camPos.y).toFloat()
         val maxZ = (box.maxZ - camPos.z).toFloat()
 
-        val matrix: Matrix4f = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
+        val matrix: Matrix4f =
+            mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
 
         vertex(renderer, matrix, minX, minY, minZ)
         vertex(renderer, matrix, minX, minY, maxZ)
@@ -316,7 +396,12 @@ object BlurShader {
                     val segmentY = rects[offset + 1]
                     val segmentWidth = rects[offset + 2]
                     val segmentHeight = rects[offset + 3]
-                    builder.putVec4(segmentX * scale, targetHeight - (segmentY + segmentHeight) * scale, segmentWidth * scale, segmentHeight * scale)
+                    builder.putVec4(
+                        segmentX * scale,
+                        targetHeight - (segmentY + segmentHeight) * scale,
+                        segmentWidth * scale,
+                        segmentHeight * scale
+                    )
                 } else {
                     builder.putVec4(0.0f, 0.0f, 0.0f, 0.0f)
                 }

@@ -457,7 +457,11 @@ object InvHelper {
     context(nn: NonNullContext)
     fun getBestProjectile(): ItemStack? {
         return getAllItems()
-            .filter { item -> !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) && isItemValid(item) }
+            .filter { item ->
+                !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) && isItemValid(
+                    item
+                )
+            }
             .maxByOrNull { item -> item.count }
     }
 
@@ -568,7 +572,11 @@ object InvHelper {
     context(nn: NonNullContext)
     fun getBestShapeAxe(): ItemStack? {
         return getAllItems()
-            .filter { item -> !item.isEmpty && isAxe(item) && isSharpnessAxe(item) && isItemValid(item) && !isGodAxe(item) }
+            .filter { item ->
+                !item.isEmpty && isAxe(item) && isSharpnessAxe(item) && isItemValid(item) && !isGodAxe(
+                    item
+                )
+            }
             .maxByOrNull { item -> (getAxeDamage(item) * 100.0F).toInt() }
     }
 
@@ -848,7 +856,11 @@ object InvHelper {
             return true
         }
 
-        if (stack.item === Items.SLIME_BALL && EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.KNOCKBACK) > 1) {
+        if (stack.item === Items.SLIME_BALL && EnchantmentUtils.getEnchantmentLevel(
+                stack,
+                Enchantments.KNOCKBACK
+            ) > 1
+        ) {
             return true
         }
 
@@ -905,7 +917,9 @@ object InvHelper {
         }
 
         val block = (stack.item as BlockItem).block
-        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(block)
+        return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(
+            block
+        )
     }
 
 }

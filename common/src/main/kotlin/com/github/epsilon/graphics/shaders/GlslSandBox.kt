@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.shaders
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -46,7 +46,12 @@ object GlslSandBox : AutoCloseable {
     private fun getOrCreatePipeline(fragmentShader: Identifier): RenderPipeline {
         return pipelines.computeIfAbsent(fragmentShader) { shader ->
             RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-                .withLocation(Identifier.fromNamespaceAndPath(shader.namespace, "pipelines/glsl_sandbox/" + shader.path.replace('/', '_')))
+                .withLocation(
+                    Identifier.fromNamespaceAndPath(
+                        shader.namespace,
+                        "pipelines/glsl_sandbox/" + shader.path.replace('/', '_')
+                    )
+                )
                 .withColorTargetState(ColorTargetState.DEFAULT)
                 .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(shader)
@@ -68,8 +73,10 @@ object GlslSandBox : AutoCloseable {
         val colorView: GpuTextureView = LuminRenderSystem.resolveColorView() ?: return
 
         val activeTarget = LuminRenderSystem.getActiveTarget()
-        val targetWidth = if (activeTarget != null) activeTarget.width() else Constants.client.gameRenderer.mainRenderTarget().width
-        val targetHeight = if (activeTarget != null) activeTarget.height() else Constants.client.gameRenderer.mainRenderTarget().height
+        val targetWidth =
+            if (activeTarget != null) activeTarget.width() else mc.gameRenderer.mainRenderTarget().width
+        val targetHeight =
+            if (activeTarget != null) activeTarget.height() else mc.gameRenderer.mainRenderTarget().height
 
         if (targetWidth <= 0 || targetHeight <= 0) return
 
@@ -86,7 +93,15 @@ object GlslSandBox : AutoCloseable {
             "Lumin GLSL Sandbox UBO",
             SANDBOX_INFO_SIZE,
             4,
-            SandboxInfo(targetWidth.toFloat(), targetHeight.toFloat(), elapsedTime, mouseUvX, mouseUvY, mousePxX, mousePxY)
+            SandboxInfo(
+                targetWidth.toFloat(),
+                targetHeight.toFloat(),
+                elapsedTime,
+                mouseUvX,
+                mouseUvY,
+                mousePxX,
+                mousePxY
+            )
         )
 
         val encoder = RenderSystem.getDevice().createCommandEncoder()

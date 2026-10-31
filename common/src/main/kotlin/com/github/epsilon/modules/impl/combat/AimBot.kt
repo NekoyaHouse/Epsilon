@@ -119,7 +119,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         val dx = predicted.x - player.x
         val dz = predicted.z - player.z
         val dy = (predicted.y + bestTarget.getEyeHeight(bestTarget.pose)) -
-            (player.y + player.getEyeHeight(player.pose))
+                (player.y + player.getEyeHeight(player.pose))
 
         val targetPitch = computeProjectilePitch(dx, dz, dy, velocity)
         if (targetPitch.isNaN()) {
@@ -186,7 +186,8 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
 
             val deltaYaw = Mth.wrapDegrees(
-                (atan2(nearestTarget.eyePosition.z - player.z, nearestTarget.eyePosition.x - player.x)).toDegrees().toFloat() - 90.0f - rotationYaw
+                (atan2(nearestTarget.eyePosition.z - player.z, nearestTarget.eyePosition.x - player.x)).toDegrees()
+                    .toFloat() - 90.0f - rotationYaw
             )
             var fixedDeltaYaw = deltaYaw
             if (fixedDeltaYaw > 180.0f) {
@@ -234,9 +235,11 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             val distSq = player.distanceToSqr(candidate)
             if (distSq > rangeSq) continue
 
-            val yawDiff = abs(Mth.wrapDegrees(
+            val yawDiff = abs(
+                Mth.wrapDegrees(
                     getYawBetween(player.yRot, player.x, player.z, candidate.x, candidate.z) - player.yRot
-                ))
+                )
+            )
             if (yawDiff > halfFov) continue
 
             if (!ignoreWalls && !player.hasLineOfSight(candidate)) continue

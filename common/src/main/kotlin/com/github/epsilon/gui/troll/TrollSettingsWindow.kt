@@ -107,6 +107,7 @@ class TrollSettingsWindow(
                         entries.add(Entry(row, null, currentDepth))
                     }
                 }
+
                 is SettingLayoutPlanner.Section.GroupElement -> append(element.section(), currentDepth)
                 else -> {
                 }

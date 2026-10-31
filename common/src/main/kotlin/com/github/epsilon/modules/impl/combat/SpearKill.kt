@@ -133,8 +133,8 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     private fun isUsingSpear(): Boolean {
         val item: Item = player.useItem.item
         return item === Items.WOODEN_SPEAR || item === Items.STONE_SPEAR || item === Items.COPPER_SPEAR ||
-            item === Items.IRON_SPEAR || item === Items.GOLDEN_SPEAR || item === Items.DIAMOND_SPEAR ||
-            item === Items.NETHERITE_SPEAR
+                item === Items.IRON_SPEAR || item === Items.GOLDEN_SPEAR || item === Items.DIAMOND_SPEAR ||
+                item === Items.NETHERITE_SPEAR
     }
 
     private fun getReadyTicks(item: Item): Int {

@@ -437,7 +437,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             }
         }
 
-        val hasActiveInput = panels.stream().filter { panel -> panel.isVisible }.anyMatch { panel -> panel.hasActiveInput() }
+        val hasActiveInput =
+            panels.stream().filter { panel -> panel.isVisible }.anyMatch { panel -> panel.hasActiveInput() }
 
         if (hasActiveInput) {
             for (panel in panels) {
@@ -632,7 +633,6 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     private val searchHeight: Float
         get() = 20.0f
-
 
 
     private fun reactInstance(action: ReisaDropdownCompanion.Action?) {

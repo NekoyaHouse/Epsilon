@@ -56,7 +56,10 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private val barBackgroundColor by colorSetting("Bar Background Color", Color(255, 255, 255, 55))
     private val barFillColor by colorSetting("Bar Fill Color", Color(255, 236, 248, 235))
     private val delayBarColor by colorSetting("Delay Bar Color", Color(190, 190, 190, 100), dependency = { delayBar })
-    private val barOutlineColor by colorSetting("Bar Outline Color", Color(255, 255, 255, 85), dependency = { barOutline })
+    private val barOutlineColor by colorSetting(
+        "Bar Outline Color",
+        Color(255, 255, 255, 85),
+        dependency = { barOutline })
     private val textColor by colorSetting("Text Color", Color(255, 255, 255, 235))
     private val drawShadow by boolSetting("Drop Shadow", true)
     private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0, 32.0, 1.0, dependency = { drawShadow })
@@ -72,7 +75,8 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private var visibilityProgress: Float = 0.0f
     private var lastVisibilityUpdateMs: Long = 0L
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun render(deltaTracker: DeltaTracker) {
         if (style == Style.Akrien) {
@@ -176,7 +180,14 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val finalHeadRadius = scaledHeadRadius * headDamageScale
         val headTintColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale)
 
-        BlurShader.render(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, blurStrength.toFloat())
+        BlurShader.render(
+            scaledPanelX,
+            scaledPanelY,
+            scaledPanelWidth,
+            scaledPanelHeight,
+            scaledCornerRadius,
+            blurStrength.toFloat()
+        )
 
         if (drawShadow) {
             scope.shadow(
@@ -266,7 +277,14 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scaledEquipmentScale = equipmentScale * animationScale
         val scaledEquipmentGap = equipmentGap * animationScale
 
-        renderEquipmentItems(graphics, target, scaledEquipmentX, scaledEquipmentY, scaledEquipmentScale, scaledEquipmentGap)
+        renderEquipmentItems(
+            graphics,
+            target,
+            scaledEquipmentX,
+            scaledEquipmentY,
+            scaledEquipmentScale,
+            scaledEquipmentGap
+        )
     }
 
     private fun renderEquipmentItems(
@@ -331,7 +349,10 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val self = NonNullContext.current?.player
         val distance = if (self == null) 0.0f else self.distanceTo(target)
         val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
-        val textWidth = maxOf(textRenderer.getWidth(name, nameScale), maxOf(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale)))
+        val textWidth = maxOf(
+            textRenderer.getWidth(name, nameScale),
+            maxOf(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale))
+        )
         val panelWidth = maxOf(110.0f * panelScale, textWidth + 40.0f * panelScale)
         val panelHeight = 39.0f * panelScale
         setBounds(panelWidth, panelHeight)
@@ -403,12 +424,32 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             val textX = panelX + 31.0f * scaled
             val textY = panelY + 2.0f * scaled
             scope.text(name, textX, textY, nameScale, withAlpha(Color(255, 255, 255, 250), animationScale))
-            scope.text(healthText, textX, panelY + 13.0f * scaled, bodyScale, withAlpha(Color(228, 228, 228, 238), animationScale))
-            scope.text(distanceText, textX, panelY + 22.0f * scaled, bodyScale, withAlpha(Color(175, 175, 175, 225), animationScale))
+            scope.text(
+                healthText,
+                textX,
+                panelY + 13.0f * scaled,
+                bodyScale,
+                withAlpha(Color(228, 228, 228, 238), animationScale)
+            )
+            scope.text(
+                distanceText,
+                textX,
+                panelY + 22.0f * scaled,
+                bodyScale,
+                withAlpha(Color(175, 175, 175, 225), animationScale)
+            )
         }
     }
 
-    private fun drawItem(graphics: GuiGraphicsExtractor, owner: LivingEntity, stack: ItemStack, x: Float, y: Float, scale: Float, seed: Int) {
+    private fun drawItem(
+        graphics: GuiGraphicsExtractor,
+        owner: LivingEntity,
+        stack: ItemStack,
+        x: Float,
+        y: Float,
+        scale: Float,
+        seed: Int
+    ) {
         graphics.pose().pushMatrix()
         graphics.pose().translate(x + scale, y + scale)
         graphics.pose().scale(scale, scale)
@@ -470,7 +511,12 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         return Color(color.red, color.green, color.blue, alpha)
     }
 
-    private fun updateAnimatedHealth(target: LivingEntity, currentHealth: Float, maxHealth: Float, frameTime: Float): Float {
+    private fun updateAnimatedHealth(
+        target: LivingEntity,
+        currentHealth: Float,
+        maxHealth: Float,
+        frameTime: Float
+    ): Float {
         val targetId = target.id
         if (targetId != lastTargetId) {
             lastTargetId = targetId

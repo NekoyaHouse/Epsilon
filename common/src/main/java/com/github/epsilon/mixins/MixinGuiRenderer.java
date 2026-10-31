@@ -56,7 +56,7 @@ public class MixinGuiRenderer {
             return;
         }
 
-        // 26.3 会在 Minecraft 构造期间渲染首帧，此时 Constants.mc 尚未初始化，直接跳过。
+        // 26.3 会在 Minecraft 构造期间渲染首帧，此时 Minecraft 尚未初始化，直接跳过。
         if (mc == null) {
             return;
         }

@@ -1,6 +1,6 @@
 package com.github.epsilon.accounts
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.PlayerHeadTexture
 import com.github.epsilon.managers.ExecutorManager
 import com.github.epsilon.managers.SkinManager
@@ -28,7 +28,7 @@ class AccountCache {
 
     fun loadHead(callback: Runnable?) {
         if (headTexture != null || uuid.isBlank()) {
-            if (callback != null) Constants.client.execute(callback)
+            if (callback != null) mc.execute(callback)
             return
         }
 
@@ -38,7 +38,7 @@ class AccountCache {
 
         ExecutorManager.execute {
             val head = SkinManager.fetchHead(UndashedUuid.fromStringLenient(uuid))
-            Constants.client.execute {
+            mc.execute {
                 if (head != null) headTexture = PlayerHeadTexture(head)
                 loadingHead = false
                 callback?.run()

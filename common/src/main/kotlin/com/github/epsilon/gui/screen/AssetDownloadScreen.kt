@@ -123,8 +123,14 @@ class AssetDownloadScreen(
         val job = manager.activeJob()
         if (job != null && job.isRunning()) {
             return listOf(
-                DialogButton(EpsilonTranslations.Resources.BUTTON_STOP.getTranslatedName(), false, Runnable { job.cancel() }),
-                DialogButton(EpsilonTranslations.Resources.BUTTON_BACKGROUND.getTranslatedName(), true, Runnable { onClose() })
+                DialogButton(
+                    EpsilonTranslations.Resources.BUTTON_STOP.getTranslatedName(),
+                    false,
+                    Runnable { job.cancel() }),
+                DialogButton(
+                    EpsilonTranslations.Resources.BUTTON_BACKGROUND.getTranslatedName(),
+                    true,
+                    Runnable { onClose() })
             )
         }
 
@@ -136,7 +142,10 @@ class AssetDownloadScreen(
         }
         if (missing.isEmpty()) {
             return listOf(
-                DialogButton(EpsilonTranslations.Resources.BUTTON_DONE.getTranslatedName(), true, Runnable { onClose() })
+                DialogButton(
+                    EpsilonTranslations.Resources.BUTTON_DONE.getTranslatedName(),
+                    true,
+                    Runnable { onClose() })
             )
         }
 

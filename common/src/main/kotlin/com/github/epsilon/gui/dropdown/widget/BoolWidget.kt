@@ -46,7 +46,8 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         val sx = width - DropdownTheme.SETTING_PADDING_X - sw
         val sy = (getHeight() - sh) * 0.5f
 
-        val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(sx - 2), absoluteY(sy - 2), sw + 4, sh + 4)
+        val hovered =
+            isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(sx - 2), absoluteY(sy - 2), sw + 4, sh + 4)
         hoverAnim.run(if (supported && hovered) 1.0f else 0.0f)
         val hoverProgress = hoverAnim.value
 
@@ -80,11 +81,25 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         if (hoverProgress > 0.02f) {
             val haloX = knobCx - STATE_LAYER_SIZE * 0.5f
             val haloY = knobCy - STATE_LAYER_SIZE * 0.5f
-            scope.roundRect(haloX, haloY, STATE_LAYER_SIZE, STATE_LAYER_SIZE, STATE_LAYER_SIZE * 0.5f, MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18))
+            scope.roundRect(
+                haloX,
+                haloY,
+                STATE_LAYER_SIZE,
+                STATE_LAYER_SIZE,
+                STATE_LAYER_SIZE * 0.5f,
+                MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18)
+            )
         }
 
         val knobRadius = knobSize * 0.5f
-        scope.roundRect(knobCx - knobW * 0.5f, knobCy - knobSize * 0.5f, knobW, knobSize, knobRadius, MD3Theme.switchKnob(t))
+        scope.roundRect(
+            knobCx - knobW * 0.5f,
+            knobCy - knobSize * 0.5f,
+            knobW,
+            knobSize,
+            knobRadius,
+            MD3Theme.switchKnob(t)
+        )
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

@@ -74,7 +74,12 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             if (rotate) {
                 val rot = RotationUtils.calculate(currentAimPoint(bedTargetNow))
                 if (bedTargetNow) {
-                    RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), { candidate -> isBedHit(candidate, maxRange) }, Priority.Low)
+                    RotationManager.INSTANCE.setRotations(
+                        rot,
+                        rotationSpeed.toDouble(),
+                        { candidate -> isBedHit(candidate, maxRange) },
+                        Priority.Low
+                    )
                 } else {
                     RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Low)
                 }

@@ -1,6 +1,6 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.KeyPressEvent
@@ -175,7 +175,7 @@ object ModuleManager {
     }
 
     private fun onKeyPress(event: KeyPressEvent) {
-        if (Constants.client.level == null || Constants.client.gui.screen() != null ||
+        if (mc.level == null || mc.gui.screen() != null ||
             event.getKey() == InputConstants.UNKNOWN.value
         ) return
 
@@ -183,14 +183,14 @@ object ModuleManager {
         val action = event.action
 
         if (keyCode == ClientSetting.guiKeybind && action == InputConstants.PRESS) {
-            Constants.client.gui.setScreen(ClientSetting.getGuiScreen())
+            mc.gui.setScreen(ClientSetting.getGuiScreen())
         }
 
         dispatchKeyBind(keyCode, action)
     }
 
     private fun onMousePress(event: MousePressEvent) {
-        if (Constants.client.level != null && Constants.client.gui.screen() == null) {
+        if (mc.level != null && mc.gui.screen() == null) {
             dispatchKeyBind(KeybindUtils.encodeMouseButton(event.button), event.action)
         }
     }

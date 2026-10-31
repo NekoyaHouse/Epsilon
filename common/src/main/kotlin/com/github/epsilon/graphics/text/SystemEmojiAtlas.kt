@@ -106,7 +106,13 @@ object SystemEmojiAtlas : AutoCloseable {
         }
     }
 
-    private fun drawColorGlyph(graphics: Graphics2D, context: FontRenderContext, glyphId: Int, x: Float, y: Float): Boolean {
+    private fun drawColorGlyph(
+        graphics: Graphics2D,
+        context: FontRenderContext,
+        glyphId: Int,
+        x: Float,
+        y: Float
+    ): Boolean {
         if (colorGlyphFont == null || glyphId < 0) {
             return false
         }
@@ -153,7 +159,11 @@ object SystemEmojiAtlas : AutoCloseable {
         val osName = System.getProperty("os.name", "").lowercase(Locale.ROOT)
         if (osName.contains("win")) {
             val windowsDir = System.getenv("WINDIR")
-            return if (windowsDir == null) Path.of("C:\\Windows\\Fonts\\seguiemj.ttf") else Path.of(windowsDir, "Fonts", "seguiemj.ttf")
+            return if (windowsDir == null) Path.of("C:\\Windows\\Fonts\\seguiemj.ttf") else Path.of(
+                windowsDir,
+                "Fonts",
+                "seguiemj.ttf"
+            )
         }
         if (osName.contains("mac") || osName.contains("darwin")) {
             return Path.of("/System/Library/Fonts/Apple Color Emoji.ttc")

@@ -329,7 +329,9 @@ class MaceBehavior : ElytraCombatBehavior {
                 }
             }
         }
-        candidates.sortWith(Comparator.comparingDouble<BlockPos> { pos -> Vec3.atCenterOf(pos).distanceToSqr(targetEye) })
+        candidates.sortWith(Comparator.comparingDouble<BlockPos> { pos ->
+            Vec3.atCenterOf(pos).distanceToSqr(targetEye)
+        })
 
         // 有效落点保持不变，避免在相邻候选间频繁切换。
         val lastCandidate = this.lastGroundCandidate

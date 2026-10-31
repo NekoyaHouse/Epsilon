@@ -51,7 +51,8 @@ object LocalFlightAvoidance {
 
         val baseDirection = desiredVelocity.normalize()
         val baseYaw = Mth.wrapDegrees((atan2(baseDirection.z, baseDirection.x)).toDegrees().toFloat() - 90.0f)
-        val basePitch = -(atan2(baseDirection.y, maxOf(0.001, baseDirection.horizontalDistance()))).toDegrees().toFloat()
+        val basePitch =
+            -(atan2(baseDirection.y, maxOf(0.001, baseDirection.horizontalDistance()))).toDegrees().toFloat()
         val preferred = if (preferredDirection == null || preferredDirection.lengthSqr() < 1.0E-8) {
             null
         } else {

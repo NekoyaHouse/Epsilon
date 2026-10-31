@@ -59,7 +59,15 @@ class TextRenderer : IRenderer {
         }
     }
 
-    fun addBlurredText(text: String, x: Float, y: Float, scale: Float, color: Color, blurRadius: Float, intensity: Int) {
+    fun addBlurredText(
+        text: String,
+        x: Float,
+        y: Float,
+        scale: Float,
+        color: Color,
+        blurRadius: Float,
+        intensity: Int
+    ) {
         addBlurredText(text, x, y, scale, color, blurRadius, intensity, StaticFontLoader.defaultFont())
     }
 

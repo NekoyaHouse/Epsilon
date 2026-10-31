@@ -50,7 +50,13 @@ object Phase : Module("Phase", Category.MOVEMENT) {
     private val waitBreak by boolSetting("Wait Break", true, dependency = { mode == Mode.Sunrise })
     private val onlyOnGround by boolSetting("Only On Ground", false, dependency = { mode == Mode.Pearl })
     private val autoDisable by boolSetting("Auto Disable", false, dependency = { mode == Mode.Pearl })
-    private val afterBreak by intSetting("Break Timeout", 4, 1, 20, 1, dependency = { mode == Mode.Sunrise && waitBreak })
+    private val afterBreak by intSetting(
+        "Break Timeout",
+        4,
+        1,
+        20,
+        1,
+        dependency = { mode == Mode.Sunrise && waitBreak })
     private val afterPearl by intSetting("Pearl Timeout", 0, 0, 60, 1, dependency = { mode == Mode.Pearl })
     private val pitch by doubleSetting("Pitch", 80.0, 0.0, 90.0, 1.0, dependency = { mode == Mode.Pearl })
     private val strict by boolSetting("Strict", false, dependency = { mode == Mode.ForceMine })

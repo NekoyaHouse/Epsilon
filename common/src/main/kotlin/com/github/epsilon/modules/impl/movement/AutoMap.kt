@@ -267,7 +267,9 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun needsTakeoffRetarget(): Boolean = runSafeOrFalse {
-        activeTakeoffTargetHeight.isNaN() || takeoffBaseY.isNaN() || player.onGround() && !player.isFallFlying && abs(player.y - takeoffBaseY) > 0.5
+        activeTakeoffTargetHeight.isNaN() || takeoffBaseY.isNaN() || player.onGround() && !player.isFallFlying && abs(
+            player.y - takeoffBaseY
+        ) > 0.5
     }
 
     private fun writeRecord(notify: Boolean) {

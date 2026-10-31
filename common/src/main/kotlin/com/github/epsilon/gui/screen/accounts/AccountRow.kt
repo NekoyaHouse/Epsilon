@@ -190,7 +190,15 @@ class AccountRow(private val account: Account<*>) {
                 MD3Theme.stateLayer(MD3Theme.ERROR, 0.9f, 30),
             )
         }
-        drawGlyph(scope, textRenderer, IconChars.DELETE, x, y, 1.0f, MD3Theme.withAlpha(MD3Theme.ERROR, if (hovered) 255 else 190))
+        drawGlyph(
+            scope,
+            textRenderer,
+            IconChars.DELETE,
+            x,
+            y,
+            1.0f,
+            MD3Theme.withAlpha(MD3Theme.ERROR, if (hovered) 255 else 190)
+        )
     }
 
     data class State(

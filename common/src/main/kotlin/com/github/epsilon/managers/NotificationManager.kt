@@ -101,9 +101,9 @@ object NotificationManager {
      */
     fun moduleState(moduleName: String, hash: Int, enabled: Boolean) {
         val stateText = (
-            if (enabled) EpsilonTranslations.Module.STATE_ENABLED
-            else EpsilonTranslations.Module.STATE_DISABLED
-            ).getTranslatedName()
+                if (enabled) EpsilonTranslations.Module.STATE_ENABLED
+                else EpsilonTranslations.Module.STATE_DISABLED
+                ).getTranslatedName()
         val mode = NotificationMode.fromEnabled(enabled)
 
         notifyReplaceable(hash, moduleName, StringUtils.capitalize(stateText), mode)

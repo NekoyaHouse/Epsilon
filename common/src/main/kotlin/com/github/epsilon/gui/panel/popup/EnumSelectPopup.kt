@@ -101,7 +101,8 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                         val hoverBackground =
                             MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f)
                         val selectedBackground = MD3Theme.SECONDARY_CONTAINER
-                        val background: Color = if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
+                        val background: Color =
+                            if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
                         val textColor: Color = if (!supported) {
                             MD3Theme.TEXT_MUTED
                         } else if (selected) {

@@ -1,6 +1,6 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -140,7 +140,7 @@ object ShaderManager {
             return
         }
 
-        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+        val mainTarget = mc.gameRenderer.mainRenderTarget()
         if (mainTarget.colorTextureView == null) {
             return
         }
@@ -180,7 +180,7 @@ object ShaderManager {
 
     fun prepareChestOutline(texture: Identifier): RenderType {
         if (!preparedChests) {
-            val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+            val mainTarget = mc.gameRenderer.mainRenderTarget()
             prepareChestOutlineTarget(mainTarget)
             preparedChests = true
         }
@@ -241,7 +241,7 @@ object ShaderManager {
             return
         }
 
-        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
+        val mainTarget = mc.gameRenderer.mainRenderTarget()
 
         capturedChests = false
         preparedChests = false
@@ -254,7 +254,7 @@ object ShaderManager {
         modelViewStack.pushMatrix()
         modelViewStack.mul(modelViewMatrix)
 
-        Constants.client.gameRenderer.featureRenderDispatcher().prepareFrame(chestOutlineStorage).use { frame ->
+        mc.gameRenderer.featureRenderDispatcher().prepareFrame(chestOutlineStorage).use { frame ->
             renderOutlinePass("epsilon_chest_outline", chestTarget!!, frame)
         }
 
@@ -386,8 +386,8 @@ object ShaderManager {
             GlowParams(
                 targetWidth.toFloat(),
                 targetHeight.toFloat(),
-                Constants.client.window.guiScaledWidth.toFloat(),
-                Constants.client.window.guiScaledHeight.toFloat(),
+                mc.window.guiScaledWidth.toFloat(),
+                mc.window.guiScaledHeight.toFloat(),
                 color,
                 settings.glowColor1,
                 settings.glowColor2,
@@ -409,8 +409,8 @@ object ShaderManager {
     ): ShaderUniforms {
         val width = maxOf(1.0f, screenWidth.toFloat())
         val height = maxOf(1.0f, screenHeight.toFloat())
-        val scaledWidth = maxOf(1.0f, Constants.client.window.guiScaledWidth.toFloat())
-        val scaledHeight = maxOf(1.0f, Constants.client.window.guiScaledHeight.toFloat())
+        val scaledWidth = maxOf(1.0f, mc.window.guiScaledWidth.toFloat())
+        val scaledHeight = maxOf(1.0f, mc.window.guiScaledHeight.toFloat())
         val outline = settings.outlineColor
         val smokeOutline1 = settings.smokeOutlineColor1
         val smokeOutline2 = settings.smokeOutlineColor2

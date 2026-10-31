@@ -16,7 +16,8 @@ import java.util.*
 object StaticFontLoader {
 
     private val FONT_FILE_EXTENSIONS = arrayOf(".ttf", ".otf", ".ttc")
-    private const val SIZE_REFERENCE_SAMPLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789简体中文字体设置默认自定义战斗移动玩家渲染"
+    private const val SIZE_REFERENCE_SAMPLE =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789简体中文字体设置默认自定义战斗移动玩家渲染"
     private val DEFAULT_FONT_ID: Identifier = ResourceLocationUtils.getIdentifier("fonts/font.ttf")
     private var builtinDefault: TtfFontLoader? = TtfFontLoader(DEFAULT_FONT_ID)
     private val DEFAULT_VISUAL_HEIGHT: Float = builtinDefault!!.fontFile.getVisualHeight(SIZE_REFERENCE_SAMPLE)
@@ -28,7 +29,8 @@ object StaticFontLoader {
 
     val JURA_LIGHT: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/jura-light.ttf"))
 
-    val CINZEL_DECORATIVE: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/cinzeldecorative.ttf"))
+    val CINZEL_DECORATIVE: TtfFontLoader =
+        TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/cinzeldecorative.ttf"))
 
     val OSAKA_CHIPS: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/osakachips.ttf"))
 

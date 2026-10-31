@@ -27,10 +27,10 @@ object Criticals : Module("Criticals", Category.COMBAT) {
 
         nonNullHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
             stopSprinting = fallTicks > 0 &&
-                fallTicks < 3 &&
-                player.isSprinting &&
-                KillAura.target != null &&
-                Velocity.attackQueue == 0
+                    fallTicks < 3 &&
+                    player.isSprinting &&
+                    KillAura.target != null &&
+                    Velocity.attackQueue == 0
         }
 
         nonNullHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
@@ -59,7 +59,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
 
     private fun canCrit(player: LocalPlayer): Boolean {
         return player.fallDistance > 0.0 && !player.onGround() && !player.onClimbable() &&
-            !player.isInWater && !player.isMobilityRestricted && !player.isPassenger
+                !player.isInWater && !player.isMobilityRestricted && !player.isPassenger
     }
 
 }

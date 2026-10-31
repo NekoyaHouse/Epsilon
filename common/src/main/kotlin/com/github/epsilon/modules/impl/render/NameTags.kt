@@ -168,7 +168,8 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         for (content in contents) {
             val textWidth = metrics.getWidth(content.text, renderScale)
             val textHeight = metrics.getHeight(renderScale)
-            val iconWidth = if (content.icon == null) 0.0f else metrics.getWidth(content.icon, renderScale, StaticFontLoader.ICONS)
+            val iconWidth =
+                if (content.icon == null) 0.0f else metrics.getWidth(content.icon, renderScale, StaticFontLoader.ICONS)
             val iconHeight = if (content.icon == null) 0.0f else metrics.getHeight(renderScale, StaticFontLoader.ICONS)
             val contentWidth = textWidth + iconWidth + (if (content.icon == null) 0.0f else iconGap)
             val width = contentWidth + paddingX * 2.0f
@@ -246,7 +247,14 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         cursorX += segment.textWidth
 
         if (content.icon != null && !content.iconFirst) {
-            layer.addText(content.icon, cursorX + segment.iconGap, iconY, renderScale, content.iconColor, StaticFontLoader.ICONS)
+            layer.addText(
+                content.icon,
+                cursorX + segment.iconGap,
+                iconY,
+                renderScale,
+                content.iconColor,
+                StaticFontLoader.ICONS
+            )
         }
     }
 

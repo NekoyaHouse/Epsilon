@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.runSafe
@@ -19,13 +19,14 @@ import java.awt.Color
 object SkeletonRenderer {
 
     fun render(player: AbstractClientPlayer, color: Color, lineWidth: Float) {
-        val dispatcher = Constants.client.entityRenderDispatcher
+        val dispatcher = mc.entityRenderDispatcher
         val partialTick = runSafe {
             if (level.tickRateManager().isFrozen) 1.0f
-            else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+            else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         } ?: return
 
-        val state = dispatcher.getRenderer(player).createRenderState(player, partialTick) as? AvatarRenderState ?: return
+        val state =
+            dispatcher.getRenderer(player).createRenderState(player, partialTick) as? AvatarRenderState ?: return
         val avatarRenderer = dispatcher.getRenderer(state)
 
         val origin = Vec3(state.x, state.y, state.z).add(avatarRenderer.getRenderOffset(state))

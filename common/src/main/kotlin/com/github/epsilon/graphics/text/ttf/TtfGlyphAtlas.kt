@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.text.ttf
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
 import com.mojang.blaze3d.systems.RenderSystem
@@ -64,8 +64,8 @@ class TtfGlyphAtlas(atlasId: Int) {
         this.alphaTexture = LuminTexture(alphaTexture, alphaTextureView, alphaSampler)
         fillTexture(texture, 0xFF.toByte())
         fillTexture(alphaTexture, 0x00.toByte())
-        Constants.client.textureManager.register(this.textureId, this.texture)
-        Constants.client.textureManager.register(this.alphaTextureId, this.alphaTexture)
+        mc.textureManager.register(this.textureId, this.texture)
+        mc.textureManager.register(this.alphaTextureId, this.alphaTexture)
     }
 
     /**
@@ -137,8 +137,8 @@ class TtfGlyphAtlas(atlasId: Int) {
     }
 
     fun destroy() {
-        Constants.client.textureManager.release(this.textureId)
-        Constants.client.textureManager.release(this.alphaTextureId)
+        mc.textureManager.release(this.textureId)
+        mc.textureManager.release(this.alphaTextureId)
     }
 
     data class GlyphUV(val u0: Float, val v0: Float, val u1: Float, val v1: Float)
@@ -147,6 +147,7 @@ class TtfGlyphAtlas(atlasId: Int) {
 
         private const val SIZE = 1024
         private const val GLYPH_GUTTER = 2
+
         /**
          * Vulkan 要求 bufferOffset 为格式 texel block size 的倍数，取 4 同时覆盖 R8（1）与 RGBA8（4）。
          */
@@ -178,7 +179,14 @@ class TtfGlyphAtlas(atlasId: Int) {
          * 因此 Vulkan 下自行申请 4 字节对齐的暂存区，并把分配长度补齐到 4 的倍数；
          * 后端判定由 [LuminRenderSystem.IS_VULKAN_BACKEND] 提供。
          */
-        private fun uploadToTexture(texture: GpuTexture, data: ByteBuffer, destX: Int, destY: Int, width: Int, height: Int) {
+        private fun uploadToTexture(
+            texture: GpuTexture,
+            data: ByteBuffer,
+            destX: Int,
+            destY: Int,
+            width: Int,
+            height: Int
+        ) {
             val encoder: CommandEncoder = RenderSystem.getDevice().createCommandEncoder()
             if (!LuminRenderSystem.IS_VULKAN_BACKEND) {
                 encoder.writeToTexture(texture, data, 0, 0, destX, destY, width, height)
@@ -186,22 +194,23 @@ class TtfGlyphAtlas(atlasId: Int) {
             }
 
             val stagingSize = Mth.roundToward(data.remaining().toLong(), STAGING_ALIGNMENT)
-            encoder.transientMemory().allocateStaging(stagingSize, STAGING_ALIGNMENT, GpuBuffer.USAGE_COPY_SRC).use { staging ->
-                MemoryUtil.memCopy(
-                    MemoryUtil.memAddress(data),
-                    MemoryUtil.memAddress(staging.data),
-                    data.remaining().toLong()
-                )
-                encoder.copyBufferToTexture(
-                    staging.slice,
-                    0, 0,
-                    width, height,
-                    texture,
-                    destX, destY,
-                    width, height,
-                    0, 0
-                )
-            }
+            encoder.transientMemory().allocateStaging(stagingSize, STAGING_ALIGNMENT, GpuBuffer.USAGE_COPY_SRC)
+                .use { staging ->
+                    MemoryUtil.memCopy(
+                        MemoryUtil.memAddress(data),
+                        MemoryUtil.memAddress(staging.data),
+                        data.remaining().toLong()
+                    )
+                    encoder.copyBufferToTexture(
+                        staging.slice,
+                        0, 0,
+                        width, height,
+                        texture,
+                        destX, destY,
+                        width, height,
+                        0, 0
+                    )
+                }
         }
     }
 }

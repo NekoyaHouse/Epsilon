@@ -40,7 +40,13 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private val step by boolSetting("Use Step", true).apply { group(sgGeneral) }
     private val disableStep by boolSetting("Toggle Step", true).apply { group(sgGeneral) }
     private val jump by boolSetting("Jump", false).apply { group(sgGeneral) }
-    private val jumpCooldown by intSetting("Jump Cooldown", 5, 0, 100, 1, dependency = { jump }).apply { group(sgGeneral) }
+    private val jumpCooldown by intSetting(
+        "Jump Cooldown",
+        5,
+        0,
+        100,
+        1,
+        dependency = { jump }).apply { group(sgGeneral) }
     private val range by intSetting("Range", 3, 0, 10, 1).apply { group(sgGeneral) }
     private val downRange by intSetting("Down Range", 3, 0, 5, 1).apply { group(sgGeneral) }
     private val collisionLimit by intSetting("Collisions To Disable", 15, 0, 100, 1).apply { group(sgGeneral) }
@@ -48,7 +54,13 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
     private val speed by doubleSetting("Speed", 0.2873, 0.0, 1.0, 0.0001).apply { group(sgSpeed) }
     private val boost by boolSetting("Speed Boost", false).apply { group(sgSpeed) }
-    private val boostedSpeed by doubleSetting("Boosted Speed", 0.5, 0.0, 1.0, 0.01, dependency = { boost }).apply { group(sgSpeed) }
+    private val boostedSpeed by doubleSetting(
+        "Boosted Speed",
+        0.5,
+        0.0,
+        1.0,
+        0.01,
+        dependency = { boost }).apply { group(sgSpeed) }
     private val boostTicks by intSetting("Boost Ticks", 3, 1, 10, 1, dependency = { boost }).apply { group(sgSpeed) }
     private val timer by doubleSetting("Timer", 1.5, 0.1, 100.0, 0.1).apply { group(sgSpeed) }
 
@@ -59,7 +71,11 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private val quadHoles by boolSetting("Quad Holes", true).apply { group(sgHole) }
 
     private val render by boolSetting("Render", true).apply { group(sgRender) }
-    private val lineWidth by doubleSetting("Line Width", 2.0, 1.0, 4.0, 0.1, dependency = { render }).apply { group(sgRender) }
+    private val lineWidth by doubleSetting("Line Width", 2.0, 1.0, 4.0, 0.1, dependency = { render }).apply {
+        group(
+            sgRender
+        )
+    }
     private val color by colorSetting("Color", Color.WHITE, dependency = { render }).apply { group(sgRender) }
 
     private var singleHole: Hole? = null

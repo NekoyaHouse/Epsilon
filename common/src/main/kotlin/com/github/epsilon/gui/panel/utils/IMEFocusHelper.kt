@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.utils
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import net.minecraft.client.gui.screens.Screen
 
 /**
@@ -29,9 +29,9 @@ object IMEFocusHelper {
         // 增加引用计数；仅第一个获取焦点的文本框真正开启 IME 输入
         refCount++
         if (refCount == 1) {
-            val screen: Screen? = Constants.client.gui.screen()
+            val screen: Screen? = mc.gui.screen()
             if (screen != null) {
-                Constants.client.onTextInputFocusChange(screen, true)
+                mc.onTextInputFocusChange(screen, true)
             }
         }
     }
@@ -47,9 +47,9 @@ object IMEFocusHelper {
         // 减少引用计数；仅最后一个失去焦点的文本框真正关闭 IME 输入
         refCount = maxOf(0, refCount - 1)
         if (refCount == 0) {
-            val screen: Screen? = Constants.client.gui.screen()
+            val screen: Screen? = mc.gui.screen()
             if (screen != null) {
-                Constants.client.onTextInputFocusChange(screen, false)
+                mc.onTextInputFocusChange(screen, false)
             }
         }
     }
@@ -60,9 +60,9 @@ object IMEFocusHelper {
      */
     fun forceDeactivate() {
         refCount = 0
-        val screen: Screen? = Constants.client.gui.screen()
+        val screen: Screen? = mc.gui.screen()
         if (screen != null) {
-            Constants.client.onTextInputFocusChange(screen, false)
+            mc.onTextInputFocusChange(screen, false)
         }
     }
 

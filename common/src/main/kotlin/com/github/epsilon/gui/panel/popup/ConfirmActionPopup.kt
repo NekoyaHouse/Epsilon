@@ -59,7 +59,13 @@ class ConfirmActionPopup(
         animatedY = bounds.y - (1.0f - progress) * 6.0f
         updateLayout(animatedY)
 
-        confirmHoverAnimation.run(if (confirmButtonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
+        confirmHoverAnimation.run(
+            if (confirmButtonBounds.contains(
+                    mouseX.toDouble(),
+                    mouseY.toDouble()
+                )
+            ) 1.0f else 0.0f
+        )
         cancelHoverAnimation.run(if (cancelButtonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
         val tree = UiTree.build { scope ->
             val popupBounds = UiRect(bounds.x, animatedY, bounds.width, bounds.height)
@@ -117,7 +123,13 @@ class ConfirmActionPopup(
         return closeAfterClick
     }
 
-    private fun buildButton(scope: UiTree.Scope, buttonBounds: UiRect, label: String, destructive: Boolean, hover: Float) {
+    private fun buildButton(
+        scope: UiTree.Scope,
+        buttonBounds: UiRect,
+        label: String,
+        destructive: Boolean,
+        hover: Float
+    ) {
         val baseColor: Color = if (destructive) MD3Theme.ERROR else MD3Theme.SURFACE_CONTAINER_HIGH
         val hoverColor: Color = if (destructive) {
             MD3Theme.withAlpha(MD3Theme.ERROR, 220)

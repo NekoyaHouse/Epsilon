@@ -55,7 +55,12 @@ class FlightIntentPlanner {
                 waypointVelocity = waypointVelocity.normalize().scale(desired.length())
                 ElytraDebug.log(ElytraDebug.SLOT_PLANNER, "planner", "waypoint " + vec(waypointVelocity))
                 // 保留行为层的烟花意图，交给飞控控制使用时机。
-                return FlightIntent(waypointVelocity, waypointVelocity.normalize(), rawIntent.directVelocity, rawIntent.useFirework)
+                return FlightIntent(
+                    waypointVelocity,
+                    waypointVelocity.normalize(),
+                    rawIntent.directVelocity,
+                    rawIntent.useFirework
+                )
             }
         }
 

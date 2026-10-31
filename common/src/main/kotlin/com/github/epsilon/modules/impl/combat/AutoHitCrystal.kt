@@ -109,10 +109,10 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
                 val mainHandStack = player.mainHandItem
                 if (!(mainHandStack.`is`(ItemTags.SWORDS) ||
-                        (workWithTotem && mainHandStack.`is`(Items.TOTEM_OF_UNDYING)) ||
-                        (workWithCrystal && mainHandStack.`is`(Items.END_CRYSTAL)) ||
-                        (workWithPickaxe && mainHandStack.`is`(ItemTags.PICKAXES)) ||
-                        active)
+                            (workWithTotem && mainHandStack.`is`(Items.TOTEM_OF_UNDYING)) ||
+                            (workWithCrystal && mainHandStack.`is`(Items.END_CRYSTAL)) ||
+                            (workWithPickaxe && mainHandStack.`is`(ItemTags.PICKAXES)) ||
+                            active)
                 ) {
                     return@nonNullHandler
                 }

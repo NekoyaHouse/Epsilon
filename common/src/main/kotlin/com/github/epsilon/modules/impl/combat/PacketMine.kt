@@ -335,7 +335,8 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
                 Render3DScheduler.addFilledBox(box, color1)
                 Render3DScheduler.addOutlineBox(box, color2)
 
-                if (!level.getBlockState(targetPosValue).isAir && !level.getBlockState(targetPosValue).canBeReplaced() &&
+                if (!level.getBlockState(targetPosValue).isAir && !level.getBlockState(targetPosValue)
+                        .canBeReplaced() &&
                     instantTimer.passedMillise(instantDelay.toLong())
                 ) {
                     sendStop()
@@ -594,7 +595,10 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val player = this.mc.player ?: return false
         val level = this.mc.level ?: return false
         val state = level.getBlockState(blockPos)
-        return !(!player.isCreative && state.getDestroySpeed(level, blockPos) < 0) && state.getCollisionShape(level, blockPos) !== Shapes.empty()
+        return !(!player.isCreative && state.getDestroySpeed(level, blockPos) < 0) && state.getCollisionShape(
+            level,
+            blockPos
+        ) !== Shapes.empty()
     }
 
     private fun updateFadeProgress(delta: Double) {

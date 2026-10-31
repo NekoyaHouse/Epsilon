@@ -83,7 +83,8 @@ class ColorPickerPopup(
                 val swatchBounds = getPreviewSwatchBounds(popupY)
                 val localPreviewBounds = previewBounds.relativeTo(popupBounds)
                 val localSwatchBounds = swatchBounds.relativeTo(popupBounds)
-                val previewSurface = if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER
+                val previewSurface =
+                    if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER
                 val swatchSurface =
                     if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGHEST
                 popup.roundRect(
@@ -380,7 +381,10 @@ class ColorPickerPopup(
         val boxBase = if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
         val boxHover = MD3Theme.SURFACE_CONTAINER_HIGHEST
         val boxColor: Color =
-            if (focused) MD3Theme.INVERSE_SURFACE else MD3Theme.withAlpha(MD3Theme.lerp(boxBase, boxHover, 0.85f), alpha)
+            if (focused) MD3Theme.INVERSE_SURFACE else MD3Theme.withAlpha(
+                MD3Theme.lerp(boxBase, boxHover, 0.85f),
+                alpha
+            )
         val textColor: Color =
             if (focused) MD3Theme.INVERSE_ON_SURFACE else MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, alpha)
         scope.pushRelative(bounds) { box ->

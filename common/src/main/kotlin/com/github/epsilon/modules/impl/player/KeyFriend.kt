@@ -17,7 +17,10 @@ import net.minecraft.world.phys.EntityHitResult
 
 object KeyFriend : Module("Key Friend", Category.PLAYER) {
 
-    private val activateKey by keybindSetting("Activate Key", KeybindUtils.encodeMouseButton(InputConstants.MOUSE_BUTTON_MIDDLE))
+    private val activateKey by keybindSetting(
+        "Activate Key",
+        KeybindUtils.encodeMouseButton(InputConstants.MOUSE_BUTTON_MIDDLE)
+    )
 
     init {
         nonNullHandler<KeyPressEvent>(EventPriority.HIGHEST) { event ->
@@ -46,10 +49,16 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         val playerName = target.gameProfile.name()
         if (FriendManager.isFriend(playerName)) {
             FriendManager.removeFriend(playerName)
-            NotificationManager.error(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).string)
+            NotificationManager.error(
+                translatedName,
+                EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_REMOVED, playerName).string
+            )
         } else {
             FriendManager.addFriend(playerName)
-            NotificationManager.success(translatedName, EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).string)
+            NotificationManager.success(
+                translatedName,
+                EpsilonTranslations.component(EpsilonTranslations.Notifications.KEY_FRIEND_ADDED, playerName).string
+            )
         }
         return true
     }

@@ -31,7 +31,13 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         val ratio = getRatio()
         val sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f)
 
-        scope.text(setting.displayName, DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel())
+        scope.text(
+            setting.displayName,
+            DropdownTheme.SETTING_PADDING_X,
+            1.0f,
+            DropdownTheme.SETTING_TEXT_SCALE,
+            DropdownTheme.settingLabel()
+        )
 
         val trackX = getLocalTrackX()
         val trackY = getLocalTrackY()
@@ -49,7 +55,14 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
 
             val activeW = trackW * sliderRatio
             if (activeW > 0.5f) {
-                scope.roundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive())
+                scope.roundRect(
+                    trackX,
+                    trackY,
+                    activeW,
+                    trackH,
+                    DropdownTheme.SLIDER_RADIUS,
+                    DropdownTheme.sliderActive()
+                )
             }
 
             val knobX = trackX + trackW * sliderRatio
@@ -114,7 +127,14 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
             if (isEditorHitboxHovered(mouseX, mouseY)) {
                 inputField.text = formatPlainValue()
-                inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight())
+                inputField.focusIfContains(
+                    mouseX,
+                    mouseY,
+                    getEditorX(),
+                    getEditorY(),
+                    getEditorWidth(),
+                    getEditorHeight()
+                )
                 dragging = false
                 DropdownScreen.react(ReisaDropdownCompanion.Action.TYPING)
                 return true
@@ -123,7 +143,14 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (inputField.isFocused) {
                 if (isEditorBoundsHovered(mouseX, mouseY)) {
-                    inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight())
+                    inputField.focusIfContains(
+                        mouseX,
+                        mouseY,
+                        getEditorX(),
+                        getEditorY(),
+                        getEditorWidth(),
+                        getEditorHeight()
+                    )
                     DropdownScreen.react(ReisaDropdownCompanion.Action.TYPING)
                     return true
                 }
@@ -211,7 +238,13 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         inputField.blur()
     }
 
-    protected fun drawValueLabels(scope: UiTree.Scope, textMetrics: UiTextMetrics, trackX: Float, trackY: Float, trackW: Float) {
+    protected fun drawValueLabels(
+        scope: UiTree.Scope,
+        textMetrics: UiTextMetrics,
+        trackX: Float,
+        trackY: Float,
+        trackW: Float
+    ) {
         val minValue = formatValue(getMin())
         val currentValue = formatValue(getVisibleValue())
         val maxValue = formatValue(getMax())
@@ -220,7 +253,13 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         scope.text(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())
 
         val currentWidth = textMetrics.textWidth(currentValue, VALUE_TEXT_SCALE)
-        scope.text(currentValue, trackX + (trackW - currentWidth) * 0.5f, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabel())
+        scope.text(
+            currentValue,
+            trackX + (trackW - currentWidth) * 0.5f,
+            textY,
+            VALUE_TEXT_SCALE,
+            DropdownTheme.settingLabel()
+        )
 
         val maxWidth = textMetrics.textWidth(maxValue, VALUE_TEXT_SCALE)
         scope.text(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())

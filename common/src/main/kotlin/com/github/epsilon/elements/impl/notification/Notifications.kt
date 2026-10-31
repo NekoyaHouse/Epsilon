@@ -28,7 +28,8 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
     private val quantum = QuantumNotification(this)
     private val akarin = AkarinNotification(this)
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun render(deltaTracker: DeltaTracker) {
         NotificationManager.update()
@@ -65,7 +66,18 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
             if (entries.isEmpty()) return
             val boundsWidth = akarin.width(metrics, entries, scale, getFontScale())
             setNotificationBounds(boundsWidth, akarin.totalHeight(entries.size, scale))
-            akarin.render(scope, metrics, entries, x, y, boundsWidth, scale, getFontScale(), horizontalAnchor, verticalAnchor)
+            akarin.render(
+                scope,
+                metrics,
+                entries,
+                x,
+                y,
+                boundsWidth,
+                scale,
+                getFontScale(),
+                horizontalAnchor,
+                verticalAnchor
+            )
         } else {
             nvidia.render(scope, metrics, previewNotification)
         }

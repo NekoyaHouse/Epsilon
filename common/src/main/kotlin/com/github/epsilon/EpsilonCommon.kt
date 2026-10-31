@@ -8,7 +8,6 @@ import com.github.epsilon.managers.network.ClientboundPacketManager
 import com.github.epsilon.managers.network.ServerboundPacketManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.impl.ClientSetting
-import net.minecraft.client.Minecraft
 
 /**
  * 客户端公共初始化入口，由各加载器的入口在自己的初始化阶段调用一次。
@@ -20,8 +19,6 @@ object EpsilonCommon {
 
     fun init() {
         Constants.LOGGER.info("Welcome to ${Constants.NAME}.")
-
-        Constants.mc = Minecraft.getInstance()
 
         // 初始化客户端系统：模块与 HUD 元素必须在配置恢复之前完成注册
         ModuleManager.initModules()

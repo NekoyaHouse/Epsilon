@@ -121,7 +121,14 @@ abstract class EpsilonDialogScreen protected constructor(
                         if (hovered) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
                     }
                     val foreground = if (hit.button.primary) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
-                    content.button(hit.bounds, MD3Theme.CONTROL_RADIUS.toFloat(), background, hit.button.label, 0.62f, foreground)
+                    content.button(
+                        hit.bounds,
+                        MD3Theme.CONTROL_RADIUS.toFloat(),
+                        background,
+                        hit.button.label,
+                        0.62f,
+                        foreground
+                    )
                 }
             }
         }

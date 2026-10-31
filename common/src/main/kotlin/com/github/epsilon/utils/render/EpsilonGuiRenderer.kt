@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.RenderTarget
@@ -127,20 +127,34 @@ class EpsilonGuiRenderer(
             guiProjection.setupOrtho(
                 1000.0f, 11000.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true
             )
-            RenderSystem.setProjectionMatrix(guiProjectionMatrixBuffer.getBuffer(guiProjection), ProjectionType.ORTHOGRAPHIC)
-            val minecraft = Constants.client
+            RenderSystem.setProjectionMatrix(
+                guiProjectionMatrixBuffer.getBuffer(guiProjection),
+                ProjectionType.ORTHOGRAPHIC
+            )
+            val minecraft = mc
             val mainRenderTarget = minecraft.gameRenderer.mainRenderTarget()
-            val dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(Matrix4f().setTranslation(0.0f, 0.0f, -11000.0f))
+            val dynamicTransforms =
+                RenderSystem.getDynamicUniforms().writeTransform(Matrix4f().setTranslation(0.0f, 0.0f, -11000.0f))
             if (firstDrawIndexAfterBlur > 0) {
                 executeDrawRange(
-                    Supplier { "GUI before blur" }, mainRenderTarget, dynamicTransforms, 0, minOf(firstDrawIndexAfterBlur, draws.size)
+                    Supplier { "GUI before blur" },
+                    mainRenderTarget,
+                    dynamicTransforms,
+                    0,
+                    minOf(firstDrawIndexAfterBlur, draws.size)
                 )
             }
 
             if (draws.size > firstDrawIndexAfterBlur) {
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(mainRenderTarget.depthTexture!!, 0.0)
                 minecraft.gameRenderer.processBlurEffect()
-                executeDrawRange(Supplier { "GUI after blur" }, mainRenderTarget, dynamicTransforms, firstDrawIndexAfterBlur, draws.size)
+                executeDrawRange(
+                    Supplier { "GUI after blur" },
+                    mainRenderTarget,
+                    dynamicTransforms,
+                    firstDrawIndexAfterBlur,
+                    draws.size
+                )
             }
         }
     }
@@ -233,9 +247,18 @@ class EpsilonGuiRenderer(
                             oversizedItemRenderers[modelIdentity] = it
                         }
                         val oversizedItemRenderState = OversizedItemRenderState(
-                            itemState, actualItemBounds.left(), actualItemBounds.top(), actualItemBounds.right(), actualItemBounds.bottom()
+                            itemState,
+                            actualItemBounds.left(),
+                            actualItemBounds.top(),
+                            actualItemBounds.right(),
+                            actualItemBounds.bottom()
                         )
-                        oversizedItemRenderer.prepare(oversizedItemRenderState, renderState, featureRenderDispatcher, guiScale)
+                        oversizedItemRenderer.prepare(
+                            oversizedItemRenderState,
+                            renderState,
+                            featureRenderDispatcher,
+                            guiScale
+                        )
                     }
                 }
             }
@@ -246,7 +269,10 @@ class EpsilonGuiRenderer(
         renderState.addBlitToCurrentLayer(
             BlitRenderState(
                 RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
-                TextureSetup.singleTexture(slotView.textureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)),
+                TextureSetup.singleTexture(
+                    slotView.textureView(),
+                    RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
+                ),
                 itemState.pose(),
                 itemState.x(),
                 itemState.y(),
@@ -349,7 +375,7 @@ class EpsilonGuiRenderer(
     }
 
     private fun enableScissor(rectangle: ScreenRectangle, renderPass: RenderPass): Boolean {
-        val window = Constants.client.gameRenderer.gameRenderState().windowRenderState
+        val window = mc.gameRenderer.gameRenderState().windowRenderState
         val scissor = ScissorUtils.toFramebufferScissor(
             rectangle.left().toFloat(),
             rectangle.top().toFloat(),

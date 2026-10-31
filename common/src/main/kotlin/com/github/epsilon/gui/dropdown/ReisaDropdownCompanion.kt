@@ -221,7 +221,8 @@ class ReisaDropdownCompanion {
     }
 
     private fun withAlpha(color: Color, alpha: Float): Color {
-        val value = ((255.0f * Mth.clamp(alpha, 0.0f, 1.0f)).toInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
+        val value =
+            ((255.0f * Mth.clamp(alpha, 0.0f, 1.0f)).toInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
         return Color(color.red, color.green, color.blue, value)
     }
 

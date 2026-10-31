@@ -96,10 +96,14 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private val mineBox by boolSetting("Box", true).apply { group(sgTargets) }
     private val mineHead by boolSetting("Head", false).apply { group(sgTargets) }
     private val mineFeet by boolSetting("Feet", true).apply { group(sgTargets) }
-    private val headMode by enumSetting("Head Mode", HeadMode.Both, dependency = { mineHead }).apply { group(sgTargets) }
+    private val headMode by enumSetting(
+        "Head Mode",
+        HeadMode.Both,
+        dependency = { mineHead }).apply { group(sgTargets) }
 
     private val feetMode by enumSetting("Feet Mode", FeetMode.Below, dependency = { mineFeet }).apply { group(sgFeet) }
-    private val feetLogic: EnumSetting<FeetLogic> = enumSetting("Feet Logic", FeetLogic.First, dependency = { mineFeet }).apply { group(sgFeet) }
+    private val feetLogic: EnumSetting<FeetLogic> =
+        enumSetting("Feet Logic", FeetLogic.First, dependency = { mineFeet }).apply { group(sgFeet) }
     private val feetOnGround by boolSetting("Only On Ground", false, dependency = { mineFeet }).apply { group(sgFeet) }
 
     private val boxCorners by boolSetting("Box Corners", false, dependency = { mineBox }).apply { group(sgBox) }
@@ -161,9 +165,15 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         if (autoPacketMine) {
             PacketMine.isEnabled = true
             autoEnabledPacketMine = true
-            NotificationManager.info(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.getTranslatedName())
+            NotificationManager.info(
+                translatedName,
+                EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.getTranslatedName()
+            )
         } else {
-            NotificationManager.error(translatedName, EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.getTranslatedName())
+            NotificationManager.error(
+                translatedName,
+                EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.getTranslatedName()
+            )
             isEnabled = false
         }
     }
@@ -256,7 +266,8 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         return when (order.value) {
             TargetOrder.Distance -> byDistance
 
-            TargetOrder.Health -> Comparator.comparingDouble<LivingEntity> { living -> living.health.toDouble() }.thenComparing(byDistance)
+            TargetOrder.Health -> Comparator.comparingDouble<LivingEntity> { living -> living.health.toDouble() }
+                .thenComparing(byDistance)
 
             TargetOrder.Hole -> Comparator.comparingInt<LivingEntity> { living ->
                 if (living is Player && HoleUtils.inHole(living)) 0 else 1
@@ -323,7 +334,12 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     }
 
     context(nn: NonNullContext)
-    private fun addCandidate(candidates: MutableList<Candidate>, pos: BlockPos, category: TargetCategory, limit: Double) {
+    private fun addCandidate(
+        candidates: MutableList<Candidate>,
+        pos: BlockPos,
+        category: TargetCategory,
+        limit: Double
+    ) {
         for (candidate in candidates) {
             if (candidate.pos == pos) return
         }

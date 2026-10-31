@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -83,7 +83,15 @@ class RegistryListSelectPopup<T : Any> private constructor(
         bounds: UiRect, setting: Setting<List<T>>, registry: Registry<T>,
         displayNameFn: (T) -> String, addFn: (T) -> Unit, removeFn: (T) -> Unit,
     ) : this(
-        bounds, setting, collectRegistryEntries(registry, setting), displayNameFn, null, emptyList(), addFn, removeFn, Unit
+        bounds,
+        setting,
+        collectRegistryEntries(registry, setting),
+        displayNameFn,
+        null,
+        emptyList(),
+        addFn,
+        removeFn,
+        Unit
     )
 
     constructor(
@@ -91,7 +99,15 @@ class RegistryListSelectPopup<T : Any> private constructor(
         displayNameFn: (T) -> String, iconProvider: ((T) -> ItemStack)?,
         addFn: (T) -> Unit, removeFn: (T) -> Unit,
     ) : this(
-        bounds, setting, collectRegistryEntries(registry, setting), displayNameFn, iconProvider, emptyList(), addFn, removeFn, Unit
+        bounds,
+        setting,
+        collectRegistryEntries(registry, setting),
+        displayNameFn,
+        iconProvider,
+        emptyList(),
+        addFn,
+        removeFn,
+        Unit
     )
 
     constructor(
@@ -283,11 +299,25 @@ class RegistryListSelectPopup<T : Any> private constructor(
         }
         val availableViewport = lastAvailableViewport ?: getAvailableViewport()
         val selectedViewport = lastSelectedViewport ?: getSelectedViewport()
-        if (availableScrollBarDrag.mouseClicked(event.x(), event.y(), availableViewport, availableScroll, maxAvailableScroll)) {
+        if (availableScrollBarDrag.mouseClicked(
+                event.x(),
+                event.y(),
+                availableViewport,
+                availableScroll,
+                maxAvailableScroll
+            )
+        ) {
             applyDraggedAvailableScroll(event.y(), availableViewport)
             return true
         }
-        if (selectedScrollBarDrag.mouseClicked(event.x(), event.y(), selectedViewport, selectedScroll, maxSelectedScroll)) {
+        if (selectedScrollBarDrag.mouseClicked(
+                event.x(),
+                event.y(),
+                selectedViewport,
+                selectedScroll,
+                maxSelectedScroll
+            )
+        ) {
             applyDraggedSelectedScroll(event.y(), selectedViewport)
             return true
         }
@@ -555,7 +585,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {
         if (preview.stack.isEmpty) return
         val scale = preview.size / 16.0f
-        val window = Constants.client.window
+        val window = mc.window
         val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.guiScale).toFloat()
         val guiX = toMinecraftGuiX(preview.x)
         val guiY = toMinecraftGuiY(preview.y)
@@ -678,7 +708,10 @@ class RegistryListSelectPopup<T : Any> private constructor(
             )
         }
 
-        private fun soundEventPopup(bounds: UiRect, setting: RegistryListSetting<SoundEvent>): RegistryListSelectPopup<SoundEvent> {
+        private fun soundEventPopup(
+            bounds: UiRect,
+            setting: RegistryListSetting<SoundEvent>
+        ): RegistryListSelectPopup<SoundEvent> {
             return RegistryListSelectPopup(
                 bounds, setting, BuiltInRegistries.SOUND_EVENT,
                 { sound ->
@@ -699,7 +732,10 @@ class RegistryListSelectPopup<T : Any> private constructor(
             )
         }
 
-        private fun enchantmentPopup(bounds: UiRect, setting: RegistryListSetting<String>): RegistryListSelectPopup<String> {
+        private fun enchantmentPopup(
+            bounds: UiRect,
+            setting: RegistryListSetting<String>
+        ): RegistryListSelectPopup<String> {
             return ofEntries(
                 bounds, setting, collectEnchantments(),
                 { id: String -> enchantmentDisplayName(id) }, null, emptyList(),
@@ -709,7 +745,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         private fun collectEnchantments(): List<String> {
             val ids = ArrayList<String>()
-            val level = Constants.client.level
+            val level = mc.level
             if (level != null) {
                 level.registryAccess().lookup(Registries.ENCHANTMENT).ifPresent { registry ->
                     registry.listElementIds()
@@ -724,7 +760,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         private fun enchantmentDisplayName(id: String): String {
             val identifier = Identifier.tryParse(id)
-            val level = Constants.client.level
+            val level = mc.level
             if (identifier == null || level == null) {
                 return formatPath(id)
             }

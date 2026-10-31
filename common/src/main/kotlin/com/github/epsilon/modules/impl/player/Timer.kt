@@ -26,7 +26,10 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     }
 
     private val mode by enumSetting("Mode", Mode.Always)
-    private val activateKey by keybindSetting("Activate Key", InputConstants.KEY_X, dependency = { mode != Mode.Always })
+    private val activateKey by keybindSetting(
+        "Activate Key",
+        InputConstants.KEY_X,
+        dependency = { mode != Mode.Always })
     val multiplier by doubleSetting("Multiplier", 1.8, 0.1, 10.0, 0.1)
     private val maxBalance by intSetting("Max Balance", 1000, 0, 10000, 1, dependency = { mode == Mode.Balance })
     val ticks by intSetting("Ticks", 13, 1, 20, 1, dependency = { mode == Mode.SlowBalance })

@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.client
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 
 object ClientUtils {
 
@@ -10,7 +10,7 @@ object ClientUtils {
      * @return 仍在加载时返回 true
      */
     fun isLoading(): Boolean {
-        val state = Constants.client.reloadStateTracker.reloadState
+        val state = mc.reloadStateTracker.reloadState
         return state == null || !state.finished
     }
 

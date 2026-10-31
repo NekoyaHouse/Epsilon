@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.nonNullHandler
@@ -179,8 +178,7 @@ object Particles : Module("Particles", Category.RENDER) {
         private val trails: MutableList<Trail> = ArrayList()
 
         override fun tick(): Boolean {
-            val mc = Constants.client
-            if (Constants.client.player!!.distanceToSqr(posX.toDouble(), posY.toDouble(), posZ.toDouble()) > 100.0) {
+            if (mc.player!!.distanceToSqr(posX.toDouble(), posY.toDouble(), posZ.toDouble()) > 100.0) {
                 age -= 4
             } else if (mc.level != null &&
                 !mc.level!!.getBlockState(BlockPos(posX.toInt(), posY.toInt(), posZ.toInt())).isAir
@@ -222,7 +220,7 @@ object Particles : Module("Particles", Category.RENDER) {
         override fun render(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
             if (trails.isEmpty()) return
 
-            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleSize = ffSize.toFloat()
 
             for (trail in trails) {
@@ -250,8 +248,7 @@ object Particles : Module("Particles", Category.RENDER) {
         protected var maxAge: Int = age
 
         open fun tick(): Boolean {
-            val mc = Constants.client
-            if (Constants.client.player!!.distanceToSqr(posX.toDouble(), posY.toDouble(), posZ.toDouble()) > 4096.0) {
+            if (mc.player!!.distanceToSqr(posX.toDouble(), posY.toDouble(), posZ.toDouble()) > 4096.0) {
                 age -= 8
             } else {
                 age--
@@ -288,8 +285,8 @@ object Particles : Module("Particles", Category.RENDER) {
         }
 
         protected fun interpolatePos(): Vec3 {
-            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val cameraPos = Constants.client.gameRenderer.mainCamera().position()
+            val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val cameraPos = mc.gameRenderer.mainCamera().position()
             val x = Mth.lerp(tickDelta.toDouble(), prevPosX.toDouble(), posX.toDouble()) - cameraPos.x
             val y = Mth.lerp(tickDelta.toDouble(), prevPosY.toDouble(), posY.toDouble()) - cameraPos.y
             val z = Mth.lerp(tickDelta.toDouble(), prevPosZ.toDouble(), posZ.toDouble()) - cameraPos.z
@@ -300,7 +297,7 @@ object Particles : Module("Particles", Category.RENDER) {
             poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads,
             position: Vec3, particleSize: Float, particleColor: Color,
         ) {
-            val camera: Camera = Constants.client.gameRenderer.mainCamera()
+            val camera: Camera = mc.gameRenderer.mainCamera()
 
             poseStack.pushPose()
             poseStack.translate(position.x, position.y, position.z)
@@ -326,7 +323,7 @@ object Particles : Module("Particles", Category.RENDER) {
         private var prevTicks = 10
 
         fun interpolate(tickDelta: Float): Vec3 {
-            val camera: Camera = Constants.client.gameRenderer.mainCamera()
+            val camera: Camera = mc.gameRenderer.mainCamera()
             val x = Mth.lerp(tickDelta.toDouble(), from.x, to.x) - camera.position().x
             val y = Mth.lerp(tickDelta.toDouble(), from.y, to.y) - camera.position().y
             val z = Mth.lerp(tickDelta.toDouble(), from.z, to.z) - camera.position().z

@@ -10,10 +10,13 @@ enum class AccountSortMode(
 ) {
 
     ADDED(EpsilonTranslations.Gui.ACCOUNTS_SORT_ADDED, null),
-    NAME(EpsilonTranslations.Gui.ACCOUNTS_SORT_NAME, Comparator.comparing<Account<*>, String> { a -> a.username.lowercase() }),
+    NAME(
+        EpsilonTranslations.Gui.ACCOUNTS_SORT_NAME,
+        Comparator.comparing<Account<*>, String> { a -> a.username.lowercase() }),
     TYPE(
         EpsilonTranslations.Gui.ACCOUNTS_SORT_TYPE,
-        Comparator.comparing<Account<*>, String> { a -> a.type.name }.thenComparing({ a: Account<*> -> a.username.lowercase() }),
+        Comparator.comparing<Account<*>, String> { a -> a.type.name }
+            .thenComparing({ a: Account<*> -> a.username.lowercase() }),
     );
 
     fun getLabel(): String {

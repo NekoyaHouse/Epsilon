@@ -141,8 +141,30 @@ object Hat : Module("Hat", Category.RENDER) {
             val c1 = colors[i]!!
             val c2 = colors[next]!!
 
-            outlineBuffer.vertex(matrix, entry, p1[0].toFloat(), 0.0f, p1[1].toFloat(), withAlpha(c1, 255).rgb, nx, 0.0f, nz, lineWidth)
-            outlineBuffer.vertex(matrix, entry, p2[0].toFloat(), 0.0f, p2[1].toFloat(), withAlpha(c2, 255).rgb, nx, 0.0f, nz, lineWidth)
+            outlineBuffer.vertex(
+                matrix,
+                entry,
+                p1[0].toFloat(),
+                0.0f,
+                p1[1].toFloat(),
+                withAlpha(c1, 255).rgb,
+                nx,
+                0.0f,
+                nz,
+                lineWidth
+            )
+            outlineBuffer.vertex(
+                matrix,
+                entry,
+                p2[0].toFloat(),
+                0.0f,
+                p2[1].toFloat(),
+                withAlpha(c2, 255).rgb,
+                nx,
+                0.0f,
+                nz,
+                lineWidth
+            )
         }
         outlineBuffer.end()
 

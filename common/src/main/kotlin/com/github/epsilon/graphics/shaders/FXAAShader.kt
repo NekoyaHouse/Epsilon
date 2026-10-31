@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.shaders
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -66,7 +66,7 @@ object FXAAShader {
     }
 
     fun renderMainTarget() {
-        render(Constants.client.gameRenderer.mainRenderTarget())
+        render(mc.gameRenderer.mainRenderTarget())
     }
 
     fun render(framebuffer: RenderTarget?) {
@@ -111,7 +111,11 @@ object FXAAShader {
             renderPass.setPipeline(RenderSystem.getCompiledPipeline(this.pipeline!!))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("FxaaInfo", fxaaInfo)
-            renderPass.setUniform("InputSampler", inputTarget.colorTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+            renderPass.setUniform(
+                "InputSampler",
+                inputTarget.colorTextureView,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+            )
             renderPass.draw(3, 1, 0, 0)
         }
     }

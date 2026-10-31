@@ -1,6 +1,7 @@
 package com.github.epsilon.accounts.types
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.TokenAccount
@@ -45,7 +46,13 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
 
         try {
             setSession(
-                User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), currentAccessToken, Optional.empty(), Optional.empty())
+                User(
+                    cache.username,
+                    UndashedUuid.fromStringLenient(cache.uuid),
+                    currentAccessToken,
+                    Optional.empty(),
+                    Optional.empty()
+                )
             )
             return true
         } catch (e: Exception) {
@@ -113,7 +120,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
         private val ENVIRONMENT = Environment(API_HOST + "/discovery", "The Altening")
 
         private val SERVICE: MinecraftServicesDiscoveryService =
-            MinecraftServicesDiscoveryService.create(Constants.client.proxy, true, ENVIRONMENT)
+            MinecraftServicesDiscoveryService.create(mc.proxy, true, ENVIRONMENT)
 
     }
 

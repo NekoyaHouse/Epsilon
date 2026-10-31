@@ -25,7 +25,14 @@ class AkarinNotification(private val owner: Notifications) {
         dependency = { active.check() && backgroundBlur }
     )
     private val backgroundAlpha by owner.intSetting("Akarin Background Alpha", 80, 0, 255, 1, dependency = active)
-    private val radius by owner.doubleSetting("Akarin Radius", CARD_RADIUS.toDouble(), 0.0, 14.0, 0.5, dependency = active)
+    private val radius by owner.doubleSetting(
+        "Akarin Radius",
+        CARD_RADIUS.toDouble(),
+        0.0,
+        14.0,
+        0.5,
+        dependency = active
+    )
     private val displayTimeMs by owner.intSetting("Akarin Display Time", 800, 500, 10000, 100, dependency = active)
 
     fun getDisplayTime(): Int {
@@ -46,9 +53,14 @@ class AkarinNotification(private val owner: Notifications) {
         val titleScale = titleScale(scale, fontScale)
         val statusScale = statusScale(scale, fontScale)
         for (notification in entries) {
-            maxWidth = maxOf(maxWidth, TEXT_X * scale
-                        + maxOf(metrics.getWidth("Module", titleScale), metrics.getWidth(statusText(notification), statusScale))
-                        + RIGHT_PADDING * scale)
+            maxWidth = maxOf(
+                maxWidth, TEXT_X * scale
+                        + maxOf(
+                    metrics.getWidth("Module", titleScale),
+                    metrics.getWidth(statusText(notification), statusScale)
+                )
+                        + RIGHT_PADDING * scale
+            )
         }
         return maxWidth
     }
@@ -176,7 +188,12 @@ class AkarinNotification(private val owner: Notifications) {
     }
 
     private fun withAlpha(color: Color, alpha: Int): Color {
-        return Color(color.red, color.green, color.blue, (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
+        return Color(
+            color.red,
+            color.green,
+            color.blue,
+            (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt()
+        )
     }
 
     private fun withAlpha(color: Color, alpha: Float): Color {

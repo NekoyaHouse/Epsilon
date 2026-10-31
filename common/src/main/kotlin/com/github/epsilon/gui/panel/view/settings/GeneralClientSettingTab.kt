@@ -146,7 +146,14 @@ class GeneralClientSettingTab(
         }
 
         val maxScroll = state.getMaxClientSettingScroll()
-        if (scrollBarDrag.mouseClicked(event.x(), event.y(), currentBounds, state.getClientSettingScroll(), maxScroll)) {
+        if (scrollBarDrag.mouseClicked(
+                event.x(),
+                event.y(),
+                currentBounds,
+                state.getClientSettingScroll(),
+                maxScroll
+            )
+        ) {
             val newScroll = scrollBarDrag.mouseDragged(event.y(), currentBounds, maxScroll)
             if (newScroll >= 0.0f) {
                 state.setClientSettingScroll(newScroll)
@@ -155,7 +162,11 @@ class GeneralClientSettingTab(
             return true
         }
 
-        val intercepted = settingListController.mouseClicked(event, isDoubleClick, currentBounds) { row, rowBounds, clickEvent, doubleClick ->
+        val intercepted = settingListController.mouseClicked(
+            event,
+            isDoubleClick,
+            currentBounds
+        ) { row, rowBounds, clickEvent, doubleClick ->
             if (row is KeybindSettingRow && row.mouseClicked(rowBounds, clickEvent, doubleClick)) {
                 state.setListeningKeybindSetting(row.getSetting())
                 true

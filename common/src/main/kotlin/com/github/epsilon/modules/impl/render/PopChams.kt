@@ -118,8 +118,10 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
             tickCount = (timer * 20.0).toInt()
 
             val progress = Mth.clamp((timer / renderTime).toFloat(), 0.0f, 1.0f)
-            setPos(x, startY + yModifier * renderTime *
-                    yEasing.value.function.apply(progress), z)
+            setPos(
+                x, startY + yModifier * renderTime *
+                        yEasing.value.function.apply(progress), z
+            )
             setOldPosAndRot()
             yHeadRotO = yHeadRot
             yBodyRotO = yBodyRot

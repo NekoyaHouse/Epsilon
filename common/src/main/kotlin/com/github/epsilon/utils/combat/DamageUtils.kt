@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.combat
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.safety.NonNullContext
@@ -352,7 +352,7 @@ object DamageUtils {
      */
     context(nn: NonNullContext)
     fun breakCrosshairCrystal(): Boolean {
-        if (Constants.client.cameraEntity == null) return false
+        if (mc.cameraEntity == null) return false
 
         val world = level
         val eye = player.eyePosition

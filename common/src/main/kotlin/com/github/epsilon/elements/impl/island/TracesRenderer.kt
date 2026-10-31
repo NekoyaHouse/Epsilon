@@ -1,6 +1,6 @@
 package com.github.epsilon.elements.impl.island
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.utils.render.WorldToScreen
@@ -38,7 +38,7 @@ object TracesRenderer {
         val nn = NonNullContext.current ?: return 0
         return context(nn) {
             val self = player
-            val connection = Constants.client.connection
+            val connection = mc.connection
 
             val centerX = islandX + islandWidth * 0.5f
             val centerY = islandY + islandHeight * 0.5f
@@ -46,13 +46,14 @@ object TracesRenderer {
             val halfHeight = maxOf(0.0f, islandHeight * 0.5f)
             val maxDistanceSquared = maxOf(0.0, maxDistance * maxDistance)
             val partialTick = if (level.tickRateManager().isFrozen) 1.0f
-            else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+            else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             var rendered = 0
 
             for (player in level.players()) {
                 if (!shouldRender(player, maxDistanceSquared, self, connection)) continue
 
-                val position = player.getPosition(partialTick).add(0.0, (player.bbHeight * TARGET_HEIGHT_FACTOR).toDouble(), 0.0)
+                val position =
+                    player.getPosition(partialTick).add(0.0, (player.bbHeight * TARGET_HEIGHT_FACTOR).toDouble(), 0.0)
                 val projected = WorldToScreen.calcWorld2ScreenRaw(position)
                 val target = resolveTarget(projected, screenWidth, screenHeight)
                 if (target == null || isInsideIsland(target.x, target.y, centerX, centerY, halfWidth, halfHeight)) {
@@ -71,7 +72,12 @@ object TracesRenderer {
         }
     }
 
-    private fun shouldRender(player: Player?, maxDistanceSquared: Double, self: Player, connection: ClientPacketListener?): Boolean {
+    private fun shouldRender(
+        player: Player?,
+        maxDistanceSquared: Double,
+        self: Player,
+        connection: ClientPacketListener?
+    ): Boolean {
         if (player == null || !player.isAlive || player.isRemoved || player.isSpectator) return false
         if (player === self) return false
         if (connection == null || !connection.onlinePlayerIds.contains(player.uuid)) return false
@@ -89,7 +95,14 @@ object TracesRenderer {
         return null
     }
 
-    private fun isInsideIsland(x: Float, y: Float, centerX: Float, centerY: Float, halfWidth: Float, halfHeight: Float): Boolean {
+    private fun isInsideIsland(
+        x: Float,
+        y: Float,
+        centerX: Float,
+        centerY: Float,
+        halfWidth: Float,
+        halfHeight: Float
+    ): Boolean {
         return abs(x - centerX) <= halfWidth && abs(y - centerY) <= halfHeight
     }
 

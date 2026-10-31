@@ -1,6 +1,7 @@
 package com.github.epsilon.assets.i18n
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.google.gson.Gson
@@ -35,12 +36,12 @@ object EpsilonLanguageManager {
             target = EpsilonLanguage.English
         }
         selectedLanguage = target
-        reload(Constants.client.resourceManager)
+        reload(mc.resourceManager)
     }
 
     fun refreshCustomLanguage() {
         if (selectedLanguage.isCustom()) {
-            reload(Constants.client.resourceManager)
+            reload(mc.resourceManager)
         }
     }
 
@@ -70,7 +71,11 @@ object EpsilonLanguageManager {
         return translations.containsKey(key)
     }
 
-    private fun appendLanguage(resourceManager: ResourceManager?, languageCode: String, output: MutableMap<String, String>) {
+    private fun appendLanguage(
+        resourceManager: ResourceManager?,
+        languageCode: String,
+        output: MutableMap<String, String>
+    ) {
         if (resourceManager == null) {
             return
         }
@@ -100,9 +105,19 @@ object EpsilonLanguageManager {
                     }
                 }
             } catch (exception: IOException) {
-                Constants.LOGGER.warn("读取 Epsilon 语言文件失败: {} from pack {} ({})", location, resource.sourcePackId(), exception.toString())
+                Constants.LOGGER.warn(
+                    "读取 Epsilon 语言文件失败: {} from pack {} ({})",
+                    location,
+                    resource.sourcePackId(),
+                    exception.toString()
+                )
             } catch (exception: JsonParseException) {
-                Constants.LOGGER.warn("读取 Epsilon 语言文件失败: {} from pack {} ({})", location, resource.sourcePackId(), exception.toString())
+                Constants.LOGGER.warn(
+                    "读取 Epsilon 语言文件失败: {} from pack {} ({})",
+                    location,
+                    resource.sourcePackId(),
+                    exception.toString()
+                )
             }
         }
     }

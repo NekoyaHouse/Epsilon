@@ -88,13 +88,49 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private val anchorPlaceMaxDelay by doubleSetting("Anchor Place Max Delay", 2.5, 0.0, 50.0, 0.1)
 
     private val sgShield: SettingGroup = settingGroup("Shield")
-    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0, 50.0, 0.1).apply { group(sgShield) }
-    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0, 50.0, 0.1).apply { group(sgShield) }
-    private val multiShield by boolSetting("Multi Shield", false, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
-    private val multiShieldChance by intSetting("Multi Shield Chance", 50, 0, 100, 1, dependency = { multiShield }).apply { group(sgShield) }
-    private val maxExtraShields by intSetting("Max Extra Shields", 1, 1, 5, 1, dependency = { multiShield }).apply { group(sgShield) }
-    private val shieldDistanceMin by intSetting("Shield Distance Min", 1, 1, 3, 1, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
-    private val shieldDistanceMax by intSetting("Shield Distance Max", 1, 1, 3, 1, dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+    private val shieldPlaceMinDelay by doubleSetting("Shield Place Min Delay", 0.0, 0.0, 50.0, 0.1).apply {
+        group(
+            sgShield
+        )
+    }
+    private val shieldPlaceMaxDelay by doubleSetting("Shield Place Max Delay", 2.5, 0.0, 50.0, 0.1).apply {
+        group(
+            sgShield
+        )
+    }
+    private val multiShield by boolSetting("Multi Shield", false, dependency = { mode == Mode.Auto }).apply {
+        group(
+            sgShield
+        )
+    }
+    private val multiShieldChance by intSetting(
+        "Multi Shield Chance",
+        50,
+        0,
+        100,
+        1,
+        dependency = { multiShield }).apply { group(sgShield) }
+    private val maxExtraShields by intSetting(
+        "Max Extra Shields",
+        1,
+        1,
+        5,
+        1,
+        dependency = { multiShield }).apply { group(sgShield) }
+    private val shieldDistanceMin by intSetting(
+        "Shield Distance Min",
+        1,
+        1,
+        3,
+        1,
+        dependency = { mode == Mode.Auto }).apply { group(sgShield) }
+    private val shieldDistanceMax by intSetting(
+        "Shield Distance Max",
+        1,
+        1,
+        3,
+        1,
+        dependency = { mode == Mode.Auto }).apply { group(sgShield) }
 
     private val chargeMinDelay by doubleSetting("Charge Min Delay", 0.0, 0.0, 50.0, 0.1)
     private val chargeMaxDelay by doubleSetting("Charge Max Delay", 2.5, 0.0, 50.0, 0.1)
@@ -179,7 +215,9 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 }
 
                 val anchorPos = currentAnchorPos
-                if (anchorPos != null && stage != Stage.PLACE_ANCHOR && !level.getBlockState(anchorPos).`is`(Blocks.RESPAWN_ANCHOR)) {
+                if (anchorPos != null && stage != Stage.PLACE_ANCHOR && !level.getBlockState(anchorPos)
+                        .`is`(Blocks.RESPAWN_ANCHOR)
+                ) {
                     resetState()
                     return@nonNullHandler
                 }
@@ -238,7 +276,11 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
                 val bc = lineColor
                 val lineAlpha = Mth.clamp((bc.alpha * alpha).toInt(), 0, 255)
-                Render3DScheduler.addOutlineBox(AABB(box.pos), Color(bc.red, bc.green, bc.blue, lineAlpha).rgb, lineWidth.toFloat())
+                Render3DScheduler.addOutlineBox(
+                    AABB(box.pos),
+                    Color(bc.red, bc.green, bc.blue, lineAlpha).rgb,
+                    lineWidth.toFloat()
+                )
             }
 
             if (mode != Mode.Assist || currentAnchorPos == null) return@nonNullHandler
@@ -834,7 +876,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (below == currentAnchorPos) return false
         val state = level.getBlockState(below)
         return !state.isAir && !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance) &&
-            !state.getCollisionShape(level, below).isEmpty
+                !state.getCollisionShape(level, below).isEmpty
     }
 
     context(nn: NonNullContext)
@@ -883,7 +925,10 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun isExistingShield(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
         val state = level.getBlockState(pos)
-        return !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance) && Block.isShapeFullBlock(state.getCollisionShape(level, pos))
+        return !BlockUtils.canBeReplacedWith(
+            state,
+            Items.GLOWSTONE.defaultInstance
+        ) && Block.isShapeFullBlock(state.getCollisionShape(level, pos))
     }
 
     context(nn: NonNullContext)

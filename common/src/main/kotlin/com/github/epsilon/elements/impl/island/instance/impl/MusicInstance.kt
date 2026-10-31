@@ -1,6 +1,7 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
@@ -10,9 +11,9 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
-import com.mojang.blaze3d.platform.NativeImage
 import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.smtc.SmtcSnapshot
+import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
@@ -60,7 +61,10 @@ class MusicInstance(
         val title = title(snapshot)
         val artist = artist(snapshot)
         val metadata = metadata(snapshot)
-        val desiredContent = maxOf(textRenderer.getWidth(title, TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP, maxOf(textRenderer.getWidth(artist, ARTIST_SCALE), textRenderer.getWidth(metadata, META_SCALE)))
+        val desiredContent = maxOf(
+            textRenderer.getWidth(title, TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP,
+            maxOf(textRenderer.getWidth(artist, ARTIST_SCALE), textRenderer.getWidth(metadata, META_SCALE))
+        )
         val desiredWidth = PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent
         val screenMaxWidth = maxOf(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
         targetWidth = Mth.clamp(desiredWidth, MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
@@ -155,7 +159,8 @@ class MusicInstance(
     ) {
         val textRenderer = textRendererSupplier.get()
         val iconWidth = textRenderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
-        val iconY = y + (textRenderer.getHeight(textScale) - textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
+        val iconY =
+            y + (textRenderer.getHeight(textScale) - textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
         scope.text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
 
         val textX = x + iconWidth + 3f
@@ -196,7 +201,7 @@ class MusicInstance(
             if (existingTexture == null) {
                 newTexture = DynamicTexture(Supplier { "Epsilon SMTC album art" }, image)
                 image = null
-                Constants.client.textureManager.register(COVER_TEXTURE, newTexture)
+                mc.textureManager.register(COVER_TEXTURE, newTexture)
                 coverTexture = newTexture
                 newTexture = null
             } else {
@@ -261,7 +266,7 @@ class MusicInstance(
 
     private fun releaseCoverTexture() {
         if (coverTexture != null) {
-            Constants.client.textureManager.release(COVER_TEXTURE)
+            mc.textureManager.release(COVER_TEXTURE)
             coverTexture = null
         }
         coverAvailable = false

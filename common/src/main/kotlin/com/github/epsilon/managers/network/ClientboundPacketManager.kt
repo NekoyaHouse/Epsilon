@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.network
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.LevelUpdateEvent
@@ -63,7 +63,7 @@ object ClientboundPacketManager {
     @Suppress("UNCHECKED_CAST")
     private fun dispatch(packet: Packet<*>?) {
         if (packet == null) return
-        val connection = Constants.client.connection ?: return
+        val connection = mc.connection ?: return
         (packet as Packet<ClientGamePacketListener>).handle(connection)
     }
 
@@ -76,7 +76,7 @@ object ClientboundPacketManager {
     }
 
     fun onPacketReceive(packet: Packet<*>): Boolean {
-        if (Constants.client.player == null || Constants.client.level == null) return false
+        if (mc.player == null || mc.level == null) return false
 
         if (shouldFlush) {
             flush()

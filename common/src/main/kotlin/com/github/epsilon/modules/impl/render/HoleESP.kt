@@ -140,9 +140,27 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
 
             drawHoles(safeHoles, safeFill, safeFillColor, safeFade, safeFadeColor, safeBox, safeBoxColor, height)
             draw(airBlocks, airFill, airFillColor, airFade, airFadeColor, airBox, airBoxColor, airHeight)
-            drawHoles(unsafeHoles, unsafeFill, unsafeFillColor, unsafeFade, unsafeFadeColor, unsafeBox, unsafeBoxColor, height)
+            drawHoles(
+                unsafeHoles,
+                unsafeFill,
+                unsafeFillColor,
+                unsafeFade,
+                unsafeFadeColor,
+                unsafeBox,
+                unsafeBoxColor,
+                height
+            )
             draw(walls, wallFill, wallFillColor, wallFade, wallFadeColor, wallBox, wallBoxColor, wallHeight)
-            draw(wallSides, wallSideFill, wallSideFillColor, wallSideFade, wallSideFadeColor, wallSideBox, wallSideBoxColor, height)
+            draw(
+                wallSides,
+                wallSideFill,
+                wallSideFillColor,
+                wallSideFade,
+                wallSideFadeColor,
+                wallSideBox,
+                wallSideBoxColor,
+                height
+            )
         }
     }
 

@@ -11,7 +11,8 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.FriendManager
 import com.mojang.blaze3d.platform.InputConstants
 
-class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", EpsilonTranslations.Gui.TAB_FRIEND, "", panelIndex) {
+class FriendDropdownPanel(panelIndex: Int) :
+    AbstractDropdownPanel("friend", EpsilonTranslations.Gui.TAB_FRIEND, "", panelIndex) {
 
     private val inputField: DropdownTextField = DropdownTextField(32)
 
@@ -54,7 +55,8 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
         if (friends.isEmpty()) {
             val emptyText = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
             val emptyScale = 0.7f
-            val emptyTextX = x + PADDING + (width - PADDING * 2.0f - textMetrics.textWidth(emptyText, emptyScale)) / 2.0f
+            val emptyTextX =
+                x + PADDING + (width - PADDING * 2.0f - textMetrics.textWidth(emptyText, emptyScale)) / 2.0f
             val emptyTextY = rowY + (ROW_HEIGHT - textMetrics.textHeight(emptyScale)) / 2.0f
             scope.text(emptyText, emptyTextX, emptyTextY, emptyScale, MD3Theme.TEXT_MUTED)
             return
@@ -76,11 +78,24 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
                 DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY
             )
             val iconScale = 0.8f
-            val removeTextX = removeX + (REMOVE_BUTTON_SIZE - textMetrics.textWidth(IconChars.CLOSE, iconScale, StaticFontLoader.ICONS)) / 2.0f
-            val removeTextY = removeY + (REMOVE_BUTTON_SIZE - textMetrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
+            val removeTextX = removeX + (REMOVE_BUTTON_SIZE - textMetrics.textWidth(
+                IconChars.CLOSE,
+                iconScale,
+                StaticFontLoader.ICONS
+            )) / 2.0f
+            val removeTextY =
+                removeY + (REMOVE_BUTTON_SIZE - textMetrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
             scope.text(
                 IconChars.CLOSE, removeTextX, removeTextY, iconScale,
-                if (isHovered(mouseX.toDouble(), mouseY.toDouble(), removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE)) {
+                if (isHovered(
+                        mouseX.toDouble(),
+                        mouseY.toDouble(),
+                        removeX,
+                        removeY,
+                        REMOVE_BUTTON_SIZE,
+                        REMOVE_BUTTON_SIZE
+                    )
+                ) {
                     MD3Theme.ERROR
                 } else {
                     MD3Theme.TEXT_MUTED

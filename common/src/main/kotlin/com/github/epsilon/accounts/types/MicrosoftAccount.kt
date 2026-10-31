@@ -22,7 +22,13 @@ class MicrosoftAccount(refreshToken: String) : Account<MicrosoftAccount>(Account
         super.login()
 
         setSession(
-            User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), currentToken, Optional.empty(), Optional.empty())
+            User(
+                cache.username,
+                UndashedUuid.fromStringLenient(cache.uuid),
+                currentToken,
+                Optional.empty(),
+                Optional.empty()
+            )
         )
         return true
     }

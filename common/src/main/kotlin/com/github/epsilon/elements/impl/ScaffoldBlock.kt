@@ -39,7 +39,8 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private var visibilityProgress: Float = 0f
     private var lastVisibilityUpdateMs: Long = 0L
 
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+    private val textRendererSupplier: Supplier<TextRenderer> =
+        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
     override fun onEnable() {
         resetAnimation()
@@ -92,7 +93,8 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         val rawVisibility = Mth.clamp(visibilityProgress, 0.0f, 1.0f)
         val easedVisibility = (rawVisibility.toDouble()).pow(3.0).toFloat()
         val panelProgress = Easing.EASE_OUT_SINE.function.apply(easedVisibility)
-        val contentProgress = Easing.EASE_OUT_SINE.function.apply(Mth.clamp((rawVisibility - 0.08f) / 0.92f, 0.0f, 1.0f))
+        val contentProgress =
+            Easing.EASE_OUT_SINE.function.apply(Mth.clamp((rawVisibility - 0.08f) / 0.92f, 0.0f, 1.0f))
         val contentAlpha = contentProgress * contentProgress * (3.0f - 2.0f * contentProgress)
         return AnimationState(panelProgress, contentProgress, contentAlpha)
     }
@@ -157,7 +159,13 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
             val labelX = numberColumnX + layout.numberColumnWidth + layout.labelGap
             val animatedLabelX = Mth.lerp(animation.contentProgress, layout.centerX - layout.labelWidth / 2.0f, labelX)
             val labelY = y + (layout.height - textRenderer.getHeight(layout.labelScale)) / 2.0f
-            clipped.text(LABEL, animatedLabelX, labelY, layout.labelScale, withAlpha(textSecondary, animation.contentAlpha))
+            clipped.text(
+                LABEL,
+                animatedLabelX,
+                labelY,
+                layout.labelScale,
+                withAlpha(textSecondary, animation.contentAlpha)
+            )
         }
     }
 
@@ -221,7 +229,10 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     }
 
     private fun getNumberColumnWidth(textRenderer: TextRenderer, numberScale: Float): Float {
-        val width = maxOf(textRenderer.getWidth(previousCountText, numberScale), textRenderer.getWidth(targetCountText, numberScale))
+        val width = maxOf(
+            textRenderer.getWidth(previousCountText, numberScale),
+            textRenderer.getWidth(targetCountText, numberScale)
+        )
         return width + 4.0f * scale.toFloat()
     }
 
@@ -237,7 +248,8 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         val previous = previousCountText
         val target = targetCountText
         val maxLen = maxOf(previous.length, target.length)
-        val contentWidth = maxOf(textRenderer.getWidth(previous, numberScale), textRenderer.getWidth(target, numberScale))
+        val contentWidth =
+            maxOf(textRenderer.getWidth(previous, numberScale), textRenderer.getWidth(target, numberScale))
         var charX = columnX + maxOf(0.0f, (columnWidth - contentWidth) / 2.0f)
         val slideOffset = 4.0f * scale.toFloat()
 

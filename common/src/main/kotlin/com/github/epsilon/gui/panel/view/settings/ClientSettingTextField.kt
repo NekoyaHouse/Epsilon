@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
@@ -174,7 +174,7 @@ class ClientSettingTextField(private val maxLength: Int) {
             }
 
             InputConstants.KEY_V -> {
-                val clipboard = Constants.client.keyboardHandler.clipboard
+                val clipboard = mc.keyboardHandler.clipboard
                 if (!clipboard.isEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }

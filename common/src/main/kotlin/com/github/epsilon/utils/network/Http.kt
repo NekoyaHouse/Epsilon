@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.network
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.google.gson.Gson
 import java.io.IOException
 import java.io.InputStream
@@ -115,7 +115,7 @@ object Http {
      */
     private fun resolveProxySelector(): ProxySelector {
         try {
-            val client = Constants.client
+            val client = mc
             if (client != null) {
                 val proxy = client.proxy
                 if (proxy != null && proxy.type() == Proxy.Type.HTTP && proxy.address() is InetSocketAddress) {

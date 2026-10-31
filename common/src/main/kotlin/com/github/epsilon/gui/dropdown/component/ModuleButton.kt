@@ -77,7 +77,8 @@ class ModuleButton(val module: Module) : Component() {
         scope.rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg)
         scope.rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
 
-        val textColor = MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle)
+        val textColor =
+            MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle)
         val textY = (DropdownTheme.MODULE_HEIGHT - textMetrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
         val leftX = DropdownTheme.MODULE_PADDING_X
         scope.text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor)
@@ -95,7 +96,13 @@ class ModuleButton(val module: Module) : Component() {
         }
     }
 
-    private fun drawKeybindButton(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, toggle: Float) {
+    private fun drawKeybindButton(
+        scope: UiTree.Scope,
+        textMetrics: UiTextMetrics,
+        mouseX: Int,
+        mouseY: Int,
+        toggle: Float
+    ) {
         val btnW = DropdownTheme.KEYBIND_WIDTH
         val btnH = DropdownTheme.KEYBIND_HEIGHT
         val btnX = width - DropdownTheme.MODULE_PADDING_X - btnW
@@ -119,7 +126,8 @@ class ModuleButton(val module: Module) : Component() {
         } else {
             val idleSurface = MD3Theme.SECONDARY_CONTAINER
             val activeSurface = MD3Theme.PRIMARY
-            surface = MD3Theme.lerp(MD3Theme.lerp(idleSurface, activeSurface, toggle), MD3Theme.TEXT_PRIMARY, kbHover * 0.08f)
+            surface =
+                MD3Theme.lerp(MD3Theme.lerp(idleSurface, activeSurface, toggle), MD3Theme.TEXT_PRIMARY, kbHover * 0.08f)
             var outline2 = MD3Theme.lerp(
                 MD3Theme.withAlpha(MD3Theme.SECONDARY, 220),
                 MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 235),

@@ -1,6 +1,7 @@
 package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.instance.LandController
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -131,10 +132,10 @@ class LandRenderer(
         val nn = NonNullContext.current
         val playerName = nn?.player?.gameProfile?.name ?: "Player"
         val serverAddress: String
-        if (Constants.client.isLocalServer) {
+        if (mc.isLocalServer) {
             serverAddress = "Singleplayer"
         } else {
-            val serverData: ServerData? = Constants.client.currentServer
+            val serverData: ServerData? = mc.currentServer
             serverAddress = if (serverData == null || serverData.ip.isBlank()) "Unknown server" else serverData.ip
         }
 
@@ -143,12 +144,42 @@ class LandRenderer(
         val latencyText = if (latency < 0) "--ms" else latency.toString() + "ms"
 
         watermarkSegments = listOf(
-            WatermarkSegment(IconChars.AUTO_AWESOME, Constants.NAME, IslandPalette.ACCENT_ALT, IslandPalette.ACCENT_ALT, true),
-            WatermarkSegment(IconChars.PERSON, playerName, IslandPalette.TEXT_PRIMARY, IslandPalette.TEXT_PRIMARY, false),
-            WatermarkSegment(IconChars.GROUPS, getPlayerCount().toString(), IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
-            WatermarkSegment(IconChars.PUBLIC, serverAddress, IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
+            WatermarkSegment(
+                IconChars.AUTO_AWESOME,
+                Constants.NAME,
+                IslandPalette.ACCENT_ALT,
+                IslandPalette.ACCENT_ALT,
+                true
+            ),
+            WatermarkSegment(
+                IconChars.PERSON,
+                playerName,
+                IslandPalette.TEXT_PRIMARY,
+                IslandPalette.TEXT_PRIMARY,
+                false
+            ),
+            WatermarkSegment(
+                IconChars.GROUPS,
+                getPlayerCount().toString(),
+                IslandPalette.TEXT_SECONDARY,
+                IslandPalette.TEXT_SECONDARY,
+                false
+            ),
+            WatermarkSegment(
+                IconChars.PUBLIC,
+                serverAddress,
+                IslandPalette.TEXT_SECONDARY,
+                IslandPalette.TEXT_SECONDARY,
+                false
+            ),
             WatermarkSegment(IconChars.NETWORK_PING, latencyText, latencyColor, latencyColor, false),
-            WatermarkSegment(IconChars.SPEED, Constants.client.fps.toString() + " FPS", IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false)
+            WatermarkSegment(
+                IconChars.SPEED,
+                mc.fps.toString() + " FPS",
+                IslandPalette.TEXT_SECONDARY,
+                IslandPalette.TEXT_SECONDARY,
+                false
+            )
         )
 
         var contentWidth = 0f
@@ -166,7 +197,7 @@ class LandRenderer(
     }
 
     private fun getPlayerCount(): Int {
-        val connection: ClientPacketListener? = Constants.client.connection
+        val connection: ClientPacketListener? = mc.connection
         if (connection != null) {
             val listed = connection.listedOnlinePlayers.size
             if (listed > 0) return listed
@@ -178,10 +209,10 @@ class LandRenderer(
     }
 
     private fun getLatency(): Int {
-        if (Constants.client.isLocalServer) return 0
+        if (mc.isLocalServer) return 0
 
         val player = NonNullContext.current?.player
-        val connection: ClientPacketListener? = Constants.client.connection
+        val connection: ClientPacketListener? = mc.connection
         if (connection != null && player != null) {
             val playerInfo: PlayerInfo? = connection.getPlayerInfo(player.uuid)
             if (playerInfo != null && playerInfo.latency >= 0) {
@@ -189,7 +220,7 @@ class LandRenderer(
             }
         }
 
-        val serverData: ServerData? = Constants.client.currentServer
+        val serverData: ServerData? = mc.currentServer
         if (serverData == null || serverData.ping < 0) return -1
         return minOf(serverData.ping, Int.MAX_VALUE.toLong()).toInt()
     }

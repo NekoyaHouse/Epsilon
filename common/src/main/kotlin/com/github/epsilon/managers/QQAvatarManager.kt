@@ -1,6 +1,6 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.utils.network.Http
 import com.mojang.blaze3d.platform.NativeImage
@@ -61,7 +61,7 @@ object QQAvatarManager {
         generation++
         state = State.UNINITIALIZED
         if (avatarTexture != null) {
-            Constants.client.textureManager.release(AVATAR_TEXTURE)
+            mc.textureManager.release(AVATAR_TEXTURE)
             avatarTexture = null
         }
     }
@@ -71,14 +71,14 @@ object QQAvatarManager {
         try {
             image = downloadAvatar(qq)
         } catch (e: IOException) {
-            Constants.client.execute { fail(requestGeneration) }
+            mc.execute { fail(requestGeneration) }
             return
         } catch (e: RuntimeException) {
-            Constants.client.execute { fail(requestGeneration) }
+            mc.execute { fail(requestGeneration) }
             return
         }
 
-        Constants.client.execute { uploadAvatar(image, requestGeneration) }
+        mc.execute { uploadAvatar(image, requestGeneration) }
     }
 
     private fun uploadAvatar(source: BufferedImage, requestGeneration: Long) {
@@ -90,7 +90,7 @@ object QQAvatarManager {
             image = toNativeImage(source)
             texture = DynamicTexture({ "Epsilon local QQ avatar" }, image)
             image = null
-            Constants.client.textureManager.register(AVATAR_TEXTURE, texture)
+            mc.textureManager.register(AVATAR_TEXTURE, texture)
             avatarTexture = texture
             texture = null
             state = State.READY
@@ -172,20 +172,21 @@ object QQAvatarManager {
         var newestAccount: String? = null
         var newestModified = Long.MIN_VALUE
         try {
-            Files.newDirectoryStream(parent, DirectoryStream.Filter { path -> Files.isDirectory(path) }).use { directories ->
-                for (directory in directories) {
-                    val fileName = directory.fileName ?: continue
+            Files.newDirectoryStream(parent, DirectoryStream.Filter { path -> Files.isDirectory(path) })
+                .use { directories ->
+                    for (directory in directories) {
+                        val fileName = directory.fileName ?: continue
 
-                    val matcher = pattern.matcher(fileName.toString())
-                    if (!matcher.matches()) continue
+                        val matcher = pattern.matcher(fileName.toString())
+                        if (!matcher.matches()) continue
 
-                    val modified = Files.getLastModifiedTime(directory).toMillis()
-                    if (modified > newestModified) {
-                        newestModified = modified
-                        newestAccount = matcher.group(1)
+                        val modified = Files.getLastModifiedTime(directory).toMillis()
+                        if (modified > newestModified) {
+                            newestModified = modified
+                            newestAccount = matcher.group(1)
+                        }
                     }
                 }
-            }
         } catch (ignored: IOException) {
             return null
         } catch (ignored: SecurityException) {

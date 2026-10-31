@@ -1,6 +1,6 @@
 package com.github.epsilon.graphics.immediate
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.mojang.blaze3d.systems.RenderSystem
@@ -191,7 +191,11 @@ object LuminImmediateRenderer {
             return begin(pipeline, texture, null)
         }
 
-        internal fun begin(pipeline: RenderPipeline, texture: Identifier?, passConfigurer: Consumer<RenderPass>?): Channel {
+        internal fun begin(
+            pipeline: RenderPipeline,
+            texture: Identifier?,
+            passConfigurer: Consumer<RenderPass>?
+        ): Channel {
             if (building) {
                 throw IllegalStateException("Immediate channel is already building")
             }
@@ -320,7 +324,7 @@ object LuminImmediateRenderer {
 
                 val texture = this.texture
                 val textureObject: AbstractTexture? =
-                    if (texture == null) null else Constants.client.textureManager.getTexture(texture)
+                    if (texture == null) null else mc.textureManager.getTexture(texture)
 
                 RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                     { "Lumin Immediate Draw" },

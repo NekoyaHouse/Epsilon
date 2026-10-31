@@ -1,6 +1,6 @@
 package com.github.epsilon.managers.rotation
 
-import com.github.epsilon.Constants
+import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.bus.EventHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.*
@@ -33,7 +33,7 @@ class SilentRotationManager : RotationManager() {
 
     @EventHandler(priority = EventPriority.HIGH)
     private fun onMoveInput(event: KeyboardInputEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             MovementFix.fixMovement(event, rotations.yaw)
         }
     }
@@ -52,14 +52,14 @@ class SilentRotationManager : RotationManager() {
 
     @EventHandler
     private fun onStrafe(event: StrafeEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }
 
     @EventHandler
     private fun onJump(event: JumpEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }

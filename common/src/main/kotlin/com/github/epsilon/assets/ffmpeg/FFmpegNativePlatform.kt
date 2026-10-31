@@ -101,7 +101,7 @@ enum class FFmpegNativePlatform(
             }
             val trimmed = url.trim()
             return (trimmed.startsWith("http://") || trimmed.startsWith("https://")) &&
-                trimmed.contains(currentOrDefault().classifier)
+                    trimmed.contains(currentOrDefault().classifier)
         }
 
     }
