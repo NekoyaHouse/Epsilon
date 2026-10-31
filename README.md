@@ -48,6 +48,7 @@ Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-part
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
 - [TrollHack](https://github.com/Luna5ama/TrollHack)
+- [ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)
 
 ## 📝 License
 

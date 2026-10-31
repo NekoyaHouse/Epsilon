@@ -39,6 +39,12 @@ required by that license.
 The original code has been modified and adapted for Epsilon's module,
 setting, rotation, and event systems.
 
+## ThunderHack-Recode
+
+- Repository: [Pan4ur/ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)
+- License: GNU General Public License v3.0
+- Used in Epsilon: Shader code.
+
 ## SlimefunHelper
 
 - Repository: [m1919810/SlimefunHelper](https://github.com/m1919810/SlimefunHelper)

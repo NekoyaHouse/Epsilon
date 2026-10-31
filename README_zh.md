@@ -48,6 +48,7 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
 - [TrollHack](https://github.com/Luna5ama/TrollHack)
+- [ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)
 
 ## 📝 许可证
 
