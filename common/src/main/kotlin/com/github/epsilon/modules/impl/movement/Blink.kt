@@ -1,14 +1,13 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.kernel.jvm.runSafe
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen
 import net.minecraft.client.player.RemotePlayer
@@ -49,14 +48,14 @@ object Blink : Module("Blink", Category.MOVEMENT) {
     private var lastLerpZ = 0.0
 
     init {
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (packet is ServerboundHelloPacket || packet is ClientIntentionPacket) return@nonNullHandler
+            if (packet is ServerboundHelloPacket || packet is ClientIntentionPacket) return@safeEventHandler
             event.cancel()
             packets.add(packet)
         }
 
-        nonNullHandler<Render3DEvent> {
+        safeEventHandler<Render3DEvent> {
             val fake = localPlayer
             if (fake != null && fakePlayer) {
                 val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
@@ -81,7 +80,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<SendPositionEvent> {
+        safeEventHandler<SendPositionEvent> {
             if (mc.gui.screen() is RecoverWorldDataScreen && isEnabled) {
                 isEnabled = false
             }

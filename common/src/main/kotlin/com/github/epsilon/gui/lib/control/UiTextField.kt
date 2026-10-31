@@ -1,12 +1,12 @@
 package com.github.epsilon.gui.lib.control
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants

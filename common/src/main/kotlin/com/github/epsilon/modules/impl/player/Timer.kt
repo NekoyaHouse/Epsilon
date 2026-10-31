@@ -1,13 +1,12 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
@@ -45,7 +44,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     val packets: Queue<Packet<ClientGamePacketListener>> = ConcurrentLinkedQueue()
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             // 先收回其他模块留下的临时倍率，再应用当前 Timer 模式。
             TimerManager.tryReset()
 
@@ -82,12 +81,12 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     val killAuraTarget = KillAura.target
                     if (KillAura.isEnabled && killAuraTarget != null && player.distanceTo(killAuraTarget) <= KillAura.aimRange.toFloat()) {
                         stopBalance()
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     if (!player.isAlive || player.health <= 0.0f) {
                         isEnabled = false
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     if (!shouldRelease && !lagging && !releasing && !player.isMoving) {
@@ -105,30 +104,30 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<ClientTickEvent.Post> {
+        safeEventHandler<ClientTickEvent.Post> {
             if (mode == Mode.Balance && releasing && balanceTime <= 10L) {
                 stopBalance()
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Post> {
+        safeEventHandler<PlayerTickEvent.Post> {
             if (mode == Mode.Balance && attack) {
                 if (lagging) stopBalance()
                 attack = false
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
-            if (mode != Mode.Balance) return@nonNullHandler
+        safeEventHandler<PacketEvent.Receive> { event ->
+            if (mode != Mode.Balance) return@safeEventHandler
 
             val packet = event.packet
             if (packet is ClientboundPlayerPositionPacket) {
                 stopBalance()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (packet is ClientboundSetEntityMotionPacket && packet.id() == player.id) {
                 stopBalance()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (packet is ClientboundPingPacket && lagging) {
                 packets.add(packet as Packet<ClientGamePacketListener>)
@@ -136,8 +135,8 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PacketEvent.Send> { event ->
-            if (mode != Mode.Balance) return@nonNullHandler
+        safeEventHandler<PacketEvent.Send> { event ->
+            if (mode != Mode.Balance) return@safeEventHandler
 
             val packet = event.packet
             if (packet is ServerboundMovePlayerPacket) {
@@ -162,7 +161,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<LevelUpdateEvent> {
+        handler<LevelUpdateEvent> {
             if (mode == Mode.Balance) {
                 packets.clear()
                 stopBalance()

@@ -1,18 +1,16 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -39,19 +37,19 @@ object Step : Module("Step", Category.MOVEMENT) {
     private var packets = 0
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             if (sneakingPause && player.isCrouching || insideBlockPause && PlayerUtils.isInBlock() ||
                 player.isInLava || player.isInWater || inWebPause && PlayerUtils.isInWeb() ||
                 !player.onGround() || feetTrapPause && FeetTrap.isEnabled
             ) {
                 player.setStepHeight(0.6f)
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             player.setStepHeight(height.toFloat())
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (timer && packets <= 0) {
                 TimerManager.reset()
                 timer = false
@@ -60,7 +58,7 @@ object Step : Module("Step", Category.MOVEMENT) {
             if (mode == Mode.OldNCP || strict) {
                 val stepHeight = player.y - player.yo
                 if (stepHeight <= 0.75 || stepHeight > height) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 val offsets = getOffset(stepHeight)

@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
@@ -14,7 +14,6 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.safety.*
 import com.google.gson.JsonObject
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
@@ -54,7 +53,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private var takeoffBaseY = Double.NaN
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (!initializedInWorld) {
                 initializeInWorld()
             }
@@ -64,8 +63,8 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             autoSaveRecord()
         }
 
-        nonNullHandler<KeyboardInputEvent> { event ->
-            if (!initializedInWorld) return@nonNullHandler
+        safeEventHandler<KeyboardInputEvent> { event ->
+            if (!initializedInWorld) return@safeEventHandler
 
             event.forward = 1.0f
             event.strafe = 0.0f
@@ -236,7 +235,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun resetRecord(notify: Boolean) {
-        if (NonNullContext.current == null) {
+        if (NonNullContext.instance == null) {
             if (notify) sendMessage("当前没有可用的玩家位置")
             return
         }
@@ -278,7 +277,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
     private fun writeRecord(notify: Boolean) {
         if (!routeLoaded) {
-            if (NonNullContext.current == null) {
+            if (NonNullContext.instance == null) {
                 if (notify) sendMessage("暂无可写入的记录")
                 return
             }

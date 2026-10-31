@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
@@ -10,8 +10,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
@@ -38,15 +36,15 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
     private var nextEntityId = Int.MIN_VALUE
 
     init {
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            val entity = packet.getEntity(level) ?: return@nonNullHandler
-            if (entity !is Player) return@nonNullHandler
-            if (ignoreSelf && entity === player) return@nonNullHandler
+            val entity = packet.getEntity(level) ?: return@safeEventHandler
+            if (entity !is Player) return@safeEventHandler
+            if (ignoreSelf && entity === player) return@safeEventHandler
 
             synchronized(ghosts) {
                 ghosts.add(GhostPlayer(level, entity, mc))

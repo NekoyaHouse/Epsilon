@@ -3,6 +3,7 @@ package com.github.epsilon
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager
 import com.github.epsilon.assets.i18n.I18NFileGenerator
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.*
 import com.github.epsilon.managers.network.ClientboundPacketManager
 import com.github.epsilon.managers.network.ServerboundPacketManager
@@ -19,6 +20,9 @@ object EpsilonCommon {
 
     fun init() {
         Constants.LOGGER.info("Welcome to ${Constants.NAME}.")
+
+        // 上下文刷新必须先于其它监听器与主线程任务注册。
+        NonNullContext.hashCode()
 
         // 初始化客户端系统：模块与 HUD 元素必须在配置恢复之前完成注册
         ModuleManager.initModules()

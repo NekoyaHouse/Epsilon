@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -27,7 +27,6 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -230,11 +229,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> { event ->
+        safeEventHandler<PlayerTickEvent.Pre> { event ->
             if (!event.isCancelled) emergencyPlacementActive = false
 
             blockResult = findBlockResult()
-            if (!blockResult.found()) return@nonNullHandler
+            if (!blockResult.found()) return@safeEventHandler
 
             if (player.onGround()) {
                 airTicks = 0
@@ -258,7 +257,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     NotificationManager.warning(
                         translatedName,
                         EpsilonTranslations.Notifications.SCAFFOLD_FLYING_WARNING.getTranslatedName(),
-                        this.hashCode()
+                        this@Scaffold.hashCode()
                     )
                 }
                 if ((!reachable || strength >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1 && canUseBlockResult()) {
@@ -266,8 +265,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     event.cancel()
 
                     rotateCount++
-                    val pos = blockPos ?: return@nonNullHandler
-                    val face = direction ?: return@nonNullHandler
+                    val pos = blockPos ?: return@safeEventHandler
+                    val face = direction ?: return@safeEventHandler
                     val rotation = getRotation(pos, face)
                     RotationManager.rotations = rotation
                     RotationManager.updateActive(true)
@@ -286,7 +285,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
                     val hand = blockResult.getHand()
 
-                    val result = interaction.useItemOn(
+                    val result = gameMode.useItemOn(
                         player,
                         hand,
                         BlockHitResult(getVec3(pos, face), face, pos, false)
@@ -308,7 +307,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     }
 
                     swapBack()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 } else {
                     rotateCount = 0
                 }
@@ -320,7 +319,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<KeyboardInputEvent>(EventPriority.HIGHEST) { event ->
+        safeEventHandler<KeyboardInputEvent>(EventPriority.HIGHEST) { event ->
             forwardInput = event.forward
             strafeInput = event.strafe
             inputYaw = Mth.wrapDegrees(
@@ -337,7 +336,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             if (toggleOnTeleport && pearlUsePacketSent && event.packet is ClientboundPlayerPositionPacket) {
                 pearlUsePacketSent = false
                 NotificationManager.error(
@@ -348,7 +347,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundUseItemPacket) {
                 val usedStack = player.getItemInHand(packet.hand)
@@ -378,7 +377,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         emergencyPlacementActive = false
         pearlUsePacketSent = false
         if (shouldSwapBack) {
-            NonNullContext.current?.let { nn -> context(nn) { InvUtils.swapBack() } }
+            NonNullContext.instance?.let { nn -> context(nn) { InvUtils.swapBack() } }
             shouldSwapBack = false
         }
     }
@@ -477,7 +476,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             val hand = blockResult.getHand()
 
-            val result = interaction.useItemOn(
+            val result = gameMode.useItemOn(
                 player,
                 hand,
                 BlockHitResult(getVec3(pos, face), face, pos, false)

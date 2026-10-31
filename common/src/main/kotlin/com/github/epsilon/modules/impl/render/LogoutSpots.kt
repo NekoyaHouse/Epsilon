@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
@@ -18,8 +18,6 @@ import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.render.SkeletonRenderer
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
@@ -56,7 +54,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
 
     init {
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundPlayerInfoUpdatePacket) {
                 if (packet.actions().contains(Action.ADD_PLAYER)) {
@@ -95,7 +93,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             for (target in level.players()) {
                 if (target === player) continue
                 playerCache[target.gameProfile.id()] = target

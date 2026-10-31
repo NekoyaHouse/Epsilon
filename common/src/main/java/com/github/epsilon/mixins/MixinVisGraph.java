@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.ChunkOcclusionEvent;
 import net.minecraft.client.renderer.chunk.VisGraph;
 import net.minecraft.core.BlockPos;
@@ -14,7 +13,7 @@ public class MixinVisGraph {
 
     @Inject(method = "setOpaque", at = @At("HEAD"), cancellable = true)
     private void onMarkClosed(BlockPos pos, CallbackInfo ci) {
-        ChunkOcclusionEvent event = EventBus.INSTANCE.post(new ChunkOcclusionEvent());
+        ChunkOcclusionEvent event = new ChunkOcclusionEvent().post();
         if (event.isCancelled()) {
             ci.cancel();
         }

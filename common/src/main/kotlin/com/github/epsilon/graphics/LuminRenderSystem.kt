@@ -1,11 +1,11 @@
 package com.github.epsilon.graphics
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.shaders.FXAAShader
 import com.github.epsilon.graphics.shaders.MotionBlurShader
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.graphics.text.StaticFontLoader
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.RenderTargetManager
 import com.github.epsilon.managers.RendererManager
 import com.github.epsilon.modules.impl.ClientSetting

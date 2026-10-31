@@ -1,17 +1,17 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
@@ -34,7 +34,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
     private var sneakDelay = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.LOWEST) {
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOWEST) {
             if (sneakDelay > 0) {
                 sneakDelay--
             }
@@ -44,8 +44,8 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
-            if (mc.gui.screen() != null) return@nonNullHandler
+        safeEventHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
+            if (mc.gui.screen() != null) return@safeEventHandler
 
             val physicallySneaking = KeybindUtils.isPressed(mc.options.keyShift)
             if (sneakingOnly && physicallySneaking && shouldSneak()) {

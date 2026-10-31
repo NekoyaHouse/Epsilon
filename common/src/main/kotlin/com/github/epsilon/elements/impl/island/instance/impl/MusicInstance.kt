@@ -1,7 +1,6 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
@@ -11,6 +10,7 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.smtc.SmtcSnapshot
 import com.mojang.blaze3d.platform.NativeImage

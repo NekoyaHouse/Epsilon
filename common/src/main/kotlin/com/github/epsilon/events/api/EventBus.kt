@@ -1,38 +1,23 @@
 package com.github.epsilon.events.api
 
 import com.github.epsilon.Constants
-import com.github.epsilon.kernel.collections.ArrayMap
 import com.github.epsilon.kernel.threads.Coroutine
-import com.github.epsilon.utils.player.ChatUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.get
 
 open class NamedProfilerEventBus(private val profilerName: String) : ProfilerEventBus()
 
-open class ProfilerEventBus : EventBus() {
-    override fun post(event: Any) {
-        for (listener in handlers) {
-            runCatching {
-                listener.function.invoke(event)
-            }.onFailure { e ->
-                unsubscribe(listener)
-                ChatUtils.sendMessage("Error while posting event $event, CLion has forced unsubscribe!")
-                Constants.LOGGER.fatal("Error while posting event $event, CLion has forced unsubscribe!")
-                e.printStackTrace()
-            }
-        }
-        invokeParallel(event)
-    }
-}
+open class ProfilerEventBus : EventBus()
 
-
+/** 每个具体事件通过 Companion 持有独立总线，不向父类型总线冒泡。 */
 open class EventBus : IPosting {
-    override val eventBus: EventBus
+    final override val eventBus: EventBus
         get() = this
-    val busID = id.getAndIncrement()
+
+    val busID: Int = id.getAndIncrement()
 
     init {
         eventBusMap[busID] = this
@@ -42,32 +27,27 @@ open class EventBus : IPosting {
     private val parallelHandlers = CopyOnWriteArrayList<ParallelHandler>()
 
     override fun post(event: Any) {
-        for (listener in handlers) {
-            runCatching {
-                listener.function.invoke(event)
-            }.onFailure { e ->
-                unsubscribe(listener)
-                ChatUtils.sendMessage("Error while posting event $event, CLion has forced unsubscribe!")
-                Constants.LOGGER.fatal("Error while posting event $event, CLion has forced unsubscribe!")
-                e.printStackTrace()
+        for (handler in handlers) {
+            try {
+                handler.function(event)
+            } catch (exception: Exception) {
+                unsubscribe(handler)
+                logFailure(event, handler, exception)
             }
         }
         invokeParallel(event)
     }
 
     protected fun invokeParallel(event: Any) {
-        if (!parallelHandlers.isEmpty()) {
-            runBlocking {
-                for (listener in parallelHandlers) {
-                    launch(Coroutine.context) {
-                        runCatching {
-                            listener.function.invoke(event)
-                        }.onFailure { e ->
-                            unsubscribe(listener)
-                            ChatUtils.sendMessage("Error while posting event $event, CLion has forced unsubscribe!")
-                            Constants.LOGGER.fatal("Error while posting event $event, CLion has forced unsubscribe!")
-                            e.printStackTrace()
-                        }
+        if (parallelHandlers.isEmpty()) return
+        runBlocking {
+            for (handler in parallelHandlers) {
+                launch(Coroutine.context) {
+                    try {
+                        handler.function(event)
+                    } catch (exception: Exception) {
+                        unsubscribe(handler)
+                        logFailure(event, handler, exception)
                     }
                 }
             }
@@ -75,51 +55,42 @@ open class EventBus : IPosting {
     }
 
     fun subscribe(handler: Handler) {
-        for (i in handlers.indices) {
-            val other = handlers[i]
-            if (handler == other) {
-                return
-            } else if (handler.priority > other.priority) {
-                handlers.add(i, handler)
-                return
-            }
+        synchronized(handlers) {
+            if (handler in handlers) return
+            val index = handlers.indexOfFirst { handler.priority > it.priority }
+            if (index < 0) handlers.add(handler) else handlers.add(index, handler)
         }
-
-        handlers.add(handler)
     }
 
-    fun subscribe(listener: ParallelHandler) {
-        for (i in parallelHandlers.indices) {
-            val other = parallelHandlers[i]
-            if (listener == other) {
-                return
-            } else if (listener.priority > other.priority) {
-                parallelHandlers.add(i, listener)
-                return
-            }
+    fun subscribe(handler: ParallelHandler) {
+        synchronized(parallelHandlers) {
+            if (handler in parallelHandlers) return
+            val index = parallelHandlers.indexOfFirst { handler.priority > it.priority }
+            if (index < 0) parallelHandlers.add(handler) else parallelHandlers.add(index, handler)
         }
-
-        parallelHandlers.add(listener)
     }
 
     fun unsubscribe(handler: Handler) {
-        handlers.removeIf {
-            it == handler
-        }
+        synchronized(handlers) { handlers.remove(handler) }
     }
 
-    fun unsubscribe(listener: ParallelHandler) {
-        parallelHandlers.removeIf {
-            it == listener
-        }
+    fun unsubscribe(handler: ParallelHandler) {
+        synchronized(parallelHandlers) { parallelHandlers.remove(handler) }
+    }
+
+    private fun logFailure(event: Any, handler: AbstractHandler<*>, exception: Exception) {
+        Constants.LOGGER.error(
+            "事件 {} 的监听器 {} (priority={}) 执行失败，已取消订阅",
+            event.javaClass.name, handler.ownerName, handler.priority, exception
+        )
     }
 
     companion object {
         private val id = AtomicInteger()
-        private val eventBusMap = ArrayMap<EventBus>()
+        private val eventBusMap = ConcurrentHashMap<Int, EventBus>()
 
-        operator fun get(busID: Int): EventBus {
-            return eventBusMap[busID]!!
+        operator fun get(busID: Int): EventBus = checkNotNull(eventBusMap[busID]) {
+            "Unknown event bus: $busID"
         }
     }
 }

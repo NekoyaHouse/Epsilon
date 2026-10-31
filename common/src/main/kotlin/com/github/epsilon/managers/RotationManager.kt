@@ -1,9 +1,10 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.events.api.AlwaysListening
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.movement.MovementFix
 import com.github.epsilon.modules.impl.render.FreeCamera
@@ -22,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random
 
-object RotationManager {
+object RotationManager : AlwaysListening {
 
     private val offset = Rotation(0f, 0f)
     var rotations = Rotation(0f, 0f)

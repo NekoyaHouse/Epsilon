@@ -1,109 +1,107 @@
 package com.github.epsilon.events.api
 
-import com.github.epsilon.kernel.interfaces.Nameable
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.instance
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeSuspend
 import com.github.epsilon.kernel.threads.Coroutine
 import kotlinx.coroutines.launch
 
-const val DEFAULT_LISTENER_PRIORITY: Int = 0
+const val DEFAULT_LISTENER_PRIORITY: Int = EventPriority.MEDIUM
 
-inline fun <reified E : IEvent> IListening.safeEventHandler(
+inline fun <reified E : IEvent<*>> IListening.safeEventHandler(
     noinline function: NonNullContext.(E) -> Unit
 ) = handler(this, E::class.java, DEFAULT_LISTENER_PRIORITY, false) { runSafe { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeEventHandler(
+inline fun <reified E : IEvent<*>> IListening.safeEventHandler(
     priority: Int,
     noinline function: NonNullContext.(E) -> Unit
 ) = handler(this, E::class.java, priority, false) { runSafe { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeEventHandler(
+inline fun <reified E : IEvent<*>> IListening.safeEventHandler(
     alwaysListening: Boolean,
     noinline function: NonNullContext.(E) -> Unit
 ) = handler(this, E::class.java, DEFAULT_LISTENER_PRIORITY, alwaysListening) { runSafe { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeEventHandler(
+inline fun <reified E : IEvent<*>> IListening.safeEventHandler(
     priority: Int,
     alwaysListening: Boolean,
     noinline function: NonNullContext.(E) -> Unit
 ) = handler(this, E::class.java, priority, alwaysListening) { runSafe { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeParallelHandler(
+inline fun <reified E : IEvent<*>> IListening.safeParallelHandler(
     noinline function: suspend NonNullContext.(E) -> Unit
 ) = parallelHandler(this, E::class.java, false) { runSafeSuspend { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeParallelHandler(
+inline fun <reified E : IEvent<*>> IListening.safeParallelHandler(
     alwaysListening: Boolean,
     noinline function: suspend NonNullContext.(E) -> Unit
 ) = parallelHandler(this, E::class.java, alwaysListening) { runSafeSuspend { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeConcurrentHandler(
+inline fun <reified E : IEvent<*>> IListening.safeConcurrentHandler(
     noinline function: suspend NonNullContext.(E) -> Unit
 ) = concurrentHandler(this, E::class.java, false) { runSafeSuspend { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.safeConcurrentHandler(
+inline fun <reified E : IEvent<*>> IListening.safeConcurrentHandler(
     alwaysListening: Boolean,
     noinline function: suspend NonNullContext.(E) -> Unit
 ) = concurrentHandler(this, E::class.java, alwaysListening) { runSafeSuspend { function.invoke(this, it) } }
 
 
-inline fun <reified E : IEvent> IListening.handler(
+inline fun <reified E : IEvent<*>> IListening.handler(
     noinline function: (E) -> Unit
 ) = handler(this, E::class.java, DEFAULT_LISTENER_PRIORITY, false, function)
 
 
-inline fun <reified E : IEvent> IListening.handler(
+inline fun <reified E : IEvent<*>> IListening.handler(
     priority: Int,
     noinline function: (E) -> Unit
 ) = handler(this, E::class.java, priority, false, function)
 
 
-inline fun <reified E : IEvent> IListening.handler(
+inline fun <reified E : IEvent<*>> IListening.handler(
     alwaysListening: Boolean,
     noinline function: (E) -> Unit
 ) = handler(this, E::class.java, DEFAULT_LISTENER_PRIORITY, alwaysListening, function)
 
 
-inline fun <reified E : IEvent> IListening.handler(
+inline fun <reified E : IEvent<*>> IListening.handler(
     priority: Int,
     alwaysListening: Boolean,
     noinline function: (E) -> Unit
 ) = handler(this, E::class.java, priority, alwaysListening, function)
 
 
-inline fun <reified E : IEvent> IListening.parallelHandler(
+inline fun <reified E : IEvent<*>> IListening.parallelHandler(
     noinline function: suspend (E) -> Unit
 ) = parallelHandler(this, E::class.java, false, function)
 
 
-inline fun <reified E : IEvent> IListening.parallelHandler(
+inline fun <reified E : IEvent<*>> IListening.parallelHandler(
     alwaysListening: Boolean,
     noinline function: suspend (E) -> Unit
 ) = parallelHandler(this, E::class.java, alwaysListening, function)
 
 
-inline fun <reified E : IEvent> IListening.concurrentHandler(
+inline fun <reified E : IEvent<*>> IListening.concurrentHandler(
     noinline function: suspend (E) -> Unit
 ) = concurrentHandler(this, E::class.java, false, function)
 
 
-inline fun <reified E : IEvent> IListening.concurrentHandler(
+inline fun <reified E : IEvent<*>> IListening.concurrentHandler(
     alwaysListening: Boolean,
     noinline function: suspend (E) -> Unit
 ) = concurrentHandler(this, E::class.java, alwaysListening, function)
 
 
 @JvmOverloads
-fun <E : IEvent> IListening.safeEventHandler(
+fun <E : IEvent<*>> IListening.safeEventHandler(
     clz: Class<out E>,
     priority: Int = DEFAULT_LISTENER_PRIORITY,
     alwaysListening: Boolean = false,
@@ -112,7 +110,7 @@ fun <E : IEvent> IListening.safeEventHandler(
 
 
 @JvmOverloads
-fun <E : IEvent> IListening.safeParallelHandler(
+fun <E : IEvent<*>> IListening.safeParallelHandler(
     clz: Class<out E>,
     alwaysListening: Boolean = false,
     function: suspend NonNullContext.(E) -> Unit
@@ -120,7 +118,7 @@ fun <E : IEvent> IListening.safeParallelHandler(
 
 
 @JvmOverloads
-fun <E : IEvent> IListening.safeConcurrentHandler(
+fun <E : IEvent<*>> IListening.safeConcurrentHandler(
     clz: Class<out E>,
     alwaysListening: Boolean = false,
     function: suspend NonNullContext.(E) -> Unit
@@ -128,7 +126,7 @@ fun <E : IEvent> IListening.safeConcurrentHandler(
 
 
 @Suppress("UNCHECKED_CAST")
-fun <E : IEvent> handler(
+fun <E : IEvent<*>> handler(
     owner: IListening,
     eventClass: Class<E>,
     priority: Int,
@@ -144,7 +142,7 @@ fun <E : IEvent> handler(
 
 
 @Suppress("UNCHECKED_CAST")
-fun <E : IEvent> parallelHandler(
+fun <E : IEvent<*>> parallelHandler(
     owner: IListening,
     eventClass: Class<E>,
     alwaysListening: Boolean,
@@ -159,7 +157,7 @@ fun <E : IEvent> parallelHandler(
 
 
 @Suppress("UNCHECKED_CAST")
-fun <E : IEvent> concurrentHandler(
+fun <E : IEvent<*>> concurrentHandler(
     owner: IListening,
     eventClass: Class<E>,
     alwaysListening: Boolean,
@@ -174,8 +172,15 @@ fun <E : IEvent> concurrentHandler(
 }
 
 
-private fun getEventBus(eventClass: Class<out IEvent>): EventBus {
-    return (eventClass.instance ?: eventClass.getDeclaredField("Companion")[null] as IPosting).eventBus
+private fun getEventBus(eventClass: Class<out IEvent<*>>): EventBus {
+    val posting = try {
+        eventClass.getDeclaredField("Companion").get(null)
+    } catch (_: NoSuchFieldException) {
+        eventClass.getDeclaredField("INSTANCE").get(null)
+    }
+    return requireNotNull(posting as? IPosting) {
+        "${eventClass.name} must expose an IPosting Companion or object instance"
+    }.eventBus
 }
 
 
@@ -200,5 +205,5 @@ sealed class AbstractHandler<F>(
     val priority: Int,
     val function: F
 ) {
-    val ownerName: String = if (owner is Nameable) owner.nameAsString else owner.javaClass.simpleName
+    val ownerName: String = owner.javaClass.name
 }

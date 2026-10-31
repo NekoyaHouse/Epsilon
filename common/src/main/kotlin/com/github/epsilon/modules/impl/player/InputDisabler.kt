@@ -1,12 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
@@ -20,9 +18,9 @@ object InputDisabler : Module("Input Disabler", Category.PLAYER) {
     private var shouldRestore = false
 
     init {
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (packet !is ServerboundContainerClickPacket && packet !is ServerboundContainerClosePacket) return@nonNullHandler
+            if (packet !is ServerboundContainerClickPacket && packet !is ServerboundContainerClosePacket) return@safeEventHandler
 
             event.cancel()
             spoofInput(player, connection)

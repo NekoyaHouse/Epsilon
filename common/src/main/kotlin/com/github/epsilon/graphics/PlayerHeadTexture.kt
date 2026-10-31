@@ -1,7 +1,7 @@
 package com.github.epsilon.graphics
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.utils.network.Http
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem

@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -12,8 +12,6 @@ import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.CameraType
 import net.minecraft.core.BlockPos
@@ -73,8 +71,8 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             lastPitch = pitch
         }
 
-        nonNullHandler<ClientTickEvent.Post> {
-            val cameraEntity = mc.cameraEntity ?: return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Post> {
+            val cameraEntity = mc.cameraEntity ?: return@safeEventHandler
             if (cameraEntity.isInWall) cameraEntity.noPhysics = true
             if (perspective?.isFirstPerson != true) mc.options.cameraType = CameraType.FIRST_PERSON
 
@@ -107,24 +105,24 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             if (KeybindUtils.isPressed(mc.options.keySprint)) s = 1.0
 
             var a = false
-            if (this.forward) {
+            if (this@FreeCamera.forward) {
                 velX += forwardDir.x * s * speedValue
                 velZ += forwardDir.z * s * speedValue
                 a = true
             }
-            if (this.backward) {
+            if (this@FreeCamera.backward) {
                 velX -= forwardDir.x * s * speedValue
                 velZ -= forwardDir.z * s * speedValue
                 a = true
             }
 
             var b = false
-            if (this.right) {
+            if (this@FreeCamera.right) {
                 velX += rightDir.x * s * speedValue
                 velZ += rightDir.z * s * speedValue
                 b = true
             }
-            if (this.left) {
+            if (this@FreeCamera.left) {
                 velX -= rightDir.x * s * speedValue
                 velZ -= rightDir.z * s * speedValue
                 b = true
@@ -136,10 +134,10 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
                 velZ *= diagonal
             }
 
-            if (this.up) {
+            if (this@FreeCamera.up) {
                 velY += s * speedValue
             }
-            if (this.down) {
+            if (this@FreeCamera.down) {
                 velY -= s * speedValue
             }
 
@@ -147,7 +145,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             pos.set(pos.x + velX, pos.y + velY, pos.z + velZ)
         }
 
-        nonNullHandler<KeyboardInputEvent> {
+        safeEventHandler<KeyboardInputEvent> {
             if (!player.abilities.flying && staySneaking && isSneaking) {
                 it.sneak = true
             }
@@ -183,7 +181,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
         }
 
-        nonNullHandler<PacketEvent.Receive> {
+        safeEventHandler<PacketEvent.Receive> {
             val packet = it.packet
             if (packet is ClientboundPlayerCombatKillPacket) {
                 val entity = level.getEntity(packet.playerId())

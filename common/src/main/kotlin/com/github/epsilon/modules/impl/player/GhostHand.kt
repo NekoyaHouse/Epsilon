@@ -1,15 +1,12 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -22,13 +19,13 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
     private val posList: MutableSet<BlockPos> = ObjectOpenHashSet()
 
     init {
-        nonNullHandler<StartUseItemEvent> { event ->
-            if (!mc.options.keyUse.isDown) return@nonNullHandler
+        safeEventHandler<StartUseItemEvent> { event ->
+            if (!mc.options.keyUse.isDown) return@safeEventHandler
 
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val normalHit = player.pick(player.blockInteractionRange(), partialTick, false)
             if (level.getBlockState(BlockPos.containing(normalHit.location)).hasBlockEntity()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val direction = Vec3(0.0, 0.0, 0.1)
@@ -49,7 +46,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
 
                 if (level.getBlockState(pos).hasBlockEntity()) {
                     for (hand in InteractionHand.values()) {
-                        val result = interaction.useItemOn(
+                        val result = gameMode.useItemOn(
                             player,
                             hand,
                             BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true)
@@ -57,7 +54,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
                             SwingMode.Both.interactSwing(hand)
                             event.cancel()
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
                     }
                 }

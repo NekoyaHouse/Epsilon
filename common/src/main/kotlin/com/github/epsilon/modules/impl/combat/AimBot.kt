@@ -1,8 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -10,9 +13,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
@@ -61,19 +61,19 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private val visibleTime = TimerUtils()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             when (mode) {
                 Mode.AimAssist -> updateAimAssist()
                 Mode.BowAim -> updateBowAim()
             }
         }
 
-        nonNullHandler<Render3DEvent> {
+        safeEventHandler<Render3DEvent> {
             if (mode == Mode.AimAssist) {
                 if (!rotationYaw.isNaN()) {
                     player.yRot = Mth.lerp(assistAcceleration, player.yRot, rotationYaw)
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (mode == Mode.BowAim && rotation == Rotation.Client && !bowTargetYaw.isNaN()) {

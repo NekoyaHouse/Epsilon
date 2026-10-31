@@ -1,14 +1,12 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -29,7 +27,7 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
     private var isKeyDown = false
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
                 isKeyDown = false
@@ -37,11 +35,11 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
 
             if (cooldownCounter > 0) {
                 --cooldownCounter
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (pressed) {
-                if (isKeyDown && previousSelectedSlot == -1) return@nonNullHandler
+                if (isKeyDown && previousSelectedSlot == -1) return@safeEventHandler
                 isKeyDown = true
 
                 if (previousSelectedSlot == -1) {
@@ -52,18 +50,18 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
                 val fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot
                 if (fireworkSlot == -1) {
                     resetState()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 InvUtils.swap(fireworkSlot, false)
 
                 if (useDelayCounter < delay) {
                     ++useDelayCounter
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (!hasUsedFirework) {
-                    interaction.useItem(player, InteractionHand.MAIN_HAND)
+                    gameMode.useItem(player, InteractionHand.MAIN_HAND)
                     hasUsedFirework = true
                     if (!switchBack) {
                         resetState()

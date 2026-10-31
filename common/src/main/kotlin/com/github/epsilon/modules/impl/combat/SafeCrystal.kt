@@ -1,14 +1,14 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -30,7 +30,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
     private const val MAX_ATTACK_DISTANCE = 3.6
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (autoBreak) {
                 handleAutoCrystalBreak()
             }
@@ -94,7 +94,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
             }
         }
 
-        interaction.attack(player, crystal)
+        gameMode.attack(player, crystal)
         SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
         attackCooldown = 1 + (Random.nextDouble() * 2).toInt()
@@ -133,7 +133,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
         val crystalHand = getCrystalHand() ?: return
 
-        interaction.useItemOn(
+        gameMode.useItemOn(
             player,
             crystalHand,
             hit

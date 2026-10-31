@@ -1,8 +1,8 @@
 package com.github.epsilon.graphics.immediate
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack

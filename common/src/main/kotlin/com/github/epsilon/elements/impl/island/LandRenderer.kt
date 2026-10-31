@@ -1,7 +1,6 @@
 package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.elements.impl.island.instance.LandController
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -12,9 +11,10 @@ import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.multiplayer.ServerData
@@ -128,7 +128,7 @@ class LandRenderer(
     }
 
     private fun updateWatermarkText() {
-        val nn = NonNullContext.current
+        val nn = NonNullContext.instance
         val playerName = nn?.player?.gameProfile?.name ?: "Player"
         val serverAddress: String
         if (mc.isLocalServer) {
@@ -204,13 +204,13 @@ class LandRenderer(
             val online = connection.onlinePlayers.size
             if (online > 0) return online
         }
-        return NonNullContext.current?.level?.players()?.size ?: 0
+        return NonNullContext.instance?.level?.players()?.size ?: 0
     }
 
     private fun getLatency(): Int {
         if (mc.isLocalServer) return 0
 
-        val player = NonNullContext.current?.player
+        val player = NonNullContext.instance?.player
         val connection: ClientPacketListener? = mc.connection
         if (connection != null && player != null) {
             val playerInfo: PlayerInfo? = connection.getPlayerInfo(player.uuid)

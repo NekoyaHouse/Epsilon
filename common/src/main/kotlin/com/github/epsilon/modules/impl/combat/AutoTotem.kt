@@ -1,13 +1,13 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 
@@ -18,18 +18,18 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
     private val checkGapple by boolSetting("Check Gapple", true)
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (!shouldHoldTotem()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING)
             if (slot == -1) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             moveItemToOffhand(slot)
@@ -37,7 +37,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
     }
 
     override fun getInfo(): String? {
-        val nn = NonNullContext.current ?: return null
+        val nn = NonNullContext.instance ?: return null
         return context(nn) { InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString() }
     }
 

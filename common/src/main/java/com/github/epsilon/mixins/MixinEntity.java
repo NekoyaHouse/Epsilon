@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.RaytraceEvent;
 import com.github.epsilon.events.impl.StrafeEvent;
 import com.github.epsilon.modules.impl.movement.Velocity;
@@ -16,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(Entity.class)
 public class MixinEntity {
@@ -35,7 +34,7 @@ public class MixinEntity {
     @WrapOperation(method = "getViewVector", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectGetViewYRot(float xRot, float yRot, Operation<Vec3> original) {
         if ((Object) this == mc.player) {
-            RaytraceEvent event = EventBus.INSTANCE.post(new RaytraceEvent(yRot, xRot));
+            RaytraceEvent event = new RaytraceEvent(yRot, xRot).post();
             return original.call(event.getPitch(), event.getYaw());
         }
         return original.call(xRot, yRot);
@@ -44,7 +43,7 @@ public class MixinEntity {
     @WrapOperation(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getYRot()F"))
     private float redirectGetYRotInMoveRelative(Entity instance, Operation<Float> original) {
         if (instance == mc.player) {
-            StrafeEvent event = EventBus.INSTANCE.post(new StrafeEvent(instance.getYRot()));
+            StrafeEvent event = new StrafeEvent(instance.getYRot()).post();
             return event.getYaw();
         }
         return original.call(instance);

@@ -1,12 +1,12 @@
 package com.github.epsilon.utils.combat
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
@@ -392,7 +392,7 @@ object DamageUtils {
         }
 
         if (target != null) {
-            interaction.attack(player, target)
+            gameMode.attack(player, target)
             SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
             return true
         }

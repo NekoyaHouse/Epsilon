@@ -1,7 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.connection
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -13,10 +17,6 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.InteractionHand
@@ -59,9 +59,9 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     private val attackTimer = TimerUtils()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (ElytraCombat.isControllingCombat()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             target = TargetManager.acquirePrimary(
@@ -82,14 +82,14 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
             val currentTarget = target
             if (currentTarget == null) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             RotationManager.setRotations(
                 RotationUtils.getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
-            if (!isReadyToAttack()) return@nonNullHandler
+            if (!isReadyToAttack()) return@safeEventHandler
 
             doAura(currentTarget)
         }
@@ -202,7 +202,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun attack(currentTarget: LivingEntity) {
-        interaction.attack(player, currentTarget)
+        gameMode.attack(player, currentTarget)
         SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
     }
 

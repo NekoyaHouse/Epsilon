@@ -1,21 +1,18 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.panel.PanelScreen
 import com.github.epsilon.gui.troll.TrollGuiScreen
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -66,7 +63,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
     )
 
     init {
-        nonNullHandler<ClientTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen != null &&
                 pauseInventory &&
@@ -76,10 +73,10 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 screen !is TrollGuiScreen &&
                 screen !is HudEditorScreen
             ) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            if (tickDelay-- > 0) return@nonNullHandler
+            if (tickDelay-- > 0) return@safeEventHandler
 
             armorList.forEach { it.reset() }
 
@@ -108,12 +105,12 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 if ((armorPiece.prevProtection == -1 || !oldVersion) && slot < 9) {
                     InvUtils.swap(slot, true)
                     try {
-                        interaction.useItem(player, InteractionHand.MAIN_HAND)
+                        gameMode.useItem(player, InteractionHand.MAIN_HAND)
                     } finally {
                         InvUtils.swapBack()
                     }
                 } else {
-                    if (player.isMoving && noMove) return@nonNullHandler
+                    if (player.isMoving && noMove) return@safeEventHandler
 
                     val inventorySlot = if (slot < 9) 36 + slot else slot
                     val armorSlot = 8 - armorPiece.equipmentSlot.index
@@ -137,7 +134,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                 }
 
                 tickDelay = delay
-                return@nonNullHandler
+                return@safeEventHandler
             }
         }
     }
@@ -157,7 +154,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         if (stack.isEmpty) return -1
 
         val slot = getEquipmentSlot(stack) ?: return 0
-        val player = NonNullContext.current?.player ?: return 0
+        val player = NonNullContext.instance?.player ?: return 0
 
         val elytra = stack.`is`(Items.ELYTRA)
         var enchantmentScore = 0
@@ -248,7 +245,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         var newProtection = -1
 
         fun reset() {
-            val player = NonNullContext.current?.player
+            val player = NonNullContext.instance?.player
             prevProtection = if (player == null) -1 else getProtection(player.inventory.getItem(inventorySlot))
             newSlot = -1
             newProtection = -1

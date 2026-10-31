@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SwingHandEvent
 import com.github.epsilon.managers.RotationManager
@@ -11,8 +11,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
@@ -33,15 +31,15 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
     private var target: LivingEntity? = null
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (!redirecting) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (!redirecting) return@safeEventHandler
 
             val currentTarget = target
             if (currentTarget == null || !currentTarget.isAlive || currentTarget.isDeadOrDying ||
                 RotationUtils.getEyeDistanceToEntity(currentTarget) > range
             ) {
                 redirecting = false
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val rotations = RotationUtils.calculate(currentTarget.eyePosition)
@@ -49,22 +47,22 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
 
             val hitResult = RotationManager.getHitResult()
             if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {
-                interaction.attack(player, currentTarget)
+                gameMode.attack(player, currentTarget)
                 SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 redirecting = false
             }
         }
 
-        nonNullHandler<SwingHandEvent> { event ->
-            if (redirecting) return@nonNullHandler
+        safeEventHandler<SwingHandEvent> { event ->
+            if (redirecting) return@safeEventHandler
 
             if (weaponOnly && !player.mainHandItem.has(DataComponents.WEAPON)) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val hitResult = mc.hitResult
             if (hitResult == null || hitResult.type != HitResult.Type.MISS) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val newTarget = TargetManager.acquirePrimary(
@@ -83,7 +81,7 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
                 )
             )
 
-            if (newTarget == null) return@nonNullHandler
+            if (newTarget == null) return@safeEventHandler
 
             target = newTarget
 

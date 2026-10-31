@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem

@@ -1,9 +1,9 @@
 package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.mc
-import com.github.epsilon.utils.safety.player
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.mc
+import com.github.epsilon.kernel.jvm.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity

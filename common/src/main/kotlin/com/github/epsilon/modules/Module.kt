@@ -1,7 +1,8 @@
 package com.github.epsilon.modules
 
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.events.bus.EventBus
+import com.github.epsilon.events.api.ListenerOwner
+import com.github.epsilon.kernel.MinecraftWrapper
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
@@ -12,7 +13,7 @@ import net.minecraft.client.Minecraft
 open class Module(
     val name: String,
     val category: Category?,
-) : SettingHost {
+) : ListenerOwner(), SettingHost {
 
     enum class BindMode {
         Toggle,
@@ -30,13 +31,13 @@ open class Module(
             }
             field = value
             if (value) {
-                EventBus.subscribe(this)
+                subscribe()
                 if (!nullCheck()) {
                     NotificationManager.moduleState(translatedName, notificationHash, true)
                 }
                 onEnable()
             } else {
-                EventBus.unsubscribe(this)
+                unsubscribe()
                 if (!nullCheck()) {
                     NotificationManager.moduleState(translatedName, notificationHash, false)
                 }
@@ -49,7 +50,7 @@ open class Module(
     val settings: MutableList<Setting<*>> = ArrayList()
     val settingGroups: MutableList<SettingGroup> = ArrayList()
 
-    protected val mc: Minecraft = Minecraft.getInstance()
+    protected val mc: Minecraft get() = MinecraftWrapper.mc
 
     private var defaultHidden = true
     private var defaultEnabled = false
@@ -73,10 +74,11 @@ open class Module(
     }
 
     // ---- 事件注册 ----
-    // 模块在 object 的 init 块中注册监听器（import com.github.epsilon.events.api.nonNullHandler / handler）：
-    //   init { nonNullHandler<ClientTickEvent.Pre> { ... } }
-    // 隐式 receiver 即模块对象，监听器绑定到模块，是否派发由 isEnabled 的
-    // EventBus.subscribe / unsubscribe 决定，因此禁用状态下不会再收到事件；
+    // 模块在 object 的 init 块中注册监听器（import com.github.epsilon.events.api.safeEventHandler / handler）：
+    //   init { safeEventHandler<ClientTickEvent.Pre> { ... } }
+    // 注册的隐式 owner 是模块；safeEventHandler 的 lambda receiver 是 NonNullContext。
+    // 监听器是否派发由 isEnabled 的
+    // subscribe() / unsubscribe() 决定，因此禁用状态下不会再收到事件；
     // 依赖玩家/世界的监听器会在上下文缺失时自动跳过。
 
     fun toggle() {

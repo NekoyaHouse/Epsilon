@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.render.maseffects
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera

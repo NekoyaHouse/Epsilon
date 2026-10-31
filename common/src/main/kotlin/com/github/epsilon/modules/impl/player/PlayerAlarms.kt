@@ -3,9 +3,13 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.elements.impl.notification.NotificationMode
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.connection
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -13,10 +17,6 @@ import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
@@ -115,7 +115,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val gamemodeRing = RingState()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             // Handle all rings
             handleRing(joinRing) { playSound(joinVolume, joinPitch, joinSound.value) }
             handleRing(leaveRing) { playSound(leaveVolume, leavePitch, leaveSound.value) }
@@ -195,7 +195,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             playersInRender.addAll(currentInRender)
         }
 
-        nonNullHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
 
             // Player Join
@@ -364,7 +364,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     private fun playSound(vol: Double, pitch: Double, sounds: List<SoundEvent>) {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         if (sounds.isEmpty()) return
         val sound = sounds[0]
         context(nn) {
@@ -380,7 +380,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     private fun getPlayerName(id: UUID): String? {
-        val nn = NonNullContext.current ?: return null
+        val nn = NonNullContext.instance ?: return null
         return context(nn) {
             val player = level.getPlayerByUUID(id)
             if (player != null) return@context player.gameProfile.name()
@@ -398,7 +398,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         val cached = gamemodeCache[id]
         if (cached != null) return translateGamemode(cached)
         // fallback: try to get from network info
-        val info = NonNullContext.current?.connection?.getPlayerInfo(id)
+        val info = NonNullContext.instance?.connection?.getPlayerInfo(id)
         if (info != null) {
             val mode = info.gameMode
             if (mode != null) return translateGamemode(mode)

@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
@@ -38,8 +38,8 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     private var localEntityIdCounter = -8
 
     init {
-        nonNullHandler<AttackEntityEvent> { onAttackEntity(it) }
-        nonNullHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
+        safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     override fun onEnable() {

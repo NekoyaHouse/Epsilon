@@ -1,7 +1,8 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -10,9 +11,6 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import net.minecraft.world.item.Items
 
 object AutoMend : Module("Auto Mend", Category.COMBAT) {
@@ -28,16 +26,16 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
     private var shouldSwapBack = false
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
-            if (!result.found()) return@nonNullHandler
+            if (!result.found()) return@safeEventHandler
 
             RotationManager.setRotations(Rotation(player.yRot, 90f), 180.0, Priority.High)
 
             InvUtils.swap(result.slot, true)
 
             val hand = result.getHand()
-            interaction.useItem(player, hand)
+            gameMode.useItem(player, hand)
             SwingMode.of(swingHand).interactSwing(hand)
 
             if (switchMode.`is`(SwitchMode.Silent)) {
@@ -54,7 +52,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
     override fun onDisable() {
         if (shouldSwapBack) {
-            val nn = NonNullContext.current ?: return
+            val nn = NonNullContext.instance ?: return
             context(nn) { InvUtils.swapBack() }
         }
     }

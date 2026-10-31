@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.network.chat.Component
 import java.io.BufferedReader
 import java.io.InputStream
@@ -30,7 +30,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
     private var currentIndex = 0
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (countdownTicks > 0) {
                 if (countdownTicks == 60) {
                     sendMessage("保护机制: 3秒后开始发送违禁词")
@@ -45,7 +45,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
                     sendMessage("开始发送!")
                     lastSendTime = System.currentTimeMillis()
                 }
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (System.currentTimeMillis() - lastSendTime >= delay) {

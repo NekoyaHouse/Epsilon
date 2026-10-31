@@ -1,11 +1,12 @@
 package com.github.epsilon.graphics.schedulers.render3d
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.BlendFunction
@@ -21,7 +22,7 @@ import org.joml.Vector3f
 import java.awt.Color
 import java.util.*
 
-object Render3DScheduler {
+object Render3DScheduler : AlwaysListening {
 
     private val blurredBoxes: MutableList<BlurredBoxCommand> = ArrayList()
     private val filledBoxes: MutableList<FilledBoxCommand> = ArrayList()

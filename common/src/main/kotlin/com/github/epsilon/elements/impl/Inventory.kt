@@ -30,7 +30,7 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     private const val PADDING = 4.5f
 
     override fun render(deltaTracker: DeltaTracker) {
-        if (NonNullContext.current == null) return
+        if (NonNullContext.instance == null) return
 
         val scope = renderScope()
 
@@ -68,7 +68,7 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     }
 
     override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
-        val player = NonNullContext.current?.player ?: return
+        val player = NonNullContext.instance?.player ?: return
 
         val scale = this.scale.toFloat()
         val slotSize = SLOT_SIZE * scale

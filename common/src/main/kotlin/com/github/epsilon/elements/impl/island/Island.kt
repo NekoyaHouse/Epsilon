@@ -9,6 +9,8 @@ import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
@@ -17,8 +19,6 @@ import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen
@@ -119,7 +119,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             setBounds(landRenderer.width, landRenderer.height)
 
             landRenderer.syncPosition(x, y)
-            landRenderer.draw(this, renderScope())
+            landRenderer.draw(this@Island, renderScope())
         }
     }
 
@@ -144,7 +144,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             LandController.post(
                 TargetInstance(
                     captured, textRendererSupplier,
-                    CheckPattern(Supplier { this.target !== captured })
+                    CheckPattern { this.target !== captured }
                 )
             )
         }
@@ -158,13 +158,13 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
         val instance = LandController.getInstance(ScaffoldBlocksInstance::class.java)
         if (instance == null) {
-            val nn = NonNullContext.current ?: return
+            val nn = NonNullContext.instance ?: return
             val count: Supplier<Int> = Supplier { context(nn) { InvHelper.getBlockCountInInventory() } }
             val icon: Supplier<ItemStack> = Supplier { Scaffold.getBlockStack() }
             LandController.post(
                 ScaffoldBlocksInstance(
                     count, icon, textRendererSupplier,
-                    CheckPattern(Supplier { !scaffoldBlocks || !Scaffold.isEnabled })
+                    CheckPattern { !scaffoldBlocks || !Scaffold.isEnabled }
                 )
             )
         }
@@ -180,16 +180,12 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
         if (instance == null) {
             LandController.post(
                 BalanceInstance(
-                    Supplier { Timer.getBalanceTime() },
-                    Supplier { Timer.getMaxBalance() },
+                    { Timer.getBalanceTime() },
+                    { Timer.getMaxBalance() },
                     textRendererSupplier,
-                    CheckPattern(
-                        Supplier {
-                            !timerBalance
-                                    || !Timer.isEnabled
-                                    || (!Timer.isReleasing() && Timer.getBalanceTime() >= Timer.getMaxBalance())
-                        }
-                    )
+                    CheckPattern {
+                        !timerBalance || !Timer.isEnabled || (!Timer.isReleasing() && Timer.getBalanceTime() >= Timer.getMaxBalance())
+                    }
                 )
             )
         }
@@ -205,11 +201,9 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             LandController.post(
                 TabListInstance(
                     textRendererSupplier,
-                    CheckPattern(
-                        Supplier {
-                            !tabList || nullCheck() || mc.gui.screen() != null || !mc.options.keyPlayerList.isDown
-                        }
-                    )
+                    CheckPattern {
+                        !tabList || nullCheck() || mc.gui.screen() != null || !mc.options.keyPlayerList.isDown
+                    }
                 )
             )
         }
@@ -229,12 +223,10 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
                     MusicInstance(
                         SmtcService.INSTANCE,
                         textRendererSupplier,
-                        CheckPattern(
-                            Supplier {
-                                val current = SmtcService.INSTANCE.snapshot()
-                                !music || !current.available() || !current.isPlaying
-                            }
-                        )
+                        CheckPattern {
+                            val current = SmtcService.INSTANCE.snapshot()
+                            !music || !current.available() || !current.isPlaying
+                        }
                     )
                 )
             }

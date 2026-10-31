@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.render
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.model.geom.ModelPart

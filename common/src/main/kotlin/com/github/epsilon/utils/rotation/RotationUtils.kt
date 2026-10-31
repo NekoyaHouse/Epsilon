@@ -1,11 +1,11 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth

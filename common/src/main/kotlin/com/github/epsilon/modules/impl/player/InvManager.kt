@@ -1,9 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -13,9 +14,6 @@ import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.connection
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -124,15 +122,15 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
-        nonNullHandler<PacketEvent.Send> { event ->
+        safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundContainerClosePacket) {
-                this.inventoryOpen = false
+                this@InvManager.inventoryOpen = false
                 if (actionState == ActionState.WAITING_FOR_INVENTORY_CLOSE) {
                     actionState = ActionState.IDLE
                 }
             }
-            if (this.inventoryOpen && mode == Mode.Silent) {
+            if (this@InvManager.inventoryOpen && mode == Mode.Silent) {
                 if (
                     packet is ServerboundMovePlayerPacket ||
                     packet is ServerboundUseItemOnPacket ||
@@ -141,56 +139,56 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     packet is ServerboundAttackPacket ||
                     packet is ServerboundPlayerActionPacket
                 ) {
-                    this.inventoryOpen = false
+                    this@InvManager.inventoryOpen = false
                     connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
                 }
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             actionConsumed = false
 
             if (InvHelper.shouldDisableFeatures()) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (NoSlowdown.isWorking()) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (player.isMoving) {
-                this.noMoveTicks = 0
+                this@InvManager.noMoveTicks = 0
             } else {
-                this.noMoveTicks++
+                this@InvManager.noMoveTicks++
             }
 
             if (pauseOnEat && PlayerUtils.isEating()) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (pauseOnKillAura && KillAura.isEnabled && KillAura.target != null) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             if (pauseOnScaffold && Scaffold.isEnabled) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val allowMove = mode == Mode.Silent
-            if (Stealer.isWorking() || (if (mode == Mode.Inventory) mc.gui.screen() !is InventoryScreen else !allowMove && this.noMoveTicks <= 1)) {
-                this.clickOffHand = false
+            if (Stealer.isWorking() || (if (mode == Mode.Inventory) mc.gui.screen() !is InventoryScreen else !allowMove && this@InvManager.noMoveTicks <= 1)) {
+                this@InvManager.clickOffHand = false
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
             val screen = mc.gui.screen()
             if (screen is AbstractContainerScreen<*> && screen.menu.containerId != player.inventoryMenu.containerId) {
                 cancelPendingAction()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
-            if (this.autoArmor) {
+            if (this@InvManager.autoArmor) {
                 val armorSlots =
                     arrayOf(EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD)
                 for (i in armorSlots.indices) {
@@ -223,13 +221,13 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 }
             }
 
-            if (this.clickOffHand && canExecuteInventoryAction()) {
+            if (this@InvManager.clickOffHand && canExecuteInventoryAction()) {
                 if (click(45)) {
-                    this.clickOffHand = false
+                    this@InvManager.clickOffHand = false
                 }
             }
 
-            if (this.offhandItem == OffhandItemMode.GoldenApple) {
+            if (this@InvManager.offhandItem == OffhandItemMode.GoldenApple) {
                 val offHand = InvHelper.getOffhandStack()
                 val offHandItem = offHand.item
 
@@ -245,14 +243,14 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                                 click(egapSlot)
                             }
                             if (clicked) {
-                                this.clickOffHand = true
+                                this@InvManager.clickOffHand = true
                             }
                         }
                     }
                 } else if (offHandItem == Items.GOLDEN_APPLE) {
                     if (egapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this.swapOffHand(egapSlot)
+                            this@InvManager.swapOffHand(egapSlot)
                         }
                     } else if (offHand.count < offHand.maxStackSize && gapSlot != -1) {
                         if (canExecuteInventoryAction()) {
@@ -263,48 +261,48 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                                 click(targetSlot)
                             }
                             if (clicked) {
-                                this.clickOffHand = true
+                                this@InvManager.clickOffHand = true
                             }
                         }
                     }
                 } else {
                     if (egapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this.swapOffHand(egapSlot)
+                            this@InvManager.swapOffHand(egapSlot)
                         }
                     } else if (gapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this.swapOffHand(gapSlot)
+                            this@InvManager.swapOffHand(gapSlot)
                         }
                     }
                 }
-            } else if (this.offhandItem == OffhandItemMode.Projectile) {
+            } else if (this@InvManager.offhandItem == OffhandItemMode.Projectile) {
                 val offHand = InvHelper.getOffhandStack()
                 val bestProjectile = InvHelper.getBestProjectile()
                 if (bestProjectile != null) {
                     val slot = InvHelper.getItemStackSlot(bestProjectile)
                     val shouldSwap =
                         offHand.item != Items.EGG && offHand.item != Items.SNOWBALL || offHand.count < bestProjectile.count
-                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this.swapOffHand(slot)
+                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this@InvManager.swapOffHand(slot)
                 }
-            } else if (this.offhandItem == OffhandItemMode.FishingRod) {
+            } else if (this@InvManager.offhandItem == OffhandItemMode.FishingRod) {
                 val offHand = InvHelper.getOffhandStack()
                 val slot = InvHelper.getItemSlot(Items.FISHING_ROD)
                 if (slot != -1 && canExecuteInventoryAction() && offHand.item != Items.FISHING_ROD) {
-                    this.swapOffHand(slot)
+                    this@InvManager.swapOffHand(slot)
                 }
-            } else if (this.offhandItem == OffhandItemMode.Block) {
+            } else if (this@InvManager.offhandItem == OffhandItemMode.Block) {
                 val offHand = InvHelper.getOffhandStack()
                 val bestBlock = InvHelper.getBestBlock()
                 if (bestBlock != null) {
                     val slot = InvHelper.getItemStackSlot(bestBlock)
                     val shouldSwap = !InvHelper.isValidStack(offHand) || offHand.count < bestBlock.count
-                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this.swapOffHand(slot)
+                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this@InvManager.swapOffHand(slot)
                 }
             }
 
-            if (this.switchGoldenApple && this.offhandItem != OffhandItemMode.GoldenApple) {
-                val targetSlotIdx = this.goldenAppleSlot - 1
+            if (this@InvManager.switchGoldenApple && this@InvManager.offhandItem != OffhandItemMode.GoldenApple) {
+                val targetSlotIdx = this@InvManager.goldenAppleSlot - 1
                 val egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE)
                 val gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE)
                 val bestGapSlot = if (egapSlot != -1) egapSlot else gapSlot
@@ -312,25 +310,25 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     val currentInSlot = InvHelper.getInventoryStack(targetSlotIdx)
                     val bestGapItem = InvHelper.getInventoryStack(bestGapSlot)
                     if (currentInSlot.item != bestGapItem.item || (currentInSlot.count < bestGapItem.count && currentInSlot.item == bestGapItem.item)) {
-                        this.swapItem(targetSlotIdx, bestGapItem)
+                        this@InvManager.swapItem(targetSlotIdx, bestGapItem)
                     }
                 }
             }
 
-            if (this.switchBlock) {
-                val blockSlotIndex = this.blockSlot - 1
+            if (this@InvManager.switchBlock) {
+                val blockSlotIndex = this@InvManager.blockSlot - 1
                 val currentBlock = InvHelper.getInventoryStack(blockSlotIndex)
                 val bestBlock = InvHelper.getBestBlock()
-                if (bestBlock != null && (bestBlock.count > currentBlock.count || !InvHelper.isValidStack(currentBlock)) && this.offhandItem != OffhandItemMode.Block) {
-                    this.swapItem(blockSlotIndex, bestBlock)
+                if (bestBlock != null && (bestBlock.count > currentBlock.count || !InvHelper.isValidStack(currentBlock)) && this@InvManager.offhandItem != OffhandItemMode.Block) {
+                    this@InvManager.swapItem(blockSlotIndex, bestBlock)
                 }
-                if (InvHelper.getBlockCountInInventory().toFloat() > this.maxBlockSize) {
-                    this.throwItem(InvHelper.getWorstBlock())
+                if (InvHelper.getBlockCountInInventory().toFloat() > this@InvManager.maxBlockSize) {
+                    this@InvManager.throwItem(InvHelper.getWorstBlock())
                 }
             }
 
-            if (this.switchSword) {
-                val slotIndex = this.swordSlot - 1
+            if (this@InvManager.switchSword) {
+                val slotIndex = this@InvManager.swordSlot - 1
                 val currentSword = InvHelper.getInventoryStack(slotIndex)
                 var bestSword = InvHelper.getBestSword()
                 val bestShapeAxe = InvHelper.getBestShapeAxe()
@@ -346,48 +344,48 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                         if (InvHelper.isSword(bestSword)) InvHelper.getSwordDamage(bestSword) else InvHelper.getAxeDamage(
                             bestSword
                         )
-                    if (bestWeaponDamage > currentDamage) this.swapItem(slotIndex, bestSword)
+                    if (bestWeaponDamage > currentDamage) this@InvManager.swapItem(slotIndex, bestSword)
                 }
             }
 
-            if (this.switchPickaxe) {
-                val slotIndex = this.pickaxeSlot - 1
+            if (this@InvManager.switchPickaxe) {
+                val slotIndex = this@InvManager.pickaxeSlot - 1
                 val bestPickaxe = InvHelper.getBestPickaxe()
                 val currentPickaxe = InvHelper.getInventoryStack(slotIndex)
                 if (bestPickaxe != null && InvHelper.isPickaxe(bestPickaxe) && (InvHelper.getToolScore(bestPickaxe) > InvHelper.getToolScore(
                         currentPickaxe
                     ) || !InvHelper.isPickaxe(currentPickaxe))
                 ) {
-                    this.swapItem(slotIndex, bestPickaxe)
+                    this@InvManager.swapItem(slotIndex, bestPickaxe)
                 }
             }
 
-            if (this.switchAxe) {
-                val slotIndex = this.axeSlot - 1
+            if (this@InvManager.switchAxe) {
+                val slotIndex = this@InvManager.axeSlot - 1
                 val bestAxe = InvHelper.getBestAxe()
                 val currentAxe = InvHelper.getInventoryStack(slotIndex)
                 if (bestAxe != null && InvHelper.isAxe(bestAxe) && (InvHelper.getToolScore(bestAxe) > InvHelper.getToolScore(
                         currentAxe
                     ) || !InvHelper.isAxe(currentAxe))
                 ) {
-                    this.swapItem(slotIndex, bestAxe)
+                    this@InvManager.swapItem(slotIndex, bestAxe)
                 }
             }
 
-            if (this.switchRod && this.offhandItem != OffhandItemMode.FishingRod) {
-                val slotIndex = this.rodSlot - 1
+            if (this@InvManager.switchRod && this@InvManager.offhandItem != OffhandItemMode.FishingRod) {
+                val slotIndex = this@InvManager.rodSlot - 1
                 val bestRod = InvHelper.getFishingRod()
                 val currentRod = InvHelper.getInventoryStack(slotIndex)
-                if (currentRod.item !is FishingRodItem) this.swapItem(slotIndex, bestRod)
+                if (currentRod.item !is FishingRodItem) this@InvManager.swapItem(slotIndex, bestRod)
             }
 
-            if (this.switchBow) {
-                val slotIndex = this.bowSlot - 1
+            if (this@InvManager.switchBow) {
+                val slotIndex = this@InvManager.bowSlot - 1
                 val currentBow = InvHelper.getInventoryStack(slotIndex)
                 var bestBow: ItemStack? = null
                 var bestScore = 0.0f
                 var currentScore = 0.0f
-                when (this.preferBow) {
+                when (this@InvManager.preferBow) {
                     BowPriorityMode.Crossbow -> {
                         bestBow = InvHelper.getBestCrossbow()
                         bestScore = InvHelper.getCrossbowScore(bestBow)
@@ -422,44 +420,44 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     currentScore = InvHelper.getPunchBowScore(currentBow)
                 }
                 val finalBow = bestBow
-                if (finalBow != null && bestScore > currentScore) this.swapItem(slotIndex, finalBow)
-                if (InvHelper.getItemCount(Items.ARROW).toFloat() > this.maxArrowSize) {
-                    this.throwItem(InvHelper.getWorstArrow())
+                if (finalBow != null && bestScore > currentScore) this@InvManager.swapItem(slotIndex, finalBow)
+                if (InvHelper.getItemCount(Items.ARROW).toFloat() > this@InvManager.maxArrowSize) {
+                    this@InvManager.throwItem(InvHelper.getWorstArrow())
                 }
             }
 
-            if (this.switchEnderPearl) {
-                this.swapItem(this.enderPearlSlot - 1, Items.ENDER_PEARL)
+            if (this@InvManager.switchEnderPearl) {
+                this@InvManager.swapItem(this@InvManager.enderPearlSlot - 1, Items.ENDER_PEARL)
             }
-            if (this.switchWaterBucket) {
-                this.swapItem(this.waterBucketSlot - 1, Items.WATER_BUCKET)
+            if (this@InvManager.switchWaterBucket) {
+                this@InvManager.swapItem(this@InvManager.waterBucketSlot - 1, Items.WATER_BUCKET)
             }
-            if (this.switchFireball) {
-                this.swapItem(this.fireballSlot - 1, Items.FIRE_CHARGE)
+            if (this@InvManager.switchFireball) {
+                this@InvManager.swapItem(this@InvManager.fireballSlot - 1, Items.FIRE_CHARGE)
             }
 
-            if (this.keepProjectile) {
-                if ((InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)).toFloat() > this.maxProjectileSize) {
-                    this.throwItem(InvHelper.getWorstProjectile())
+            if (this@InvManager.keepProjectile) {
+                if ((InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)).toFloat() > this@InvManager.maxProjectileSize) {
+                    this@InvManager.throwItem(InvHelper.getWorstProjectile())
                 }
-                if (this.switchProjectile && this.offhandItem != OffhandItemMode.Projectile) {
-                    val pSlot = this.projectileSlot - 1
+                if (this@InvManager.switchProjectile && this@InvManager.offhandItem != OffhandItemMode.Projectile) {
+                    val pSlot = this@InvManager.projectileSlot - 1
                     if (InvHelper.getItemCount(Items.EGG) > 0) {
-                        this.swapItem(pSlot, Items.EGG)
+                        this@InvManager.swapItem(pSlot, Items.EGG)
                     } else if (InvHelper.getItemCount(Items.SNOWBALL) > 0) {
-                        this.swapItem(pSlot, Items.SNOWBALL)
+                        this@InvManager.swapItem(pSlot, Items.SNOWBALL)
                     }
                 }
             }
 
-            if (this.throwItems) {
+            if (this@InvManager.throwItems) {
                 val slots = (0 until player.inventory.nonEquipmentItems.size).toMutableList()
                 slots.shuffle()
                 for (slotIdx in slots) {
                     val stack = InvHelper.getInventoryStack(slotIdx)
-                    if (!stack.isEmpty && !this.isItemUseful(stack) && canExecuteInventoryAction()) {
-                        if (this.throwItem(stack)) {
-                            return@nonNullHandler
+                    if (!stack.isEmpty && !this@InvManager.isItemUseful(stack) && canExecuteInventoryAction()) {
+                        if (this@InvManager.throwItem(stack)) {
+                            return@safeEventHandler
                         }
                     }
                 }
@@ -470,7 +468,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
+        safeEventHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (shouldStopSprinting() && actionState == ActionState.WAITING_FOR_SPRINT_STOP) {
                 player.isSprinting = false
                 if (!player.wasSprinting) {

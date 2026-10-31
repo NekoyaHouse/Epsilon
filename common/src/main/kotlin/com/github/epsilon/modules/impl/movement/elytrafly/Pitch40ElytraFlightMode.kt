@@ -5,14 +5,14 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.item.Items
 import kotlin.random.Random
@@ -31,7 +31,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     override fun onEnable() {
         resetState()
 
-        if (NonNullContext.current == null) {
+        if (NonNullContext.instance == null) {
             pendingActivationCheck = true
             return
         }

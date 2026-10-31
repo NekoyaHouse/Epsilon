@@ -1,10 +1,10 @@
 package com.github.epsilon.managers
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.screen.AssetDownloadScreen
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.AssetManager.ffmpegUrl
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.client.ClientPlatform

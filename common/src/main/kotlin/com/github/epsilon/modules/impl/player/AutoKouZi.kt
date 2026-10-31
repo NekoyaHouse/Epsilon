@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.network.chat.Component
 import java.io.BufferedReader
 import java.io.InputStream
@@ -36,8 +36,8 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     private val random = Random()
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (!canSend()) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (!canSend()) return@safeEventHandler
 
             if (mode == Mode.TXT) {
                 sendTxtMode()

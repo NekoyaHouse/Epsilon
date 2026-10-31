@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.OpenScreenEvent;
 import com.github.epsilon.gui.overlay.DownloadJobOverlay;
 import net.minecraft.client.gui.Gui;
@@ -15,7 +14,7 @@ public class MixinGui {
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onSetScreen(Screen screen, CallbackInfo ci) {
-        OpenScreenEvent event = EventBus.INSTANCE.post(new OpenScreenEvent(screen));
+        OpenScreenEvent event = new OpenScreenEvent(screen).post();
         if (event.isCancelled()) {
             ci.cancel();
         } else {

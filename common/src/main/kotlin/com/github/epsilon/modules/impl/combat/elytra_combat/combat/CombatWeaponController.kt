@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -65,7 +65,7 @@ object CombatWeaponController {
         swingHand: Boolean,
         reachBuffer: Double,
     ): Boolean {
-        val nn = NonNullContext.current ?: return false
+        val nn = NonNullContext.instance ?: return false
         return context(nn) { attackMaceImpl(target, antiShield, swingHand, reachBuffer) }
     }
 
@@ -108,7 +108,7 @@ object CombatWeaponController {
     }
 
     fun ensureSpearUse(): Boolean {
-        val nn = NonNullContext.current ?: return false
+        val nn = NonNullContext.instance ?: return false
         return context(nn) { ensureSpearUseImpl() }
     }
 
@@ -226,7 +226,7 @@ object CombatWeaponController {
     }
 
     fun stopSpearUse() {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) {
             // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
             val player = mc.player
@@ -273,7 +273,7 @@ object CombatWeaponController {
         if (target == null || !target.isUsingItem || !target.isBlocking) {
             return false
         }
-        val nn = NonNullContext.current ?: return false
+        val nn = NonNullContext.instance ?: return false
         return context(nn) {
             InvUtils.findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
         }

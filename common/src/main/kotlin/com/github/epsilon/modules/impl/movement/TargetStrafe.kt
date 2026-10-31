@@ -1,12 +1,15 @@
 package com.github.epsilon.modules.impl.movement
 
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -15,9 +18,6 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -41,7 +41,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     private var direction = 1
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
             val left = mc.options.keyLeft.isDown
             val right = mc.options.keyRight.isDown
             if (left != right) {
@@ -50,12 +50,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (speedOnly && !Speed.isEnabled && !Flight.isEnabled) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (requireJump && (mc.gui.screen() != null || !mc.options.keyJump.isDown)) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (KillAura.isEnabled && !Scaffold.isEnabled && !player.isUsingItem && !player.isBlocking) {
@@ -66,14 +66,14 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (target == null) {
                 targetYaw = Float.NaN
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val offsets = createOrbitOffsets()
             var closestIndex = findClosestIndex(offsets)
             if (closestIndex < 0) {
                 resetTarget()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (player.horizontalCollision) {

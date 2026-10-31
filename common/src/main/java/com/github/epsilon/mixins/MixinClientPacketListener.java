@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.GameJoinedEvent;
 import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.RespawnEvent;
@@ -45,20 +44,20 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @Inject(method = "handleLogin", at = @At("TAIL"))
     private void onHandleLoginTail(ClientboundLoginPacket packet, CallbackInfo ci, @Share("worldNotNull") LocalBooleanRef worldNotNull) {
         if (worldNotNull.get()) {
-            EventBus.INSTANCE.post(new GameLeftEvent());
+            new GameLeftEvent().post();
         }
-        EventBus.INSTANCE.post(new GameJoinedEvent());
+        new GameJoinedEvent().post();
     }
 
     // the server sends a GameJoin packet after the reconfiguration phase
     @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
     private void onHandleConfigurationStart(ClientboundStartConfigurationPacket packet, CallbackInfo ci) {
-        EventBus.INSTANCE.post(new GameLeftEvent());
+        new GameLeftEvent().post();
     }
 
     @Inject(method = "handleRespawn", at = @At("RETURN"))
     private void onHandleRespawnReturn(ClientboundRespawnPacket packet, CallbackInfo ci) {
-        EventBus.INSTANCE.post(new RespawnEvent());
+        new RespawnEvent().post();
     }
 
     @Inject(method = "handleSetEntityData", at = @At("HEAD"), cancellable = true)

@@ -1,8 +1,12 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -13,10 +17,6 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.core.BlockPos
@@ -59,15 +59,15 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     )
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val currentRotation = rotation
             if (currentRotation != null && rotate) {
                 RotationManager.setRotations(currentRotation, rotationSpeed.toDouble())
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre> {
-            if (!timer.passedMillise(placeDelay.toLong())) return@nonNullHandler
+        safeEventHandler<ClientTickEvent.Pre> {
+            if (!timer.passedMillise(placeDelay.toLong())) return@safeEventHandler
 
             progress = 0
 
@@ -81,22 +81,22 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             if (!result.found()) {
                 ChatUtils.sendMessage("[FeetTrap] No block found")
                 toggle()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (toggleOnMove && player.distanceToSqr(startX, startY, startZ) > 1.0 ||
                 toggleOnJump && player.input.keyPresses.jump()
             ) {
                 toggle()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (pauseOnEat && PlayerUtils.isEating()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (!inAir && !player.onGround()) {
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             doSurround(BlockPos.containing(player.x, player.y, player.z), result.slot)
@@ -108,7 +108,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         { rotate }
 
     override fun onEnable() {
-        val nn = NonNullContext.current
+        val nn = NonNullContext.instance
         if (nn == null) {
             toggle()
             return
@@ -216,7 +216,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun placeBlock(pos: BlockPos, side: Direction, hand: InteractionHand) {
         val result = BlockHitResult(hitVec(pos, side), side, pos, false)
-        interaction.useItemOn(player, hand, result)
+        gameMode.useItemOn(player, hand, result)
     }
 
     private fun hitVec(pos: BlockPos, side: Direction): Vec3 {

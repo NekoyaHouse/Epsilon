@@ -1,9 +1,10 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -14,10 +15,6 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -45,10 +42,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     private var trackedBedFace: Direction? = null
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (shouldPauseBreaking()) {
                 clearBreakingState()
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             val maxRange = range
@@ -61,7 +58,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
                 val nextTarget = findTarget()
                 if (nextTarget == null) {
                     resetBreaking()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
                 resetBreaking()
                 currentTarget = nextTarget.pos
@@ -86,11 +83,11 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
 
             if (!startedBreaking) {
-                interaction.startDestroyBlock(currentTarget!!, currentFace!!)
+                gameMode.startDestroyBlock(currentTarget!!, currentFace!!)
                 startedBreaking = true
             }
 
-            interaction.continueDestroyBlock(currentTarget!!, currentFace!!)
+            gameMode.continueDestroyBlock(currentTarget!!, currentFace!!)
 
             SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
 
@@ -99,10 +96,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
         }
 
-        nonNullHandler<Render3DEvent> {
-            if (!esp || currentTarget == null) return@nonNullHandler
+        safeEventHandler<Render3DEvent> {
+            if (!esp || currentTarget == null) return@safeEventHandler
 
-            val target = currentTarget ?: return@nonNullHandler
+            val target = currentTarget ?: return@safeEventHandler
             val shape = level.getBlockState(target).getShape(level, target)
             val box = if (shape.isEmpty) AABB(target) else shape.bounds().move(target)
             Render3DScheduler.addFilledBox(box, Color(255, 0, 0, 50))
@@ -147,7 +144,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     private fun resetBreaking() {
         if (startedBreaking) {
-            NonNullContext.current?.interaction?.stopDestroyBlock()
+            NonNullContext.instance?.gameMode?.stopDestroyBlock()
         }
         clearBreakingState()
     }
@@ -165,7 +162,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             return followUpTarget
         }
 
-        val manager = NonNullContext.current ?: return null
+        val manager = NonNullContext.instance ?: return null
         val player = manager.player
         val level = manager.level
         val maxRange = range
@@ -213,7 +210,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             return null
         }
 
-        val manager = NonNullContext.current ?: return null
+        val manager = NonNullContext.instance ?: return null
         val maxRange = range
         val eyes = manager.player.eyePosition
         val target = getBedFaceTarget(bedPos, bedFace, maxRange, eyes)
@@ -246,7 +243,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getDirectBedTarget(bedPos: BlockPos, maxRange: Double, eyes: Vec3): TargetData? {
-        val level = NonNullContext.current?.level ?: return null
+        val level = NonNullContext.instance?.level ?: return null
         var best: TargetData? = null
 
         for (face in Direction.values()) {
@@ -284,7 +281,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getBedFaceTarget(bedPos: BlockPos, bedFace: Direction, maxRange: Double, eyes: Vec3): TargetData? {
-        val level = NonNullContext.current?.level ?: return null
+        val level = NonNullContext.instance?.level ?: return null
         val adjacentPos = bedPos.relative(bedFace)
         val adjacentState: BlockState = level.getBlockState(adjacentPos)
         if (adjacentState.isAir) {
@@ -365,7 +362,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     }
 
     private fun worldState(pos: BlockPos): BlockState? {
-        return NonNullContext.current?.level?.getBlockState(pos)
+        return NonNullContext.instance?.level?.getBlockState(pos)
     }
 
     private data class TargetData(

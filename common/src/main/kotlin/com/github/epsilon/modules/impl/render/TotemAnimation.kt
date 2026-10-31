@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -21,7 +21,7 @@ import kotlin.math.sin
 object TotemAnimation : Module("Totem Animation", Category.RENDER) {
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     private enum class Mode {

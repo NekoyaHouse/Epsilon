@@ -1,16 +1,14 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -36,8 +34,8 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
     private var isKeyDown = false
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (mc.gui.screen() != null) return@safeEventHandler
 
             val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
@@ -45,7 +43,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
             }
 
             if (pressed) {
-                if (isKeyDown && originalSlot == -1) return@nonNullHandler
+                if (isKeyDown && originalSlot == -1) return@safeEventHandler
                 isKeyDown = true
 
                 if (originalSlot == -1) {
@@ -54,7 +52,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                 if (swapCounter < swapDelay) {
                     ++swapCounter
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 val wearingElytra = player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
@@ -76,7 +74,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
                             resetState()
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
 
                         val invSlot = InvUtils.find(predicate).slot
@@ -88,10 +86,10 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                             ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
-                            return@nonNullHandler
+                            return@safeEventHandler
                         } else {
                             resetState()
-                            return@nonNullHandler
+                            return@safeEventHandler
                         }
                     }
 
@@ -100,7 +98,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                 }
 
                 if (!isSwinging) {
-                    interaction.useItem(player, InteractionHand.MAIN_HAND)
+                    gameMode.useItem(player, InteractionHand.MAIN_HAND)
                     SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
                     isSwinging = true
                 }

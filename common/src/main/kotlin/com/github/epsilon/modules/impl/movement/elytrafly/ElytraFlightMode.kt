@@ -4,12 +4,12 @@ import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
+import com.github.epsilon.kernel.MinecraftWrapper
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
@@ -19,7 +19,7 @@ import net.minecraft.world.item.Items
 
 abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
-    protected val mc: Minecraft = Minecraft.getInstance()
+    protected val mc: Minecraft get() = MinecraftWrapper.mc
     private val unbreakingTimer = TimerUtils()
 
     open fun onEnable() {
@@ -129,7 +129,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
             InvUtils.invSwap(rocket.slot)
         }
 
-        val result = interaction.useItem(player, hand)
+        val result = gameMode.useItem(player, hand)
         if (result.consumesAction()) {
             SwingMode.Both.interactSwing(hand)
         }

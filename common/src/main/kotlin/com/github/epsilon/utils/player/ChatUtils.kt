@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.interfaces.ChatComponentAccessor
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.ColorUtils
 import net.minecraft.network.chat.Component

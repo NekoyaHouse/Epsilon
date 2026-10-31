@@ -1,9 +1,10 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.events.api.AlwaysListening
+import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
@@ -11,7 +12,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
 
-object ExtrapolationManager {
+object ExtrapolationManager : AlwaysListening {
 
     private var motions: Map<AbstractClientPlayer, List<Vec3>> = HashMap()
 

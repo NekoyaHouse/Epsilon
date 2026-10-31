@@ -1,8 +1,12 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.RightClickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.gameMode
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
@@ -10,10 +14,6 @@ import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.BlockPos
@@ -55,13 +55,13 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     var crystalling = false
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             onTick(it)
         }
 
-        nonNullHandler<RightClickEvent> { event ->
-            if (!mc.mouseHandler.isRightPressed) return@nonNullHandler
-            if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return@nonNullHandler
+        safeEventHandler<RightClickEvent> { event ->
+            if (!mc.mouseHandler.isRightPressed) return@safeEventHandler
+            if (!player.mainHandItem.`is`(Items.END_CRYSTAL)) return@safeEventHandler
 
             val hit = mc.hitResult
             if (hit is BlockHitResult) {
@@ -141,7 +141,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 }
 
                 val result: InteractionResult =
-                    interaction.useItemOn(player, InteractionHand.MAIN_HAND, placeHit)
+                    gameMode.useItemOn(player, InteractionHand.MAIN_HAND, placeHit)
                 if (result.consumesAction()) {
                     SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
                 }
@@ -179,7 +179,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     KeyMapping.click(mc.options.keyAttack.defaultKey)
                 }
 
-                interaction.attack(player, entity)
+                gameMode.attack(player, entity)
 
                 SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
 

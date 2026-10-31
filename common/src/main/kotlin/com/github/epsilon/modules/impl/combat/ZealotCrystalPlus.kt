@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
@@ -10,6 +10,7 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -27,7 +28,6 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -359,7 +359,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         workerThread.isDaemon = true
         workerThread.start()
 
-        nonNullHandler<PlayerTickEvent.Pre> { onTick() }
+        safeEventHandler<PlayerTickEvent.Pre> { onTick() }
         handler<PacketEvent.Receive> { onPacketReceive(it) }
         handler<Render3DEvent> { onRender3D() }
         handler<Render2DEvent.Level> { onRender2D(it) }
@@ -583,7 +583,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
                 lastProcessedId = snapshot.id
                 val start = System.nanoTime()
-                val nn = NonNullContext.current
+                val nn = NonNullContext.instance
                 if (nn == null) {
                     waitForSignal(50L, 0)
                     continue
@@ -1379,7 +1379,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleSpawnPacket(packet: ClientboundAddEntityPacket) {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) { handleSpawnPacketImpl(packet) }
     }
 
@@ -1430,7 +1430,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleExplosionPacket(packet: ClientboundSoundPacket) {
-        val nn = NonNullContext.current ?: return
+        val nn = NonNullContext.instance ?: return
         context(nn) { handleExplosionPacketImpl(packet) }
     }
 

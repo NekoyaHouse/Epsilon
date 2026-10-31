@@ -1,14 +1,14 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.level
+import com.github.epsilon.kernel.jvm.player
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BlockItem
@@ -31,15 +31,15 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
     private val blocksOnly by boolSetting("Blocks Only", true)
 
     init {
-        nonNullHandler<PlayerTickEvent.Pre> {
-            if (!player.onGround() || !isMovementInputPressed()) return@nonNullHandler
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (!player.onGround() || !isMovementInputPressed()) return@safeEventHandler
 
             val motionX = player.deltaMovement.x
             val motionZ = player.deltaMovement.z
-            if (!canSafeWalk(motionX, motionZ)) return@nonNullHandler
+            if (!canSafeWalk(motionX, motionZ)) return@safeEventHandler
 
             val multiplier = if (player.hasEffect(MobEffects.SPEED)) speedMotion else motion
-            if (multiplier == 1.0) return@nonNullHandler
+            if (multiplier == 1.0) return@safeEventHandler
 
             player.deltaMovement = Vec3(
                 motionX * multiplier,
@@ -48,8 +48,8 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
             )
         }
 
-        nonNullHandler<MoveEvent>(EventPriority.LOWEST) { event ->
-            if (!canSafeWalk(event.x, event.z)) return@nonNullHandler
+        safeEventHandler<MoveEvent>(EventPriority.LOWEST) { event ->
+            if (!canSafeWalk(event.x, event.z)) return@safeEventHandler
 
             var movementX = event.x
             var movementZ = event.z

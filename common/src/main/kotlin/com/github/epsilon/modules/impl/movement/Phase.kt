@@ -1,12 +1,11 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool
@@ -14,7 +13,6 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.MoveUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -69,7 +67,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             clipTimer = afterBreak
         }
 
-        nonNullHandler<BlockCollisionEvent> { event ->
+        safeEventHandler<BlockCollisionEvent> { event ->
             val playerPos = BlockPos.containing(player.position())
 
             if ((mode != Mode.CCClip && mode != Mode.Pearl && mode != Mode.ForceMine && canNoClip()) || afterPearlTime > 0) {
@@ -83,7 +81,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 val zDelta = abs(playerPos.z - event.pos.z).toFloat()
 
                 if (xDelta != 0.0f && zDelta != 0.0f && strict) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (event.pos != playerPos.below() || mc.options.keyShift.isDown) {
@@ -92,7 +90,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> { event ->
+        safeEventHandler<PlayerTickEvent.Pre> { event ->
             if (clipTimer > 0) clipTimer--
             if (afterPearlTime > 0) afterPearlTime--
 
@@ -111,12 +109,12 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     blockToBreak = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
                 }
 
-                if (blockToBreak == null) return@nonNullHandler
+                if (blockToBreak == null) return@safeEventHandler
                 val bestTool = AutoTool.getBestTool(blockToBreak)
-                if (bestTool == -1) return@nonNullHandler
+                if (bestTool == -1) return@safeEventHandler
 
                 InvUtils.swap(bestTool, true)
-                interaction.continueDestroyBlock(blockToBreak, player.direction)
+                gameMode.continueDestroyBlock(blockToBreak, player.direction)
                 SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 if (silent) {
                     InvUtils.swapBack()
@@ -150,14 +148,14 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
                     if (pauseOnPhase && isPlayerInBlock()) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val dir = MoveUtils.forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
-                        return@nonNullHandler
+                        return@safeEventHandler
                     }
 
                     val angle = RotationUtils.calculate(Vec3.atCenterOf(block))
@@ -278,7 +276,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             InvUtils.invSwap(slot)
         }
 
-        interaction.useItem(player, InteractionHand.MAIN_HAND)
+        gameMode.useItem(player, InteractionHand.MAIN_HAND)
 
         SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
 

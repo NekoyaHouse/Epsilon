@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import static com.github.epsilon.Constants.mc;
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(ClientLevel.class)
 public abstract class MixinClientLevel {

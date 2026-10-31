@@ -2,10 +2,11 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -17,9 +18,6 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.interaction
-import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -60,10 +58,10 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) {
                 pressed = false
-                return@nonNullHandler
+                return@safeEventHandler
             }
 
             if (hasActivated) {
@@ -78,15 +76,15 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 val pearl = InvUtils.findInHotbar(Items.ENDER_PEARL)
                 if (!pearl.found()) {
                     resetState()
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (player.cooldowns.isOnCooldown(Items.ENDER_PEARL.defaultInstance)) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (pauseOnEat && (PlayerUtils.isEating() || NoSlowdown.isWorking())) {
-                    return@nonNullHandler
+                    return@safeEventHandler
                 } else {
                     if (NoSlowdown.isWorking()) {
                         NotificationManager.warning(
@@ -106,11 +104,11 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
 
                 if (clock < delay) {
                     clock++
-                    return@nonNullHandler
+                    return@safeEventHandler
                 }
 
                 if (!hasActivated) {
-                    val result: InteractionResult = interaction.useItem(player, InteractionHand.MAIN_HAND)
+                    val result: InteractionResult = gameMode.useItem(player, InteractionHand.MAIN_HAND)
                     if (result.consumesAction()) {
                         SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
                     }

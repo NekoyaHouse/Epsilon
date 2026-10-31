@@ -1,13 +1,12 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.nonNullHandler
-import com.github.epsilon.events.bus.EventPriority
+import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
-import com.github.epsilon.utils.safety.player
 import net.minecraft.client.player.LocalPlayer
 
 object Criticals : Module("Criticals", Category.COMBAT) {
@@ -17,7 +16,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     private var stopSprinting = false
 
     init {
-        nonNullHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
+        safeEventHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (!canCrit(player) || player.fallDistance >= 1.0) {
                 fallTicks = 0
             } else {
@@ -25,15 +24,15 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             }
         }
 
-        nonNullHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
+        safeEventHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
             stopSprinting = fallTicks in 1..<3 &&
                     player.isSprinting &&
                     KillAura.target != null &&
                     Velocity.attackQueue == 0
         }
 
-        nonNullHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
-            if (!stopSprinting) return@nonNullHandler
+        safeEventHandler<KeyboardInputEvent>(EventPriority.LOWEST) { event ->
+            if (!stopSprinting) return@safeEventHandler
             stopSprinting = false
 
             if (fallTicks in 1..<3 &&

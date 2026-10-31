@@ -2,7 +2,7 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.nonNullHandler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -12,12 +12,11 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
@@ -90,7 +89,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     init {
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
         handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
-        nonNullHandler<AttackEntityEvent> { event ->
+        safeEventHandler<AttackEntityEvent> { event ->
             val target = event.entity
             if (triggerMode == TriggerMode.Kill && event.player === player && target is Player && target !== player && target.isAlive) {
                 recentTargets[target.id] = TrackedTarget(target, System.currentTimeMillis())
@@ -177,7 +176,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun updateKillTrigger() {
-        val level = NonNullContext.current?.level
+        val level = NonNullContext.instance?.level
         if (triggerMode == TriggerMode.Kill && level != null) {
             val now = System.currentTimeMillis()
             val iterator = recentTargets.entries.iterator()
@@ -209,7 +208,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     private fun confirmTrackedDeath(entityId: Int) {
         if (!isEnabled || triggerMode != TriggerMode.Kill) return
-        val level = NonNullContext.current?.level ?: return
+        val level = NonNullContext.instance?.level ?: return
         val target = recentTargets[entityId]
         if (target == null || target.player.level() !== level || !target.isRecent(System.currentTimeMillis())) {
             return
@@ -220,7 +219,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     private fun confirmDeathEvent(packet: ClientboundEntityEventPacket) {
         if (!isEnabled || triggerMode != TriggerMode.Kill) return
-        val level = NonNullContext.current?.level ?: return
+        val level = NonNullContext.instance?.level ?: return
         val entity = packet.getEntity(level) ?: return
         confirmTrackedDeath(entity.id)
     }

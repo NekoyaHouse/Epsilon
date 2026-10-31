@@ -1,7 +1,7 @@
 package com.github.epsilon.assets.i18n
 
 import com.github.epsilon.Constants
-import com.github.epsilon.Constants.mc
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.google.gson.Gson

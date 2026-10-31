@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent

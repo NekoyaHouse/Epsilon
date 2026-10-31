@@ -1,10 +1,10 @@
 package com.github.epsilon.accounts
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.accounts.types.CrackedAccount
 import com.github.epsilon.accounts.types.MicrosoftAccount
 import com.github.epsilon.accounts.types.SessionAccount
 import com.github.epsilon.accounts.types.TheAlteningAccount
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.google.gson.JsonObject
 import com.mojang.authlib.minecraft.UserApiService
 import com.mojang.authlib.services.FriendsService
