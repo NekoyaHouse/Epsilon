@@ -5,7 +5,7 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category

@@ -1,16 +1,21 @@
-package com.github.epsilon.managers.rotation
+package com.github.epsilon.managers
 
 import com.github.epsilon.Constants.mc
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.modules.impl.ClientSetting
+import com.github.epsilon.modules.impl.movement.MovementFix
+import com.github.epsilon.modules.impl.render.FreeCamera
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.HitResult
 import java.util.function.Function
@@ -19,21 +24,11 @@ import kotlin.math.atan2
 import kotlin.random.Random
 
 /**
- * 托管旋转管理器基类。
+ * 托管旋转管理器。
  *
- * 与其它 Manager 不同，本类实例是**可替换**的：[switchRotationManager] 会创建新的
- * [SilentRotationManager] / [SnapRotationManager] 实例并赋给 [INSTANCE]。因此调用方每次
- * 使用都必须重新读取 [INSTANCE]，不得长期缓存（AGENTS 约束）。
- *
- * INSTANCE 使用 `@Volatile` 保证跨线程可见性；Kotlin 侧沿用 `RotationManager.INSTANCE.xxx`
- * 语法，Java 侧 Phase B 改为 `RotationManager.Companion.instance`。
+ * 所有旋转请求统一提交到 [INSTANCE]，不再按模式创建不同实例。
  */
-abstract class RotationManager {
-
-    enum class RotationMode {
-        SILENT,
-        SNAP
-    }
+class RotationManager private constructor() {
 
     private val offset = Rot2f(0f, 0f)
     var rotations = Rot2f(0f, 0f)
@@ -43,19 +38,20 @@ abstract class RotationManager {
     var lastAnimationRotation: Rot2f? = null
 
     @Volatile
-    protected var active = false
+    private var active = false
 
     @Volatile
-    protected var smoothed = false
+    private var smoothed = false
 
     @Volatile
-    protected var rotationSpeed = 0.0
-    protected var raytrace: Function<Rot2f, Boolean>? = null
+    private var rotationSpeed = 0.0
+    private var raytrace: Function<Rot2f, Boolean>? = null
     private var randomAngle = 0f
     private var rotationHitResult: HitResult? = null
     private var calculatingHitResult = false
+    private var useItemRotation: Rot2f? = null
 
-    protected var priority = 0
+    private var priority = 0
 
     fun setRotations(rotations: Rot2f?, rotationSpeed: Double) {
         setRotations(rotations, rotationSpeed, null, Priority.Medium)
@@ -86,16 +82,9 @@ abstract class RotationManager {
         this.active = true
 
         smooth()
-        onRotationsSet()
     }
 
-    protected open fun onRotationsSet() {
-    }
-
-    protected open fun resetModeState() {
-    }
-
-    protected open fun smooth() {
+    private fun smooth() {
         if (!smoothed) {
             var targetYaw = targetRotations!!.yaw
             var targetPitch = targetRotations!!.pitch
@@ -173,19 +162,19 @@ abstract class RotationManager {
         }
     }
 
-    protected open fun shouldModifyCrosshair(): Boolean {
-        return false
+    private fun shouldModifyCrosshair(): Boolean {
+        return ClientSetting.modifyCrosshair && !FreeCamera.isEnabled
     }
 
-    protected fun hasActiveRotation(): Boolean {
+    private fun hasActiveRotation(): Boolean {
         return active
     }
 
-    protected fun clampPitch(pitch: Float): Float {
+    private fun clampPitch(pitch: Float): Float {
         return pitch.coerceIn(-90.0f, 90.0f)
     }
 
-    protected fun correctDisabledRotations(player: LocalPlayer) {
+    private fun correctDisabledRotations(player: LocalPlayer) {
         val playerRotation = Rot2f(player.yRot, player.xRot)
         val fixedRotations = RotationUtils.applySensitivityPatch(playerRotation, lastRotations)
         val fixedYaw = fixedRotations.yaw + Mth.wrapDegrees(player.yRot - fixedRotations.yaw)
@@ -234,22 +223,8 @@ abstract class RotationManager {
         this.smoothed = smoothed
     }
 
-    open fun copyStateFrom(manager: RotationManager) {
-        this.rotations = manager.rotations
-        this.lastRotations = manager.lastRotations
-        this.targetRotations = manager.targetRotations
-        this.animationRotation = manager.animationRotation
-        this.lastAnimationRotation = manager.lastAnimationRotation
-        this.active = manager.active
-        this.smoothed = manager.smoothed
-        this.rotationSpeed = manager.rotationSpeed
-        this.raytrace = manager.raytrace
-        this.priority = manager.priority
-        this.rotationHitResult = manager.rotationHitResult
-    }
-
     @EventHandler
-    protected open fun onRespawn(event: RespawnEvent) {
+    private fun onRespawn(event: RespawnEvent) {
         offset.set(0f, 0f)
         rotations = Rot2f(0f, 0f)
         lastRotations = Rot2f(0f, 0f)
@@ -263,7 +238,7 @@ abstract class RotationManager {
         randomAngle = 0f
         rotationHitResult = null
         calculatingHitResult = false
-        resetModeState()
+        useItemRotation = null
     }
 
     @EventHandler
@@ -275,7 +250,7 @@ abstract class RotationManager {
     }
 
     @EventHandler(priority = -1000)
-    protected open fun onPlayerTick(event: PlayerTickEvent.Pre) {
+    private fun onPlayerTick(event: PlayerTickEvent.Pre) {
         val player = mc.player!!
         if (!active || targetRotations == null) {
             val current = Rot2f(player.yRot, player.xRot)
@@ -286,15 +261,11 @@ abstract class RotationManager {
 
         if (hasActiveRotation()) {
             smooth()
-            afterPlayerTick()
         }
     }
 
-    protected open fun afterPlayerTick() {
-    }
-
     @EventHandler
-    protected open fun onAnimation(event: RotationAnimationEvent) {
+    private fun onAnimation(event: RotationAnimationEvent) {
         val animation = animationRotation
         val lastAnimation = lastAnimationRotation
         if (active && animation != null && lastAnimation != null) {
@@ -306,7 +277,7 @@ abstract class RotationManager {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    protected open fun onSendPosition(event: SendPositionEvent) {
+    private fun onSendPosition(event: SendPositionEvent) {
         val player = mc.player
         if (player == null) {
             active = false
@@ -316,12 +287,25 @@ abstract class RotationManager {
             smoothed = false
             rotationHitResult = null
             calculatingHitResult = false
-            resetModeState()
+            useItemRotation = null
             return
         }
 
         if (active) {
-            handleSendPosition(event)
+            // Item use is sent before LocalPlayer ticks; keep both packets on the same server rotation.
+            val useItemRotation = useItemRotation
+            if (useItemRotation != null) {
+                rotations = useItemRotation
+                this.useItemRotation = null
+            }
+
+            val yaw = rotations.yaw
+            val pitch = clampPitch(rotations.pitch)
+
+            if (!yaw.isNaN() && !pitch.isNaN()) {
+                event.yaw = yaw
+                event.pitch = pitch
+            }
 
             if (abs((rotations.yaw - player.yRot) % 360) < 1 &&
                 abs(rotations.pitch - player.xRot) < 1
@@ -343,34 +327,98 @@ abstract class RotationManager {
         smoothed = false
     }
 
-    protected abstract fun handleSendPosition(event: SendPositionEvent)
+    @EventHandler(priority = EventPriority.HIGH)
+    private fun onMoveInput(event: KeyboardInputEvent) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+            MovementFix.fixMovement(event, rotations.yaw)
+        }
+    }
+
+    @EventHandler
+    private fun onItemRaytrace(event: UseItemRaytraceEvent) {
+        if (hasActiveRotation()) {
+            event.yaw = rotations.yaw
+            event.pitch = clampPitch(rotations.pitch)
+        }
+    }
+
+    @EventHandler
+    private fun onStrafe(event: StrafeEvent) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+            event.yaw = rotations.yaw
+        }
+    }
+
+    @EventHandler
+    private fun onJump(event: JumpEvent) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+            event.yaw = rotations.yaw
+        }
+    }
+
+    @EventHandler
+    private fun onFallFlying(event: FallFlyingEvent) {
+        if (MovementFix.isEnabled && hasActiveRotation()) {
+            event.yaw = rotations.yaw
+            event.pitch = clampPitch(rotations.pitch)
+        }
+    }
+
+    @EventHandler
+    private fun onUseItem(event: UseItemEvent) {
+        if (hasActiveRotation()) {
+            event.yaw = rotations.yaw
+            event.pitch = clampPitch(rotations.pitch)
+        }
+    }
+
+    @EventHandler
+    private fun onFireworkUpdate(event: FireworkRotationEvent) {
+        if (hasActiveRotation()) {
+            event.yaw = rotations.yaw
+            event.pitch = clampPitch(rotations.pitch)
+        }
+    }
+
+    @EventHandler
+    private fun onAttack(event: AttackYawEvent) {
+        if (hasActiveRotation()) {
+            event.yaw = rotations.yaw
+        }
+    }
+
+    @EventHandler
+    private fun onPacketSend(event: PacketEvent.Send) {
+        val packet = event.packet
+        if (packet is ServerboundClientTickEndPacket) {
+            useItemRotation = null
+        } else if (hasActiveRotation() && packet is ServerboundUseItemPacket) {
+            val yaw = rotations.yaw
+            val pitch = clampPitch(rotations.pitch)
+            if (!yaw.isNaN() && !pitch.isNaN()) {
+                useItemRotation = Rot2f(yaw, pitch)
+                if (packet.yRot() != yaw || packet.xRot() != pitch) {
+                    event.packet = ServerboundUseItemPacket(
+                        packet.hand(),
+                        packet.sequence(),
+                        yaw,
+                        pitch
+                    )
+                }
+            }
+        }
+    }
 
     companion object {
 
         /**
-         * 当前生效的托管旋转实例。
-         *
-         * 该字段是可替换的（模式切换会整体替换实例），调用方每次都必须重新读取。
-         * 初始实例与 [RotationMode] 默认值 [RotationMode.SILENT] 保持一致。
+         * 当前托管旋转实例。
          */
-        @Volatile
-        var INSTANCE: RotationManager = SilentRotationManager()
-            private set
+        @JvmField
+        val INSTANCE: RotationManager = RotationManager()
 
         init {
             EventBus.subscribe(INSTANCE)
-        }
-
-        fun switchRotationManager(mode: RotationMode) {
-            val previous = INSTANCE
-            val next = when (mode) {
-                RotationMode.SNAP -> SnapRotationManager()
-                RotationMode.SILENT -> SilentRotationManager()
-            }
-            next.copyStateFrom(previous)
-            EventBus.unsubscribe(previous)
-            INSTANCE = next
-            EventBus.subscribe(next)
         }
 
     }

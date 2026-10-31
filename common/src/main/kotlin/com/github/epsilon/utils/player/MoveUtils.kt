@@ -1,18 +1,12 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.player
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * 依据当前旋转与移动输入计算水平速度向量。
- *
- * `RotationManager.INSTANCE` 是可变静态字段（切换旋转模式会替换实例），
- * 因此每次调用都重新读取，不做缓存。
- */
 object MoveUtils {
 
     /**

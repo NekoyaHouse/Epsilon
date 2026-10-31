@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f

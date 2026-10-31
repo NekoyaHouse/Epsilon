@@ -376,7 +376,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         if (buffer != null && cursorIndex > 0) {
             inputBuffer = buffer.substring(0, cursorIndex - 1) + buffer.substring(cursorIndex)
             cursorIndex--
-            }
+        }
     }
 
     private fun deleteForward() {
@@ -387,7 +387,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         val buffer = inputBuffer
         if (buffer != null && cursorIndex < buffer.length) {
             inputBuffer = buffer.substring(0, cursorIndex) + buffer.substring(cursorIndex + 1)
-            }
+        }
     }
 
     private fun applyValue(value: String) {

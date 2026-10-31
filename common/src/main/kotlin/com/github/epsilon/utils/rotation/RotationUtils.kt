@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.Constants.mc
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.safety.level
@@ -197,7 +197,10 @@ object RotationUtils {
         return calculate(
             entity.position().add(
                 0.0,
-                (player.y - entity.y + player.eyeHeight).coerceIn(0.0, (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9),
+                (player.y - entity.y + player.eyeHeight).coerceIn(
+                    0.0,
+                    (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
+                ),
                 0.0
             )
         )

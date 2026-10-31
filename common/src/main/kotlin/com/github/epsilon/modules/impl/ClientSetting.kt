@@ -15,12 +15,11 @@ import com.github.epsilon.gui.troll.TrollGuiScreen
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.TranslationManager
-import com.github.epsilon.managers.rotation.RotationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.IconSet
@@ -185,12 +184,6 @@ object ClientSetting : Module("Client Setting", null) {
     val teams: EnumSetting<Teams> = enumSetting("Teams", Teams.None).group(sgTeams)
 
     // Anti Cheat
-    val rotationMode: EnumSetting<RotationManager.RotationMode> = enumSetting(
-        "Rotation Mode",
-        RotationManager.RotationMode.SILENT,
-        onChanged = { RotationManager.switchRotationManager(it) }
-    ).group(sgAntiCheat)
-
     val modifyCrosshair by boolSetting("Modify Crosshair", true).group(sgAntiCheat)
 
     val hideMode: EnumSetting<HideMode> = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat)

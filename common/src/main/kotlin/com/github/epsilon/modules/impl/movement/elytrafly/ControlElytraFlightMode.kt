@@ -5,7 +5,7 @@ import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvUtils

@@ -62,7 +62,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - `ModuleManager.initModules()` 与 `HudElementManager.initElements()` 必须在 `ConfigManager.initConfig()` 之前完成。
 - Manager 统一为 `public static final Xxx INSTANCE` 单例，构造函数默认私有（`ModuleManager` 等既有例外遵循现状）；调用方不得为已由 Manager 持有的资源另建实例。
-- `RotationManager.INSTANCE` 是可变静态字段，切换旋转模式会替换实例；每次使用都必须重新读取，不得长期缓存。
+- `RotationManager.INSTANCE` 是固定单例；所有旋转请求统一从该实例读取，不得另建实例。
 - GPU renderer、render target、字体 atlas 和 shader 必须在渲染线程创建和使用。
 - 字段持有 renderer 时使用 `Suppliers.memoize(Renderer::create)` 延迟创建，或交给 `RendererManager` 注册。
 - 不再使用的 GPU 资源调用 `close()`；全局销毁交给 `RendererManager`、`RenderTargetManager`、`ShaderManager` 等 Manager 生命周期。
@@ -115,7 +115,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Zip 导入必须继续使用 `ConfigManager` 的安全解压逻辑，不得绕过路径穿越校验。
 - 修改配置 schema 时必须同步更新 `ConfigManager.CONFIG_VERSION` 与迁移逻辑；不得直接丢弃旧配置。
 - 影响数据完整性的操作应主动保存，不能只依赖 JVM shutdown hook。
-- Rotation 请求每次从 `RotationManager.INSTANCE` 读取；切换模式会通过 `copyStateFrom()` 替换实例。
+- Rotation 请求统一从 `RotationManager.INSTANCE` 读取；不得另建实例或缓存独立旋转状态。
 - raytrace 回调会在平滑旋转校验中被多次调用，必须无副作用。
 - 服务端位置/旋转包会重置托管旋转；需要等待命中后攻击或放置时，由模块自行维护 pending 状态并保证动作只执行一次。
 

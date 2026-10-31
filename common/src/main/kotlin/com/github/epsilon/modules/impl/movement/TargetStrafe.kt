@@ -8,7 +8,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura

@@ -63,7 +63,7 @@ class LambdaListener(klass: Class<*>, obj: Any?, method: Method) : IListener {
     private companion object {
 
         /**
-         * 按事件处理类缓存 private lookup：同一类型的多个实例反复订阅时（例如切换旋转模式重建 RotationManager）不必重复提升访问权限。
+         * 按事件处理类缓存 private lookup：同一类型的多个监听器实例反复订阅时不必重复提升访问权限。
          */
         private val LOOKUPS: MutableMap<Class<*>, MethodHandles.Lookup> = ConcurrentHashMap()
 

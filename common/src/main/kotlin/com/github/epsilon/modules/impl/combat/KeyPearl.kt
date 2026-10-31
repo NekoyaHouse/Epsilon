@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown

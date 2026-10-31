@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
