@@ -2,7 +2,7 @@ package com.github.epsilon.utils.player
 
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.player
 import kotlin.math.cos
 import kotlin.math.sin

@@ -2,7 +2,7 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.item.ItemStack

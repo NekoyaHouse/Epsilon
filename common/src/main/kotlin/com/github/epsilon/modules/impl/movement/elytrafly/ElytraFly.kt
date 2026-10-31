@@ -6,8 +6,7 @@ import com.github.epsilon.events.impl.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.DoubleSetting
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.mojang.blaze3d.platform.InputConstants
 import java.util.*
 

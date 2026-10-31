@@ -7,7 +7,7 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import net.minecraft.client.multiplayer.PlayerInfo

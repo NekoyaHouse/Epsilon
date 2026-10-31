@@ -10,7 +10,7 @@ import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.core.BlockPos

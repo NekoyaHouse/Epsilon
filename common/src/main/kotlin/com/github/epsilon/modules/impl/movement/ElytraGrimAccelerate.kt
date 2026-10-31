@@ -10,10 +10,10 @@ import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket

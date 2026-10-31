@@ -10,10 +10,9 @@ import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
-import com.github.epsilon.utils.safety.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.item.Items
 import kotlin.random.Random

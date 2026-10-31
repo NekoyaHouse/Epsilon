@@ -1,12 +1,10 @@
 package com.github.epsilon.utils.render.esp
 
-import com.github.epsilon.Constants.mc
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*

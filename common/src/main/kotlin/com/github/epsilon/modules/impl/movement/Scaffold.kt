@@ -9,6 +9,10 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category

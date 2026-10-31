@@ -14,10 +14,10 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
 import com.github.epsilon.utils.world.hole.HoleUtils

@@ -11,7 +11,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils

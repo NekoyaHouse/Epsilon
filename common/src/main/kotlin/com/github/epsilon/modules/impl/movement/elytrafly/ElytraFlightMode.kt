@@ -4,6 +4,8 @@ import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode

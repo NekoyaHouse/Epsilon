@@ -5,9 +5,7 @@ import com.github.epsilon.events.impl.DestroyBlockEvent
 import com.github.epsilon.events.impl.PlaceBlockEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 
 object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
 

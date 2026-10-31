@@ -13,7 +13,7 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
@@ -79,7 +79,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
             val result = findBlocks()
             if (!result.found()) {
-                ChatUtils.addChatMessage("[FeetTrap] No block found")
+                ChatUtils.sendMessage("[FeetTrap] No block found")
                 toggle()
                 return@nonNullHandler
             }

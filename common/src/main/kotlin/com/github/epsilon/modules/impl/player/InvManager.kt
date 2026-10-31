@@ -13,7 +13,7 @@ import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.connection
 import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils

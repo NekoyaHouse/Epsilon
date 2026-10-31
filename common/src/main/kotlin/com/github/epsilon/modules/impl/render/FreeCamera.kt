@@ -307,7 +307,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
     }
 
     fun sendChatInfo(text: String) {
-        ChatUtils.addChatMessage("[Free Camera] $text")
+        ChatUtils.sendMessage("[Free Camera] $text")
     }
 
     fun renderHands(): Boolean = !isEnabled || renderHands

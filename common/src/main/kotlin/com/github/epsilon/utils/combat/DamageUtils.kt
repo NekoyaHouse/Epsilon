@@ -3,7 +3,7 @@ package com.github.epsilon.utils.combat
 import com.github.epsilon.Constants.mc
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player

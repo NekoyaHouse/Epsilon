@@ -6,7 +6,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
 import net.minecraft.world.InteractionHand

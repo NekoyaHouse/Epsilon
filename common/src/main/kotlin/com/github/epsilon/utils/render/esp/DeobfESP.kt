@@ -5,7 +5,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis

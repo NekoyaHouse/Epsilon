@@ -27,7 +27,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction

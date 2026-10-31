@@ -12,7 +12,7 @@ import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers

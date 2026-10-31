@@ -66,7 +66,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                         if (ignoreBots && !mc.connection!!.onlinePlayerIds.contains(player.uuid))
                             continue
                         if (notifications) {
-                            ChatUtils.addChatMessage(
+                            ChatUtils.sendMessage(
                                 player.name.string + " logged back at  X: " + player.x.toInt() +
                                         " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                             )
@@ -84,7 +84,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                     if (ignoreBots && !mc.connection!!.onlinePlayerIds.contains(player.uuid))
                         continue
                     if (notifications) {
-                        ChatUtils.addChatMessage(
+                        ChatUtils.sendMessage(
                             player.name.string + " logged out at  X: " + player.x.toInt() +
                                     " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                         )

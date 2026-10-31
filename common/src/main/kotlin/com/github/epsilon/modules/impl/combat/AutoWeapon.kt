@@ -12,7 +12,7 @@ import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.ItemTags

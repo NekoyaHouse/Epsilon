@@ -3,6 +3,10 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module

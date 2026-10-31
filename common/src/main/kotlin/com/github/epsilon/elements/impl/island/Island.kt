@@ -17,8 +17,8 @@ import com.github.epsilon.smtc.SmtcService
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.safety.NonNullContext
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen

@@ -10,8 +10,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.level
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack

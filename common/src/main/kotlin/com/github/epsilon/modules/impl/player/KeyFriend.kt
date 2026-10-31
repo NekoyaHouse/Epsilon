@@ -10,7 +10,7 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult

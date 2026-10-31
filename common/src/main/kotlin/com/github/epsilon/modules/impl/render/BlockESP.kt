@@ -75,7 +75,7 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
 
         val player = mc.player
         if (mc.fps < 8 && player != null && player.tickCount > 150) {
-            ChatUtils.addChatMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。")
+            ChatUtils.sendMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。")
             toggle()
             return
         }

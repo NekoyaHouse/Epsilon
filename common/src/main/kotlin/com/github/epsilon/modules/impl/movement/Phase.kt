@@ -5,6 +5,8 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool

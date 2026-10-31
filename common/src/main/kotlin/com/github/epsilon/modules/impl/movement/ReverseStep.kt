@@ -4,7 +4,7 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos

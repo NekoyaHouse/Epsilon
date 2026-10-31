@@ -8,7 +8,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.player
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item

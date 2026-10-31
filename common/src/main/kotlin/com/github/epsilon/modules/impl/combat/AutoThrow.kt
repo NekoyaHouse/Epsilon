@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player
 import com.github.epsilon.utils.timer.TimerUtils

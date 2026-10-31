@@ -16,7 +16,7 @@ import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.player
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker

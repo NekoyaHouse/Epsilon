@@ -4,6 +4,8 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils

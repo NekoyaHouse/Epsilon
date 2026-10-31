@@ -14,7 +14,7 @@ import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player

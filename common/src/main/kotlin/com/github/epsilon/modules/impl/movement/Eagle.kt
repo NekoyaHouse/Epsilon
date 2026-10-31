@@ -8,10 +8,10 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem

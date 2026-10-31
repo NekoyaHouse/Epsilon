@@ -5,7 +5,7 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand

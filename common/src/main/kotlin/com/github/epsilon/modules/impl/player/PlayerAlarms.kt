@@ -13,7 +13,7 @@ import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.connection
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
@@ -239,7 +239,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{new_gamemode}", translateGamemode(newMode))
                                     val mode = alertMode.value
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-                                        ChatUtils.addChatMessage(
+                                        ChatUtils.sendMessage(
                                             Component.literal(msg).withStyle(ChatFormatting.YELLOW)
                                         )
                                     }
@@ -349,7 +349,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         msg = msg.replace("{old_gamemode}", "").replace("{new_gamemode}", "").trim()
         // Chat
         if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-            ChatUtils.addChatMessage(Component.literal(msg).withStyle(color))
+            ChatUtils.sendMessage(Component.literal(msg).withStyle(color))
         }
         // HUD Notification (no chat side-effect)
         if ((mode == AlertMode.Notification || mode == AlertMode.Both) && playerId != null) {

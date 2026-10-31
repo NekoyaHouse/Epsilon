@@ -3,7 +3,7 @@ package com.github.epsilon.utils.rotation
 import com.github.epsilon.Constants.mc
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import net.minecraft.core.BlockPos

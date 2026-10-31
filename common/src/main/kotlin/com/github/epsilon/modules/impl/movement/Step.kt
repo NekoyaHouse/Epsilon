@@ -12,7 +12,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.safety.connection
 import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.ai.attributes.Attributes

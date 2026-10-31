@@ -9,7 +9,7 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor

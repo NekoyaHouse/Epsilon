@@ -14,7 +14,7 @@ import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.google.common.base.Suppliers
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player

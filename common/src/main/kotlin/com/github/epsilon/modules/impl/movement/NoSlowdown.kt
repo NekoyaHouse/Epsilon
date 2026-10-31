@@ -6,6 +6,8 @@ import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category

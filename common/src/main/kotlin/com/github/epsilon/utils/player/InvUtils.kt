@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack

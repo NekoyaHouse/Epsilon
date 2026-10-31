@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.connection
 import com.github.epsilon.utils.safety.interaction
 import com.github.epsilon.utils.safety.player

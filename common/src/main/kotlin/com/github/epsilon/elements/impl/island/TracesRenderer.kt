@@ -4,7 +4,7 @@ import com.github.epsilon.Constants.mc
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.player
 import net.minecraft.client.Camera

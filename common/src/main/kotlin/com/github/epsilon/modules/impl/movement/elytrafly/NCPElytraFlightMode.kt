@@ -6,9 +6,9 @@ import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.safety.NonNullContext
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.safety.player
-import com.github.epsilon.utils.safety.runSafe
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
