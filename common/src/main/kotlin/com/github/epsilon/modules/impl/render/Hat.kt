@@ -183,7 +183,7 @@ object Hat : Module("Hat", Category.RENDER) {
     }
 
     private fun withAlpha(source: Color, alpha: Int): Color =
-        Color(source.red, source.green, source.blue, Mth.clamp(alpha, 0, 255))
+        Color(source.red, source.green, source.blue, alpha.coerceIn(0, 255))
 
     private fun getColorMode(): Array<Color> = when (this.mode) {
         Mode.Astolfo -> arrayOf(

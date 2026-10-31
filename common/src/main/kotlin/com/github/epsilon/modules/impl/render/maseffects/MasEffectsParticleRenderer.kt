@@ -69,7 +69,7 @@ class MasEffectsParticleRenderer {
     }
 
     fun spawnSlam(position: Vec3, size: Double) {
-        val clampedSize = Mth.clamp(size.toFloat(), 1.0f, 10.0f)
+        val clampedSize = size.toFloat().coerceIn(1.0f, 10.0f)
         if (MasEffects.isMaceShockwaveEnabled()) {
             add(
                 ShockwaveParticle(
@@ -265,7 +265,7 @@ class MasEffectsParticleRenderer {
         fun texture(): Identifier {
             if (frames.size == 1) return frames[0]
             val max = maxOf(1, frameDuration())
-            val index = Mth.clamp(frameAge(), 0, max) * (frames.size - 1) / max
+            val index = frameAge().coerceIn(0, max) * (frames.size - 1) / max
             return frames[index]
         }
 
@@ -295,10 +295,10 @@ class MasEffectsParticleRenderer {
             val matrix: Matrix4f = poseStack.last().pose()
             val halfSize = size
             val color = ARGB.colorFromFloat(
-                Mth.clamp(alpha, 0.0f, 1.0f),
-                Mth.clamp(red, 0.0f, 1.0f),
-                Mth.clamp(green, 0.0f, 1.0f),
-                Mth.clamp(blue, 0.0f, 1.0f)
+                alpha.coerceIn(0.0f, 1.0f),
+                red.coerceIn(0.0f, 1.0f),
+                green.coerceIn(0.0f, 1.0f),
+                blue.coerceIn(0.0f, 1.0f)
             )
 
             renderer.vertex(matrix, -halfSize, -halfSize, 0.0f, 0.0f, 1.0f, color)
@@ -349,16 +349,16 @@ class MasEffectsParticleRenderer {
         private var alphaControl = opacity
 
         init {
-            this.alpha = Mth.clamp(opacity * MasEffects.getMaceShockwaveOpacity(), 0.0f, 1.0f)
+            this.alpha = (opacity * MasEffects.getMaceShockwaveOpacity()).coerceIn(0.0f, 1.0f)
             this.size = 0.5f
             this.friction = 0.0f
         }
 
         override fun afterTick() {
             size += scaler * sizer
-            scaler = Mth.clamp(scaler - 1.0f / lifetime, 0.0f, 1.0f)
+            scaler = (scaler - 1.0f / lifetime).coerceIn(0.0f, 1.0f)
             alphaControl -= 1.0f / lifetime
-            alpha = Mth.clamp(alphaControl * MasEffects.getMaceShockwaveOpacity(), 0.0f, 1.0f)
+            alpha = (alphaControl * MasEffects.getMaceShockwaveOpacity()).coerceIn(0.0f, 1.0f)
         }
 
         override fun frameAge(): Int = minOf(age, lifetime / 2)
@@ -391,8 +391,8 @@ class MasEffectsParticleRenderer {
 
         override fun afterTick() {
             size += scaler * 0.2f
-            scaler = Mth.clamp(scaler - 1.0f / lifetime, 0.0f, 1.0f)
-            alpha = Mth.clamp(alpha - 1.0f / lifetime, 0.0f, 1.0f)
+            scaler = (scaler - 1.0f / lifetime).coerceIn(0.0f, 1.0f)
+            alpha = (alpha - 1.0f / lifetime).coerceIn(0.0f, 1.0f)
         }
     }
 
@@ -409,7 +409,7 @@ class MasEffectsParticleRenderer {
         }
 
         override fun afterTick() {
-            alpha = Mth.clamp((1.0f - time) * 1.5f, 0.2f, 1.0f) - 0.2f
+            alpha = ((1.0f - time) * 1.5f).coerceIn(0.2f, 1.0f) - 0.2f
             time += 1.0f / lifetime
             size = alpha * scale
         }
@@ -488,9 +488,7 @@ class MasEffectsParticleRenderer {
             }
 
             rotY += 20.0f
-            alpha = Mth.clamp(
-                sqrt(sin(age.toDouble() / lifetime * PI)).toFloat() / 1.2f, 0.0f, 1.0f
-            ) * opacity
+            alpha = (sqrt(sin(age.toDouble() / lifetime * PI)).toFloat() / 1.2f).coerceIn(0.0f, 1.0f) * opacity
             size = alpha / opacity * scale
         }
 
@@ -547,9 +545,7 @@ class MasEffectsParticleRenderer {
             if (age.toFloat() >= lifetime / 4.0f &&
                 target.position().distanceTo(Vec3(x, y, z)) < 20.0
             ) {
-                alpha = Mth.clamp(
-                    1.0f - (age.toFloat() - lifetime / 1.5f) / 20.0f, 0.0f, 1.0f
-                ) * MasEffects.getTotemEffectOpacity()
+                alpha = (1.0f - (age.toFloat() - lifetime / 1.5f) / 20.0f).coerceIn(0.0f, 1.0f) * MasEffects.getTotemEffectOpacity()
                 friction = 1.0f
                 val speed = ((age - 15) * 0.05f).toDouble()
                 xd = targetDirection.x * speed
@@ -613,7 +609,7 @@ class MasEffectsParticleRenderer {
             if (player != null && player.position().distanceTo(position) < 6.0) {
                 alphaControl -= 0.8f
             }
-            this.alpha = Mth.clamp(alphaControl * MasEffects.getPearlTrailOpacity(), 0.0f, 1.0f)
+            this.alpha = (alphaControl * MasEffects.getPearlTrailOpacity()).coerceIn(0.0f, 1.0f)
         }
 
         override fun afterTick() {
@@ -623,7 +619,7 @@ class MasEffectsParticleRenderer {
             if (player != null && player.position().distanceTo(Vec3(x, y, z)) < 6.0) {
                 alphaControl -= 0.8f
             }
-            alpha = Mth.clamp(alphaControl * MasEffects.getPearlTrailOpacity(), 0.0f, 1.0f)
+            alpha = (alphaControl * MasEffects.getPearlTrailOpacity()).coerceIn(0.0f, 1.0f)
         }
     }
 

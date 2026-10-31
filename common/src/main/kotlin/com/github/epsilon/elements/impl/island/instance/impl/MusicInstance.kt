@@ -16,7 +16,6 @@ import com.github.epsilon.smtc.SmtcSnapshot
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.RenderingHints
@@ -67,7 +66,7 @@ class MusicInstance(
         )
         val desiredWidth = PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent
         val screenMaxWidth = maxOf(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
-        targetWidth = Mth.clamp(desiredWidth, MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
+        targetWidth = desiredWidth.coerceIn(MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
     }
 
     override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {

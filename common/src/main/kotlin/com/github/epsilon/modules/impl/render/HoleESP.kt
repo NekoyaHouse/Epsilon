@@ -432,11 +432,11 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
         val fadeStart = minOf(startFade, renderDistance)
         val blockDistance = player.position().distanceTo(position)
         if (blockDistance <= fadeStart || fadeStart >= renderDistance) return 1.0
-        return Mth.clamp((renderDistance - blockDistance) / (renderDistance - fadeStart), 0.0, 1.0)
+        return ((renderDistance - blockDistance) / (renderDistance - fadeStart)).coerceIn(0.0, 1.0)
     }
 
     private fun withAlpha(color: Color, multiplier: Double): Int {
-        val alpha = Mth.clamp((color.alpha * multiplier).roundToInt(), 0, 255)
+        val alpha = (color.alpha * multiplier).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha).rgb
     }
 

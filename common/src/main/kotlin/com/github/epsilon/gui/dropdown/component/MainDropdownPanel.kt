@@ -13,7 +13,6 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.util.Mth
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -159,7 +158,7 @@ class MainDropdownPanel(
                 val label = entry.labelSupplier.get()
                 val labelScale = 0.42f
                 val labelW = textMetrics.textWidth(label, labelScale)
-                val labelX = Mth.clamp(iconX + (ICON_SIZE - labelW) * 0.5f, x + 2.0f, x + width - labelW - 2.0f)
+                val labelX = (iconX + (ICON_SIZE - labelW) * 0.5f).coerceIn(x + 2.0f, x + width - labelW - 2.0f)
                 scope.text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED)
             }
         }

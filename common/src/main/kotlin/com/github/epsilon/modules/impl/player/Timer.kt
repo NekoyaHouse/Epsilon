@@ -13,7 +13,6 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.*
-import net.minecraft.util.Mth
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -70,7 +69,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     } else {
                         TimerManager.set(1.0F)
                     }
-                    balance = Mth.clamp(balance, 0.0F, ticks.toFloat())
+                    balance = balance.coerceIn(0.0F, ticks.toFloat())
                 }
 
                 Mode.Balance -> {

@@ -115,7 +115,7 @@ object Health : Module("Health", Category.RENDER) {
 
         val healthText = decimalFormat.format(health / 2.0f)
         val healthColor = blendColors(
-            HEALTH_COLOR_FRACTIONS, HEALTH_COLORS, Mth.clamp(health / maxHealth, 0.0f, 1.0f)
+            HEALTH_COLOR_FRACTIONS, HEALTH_COLORS, (health / maxHealth).coerceIn(0.0f, 1.0f)
         )
 
         graphics.text(mc.font, healthText, cursorX, y, healthColor.rgb, true)
@@ -216,7 +216,7 @@ object Health : Module("Health", Category.RENDER) {
             return Color.WHITE
         }
 
-        val progress = Mth.clamp(progressValue, 0.0f, 1.0f)
+        val progress = progressValue.coerceIn(0.0f, 1.0f)
 
         if (progress <= fractions[0]) {
             return colors[0]

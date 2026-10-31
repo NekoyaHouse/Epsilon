@@ -13,7 +13,6 @@ import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.EnchantmentUtils
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
@@ -173,7 +172,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
             if (step.stop) break
         }
 
-        val start = Mth.clamp(points.size - 2, 0, ignoredTicks)
+        val start = (points.size - 2).coerceIn(0, ignoredTicks)
         return Path(points, start, blockHit, entityHits)
     }
 

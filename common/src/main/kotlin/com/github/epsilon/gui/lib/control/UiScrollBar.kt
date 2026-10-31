@@ -5,7 +5,6 @@ import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
-import net.minecraft.util.Mth
 import java.util.*
 
 /**
@@ -122,7 +121,7 @@ class UiScrollBar(theme: UiTheme) {
             if (trackHeight <= 0.5f) {
                 return null
             }
-            val thumbHeight = Mth.clamp(viewport.height / contentHeight * trackHeight, MIN_THUMB_HEIGHT, trackHeight)
+            val thumbHeight = (viewport.height / contentHeight * trackHeight).coerceIn(MIN_THUMB_HEIGHT, trackHeight)
             val thumbTravel = trackHeight - thumbHeight
             val scrollRatio = if (maxScroll > 0.0f) scroll / maxScroll else 0.0f
             val thumbY = viewport.y + thumbTravel * (scrollRatio).coerceIn(0.0f, 1.0f)

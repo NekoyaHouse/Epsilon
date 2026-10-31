@@ -34,7 +34,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Consumer
 
@@ -629,7 +628,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         get() = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y - searchHeight
 
     private val searchWidth: Float
-        get() = Mth.clamp(LuminRenderSystem.getScaledWidth() - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f)
+        get() = (LuminRenderSystem.getScaledWidth() - DropdownTheme.PANEL_MARGIN_X * 2.0f).coerceIn(140.0f, 200.0f)
 
     private val searchHeight: Float
         get() = 20.0f

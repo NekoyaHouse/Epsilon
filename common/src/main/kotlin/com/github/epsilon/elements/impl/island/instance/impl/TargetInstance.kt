@@ -11,7 +11,6 @@ import com.github.epsilon.utils.safety.NonNullContext
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import java.awt.Color
 import java.util.*
@@ -41,7 +40,7 @@ class TargetInstance(
         val nameWidth = textRenderer.getWidth(target.name.string, NAME_SCALE)
         val desired = PADDING + HEAD_SIZE + HEAD_GAP + nameWidth + NAME_ICON_GAP + ICON_SIZE + ICON_RIGHT_PADDING
         val screenMaxWidth = LuminRenderSystem.getScaledWidthInt() - 50f
-        targetWidth = Mth.clamp(desired, MIN_WIDTH, maxOf(MIN_WIDTH, screenMaxWidth))
+        targetWidth = desired.coerceIn(MIN_WIDTH, maxOf(MIN_WIDTH, screenMaxWidth))
         val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
         val health = HealthManager.getHealth(target)
         val healthRowHeight = maxOf(BAR_HEIGHT, textRenderer.getHeight(HEALTH_SCALE))
@@ -116,7 +115,7 @@ class TargetInstance(
             IslandPalette.ACCENT_ALT,
             IslandPalette.SUCCESS
         )
-        val filled = Mth.clamp(barWidth, 0f, healthWidth)
+        val filled = barWidth.coerceIn(0f, healthWidth)
         if (filled > 0f) {
             scope.roundRectHorizontalGradient(
                 barX, barY, filled, BAR_HEIGHT, barRadius,

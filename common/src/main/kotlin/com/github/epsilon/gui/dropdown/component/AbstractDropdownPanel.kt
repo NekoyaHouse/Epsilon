@@ -260,7 +260,7 @@ abstract class AbstractDropdownPanel protected constructor(
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
         if (!openedState) return false
         if (isPanelHovered(mouseX, mouseY)) {
-            targetScroll = Mth.clamp(targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED, 0.0f, maxScroll)
+            targetScroll = (targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED).coerceIn(0.0f, maxScroll)
             return true
         }
         return false
@@ -356,14 +356,14 @@ abstract class AbstractDropdownPanel protected constructor(
     }
 
     protected fun setScrollImmediate(value: Float) {
-        scroll = Mth.clamp(value, 0.0f, maxScroll)
+        scroll = value.coerceIn(0.0f, maxScroll)
         targetScroll = scroll
     }
 
     private fun updateScroll(contentHeight: Float, visibleHeight: Float, animate: Boolean) {
         maxScroll = maxOf(0.0f, contentHeight - visibleHeight)
-        targetScroll = Mth.clamp(targetScroll, 0.0f, maxScroll)
-        scroll = Mth.clamp(scroll, 0.0f, maxScroll)
+        targetScroll = targetScroll.coerceIn(0.0f, maxScroll)
+        scroll = scroll.coerceIn(0.0f, maxScroll)
         if (maxScroll <= 0.0f) {
             scrollBar.reset()
         }

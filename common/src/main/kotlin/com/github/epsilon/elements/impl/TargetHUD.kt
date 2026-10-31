@@ -90,7 +90,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
         val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         val target = updateRenderedTarget(resolveTarget())
-        val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
+        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
         if (target == null || animationScale <= 0.01f) return
 
         val textRenderer = textRendererSupplier.get()
@@ -106,19 +106,19 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
         } else {
             maxHealth = maxOf(1.0f, lastKnownMaxHealth)
-            displayedHealth = Mth.clamp(displayedHealth, 0.0f, maxHealth)
-            delayedHealth = Mth.clamp(delayedHealth, 0.0f, maxHealth)
-            healthPercent = Mth.clamp(displayedHealth / maxHealth, 0.0f, 1.0f)
+            displayedHealth = displayedHealth.coerceIn(0.0f, maxHealth)
+            delayedHealth = delayedHealth.coerceIn(0.0f, maxHealth)
+            healthPercent = (displayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
         }
-        val delayHealthPercent = Mth.clamp(delayedHealth / maxHealth, 0.0f, 1.0f)
+        val delayHealthPercent = (delayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
 
         val pad = 5.0f * panelScale
         val cornerRadius = radius.toFloat() * panelScale
         val barHeight = healthBarHeight.toFloat() * panelScale
         val barRadius = healthBarRadius.toFloat() * panelScale
         val barWidth = maxOf(1.0f, panelWidth - pad * 2.0f)
-        val delayedBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * delayHealthPercent)
-        val filledBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * healthPercent)
+        val delayedBarWidth = barWidth.coerceIn(0.0f, barWidth * delayHealthPercent)
+        val filledBarWidth = barWidth.coerceIn(0.0f, barWidth * healthPercent)
 
         val innerHeight = maxOf(1.0f, panelHeight - pad * 2.0f)
         val contentAreaHeight = maxOf(1.0f, innerHeight - pad - barHeight)
@@ -171,7 +171,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scaledEquipmentY = Mth.lerp(animationScale, centerY, equipmentY)
         val scaledEquipmentScale = equipmentScale * animationScale
         val scaledEquipmentGap = equipmentGap * animationScale
-        val damageProgress = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f))
+        val damageProgress = Easing.EASE_OUT_SINE.function.apply((target.hurtTime / 10.0f).coerceIn(0.0f, 1.0f))
         val headDamageScale = 1.0f - damageProgress * HEAD_DAMAGE_SCALE_FACTOR
         val finalHeadSize = scaledHeadSize * headDamageScale
         val finalHeadX = scaledHeadX + (scaledHeadSize - finalHeadSize) / 2.0f
@@ -251,7 +251,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val textRenderer = textRendererSupplier.get()
         val panelWidth = panelWidthSetting.toFloat() * panelScale
         val panelHeight = panelHeightSetting.toFloat() * panelScale
-        val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
+        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
         val pad = 5.0f * panelScale
         val barHeight = healthBarHeight.toFloat() * panelScale
         val innerHeight = maxOf(1.0f, panelHeight - pad * 2.0f)
@@ -327,7 +327,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val panelScale = scale.toFloat()
         val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         val target = updateRenderedTarget(resolveTarget())
-        val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
+        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
         if (target == null || animationScale <= 0.01f) {
             setBounds(110.0f * panelScale, 39.0f * panelScale)
             return
@@ -336,8 +336,8 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
         val health = HealthManager.getHealth(target)
         val healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
-        val armorPercent = Mth.clamp(target.armorValue / 20.0f, 0.0f, 1.0f)
-        val damageProgress = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f))
+        val armorPercent = (target.armorValue / 20.0f).coerceIn(0.0f, 1.0f)
+        val damageProgress = Easing.EASE_OUT_SINE.function.apply((target.hurtTime / 10.0f).coerceIn(0.0f, 1.0f))
         val headScale = 1.0f - damageProgress * AKRIEN_HEAD_DAMAGE_SCALE_FACTOR
 
         val textRenderer = textRendererSupplier.get()
@@ -474,7 +474,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             lastVisibilityUpdateMs = now
         }
 
-        val delta = Mth.clamp((now - lastVisibilityUpdateMs) / VISIBILITY_ANIMATION_DURATION_MS.toFloat(), 0.0f, 1.0f)
+        val delta = ((now - lastVisibilityUpdateMs) / VISIBILITY_ANIMATION_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
         lastVisibilityUpdateMs = now
 
         if (liveTarget != null) {
@@ -498,15 +498,15 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     }
 
     private fun tintColor(baseColor: Color, damageProgress: Float): Color {
-        val greenBlue = Mth.clamp((255.0f - 155.0f * damageProgress).roundToInt(), 100, 255)
-        val red = Mth.clamp((baseColor.red + (255 - baseColor.red) * damageProgress).roundToInt(), 0, 255)
-        val green = Mth.clamp((baseColor.green * greenBlue / 255.0f).roundToInt(), 0, 255)
-        val blue = Mth.clamp((baseColor.blue * greenBlue / 255.0f).roundToInt(), 0, 255)
+        val greenBlue = (255.0f - 155.0f * damageProgress).roundToInt().coerceIn(100, 255)
+        val red = (baseColor.red + (255 - baseColor.red) * damageProgress).roundToInt().coerceIn(0, 255)
+        val green = (baseColor.green * greenBlue / 255.0f).roundToInt().coerceIn(0, 255)
+        val blue = (baseColor.blue * greenBlue / 255.0f).roundToInt().coerceIn(0, 255)
         return Color(red, green, blue, baseColor.alpha)
     }
 
     private fun withAlpha(color: Color, alphaScale: Float): Color {
-        val alpha = Mth.clamp((color.alpha * alphaScale).roundToInt(), 0, 255)
+        val alpha = (color.alpha * alphaScale).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 
@@ -528,15 +528,15 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             if (lastKnownHealth >= 0.0f && currentHealth < lastKnownHealth) {
                 lastDamageTimeMs = System.currentTimeMillis()
             }
-            val speed = Mth.clamp(frameTime * 10.0f, 0.0f, 1.0f)
+            val speed = (frameTime * 10.0f).coerceIn(0.0f, 1.0f)
             displayedHealth = Mth.lerp(speed, displayedHealth, currentHealth)
             delayedHealth = updateDelayedHealth(currentHealth, frameTime)
             lastKnownHealth = currentHealth
             lastKnownMaxHealth = maxHealth
         }
-        displayedHealth = Mth.clamp(displayedHealth, 0.0f, maxHealth)
-        delayedHealth = Mth.clamp(delayedHealth, 0.0f, maxHealth)
-        return Mth.clamp(displayedHealth / maxHealth, 0.0f, 1.0f)
+        displayedHealth = displayedHealth.coerceIn(0.0f, maxHealth)
+        delayedHealth = delayedHealth.coerceIn(0.0f, maxHealth)
+        return (displayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
     }
 
     private fun updateDelayedHealth(currentHealth: Float, frameTime: Float): Float {
@@ -549,7 +549,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         if (delayWait && System.currentTimeMillis() - lastDamageTimeMs < delayTime.toLong()) {
             return delayedHealth
         }
-        val speed = Mth.clamp(frameTime * delaySpeed.toFloat() * 2.0f, 0.0f, 1.0f)
+        val speed = (frameTime * delaySpeed.toFloat() * 2.0f).coerceIn(0.0f, 1.0f)
         return Mth.lerp(speed, delayedHealth, currentHealth)
     }
 

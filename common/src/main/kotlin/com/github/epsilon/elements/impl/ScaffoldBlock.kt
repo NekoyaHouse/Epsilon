@@ -90,11 +90,11 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     }
 
     private fun createAnimationState(): AnimationState {
-        val rawVisibility = Mth.clamp(visibilityProgress, 0.0f, 1.0f)
+        val rawVisibility = visibilityProgress.coerceIn(0.0f, 1.0f)
         val easedVisibility = (rawVisibility.toDouble()).pow(3.0).toFloat()
         val panelProgress = Easing.EASE_OUT_SINE.function.apply(easedVisibility)
         val contentProgress =
-            Easing.EASE_OUT_SINE.function.apply(Mth.clamp((rawVisibility - 0.08f) / 0.92f, 0.0f, 1.0f))
+            Easing.EASE_OUT_SINE.function.apply(((rawVisibility - 0.08f) / 0.92f).coerceIn(0.0f, 1.0f))
         val contentAlpha = contentProgress * contentProgress * (3.0f - 2.0f * contentProgress)
         return AnimationState(panelProgress, contentProgress, contentAlpha)
     }
@@ -218,7 +218,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
             lastVisibilityUpdateMs = now
         }
 
-        val delta = Mth.clamp((now - lastVisibilityUpdateMs) / 220.0f, 0.0f, 1.0f)
+        val delta = ((now - lastVisibilityUpdateMs) / 220.0f).coerceIn(0.0f, 1.0f)
         lastVisibilityUpdateMs = now
 
         if (shouldShow) {
@@ -334,7 +334,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private const val BASE_LABEL_GAP = 2.6f
 
     private fun withAlpha(color: Color, alphaMul: Float): Color {
-        val alpha = Mth.clamp((color.alpha * alphaMul).toInt(), 0, 255)
+        val alpha = (color.alpha * alphaMul).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

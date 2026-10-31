@@ -5,7 +5,6 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.client.resources.sounds.SoundInstance
 import net.minecraft.client.sounds.SoundEngine
 import net.minecraft.sounds.SoundSource
-import net.minecraft.util.Mth
 import java.util.*
 
 object SoundManager {
@@ -39,8 +38,8 @@ object SoundManager {
         return SimpleSoundInstance(
             key.id(),
             SoundSource.UI,
-            Mth.clamp(volume, 0.0f, 1.0f),
-            Mth.clamp(pitch, 0.5f, 2.0f),
+            volume.coerceIn(0.0f, 1.0f),
+            pitch.coerceIn(0.5f, 2.0f),
             SoundInstance.createUnseededRandom(),
             false,
             0,

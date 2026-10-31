@@ -29,7 +29,6 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -220,8 +219,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
                 maxAvailableScroll = maxOf(0.0f, availableContentHeight - availableViewport.height)
                 maxSelectedScroll = maxOf(0.0f, selectedContentHeight - selectedViewport.height)
-                availableScroll = Mth.clamp(availableScroll, 0.0f, maxAvailableScroll)
-                selectedScroll = Mth.clamp(selectedScroll, 0.0f, maxSelectedScroll)
+                availableScroll = availableScroll.coerceIn(0.0f, maxAvailableScroll)
+                selectedScroll = selectedScroll.coerceIn(0.0f, maxSelectedScroll)
                 updateAvailableSmoothScroll(partialTick)
                 updateSelectedSmoothScroll(partialTick)
 
@@ -515,7 +514,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             return
         }
         if (abs(availableScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
-        val nextScroll = Mth.clamp(availableScroll + availableScrollVelocity * partialTick, 0.0f, maxAvailableScroll)
+        val nextScroll = (availableScroll + availableScrollVelocity * partialTick).coerceIn(0.0f, maxAvailableScroll)
         if (nextScroll.compareTo(availableScroll) == 0) {
             availableScrollVelocity = 0.0f
             return
@@ -531,7 +530,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             return
         }
         if (abs(selectedScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
-        val nextScroll = Mth.clamp(selectedScroll + selectedScrollVelocity * partialTick, 0.0f, maxSelectedScroll)
+        val nextScroll = (selectedScroll + selectedScrollVelocity * partialTick).coerceIn(0.0f, maxSelectedScroll)
         if (nextScroll.compareTo(selectedScroll) == 0) {
             selectedScrollVelocity = 0.0f
             return
@@ -559,7 +558,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun applyDraggedAvailableScroll(mouseY: Double, viewport: UiRect) {
         val newScroll = availableScrollBarDrag.mouseDragged(mouseY, viewport, maxAvailableScroll)
         if (newScroll >= 0.0f) {
-            availableScroll = Mth.clamp(newScroll, 0.0f, maxAvailableScroll)
+            availableScroll = newScroll.coerceIn(0.0f, maxAvailableScroll)
             availableScrollVelocity = 0.0f
         }
     }
@@ -567,7 +566,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun applyDraggedSelectedScroll(mouseY: Double, viewport: UiRect) {
         val newScroll = selectedScrollBarDrag.mouseDragged(mouseY, viewport, maxSelectedScroll)
         if (newScroll >= 0.0f) {
-            selectedScroll = Mth.clamp(newScroll, 0.0f, maxSelectedScroll)
+            selectedScroll = newScroll.coerceIn(0.0f, maxSelectedScroll)
             selectedScrollVelocity = 0.0f
         }
     }

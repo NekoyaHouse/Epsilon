@@ -182,7 +182,7 @@ abstract class RotationManager {
     }
 
     protected fun clampPitch(pitch: Float): Float {
-        return Mth.clamp(pitch, -90.0f, 90.0f)
+        return pitch.coerceIn(-90.0f, 90.0f)
     }
 
     protected fun correctDisabledRotations(player: LocalPlayer) {

@@ -203,7 +203,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     }
 
     private fun darken(color: Color, amount: Float): Color {
-        val factor = 1.0f - Mth.clamp(amount, 0.0f, 1.0f)
+        val factor = 1.0f - amount.coerceIn(0.0f, 1.0f)
         return Color(
             (color.red * factor).roundToInt(),
             (color.green * factor).roundToInt(),

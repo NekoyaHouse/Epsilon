@@ -189,7 +189,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             renderBoxes.removeAll { box -> time - box.startTime > fadeMillis }
 
             for (box in renderBoxes) {
-                val progress = Mth.clamp((time - box.startTime).toFloat() / fadeMillis, 0.0f, 1.0f)
+                val progress = ((time - box.startTime).toFloat() / fadeMillis).coerceIn(0.0f, 1.0f)
 
                 var scale = 1.0
                 if (box.shrink) {
@@ -197,7 +197,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     if (scale < 0) scale = 0.0
                 }
 
-                val alphaFactor = if (box.fade) Mth.clamp(1.0f - progress, 0.0f, 1.0f) else 1.0f
+                val alphaFactor = if (box.fade) (1.0f - progress).coerceIn(0.0f, 1.0f) else 1.0f
 
                 val boxSideColor = box.sideColor
                 val boxLineColor = box.lineColor

@@ -18,7 +18,6 @@ import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
-import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -652,7 +651,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val target = targetPos ?: return
 
         val max = getMineTicks(getTool(target))
-        val rawProgress = Mth.clamp(progress / (max * mineDamage), 0.0, 1.0)
+        val rawProgress = (progress / (max * mineDamage)).coerceIn(0.0, 1.0)
 
         val color1 = if (rawProgress >= 0.95) sideEndColor else sideStartColor
         val color2 = if (rawProgress >= 0.95) lineEndColor else lineStartColor
@@ -689,7 +688,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val second = secondPos ?: return
 
         val max = getMineTicksSecond(getTool(second))
-        val rawProgress = Mth.clamp(secondProgress / (max * mineDamage), 0.0, 1.0)
+        val rawProgress = (secondProgress / (max * mineDamage)).coerceIn(0.0, 1.0)
 
         val color1 = if (rawProgress >= 0.95) secondSideEndColor else secondSideStartColor
         val color2 = if (rawProgress >= 0.95) secondLineEndColor else secondLineStartColor

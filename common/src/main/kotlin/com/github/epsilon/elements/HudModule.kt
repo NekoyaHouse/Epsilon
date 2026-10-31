@@ -7,7 +7,6 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.modules.Module
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.util.Mth
 
 /**
  * HUD 元素基类：在 [Module] 的启用/配置能力之上提供锚点、屏幕钳制与 [UiRenderBatch] 提交。
@@ -123,8 +122,8 @@ abstract class HudModule : Module {
     private fun applyRenderPosition(renderX: Float, renderY: Float, updateAnchors: Boolean) {
         val screenWidth = screenWidth
         val screenHeight = screenHeight
-        val clampedX = Mth.clamp(renderX, 0.0f, maxOf(0.0f, screenWidth - width))
-        val clampedY = Mth.clamp(renderY, 0.0f, maxOf(0.0f, screenHeight - height))
+        val clampedX = renderX.coerceIn(0.0f, maxOf(0.0f, screenWidth - width))
+        val clampedY = renderY.coerceIn(0.0f, maxOf(0.0f, screenHeight - height))
 
         if (updateAnchors) {
             horizontalAnchor = HudLayoutHelper.resolveHorizontalAnchor(clampedX, width, screenWidth)

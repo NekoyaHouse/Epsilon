@@ -6,7 +6,6 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponC
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetAction
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -67,11 +66,7 @@ class SpearBehavior : ElytraCombatBehavior {
         val predicted = target.predictedPosition
         val aimDistance = bot.player().eyePosition.distanceTo(predicted)
         val blend = if (bot.spearUsePredictor) {
-            Mth.clamp(
-                (aimDistance - AIM_PREDICTION_NEAR) / (AIM_PREDICTION_FAR - AIM_PREDICTION_NEAR),
-                0.0,
-                1.0,
-            )
+            ((aimDistance - AIM_PREDICTION_NEAR) / (AIM_PREDICTION_FAR - AIM_PREDICTION_NEAR)).coerceIn(0.0, 1.0)
         } else {
             0.0
         }

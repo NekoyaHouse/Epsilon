@@ -220,7 +220,7 @@ class ProjectileSimulator(private val level: Level) {
         positionVec = user.getPosition(partialTick)
             .subtract(yawSin * 0.3, 0.0, yawCos * 0.3)
             .add(0.0, user.getEyeHeight(user.pose).toDouble(), 0.0)
-        velocity = Vec3(-yawSin, Mth.clamp(-(pitchSin / pitchCos), -5.0, 5.0), -yawCos)
+        velocity = Vec3(-yawSin, (-(pitchSin / pitchCos)).coerceIn(-5.0, 5.0), -yawCos)
         val length = velocity.length()
         velocity = velocity.scale(0.6 / length + 0.5)
         collisionSource = user
@@ -258,7 +258,7 @@ class ProjectileSimulator(private val level: Level) {
                         entity.isAlive &&
                         entity.isPickable
             },
-            Mth.clamp((ticks - 2) / 20.0F, 0.0F, 0.3F),
+            ((ticks - 2) / 20.0F).coerceIn(0.0F, 0.3F),
         )
         return entityHit ?: blockHit
     }

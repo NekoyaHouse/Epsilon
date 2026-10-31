@@ -100,7 +100,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
             val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val segments = segmentsSetting
             val rings = ringsSetting
-            val alpha = Mth.clamp(alphaSetting, 0, 255)
+            val alpha = alphaSetting.coerceIn(0, 255)
             val lines = LuminImmediateRenderer.beginLines(LINES_PIPELINE)
             val quads = if (filledSphere) LuminImmediateRenderer.beginPosColorQuads(FILLED_PIPELINE) else null
             val matrix = stack.last().pose()
@@ -109,7 +109,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
             for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
                 val fuse = entity.fuse.toFloat()
-                val norm = Mth.clamp(fuse / 80.0f, 0.0f, 1.0f)
+                val norm = (fuse / 80.0f).coerceIn(0.0f, 1.0f)
                 val color = fuseColor(norm, alpha)
                 val scale = pulseScale(fuse, pt)
                 val x = Mth.lerp(pt.toDouble(), entity.xOld, entity.x) - camera.x
@@ -128,11 +128,11 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
                     drawSphere(quads, matrix, x, y + entity.bbHeight * 0.5, z, radius, rings, segments, color)
                     drawSphere(
                         quads, matrix, x, y + entity.bbHeight * 0.5, z, radius * 0.96f, rings, segments,
-                        withAlpha(color, Mth.clamp((alpha * 0.6f).toInt(), 0, 255))
+                        withAlpha(color, (alpha * 0.6f).toInt().coerceIn(0, 255))
                     )
                     drawSphere(
                         quads, matrix, x, y + entity.bbHeight * 0.5, z, radius * 0.92f, rings, segments,
-                        withAlpha(color, Mth.clamp((alpha * 0.35f).toInt(), 0, 255))
+                        withAlpha(color, (alpha * 0.35f).toInt().coerceIn(0, 255))
                     )
                 }
                 if (wireframeSphere) {
@@ -150,7 +150,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
 
     private fun pulseScale(fuse: Float, pt: Float): Float {
         if (!pulse) return 1.0f
-        val fade = Mth.clamp(1.0f - (fuse / 20.0f) / pulseThresholdSec.toFloat(), 0.0f, 1.0f)
+        val fade = (1.0f - (fuse / 20.0f) / pulseThresholdSec.toFloat()).coerceIn(0.0f, 1.0f)
         val gameTime = mc.level?.gameTime ?: 0L
         val phase = (gameTime + pt) / 20.0f * pulseSpeedHz.toFloat() * Mth.TWO_PI
         return 1.0f + Mth.sin(phase.toDouble()) * pulseAmplitude.toFloat() * fade
@@ -168,7 +168,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
     }
 
     private fun lerp(a: Int, b: Int, t: Float): Int {
-        val clamped = Mth.clamp(t, 0.0f, 1.0f)
+        val clamped = t.coerceIn(0.0f, 1.0f)
         val aa = (a ushr 24) and 255
         val ar = (a ushr 16) and 255
         val ag = (a ushr 8) and 255
@@ -184,7 +184,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
     }
 
     private fun withAlpha(color: Int, alpha: Int): Int =
-        (color and 0x00FFFFFF) or (Mth.clamp(alpha, 0, 255) shl 24)
+        (color and 0x00FFFFFF) or (alpha.coerceIn(0, 255) shl 24)
 
     private fun drawRing(
         out: LuminImmediateRenderer.Lines, m: Matrix4f, pose: PoseStack.Pose,

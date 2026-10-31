@@ -176,7 +176,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
     }
 
     private fun applyOpacity(color: Color, opacity: Float): Color {
-        val alpha = Mth.clamp((color.alpha * Mth.clamp(opacity, 0.0f, 1.0f)).roundToInt(), 0, 255)
+        val alpha = (color.alpha * opacity.coerceIn(0.0f, 1.0f)).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

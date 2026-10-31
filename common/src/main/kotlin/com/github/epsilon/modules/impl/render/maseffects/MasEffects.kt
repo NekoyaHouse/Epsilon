@@ -17,7 +17,6 @@ import net.minecraft.gizmos.Gizmos
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.LivingEntity
@@ -274,7 +273,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
 
     private fun distanceFade(entity: Entity, startDistance: Float): Float {
         val player = mc.player ?: return 0.0f
-        return Mth.clamp((player.distanceTo(entity) - startDistance) / 20.0F, 0.0F, 1.0F)
+        return ((player.distanceTo(entity) - startDistance) / 20.0F).coerceIn(0.0F, 1.0F)
     }
 
     private fun pearlColor(pearl: ThrownEnderpearl): Color {

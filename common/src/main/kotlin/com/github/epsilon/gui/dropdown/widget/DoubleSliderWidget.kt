@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.DoubleSetting
-import net.minecraft.util.Mth
 import java.text.DecimalFormat
 import java.util.function.Predicate
 import kotlin.math.roundToInt
@@ -17,7 +16,7 @@ class DoubleSliderWidget(setting: DoubleSetting) :
         val range = setting.range.endInclusive - setting.range.start
         val step = setting.step
         val value = setting.range.start + (rawRatio * range / step).roundToInt() * step
-        previewValue(Mth.clamp(value, setting.range.start, setting.range.endInclusive))
+        previewValue(value.coerceIn(setting.range.start, setting.range.endInclusive))
     }
 
     override fun formatValue(value: Double): String {

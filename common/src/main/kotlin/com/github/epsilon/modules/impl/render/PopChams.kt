@@ -18,7 +18,6 @@ import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
@@ -117,7 +116,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
                 else minecraft.deltaTracker.getGameTimeDeltaPartialTick(true)
             tickCount = (timer * 20.0).toInt()
 
-            val progress = Mth.clamp((timer / renderTime).toFloat(), 0.0f, 1.0f)
+            val progress = (timer / renderTime).toFloat().coerceIn(0.0f, 1.0f)
             setPos(
                 x, startY + yModifier * renderTime *
                         yEasing.value.function.apply(progress), z
@@ -148,7 +147,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
         override fun getCurrentSwing(): SwingDescription? = swing
 
         private fun withAlpha(color: Color, alpha: Int): Color =
-            Color(color.red, color.green, color.blue, Mth.clamp(alpha, 0, 255))
+            Color(color.red, color.green, color.blue, alpha.coerceIn(0, 255))
 
         override fun shouldShowName(): Boolean = false
 

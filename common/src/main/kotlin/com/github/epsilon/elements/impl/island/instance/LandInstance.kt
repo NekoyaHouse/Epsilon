@@ -5,7 +5,6 @@ import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.elements.impl.island.pattern.impl.DelayPattern
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.utils.timer.TimerUtils
-import net.minecraft.util.Mth
 import java.awt.Color
 
 /**
@@ -50,12 +49,12 @@ abstract class LandInstance(
     }
 
     fun setContentAlpha(contentAlpha: Float) {
-        this.contentAlpha = Mth.clamp(contentAlpha, 0.0f, 1.0f)
+        this.contentAlpha = contentAlpha.coerceIn(0.0f, 1.0f)
     }
 
     protected fun fade(color: Color): Color {
         if (contentAlpha >= 1.0f) return color
-        val alpha = Mth.clamp((color.alpha * contentAlpha).toInt(), 0, 255)
+        val alpha = (color.alpha * contentAlpha).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

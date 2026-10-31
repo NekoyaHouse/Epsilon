@@ -1,6 +1,5 @@
 package com.github.epsilon.elements.impl.island
 
-import net.minecraft.util.Mth
 import java.awt.Color
 
 object IslandPalette {
@@ -19,11 +18,11 @@ object IslandPalette {
     val OUTLINE: Color = Color(255, 255, 255, 48)
 
     fun withAlpha(color: Color, alpha: Int): Color {
-        return Color(color.red, color.green, color.blue, Mth.clamp(alpha, 0, 255))
+        return Color(color.red, color.green, color.blue, alpha.coerceIn(0, 255))
     }
 
     fun withAlphaMul(color: Color, alpha: Float): Color {
-        return withAlpha(color, (color.alpha * Mth.clamp(alpha, 0.0f, 1.0f)).toInt())
+        return withAlpha(color, (color.alpha * alpha.coerceIn(0.0f, 1.0f)).toInt())
     }
 
 }

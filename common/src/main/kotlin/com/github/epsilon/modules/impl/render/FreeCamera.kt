@@ -303,7 +303,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
         yaw += deltaX.toFloat()
         pitch += deltaY.toFloat()
 
-        pitch = Mth.clamp(pitch, -90.0f, 90.0f)
+        pitch = pitch.coerceIn(-90.0f, 90.0f)
     }
 
     fun sendChatInfo(text: String) {

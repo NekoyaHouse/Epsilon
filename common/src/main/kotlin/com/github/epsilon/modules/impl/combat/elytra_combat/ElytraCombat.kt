@@ -513,11 +513,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             yaw = if (unlimited) {
                 nextYaw
             } else {
-                previousYaw + Mth.clamp(
-                    Mth.wrapDegrees(nextYaw - previousYaw),
-                    (-limit).toFloat(),
-                    limit.toFloat(),
-                )
+                previousYaw + Mth.wrapDegrees(nextYaw - previousYaw).coerceIn((-limit).toFloat(), limit.toFloat())
             }
         }
 
@@ -538,7 +534,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         val pitch = if (unlimited) {
             nextPitch
         } else {
-            previousPitch + Mth.clamp(pitchDelta, (-limit).toFloat(), limit.toFloat())
+            previousPitch + pitchDelta.coerceIn((-limit).toFloat(), limit.toFloat())
         }
         val direction = Entity.calculateViewVector(pitch, yaw).normalize()
         return FlightIntent(

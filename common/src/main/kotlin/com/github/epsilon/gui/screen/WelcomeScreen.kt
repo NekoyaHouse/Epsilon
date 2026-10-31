@@ -11,7 +11,6 @@ import net.minecraft.client.gui.components.CycleButton
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Mth
 import net.minecraft.util.Util
 import java.awt.Color
 import java.net.URI
@@ -119,7 +118,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         val font = this.font
-        val fade = Mth.clamp((Util.getMillis() - openedAtMs) / 250.0f, 0.0f, 1.0f)
+        val fade = ((Util.getMillis() - openedAtMs) / 250.0f).coerceIn(0.0f, 1.0f)
         val alpha = (255.0f * fade).roundToInt()
 
         val cardWidth = minOf(560, width - CARD_MARGIN * 2)

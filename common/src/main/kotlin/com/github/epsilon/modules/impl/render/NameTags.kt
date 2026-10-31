@@ -327,7 +327,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     }
 
     private fun mix(first: Color, second: Color, amount: Float): Color {
-        val clamped = Mth.clamp(amount, 0.0f, 1.0f)
+        val clamped = amount.coerceIn(0.0f, 1.0f)
         val inverse = 1.0f - clamped
         return Color(
             (first.red * inverse + second.red * clamped).roundToInt(),

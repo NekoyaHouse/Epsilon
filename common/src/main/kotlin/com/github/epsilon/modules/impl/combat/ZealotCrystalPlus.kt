@@ -779,9 +779,9 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         ticks: Int,
         armorMode: DamageUtils.ArmorEnchantmentMode,
     ): TargetSnapshot {
-        val motionX = Mth.clamp(entity.x - entity.xo, -0.6, 0.6)
-        val motionY = Mth.clamp(entity.y - entity.yo, -0.5, 0.5)
-        val motionZ = Mth.clamp(entity.z - entity.zo, -0.6, 0.6)
+        val motionX = (entity.x - entity.xo).coerceIn(-0.6, 0.6)
+        val motionY = (entity.y - entity.yo).coerceIn(-0.5, 0.5)
+        val motionZ = (entity.z - entity.zo).coerceIn(-0.6, 0.6)
 
         val entityBox = entity.boundingBox
         var targetBox = entityBox
@@ -2223,7 +2223,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
         fun apply(damage: Float): Float {
             val toughnessFactor = 2.0f + toughness / 4.0f
-            val effectiveArmor = Mth.clamp(armorValue - damage / toughnessFactor, armorValue * 0.2f, 20.0f)
+            val effectiveArmor = (armorValue - damage / toughnessFactor).coerceIn(armorValue * 0.2f, 20.0f)
             val afterArmor = damage * (1.0f - effectiveArmor / 25.0f)
             return afterArmor * resistanceMultiplier * blastReduction
         }

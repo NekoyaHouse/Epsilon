@@ -11,7 +11,6 @@ import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.abs
@@ -500,7 +499,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             rainbowSaturation.toFloat(),
             rainbowBrightness.toFloat()
         )
-        return Color(rgb ushr 16 and 0xFF, rgb ushr 8 and 0xFF, rgb and 0xFF, Mth.clamp(alpha, 0, 255))
+        return Color(rgb ushr 16 and 0xFF, rgb ushr 8 and 0xFF, rgb and 0xFF, alpha.coerceIn(0, 255))
     }
 
     private fun animateColor(start: Color, end: Color, offset: Long): Color {
@@ -518,14 +517,14 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private fun darken(color: Color, factor: Float): Color {
-        val red = Mth.clamp((color.red * factor).toInt(), 0, 255)
-        val green = Mth.clamp((color.green * factor).toInt(), 0, 255)
-        val blue = Mth.clamp((color.blue * factor).toInt(), 0, 255)
+        val red = (color.red * factor).toInt().coerceIn(0, 255)
+        val green = (color.green * factor).toInt().coerceIn(0, 255)
+        val blue = (color.blue * factor).toInt().coerceIn(0, 255)
         return Color(red, green, blue, color.alpha)
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {
-        val alpha = Mth.clamp((color.alpha * Mth.clamp(multiplier, 0.0f, 1.0f)).toInt(), 0, 255)
+        val alpha = (color.alpha * multiplier.coerceIn(0.0f, 1.0f)).toInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 
@@ -549,12 +548,12 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 
         fun update(target: Boolean, now: Long): Float {
             if (this.target != target) {
-                val elapsed = Mth.clamp(now - startedAt, 0L, MODULE_ANIMATION_DURATION_MS.toLong())
+                val elapsed = (now - startedAt).coerceIn(0L, MODULE_ANIMATION_DURATION_MS.toLong())
                 this.target = target
                 this.startedAt = now - (MODULE_ANIMATION_DURATION_MS - elapsed)
             }
 
-            val elapsed = Mth.clamp((now - startedAt) / MODULE_ANIMATION_DURATION_MS.toFloat(), 0.0f, 1.0f)
+            val elapsed = ((now - startedAt) / MODULE_ANIMATION_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
             val eased = Easing.EASE_IN_OUT_QUAD.function.apply(elapsed)
             progressValue = if (target) eased else 1.0f - eased
             return progressValue

@@ -13,7 +13,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import net.minecraft.util.Mth
 import java.awt.Color
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -336,8 +335,8 @@ class ColorPickerPopup(
 
     private fun updateChannelFromMouse(channel: Channel, mouseX: Double, trackBounds: UiRect) {
         var progress = (mouseX - trackBounds.x) / trackBounds.width
-        progress = Mth.clamp(progress, 0.0, 1.0)
-        val value = Mth.clamp((progress * 255.0).roundToInt(), 0, 255)
+        progress = progress.coerceIn(0.0, 1.0)
+        val value = (progress * 255.0).roundToInt().coerceIn(0, 255)
         val current = getVisibleColor()
         val updated = when (channel) {
             Channel.RED -> Color(value, current.green, current.blue, current.alpha)
@@ -433,7 +432,7 @@ class ColorPickerPopup(
         }
         var value: Int
         try {
-            value = Mth.clamp(buffer.toInt(), 0, 255)
+            value = buffer.toInt().coerceIn(0, 255)
         } catch (ignored: NumberFormatException) {
             value = getChannelValue(focused)
         }

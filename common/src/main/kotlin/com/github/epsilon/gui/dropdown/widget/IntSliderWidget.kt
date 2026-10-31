@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.IntSetting
-import net.minecraft.util.Mth
 import java.util.function.Predicate
 import kotlin.math.roundToInt
 
@@ -16,7 +15,7 @@ class IntSliderWidget(setting: IntSetting) :
         val range = setting.range.last - setting.range.first
         val step = setting.step
         val value = setting.range.first + (rawRatio * range / step).roundToInt() * step
-        previewValue(Mth.clamp(value, setting.range.first, setting.range.last))
+        previewValue(value.coerceIn(setting.range.first, setting.range.last))
     }
 
     override fun formatValue(value: Int): String {

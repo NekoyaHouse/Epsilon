@@ -78,7 +78,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
 
             if (mode == Mode.BowAim && rotation == Rotation.Client && !bowTargetYaw.isNaN()) {
                 val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-                val factor = Mth.clamp(bowSmooth / 100.0f * tickDelta, 0.0f, 1.0f)
+                val factor = (bowSmooth / 100.0f * tickDelta).coerceIn(0.0f, 1.0f)
                 val currentYaw = player.yRot
                 player.yRot = currentYaw + Mth.wrapDegrees(bowTargetYaw - currentYaw) * factor
                 player.xRot = Mth.lerp(factor, player.xRot, bowTargetPitch)
@@ -168,7 +168,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         }
 
         val nearestTarget = getNearestTarget(5.0f)
-        assistAcceleration = Mth.clamp(assistAcceleration + aimStrength / 10000.0f, 0.0f, 1.0f)
+        assistAcceleration = (assistAcceleration + aimStrength / 10000.0f).coerceIn(0.0f, 1.0f)
 
         if (nearestTarget != null) {
             if (!player.hasLineOfSight(nearestTarget) && !ignoreWalls) {
@@ -192,7 +192,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             if (fixedDeltaYaw > 180.0f) {
                 fixedDeltaYaw -= 180.0f
             }
-            val yawStep = Mth.clamp(Mth.abs(fixedDeltaYaw), -aimSmooth.toFloat(), aimSmooth.toFloat())
+            val yawStep = Mth.abs(fixedDeltaYaw).coerceIn(-aimSmooth.toFloat(), aimSmooth.toFloat())
             val newYaw = rotationYaw + (if (fixedDeltaYaw > 0.0f) yawStep else -yawStep)
             val gcdFix = (mc.options.sensitivity().get() * 0.6 + 0.2).pow(3.0) * 1.2
             rotationYaw = (newYaw - (newYaw - rotationYaw) % gcdFix).toFloat()

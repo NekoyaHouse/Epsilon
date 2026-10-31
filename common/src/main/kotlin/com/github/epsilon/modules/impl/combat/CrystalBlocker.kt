@@ -130,7 +130,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
             if (rotate == RotateMode.Normal) {
                 self.yRot = rot.yaw
-                self.xRot = Mth.clamp(rot.pitch, -90.0f, 90.0f)
+                self.xRot = rot.pitch.coerceIn(-90.0f, 90.0f)
             } else if (rotate == RotateMode.Silent) {
                 RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
 

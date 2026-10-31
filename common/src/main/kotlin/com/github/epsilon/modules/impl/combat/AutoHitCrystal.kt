@@ -20,7 +20,6 @@ import com.github.epsilon.utils.safety.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
-import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
@@ -70,8 +69,8 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
 
             for (box in renderBoxes) {
                 val age = time - box.startTime
-                val progress = Mth.clamp(age.toFloat() / fade, 0.0f, 1.0f)
-                val alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f)
+                val progress = (age.toFloat() / fade).coerceIn(0.0f, 1.0f)
+                val alphaFactor = (1.0f - progress).coerceIn(0.0f, 1.0f)
 
                 val boxSideColor = box.sideColor
                 val boxLineColor = box.lineColor

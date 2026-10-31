@@ -248,15 +248,15 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             renderBoxes.removeAll { box -> time - box.startTime > 1000 }
 
             for (box in renderBoxes) {
-                val progress = Mth.clamp((time - box.startTime).toFloat() / 1000.0f, 0.0f, 1.0f)
+                val progress = ((time - box.startTime).toFloat() / 1000.0f).coerceIn(0.0f, 1.0f)
                 val alpha = 1.0f - progress
 
                 val fc = sideColor
-                val fillAlpha = Mth.clamp((fc.alpha * alpha).toInt(), 0, 255)
+                val fillAlpha = (fc.alpha * alpha).toInt().coerceIn(0, 255)
                 Render3DScheduler.addFilledBox(AABB(box.pos), Color(fc.red, fc.green, fc.blue, fillAlpha))
 
                 val bc = lineColor
-                val lineAlpha = Mth.clamp((bc.alpha * alpha).toInt(), 0, 255)
+                val lineAlpha = (bc.alpha * alpha).toInt().coerceIn(0, 255)
                 Render3DScheduler.addOutlineBox(
                     AABB(box.pos),
                     Color(bc.red, bc.green, bc.blue, lineAlpha).rgb,

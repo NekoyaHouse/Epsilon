@@ -35,7 +35,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.concurrent.atomic.AtomicReference
 
@@ -122,7 +121,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val h = LuminRenderSystem.getScaledHeightInt()
 
         layout(w, h)
-        scroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll)
+        scroll = (scroll + scrollVelocity * partialTick).coerceIn(0.0f, maxScroll)
         scrollVelocity *= 0.86f
 
         scene.beginFrame()
@@ -701,7 +700,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         } else if (bottom > scroll + viewport.height) {
             scroll = bottom - viewport.height
         }
-        scroll = Mth.clamp(scroll, 0.0f, maxScroll)
+        scroll = scroll.coerceIn(0.0f, maxScroll)
         scrollVelocity = 0.0f
     }
 

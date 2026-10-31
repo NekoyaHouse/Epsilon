@@ -23,7 +23,6 @@ import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
@@ -289,7 +288,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val subtitleWidth = renderer.getWidth(bannerSubtitle, requestedSubtitleScale)
         val desired = maxOf(IDEAL_WIDTH * uiScale, maxOf(titleWidth, subtitleWidth) + 230.0f * uiScale)
         val available = maxOf(1.0f, LuminRenderSystem.getScaledWidth() - 24.0f)
-        val width = minOf(available, Mth.clamp(desired, MIN_WIDTH * uiScale, MAX_WIDTH * uiScale))
+        val width = minOf(available, desired.coerceIn(MIN_WIDTH * uiScale, MAX_WIDTH * uiScale))
         return Layout(width, BASE_HEIGHT * uiScale)
     }
 
@@ -481,12 +480,12 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         if (text == null || text.isEmpty()) return requested
         val natural = if (font == null) renderer.getWidth(text, 1.0f) else renderer.getWidth(text, 1.0f, font)
         if (natural <= 0.0f) return requested
-        return Mth.clamp(maxWidth / natural, 0.1f, requested)
+        return (maxWidth / natural).coerceIn(0.1f, requested)
     }
 
     private fun withAlpha(color: Color?, alphaMultiplier: Float): Color {
         val source = color ?: Color.WHITE
-        val alpha = Mth.clamp((source.alpha * Mth.clamp(alphaMultiplier, 0.0f, 1.0f)).roundToInt(), 0, 255)
+        val alpha = (source.alpha * alphaMultiplier.coerceIn(0.0f, 1.0f)).roundToInt().coerceIn(0, 255)
         return Color(source.red, source.green, source.blue, alpha)
     }
 

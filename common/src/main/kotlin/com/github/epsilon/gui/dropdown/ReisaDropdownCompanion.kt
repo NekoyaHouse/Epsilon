@@ -86,7 +86,7 @@ class ReisaDropdownCompanion {
 
         entranceAnim.run(1.0f)
 
-        val entrance = Mth.clamp(entranceAnim.value, 0.0f, 1.0f)
+        val entrance = entranceAnim.value.coerceIn(0.0f, 1.0f)
         val pulse = resolveActionPulse(now)
         val bob = sin((now % 3_896L) / 620.0).toFloat() * 1.15f
         val motionX = resolveMotionX(now, pulse)
@@ -160,7 +160,7 @@ class ReisaDropdownCompanion {
         if (active.durationMs() <= 0L) {
             return 0.0f
         }
-        val progress = Mth.clamp((now - actionStartedMs) / active.durationMs().toFloat(), 0.0f, 1.0f)
+        val progress = ((now - actionStartedMs) / active.durationMs().toFloat()).coerceIn(0.0f, 1.0f)
         return Mth.sin((progress * Mth.PI).toDouble())
     }
 
@@ -210,7 +210,7 @@ class ReisaDropdownCompanion {
     }
 
     private fun resolveLayout(screenWidth: Float, screenHeight: Float): Layout {
-        var imageHeight = Mth.clamp(screenHeight * 0.60f, 150.0f, 520.0f)
+        var imageHeight = (screenHeight * 0.60f).coerceIn(150.0f, 520.0f)
         val maxWidth = maxOf(90.0f, screenWidth * 0.24f)
         imageHeight = minOf(imageHeight, maxWidth / IMAGE_ASPECT_RATIO)
         imageHeight = minOf(imageHeight, screenHeight * 0.82f)
@@ -222,7 +222,7 @@ class ReisaDropdownCompanion {
 
     private fun withAlpha(color: Color, alpha: Float): Color {
         val value =
-            ((255.0f * Mth.clamp(alpha, 0.0f, 1.0f)).toInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
+            ((255.0f * alpha.coerceIn(0.0f, 1.0f)).toInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
         return Color(color.red, color.green, color.blue, value)
     }
 

@@ -155,14 +155,14 @@ object FireflyESP {
         rainbowSaturation: Float,
         rainbowBrightness: Float,
     ): Color {
-        val clampedMix = Mth.clamp(mixAmount, 0.0f, 1.0f)
+        val clampedMix = mixAmount.coerceIn(0.0f, 1.0f)
         val progress = if (espLength <= 0) 0.0f else index.toFloat() / espLength.toFloat()
 
         return when (mode) {
             ColorMode.Blend -> {
                 val wave =
                     (Mth.sin(((age * blendSpeed * 0.25f) + (progress * 6.2831855f) + ringIndex).toDouble()) + 1.0f) * 0.5f
-                val blendProgress = Mth.clamp(wave * clampedMix, 0.0f, 1.0f)
+                val blendProgress = (wave * clampedMix).coerceIn(0.0f, 1.0f)
                 ColorUtils.interpolateColor(primaryColor, secondaryColor, blendProgress)
             }
 
@@ -170,8 +170,8 @@ object FireflyESP {
                 val hue = Mth.frac((age * 0.01f * rainbowSpeed) + progress + ringIndex * 0.17f)
                 val rainbow = Color.getHSBColor(
                     hue,
-                    Mth.clamp(rainbowSaturation, 0.0f, 1.0f),
-                    Mth.clamp(rainbowBrightness, 0.0f, 1.0f)
+                    rainbowSaturation.coerceIn(0.0f, 1.0f),
+                    rainbowBrightness.coerceIn(0.0f, 1.0f)
                 )
                 Color(rainbow.red, rainbow.green, rainbow.blue, primaryColor.alpha)
             }

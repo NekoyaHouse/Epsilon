@@ -152,7 +152,7 @@ object RotationUtils {
         val dist = sqrt(dx * dx + dz * dz)
         val yaw = (-atan2(dx, dz)).toDegrees().toFloat()
         val pitch = (-atan2(dy, dist)).toDegrees().toFloat()
-        return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
+        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -197,11 +197,7 @@ object RotationUtils {
         return calculate(
             entity.position().add(
                 0.0,
-                Mth.clamp(
-                    player.y - entity.y + player.eyeHeight,
-                    0.0,
-                    (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
-                ),
+                (player.y - entity.y + player.eyeHeight).coerceIn(0.0, (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9),
                 0.0
             )
         )
@@ -368,7 +364,7 @@ object RotationUtils {
                 (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
                 (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
-        return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
+        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -387,7 +383,7 @@ object RotationUtils {
                 (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
                 (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
-        return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
+        return Rot2f(yaw, pitch.coerceIn(-90f, 90f))
     }
 
     /**
@@ -401,7 +397,7 @@ object RotationUtils {
         val lastRotation = rotationManager.getLastRotation()
         val previousRotation = Rot2f(lastRotation.yaw, lastRotation.pitch)
         val yaw = previousRotation.yaw + Mth.wrapDegrees(rotation.yaw - previousRotation.yaw)
-        val pitch = Mth.clamp(rotation.pitch, -90f, 90f)
+        val pitch = rotation.pitch.coerceIn(-90f, 90f)
         return Rot2f(yaw, pitch)
     }
 
@@ -441,8 +437,8 @@ object RotationUtils {
             val maxYaw = speed * distributionYaw
             val maxPitch = speed * distributionPitch
 
-            val moveYaw = Mth.clamp(deltaYaw, -maxYaw, maxYaw).toFloat()
-            val movePitch = Mth.clamp(deltaPitch, -maxPitch, maxPitch).toFloat()
+            val moveYaw = deltaYaw.coerceIn(-maxYaw, maxYaw).toFloat()
+            val movePitch = deltaPitch.coerceIn(-maxPitch, maxPitch).toFloat()
 
             return Rot2f(moveYaw, movePitch)
         }

@@ -19,7 +19,6 @@ import com.mojang.renderpearl.api.textures.FilterMode
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Matrix4fc
@@ -121,7 +120,7 @@ object MotionBlurShader {
         }
 
         val scaledStrength = settings.strength * frameScale
-        val scaledSamples = Mth.clamp((settings.samples * frameScale).roundToInt(), 4, MAX_SAMPLES)
+        val scaledSamples = (settings.samples * frameScale).roundToInt().coerceIn(4, MAX_SAMPLES)
         val uniformData = MotionBlurUniforms(
             Matrix4f(view).invert(),
             Matrix4f(projection).invert(),

@@ -14,7 +14,6 @@ import com.github.epsilon.utils.safety.level
 import com.github.epsilon.utils.safety.runSafe
 import com.google.common.base.Suppliers
 import net.minecraft.client.Camera
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MobCategory
@@ -160,10 +159,10 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
             return null
         }
 
-        bounds[0] = Mth.clamp(bounds[0], 0.0f, screenWidth)
-        bounds[1] = Mth.clamp(bounds[1], 0.0f, screenHeight)
-        bounds[2] = Mth.clamp(bounds[2], 0.0f, screenWidth)
-        bounds[3] = Mth.clamp(bounds[3], 0.0f, screenHeight)
+        bounds[0] = bounds[0].coerceIn(0.0f, screenWidth)
+        bounds[1] = bounds[1].coerceIn(0.0f, screenHeight)
+        bounds[2] = bounds[2].coerceIn(0.0f, screenWidth)
+        bounds[3] = bounds[3].coerceIn(0.0f, screenHeight)
         return bounds
     }
 
@@ -225,7 +224,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
 
         val health = HealthManager.getHealth(entity)
         val maxHealth = maxOf(1.0f, entity.maxHealth + maxOf(0.0f, entity.absorptionAmount))
-        val healthRatio = Mth.clamp(health / maxHealth, 0.0f, 1.0f)
+        val healthRatio = (health / maxHealth).coerceIn(0.0f, 1.0f)
         val fillY = endY - height * healthRatio
 
         val distanceScale = height / 45.0f

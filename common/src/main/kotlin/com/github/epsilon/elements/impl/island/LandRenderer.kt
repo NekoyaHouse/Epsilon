@@ -18,7 +18,6 @@ import com.github.epsilon.utils.safety.NonNullContext
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.multiplayer.ServerData
-import net.minecraft.util.Mth
 import java.awt.Color
 
 class LandRenderer(
@@ -96,7 +95,7 @@ class LandRenderer(
 
         if (w < 1f || h < 1f) return
 
-        val radius = minOf(w, h) * 0.4f * Mth.clamp(radiusAnim.value, 0f, 1f)
+        val radius = minOf(w, h) * 0.4f * radiusAnim.value.coerceIn(0f, 1f)
 
         if (island.backgroundBlur) {
             BlurShader.render(x, y, w, h, radius, island.blurStrength.toFloat())

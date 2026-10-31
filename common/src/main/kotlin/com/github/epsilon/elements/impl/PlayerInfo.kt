@@ -335,7 +335,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {
-        val alpha = Mth.clamp((color.alpha * multiplier).roundToInt(), 0, 255)
+        val alpha = (color.alpha * multiplier).roundToInt().coerceIn(0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 
