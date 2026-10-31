@@ -130,6 +130,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
         pressed = false
     }
 
+    context(nn: NonNullContext)
     private fun handleSwitchBack() {
         if (switchClock < switchDelay) {
             switchClock++

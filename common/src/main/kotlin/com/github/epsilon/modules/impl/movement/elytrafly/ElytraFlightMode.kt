@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
@@ -75,7 +75,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
             click(containerId, 6)
             click(containerId, 6)
 
-            netHandler.send(
+            connection.send(
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
             )
             player.startFallFlying()
@@ -89,7 +89,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
     protected fun startFallFlying(): Boolean = runSafeOrFalse {
         if (player.tryToStartFallFlying()) {
-            netHandler.send(
+            connection.send(
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
             )
             true
@@ -100,7 +100,7 @@ abstract class ElytraFlightMode(protected val elytraFly: ElytraFly) {
 
     protected fun restartFallFlying() {
         runSafe {
-            netHandler.send(
+            connection.send(
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
             )
             player.startFallFlying()

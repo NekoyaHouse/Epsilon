@@ -19,7 +19,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -93,7 +93,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
                 swingHand(InteractionHand.MAIN_HAND)
             }
 
-            if (world.getBlockState(currentTarget!!).isAir) {
+            if (level.getBlockState(currentTarget!!).isAir) {
                 resetBreaking()
             }
         }
@@ -102,7 +102,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             if (!esp || currentTarget == null) return@nonNullListener
 
             val target = currentTarget ?: return@nonNullListener
-            val shape = world.getBlockState(target).getShape(world, target)
+            val shape = level.getBlockState(target).getShape(level, target)
             val box = if (shape.isEmpty) AABB(target) else shape.bounds().move(target)
             Render3DScheduler.addFilledBox(box, Color(255, 0, 0, 50))
         }
@@ -160,6 +160,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return KillAura.isEnabled && KillAura.target != null
     }
 
+    context(nn: NonNullContext)
     private fun findTarget(): TargetData? {
         val followUpTarget = getTrackedBedTarget()
         if (followUpTarget != null) {
@@ -168,7 +169,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
         val manager = NonNullContext.current ?: return null
         val player = manager.player
-        val world = manager.world
+        val level = manager.level
         val maxRange = range
         val maxRangeSq = maxRange * maxRange
         val eyes = player.getEyePosition()
@@ -180,7 +181,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = playerPos.offset(x, y, z)
-                    if (world.getBlockState(pos).block !is BedBlock) {
+                    if (level.getBlockState(pos).block !is BedBlock) {
                         continue
                     }
 
@@ -203,6 +204,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return best
     }
 
+    context(nn: NonNullContext)
     private fun getTrackedBedTarget(): TargetData? {
         val bedPos = trackedBedPos ?: return null
         val bedFace = trackedBedFace ?: return null
@@ -224,6 +226,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return null
     }
 
+    context(nn: NonNullContext)
     private fun getTargetData(bedPos: BlockPos, maxRange: Double, eyes: Vec3): TargetData? {
         val directTarget = getDirectBedTarget(bedPos, maxRange, eyes)
         if (directTarget != null) {
@@ -243,15 +246,16 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return coveredFaceTarget
     }
 
+    context(nn: NonNullContext)
     private fun getDirectBedTarget(bedPos: BlockPos, maxRange: Double, eyes: Vec3): TargetData? {
-        val world = NonNullContext.current?.world ?: return null
+        val level = NonNullContext.current?.level ?: return null
         var best: TargetData? = null
 
         for (face in Direction.values()) {
             if (face == Direction.DOWN) continue
 
             val adjacentPos = bedPos.relative(face)
-            if (!world.getBlockState(adjacentPos).isAir) {
+            if (!level.getBlockState(adjacentPos).isAir) {
                 continue
             }
 
@@ -280,10 +284,11 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return best
     }
 
+    context(nn: NonNullContext)
     private fun getBedFaceTarget(bedPos: BlockPos, bedFace: Direction, maxRange: Double, eyes: Vec3): TargetData? {
-        val world = NonNullContext.current?.world ?: return null
+        val level = NonNullContext.current?.level ?: return null
         val adjacentPos = bedPos.relative(bedFace)
-        val adjacentState: BlockState = world.getBlockState(adjacentPos)
+        val adjacentState: BlockState = level.getBlockState(adjacentPos)
         if (adjacentState.isAir) {
             return null
         }
@@ -351,6 +356,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return bestFace
     }
 
+    context(nn: NonNullContext)
     private fun isBedHit(rotation: Rot2f, rayRange: Double): Boolean {
         val result = RaytraceUtils.raytrace(rotation, rayRange)
         return result is BlockHitResult && isBedBlock(result.blockPos)
@@ -361,7 +367,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     }
 
     private fun worldState(pos: BlockPos): BlockState? {
-        return NonNullContext.current?.world?.getBlockState(pos)
+        return NonNullContext.current?.level?.getBlockState(pos)
     }
 
     private data class TargetData(

@@ -6,6 +6,7 @@ import com.github.epsilon.utils.NonNullContext
 /**
  * 依据当前旋转与移动输入计算水平速度向量。
  *
+ * 依赖移动输入的方法接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext` 作用域内调用。
  * `RotationManager.INSTANCE` 是可变静态字段（切换旋转模式会替换实例），
  * 因此每次调用都重新读取，不做缓存。
  */
@@ -32,11 +33,11 @@ object MoveUtils {
      *
      * @param speed 移动速度
      */
+    context(nn: NonNullContext)
     fun forward(speed: Double): DoubleArray {
         var yaw = RotationManager.INSTANCE.getYaw()
-        val ctx = NonNullContext.current ?: return doubleArrayOf(0.0, 0.0)
 
-        val moveVector = ctx.player.input.moveVector
+        val moveVector = nn.player.input.moveVector
         var forward = moveVector.y
         var left = moveVector.x
 

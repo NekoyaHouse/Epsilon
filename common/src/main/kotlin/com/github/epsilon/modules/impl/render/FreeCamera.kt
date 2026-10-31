@@ -20,7 +20,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -101,7 +101,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
                     rotation = calculate(hit.entity.blockPosition())
                 } else if (hit is BlockHitResult) {
                     val crossHairPos: BlockPos = hit.blockPos
-                    if (!world.getBlockState(crossHairPos).isAir) {
+                    if (!level.getBlockState(crossHairPos).isAir) {
                         rotation = calculate(hit.location)
                     }
                 }
@@ -195,7 +195,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
         nonNullListener<PacketEvent.Receive> {
             val packet = it.packet
             if (packet is ClientboundPlayerCombatKillPacket) {
-                val entity = world.getEntity(packet.playerId())
+                val entity = level.getEntity(packet.playerId())
                 if (entity === player && toggleOnDeath) {
                     toggle()
                     sendChatInfo("Toggled off because you died.")

@@ -74,7 +74,7 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
         }
 
         val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
-        val fake = RemotePlayer(nn.world, GameProfile(uuid, nameSetting))
+        val fake = RemotePlayer(nn.level, GameProfile(uuid, nameSetting))
         fakePlayer = fake
         fake.setId(-66123666)
         fake.copyPosition(nn.player)
@@ -88,7 +88,7 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             fake.inventory.replaceWith(nn.player.inventory)
         }
 
-        nn.world.addEntity(fake)
+        nn.level.addEntity(fake)
     }
 
     override fun onDisable() {

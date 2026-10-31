@@ -21,6 +21,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.combat.DamageUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.FindItemResult
@@ -361,6 +362,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         signalWorker()
     }
 
+    context(nn: NonNullContext)
     private fun onTick() {
         updateTimeouts()
         updateExplosionSamples()
@@ -535,7 +537,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
                 lastProcessedId = snapshot.id
                 val start = System.nanoTime()
-                asyncResult = evaluateSnapshot(snapshot, start)
+                val nn = NonNullContext.current
+                if (nn == null) {
+                    waitForSignal(50L, 0)
+                    continue
+                }
+                asyncResult = context(nn) { evaluateSnapshot(snapshot, start) }
                 cachedRotationPlaceInfo = asyncResult.rotationPlaceInfo
                 cachedPlaceInfo = asyncResult.placeInfo
                 cachedRotationBreakPlan = asyncResult.rotationBreakPlan
@@ -586,6 +593,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun captureSnapshotIfNeeded(): SnapshotData? {
         if (!snapshotTimer.passedMillise(updateDelay.toLong()) && latestSnapshot != null) {
             return latestSnapshot
@@ -599,6 +607,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return snapshot
     }
 
+    context(nn: NonNullContext)
     private fun captureSnapshot(): SnapshotData {
         val player: Player = this.mc.player ?: return SnapshotData.EMPTY
         val level: net.minecraft.client.multiplayer.ClientLevel = this.mc.level ?: return SnapshotData.EMPTY
@@ -672,6 +681,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         )
     }
 
+    context(nn: NonNullContext)
     private fun captureTargets(
         level: net.minecraft.client.multiplayer.ClientLevel,
         armorMode: DamageUtils.ArmorEnchantmentMode,
@@ -708,6 +718,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return list.toList()
     }
 
+    context(nn: NonNullContext)
     private fun buildTargetSnapshot(
         entity: LivingEntity,
         ticks: Int,
@@ -748,6 +759,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         )
     }
 
+    context(nn: NonNullContext)
     private fun capturePlacePositions(level: net.minecraft.client.multiplayer.ClientLevel): List<BlockPos> {
         val rawPosList = getRawPosList(level)
         if (rawPosList.isEmpty()) return rawPosList
@@ -761,6 +773,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return list
     }
 
+    context(nn: NonNullContext)
     private fun captureCrystals(level: net.minecraft.client.multiplayer.ClientLevel): List<CrystalSnapshot> {
         if (this.mc.player == null) return emptyList()
 
@@ -851,6 +864,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return resistant
     }
 
+    context(nn: NonNullContext)
     private fun evaluateSnapshot(snapshot: SnapshotData, startTime: Long): AsyncResult {
         if (snapshot.targets.isEmpty()) {
             return AsyncResult(snapshot.id, null, null, null, null, null, System.nanoTime() - startTime)
@@ -870,6 +884,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return AsyncResult(snapshot.id, rotationPlaceInfo, placeInfo, rotationBreakPlan, breakPlan, primary, System.nanoTime() - startTime)
     }
 
+    context(nn: NonNullContext)
     private fun evaluatePlace(snapshot: SnapshotData, requireRotation: Boolean): PlaceInfo? {
         if (snapshot.placePositions.isEmpty()) return null
 
@@ -944,6 +959,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return buildPlaceInfo(choice, snapshot.settings.placeSideBypass, snapshot.self.eyePos)
     }
 
+    context(nn: NonNullContext)
     private fun evaluateBreak(snapshot: SnapshotData, placeInfo: PlaceInfo?, requireRotation: Boolean): BreakPlan? {
         if (snapshot.crystals.isEmpty()) return null
 
@@ -1056,6 +1072,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return max
     }
 
+    context(nn: NonNullContext)
     private fun buildPlaceInfo(choice: PlaceChoice, bypass: PlaceBypass, eyePos: Vec3): PlaceInfo {
         val blockPos = choice.blockPos ?: error("PlaceChoice has no block position")
         val side: Direction
@@ -1117,6 +1134,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return if (!requirePlaceable || isPlaceable(placeInfo.blockPos)) placeInfo else null
     }
 
+    context(nn: NonNullContext)
     private fun getValidBreakPlan(breakPlan: BreakPlan?): BreakPlan? {
         if (breakPlan == null || nullCheck()) return null
         val level = this.mc.level ?: return null
@@ -1131,6 +1149,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun getActionPlaceInfo(): PlaceInfo? {
         val action = getValidPlaceInfo(cachedPlaceInfo, true)
         if (action != null) return action
@@ -1143,6 +1162,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return null
     }
 
+    context(nn: NonNullContext)
     private fun getActionBreakPlan(): BreakPlan? {
         val action = getValidBreakPlan(cachedBreakPlan)
         if (action != null) return action
@@ -1155,6 +1175,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return null
     }
 
+    context(nn: NonNullContext)
     private fun placeDirect(placeInfo: PlaceInfo, ignoreTimer: Boolean): Boolean {
         val player = this.mc.player ?: return false
         if (!ignoreTimer && !placeTimer.passedMillise(placeDelay.toLong())) return false
@@ -1208,6 +1229,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return true
     }
 
+    context(nn: NonNullContext)
     private fun breakDirect(breakPlan: BreakPlan?): Boolean {
         if (breakPlan == null) return false
         if (placeSwitchMode != SwitchMode.Ghost &&
@@ -1276,6 +1298,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleSpawnPacket(packet: ClientboundAddEntityPacket) {
+        val nn = NonNullContext.current ?: return
+        context(nn) { handleSpawnPacketImpl(packet) }
+    }
+
+    context(nn: NonNullContext)
+    private fun handleSpawnPacketImpl(packet: ClientboundAddEntityPacket) {
         crystalSpawnMap[packet.id] = System.currentTimeMillis()
         val snapshot = latestSnapshot
         if (snapshot == null || snapshot.targets.isEmpty() || bbtt) return
@@ -1313,6 +1341,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun handleExplosionPacket(packet: ClientboundSoundPacket) {
+        val nn = NonNullContext.current ?: return
+        context(nn) { handleExplosionPacketImpl(packet) }
+    }
+
+    context(nn: NonNullContext)
+    private fun handleExplosionPacketImpl(packet: ClientboundSoundPacket) {
         if (packet.getSound() !== SoundEvents.GENERIC_EXPLODE) return
 
         val soundPos = Vec3(packet.x, packet.y, packet.z)
@@ -1543,6 +1577,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                         targetInfo.minArmorRate <= forcePlaceArmorRate)
     }
 
+    context(nn: NonNullContext)
     private fun getRawPosList(level: net.minecraft.client.multiplayer.ClientLevel): List<BlockPos> {
         val now = System.currentTimeMillis()
         var cached = cachedRawPosList
@@ -1553,6 +1588,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return cached
     }
 
+    context(nn: NonNullContext)
     private fun buildRawPosList(level: net.minecraft.client.multiplayer.ClientLevel): List<BlockPos> {
         val player = this.mc.player ?: return emptyList()
 
@@ -1599,6 +1635,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return list
     }
 
+    context(nn: NonNullContext)
     private fun getCollidingEntities(level: net.minecraft.client.multiplayer.ClientLevel): List<Entity> {
         val player = this.mc.player ?: return emptyList()
 
@@ -1642,26 +1679,31 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return true
     }
 
+    context(nn: NonNullContext)
     private fun checkPlaceRotation(pos: BlockPos): Boolean {
         if (placeRotationRange <= 0.0) return true
         return checkPlaceRotation(pos, RotationManager.INSTANCE.rotations)
     }
 
+    context(nn: NonNullContext)
     private fun checkPlaceRotation(pos: BlockPos, currentRotation: Rot2f): Boolean {
         if (placeRotationRange <= 0.0) return true
         return getRotationDelta(currentRotation, RotationUtils.calculate(getCrystalPos(pos))) <= placeRotationRange
     }
 
+    context(nn: NonNullContext)
     private fun checkCrystalRotation(crystalPos: Vec3, range: Double): Boolean {
         if (range <= 0.0) return true
         return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.rotations)
     }
 
+    context(nn: NonNullContext)
     private fun checkCrystalRotation(crystalPos: Vec3, range: Double, currentRotation: Rot2f): Boolean {
         if (range <= 0.0) return true
         return getRotationDelta(currentRotation, RotationUtils.calculate(crystalPos)) <= range
     }
 
+    context(nn: NonNullContext)
     private fun checkBreakRange(crystalPos: Vec3): Boolean {
         val player = this.mc.player ?: return false
         val rangeSq = breakRange * breakRange
@@ -1770,6 +1812,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return -1
     }
 
+    context(nn: NonNullContext)
     private fun findCrystalItem(): FindItemResult {
         return InvUtils.findInHotbar(Items.END_CRYSTAL)
     }
@@ -1788,6 +1831,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun doSwing(hand: InteractionHand) {
         when (swingMode) {
             SwingMode.Client -> PlayerUtils.swingHand(hand)
@@ -1801,6 +1845,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return Math.max(1.8, yawSpeed)
     }
 
+    context(nn: NonNullContext)
     private fun prepareRotation(breakPlan: BreakPlan?, placeInfo: PlaceInfo?) {
         if (breakPlan != null && shouldPrioritizeBreak(breakPlan)) {
             RotationManager.INSTANCE.setRotations(

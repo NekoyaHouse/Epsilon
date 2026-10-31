@@ -18,7 +18,7 @@ import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.BlockPos
@@ -144,7 +144,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun tryPlaceBlockOrHelper(pos: BlockPos, slot: Int) {
-        if (getPlaceSide(pos) != null || !world.getBlockState(pos).canBeReplaced()) {
+        if (getPlaceSide(pos) != null || !level.getBlockState(pos).canBeReplaced()) {
             tryPlaceBlock(pos, slot)
         } else {
             val helper = getHelperPos(pos) ?: return
@@ -158,7 +158,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         var side: Direction? = null
         for (i in Direction.values()) {
             val neighbourPos = pos.relative(i)
-            val neighbourState = world.getBlockState(neighbourPos)
+            val neighbourState = level.getBlockState(neighbourPos)
             if (neighbourState.canBeReplaced() || !isClickable(neighbourState, neighbourPos)) continue
             if (!RotationUtils.canSee(neighbourPos, i.opposite)) continue
             val vecDis = player.eyePosition.distanceToSqr(hitVec(pos, i))
@@ -174,7 +174,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isClickable(state: BlockState, pos: BlockPos): Boolean {
         return player.isSecondaryUseActive || !(
-            state.getMenuProvider(world, pos) != null ||
+            state.getMenuProvider(level, pos) != null ||
                 state.block is EntityBlock ||
                 state.`is`(BlockTags.BUTTONS) ||
                 state.`is`(BlockTags.PRESSURE_PLATES) ||
@@ -240,7 +240,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun otherIntersectPos(pos: BlockPos): Boolean {
-        for (otherPlayer in world.players()) {
+        for (otherPlayer in level.players()) {
             if (otherPlayer.boundingBox.intersects(AABB(pos))) {
                 return true
             }
@@ -248,6 +248,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         return false
     }
 
+    context(nn: NonNullContext)
     private fun findBlocks(): FindItemResult {
         if (inventorySwap) {
             val result = InvUtils.find(Items.OBSIDIAN)

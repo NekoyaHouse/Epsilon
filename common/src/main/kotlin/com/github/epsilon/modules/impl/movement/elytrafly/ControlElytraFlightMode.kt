@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombatInput
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.runSafe
@@ -303,7 +303,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             box.maxY + probeDistance,
             box.maxZ - CEILING_PROBE_EPSILON
         )
-        !world.noBlockCollision(player, ceilingProbe)
+        !level.noBlockCollision(player, ceilingProbe)
     }
 
     private fun hasMoveInput(): Boolean = runSafeOrFalse {

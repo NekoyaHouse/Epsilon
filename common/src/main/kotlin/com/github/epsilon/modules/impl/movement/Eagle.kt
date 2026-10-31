@@ -12,7 +12,7 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafeOrFalse
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
@@ -92,7 +92,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
     fun isOverEdge(): Boolean = runSafeOrFalse {
         val predictedMovement = predictMovement()
         val movement = player.deltaMovement.add(predictedMovement.x, 0.0, predictedMovement.z)
-        world.noCollision(player, player.boundingBox.move(movement.x, -1.0, movement.z))
+        level.noCollision(player, player.boundingBox.move(movement.x, -1.0, movement.z))
     }
 
     context(nn: NonNullContext)
@@ -119,7 +119,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun getAllowedHorizontalDistance(): Float {
         val posBelow = player.blockPosBelowThatAffectsMyMovement
-        val blockFriction = world.getBlockState(posBelow).block.friction
+        val blockFriction = level.getBlockState(posBelow).block.friction
         return player.speed * (0.21600002f / (blockFriction * blockFriction * blockFriction))
     }
 
@@ -136,7 +136,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
 
         val block = blockItem.block
         val state: BlockState = block.defaultBlockState()
-        if (block is EntityBlock || state.getMenuProvider(world, BlockPos.ZERO) != null) return false
+        if (block is EntityBlock || state.getMenuProvider(level, BlockPos.ZERO) != null) return false
         if (!state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) return false
 
         return block !is FallingBlock &&

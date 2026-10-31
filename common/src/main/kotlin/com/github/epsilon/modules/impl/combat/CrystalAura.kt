@@ -13,7 +13,7 @@ import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.BlockPos
@@ -65,8 +65,8 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
             val hit = mc.hitResult
             if (hit is BlockHitResult) {
-                if ((world.getBlockState(hit.blockPos).`is`(Blocks.OBSIDIAN) ||
-                        world.getBlockState(hit.blockPos).`is`(Blocks.BEDROCK)) &&
+                if ((level.getBlockState(hit.blockPos).`is`(Blocks.OBSIDIAN) ||
+                        level.getBlockState(hit.blockPos).`is`(Blocks.BEDROCK)) &&
                     canPlaceCrystalAssumeObsidian(hit.blockPos)
                 ) {
                     event.cancel()
@@ -121,8 +121,8 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         if (blockHit != null) {
             if (!dontPlace &&
                 randomInt <= placeChance.toInt() &&
-                (world.getBlockState(blockHit.blockPos).`is`(Blocks.OBSIDIAN) ||
-                    world.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
+                (level.getBlockState(blockHit.blockPos).`is`(Blocks.OBSIDIAN) ||
+                    level.getBlockState(blockHit.blockPos).`is`(Blocks.BEDROCK)) &&
                 canPlaceCrystalAssumeObsidian(blockHit.blockPos)
             ) {
 
@@ -196,6 +196,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun selectSword(): Boolean {
         val sword: FindItemResult = InvUtils.findInHotbar { stack -> stack.`is`(ItemTags.SWORDS) }
 
@@ -207,13 +208,13 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun canPlaceCrystalAssumeObsidian(supportPos: BlockPos): Boolean {
         val crystalPos = supportPos.above()
-        if (!world.getBlockState(crystalPos).isAir) return false
-        if (strictAirCheck && !world.getBlockState(crystalPos.above()).isAir) return false
+        if (!level.getBlockState(crystalPos).isAir) return false
+        if (strictAirCheck && !level.getBlockState(crystalPos.above()).isAir) return false
         val box = AABB(
             crystalPos.x.toDouble(), crystalPos.y.toDouble(), crystalPos.z.toDouble(),
             crystalPos.x + 1.0, crystalPos.y + 2.0, crystalPos.z + 1.0
         )
-        return world.getEntities(null, box).isEmpty()
+        return level.getEntities(null, box).isEmpty()
     }
 
     context(nn: NonNullContext)
@@ -236,7 +237,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun isDeadBodyNearby(): Boolean {
-        for (otherPlayer in world.players()) {
+        for (otherPlayer in level.players()) {
             if (otherPlayer === player) continue
             if (otherPlayer.distanceToSqr(player) > 36.0) continue
             if (!otherPlayer.isAlive || otherPlayer.deathTime > 0) {
@@ -248,7 +249,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun damageTickCheck(): Boolean {
-        val found = world.players().stream()
+        val found = level.players().stream()
             .filter { p -> p !== nn.player }
             .filter { p -> p.distanceToSqr(nn.player) < 36.0 }
             .filter { p -> !p.onGround() }

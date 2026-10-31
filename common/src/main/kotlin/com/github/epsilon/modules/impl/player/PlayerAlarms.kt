@@ -17,10 +17,10 @@ import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.player
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
@@ -123,15 +123,15 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             handleRing(gamemodeRing) { playSound(gamemodeVolume, gamemodePitch, gamemodeSound.value) }
 
             // Detect world/server changes and re-scan online target players
-            val currentConnection: Any? = netHandler
-            val currentLevel: Any? = world
+            val currentConnection: Any? = connection
+            val currentLevel: Any? = level
             val reconnected = currentConnection !== lastConnection
             val worldChanged = currentLevel !== lastLevel
             if (reconnected || worldChanged) {
                 if (reconnected) lastConnection = currentConnection
                 if (worldChanged) lastLevel = currentLevel
                 alarmedJoinPlayers.clear()
-                for (entry in netHandler.listedOnlinePlayers) {
+                for (entry in connection.listedOnlinePlayers) {
                     val id = entry.profile.id()
                     val playerName = entry.profile.name()
                     if (shouldAlarm(playerName)) {
@@ -144,7 +144,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
 
             // Render distance detection
             val currentInRender: MutableSet<UUID> = HashSet()
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity is Player && entity !== player) {
                     currentInRender.add(entity.uuid)
                 }
@@ -200,7 +200,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                         val id = entry.profileId()
                         val newMode = entry.gameMode()
 
-                        val playerInfo = netHandler.getPlayerInfo(id) ?: continue
+                        val playerInfo = connection.getPlayerInfo(id) ?: continue
 
                         val oldMode = playerInfo.gameMode
                         if (oldMode != newMode) {
@@ -329,15 +329,15 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         val nn = NonNullContext.current ?: return
         if (sounds.isEmpty()) return
         val sound = sounds[0]
-        nn.world.playLocalSound(nn.player.blockPosition(), sound, SoundSource.PLAYERS, vol.toFloat(), pitch.toFloat(), false)
+        nn.level.playLocalSound(nn.player.blockPosition(), sound, SoundSource.PLAYERS, vol.toFloat(), pitch.toFloat(), false)
     }
 
     private fun getPlayerName(id: UUID): String? {
         val nn = NonNullContext.current ?: return null
-        val player = nn.world.getPlayerByUUID(id)
+        val player = nn.level.getPlayerByUUID(id)
         if (player != null) return player.gameProfile.name()
         // fallback: try to get from network player list
-        val entry = nn.netHandler.getPlayerInfo(id)
+        val entry = nn.connection.getPlayerInfo(id)
         if (entry != null) {
             val profile = entry.profile ?: return null
             return profile.name()
@@ -351,7 +351,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         // fallback: try to get from network info
         val nn = NonNullContext.current
         if (nn != null) {
-            val info = nn.netHandler.getPlayerInfo(id)
+            val info = nn.connection.getPlayerInfo(id)
             if (info != null) {
                 val mode = info.gameMode
                 if (mode != null) return translateGamemode(mode)

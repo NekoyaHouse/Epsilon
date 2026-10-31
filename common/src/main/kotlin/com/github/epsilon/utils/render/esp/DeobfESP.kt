@@ -6,7 +6,6 @@ import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.world
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
@@ -64,31 +63,28 @@ object DeobfESP {
 
     /**
      * 仅保留仍处于上升阶段的命中特效。
+     *
+     * 调用方需在 [NonNullContext] 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun retainRisingEffects() {
         if (effects.isEmpty()) return
-        val nn = NonNullContext.current
-        if (nn == null) {
-            clear()
-            return
-        }
-        context(nn) {
-            val now = System.currentTimeMillis()
-            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            val iterator = effects.values.iterator()
+        val now = System.currentTimeMillis()
+        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val world = nn.level
+        val iterator = effects.values.iterator()
 
-            while (iterator.hasNext()) {
-                val effect = iterator.next()
-                val target = effect.target
+        while (iterator.hasNext()) {
+            val effect = iterator.next()
+            val target = effect.target
 
-                if (target.level() !== world) {
+            if (target.level() !== world) {
+                iterator.remove()
+            } else if (effect.killedAtMs < 0L) {
+                if (target.isDeadOrDying) {
+                    effect.beginKill(now, partialTick)
+                } else {
                     iterator.remove()
-                } else if (effect.killedAtMs < 0L) {
-                    if (target.isDeadOrDying) {
-                        effect.beginKill(now, partialTick)
-                    } else {
-                        iterator.remove()
-                    }
                 }
             }
         }
@@ -97,53 +93,50 @@ object DeobfESP {
     /**
      * 渲染全部活动命中特效。
      *
+     * 调用方需在 [NonNullContext] 作用域内调用。
+     *
      * @param poseStack 渲染姿态栈
      * @param size      特效尺寸
      * @param spins     旋转圈数
      * @param wobble    摆动幅度
      * @param flyHeight 特效上升高度
      */
+    context(nn: NonNullContext)
     fun render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
         if (effects.isEmpty()) return
-        val nn = NonNullContext.current
-        if (nn == null) {
-            clear()
-            return
-        }
-        context(nn) {
-            val now = System.currentTimeMillis()
-            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            val camera: Camera = Constants.client.gameRenderer.mainCamera()
-            val texture = KillAura.deobfMode.texture
-            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
-            val iterator = effects.values.iterator()
+        val now = System.currentTimeMillis()
+        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val camera: Camera = Constants.client.gameRenderer.mainCamera()
+        val world = nn.level
+        val texture = KillAura.deobfMode.texture
+        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
+        val iterator = effects.values.iterator()
 
-            while (iterator.hasNext()) {
-                val effect = iterator.next()
-                val target = effect.target
+        while (iterator.hasNext()) {
+            val effect = iterator.next()
+            val target = effect.target
 
-                if (target.level() !== world) {
-                    iterator.remove()
-                    continue
-                }
-
-                if (effect.killedAtMs < 0L && target.isDeadOrDying) {
-                    effect.beginKill(now, partialTick)
-                } else if (effect.killedAtMs < 0L && target.isRemoved) {
-                    iterator.remove()
-                    continue
-                }
-
-                if (effect.killedAtMs >= 0L && now - effect.killedAtMs >= KILL_DURATION_MS) {
-                    iterator.remove()
-                    continue
-                }
-
-                renderEffect(poseStack, renderer, camera, effect, now, partialTick, size, spins, wobble, flyHeight)
+            if (target.level() !== world) {
+                iterator.remove()
+                continue
             }
 
-            renderer.end()
+            if (effect.killedAtMs < 0L && target.isDeadOrDying) {
+                effect.beginKill(now, partialTick)
+            } else if (effect.killedAtMs < 0L && target.isRemoved) {
+                iterator.remove()
+                continue
+            }
+
+            if (effect.killedAtMs >= 0L && now - effect.killedAtMs >= KILL_DURATION_MS) {
+                iterator.remove()
+                continue
+            }
+
+            renderEffect(poseStack, renderer, camera, effect, now, partialTick, size, spins, wobble, flyHeight)
         }
+
+        renderer.end()
     }
 
     private fun renderEffect(

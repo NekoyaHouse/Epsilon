@@ -16,7 +16,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
 import com.github.epsilon.utils.world.hole.HoleUtils
@@ -99,7 +99,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
                     event.z = 0.0
                     event.cancel()
                     toggle()
-                } else if (!world.noBlockCollision(player, player.boundingBox.move(0.0, -0.05, 0.0))) {
+                } else if (!level.noBlockCollision(player, player.boundingBox.move(0.0, -0.05, 0.0))) {
                     toggle()
                 } else {
                     event.x = 0.0
@@ -118,7 +118,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             val motionZ = speedValue() * pitch
             val distanceZ = hole.middle.z - player.z
 
-            if (!world.noBlockCollision(player, player.boundingBox.move(motionX, 0.0, motionZ))) {
+            if (!level.noBlockCollision(player, player.boundingBox.move(motionX, 0.0, motionZ))) {
                 collisions++
                 if (collisionLimit > 0 && collisions >= collisionLimit) {
                     toggle()
@@ -130,7 +130,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
             if (jumpTicks > 0) {
                 jumpTicks--
-            } else if (jump && !world.noBlockCollision(player, player.boundingBox.move(0.0, -0.05, 0.0))) {
+            } else if (jump && !level.noBlockCollision(player, player.boundingBox.move(0.0, -0.05, 0.0))) {
                 jumpTicks = jumpCooldown
                 event.y = 0.42
             }
@@ -201,6 +201,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
         )
     }
 
+    context(nn: NonNullContext)
     private fun singleBlocked(): Boolean {
         if (!singleTarget) return false
         val hole = singleHole ?: return false

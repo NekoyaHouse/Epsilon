@@ -13,7 +13,8 @@ import net.minecraft.world.phys.Vec3
  * 玩家下落轨迹模拟器。
  *
  * 位置、速度与模拟状态为该类实例字段；只有“本地玩家是否疾跑 / 包围盒宽度 / 世界射线检测”
- * 需要客户端上下文，缺失时按安全默认值处理（不疾跑、宽度 0、无碰撞）。
+ * 需要客户端上下文，相关方法接收 [NonNullContext] 上下文参数，调用方需在 `NonNullContext`
+ * 作用域内调用（`nonNullListener` / `runSafe` / `context(nn)`）。
  */
 class FallingPlayer(
     var x: Double,
@@ -46,6 +47,7 @@ class FallingPlayer(
         player.speed,
     )
 
+    context(nn: NonNullContext)
     private fun calculateForTick() {
         var sr = strafe * 0.9800000190734863F
         var fw = forward * 0.9800000190734863F
@@ -58,8 +60,7 @@ class FallingPlayer(
             }
 
             var fixedJumpFactor = jumpMovementFactor
-            val localPlayer = NonNullContext.current?.player
-            if (localPlayer != null && localPlayer.isSprinting) {
+            if (nn.player.isSprinting) {
                 fixedJumpFactor *= 1.3F
             }
 
@@ -87,6 +88,7 @@ class FallingPlayer(
      *
      * @param ticks 模拟的 tick 数
      */
+    context(nn: NonNullContext)
     fun calculate(ticks: Int): FallingPlayer {
         for (i in 0 until ticks) {
             calculateForTick()
@@ -100,12 +102,13 @@ class FallingPlayer(
      * @param ticks 模拟的 tick 数
      * @return 最先碰撞的方块位置；未碰撞时返回 null
      */
+    context(nn: NonNullContext)
     fun findCollision(ticks: Int): BlockPos? {
         for (i in 0 until ticks) {
             val start = Vec3(x, y, z)
             calculateForTick()
             val end = Vec3(x, y, z)
-            val halfWidth = (NonNullContext.current?.player?.bbWidth ?: 0.0F) / 2.0F
+            val halfWidth = nn.player.bbWidth / 2.0F
 
             raytrace(start, end)?.let { return it }
             raytrace(start.add(halfWidth.toDouble(), 0.0, halfWidth.toDouble()), end)?.let { return it }
@@ -121,15 +124,15 @@ class FallingPlayer(
         return null
     }
 
+    context(nn: NonNullContext)
     private fun raytrace(start: Vec3, end: Vec3): BlockPos? {
-        val ctx = NonNullContext.current ?: return null
-        val result = ctx.world.clip(
+        val result = nn.level.clip(
             ClipContext(
                 start,
                 end,
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
-                ctx.player,
+                nn.player,
             )
         )
 

@@ -174,7 +174,7 @@ class LandRenderer(
             val online = connection.onlinePlayers.size
             if (online > 0) return online
         }
-        return NonNullContext.current?.world?.players()?.size ?: 0
+        return NonNullContext.current?.level?.players()?.size ?: 0
     }
 
     private fun getLatency(): Int {

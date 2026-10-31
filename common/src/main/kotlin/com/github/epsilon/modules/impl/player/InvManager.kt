@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.InvHelper
@@ -133,7 +133,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     packet is ServerboundPlayerActionPacket
                 ) {
                     this.inventoryOpen = false
-                    netHandler.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
+                    connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
                 }
             }
         }
@@ -475,6 +475,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         if (InvHelper.isGodItem(stack)) return true
@@ -515,6 +516,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return stack.item !is StandingAndWallBlockItem && InvHelper.isCommonItemUseful(stack)
     }
 
+    context(nn: NonNullContext)
     private fun swapOffHand(slot: Int) {
         if (slot < 9) {
             swap(slot + 36, 40)
@@ -523,6 +525,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun throwItem(item: ItemStack?): Boolean {
         if (item != null && InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
             val itemSlot = InvHelper.getItemStackSlot(item)
@@ -537,6 +540,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return false
     }
 
+    context(nn: NonNullContext)
     private fun swapItem(targetSlot: Int, bestItem: ItemStack?) {
         val currentSlot = InvHelper.getInventoryStack(targetSlot)
         if (InvHelper.isItemValid(currentSlot) && bestItem !== currentSlot && canExecuteInventoryAction()) {
@@ -551,6 +555,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun swapItem(targetSlot: Int, item: Item) {
         val currentSlot = InvHelper.getInventoryStack(targetSlot)
         if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
@@ -617,6 +622,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun click(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
         ClickSlotUtils.click(slot)
@@ -624,6 +630,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return true
     }
 
+    context(nn: NonNullContext)
     private fun swap(slot: Int, hotbarSlot: Int): Boolean {
         if (!prepareInventoryAction()) return false
         ClickSlotUtils.swap(slot, hotbarSlot)
@@ -631,6 +638,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return true
     }
 
+    context(nn: NonNullContext)
     private fun shiftClick(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
         ClickSlotUtils.shiftClick(slot)
@@ -638,6 +646,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return true
     }
 
+    context(nn: NonNullContext)
     private fun dropAll(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
         ClickSlotUtils.dropAll(slot)

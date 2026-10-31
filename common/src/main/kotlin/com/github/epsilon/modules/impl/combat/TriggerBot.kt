@@ -10,7 +10,7 @@ import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -115,7 +115,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
         val eyePos: Vec3 = player.eyePosition
         val lookVec = getRotationVector(pitch, yaw)
         val endPos = eyePos.add(lookVec.scale(distance))
-        return world.clip(
+        return level.clip(
             ClipContext(eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)
         )
     }
@@ -135,7 +135,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
         val canCrit = !player.abilities.flying &&
             !player.isFallFlying &&
             !player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
-            world.getBlockState(player.blockPosition()).block !== Blocks.COBWEB
+            level.getBlockState(player.blockPosition()).block !== Blocks.COBWEB
 
         if (player.fallDistance > MIN_CRIT_FALL.toDouble() && player.fallDistance < MAX_CRIT_FALL.toDouble()) {
             return false
@@ -162,7 +162,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isAboveWater(): Boolean {
         val pos = BlockPos.containing(player.x, player.y - 0.4, player.z)
-        return player.isInWater || world.getBlockState(pos).block === Blocks.WATER
+        return player.isInWater || level.getBlockState(pos).block === Blocks.WATER
     }
 
     fun getAttackCooldown(): Float {

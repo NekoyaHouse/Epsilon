@@ -11,6 +11,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
@@ -166,6 +167,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         awaitingBack = false
     }
 
+    context(nn: NonNullContext)
     private fun onAttackEntity(event: AttackEntityEvent) {
         if (ElytraCombat.isControllingCombat()) {
             return
@@ -175,6 +177,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         performSwap(event.entity)
     }
 
+    context(nn: NonNullContext)
     private fun performSwap(target: Entity?) {
         if (awaitingBack) return
 
@@ -193,6 +196,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         awaitingBack = swapBack
     }
 
+    context(nn: NonNullContext)
     private fun onTick() {
         if (!awaitingBack) return
         if (backTimer.passedMillise(swapBackDelay.toLong())) {
@@ -202,6 +206,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun canSwapByWeapon(): Boolean {
         if (!onlyOnWeapon) return true
         return InvUtils.testInMainHand { item ->
@@ -215,6 +220,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun getSmartSlot(target: Entity?): Int {
         val player = this.mc.player ?: return -1
         val currentStack = player.mainHandItem

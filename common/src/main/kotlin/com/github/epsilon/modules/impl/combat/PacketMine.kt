@@ -12,6 +12,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
@@ -150,13 +151,16 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     }
 
     override fun onDisable() {
-        if (hasSwitch) {
-            InvUtils.swap(oldSlot, false)
-            hasSwitch = false
-        }
-        if (secondHasSwitch) {
-            InvUtils.swap(oldSlot, false)
-            secondHasSwitch = false
+        val nn = NonNullContext.current ?: return
+        context(nn) {
+            if (hasSwitch) {
+                InvUtils.swap(oldSlot, false)
+                hasSwitch = false
+            }
+            if (secondHasSwitch) {
+                InvUtils.swap(oldSlot, false)
+                secondHasSwitch = false
+            }
         }
     }
 
@@ -235,6 +239,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun onRender(event: Render3DEvent) {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
@@ -369,13 +374,15 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun sendStart(pos: BlockPos) {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
         val connection = this.mc.connection ?: return
+        val direction = RotationUtils.getDirection(pos)
         connection.send(
             ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, RotationUtils.getDirection(pos),
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction,
             )
         )
         if (fastBypass) {
@@ -395,7 +402,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
                     mc.execute {
                         mc.connection?.send(
                             ServerboundPlayerActionPacket(
-                                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, RotationUtils.getDirection(pos),
+                                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, direction,
                             )
                         )
                     }
@@ -413,6 +420,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun sendStop() {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
@@ -456,6 +464,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun sendStopSecond() {
         val player = this.mc.player ?: return
         val second = secondPos

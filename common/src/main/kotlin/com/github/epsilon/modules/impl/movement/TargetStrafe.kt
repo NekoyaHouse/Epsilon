@@ -15,7 +15,7 @@ import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -161,7 +161,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
             z + 0.015
         )
         val minY = Mth.floor(box.minY)
-        if (minY < world.minY) return true
+        if (minY < level.minY) return true
 
         val minX = Mth.floor(box.minX)
         val maxX = Mth.floor(box.maxX + 1.0)
@@ -172,8 +172,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         for (blockX in minX until maxX) {
             for (blockZ in minZ until maxZ) {
                 var blockY = minY
-                while (blockY >= world.minY) {
-                    val state: BlockState = world.getBlockState(pos.set(blockX, blockY, blockZ))
+                while (blockY >= level.minY) {
+                    val state: BlockState = level.getBlockState(pos.set(blockX, blockY, blockZ))
                     if (!state.canBeReplaced()) {
                         return false
                     }

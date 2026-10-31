@@ -10,7 +10,7 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -93,7 +93,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
 
         // Already an anchor at crosshair? Skip placement, go straight to charge.
-        if (world.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
+        if (level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) {
             phase = Phase.CHARGE
             return
         }
@@ -116,7 +116,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private fun doCharge() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!world.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val glowstoneSlot = findHotbarSlot(Items.GLOWSTONE)
         if (glowstoneSlot == -1) {
@@ -136,7 +136,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private fun doDetonate() {
         val hit = mc.hitResult
         if (hit !is BlockHitResult || hit.type != HitResult.Type.BLOCK) return
-        if (!world.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
+        if (!level.getBlockState(hit.blockPos).`is`(Blocks.RESPAWN_ANCHOR)) return
 
         val slot = detonateSlot - 1
         player.inventory.setSelectedSlot(slot)

@@ -14,7 +14,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
@@ -78,7 +78,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
             render.clear()
             val layer = render.layer(0)
             val partial = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
                 val anchor = entity.getPosition(partial).add(0.0, entity.bbHeight + 0.4, 0.0)
                 val screen = WorldToScreen.calcWorld2Screen(anchor) ?: continue
@@ -105,7 +105,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
             val matrix = stack.last().pose()
             val pose = stack.last()
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
                 val fuse = entity.fuse.toFloat()
                 val norm = Mth.clamp(fuse / 80.0f, 0.0f, 1.0f)

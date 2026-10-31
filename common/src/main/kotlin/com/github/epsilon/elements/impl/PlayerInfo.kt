@@ -13,7 +13,7 @@ import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel
@@ -58,7 +58,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private var rowsInitialized: Boolean = false
 
     init {
-        nonNullListener<PacketEvent.Receive> { event -> onPacketReceive(event, world) }
+        nonNullListener<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
         nonNullListener<PlayerTickEvent.Post> { refreshRows() }
         handler<GameLeftEvent> {
             popCounts.clear()
@@ -156,7 +156,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         val players: MutableList<AbstractClientPlayer> = ArrayList()
 
         val self = nn.player
-        for (player in nn.world.players()) {
+        for (player in nn.level.players()) {
             if ((!showSelf && player === self) || player.isRemoved) continue
             if (self.distanceToSqr(player) > maxDistanceSquared) continue
             players.add(player)

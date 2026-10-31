@@ -22,7 +22,7 @@ import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.render.SkeletonRenderer
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
@@ -95,14 +95,14 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                                     " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                         )
                     }
-                    logoutCache.computeIfAbsent(uuid) { LogoutPlayer(world, player) }
+                    logoutCache.computeIfAbsent(uuid) { LogoutPlayer(level, player) }
                 }
                 playerCache.clear()
             }
         }
 
         nonNullListener<PlayerTickEvent.Pre> {
-            for (target in world.players()) {
+            for (target in level.players()) {
                 if (target === player) continue
                 playerCache[target.gameProfile.id()] = target
             }

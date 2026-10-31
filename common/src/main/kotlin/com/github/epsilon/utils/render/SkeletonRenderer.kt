@@ -3,7 +3,7 @@ package com.github.epsilon.utils.render
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.model.geom.ModelPart
 import net.minecraft.client.model.player.PlayerModel
@@ -21,7 +21,7 @@ object SkeletonRenderer {
     fun render(player: AbstractClientPlayer, color: Color, lineWidth: Float) {
         val dispatcher = Constants.client.getEntityRenderDispatcher()
         val partialTick = runSafe {
-            if (world.tickRateManager().isFrozen) 1.0f
+            if (level.tickRateManager().isFrozen) 1.0f
             else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         } ?: return
 

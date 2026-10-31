@@ -10,7 +10,7 @@ import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -85,7 +85,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     if (hit.type != HitResult.Type.BLOCK) return
 
                     val pos: BlockPos = hit.blockPos
-                    val state: BlockState = world.getBlockState(pos)
+                    val state: BlockState = level.getBlockState(pos)
                     if (state.isAir) return
 
                     val isObsidian = state.`is`(Blocks.OBSIDIAN) || state.`is`(Blocks.BEDROCK)

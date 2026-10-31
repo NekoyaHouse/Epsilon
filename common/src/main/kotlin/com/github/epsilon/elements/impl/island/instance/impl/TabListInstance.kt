@@ -58,7 +58,7 @@ class TabListInstance(
 
         val nn = NonNullContext.current
         val connection: ClientPacketListener? = Constants.client.getConnection()
-        val scoreboard: Scoreboard? = nn?.world?.scoreboard
+        val scoreboard: Scoreboard? = nn?.level?.scoreboard
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)
         val showScore = objective != null && objective.renderType != ObjectiveCriteria.RenderType.HEARTS
 

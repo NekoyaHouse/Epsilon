@@ -12,11 +12,11 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.network.NetworkUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -107,17 +107,17 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                 }
                 if (ticks == 2) {
                     val hand = if (player.usedItemHand == InteractionHand.OFF_HAND) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
-                    netHandler.send(
+                    connection.send(
                         ServerboundUseItemPacket(
                             hand,
-                            world.blockStatePredictionHandler.startPredicting().currentSequence(),
+                            level.blockStatePredictionHandler.startPredicting().currentSequence(),
                             RotationManager.INSTANCE.getYaw(),
                             RotationManager.INSTANCE.getPitch()
                         )
                     )
                 }
                 if (ticks > useDuration + 3) {
-                    netHandler.send(
+                    connection.send(
                         ServerboundPlayerActionPacket(
                             ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
                             BlockPos.ZERO,

@@ -41,11 +41,11 @@ object TracesRenderer {
         val halfWidth = Math.max(0.0f, islandWidth * 0.5f)
         val halfHeight = Math.max(0.0f, islandHeight * 0.5f)
         val maxDistanceSquared = Math.max(0.0, maxDistance * maxDistance)
-        val partialTick = if (nn.world.tickRateManager().isFrozen) 1.0f
+        val partialTick = if (nn.level.tickRateManager().isFrozen) 1.0f
         else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         var rendered = 0
 
-        for (player in nn.world.players()) {
+        for (player in nn.level.players()) {
             if (!shouldRender(player, maxDistanceSquared, self, connection)) continue
 
             val position = player.getPosition(partialTick).add(0.0, (player.bbHeight * TARGET_HEIGHT_FACTOR).toDouble(), 0.0)

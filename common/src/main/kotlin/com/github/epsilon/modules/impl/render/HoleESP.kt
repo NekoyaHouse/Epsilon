@@ -13,7 +13,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -129,7 +129,7 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
 
     init {
         nonNullListener<PlayerTickEvent.Pre> {
-            if (scannedLevel !== world) updateTimer.setMs(updateDelay.toLong())
+            if (scannedLevel !== level) updateTimer.setMs(updateDelay.toLong())
             if (!updateTimer.every(updateDelay.toLong())) return@nonNullListener
 
             val result = scan()
@@ -138,7 +138,7 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
             airBlocks = result.airBlocks
             walls = result.walls
             wallSides = result.wallSides
-            scannedLevel = world
+            scannedLevel = level
         }
 
         handler<Render3DEvent> {

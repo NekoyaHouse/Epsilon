@@ -119,6 +119,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
         isKeyDown = false
     }
 
+    context(nn: NonNullContext)
     private fun handleSwitchBack() {
         if (switchCounter < switchDelay) {
             ++switchCounter

@@ -19,6 +19,7 @@ import com.github.epsilon.modules.impl.player.Timer
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
@@ -165,7 +166,8 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
         val instance = LandController.getInstance(ScaffoldBlocksInstance::class.java)
         if (instance == null) {
-            val count: Supplier<Int> = Supplier { InvHelper.getBlockCountInInventory() }
+            val nn = NonNullContext.current ?: return
+            val count: Supplier<Int> = Supplier { context(nn) { InvHelper.getBlockCountInInventory() } }
             val icon: Supplier<ItemStack> = Supplier { Scaffold.getBlockStack() }
             LandController.post(
                 ScaffoldBlocksInstance(

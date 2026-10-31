@@ -82,6 +82,7 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
         isKeyDown = false
     }
 
+    context(nn: NonNullContext)
     private fun handleSwitchBack() {
         if (switchDelayCounter < switchDelay) {
             ++switchDelayCounter

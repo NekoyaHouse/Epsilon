@@ -129,13 +129,16 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
     init {
         // 常驻监听：模块禁用时也需要继续绘制 Deobf ESP 的上升效果。
         EventBus.handler<Render3DEvent> { event ->
-            DeobfESP.render(
-                event.poseStack,
-                deobfSize.toFloat(),
-                deobfSpins.toFloat(),
-                deobfWobble.toFloat(),
-                deobfFlyHeight.toFloat(),
-            )
+            val nn = NonNullContext.current ?: return@handler
+            context(nn) {
+                DeobfESP.render(
+                    event.poseStack,
+                    deobfSize.toFloat(),
+                    deobfSpins.toFloat(),
+                    deobfWobble.toFloat(),
+                    deobfFlyHeight.toFloat(),
+                )
+            }
         }
 
         nonNullListener<ClientTickEvent.Pre> {
@@ -358,9 +361,11 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
     override fun onDisable() {
         resetState()
-        DeobfESP.retainRisingEffects()
+        val nn = NonNullContext.current ?: return
+        context(nn) { DeobfESP.retainRisingEffects() }
     }
 
+    context(nn: NonNullContext)
     private fun getAttackEntity(): Entity? {
         if (throughWalls) {
             val currentTarget = target ?: return null

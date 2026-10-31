@@ -8,7 +8,7 @@ import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -26,7 +26,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
 
             val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             val normalHit = player.pick(player.blockInteractionRange(), partialTick, false)
-            if (world.getBlockState(BlockPos.containing(normalHit.location)).hasBlockEntity()) {
+            if (level.getBlockState(BlockPos.containing(normalHit.location)).hasBlockEntity()) {
                 return@nonNullListener
             }
 
@@ -46,7 +46,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                 }
                 posList.add(pos)
 
-                if (world.getBlockState(pos).hasBlockEntity()) {
+                if (level.getBlockState(pos).hasBlockEntity()) {
                     for (hand in InteractionHand.values()) {
                         val result = interaction.useItemOn(player, hand, BlockHitResult(Vec3.atCenterOf(pos), getDirection(pos), pos, true))
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {

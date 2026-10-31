@@ -71,7 +71,7 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
     fun getBestTool(pos: BlockPos): Int {
         val nn = NonNullContext.current ?: return -1
         val player = nn.player
-        val world = nn.world
+        val world = nn.level
         val blockState = world.getBlockState(pos)
         val block = blockState.block
         var slot = 0

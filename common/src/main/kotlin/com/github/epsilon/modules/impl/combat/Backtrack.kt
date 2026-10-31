@@ -297,7 +297,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun isValidTarget(candidate: LivingEntity): Boolean {
         if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
-        if (candidate.level() !== nn.world || AntiBot.isBot(candidate)) return false
+        if (candidate.level() !== nn.level || AntiBot.isBot(candidate)) return false
         if (TargetManager.isSameTeam(candidate)) return false
         return candidate !is Player || !FriendManager.isFriend(candidate)
     }
@@ -312,7 +312,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         var nearest: LivingEntity? = null
         var nearestDistance = Double.MAX_VALUE
 
-        for (entity in nn.world.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             val living = entity as? LivingEntity ?: continue
             if (entity is ArmorStand) continue
             if (!isValidTarget(living) || !isEnabledRangeTarget(living)) continue

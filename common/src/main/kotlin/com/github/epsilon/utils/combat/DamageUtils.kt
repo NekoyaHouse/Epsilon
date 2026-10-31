@@ -27,6 +27,9 @@ import net.minecraft.world.phys.Vec3
  *
  * 客户端计算流程与原版 `ServerExplosion`、`ExplosionDamageCalculator`、`CombatRules` 以及
  * `LivingEntity.getDamageAfterArmorAbsorb/getDamageAfterMagicAbsorb` 保持一致。
+ *
+ * 需要在客户端世界内做视线/暴露采样或读取本地玩家的方法接收 [NonNullContext] 上下文参数，
+ * 调用方需在 `NonNullContext` 作用域内调用（`nonNullListener` / `runSafe` / `context(nn)`）。
  */
 object DamageUtils {
 
@@ -49,12 +52,15 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对目标造成的最终伤害。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @param target     目标实体
      * @param crystalPos 末影水晶爆炸中心
      * @param targetPos  目标预测位置；为 null 时使用实体当前位置
      * @param mode       护甲附魔计算模式
      * @return 应用全部减免后的估算伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun crystalDamage(target: LivingEntity, crystalPos: Vec3, targetPos: Vec3?, mode: ArmorEnchantmentMode): Float {
         return explosionDamage(target, crystalPos, CRYSTAL_EXPLOSION_RADIUS, targetPos, mode)
     }
@@ -62,17 +68,22 @@ object DamageUtils {
     /**
      * 估算重生锚爆炸对目标造成的最终伤害。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @param target    目标实体
      * @param anchorPos 重生锚爆炸中心
      * @param mode      护甲附魔计算模式
      * @return 应用全部减免后的估算伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun anchorDamage(target: LivingEntity, anchorPos: Vec3, mode: ArmorEnchantmentMode): Float {
         return explosionDamage(target, anchorPos, ANCHOR_EXPLOSION_RADIUS, null, mode)
     }
 
     /**
      * 估算指定爆炸对目标造成的最终伤害。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      *
      * @param target       目标实体
      * @param explosionPos 爆炸中心
@@ -81,6 +92,7 @@ object DamageUtils {
      * @param mode         护甲附魔计算模式
      * @return 应用全部减免后的估算伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun explosionDamage(
         target: LivingEntity,
         explosionPos: Vec3,
@@ -116,11 +128,14 @@ object DamageUtils {
     /**
      * 计算尚未应用护甲等减免的原始爆炸伤害。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @param target       目标实体
      * @param explosionPos 爆炸中心
      * @param radius       爆炸或特效半径
      * @return 未应用减免的估算伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun rawExplosionDamage(target: LivingEntity, explosionPos: Vec3, radius: Float): Float {
         val doubleRadius = radius * 2.0f
         val dist = Math.sqrt(target.distanceToSqr(explosionPos)) / doubleRadius
@@ -138,10 +153,13 @@ object DamageUtils {
     /**
      * 计算爆炸中心对目标包围盒的无遮挡采样比例。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用（需要世界做视线检测）。
+     *
      * @param center 爆炸中心
      * @param entity 实体
      * @return 范围为 0 到 1 的无遮挡比例
      */
+    context(nn: NonNullContext)
     fun getSeenPercent(center: Vec3, entity: LivingEntity): Float {
         return getSeenPercent(center, entity.boundingBox, entity)
     }
@@ -149,11 +167,14 @@ object DamageUtils {
     /**
      * 计算爆炸中心对目标包围盒的无遮挡采样比例。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用（需要世界做视线检测）。
+     *
      * @param center 爆炸中心
      * @param bb     用于采样的实体包围盒
      * @param entity 实体
      * @return 范围为 0 到 1 的无遮挡比例
      */
+    context(nn: NonNullContext)
     fun getSeenPercent(center: Vec3, bb: AABB, entity: LivingEntity): Float {
         val xs = 1.0 / ((bb.maxX - bb.minX) * 2.0 + 1.0)
         val ys = 1.0 / ((bb.maxY - bb.minY) * 2.0 + 1.0)
@@ -162,8 +183,6 @@ object DamageUtils {
         val zOffset = (1.0 - Math.floor(1.0 / zs) * zs) / 2.0
 
         if (xs < 0.0 || ys < 0.0 || zs < 0.0) return 0.0f
-
-        val ctx = NonNullContext.current ?: return 0.0f
 
         var hits = 0
         var total = 0
@@ -179,7 +198,7 @@ object DamageUtils {
                     val z = Mth.lerp(zz, bb.minZ, bb.maxZ)
                     val from = Vec3(x + xOffset, y, z + zOffset)
 
-                    if (ctx.world.clip(
+                    if (nn.level.clip(
                             ClipContext(
                                 from, center,
                                 ClipContext.Block.COLLIDER,
@@ -300,10 +319,13 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对本地玩家造成的最终伤害。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @param crystalPos 末影水晶爆炸中心
      * @param mode       护甲附魔计算模式
      * @return 本地玩家预计受到的伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun selfCrystalDamage(crystalPos: Vec3, mode: ArmorEnchantmentMode): Float {
         return selfCrystalDamage(crystalPos, null, mode)
     }
@@ -311,14 +333,16 @@ object DamageUtils {
     /**
      * 估算末影水晶爆炸对本地玩家造成的最终伤害。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @param crystalPos 末影水晶爆炸中心
      * @param selfPos    本地玩家预测位置；为 null 时使用当前位置
      * @param mode       护甲附魔计算模式
      * @return 本地玩家预计受到的伤害，最小为 0
      */
+    context(nn: NonNullContext)
     fun selfCrystalDamage(crystalPos: Vec3, selfPos: Vec3?, mode: ArmorEnchantmentMode): Float {
-        val player = NonNullContext.current?.player ?: return 0f
-        return crystalDamage(player, crystalPos, selfPos, mode)
+        return crystalDamage(nn.player, crystalPos, selfPos, mode)
     }
 
     /**
@@ -342,13 +366,15 @@ object DamageUtils {
 
     /**
      * 破坏准星指向的末影水晶（用于自动打水晶类模块）。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun breakCrosshairCrystal(): Boolean {
-        val ctx = NonNullContext.current ?: return false
         if (Constants.client.cameraEntity == null) return false
 
-        val player = ctx.player
-        val world = ctx.world
+        val player = nn.player
+        val world = nn.level
         val eye = player.eyePosition
         val look = player.lookAngle
         val end = eye.add(look.scale(4.0))
@@ -386,7 +412,7 @@ object DamageUtils {
         }
 
         if (target != null) {
-            ctx.interaction.attack(player, target)
+            nn.interaction.attack(player, target)
             PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
             return true
         }

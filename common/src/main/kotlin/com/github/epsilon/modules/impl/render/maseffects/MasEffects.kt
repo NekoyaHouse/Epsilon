@@ -17,7 +17,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.github.epsilon.utils.player
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
@@ -115,7 +115,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
             particleRenderer.tick()
 
             if (playerDeathEffect) {
-                for (target in world.players()) {
+                for (target in level.players()) {
                     if (target.deathTime == 1) {
                         particleRenderer.spawnDeath(target.position())
                     }
@@ -123,7 +123,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
             }
 
             if (pearlTrailParticles) {
-                for (entity in world.entitiesForRendering()) {
+                for (entity in level.entitiesForRendering()) {
                     if (entity is ThrownEnderpearl) {
                         particleRenderer.spawnPearlTrail(entity)
                     }

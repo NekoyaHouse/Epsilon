@@ -6,7 +6,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.BedBlock
@@ -43,7 +43,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
         if (!entity.onGround() || entity.isUnderWater || entity.isInLava || mc.options.keyJump.isDown || entity.noPhysics) {
             return false
         }
-        return !world.noCollision(
+        return !level.noCollision(
             entity,
             entity.boundingBox.move(0.0, (-(fallDistance + 0.01)).toFloat().toDouble(), 0.0)
         )
@@ -72,7 +72,7 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun check(blockPos: BlockPos.MutableBlockPos, x: Int, z: Int): Boolean {
         blockPos.move(x, 0, z)
-        val isBed = world.getBlockState(blockPos).block is BedBlock
+        val isBed = level.getBlockState(blockPos).block is BedBlock
         blockPos.move(-x, 0, -z)
         return isBed
     }

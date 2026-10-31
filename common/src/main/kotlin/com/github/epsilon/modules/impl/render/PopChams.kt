@@ -13,7 +13,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
@@ -49,12 +49,12 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
                 return@nonNullListener
             }
 
-            val entity = packet.getEntity(world) ?: return@nonNullListener
+            val entity = packet.getEntity(level) ?: return@nonNullListener
             if (entity !is Player) return@nonNullListener
             if (ignoreSelf && entity === player) return@nonNullListener
 
             synchronized(ghosts) {
-                ghosts.add(GhostPlayer(world, entity, mc))
+                ghosts.add(GhostPlayer(level, entity, mc))
             }
         }
 

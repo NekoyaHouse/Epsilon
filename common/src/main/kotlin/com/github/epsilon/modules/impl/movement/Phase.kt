@@ -11,14 +11,14 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.MoveUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -132,8 +132,8 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                                 continue
                             }
                             val bp = BlockPos.containing(player.position()).offset(x, y, z)
-                            if (player.boundingBox.intersects(AABB(bp)) && !world.getBlockState(bp).isAir) {
-                                netHandler.send(
+                            if (player.boundingBox.intersects(AABB(bp)) && !level.getBlockState(bp).isAir) {
+                                connection.send(
                                     ServerboundPlayerActionPacket(
                                         ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                                         bp,
@@ -191,14 +191,14 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 val diagonalOffset = forwardWithoutStrafe(0.44)
                 val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
 
-                netHandler.send(
+                connection.send(
                     ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
                 )
 
                 if (diagonal) {
                     val directionVec = forwardWithoutStrafe(0.51)
 
-                    var height = if (world.clip(
+                    var height = if (level.clip(
                             ClipContext(
                                 player.eyePosition,
                                 player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
@@ -214,9 +214,9 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     }
 
                     player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
-                    netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
 
-                    height = if (world.getBlockState(
+                    height = if (level.getBlockState(
                             BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
                         ).isAir
                     ) {
@@ -226,12 +226,12 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     }
 
                     player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
-                    netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
                     toggle()
                 } else {
                     val directionVec = forwardWithoutStrafe(0.57)
 
-                    var height = if (world.clip(
+                    var height = if (level.clip(
                             ClipContext(
                                 player.eyePosition,
                                 player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
@@ -247,12 +247,12 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     }
 
                     player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
-                    netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
 
                     player.setPos(player.x + directionVec[0], player.y, player.z + directionVec[1])
-                    netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
 
-                    height = if (world.getBlockState(
+                    height = if (level.getBlockState(
                             BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
                         ).isAir
                     ) {
@@ -262,7 +262,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     }
 
                     player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
-                    netHandler.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
                     toggle()
                 }
             }
@@ -305,7 +305,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun isPlayerInBlock(): Boolean {
-        return !world.getBlockState(BlockPos.containing(player.position())).isAir
+        return !level.getBlockState(BlockPos.containing(player.position())).isAir
     }
 
 }

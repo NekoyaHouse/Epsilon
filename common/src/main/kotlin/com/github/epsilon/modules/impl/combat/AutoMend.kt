@@ -56,7 +56,8 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
     override fun onDisable() {
         if (shouldSwapBack) {
-            InvUtils.swapBack()
+            val nn = NonNullContext.current ?: return
+            context(nn) { InvUtils.swapBack() }
         }
     }
 

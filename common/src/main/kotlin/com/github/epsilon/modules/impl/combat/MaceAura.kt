@@ -156,7 +156,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
         // 何意味，，，
         if (paperServer) {
             for (i in 0 until 4) {
-                nn.netHandler.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
+                nn.connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
             }
         }
 
@@ -197,7 +197,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun sendMovePacket(x: Double, y: Double, z: Double, onGround: Boolean) {
-        nn.netHandler.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
+        nn.connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
     }
 
     context(nn: NonNullContext)

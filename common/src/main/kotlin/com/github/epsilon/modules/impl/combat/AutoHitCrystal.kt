@@ -19,7 +19,7 @@ import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
@@ -105,7 +105,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 val hitResult = mc.hitResult
                 if (hitResult is BlockHitResult) {
                     if (hitResult.type == HitResult.Type.BLOCK && !active &&
-                        !world.getBlockState(hitResult.blockPos).canBeReplaced() && checkPlace
+                        !level.getBlockState(hitResult.blockPos).canBeReplaced() && checkPlace
                     ) {
                         return@nonNullListener
                     }
@@ -129,13 +129,13 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                     }
 
                     val renderPos = hitResult.blockPos.relative(hitResult.direction)
-                    val hitState = world.getBlockState(hitResult.blockPos)
+                    val hitState = level.getBlockState(hitResult.blockPos)
 
                     if (hitState.`is`(Blocks.BEDROCK) || hitState.`is`(Blocks.OBSIDIAN)) {
                         active = true
                         crystalling = true
-                    } else if (!world.getBlockState(renderPos).`is`(Blocks.OBSIDIAN)) {
-                        val state = world.getBlockState(hitResult.blockPos)
+                    } else if (!level.getBlockState(renderPos).`is`(Blocks.OBSIDIAN)) {
+                        val state = level.getBlockState(hitResult.blockPos)
                         if (state.`is`(Blocks.RESPAWN_ANCHOR) && state.getValue(RespawnAnchorBlock.CHARGE) > 0) {
                             return@nonNullListener
                         }
@@ -194,7 +194,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
             val crosshairTarget = mc.hitResult
 
             if (swordSwap && mainHandStack.`is`(ItemTags.SWORDS) && crosshairTarget is BlockHitResult) {
-                if (world.getBlockState(crosshairTarget.blockPos).`is`(Blocks.OBSIDIAN) &&
+                if (level.getBlockState(crosshairTarget.blockPos).`is`(Blocks.OBSIDIAN) &&
                     !player.isHolding(Items.END_CRYSTAL)
                 ) {
                     if (selectItemFromHotbar(Items.END_CRYSTAL)) {
@@ -219,6 +219,7 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
         resetState()
     }
 
+    context(nn: NonNullContext)
     private fun selectItemFromHotbar(item: Item): Boolean {
         val result: FindItemResult = InvUtils.findInHotbar(item)
         if (result.found()) {

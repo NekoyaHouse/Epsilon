@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.network.NetworkUtils
 import com.github.epsilon.utils.player
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -24,7 +24,7 @@ object InputDisabler : Module("Input Disabler", Category.PLAYER) {
             if (packet !is ServerboundContainerClickPacket && packet !is ServerboundContainerClosePacket) return@nonNullListener
 
             event.cancel()
-            spoofInput(player, netHandler)
+            spoofInput(player, connection)
             NetworkUtils.sendPacketNoEvent(packet)
             restoreInput(player)
         }

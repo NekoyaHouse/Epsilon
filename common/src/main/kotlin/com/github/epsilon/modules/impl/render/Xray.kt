@@ -13,6 +13,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.timer.TimerUtils
@@ -196,7 +197,7 @@ object Xray : Module("Xray", Category.RENDER) {
             displayBlock = pos
             mc.gameMode!!.startDestroyBlock(pos, player.direction)
             mc.gameMode!!.stopDestroyBlock()
-            PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
+            NonNullContext.current?.let { nn -> context(nn) { PlayerUtils.swingHand(InteractionHand.MAIN_HAND) } }
             checked.add(BlockMemory(pos))
             done++
         }

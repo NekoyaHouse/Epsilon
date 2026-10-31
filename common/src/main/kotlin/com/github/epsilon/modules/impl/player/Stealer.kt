@@ -83,6 +83,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         return !timer.hasDelayed(3)
     }
 
+    context(nn: NonNullContext)
     fun isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) {
             return false
@@ -145,6 +146,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun isBestItemInChest(menu: ChestMenu, stack: ItemStack): Boolean {
         if (!InvHelper.isGodItem(stack) && !InvHelper.isSharpnessAxe(stack)) {
             for (i in 0 until menu.rowCount * 9) {
@@ -181,6 +183,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun isChestEmpty(menu: ChestMenu): Boolean {
         for (i in 0 until menu.rowCount * 9) {
             val item = menu.getSlot(i).item

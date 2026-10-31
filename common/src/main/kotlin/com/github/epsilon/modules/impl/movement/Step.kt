@@ -10,7 +10,7 @@ import com.github.epsilon.modules.impl.combat.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.runSafe
@@ -72,7 +72,7 @@ object Step : Module("Step", Category.MOVEMENT) {
                         packets = 2
                     }
                     for (offset in offsets) {
-                        netHandler.send(
+                        connection.send(
                             ServerboundMovePlayerPacket.Pos(
                                 player.xo,
                                 player.yo + offset,

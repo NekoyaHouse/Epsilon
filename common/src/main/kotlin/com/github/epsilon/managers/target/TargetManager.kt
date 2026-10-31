@@ -7,6 +7,7 @@ import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity
@@ -46,29 +47,32 @@ object TargetManager {
     }
 
     fun acquireTargets(request: TargetRequest): List<LivingEntity> {
-        if (Constants.client.player == null || Constants.client.level == null) return emptyList()
+        val nn = NonNullContext.current ?: return emptyList()
+        return context(nn) {
+            val candidates = collectTargets(request)
+            if (candidates.isEmpty()) {
+                candidates
+            } else {
+                if (!isSharedTargetAlive()) {
+                    sharedTarget = null
+                }
 
-        val candidates = collectTargets(request)
-        if (candidates.isEmpty()) return candidates
+                val shared = sharedTarget
+                if (shared != null && isValidTarget(shared, request)) {
+                    if (candidates.remove(shared)) {
+                        candidates.add(0, shared)
+                    }
+                } else if (sharedTarget == null) {
+                    sharedTarget = candidates.first()
+                }
 
-        if (!isSharedTargetAlive()) {
-            sharedTarget = null
-        }
-
-        val shared = sharedTarget
-        if (shared != null && isValidTarget(shared, request)) {
-            if (candidates.remove(shared)) {
-                candidates.add(0, shared)
+                val maxTargets = Math.max(1, request.maxTargets)
+                if (candidates.size > maxTargets) {
+                    candidates.subList(0, maxTargets).toList()
+                } else {
+                    candidates.toList()
+                }
             }
-        } else if (sharedTarget == null) {
-            sharedTarget = candidates.first()
-        }
-
-        val maxTargets = Math.max(1, request.maxTargets)
-        return if (candidates.size > maxTargets) {
-            candidates.subList(0, maxTargets).toList()
-        } else {
-            candidates.toList()
         }
     }
 
@@ -79,12 +83,13 @@ object TargetManager {
         return sharedTarget
     }
 
+    context(nn: NonNullContext)
     private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in Constants.client.level!!.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === Constants.client.player) continue
+            if (entity === nn.player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }
@@ -101,6 +106,7 @@ object TargetManager {
         return !AntiBot.isBot(shared)
     }
 
+    context(nn: NonNullContext)
     private fun isValidTarget(entity: LivingEntity, request: TargetRequest): Boolean {
         if (!entity.isAlive || entity.isDeadOrDying) return false
         if (AntiBot.isBot(entity)) return false

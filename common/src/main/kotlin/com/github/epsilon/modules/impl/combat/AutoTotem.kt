@@ -39,8 +39,8 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
     }
 
     override fun getInfo(): String? {
-        if (NonNullContext.current == null) return null
-        return InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString()
+        val nn = NonNullContext.current ?: return null
+        return context(nn) { InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString() }
     }
 
     context(nn: NonNullContext)

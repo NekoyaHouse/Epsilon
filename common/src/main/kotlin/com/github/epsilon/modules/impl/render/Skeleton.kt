@@ -12,7 +12,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.SkeletonRenderer
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import java.awt.Color
 
 object Skeleton : Module("Skeleton", Category.RENDER) {
@@ -31,7 +31,7 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
 
     private fun onRender3D(event: Render3DEvent) {
         runSafe {
-            for (candidate in world.players()) {
+            for (candidate in level.players()) {
                 if (!candidate.isAlive || candidate.isSpectator) continue
                 if (candidate.isInvisible && !invisibles) continue
                 if (candidate.position().distanceToSqr(mc.gameRenderer.mainCamera().position()) > distance * distance) continue

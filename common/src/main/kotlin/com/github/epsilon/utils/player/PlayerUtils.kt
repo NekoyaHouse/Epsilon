@@ -11,7 +11,8 @@ import net.minecraft.world.level.block.WebBlock
 /**
  * 本地玩家相关工具类。
  *
- * 依赖玩家的方法统一通过 [NonNullContext] 读取上下文；上下文缺失时返回安全默认值。
+ * 依赖玩家的方法统一接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext` 作用域内调用
+ * （`nonNullListener` / `runSafe` / `context(nn)`），由调用方保证玩家与世界已经就绪。
  */
 object PlayerUtils {
 
@@ -23,17 +24,17 @@ object PlayerUtils {
      *
      * @param hand 挥手使用的手
      */
+    context(nn: NonNullContext)
     fun swingHand(hand: InteractionHand) {
-        val ctx = NonNullContext.current ?: return
-        ctx.player.swing(hand, SwingAnimation.DEFAULT, false)
+        nn.player.swing(hand, SwingAnimation.DEFAULT, false)
     }
 
     /**
      * 判断本地玩家是否正在使用食物。
      */
+    context(nn: NonNullContext)
     fun isEating(): Boolean {
-        val ctx = NonNullContext.current ?: return false
-        val player = ctx.player
+        val player = nn.player
         return (player.mainHandItem.components.has(DataComponents.FOOD) ||
                 player.offhandItem.components.has(DataComponents.FOOD)) && player.isUsingItem
     }
@@ -41,9 +42,9 @@ object PlayerUtils {
     /**
      * 判断本地玩家的包围盒是否与蜘蛛网相交。
      */
+    context(nn: NonNullContext)
     fun isInWeb(): Boolean {
-        val ctx = NonNullContext.current ?: return false
-        val box = ctx.player.boundingBox.deflate(1.0E-6)
+        val box = nn.player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -57,7 +58,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (ctx.world.getBlockState(mutablePos).block is WebBlock) {
+                    if (nn.level.getBlockState(mutablePos).block is WebBlock) {
                         return true
                     }
                 }
@@ -70,9 +71,9 @@ object PlayerUtils {
     /**
      * 判断本地玩家的包围盒是否与实体方块相交。
      */
+    context(nn: NonNullContext)
     fun isInBlock(): Boolean {
-        val ctx = NonNullContext.current ?: return false
-        val box = ctx.player.boundingBox.deflate(1.0E-6)
+        val box = nn.player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -86,7 +87,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (ctx.world.getBlockState(mutablePos).isSolidRender()) {
+                    if (nn.level.getBlockState(mutablePos).isSolidRender()) {
                         return true
                     }
                 }

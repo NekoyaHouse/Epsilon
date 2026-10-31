@@ -5,7 +5,7 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.renderpearl.api.pipeline.*
@@ -76,7 +76,7 @@ object WireframeEntityRenderer {
         }
 
         val partialTick = runSafe {
-            if (world.tickRateManager().isFrozen) 1.0f
+            if (level.tickRateManager().isFrozen) 1.0f
             else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         }
         if (partialTick != null) {

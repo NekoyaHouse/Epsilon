@@ -24,7 +24,7 @@ import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.FallingPlayer
 import com.github.epsilon.utils.player.FindItemResult
@@ -37,7 +37,7 @@ import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.runSafe
 import com.github.epsilon.utils.runSafeOrElse
 import com.github.epsilon.utils.runSafeOrFalse
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -288,7 +288,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     RotationManager.INSTANCE.updateActive(true)
 
                     // 代替 sendPosition()
-                    netHandler.send(
+                    connection.send(
                         ServerboundMovePlayerPacket.Rot(
                             rotation.yaw,
                             rotation.pitch,
@@ -397,7 +397,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         emergencyPlacementActive = false
         pearlUsePacketSent = false
         if (shouldSwapBack) {
-            InvUtils.swapBack()
+            NonNullContext.current?.let { nn -> context(nn) { InvUtils.swapBack() } }
             shouldSwapBack = false
         }
     }
@@ -588,8 +588,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             val hit = center.add(normal.scale(0.5))
             val baseBlockPos = pos.relative(dir)
 
-            val state: BlockState = world.getBlockState(baseBlockPos)
-            if (state.getCollisionShape(world, baseBlockPos).isEmpty || state.getMenuProvider(world, baseBlockPos) != null) {
+            val state: BlockState = level.getBlockState(baseBlockPos)
+            if (state.getCollisionShape(level, baseBlockPos).isEmpty || state.getMenuProvider(level, baseBlockPos) != null) {
                 continue
             }
 
@@ -690,7 +690,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private fun onAir(): Boolean = runSafeOrFalse {
         val baseVec = player.eyePosition
         val base = BlockPos.containing(baseVec.x, getYLevel().toDouble(), baseVec.z)
-        world.getBlockState(base).canBeReplaced()
+        level.getBlockState(base).canBeReplaced()
     }
 
     private fun getVec3(pos: BlockPos, face: Direction): Vec3 {
@@ -758,6 +758,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun swapBack() {
         if (blockResult.isOffhand()) {
             return

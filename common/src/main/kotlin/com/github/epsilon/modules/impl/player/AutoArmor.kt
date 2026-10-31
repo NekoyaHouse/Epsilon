@@ -12,7 +12,7 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.interaction
-import com.github.epsilon.utils.netHandler
+import com.github.epsilon.utils.connection
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
@@ -119,7 +119,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                     val armorSlot = 8 - armorPiece.equipmentSlot.index
 
                     if (strict) {
-                        netHandler.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+                        connection.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
                     }
 
                     click(inventorySlot)
@@ -128,7 +128,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
                         click(inventorySlot)
                     }
 
-                    netHandler.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
+                    connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
                 }
 
                 tickDelay = delay

@@ -15,7 +15,7 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.github.epsilon.utils.world.BlockUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -82,7 +82,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             // 1. Find crystals within range
             val self = player
             val playerY = self.y
-            val targetCrystal = world.getEntitiesOfClass(
+            val targetCrystal = level.getEntitiesOfClass(
                 EndCrystal::class.java,
                 self.boundingBox.inflate(range),
                 { crystal -> Math.abs(crystal.y - playerY) < 1.0 }
@@ -93,7 +93,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             // 2.1 Check if already blocked by obsidian
             val eyes: Vec3 = self.eyePosition
             val towards: Vec3 = targetCrystal.position().add(0.0, 0.5, 0.0)
-            val hit = world.clip(
+            val hit = level.clip(
                 ClipContext(
                     eyes,
                     towards,
@@ -104,7 +104,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             )
             if (hit.type == HitResult.Type.BLOCK) {
                 val hitPos = (hit as BlockHitResult).blockPos
-                if (world.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullListener
+                if (level.getBlockState(hitPos).`is`(Blocks.OBSIDIAN)) return@nonNullListener
             }
 
             // 2. Calculate placement position
@@ -121,7 +121,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
             // 3. Check if placeable
             if (!canPlaceAt(placePos)) return@nonNullListener
-            if (!world.getBlockState(placePos.below()).isSolid) return@nonNullListener
+            if (!level.getBlockState(placePos.below()).isSolid) return@nonNullListener
 
             // 4. Find obsidian
             val obsidian: FindItemResult = findInHotbar(Items.OBSIDIAN)

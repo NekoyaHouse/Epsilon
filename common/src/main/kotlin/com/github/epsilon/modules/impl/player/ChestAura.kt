@@ -17,7 +17,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -119,7 +119,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             val packet = event.packet
             if (packet is ServerboundUseItemOnPacket) {
                 val pos = packet.hitResult().blockPos
-                if (isSelectedContainer(world.getBlockEntity(pos))) {
+                if (isSelectedContainer(level.getBlockEntity(pos))) {
                     clickedContainers.add(pos.immutable())
                     playerClickedContainers.add(pos.immutable())
                 }
@@ -167,7 +167,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         if (distance <= 0.0) return false
 
         val distanceSq = distance * distance
-        for (player in nn.world.players()) {
+        for (player in nn.level.players()) {
             if (player !== nn.player && player.distanceToSqr(nn.player) <= distanceSq) {
                 return true
             }
@@ -186,7 +186,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
         for (pos in BlockPos.betweenClosed(origin.offset(-radius, -radius, -radius), origin.offset(radius, radius, radius))) {
             val immutable = pos.immutable()
-            if (!isSelectedContainer(nn.world.getBlockEntity(immutable))) continue
+            if (!isSelectedContainer(nn.level.getBlockEntity(immutable))) continue
             if (isBlockedChest(immutable)) continue
             if (wasAlreadyOpened(immutable)) continue
 
@@ -207,7 +207,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val maxRange = range
         if (distanceSq > maxRange * maxRange) return null
 
-        val visibleHit = nn.world.clip(
+        val visibleHit = nn.level.clip(
             ClipContext(
                 eyes,
                 Vec3.atCenterOf(pos),
@@ -241,7 +241,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val end = start.add(direction.scale(range))
 
         if (!throughWalls) {
-            val hit = nn.world.clip(
+            val hit = nn.level.clip(
                 ClipContext(
                     start,
                     end,
@@ -253,8 +253,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             return if (hit.type == HitResult.Type.BLOCK) hit else null
         }
 
-        val state: BlockState = nn.world.getBlockState(pos)
-        val shape = state.getShape(nn.world, pos)
+        val state: BlockState = nn.level.getBlockState(pos)
+        val shape = state.getShape(nn.level, pos)
         return if (shape.isEmpty) null else shape.clip(start, end, pos)
     }
 
@@ -269,7 +269,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun isBlockedChest(pos: BlockPos): Boolean {
         val above = pos.above()
-        return nn.world.getBlockEntity(pos) is ChestBlockEntity && nn.world.getBlockState(above).isRedstoneConductor(nn.world, above)
+        return nn.level.getBlockEntity(pos) is ChestBlockEntity && nn.level.getBlockState(above).isRedstoneConductor(nn.level, above)
     }
 
     private fun wasAlreadyOpened(pos: BlockPos): Boolean {
@@ -282,7 +282,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun markContainerOpened(pos: BlockPos) {
-        if (isSelectedContainer(nn.world.getBlockEntity(pos))) {
+        if (isSelectedContainer(nn.level.getBlockEntity(pos))) {
             clickedContainers.add(pos.immutable())
         }
     }
@@ -305,7 +305,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun isInLobby(): Boolean {
-        for (entity in nn.world.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity.name.string.contains("\u00A7e\u00A7lCLICK TO PLAY")) {
                 return true
             }

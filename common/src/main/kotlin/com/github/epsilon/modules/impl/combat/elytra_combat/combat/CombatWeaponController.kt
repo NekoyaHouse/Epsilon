@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
+import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
@@ -70,6 +71,17 @@ object CombatWeaponController {
         swingHand: Boolean,
         reachBuffer: Double,
     ): Boolean {
+        val nn = NonNullContext.current ?: return false
+        return context(nn) { attackMaceImpl(target, antiShield, swingHand, reachBuffer) }
+    }
+
+    context(nn: NonNullContext)
+    private fun attackMaceImpl(
+        target: LivingEntity?,
+        antiShield: Boolean,
+        swingHand: Boolean,
+        reachBuffer: Double,
+    ): Boolean {
         val player = mc.player ?: return false
         if (target == null || !target.isAlive) {
             return false
@@ -104,6 +116,12 @@ object CombatWeaponController {
     }
 
     fun ensureSpearUse(): Boolean {
+        val nn = NonNullContext.current ?: return false
+        return context(nn) { ensureSpearUseImpl() }
+    }
+
+    context(nn: NonNullContext)
+    private fun ensureSpearUseImpl(): Boolean {
         val player = mc.player ?: return false
         val gameMode = mc.gameMode ?: return false
         if (isUsingSpear(player)) {
@@ -219,19 +237,22 @@ object CombatWeaponController {
     }
 
     fun stopSpearUse() {
-        // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
-        val player = mc.player
-        if (player != null && isUsingSpear(player)) {
-            mc.gameMode?.releaseUsingItem(player)
-        }
-        releaseSpearKey()
-        if (spearInventorySwapped) {
-            InvUtils.invSwapBack()
-            spearInventorySwapped = false
-        }
-        if (spearSavedHotbarSlot >= 0) {
-            InvUtils.swap(spearSavedHotbarSlot, false)
-            spearSavedHotbarSlot = -1
+        val nn = NonNullContext.current ?: return
+        context(nn) {
+            // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
+            val player = mc.player
+            if (player != null && isUsingSpear(player)) {
+                mc.gameMode?.releaseUsingItem(player)
+            }
+            releaseSpearKey()
+            if (spearInventorySwapped) {
+                InvUtils.invSwapBack()
+                spearInventorySwapped = false
+            }
+            if (spearSavedHotbarSlot >= 0) {
+                InvUtils.swap(spearSavedHotbarSlot, false)
+                spearSavedHotbarSlot = -1
+            }
         }
     }
 
@@ -263,9 +284,13 @@ object CombatWeaponController {
         if (target == null || !target.isUsingItem || !target.isBlocking) {
             return false
         }
-        return InvUtils.findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
+        val nn = NonNullContext.current ?: return false
+        return context(nn) {
+            InvUtils.findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
+        }
     }
 
+    context(nn: NonNullContext)
     private fun selectMainHand(predicate: Predicate<ItemStack>): Selection? {
         val player = mc.player ?: return null
         if (predicate.test(player.mainHandItem)) {

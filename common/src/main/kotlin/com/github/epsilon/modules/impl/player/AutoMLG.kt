@@ -19,7 +19,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -218,7 +218,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun grimFindCollectableWater(): BlockPos? {
         val player = nn.player
-        val world = nn.world
+        val world = nn.level
         val eyesPos = player.getEyePosition()
         val base = BlockPos.containing(player.x, player.y, player.z)
         var bestPos: BlockPos? = null
@@ -251,7 +251,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun canSeePosition(from: Vec3, to: Vec3, targetBlock: BlockPos): Boolean {
         val clipContext = ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, nn.player)
-        val result: BlockHitResult = nn.world.clip(clipContext)
+        val result: BlockHitResult = nn.level.clip(clipContext)
         if (result.type == HitResult.Type.MISS) return true
         return result.blockPos == targetBlock
     }
@@ -259,7 +259,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun shouldSkipMlgPlacement(bestPos: BlockPos): Boolean {
         val landingPos = bestPos.below()
-        val landingState: BlockState = nn.world.getBlockState(landingPos)
+        val landingState: BlockState = nn.level.getBlockState(landingPos)
         if (landingState.isAir) return false
         if (!landingState.hasProperty(BlockStateProperties.WATERLOGGED)) return false
 
@@ -286,7 +286,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     context(nn: NonNullContext)
     private fun getBestPos(): BlockPos? {
         val player = nn.player
-        val world = nn.world
+        val world = nn.level
         val velocity = player.deltaMovement
         val predictedPos = Vec3(player.x + velocity.x * 3, player.y, player.z + velocity.z * 3)
 

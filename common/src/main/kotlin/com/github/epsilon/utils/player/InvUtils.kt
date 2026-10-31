@@ -8,8 +8,8 @@ import java.util.function.Predicate
 /**
  * 背包快捷栏查找与切换工具类。
  *
- * 依赖玩家的方法统一通过 [NonNullContext] 读取本地玩家；上下文缺失时返回空结果
- * 或直接跳过，不再直接解引用 `mc.player`。
+ * 依赖玩家的方法统一接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext` 作用域内调用
+ * （`nonNullListener` / `runSafe` / `context(nn)`），由调用方保证玩家、世界与连接已经就绪。
  */
 object InvUtils {
 
@@ -22,9 +22,9 @@ object InvUtils {
      *
      * @param predicate 物品匹配谓词
      */
+    context(nn: NonNullContext)
     fun testInMainHand(predicate: Predicate<ItemStack>): Boolean {
-        val ctx = NonNullContext.current ?: return false
-        return predicate.test(ctx.player.mainHandItem)
+        return predicate.test(nn.player.mainHandItem)
     }
 
     /**
@@ -32,9 +32,9 @@ object InvUtils {
      *
      * @param predicate 物品匹配谓词
      */
+    context(nn: NonNullContext)
     fun testInOffHand(predicate: Predicate<ItemStack>): Boolean {
-        val ctx = NonNullContext.current ?: return false
-        return predicate.test(ctx.player.offhandItem)
+        return predicate.test(nn.player.offhandItem)
     }
 
     /**
@@ -42,6 +42,7 @@ object InvUtils {
      *
      * @param items 待匹配的物品集合
      */
+    context(nn: NonNullContext)
     fun findInHotbar(vararg items: Item): FindItemResult {
         return findInHotbar(Predicate { itemStack ->
             items.any { itemStack.item === it }
@@ -53,15 +54,14 @@ object InvUtils {
      *
      * @param isGood 物品匹配谓词
      */
+    context(nn: NonNullContext)
     fun findInHotbar(isGood: Predicate<ItemStack>): FindItemResult {
-        val ctx = NonNullContext.current ?: return FindItemResult(-1, 0, 0)
-
         if (testInOffHand(isGood)) {
-            val offhand = ctx.player.offhandItem
+            val offhand = nn.player.offhandItem
             return FindItemResult(40, offhand.count, offhand.maxStackSize)
         } else if (testInMainHand(isGood)) {
-            val mainHand = ctx.player.mainHandItem
-            return FindItemResult(ctx.player.inventory.selectedSlot, mainHand.count, mainHand.maxStackSize)
+            val mainHand = nn.player.mainHandItem
+            return FindItemResult(nn.player.inventory.selectedSlot, mainHand.count, mainHand.maxStackSize)
         }
 
         return find(isGood, 0, 8)
@@ -72,6 +72,7 @@ object InvUtils {
      *
      * @param items 待匹配的物品集合
      */
+    context(nn: NonNullContext)
     fun find(vararg items: Item): FindItemResult {
         return find(Predicate { itemStack ->
             items.any { itemStack.item === it }
@@ -83,9 +84,9 @@ object InvUtils {
      *
      * @param isGood 物品匹配谓词
      */
+    context(nn: NonNullContext)
     fun find(isGood: Predicate<ItemStack>): FindItemResult {
-        val ctx = NonNullContext.current ?: return FindItemResult(-1, 0, 0)
-        return find(isGood, 0, ctx.player.inventory.containerSize)
+        return find(isGood, 0, nn.player.inventory.containerSize)
     }
 
     /**
@@ -95,13 +96,12 @@ object InvUtils {
      * @param start  搜索起始槽位（含）
      * @param end    搜索结束槽位（含）
      */
+    context(nn: NonNullContext)
     fun find(isGood: Predicate<ItemStack>, start: Int, end: Int): FindItemResult {
-        val ctx = NonNullContext.current ?: return FindItemResult(-1, 0, 0)
-
         var slot = -1
         var count = 0
         var maxCount = 0
-        val inventory = ctx.player.inventory
+        val inventory = nn.player.inventory
 
         for (i in start..end) {
             val stack = inventory.getItem(i)
@@ -122,9 +122,9 @@ object InvUtils {
      * @param slot     背包、容器或装备槽位
      * @param saveSwap 是否保存切换前的槽位以便恢复
      */
+    context(nn: NonNullContext)
     fun swap(slot: Int, saveSwap: Boolean) {
-        val ctx = NonNullContext.current ?: return
-        val inventory = ctx.player.inventory
+        val inventory = nn.player.inventory
 
         if (slot == 40 || inventory.selectedSlot == slot) {
             return
@@ -142,6 +142,7 @@ object InvUtils {
     /**
      * 恢复上次保存的快捷栏槽位。
      */
+    context(nn: NonNullContext)
     fun swapBack() {
         if (previousSlot == -1) return
         swap(previousSlot, false)
@@ -153,27 +154,26 @@ object InvUtils {
      *
      * @param slot 背包、容器或装备槽位
      */
+    context(nn: NonNullContext)
     fun invSwap(slot: Int) {
-        val ctx = NonNullContext.current ?: return
-
         var containerSlot = slot
         if (slot < 9) containerSlot += 36
         else if (slot == 40) containerSlot = 45
 
-        val selectedSlot = ctx.player.inventory.selectedSlot
-        ClickSlotUtils.swap(ctx.player.containerMenu.containerId, containerSlot, selectedSlot)
+        val selectedSlot = nn.player.inventory.selectedSlot
+        ClickSlotUtils.swap(nn.player.containerMenu.containerId, containerSlot, selectedSlot)
         invSlots = intArrayOf(containerSlot, selectedSlot)
     }
 
     /**
      * 撤销上次容器槽位交换。
      */
+    context(nn: NonNullContext)
     fun invSwapBack() {
         val slots = invSlots ?: return
         if (slots.size < 2) return
 
-        val ctx = NonNullContext.current ?: return
-        ClickSlotUtils.swap(ctx.player.containerMenu.containerId, slots[0], slots[1])
+        ClickSlotUtils.swap(nn.player.containerMenu.containerId, slots[0], slots[1])
     }
 
 }

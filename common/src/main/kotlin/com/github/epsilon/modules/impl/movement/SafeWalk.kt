@@ -8,7 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.player
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BlockItem
@@ -111,7 +111,7 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun canMove(movementX: Double, movementZ: Double, movementY: Double): Boolean {
-        return world.noCollision(
+        return level.noCollision(
             player,
             player.boundingBox.move(movementX, movementY, movementZ)
         )
@@ -120,7 +120,7 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun canFallAtLeast(movementX: Double, movementZ: Double, minHeight: Double): Boolean {
         val boundingBox = player.boundingBox
-        return world.noCollision(
+        return level.noCollision(
             player,
             AABB(
                 boundingBox.minX + 1.0E-7 + movementX,
@@ -146,7 +146,7 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
         val block = blockItem.block
         val state: BlockState = block.defaultBlockState()
-        if (block is EntityBlock || state.getMenuProvider(world, BlockPos.ZERO) != null) return false
+        if (block is EntityBlock || state.getMenuProvider(level, BlockPos.ZERO) != null) return false
         if (!state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) return false
 
         return block !is FallingBlock &&

@@ -19,10 +19,12 @@ object RaytraceUtils {
      * @param eyes 射线起点
      * @param vec3 射线终点
      * @return 判断结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun canSeePointFrom(eyes: Vec3, vec3: Vec3): Boolean {
-        val nn = NonNullContext.current ?: return false
-        return nn.world.clip(
+        return nn.level.clip(
             ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player)
         ).getType() == HitResult.Type.MISS
     }
@@ -33,7 +35,10 @@ object RaytraceUtils {
      * @param rotation 旋转角
      * @param range    射线追踪或自适应选点距离
      * @return 操作结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun raytrace(rotation: Rot2f, range: Double): HitResult? {
         return raytrace(rotation, range, 0.0f)
     }
@@ -45,9 +50,11 @@ object RaytraceUtils {
      * @param range    射线追踪或自适应选点距离
      * @param expand   实体包围盒扩大量
      * @return 操作结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun raytrace(rotation: Rot2f, range: Double, expand: Float): HitResult? {
-        val nn = NonNullContext.current ?: return null
         return raytrace(rotation, range, expand, nn.player)
     }
 
@@ -59,11 +66,13 @@ object RaytraceUtils {
      * @param expand   实体包围盒扩大量
      * @param entity   实体
      * @return 操作结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun raytrace(rotation: Rot2f, range: Double, expand: Float, entity: Entity?): HitResult? {
         if (entity == null) return null
-        val nn = NonNullContext.current ?: return null
-        val world = nn.world
+        val world = nn.level
 
         val partialTicks = nn.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
 
@@ -142,16 +151,18 @@ object RaytraceUtils {
      * @param pos      目标位置
      * @param strict   是否要求命中指定方块面
      * @return 判断结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun overBlock(rotation: Rot2f, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
-        val nn = NonNullContext.current ?: return false
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
 
         val eyePos = nn.player.getEyePosition(1.0f)
         val reach = 4.5
         val endVec = eyePos.add(lookVec.scale(reach))
 
-        val result: BlockHitResult = nn.world.clip(
+        val result: BlockHitResult = nn.level.clip(
             ClipContext(
                 eyePos,
                 endVec,
@@ -175,7 +186,10 @@ object RaytraceUtils {
      * @param pos      目标位置
      * @param strict   是否要求命中指定方块面
      * @return 判断结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun overBlock(rotation: Rot2f, pos: BlockPos, strict: Boolean): Boolean {
         return overBlock(rotation, Direction.UP, pos, strict)
     }
@@ -186,7 +200,10 @@ object RaytraceUtils {
      * @param rotation 旋转角
      * @param pos      目标位置
      * @return 判断结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun overBlock(rotation: Rot2f, pos: BlockPos): Boolean {
         return overBlock(rotation, Direction.UP, pos, false)
     }
@@ -198,7 +215,10 @@ object RaytraceUtils {
      * @param pos        目标位置
      * @param enumFacing 预期命中的方块面
      * @return 判断结果
+     *
+     * 调用方需在 NonNullContext 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun overBlock(rotation: Rot2f, pos: BlockPos, enumFacing: Direction): Boolean {
         return overBlock(rotation, enumFacing, pos, true)
     }

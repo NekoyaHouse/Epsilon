@@ -12,7 +12,7 @@ import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.network.NetworkUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
@@ -260,7 +260,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
         val chunkZ = SectionPos.blockToSectionCoord(player.z)
         for (x in 0..1) {
             for (z in 0..1) {
-                if (!world.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
+                if (!level.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
                     return true
                 }
             }
@@ -276,7 +276,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     context(nn: NonNullContext)
     private fun isFireworkBoosted(): Boolean {
         val box: AABB = player.boundingBox.inflate(1.0)
-        for (rocket in world.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
+        for (rocket in level.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
             if (rocket.isAlive) {
                 return true
             }

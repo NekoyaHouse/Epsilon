@@ -8,7 +8,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import java.awt.Color
 
@@ -27,7 +27,7 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
         runSafe {
             var batching = false
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity !is EndCrystal) continue
                 if (!batching) {
                     WireframeEntityRenderer.beginBatch(event.poseStack)

@@ -13,7 +13,7 @@ import com.github.epsilon.utils.player
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -228,7 +228,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         val halfFov = bowFov / 2.0f
         val rangeSq = bowRange.toDouble() * bowRange.toDouble()
 
-        for (entity in world.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val candidate = entity as? Player ?: continue
             if (shouldSkipPlayer(candidate)) continue
 
@@ -257,7 +257,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private fun getNearestTarget(range: Float): Player? {
         var nearest: Player? = null
         var bestDistance = (range * range).toDouble()
-        for (entity in world.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val candidate = entity as? Player ?: continue
             if (shouldSkipPlayer(candidate)) continue
             if (candidate.isInvisible && ignoreInvisible) continue

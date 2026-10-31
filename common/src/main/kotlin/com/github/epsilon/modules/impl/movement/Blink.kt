@@ -10,7 +10,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.network.NetworkUtils
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen
 import net.minecraft.client.player.RemotePlayer
@@ -122,7 +122,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
             prevServerYHeadRot = serverYHeadRot
             if (fakePlayer) {
                 val fake = RemotePlayer(
-                    world,
+                    level,
                     GameProfile(UUID.nameUUIDFromBytes("".toByteArray(StandardCharsets.UTF_8)), "")
                 )
                 fake.id = -1337
@@ -132,7 +132,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
                 fake.yHeadRot = player.yHeadRot
                 fake.health = player.health
                 fake.absorptionAmount = player.absorptionAmount
-                world.addEntity(fake)
+                level.addEntity(fake)
                 localPlayer = fake
             }
         }
@@ -141,7 +141,7 @@ object Blink : Module("Blink", Category.MOVEMENT) {
     override fun onDisable() {
         runSafe {
             if (fakePlayer) {
-                localPlayer?.let { world.removeEntity(it.id, Entity.RemovalReason.DISCARDED) }
+                localPlayer?.let { level.removeEntity(it.id, Entity.RemovalReason.DISCARDED) }
             }
             releaseAll()
             packets.clear()

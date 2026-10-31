@@ -110,7 +110,7 @@ class ScaffoldBlocksInstance(
         val tintSource: BlockTintSource = Constants.client.blockColors.getTintSource(state, 0) ?: return
         val nn = NonNullContext.current ?: return
 
-        val tint = tintSource.colorAsTerrainParticle(state, nn.world, nn.player.blockPosition())
+        val tint = tintSource.colorAsTerrainParticle(state, nn.level, nn.player.blockPosition())
         iconTint = Color(tint, true)
     }
 

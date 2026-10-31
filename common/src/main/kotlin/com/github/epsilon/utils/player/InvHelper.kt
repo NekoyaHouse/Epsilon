@@ -39,8 +39,9 @@ import net.minecraft.world.level.block.SlabBlock
 /**
  * 背包辅助逻辑（InvManager 等模块）使用的物品评分与查找工具类。
  *
- * 依赖背包内容的方法统一通过 [NonNullContext] 读取本地玩家；上下文缺失时返回
- * 与原实现“玩家为 null”分支一致的默认值（-1 / null / 空列表 / 0 分）。
+ * 依赖背包内容的方法统一接收 [NonNullContext] 上下文参数；调用方需在 `NonNullContext`
+ * 作用域内调用（`nonNullListener` / `runSafe` / `context(nn)`），由调用方保证玩家已经就绪。
+ * 纯物品评分方法（isSword / getProtection 等）不依赖上下文，可直接调用。
  */
 object InvHelper {
 
@@ -138,7 +139,10 @@ object InvHelper {
 
     /**
      * 判断当前界面是否应禁用背包辅助功能。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun shouldDisableFeatures(): Boolean {
         return getAllItems().any { item ->
             if (item.isEmpty) {
@@ -227,10 +231,12 @@ object InvHelper {
 
     /**
      * 获取指定普通背包槽位中的物品堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getInventoryStack(slot: Int): ItemStack {
-        val ctx = NonNullContext.current ?: return ItemStack.EMPTY
-        val items = ctx.player.inventory.nonEquipmentItems
+        val items = nn.player.inventory.nonEquipmentItems
 
         if (slot < 0 || slot >= items.size) {
             return ItemStack.EMPTY
@@ -241,18 +247,22 @@ object InvHelper {
 
     /**
      * 获取指定护甲槽位中的物品堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getArmorStack(slot: EquipmentSlot): ItemStack {
-        val ctx = NonNullContext.current ?: return ItemStack.EMPTY
-        return ctx.player.inventory.getItem(slot.getIndex(36))
+        return nn.player.inventory.getItem(slot.getIndex(36))
     }
 
     /**
      * 获取副手槽位中的物品堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getOffhandStack(): ItemStack {
-        val ctx = NonNullContext.current ?: return ItemStack.EMPTY
-        return ctx.player.inventory.getItem(Inventory.SLOT_OFFHAND)
+        return nn.player.inventory.getItem(Inventory.SLOT_OFFHAND)
     }
 
     /**
@@ -308,10 +318,12 @@ object InvHelper {
 
     /**
      * 查找普通背包区域中的空槽位。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun findEmptyInventory(): Int {
-        val ctx = NonNullContext.current ?: return -1
-        val size = ctx.player.inventory.nonEquipmentItems.size
+        val size = nn.player.inventory.nonEquipmentItems.size
 
         for (i in 9 until size) {
             if (getInventoryStack(i).isEmpty) {
@@ -324,12 +336,11 @@ object InvHelper {
 
     /**
      * 查找快捷栏中的空槽位。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun findEmptySlot(): Int {
-        if (NonNullContext.current == null) {
-            return -1
-        }
-
         for (i in 0 until 9) {
             if (getInventoryStack(i).isEmpty) {
                 return i
@@ -342,13 +353,12 @@ object InvHelper {
     /**
      * 在快捷栏中查找指定物品。
      *
-     * @return 匹配槽位；未找到或玩家不存在时返回 null
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
+     * @return 匹配槽位；未找到时返回 null
      */
+    context(nn: NonNullContext)
     fun findItemHotbar(item: Item): Int? {
-        if (NonNullContext.current == null) {
-            return null
-        }
-
         for (i in 0 until 9) {
             if (getInventoryStack(i).item === item) {
                 return i
@@ -374,11 +384,13 @@ object InvHelper {
 
     /**
      * 获取玩家背包中的全部物品堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getAllItems(): List<ItemStack> {
         val list = ArrayList<ItemStack>()
-        val ctx = NonNullContext.current ?: return list
-        val inventory = ctx.player.inventory
+        val inventory = nn.player.inventory
 
         for (i in 0 until inventory.containerSize) {
             list.add(inventory.getItem(i))
@@ -389,7 +401,10 @@ object InvHelper {
 
     /**
      * 获取指定护甲槽位可用物品的最高评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestArmorScore(slot: EquipmentSlot): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && getArmorSlot(item) == slot }
@@ -399,14 +414,20 @@ object InvHelper {
 
     /**
      * 获取指定护甲槽位当前装备的评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getCurrentArmorScore(slot: EquipmentSlot): Float {
         return getProtection(getArmorStack(slot))
     }
 
     /**
      * 获取背包内剑的最高伤害评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestSwordDamage(): Float {
         return getAllItems()
             .filter { item -> isSword(item) }
@@ -417,8 +438,11 @@ object InvHelper {
     /**
      * 获取背包内伤害评分最高的剑。
      *
+     * 调用方需在 `NonNullContext` 作用域内调用。
+     *
      * @return 评分最高的剑；不存在时返回 null
      */
+    context(nn: NonNullContext)
     fun getBestSword(): ItemStack? {
         return getAllItems()
             .filter { item -> isSword(item) }
@@ -427,13 +451,15 @@ object InvHelper {
 
     /**
      * 按对象引用查找物品堆所在的背包槽位。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getItemStackSlot(stack: ItemStack?): Int {
         if (stack == null) {
             return -1
         }
-        val ctx = NonNullContext.current ?: return -1
-        val inventory = ctx.player.inventory
+        val inventory = nn.player.inventory
 
         for (i in 0 until inventory.containerSize) {
             if (inventory.getItem(i) === stack) {
@@ -468,10 +494,12 @@ object InvHelper {
 
     /**
      * 在普通背包槽位中查找指定物品。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getItemSlot(item: Item): Int {
-        val ctx = NonNullContext.current ?: return -1
-        val size = ctx.player.inventory.nonEquipmentItems.size
+        val size = nn.player.inventory.nonEquipmentItems.size
 
         for (i in 0 until size) {
             if (getInventoryStack(i).item === item) {
@@ -484,7 +512,10 @@ object InvHelper {
 
     /**
      * 获取数量最多的可用投掷物。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestProjectile(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) && isItemValid(item) }
@@ -493,7 +524,10 @@ object InvHelper {
 
     /**
      * 获取任意可用钓鱼竿。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getFishingRod(): ItemStack? {
         return getAllItems()
             .firstOrNull { item -> !item.isEmpty && item.item is FishingRodItem && isItemValid(item) }
@@ -501,7 +535,10 @@ object InvHelper {
 
     /**
      * 统计背包内可放置方块的总数。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBlockCountInInventory(): Int {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
@@ -510,7 +547,10 @@ object InvHelper {
 
     /**
      * 获取数量最少的投掷物堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getWorstProjectile(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) }
@@ -519,7 +559,10 @@ object InvHelper {
 
     /**
      * 获取数量最少的可用箭矢堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getWorstArrow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is ArrowItem && isItemValid(item) }
@@ -528,7 +571,10 @@ object InvHelper {
 
     /**
      * 获取数量最少的可用方块堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getWorstBlock(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
@@ -537,7 +583,10 @@ object InvHelper {
 
     /**
      * 获取数量最多的可用方块堆。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestBlock(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
@@ -546,7 +595,10 @@ object InvHelper {
 
     /**
      * 获取背包内镐的最高工具评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPickaxeScore(): Float {
         return getAllItems()
             .filter { item -> isPickaxe(item) && isItemValid(item) }
@@ -556,7 +608,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的镐。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPickaxe(): ItemStack? {
         return getAllItems()
             .filter { item -> isPickaxe(item) && isItemValid(item) }
@@ -565,7 +620,10 @@ object InvHelper {
 
     /**
      * 获取背包内普通斧的最高工具评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestAxeScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && isAxe(item) && !isSharpnessAxe(item) && isItemValid(item) }
@@ -575,7 +633,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的普通斧。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestAxe(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && isAxe(item) && !isSharpnessAxe(item) && isItemValid(item) }
@@ -584,7 +645,10 @@ object InvHelper {
 
     /**
      * 获取背包内伤害评分最高的锋利斧。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestShapeAxe(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && isAxe(item) && isSharpnessAxe(item) && isItemValid(item) && !isGodAxe(item) }
@@ -593,7 +657,10 @@ object InvHelper {
 
     /**
      * 获取背包内锹的最高工具评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestShovelScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && isShovel(item) && isItemValid(item) }
@@ -603,7 +670,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的锹。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestShovel(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && isShovel(item) && isItemValid(item) }
@@ -612,7 +682,10 @@ object InvHelper {
 
     /**
      * 获取背包内弩的最高附魔评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestCrossbowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is CrossbowItem && isItemValid(item) }
@@ -622,7 +695,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的弩。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestCrossbow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is CrossbowItem && isItemValid(item) }
@@ -631,7 +707,10 @@ object InvHelper {
 
     /**
      * 获取背包内冲击弓的最高评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPunchBowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
@@ -641,7 +720,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的冲击弓。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPunchBow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
@@ -650,7 +732,10 @@ object InvHelper {
 
     /**
      * 获取背包内力量弓的最高评分。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPowerBowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
@@ -660,7 +745,10 @@ object InvHelper {
 
     /**
      * 获取背包内评分最高的力量弓。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getBestPowerBow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
@@ -683,14 +771,20 @@ object InvHelper {
 
     /**
      * 判断背包中是否含有指定物品。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun hasItem(item: Item): Boolean {
         return getAllItems().any { stack -> !stack.isEmpty && stack.item === item }
     }
 
     /**
      * 统计背包中指定物品的总数。
+     *
+     * 调用方需在 `NonNullContext` 作用域内调用。
      */
+    context(nn: NonNullContext)
     fun getItemCount(item: Item): Int {
         return getAllItems()
             .filter { stack -> !stack.isEmpty && stack.item === item }

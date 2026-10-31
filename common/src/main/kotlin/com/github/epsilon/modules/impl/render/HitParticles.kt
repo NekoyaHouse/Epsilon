@@ -16,7 +16,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.BlendFunction
@@ -84,7 +84,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         nonNullListener<PlayerTickEvent.Pre> {
             particles.removeAll { particle -> particle.tick() }
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity !is LivingEntity) continue
                 if (onlySelf && entity !== player) continue
                 if (entity.hurtTime <= 0) continue

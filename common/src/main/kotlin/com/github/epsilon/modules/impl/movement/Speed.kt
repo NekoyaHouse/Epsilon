@@ -15,7 +15,7 @@ import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.runSafe
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -139,7 +139,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 var collisions = 0
                 val box = if (strict) player.boundingBox else player.boundingBox.inflate(1.0)
 
-                for (entity in world.entitiesForRendering()) {
+                for (entity in level.entitiesForRendering()) {
                     val entityBox = entity.boundingBox
                     if (boat && player.onGround() && entity is Boat && box.intersects(entityBox.inflate(boatExpand))) {
                         val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
@@ -259,7 +259,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     val moveSpeed = 0.66 * (distance - base)
                     speed = distance - moveSpeed
                 } else {
-                    if ((!world.noCollision(player, player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)) || player.verticalCollision) && strafe > 0) {
+                    if ((!level.noCollision(player, player.boundingBox.move(0.0, player.deltaMovement.y, 0.0)) || player.verticalCollision) && strafe > 0) {
                         strafe = 1
                     }
                     speed = distance - distance / 159.0
@@ -343,7 +343,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
     context(nn: NonNullContext)
     private fun canCollide(entity: Entity?, box: AABB): Boolean {
-        return !world.noBlockCollision(entity, box)
+        return !level.noBlockCollision(entity, box)
     }
 
     context(nn: NonNullContext)

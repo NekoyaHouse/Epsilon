@@ -1,6 +1,8 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.utils.NonNullContext
+import com.github.epsilon.utils.interaction
+import com.github.epsilon.utils.player
 import net.minecraft.world.inventory.ContainerInput
 
 /**
@@ -19,9 +21,9 @@ object ClickSlotUtils {
      * @param button      点击按钮编号
      * @param action      容器操作类型
      */
+    context(nn: NonNullContext)
     fun clickSlot(containerId: Int, slot: Int, button: Int, action: ContainerInput) {
-        val ctx = NonNullContext.current ?: return
-        ctx.interaction.handleContainerInput(containerId, slot, button, action, ctx.player)
+        interaction.handleContainerInput(containerId, slot, button, action, player)
     }
 
     /**
@@ -31,14 +33,15 @@ object ClickSlotUtils {
      * @param button 点击按钮编号
      * @param action 容器操作类型
      */
+    context(nn: NonNullContext)
     fun clickSlot(slot: Int, button: Int, action: ContainerInput) {
-        val ctx = NonNullContext.current ?: return
-        clickSlot(ctx.player.inventoryMenu.containerId, slot, button, action)
+        clickSlot(nn.player.inventoryMenu.containerId, slot, button, action)
     }
 
     /**
      * 对容器槽位执行普通点击。
      */
+    context(nn: NonNullContext)
     fun click(containerId: Int, slot: Int) {
         clickSlot(containerId, slot, 0, ContainerInput.PICKUP)
     }
@@ -46,6 +49,7 @@ object ClickSlotUtils {
     /**
      * 对容器槽位执行普通点击。
      */
+    context(nn: NonNullContext)
     fun click(slot: Int) {
         clickSlot(slot, 0, ContainerInput.PICKUP)
     }
@@ -53,6 +57,7 @@ object ClickSlotUtils {
     /**
      * 对容器槽位执行快速移动点击。
      */
+    context(nn: NonNullContext)
     fun shiftClick(containerId: Int, slot: Int) {
         clickSlot(containerId, slot, 0, ContainerInput.QUICK_MOVE)
     }
@@ -60,6 +65,7 @@ object ClickSlotUtils {
     /**
      * 对容器槽位执行快速移动点击。
      */
+    context(nn: NonNullContext)
     fun shiftClick(slot: Int) {
         clickSlot(slot, 0, ContainerInput.QUICK_MOVE)
     }
@@ -67,6 +73,7 @@ object ClickSlotUtils {
     /**
      * 从容器槽位丢出一个物品。
      */
+    context(nn: NonNullContext)
     fun drop(containerId: Int, slot: Int) {
         clickSlot(containerId, slot, 0, ContainerInput.THROW)
     }
@@ -74,6 +81,7 @@ object ClickSlotUtils {
     /**
      * 从容器槽位丢出一个物品。
      */
+    context(nn: NonNullContext)
     fun drop(slot: Int) {
         clickSlot(slot, 0, ContainerInput.THROW)
     }
@@ -81,6 +89,7 @@ object ClickSlotUtils {
     /**
      * 丢出容器槽位中的整组物品。
      */
+    context(nn: NonNullContext)
     fun dropAll(containerId: Int, slot: Int) {
         clickSlot(containerId, slot, 1, ContainerInput.THROW)
     }
@@ -88,6 +97,7 @@ object ClickSlotUtils {
     /**
      * 丢出容器槽位中的整组物品。
      */
+    context(nn: NonNullContext)
     fun dropAll(slot: Int) {
         clickSlot(slot, 1, ContainerInput.THROW)
     }
@@ -95,6 +105,7 @@ object ClickSlotUtils {
     /**
      * 将容器槽位与快捷栏槽位交换。
      */
+    context(nn: NonNullContext)
     fun swap(containerId: Int, slot: Int, hotbarSlot: Int) {
         clickSlot(containerId, slot, hotbarSlot, ContainerInput.SWAP)
     }
@@ -102,6 +113,7 @@ object ClickSlotUtils {
     /**
      * 将容器槽位与快捷栏槽位交换。
      */
+    context(nn: NonNullContext)
     fun swap(slot: Int, hotbarSlot: Int) {
         clickSlot(slot, hotbarSlot, ContainerInput.SWAP)
     }

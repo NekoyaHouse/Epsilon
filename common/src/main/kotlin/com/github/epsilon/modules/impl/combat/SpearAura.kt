@@ -494,6 +494,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun findMace(): FindItemResult {
         // 攻击只结算主手，因此排除副手槽位 40；Silent 只能操作快捷栏，InvSwitch 才搜索整个主背包。
         if (maceSwapMode == MaceSwapMode.InvSwitch) {

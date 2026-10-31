@@ -8,7 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 
 object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
 
@@ -26,8 +26,8 @@ object NoGhostBlocks : Module("No Ghost Blocks", Category.RENDER) {
         event.cancel()
 
         runSafe {
-            val blockState = world.getBlockState(event.blockPos)
-            blockState.block.playerWillDestroy(world, event.blockPos, blockState, player)
+            val blockState = level.getBlockState(event.blockPos)
+            blockState.block.playerWillDestroy(level, event.blockPos, blockState, player)
         }
     }
 

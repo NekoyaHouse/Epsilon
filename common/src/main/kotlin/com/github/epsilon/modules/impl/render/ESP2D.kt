@@ -15,7 +15,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.runSafe
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import com.google.common.base.Suppliers
 import net.minecraft.client.Camera
 import net.minecraft.util.Mth
@@ -80,7 +80,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
             val screenWidth = LuminRenderSystem.getScaledWidth()
             val screenHeight = LuminRenderSystem.getScaledHeight()
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 if (entity !is LivingEntity || !shouldRender(entity)) continue
 
                 val renderPosition = entity.getPosition(partialTick)

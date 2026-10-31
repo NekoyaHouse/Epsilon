@@ -8,7 +8,7 @@ import com.github.epsilon.utils.NonNullContext
 import com.github.epsilon.utils.interaction
 import com.github.epsilon.utils.player
 import com.github.epsilon.utils.player.PlayerUtils
-import com.github.epsilon.utils.world
+import com.github.epsilon.utils.level
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -82,7 +82,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
             val start: Vec3 = player.eyePosition
             val end: Vec3 = crystal.position()
 
-            val blockHit = world.clip(
+            val blockHit = level.clip(
                 ClipContext(
                     start,
                     end,
@@ -115,22 +115,22 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
         val base: BlockPos = hit.blockPos
 
-        if (!world.getBlockState(base).`is`(Blocks.OBSIDIAN) &&
-            !world.getBlockState(base).`is`(Blocks.BEDROCK)
+        if (!level.getBlockState(base).`is`(Blocks.OBSIDIAN) &&
+            !level.getBlockState(base).`is`(Blocks.BEDROCK)
         ) {
             return
         }
 
         val above = base.above()
 
-        if (!world.getBlockState(above).isAir) return
+        if (!level.getBlockState(above).isAir) return
 
         val box = AABB(
             above.x.toDouble(), above.y.toDouble(), above.z.toDouble(),
             above.x + 1.0, above.y + 2.0, above.z + 1.0
         )
 
-        if (!world.getEntities(null, box).isEmpty()) {
+        if (!level.getEntities(null, box).isEmpty()) {
             return
         }
 
