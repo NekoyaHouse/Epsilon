@@ -15,10 +15,12 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import kotlin.math.atan2
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -279,7 +281,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     startDelay = System.currentTimeMillis()
                 }
             }
-            yaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(movement.z, movement.x)).toFloat() + 90.0f)
+            yaw = Mth.wrapDegrees((atan2(movement.z, movement.x)).toDegrees().toFloat() + 90.0f)
         }
     }
 

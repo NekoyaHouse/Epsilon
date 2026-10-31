@@ -76,7 +76,7 @@ class EpsilonFontGlyph private constructor(
             RenderType.create(
                 name,
                 RenderSetup.builder(pipeline)
-                    .withTexture("Sampler0", descriptor.atlas.getTextureId(), Supplier { descriptor.atlas.getTexture().getSampler() })
+                    .withTexture("Sampler0", descriptor.atlas.getTextureId(), Supplier { descriptor.atlas.getTexture().sampler })
                     .createRenderSetup()
             )
         }
@@ -93,7 +93,7 @@ class EpsilonFontGlyph private constructor(
     private fun left(x: Float, bold: Boolean, italic: Boolean): Float {
         val descriptor = this.descriptor ?: return x
         var left = x + descriptor.xOffset * scale()
-        if (italic) left += Math.min(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)))
+        if (italic) left += minOf(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)))
         if (bold) left -= extraThickness(true)
         return left
     }
@@ -110,7 +110,7 @@ class EpsilonFontGlyph private constructor(
         var right = x + descriptor.xOffset * scale() + descriptor.width * scale()
         if (hasShadow) right += shadowOffset
         if (bold) right += extraThickness(true)
-        if (italic) right += Math.max(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)))
+        if (italic) right += maxOf(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)))
         return right
     }
 
@@ -195,13 +195,13 @@ class EpsilonFontGlyph private constructor(
         override fun textureView(): GpuTextureView {
             val descriptor = this.glyph.descriptor
                 ?: throw IllegalStateException("Whitespace glyphs do not have textures")
-            return descriptor.atlas.getTexture().getTextureView()
+            return descriptor.atlas.getTexture().textureView
         }
 
         override fun `epsilon$sampler`(): GpuSampler {
             val descriptor = this.glyph.descriptor
                 ?: throw IllegalStateException("Whitespace glyphs do not have samplers")
-            return descriptor.atlas.getTexture().getSampler()
+            return descriptor.atlas.getTexture().sampler
         }
 
         override fun guiPipeline(): RenderPipeline {

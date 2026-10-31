@@ -11,6 +11,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
+import kotlin.math.roundToInt
 
 /**
  * The compact translucent notification style from Kiwi's Akarin HUD.
@@ -46,14 +47,9 @@ class AkarinNotification(private val owner: Notifications) {
         val titleScale = titleScale(scale, fontScale)
         val statusScale = statusScale(scale, fontScale)
         for (notification in entries) {
-            maxWidth = Math.max(
-                maxWidth, TEXT_X * scale
-                        + Math.max(
-                            metrics.getWidth("Module", titleScale),
-                            metrics.getWidth(statusText(notification), statusScale)
-                        )
-                        + RIGHT_PADDING * scale
-            )
+            maxWidth = maxOf(maxWidth, TEXT_X * scale
+                        + maxOf(metrics.getWidth("Module", titleScale), metrics.getWidth(statusText(notification), statusScale))
+                        + RIGHT_PADDING * scale)
         }
         return maxWidth
     }
@@ -116,7 +112,7 @@ class AkarinNotification(private val owner: Notifications) {
         val eased = Easing.EASE_OUT_CUBIC.function.apply(progress)
         val direction = if (horizontalAnchor == HudModule.HorizontalAnchor.Left) -1.0f else 1.0f
         val actualX = x + direction * (1.0f - eased) * (width + SLIDE_MARGIN * scale)
-        val alpha = Math.clamp(Math.round(255.0f * eased).toLong(), 0, 255)
+        val alpha = ((255.0f * eased).roundToInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
 
         if (backgroundBlur) {
             BlurShader.render(actualX, y, width, height, cardRadius, blurStrength.toFloat() * scale)
@@ -124,7 +120,7 @@ class AkarinNotification(private val owner: Notifications) {
 
         scope.roundRect(
             actualX, y, width, height, cardRadius,
-            Color(8, 12, 22, Math.round(backgroundAlpha * eased))
+            Color(8, 12, 22, (backgroundAlpha * eased).roundToInt())
         )
 
         val topColor = ModuleList.getThemeColor(0, 0L)
@@ -132,8 +128,8 @@ class AkarinNotification(private val owner: Notifications) {
         val titleScale = titleScale(scale, fontScale)
         val titleHeight = metrics.getHeight(titleScale)
         val stripeY = y + 5.0f * scale
-        val stripeHeight = Math.max(4.0f * scale, titleHeight * 0.68f)
-        val stripeGlow = withAlpha(topColor, Math.round(alpha * 0.13f))
+        val stripeHeight = maxOf(4.0f * scale, titleHeight * 0.68f)
+        val stripeGlow = withAlpha(topColor, (alpha * 0.13f).roundToInt())
         scope.roundRect(
             actualX - 0.2f * scale, stripeY - 1.5f * scale,
             (STRIPE_WIDTH + 1.5f) * scale, stripeHeight + 3.0f * scale, 2.0f * scale, stripeGlow
@@ -151,17 +147,17 @@ class AkarinNotification(private val owner: Notifications) {
         ) { textScope ->
             textScope.text(
                 statusText(notification), textX, y + 15.5f * scale, statusScale,
-                Color(244, 246, 250, Math.round(alpha * (160.0f / 255.0f)))
+                Color(244, 246, 250, (alpha * (160.0f / 255.0f)).roundToInt())
             )
         }
     }
 
     private fun animationProgress(notification: Notification): Float {
         val enter = if (notification.shouldSkipIntroAnim()) 1.0f
-        else Math.clamp(notification.elapsedTime / TRANSITION_DURATION.toFloat(), 0.0f, 1.0f)
+        else (notification.elapsedTime / TRANSITION_DURATION.toFloat()).coerceIn(0.0f, 1.0f)
         val exitTime = notification.exitTime
         if (exitTime < 0L) return enter
-        return enter * (1.0f - Math.clamp(exitTime / TRANSITION_DURATION.toFloat(), 0.0f, 1.0f))
+        return enter * (1.0f - (exitTime / TRANSITION_DURATION.toFloat()).coerceIn(0.0f, 1.0f))
     }
 
     private fun statusText(notification: Notification): String {
@@ -173,19 +169,19 @@ class AkarinNotification(private val owner: Notifications) {
     }
 
     private fun titleScale(scale: Float, fontScale: Float): Float {
-        return Math.max(0.25f, fontScale * 0.95f * scale)
+        return maxOf(0.25f, fontScale * 0.95f * scale)
     }
 
     private fun statusScale(scale: Float, fontScale: Float): Float {
-        return Math.max(0.25f, fontScale * scale)
+        return maxOf(0.25f, fontScale * scale)
     }
 
     private fun withAlpha(color: Color, alpha: Int): Color {
-        return Color(color.red, color.green, color.blue, Math.clamp(alpha.toLong(), 0, 255))
+        return Color(color.red, color.green, color.blue, (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
     }
 
     private fun withAlpha(color: Color, alpha: Float): Color {
-        return withAlpha(color, Math.round(color.alpha * Math.clamp(alpha, 0.0f, 1.0f)))
+        return withAlpha(color, (color.alpha * (alpha).coerceIn(0.0f, 1.0f)).roundToInt())
     }
 
     private companion object {

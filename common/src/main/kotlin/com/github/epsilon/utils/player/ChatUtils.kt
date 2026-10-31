@@ -4,6 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.interfaces.ChatComponentAccessor
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.ColorUtils
+import kotlin.math.sin
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
@@ -157,7 +158,7 @@ object ChatUtils {
         while (offset < PREFIX.length) {
             val codePoint = PREFIX.codePointAt(offset)
             val character = String(Character.toChars(codePoint))
-            val blend = ((Math.sin(animationTime - visualIndex * GRADIENT_CHAR_STEP) + 1.0) * 0.5).toFloat()
+            val blend = ((sin(animationTime - visualIndex * GRADIENT_CHAR_STEP) + 1.0) * 0.5).toFloat()
             val color = ColorUtils.interpolateColor(
                 ClientSetting.chatPrefixColorStart,
                 ClientSetting.chatPrefixColorEnd,

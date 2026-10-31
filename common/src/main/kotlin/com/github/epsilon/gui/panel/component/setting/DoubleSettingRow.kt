@@ -9,6 +9,8 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -56,7 +58,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
         val trackBounds = getTrackBounds(bounds)
         val fieldBounds = getFieldBounds(bounds)
         val progress = getProgress()
-        val visualProgress = Math.clamp(progress, 0.0f, 1.0f)
+        val visualProgress = (progress).coerceIn(0.0f, 1.0f)
         val handleWidth = 2.0f - animatedPress * 2.0f
         val handleHeight = 14.0f
         val handleX = trackBounds.x + trackBounds.width * visualProgress - handleWidth / 2.0f
@@ -101,7 +103,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
         scope.input(
             fieldBounds.relativeTo(bounds), focusedState, fieldHover,
             displayX - fieldBounds.x, display, displayScale, MD3Theme.filledFieldContent(focusedState),
-            if (focusedState) Math.min(cursorIndex, display.length) else null,
+            if (focusedState) minOf(cursorIndex, display.length) else null,
             if (focusedState) MD3Theme.filledFieldCaret(focusedState) else null,
             null, 0.0f, null
         )
@@ -178,12 +180,12 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
             }
 
             InputConstants.KEY_LEFT -> {
-                cursorIndex = Math.max(0, cursorIndex - 1)
+                cursorIndex = maxOf(0, cursorIndex - 1)
                 return true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursorIndex = Math.min(getDisplayBuffer().length, cursorIndex + 1)
+                cursorIndex = minOf(getDisplayBuffer().length, cursorIndex + 1)
                 return true
             }
 
@@ -225,10 +227,10 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
     fun updateFromMouse(bounds: UiRect, mouseX: Double) {
         val trackBounds = getTrackBounds(bounds)
         var progress = (mouseX - trackBounds.x) / trackBounds.width
-        progress = Math.clamp(progress, 0.0, 1.0)
+        progress = (progress).coerceIn(0.0, 1.0)
         val rawValue = doubleSetting.min + (doubleSetting.max - doubleSetting.min) * progress
         val step = if (doubleSetting.step <= 0.0) 0.01 else doubleSetting.step
-        val snapped = doubleSetting.min + Math.round((rawValue - doubleSetting.min) / step) * step
+        val snapped = doubleSetting.min + ((rawValue - doubleSetting.min) / step).roundToInt() * step
         previewValue(snapped)
     }
 
@@ -248,8 +250,8 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
 
     private fun formatValue(): String {
         val value = getVisibleValue()
-        return if (Math.abs(value - Math.round(value)) < 0.0001) {
-            Math.round(value).toInt().toString()
+        return if (abs(value - (value).roundToInt()) < 0.0001) {
+            (value).roundToInt().toString()
         } else {
             String.format("%.2f", value)
         }
@@ -313,7 +315,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
 
     private fun getFieldTextScale(textRenderer: TextRenderer, text: String, fieldBounds: UiRect): Float {
         val textWidth = textRenderer.getWidth(text, FIELD_TEXT_SCALE)
-        val maxTextWidth = Math.max(1.0f, fieldBounds.width - FIELD_TEXT_PADDING * 2.0f)
+        val maxTextWidth = maxOf(1.0f, fieldBounds.width - FIELD_TEXT_PADDING * 2.0f)
         if (textWidth <= maxTextWidth || textWidth <= 0.0f) {
             return FIELD_TEXT_SCALE
         }

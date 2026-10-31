@@ -1,6 +1,9 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.path
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import java.util.PriorityQueue
 
@@ -92,12 +95,12 @@ internal class AStarSearch(
 
     private fun canOccupy(pos: BlockPos): Boolean {
         // 节点占用的定义：以该方块为脚底时，完整玩家 AABB 覆盖的体素全部为 FREE。
-        val minX = Math.floor(bodyMinX(pos)).toInt()
-        val minY = Math.floor(bodyMinY(pos)).toInt()
-        val minZ = Math.floor(bodyMinZ(pos)).toInt()
-        val maxX = Math.ceil(bodyMaxX(pos)).toInt() - 1
-        val maxY = Math.ceil(bodyMaxY(pos)).toInt() - 1
-        val maxZ = Math.ceil(bodyMaxZ(pos)).toInt() - 1
+        val minX = floor(bodyMinX(pos)).toInt()
+        val minY = floor(bodyMinY(pos)).toInt()
+        val minZ = floor(bodyMinZ(pos)).toInt()
+        val maxX = ceil(bodyMaxX(pos)).toInt() - 1
+        val maxY = ceil(bodyMaxY(pos)).toInt() - 1
+        val maxZ = ceil(bodyMaxZ(pos)).toInt() - 1
         return this.grid.findBlockedInVolume(minX, minY, minZ, maxX, maxY, maxZ) ==
                 VoxelCollisionCache.NO_BLOCK
     }
@@ -109,7 +112,7 @@ internal class AStarSearch(
 
     private fun heuristic(pos: BlockPos): Double {
         // 三维欧氏距离，和 26 方向移动代价一致，因此是可采纳启发式。
-        return Math.sqrt(this.goal.distSqr(pos))
+        return sqrt(this.goal.distSqr(pos))
     }
 
     private fun bodyMinX(pos: BlockPos): Double {
@@ -167,7 +170,7 @@ internal class AStarSearch(
 
         private fun cost(offset: IntArray): Double {
             // 对角移动代价为实际欧氏长度，保证不会低估路径成本。
-            return Math.sqrt((offset[0] * offset[0] + offset[1] * offset[1] + offset[2] * offset[2]).toDouble())
+            return sqrt((offset[0] * offset[0] + offset[1] * offset[1] + offset[2] * offset[2]).toDouble())
         }
 
         private fun reconstructPath(cameFrom: Map<BlockPos, BlockPos>, end: BlockPos): List<BlockPos> {

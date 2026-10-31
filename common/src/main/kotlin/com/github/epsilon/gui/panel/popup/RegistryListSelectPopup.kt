@@ -19,6 +19,8 @@ import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.world.BlockRegistryUtils
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -202,8 +204,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
                     selectedViewport.right() - availableViewport.x, availableViewport.height
                 )
 
-                maxAvailableScroll = Math.max(0.0f, availableContentHeight - availableViewport.height)
-                maxSelectedScroll = Math.max(0.0f, selectedContentHeight - selectedViewport.height)
+                maxAvailableScroll = maxOf(0.0f, availableContentHeight - availableViewport.height)
+                maxSelectedScroll = maxOf(0.0f, selectedContentHeight - selectedViewport.height)
                 availableScroll = Mth.clamp(availableScroll, 0.0f, maxAvailableScroll)
                 selectedScroll = Mth.clamp(selectedScroll, 0.0f, maxSelectedScroll)
                 updateAvailableSmoothScroll(partialTick)
@@ -484,7 +486,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             resetAvailableScroll()
             return
         }
-        if (Math.abs(availableScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
+        if (abs(availableScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
         val nextScroll = Mth.clamp(availableScroll + availableScrollVelocity * partialTick, 0.0f, maxAvailableScroll)
         if (nextScroll.compareTo(availableScroll) == 0) {
             availableScrollVelocity = 0.0f
@@ -492,7 +494,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         }
         availableScroll = nextScroll
         availableScrollVelocity *= SCROLL_DECAY
-        if (Math.abs(availableScrollVelocity) < MIN_SCROLL_VELOCITY) availableScrollVelocity = 0.0f
+        if (abs(availableScrollVelocity) < MIN_SCROLL_VELOCITY) availableScrollVelocity = 0.0f
     }
 
     private fun updateSelectedSmoothScroll(partialTick: Float) {
@@ -500,7 +502,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             resetSelectedScroll()
             return
         }
-        if (Math.abs(selectedScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
+        if (abs(selectedScrollVelocity) <= 0.01f || partialTick <= 0.0f) return
         val nextScroll = Mth.clamp(selectedScroll + selectedScrollVelocity * partialTick, 0.0f, maxSelectedScroll)
         if (nextScroll.compareTo(selectedScroll) == 0) {
             selectedScrollVelocity = 0.0f
@@ -508,7 +510,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         }
         selectedScroll = nextScroll
         selectedScrollVelocity *= SCROLL_DECAY
-        if (Math.abs(selectedScrollVelocity) < MIN_SCROLL_VELOCITY) selectedScrollVelocity = 0.0f
+        if (abs(selectedScrollVelocity) < MIN_SCROLL_VELOCITY) selectedScrollVelocity = 0.0f
     }
 
     private fun resetScroll() {
@@ -544,8 +546,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
     private fun trim(value: String?, scale: Float, maxWidth: Float): String {
         if (value == null || value.isEmpty()) return ""
-        val maxChars = Math.max(3, (maxWidth / (5.0f * scale)).toInt())
-        return if (value.length <= maxChars) value else value.substring(0, Math.max(0, maxChars - 3)) + "..."
+        val maxChars = maxOf(3, (maxWidth / (5.0f * scale)).toInt())
+        return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
 
     private fun centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
@@ -555,8 +557,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {
         if (preview.stack.isEmpty()) return
         val scale = preview.size / 16.0f
-        val window = Constants.client.getWindow()
-        val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.getGuiScale()).toFloat()
+        val window = Constants.client.window
+        val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.guiScale).toFloat()
         val guiX = toMinecraftGuiX(preview.x)
         val guiY = toMinecraftGuiY(preview.y)
         guiGraphics.pose().pushMatrix()
@@ -575,11 +577,11 @@ class RegistryListSelectPopup<T : Any> private constructor(
     }
 
     private fun toMinecraftGuiXInt(epsilonX: Float): Int {
-        return Math.round(toMinecraftGuiX(epsilonX))
+        return (toMinecraftGuiX(epsilonX)).roundToInt()
     }
 
     private fun toMinecraftGuiYInt(epsilonY: Float): Int {
-        return Math.round(toMinecraftGuiY(epsilonY))
+        return (toMinecraftGuiY(epsilonY)).roundToInt()
     }
 
     override fun close() {
@@ -672,7 +674,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         ): RegistryListSelectPopup<EntityType<*>> {
             return RegistryListSelectPopup(
                 bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                { entityType -> entityType.getDescription().getString() },
+                { entityType -> entityType.description.string },
                 { entityType -> entityTypePreviewStack(entityType) },
                 { value -> setting.add(value) }, { value -> setting.remove(value) }
             )
@@ -730,7 +732,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
             }
             return level.registryAccess().lookup(Registries.ENCHANTMENT)
                 .flatMap { registry -> registry.get(ResourceKey.create(Registries.ENCHANTMENT, identifier)) }
-                .map { holder -> holder.value().description().getString() }
+                .map { holder -> holder.value().description().string }
                 .orElseGet { formatPath(identifier.getPath()) }
         }
 
@@ -739,7 +741,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
                 return ""
             }
             if (item.builtInRegistryHolder().areComponentsBound()) {
-                return item.getDefaultInstance().getHoverName().getString()
+                return item.defaultInstance.hoverName.string
             }
             val key = BuiltInRegistries.ITEM.getKey(item)
             return if (key != null) formatPath(key.getPath()) else ""
@@ -756,13 +758,13 @@ class RegistryListSelectPopup<T : Any> private constructor(
             if (item == null || item === Items.AIR || !item.builtInRegistryHolder().areComponentsBound()) {
                 return ItemStack.EMPTY
             }
-            return item.getDefaultInstance()
+            return item.defaultInstance
         }
 
         private fun entityTypePreviewStack(entityType: EntityType<*>): ItemStack {
             val key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
                 ?: return ItemStack.EMPTY
-            val eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg")
+            val eggId = Identifier.tryParse(key.namespace + ":" + key.getPath() + "_spawn_egg")
             if (eggId != null) {
                 val egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null)
                 val eggStack = itemPreviewStack(egg)

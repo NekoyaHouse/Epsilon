@@ -17,6 +17,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
@@ -65,8 +66,8 @@ class CategoryRailPanel(
         this.bounds = bounds
         val targetWidth = if (state.isSidebarExpanded()) MD3Theme.RAIL_EXPANDED_WIDTH else MD3Theme.RAIL_COLLAPSED_WIDTH
         val targetContent = if (state.isSidebarExpanded()) 1.0f else 0.0f
-        val requiresScissor = Math.abs(bounds.width - targetWidth) > 0.001f ||
-                Math.abs(contentAnimation.value - targetContent) > 0.001f
+        val requiresScissor = abs(bounds.width - targetWidth) > 0.001f ||
+                abs(contentAnimation.value - targetContent) > 0.001f
         val tree = UiTree.build { root ->
             root.scissorIf(requiresScissor, bounds) { scope ->
                 val contentProgress = scope.animate(contentAnimation, state.isSidebarExpanded())
@@ -122,7 +123,7 @@ class CategoryRailPanel(
                                 MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (120 * dividerProgress).toInt())
                             )
                             rail.rect(
-                                dividerX, dividerY, Math.min(18.0f, dividerWidth), 1.0f,
+                                dividerX, dividerY, minOf(18.0f, dividerWidth), 1.0f,
                                 MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (52 * dividerProgress).toInt())
                             )
                         }
@@ -328,7 +329,7 @@ class CategoryRailPanel(
                 val textOffset = (1.0f - contentProgress) * 5.0f
                 val animatedLabel = MD3Theme.withAlpha(labelColor, (255 * contentProgress).toInt())
                 val animatedCount = MD3Theme.withAlpha(countColor, (220 * contentProgress).toInt())
-                item.text(category.getName(), 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
+                item.text(category.name, 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
                 val countWidth = textRenderer.getWidth(count.toString(), itemCountScale)
                 item.text(
                     count.toString(), itemRect.width - 12.0f - countWidth, countY, itemCountScale, animatedCount

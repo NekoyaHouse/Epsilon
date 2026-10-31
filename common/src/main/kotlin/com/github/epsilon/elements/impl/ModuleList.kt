@@ -12,6 +12,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
+import kotlin.math.abs
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
 import java.awt.Color
@@ -148,12 +149,12 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private fun renderSimple(textRenderer: TextRenderer) {
-        val textScale = Math.max(0.1f, fontSize.toFloat() / 16.0f)
+        val textScale = maxOf(0.1f, fontSize.toFloat() / 16.0f)
         val entries = collectRenderEntries(textRenderer, textScale, showSuffix)
         val layout = updateLayout(entries, textRenderer.getHeight(textScale) + lineSpacing.toFloat())
 
-        val boundsWidth = Math.max(MIN_BOUNDS, maxDisplayWidth(entries))
-        setBounds(boundsWidth, Math.max(MIN_BOUNDS, layout.height))
+        val boundsWidth = maxOf(MIN_BOUNDS, maxDisplayWidth(entries))
+        setBounds(boundsWidth, maxOf(MIN_BOUNDS, layout.height))
         if (entries.isEmpty()) return
 
         val scope = renderScope()
@@ -174,7 +175,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private fun renderNormal(textRenderer: TextRenderer) {
-        val textScale = Math.max(0.1f, fontSize.toFloat() / 16.0f)
+        val textScale = maxOf(0.1f, fontSize.toFloat() / 16.0f)
         val textHeight = textRenderer.getHeight(textScale)
         val horizontalPadding = this.horizontalPadding.toFloat()
         val lineHeight = textHeight + this.verticalPadding.toFloat() * 2.0f
@@ -182,8 +183,8 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         val entries = collectRenderEntries(textRenderer, textScale, showSuffix)
         val layout = updateLayout(entries, lineHeight)
         val maxTextWidth = maxDisplayWidth(entries)
-        val boundsWidth = Math.max(MIN_BOUNDS, maxTextWidth + horizontalPadding * 2.0f)
-        setBounds(boundsWidth, Math.max(MIN_BOUNDS, layout.height))
+        val boundsWidth = maxOf(MIN_BOUNDS, maxTextWidth + horizontalPadding * 2.0f)
+        setBounds(boundsWidth, maxOf(MIN_BOUNDS, layout.height))
         if (entries.isEmpty()) return
 
         val rightSide = x + width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f
@@ -241,11 +242,11 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             val lineX = if (rightSide) row.backgroundX + row.backgroundWidth else row.backgroundX - lineWidth
             var lineBottom = row.backgroundY + row.backgroundHeight
             if (i + 1 < rows.size) {
-                lineBottom = Math.max(lineBottom, rows[i + 1].backgroundY)
+                lineBottom = maxOf(lineBottom, rows[i + 1].backgroundY)
             }
             val bottomAnimation = if (i + 1 < rows.size) rows[i + 1].entry.animation else row.entry.animation
             scope.rectVerticalGradient(
-                lineX, row.backgroundY, lineWidth, Math.max(0.0f, lineBottom - row.backgroundY),
+                lineX, row.backgroundY, lineWidth, maxOf(0.0f, lineBottom - row.backgroundY),
                 withAlpha(row.startColor, row.entry.animation), withAlpha(row.endColor, bottomAnimation)
             )
         }
@@ -256,7 +257,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         val gradientStep = shadowGradientLength.toLong()
         var offset = 0
         while (offset < rows.size) {
-            val count = Math.min(MAX_SEGMENTS, rows.size - offset)
+            val count = minOf(MAX_SEGMENTS, rows.size - offset)
             val segmentRects = FloatArray(count * 4)
             val segmentRadii = FloatArray(count)
             val segmentColors = arrayOfNulls<Color>(count)
@@ -274,10 +275,10 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
                 segmentRects[index + 3] = row.backgroundHeight
                 segmentColors[i] = resolveShadowColor(offset + i, gradientStep)
 
-                minX = Math.min(minX, row.backgroundX)
-                minY = Math.min(minY, row.backgroundY)
-                maxX = Math.max(maxX, row.backgroundX + row.backgroundWidth)
-                maxY = Math.max(maxY, row.backgroundY + row.backgroundHeight)
+                minX = minOf(minX, row.backgroundX)
+                minY = minOf(minY, row.backgroundY)
+                maxX = maxOf(maxX, row.backgroundX + row.backgroundWidth)
+                maxY = maxOf(maxY, row.backgroundY + row.backgroundHeight)
             }
 
             if (maxX > minX && maxY > minY) {
@@ -362,7 +363,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             val targetY = accumulatedY
             var currentY = moduleYPositions[entry.module] ?: targetY
             val difference = targetY - currentY
-            currentY = if (Math.abs(difference) > 0.1f) currentY + difference * speed else targetY
+            currentY = if (abs(difference) > 0.1f) currentY + difference * speed else targetY
             moduleYPositions[entry.module] = currentY
             renderY[i] = currentY
 
@@ -403,7 +404,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         val glowRadius = this.glowRadius.toFloat()
         val glowIntensity = this.glowIntensity
         val glowColor = ColorUtils.interpolateColor(nameStartColor, nameEndColor, 0.5f)
-        val shadowOffset = textShadowDepth.toFloat() * Math.max(1.0f, textScale)
+        val shadowOffset = textShadowDepth.toFloat() * maxOf(1.0f, textScale)
         if (textShadow) {
             scope.text(entry.name, x + shadowOffset, y + shadowOffset, textScale, darken(glowColor, 0.5f))
         }
@@ -492,7 +493,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private fun maxDisplayWidth(entries: List<RenderEntry>): Float {
         var width = 0.0f
         for (entry in entries) {
-            width = Math.max(width, entry.displayWidth)
+            width = maxOf(width, entry.displayWidth)
         }
         return width
     }

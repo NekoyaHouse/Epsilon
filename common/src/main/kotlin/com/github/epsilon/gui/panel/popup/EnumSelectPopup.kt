@@ -42,7 +42,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
 
         val fullContentHeight = optionCount * ITEM_HEIGHT
         val viewportHeight = this.bounds.height - CONTENT_PADDING * 2
-        this.maxScroll = Math.max(0.0f, fullContentHeight - viewportHeight)
+        this.maxScroll = maxOf(0.0f, fullContentHeight - viewportHeight)
 
         this.openAnimation.startValue = 0.0f
     }
@@ -180,7 +180,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
             return false
         }
         val nextScroll = scroll - scrollY.toFloat() * 20.0f
-        scroll = Math.clamp(nextScroll, 0.0f, maxScroll)
+        scroll = (nextScroll).coerceIn(0.0f, maxScroll)
         return true
     }
 

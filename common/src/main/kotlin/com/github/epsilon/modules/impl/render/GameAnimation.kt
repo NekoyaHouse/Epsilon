@@ -6,6 +6,8 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 object GameAnimation : Module("Game Animation", Category.RENDER) {
 
@@ -32,14 +34,14 @@ object GameAnimation : Module("Game Animation", Category.RENDER) {
             return vanillaX
         }
 
-        if (!lastHotbarTargetX.isFinite() || Math.abs(hotbarAnimation.value - vanillaX) > HOTBAR_RESET_DISTANCE) {
+        if (!lastHotbarTargetX.isFinite() || abs(hotbarAnimation.value - vanillaX) > HOTBAR_RESET_DISTANCE) {
             resetHotbarAnimation(vanillaX.toFloat())
             return vanillaX
         }
 
         lastHotbarTargetX = vanillaX.toFloat()
         hotbarAnimation.run(vanillaX.toFloat())
-        return Math.round(hotbarAnimation.value)
+        return (hotbarAnimation.value).roundToInt()
     }
 
     fun beginInventoryAnimation() {

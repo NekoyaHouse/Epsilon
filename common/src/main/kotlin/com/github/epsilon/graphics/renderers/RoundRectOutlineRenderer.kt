@@ -112,10 +112,10 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
         val outerY1 = y - halfOutline
         val outerX2 = x2 + halfOutline
         val outerY2 = y2 + halfOutline
-        val argbTopLeft = ARGB.toABGR(colorTopLeft.getRGB())
-        val argbBottomLeft = ARGB.toABGR(colorBottomLeft.getRGB())
-        val argbBottomRight = ARGB.toABGR(colorBottomRight.getRGB())
-        val argbTopRight = ARGB.toABGR(colorTopRight.getRGB())
+        val argbTopLeft = ARGB.toABGR(colorTopLeft.rgb)
+        val argbBottomLeft = ARGB.toABGR(colorBottomLeft.rgb)
+        val argbBottomRight = ARGB.toABGR(colorBottomRight.rgb)
+        val argbTopRight = ARGB.toABGR(colorTopRight.rgb)
 
         addVertex(
             outerX1, outerY1, x, y, x2, y2, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,

@@ -4,6 +4,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import java.util.EnumSet
@@ -44,7 +45,7 @@ class AssetDownloadScreen(
     }
 
     override fun cardHeight(): Float {
-        return EpsilonDialogScreen.CARD_PADDING * 2.0f + 36.0f + Math.max(1, assets.size) * ROW_HEIGHT +
+        return EpsilonDialogScreen.CARD_PADDING * 2.0f + 36.0f + maxOf(1, assets.size) * ROW_HEIGHT +
                 STATUS_BLOCK_HEIGHT + EpsilonDialogScreen.BUTTON_HEIGHT + 10.0f
     }
 
@@ -67,7 +68,7 @@ class AssetDownloadScreen(
             val status = if (downloading) {
                 String.format(
                     Locale.ROOT, "%s %d%%", EpsilonTranslations.Resources.STATUS_DOWNLOADING.getTranslatedName(),
-                    Math.round(job!!.currentProgress() * 100.0f)
+                    (job!!.currentProgress() * 100.0f).roundToInt()
                 )
             } else {
                 if (ready) EpsilonTranslations.Resources.STATUS_READY.getTranslatedName()
@@ -87,7 +88,7 @@ class AssetDownloadScreen(
         if (running) {
             val barWidth = cardBounds().width - EpsilonDialogScreen.CARD_PADDING * 2.0f
             scope.roundRect(EpsilonDialogScreen.CARD_PADDING, y, barWidth, 6.0f, 3.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
-            val filled = Math.max(2.0f, barWidth * job!!.progress())
+            val filled = maxOf(2.0f, barWidth * job!!.progress())
             scope.roundRect(EpsilonDialogScreen.CARD_PADDING, y, filled, 6.0f, 3.0f, MD3Theme.PRIMARY_CONTAINER)
             y += 12.0f
             val current = job!!.currentAsset()
@@ -97,7 +98,7 @@ class AssetDownloadScreen(
                 String.format(
                     Locale.ROOT, "%s %s %d%%",
                     EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName(),
-                    label(current), Math.round(job!!.currentProgress() * 100.0f)
+                    label(current), (job!!.currentProgress() * 100.0f).roundToInt()
                 )
             }
             scope.text(line, EpsilonDialogScreen.CARD_PADDING, y, EpsilonDialogScreen.BODY_SCALE, MD3Theme.TEXT_SECONDARY)

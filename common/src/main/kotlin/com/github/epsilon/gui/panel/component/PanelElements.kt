@@ -78,7 +78,7 @@ object PanelElements {
         textScale: Float, horizontalPadding: Float, trailingSlotWidth: Float, maxWidth: Float,
     ): UiRect {
         val desiredWidth = textRenderer.getWidth(label, textScale) + horizontalPadding * 2.0f + trailingSlotWidth
-        return alignTrailing(rowBounds, Math.min(maxWidth, desiredWidth), MD3Theme.COMPACT_CHIP_HEIGHT)
+        return alignTrailing(rowBounds, minOf(maxWidth, desiredWidth), MD3Theme.COMPACT_CHIP_HEIGHT)
     }
 
     /**

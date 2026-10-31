@@ -15,6 +15,7 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.world.BlockUtils
+import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -83,7 +84,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
             val targetCrystal = level.getEntitiesOfClass(
                 EndCrystal::class.java,
                 self.boundingBox.inflate(range),
-                { crystal -> Math.abs(crystal.y - playerY) < 1.0 }
+                { crystal -> abs(crystal.y - playerY) < 1.0 }
             ).minByOrNull { crystal -> self.distanceTo(crystal) }
 
             if (targetCrystal == null) return@nonNullHandler
@@ -136,8 +137,8 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
                 RotationManager.INSTANCE.setRotations(rot, rotationSpeed.toDouble(), Priority.Highest)
 
                 if (RotationManager.INSTANCE.rotations != null) {
-                    val yawDiff = Math.abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.yaw).toDouble())
-                    val pitchDiff = Math.abs((RotationManager.INSTANCE.getPitch() - rot.pitch).toDouble())
+                    val yawDiff = abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.yaw).toDouble())
+                    val pitchDiff = abs((RotationManager.INSTANCE.getPitch() - rot.pitch).toDouble())
                     if (yawDiff > 15 || pitchDiff > 15) {
                         readyToPlace = false
                     }
@@ -153,7 +154,7 @@ object CrystalBlocker : Module("Crystal Blocker", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun placeBlock(pos: BlockPos, item: FindItemResult) {
-        val oldSlot = player.inventory.getSelectedSlot()
+        val oldSlot = player.inventory.selectedSlot
 
         val side: Direction = RotationUtils.getDirection(pos)
         val bhr = BlockHitResult(Vec3.atCenterOf(pos), side, pos, false)

@@ -195,7 +195,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             val clipY = panel.contentClipY
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
-            val actualClipH = Math.min(clipH, revealedBottom - clipY)
+            val actualClipH = minOf(clipH, revealedBottom - clipY)
             if (actualClipH > 0.5f) {
                 beginDropdownLayer()
                 val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
@@ -242,9 +242,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             var xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X
             if (isReisaCompanionEnabled()) {
                 val companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight())
-                xRight = Math.min(xRight, companionLeft - 8.0f)
+                xRight = minOf(xRight, companionLeft - 8.0f)
             }
-            xRight = Math.max(searchX + searchWidth, xRight)
+            xRight = maxOf(searchX + searchWidth, xRight)
             var y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y -
                     hints.size * lineHeight - (hints.size - 1) * lineGap
             val alpha = (255 * scrimAnim.value).toInt()
@@ -598,9 +598,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     private fun resolveMaxPanelHeight(panel: DropdownPanel, screenLimited: Float): Float {
         return when (panel.id) {
-            "main" -> Math.min(screenLimited, 260.0f)
-            "friend", "config" -> Math.min(screenLimited, 220.0f)
-            else -> Math.min(screenLimited, 350.0f)
+            "main" -> minOf(screenLimited, 260.0f)
+            "friend", "config" -> minOf(screenLimited, 220.0f)
+            else -> minOf(screenLimited, 350.0f)
         }
     }
 
@@ -654,8 +654,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     override fun openRegistryListSettingPopup(setting: RegistryListSetting<*>) {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-            Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+            minOf(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+            minOf(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
         popupHost.open(RegistryListSelectPopup.create(bounds, setting))
         react(ReisaDropdownCompanion.Action.PANEL_OPEN)
@@ -663,8 +663,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     override fun openStringListSettingPopup(setting: StringListSetting) {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-            Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+            minOf(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+            minOf(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
         popupHost.open(StringListSelectPopup(bounds, setting, { it -> setting.add(it) }, { it -> setting.remove(it) }))
         react(ReisaDropdownCompanion.Action.PANEL_OPEN)

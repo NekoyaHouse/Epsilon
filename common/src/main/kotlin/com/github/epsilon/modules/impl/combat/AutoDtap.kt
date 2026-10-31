@@ -93,7 +93,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     val endCrystalSlot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot
                     if (endCrystalSlot == -1) return
 
-                    originalSlot = player.inventory.getSelectedSlot()
+                    originalSlot = player.inventory.selectedSlot
 
                     if (isObsidian) {
                         // 如果已经是黑曜石，直接切水晶并放置

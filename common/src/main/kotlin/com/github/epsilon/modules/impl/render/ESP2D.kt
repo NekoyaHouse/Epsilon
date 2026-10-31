@@ -76,7 +76,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
     private fun onRender2D() {
         runSafe {
             val rectRenderer = rectRendererSupplier.get()
-            val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val screenWidth = LuminRenderSystem.getScaledWidth()
             val screenHeight = LuminRenderSystem.getScaledHeight()
 
@@ -171,10 +171,10 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
     private fun includeProjected(bounds: FloatArray, projected: Vector3f) {
         if (!projected.x.isFinite() || !projected.y.isFinite()) return
 
-        bounds[0] = Math.min(bounds[0], projected.x)
-        bounds[1] = Math.min(bounds[1], projected.y)
-        bounds[2] = Math.max(bounds[2], projected.x)
-        bounds[3] = Math.max(bounds[3], projected.y)
+        bounds[0] = minOf(bounds[0], projected.x)
+        bounds[1] = minOf(bounds[1], projected.y)
+        bounds[2] = maxOf(bounds[2], projected.x)
+        bounds[3] = maxOf(bounds[3], projected.y)
     }
 
     private fun shouldRender(entity: Entity): Boolean {
@@ -225,7 +225,7 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
         if (height <= 0.0f) return
 
         val health = HealthManager.getHealth(entity)
-        val maxHealth = Math.max(1.0f, entity.maxHealth + Math.max(0.0f, entity.absorptionAmount))
+        val maxHealth = maxOf(1.0f, entity.maxHealth + maxOf(0.0f, entity.absorptionAmount))
         val healthRatio = Mth.clamp(health / maxHealth, 0.0f, 1.0f)
         val fillY = endY - height * healthRatio
 

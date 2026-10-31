@@ -8,6 +8,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
+import kotlin.math.pow
 import net.minecraft.client.KeyMapping
 
 /**
@@ -175,9 +176,9 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
             return value * burstCPSMultiplier
         } else if (state.isInDecay) {
             var decayProgress = (currentTime - state.decayStartTime).toDouble() / decayDuration
-            decayProgress = Math.min(1.0, Math.max(0.0, decayProgress))
+            decayProgress = minOf(1.0, maxOf(0.0, decayProgress))
 
-            val curveFactor = Math.pow(1.0 - decayProgress, decayCurve)
+            val curveFactor = (1.0 - decayProgress).pow(decayCurve)
             val multiplier = 1.0 + (burstCPSMultiplier - 1.0) * curveFactor
 
             return value * multiplier

@@ -1,5 +1,11 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import com.github.epsilon.utils.math.toDegrees
+import com.github.epsilon.utils.math.toRadians
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -45,13 +51,8 @@ object LocalFlightAvoidance {
         targetDirection = targetDirection.normalize()
 
         val baseDirection = desiredVelocity.normalize()
-        val baseYaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(baseDirection.z, baseDirection.x)).toFloat() - 90.0f)
-        val basePitch = -Math.toDegrees(
-            Math.atan2(
-                baseDirection.y,
-                Math.max(0.001, baseDirection.horizontalDistance()),
-            )
-        ).toFloat()
+        val baseYaw = Mth.wrapDegrees((atan2(baseDirection.z, baseDirection.x)).toDegrees().toFloat() - 90.0f)
+        val basePitch = -(atan2(baseDirection.y, maxOf(0.001, baseDirection.horizontalDistance()))).toDegrees().toFloat()
         val preferred = if (preferredDirection == null || preferredDirection.lengthSqr() < 1.0E-8) {
             null
         } else {
@@ -75,8 +76,8 @@ object LocalFlightAvoidance {
                 val continuity = if (preferred == null) 0.0 else direction.dot(preferred)
                 val score = alignment +
                         continuity * 0.75 -
-                        Math.abs(yawOffset) * 0.002 -
-                        Math.abs(pitchOffset) * 0.001
+                        abs(yawOffset) * 0.002 -
+                        abs(pitchOffset) * 0.001
                 if (score > bestScore) {
                     bestScore = score
                     best = direction.scale(desiredVelocity.length())
@@ -107,13 +108,13 @@ object LocalFlightAvoidance {
     }
 
     private fun direction(yaw: Float, pitch: Float): Vec3 {
-        val yawRad = Math.toRadians(yaw.toDouble())
-        val pitchRad = Math.toRadians(pitch.toDouble())
-        val horizontal = Math.cos(pitchRad)
+        val yawRad = (yaw.toDouble()).toRadians()
+        val pitchRad = (pitch.toDouble()).toRadians()
+        val horizontal = cos(pitchRad)
         return Vec3(
-            -Math.sin(yawRad) * horizontal,
-            -Math.sin(pitchRad),
-            Math.cos(yawRad) * horizontal,
+            -sin(yawRad) * horizontal,
+            -sin(pitchRad),
+            cos(yawRad) * horizontal,
         )
     }
 

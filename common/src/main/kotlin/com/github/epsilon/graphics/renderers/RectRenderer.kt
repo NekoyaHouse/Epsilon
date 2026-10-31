@@ -8,6 +8,7 @@ import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
+import kotlin.math.sqrt
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
@@ -46,7 +47,7 @@ class RectRenderer private constructor() : IRenderer {
     fun addLine(x1: Float, y1: Float, x2: Float, y2: Float, width: Float, color: Color?) {
         val dx = x2 - x1
         val dy = y2 - y1
-        val length = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+        val length = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
         if (!length.isFinite() || length <= 0.001f || color == null) return
 
         val halfWidth = width / 2.0f
@@ -56,7 +57,7 @@ class RectRenderer private constructor() : IRenderer {
         buffer.ensureCapacity(currentOffset + RECT_BYTES)
         buffer.tryMap()
 
-        val argb = ARGB.toABGR(color.getRGB())
+        val argb = ARGB.toABGR(color.rgb)
         addVertex(x1 + normalX, y1 + normalY, argb)
         addVertex(x1 - normalX, y1 - normalY, argb)
         addVertex(x2 - normalX, y2 - normalY, argb)
@@ -83,10 +84,10 @@ class RectRenderer private constructor() : IRenderer {
         buffer.ensureCapacity(currentOffset + RECT_BYTES)
         buffer.tryMap()
 
-        val argb1 = ARGB.toABGR(c1.getRGB())
-        val argb2 = ARGB.toABGR(c2.getRGB())
-        val argb3 = ARGB.toABGR(c3.getRGB())
-        val argb4 = ARGB.toABGR(c4.getRGB())
+        val argb1 = ARGB.toABGR(c1.rgb)
+        val argb2 = ARGB.toABGR(c2.rgb)
+        val argb3 = ARGB.toABGR(c3.rgb)
+        val argb4 = ARGB.toABGR(c4.rgb)
 
         addVertex(x, y, argb1)
         addVertex(x, y + h, argb2)

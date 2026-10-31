@@ -76,7 +76,7 @@ object WireframeEntityRenderer {
 
         val partialTick = runSafe {
             if (level.tickRateManager().isFrozen) 1.0f
-            else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
         }
         if (partialTick != null) {
             renderEntity(entity, scale, sideColor, lineColor, lineWidth, partialTick)
@@ -104,7 +104,7 @@ object WireframeEntityRenderer {
         offsetZ = Mth.lerp(partialTick.toDouble(), entity.zOld, entity.z)
 
         @Suppress("UNCHECKED_CAST")
-        val renderer = Constants.client.getEntityRenderDispatcher().getRenderer(entity) as EntityRenderer<Entity, EntityRenderState>
+        val renderer = Constants.client.entityRenderDispatcher.getRenderer(entity) as EntityRenderer<Entity, EntityRenderState>
         val state: EntityRenderState = renderer.createRenderState(entity, partialTick)
 
         val renderOffset = renderer.getRenderOffset(state)
@@ -122,7 +122,7 @@ object WireframeEntityRenderer {
         )
         modelPoseStack.popPose()
         vertexConsumer.reset()
-        submitNodeStorage.getSubmitsPerOrder().clear()
+        submitNodeStorage.submitsPerOrder.clear()
     }
 
     private fun isBatching(): Boolean {
@@ -159,7 +159,7 @@ object WireframeEntityRenderer {
         x3: Float, y3: Float, z3: Float,
         x4: Float, y4: Float, z4: Float,
     ) {
-        val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
+        val cameraPos = Constants.client.entityRenderDispatcher.camera!!.position()
         val rx1 = (offsetX + x1 - cameraPos.x).toFloat()
         val ry1 = (offsetY + y1 - cameraPos.y).toFloat()
         val rz1 = (offsetZ + z1 - cameraPos.z).toFloat()
@@ -175,10 +175,10 @@ object WireframeEntityRenderer {
 
         val sides = sidesBuilder
         if (sides != null) {
-            sides.vertex(drawMatrix!!, rx1, ry1, rz1, sideColor.getRGB())
-            sides.vertex(drawMatrix!!, rx2, ry2, rz2, sideColor.getRGB())
-            sides.vertex(drawMatrix!!, rx3, ry3, rz3, sideColor.getRGB())
-            sides.vertex(drawMatrix!!, rx4, ry4, rz4, sideColor.getRGB())
+            sides.vertex(drawMatrix!!, rx1, ry1, rz1, sideColor.rgb)
+            sides.vertex(drawMatrix!!, rx2, ry2, rz2, sideColor.rgb)
+            sides.vertex(drawMatrix!!, rx3, ry3, rz3, sideColor.rgb)
+            sides.vertex(drawMatrix!!, rx4, ry4, rz4, sideColor.rgb)
         }
 
         if (linesBuilder != null) {
@@ -194,8 +194,8 @@ object WireframeEntityRenderer {
         val normal = getNormal(x1, y1, z1, x2, y2, z2)
         val matrix = drawMatrix!!
         val pose = linePose!!
-        lines.vertex(matrix, pose, x1, y1, z1, lineColor.getRGB(), normal.x, normal.y, normal.z, lineWidth)
-        lines.vertex(matrix, pose, x2, y2, z2, lineColor.getRGB(), normal.x, normal.y, normal.z, lineWidth)
+        lines.vertex(matrix, pose, x1, y1, z1, lineColor.rgb, normal.x, normal.y, normal.z, lineWidth)
+        lines.vertex(matrix, pose, x2, y2, z2, lineColor.rgb, normal.x, normal.y, normal.z, lineWidth)
     }
 
     private fun getNormal(x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float): Vector3f {

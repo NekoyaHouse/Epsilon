@@ -3,6 +3,10 @@ package com.github.epsilon.utils.render
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.modules.impl.render.CameraClip
+import com.github.epsilon.utils.math.toRadians
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.tan
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.state.level.CameraRenderState
 import net.minecraft.util.Mth
@@ -50,18 +54,16 @@ object WorldToScreen {
         if (Constants.client.gameRenderer.gameRenderState().optionsRenderState.bobView && cameraState.entityRenderState.isPlayer) {
             val walkDistance = cameraState.entityRenderState.backwardsInterpolatedWalkDistance
             val bob = cameraState.entityRenderState.bob
-            val sin = Mth.sin((walkDistance * Math.PI.toFloat()).toDouble())
-            val cos = Mth.cos((walkDistance * Math.PI.toFloat()).toDouble())
+            val sin = Mth.sin((walkDistance * PI.toFloat()).toDouble())
+            val cos = Mth.cos((walkDistance * PI.toFloat()).toDouble())
 
             val cameraClip = CameraClip
             if (!cameraClip.isEnabled || !cameraClip.betterBobView) {
-                VIEW_BOBBING_MATRIX.translate(sin * bob * 0.5f, -Math.abs(cos * bob), 0.0f)
+                VIEW_BOBBING_MATRIX.translate(sin * bob * 0.5f, -abs(cos * bob), 0.0f)
             }
-            VIEW_BOBBING_MATRIX.rotateZ(Math.toRadians((sin * bob * 3.0f).toDouble()).toFloat())
+            VIEW_BOBBING_MATRIX.rotateZ(((sin * bob * 3.0f).toDouble()).toRadians().toFloat())
             VIEW_BOBBING_MATRIX.rotateX(
-                Math.toRadians(
-                    (Math.abs(Mth.cos((walkDistance * Math.PI.toFloat() - 0.2f).toDouble()) * bob) * 5.0f).toDouble()
-                ).toFloat()
+                ((abs(Mth.cos((walkDistance * PI.toFloat() - 0.2f).toDouble()) * bob) * 5.0f).toDouble()).toRadians().toFloat()
             )
             WORLD_PROJECTION_MATRIX.mul(VIEW_BOBBING_MATRIX)
         }
@@ -92,7 +94,7 @@ object WorldToScreen {
         val depth = -camera.getViewRotationMatrix(STABLE_VIEW_MATRIX).transformPosition(cameraRelativePos, Vector3f()).z
         if (depth < Camera.PROJECTION_Z_NEAR) return 0.0f
 
-        val projectionYScale = 1.0f / Math.tan(Math.toRadians(camera.fov.toDouble()) * 0.5).toFloat()
+        val projectionYScale = 1.0f / tan((camera.fov.toDouble()).toRadians() * 0.5).toFloat()
         return LuminRenderSystem.getScaledHeight() * projectionYScale / (2.0f * depth * REFERENCE_PIXELS_PER_WORLD_UNIT)
     }
 

@@ -9,6 +9,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -119,8 +120,8 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     }
 
     private fun getRotationVector(pitch: Float, yaw: Float): Vec3 {
-        val radPitch = pitch * (Math.PI.toFloat() / 180f)
-        val radYaw = -yaw * (Math.PI.toFloat() / 180f)
+        val radPitch = pitch * (PI.toFloat() / 180f)
+        val radYaw = -yaw * (PI.toFloat() / 180f)
         val cosYaw = Mth.cos(radYaw.toDouble())
         val sinYaw = Mth.sin(radYaw.toDouble())
         val cosPitch = Mth.cos(radPitch.toDouble())
@@ -169,7 +170,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             val attackSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
             val cooldownPerTick = 1.0f / attackSpeed * 20.0f
             val lastAttackTicks = player.getAttackStrengthScale(0.0f) * cooldownPerTick
-            Math.min(1.0f, lastAttackTicks / cooldownPerTick)
+            minOf(1.0f, lastAttackTicks / cooldownPerTick)
         }
     }
 

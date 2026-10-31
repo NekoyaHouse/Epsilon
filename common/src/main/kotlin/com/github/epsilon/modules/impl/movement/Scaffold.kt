@@ -21,6 +21,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.player.FallingPlayer
@@ -31,6 +32,9 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -334,14 +338,10 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             forwardInput = event.forward
             strafeInput = event.strafe
             inputYaw = Mth.wrapDegrees(
-                Math.round(
-                    (player.yRot + Math.toDegrees(Math.atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toFloat()) / 45.0f
-                ) * 45.0f
+                ((player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees().toFloat()) / 45.0f).roundToInt() * 45.0f
             )
             rawInputYaw = Mth.wrapDegrees(
-                Math.round(
-                    player.yRot + Math.toDegrees(Math.atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toFloat()
-                ).toFloat()
+                (player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees().toFloat()).roundToInt().toFloat()
             )
 
             if (mode == Mode.TellyBridge && player.onGround() && !mc.options.keyJump.isDown && player.isMoving) {
@@ -520,7 +520,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     private fun getYLevel(): Int = runSafeOrElse(0) {
         if ((!mc.options.keyJump.isDown && player.isMoving && mode == Mode.TellyBridge) &&
-            Math.abs(yLevel - (Mth.floor(player.y) - 1)) <= 1.25
+            abs(yLevel - (Mth.floor(player.y) - 1)) <= 1.25
         ) {
             return@runSafeOrElse yLevel
         }
@@ -632,7 +632,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         for (i in 1 until yawArray.size) {
             val key = yawArray[i]
             var j = i - 1
-            while (j >= 0 && Math.abs(Mth.wrapDegrees(baseYaw - yawArray[j])) > Math.abs(Mth.wrapDegrees(baseYaw - key))) {
+            while (j >= 0 && abs(Mth.wrapDegrees(baseYaw - yawArray[j])) > abs(Mth.wrapDegrees(baseYaw - key))) {
                 yawArray[j + 1] = yawArray[j]
                 j -= 1
             }

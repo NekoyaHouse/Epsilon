@@ -65,10 +65,10 @@ object ClientIdentityHider {
     }
 
     private fun shouldHideAsVanilla(id: Identifier): Boolean {
-        if ("minecraft" == id.getNamespace()) {
+        if ("minecraft" == id.namespace) {
             return VANILLA_HIDDEN_MINECRAFT_PAYLOADS.contains(id.getPath())
         }
-        return VANILLA_HIDDEN_NAMESPACES.contains(id.getNamespace())
+        return VANILLA_HIDDEN_NAMESPACES.contains(id.namespace)
     }
 
     private fun filterPayload(payload: CustomPacketPayload, mode: ClientSetting.HideMode): CustomPacketPayload? {
@@ -85,16 +85,16 @@ object ClientIdentityHider {
             return payload
         }
 
-        val filteredChannels = channels.filter { channel -> !HIDDEN_NAMESPACES.contains(channel.getNamespace()) }
+        val filteredChannels = channels.filter { channel -> !HIDDEN_NAMESPACES.contains(channel.namespace) }
         if (filteredChannels.size == channels.size) {
             return payload
         }
 
         val payloadId = payload.type().id()
-        if (filteredChannels.isEmpty() && "minecraft" == payloadId.getNamespace() && "register" != payloadId.getPath()) {
+        if (filteredChannels.isEmpty() && "minecraft" == payloadId.namespace && "register" != payloadId.getPath()) {
             return null
         }
-        if (filteredChannels.isEmpty() && mode == ClientSetting.HideMode.Hide && "minecraft" == payloadId.getNamespace()) {
+        if (filteredChannels.isEmpty() && mode == ClientSetting.HideMode.Hide && "minecraft" == payloadId.namespace) {
             return null
         }
 
@@ -118,7 +118,7 @@ object ClientIdentityHider {
                 for (component in entry.value) {
                     val idMethod: Method = component.javaClass.getMethod("id")
                     val componentId = idMethod.invoke(component) as Identifier
-                    if (HIDDEN_NAMESPACES.contains(componentId.getNamespace())) {
+                    if (HIDDEN_NAMESPACES.contains(componentId.namespace)) {
                         changed = true
                     } else {
                         filteredComponents.add(component)
@@ -159,8 +159,8 @@ object ClientIdentityHider {
             val version = readAccessor(payload, "version")
             val protocol = readAccessor(payload, "protocol")
 
-            for (constructor in payload.javaClass.getConstructors()) {
-                val args = createConstructorArguments(constructor.getParameterTypes(), type, version, protocol, filteredChannels)
+            for (constructor in payload.javaClass.constructors) {
+                val args = createConstructorArguments(constructor.parameterTypes, type, version, protocol, filteredChannels)
                     ?: continue
                 return constructor.newInstance(*args) as CustomPacketPayload
             }

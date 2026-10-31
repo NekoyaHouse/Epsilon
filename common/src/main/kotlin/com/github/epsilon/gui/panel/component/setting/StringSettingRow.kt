@@ -44,8 +44,8 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         val slice = buildDisplaySlice(displaySource, fieldBounds, focusedState)
         var selection: UiTree.SelectionRange? = null
         if (focusedState && hasSelection()) {
-            val selectionStartIndex = Math.max(slice.start, this.selectionStart)
-            val selectionEndIndex = Math.min(slice.end, this.selectionEnd)
+            val selectionStartIndex = maxOf(slice.start, this.selectionStart)
+            val selectionEndIndex = minOf(slice.end, this.selectionEnd)
             if (selectionEndIndex > selectionStartIndex) {
                 selection = UiTree.SelectionRange(selectionStartIndex - slice.start, selectionEndIndex - slice.start)
             }
@@ -63,9 +63,9 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         )
         if (focusedState) {
             var caretX = slice.textX + textRenderer.getWidth(
-                slice.text.substring(0, Math.min(slice.caretIndex, slice.text.length)), FIELD_SCALE
+                slice.text.substring(0, minOf(slice.caretIndex, slice.text.length)), FIELD_SCALE
             )
-            caretX = Math.min(caretX, fieldBounds.right() - 5.0f)
+            caretX = minOf(caretX, fieldBounds.right() - 5.0f)
             val textY = fieldBounds.y + (fieldBounds.height - textRenderer.getHeight(FIELD_SCALE)) / 2.0f
             IMEFocusHelper.updateCursorPos(caretX, textY)
         }
@@ -125,13 +125,13 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
             }
 
             InputConstants.KEY_LEFT -> {
-                cursorIndex = Math.max(0, cursorIndex - 1)
+                cursorIndex = maxOf(0, cursorIndex - 1)
                 clearSelection()
                 return true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursorIndex = Math.min(getDisplayBuffer().length, cursorIndex + 1)
+                cursorIndex = minOf(getDisplayBuffer().length, cursorIndex + 1)
                 clearSelection()
                 return true
             }
@@ -222,7 +222,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
     private fun buildDisplaySlice(value: String?, fieldBounds: UiRect, editing: Boolean): DisplaySlice {
         val safeValue = value ?: ""
         val horizontalInset = 6.0f
-        val availableWidth = Math.max(8.0f, fieldBounds.width - horizontalInset * 2.0f)
+        val availableWidth = maxOf(8.0f, fieldBounds.width - horizontalInset * 2.0f)
         if (!editing) {
             val shown = fitWithEllipsis(safeValue, availableWidth)
             return DisplaySlice(shown, fieldBounds.x + horizontalInset, 0, 0, shown.length)
@@ -408,10 +408,10 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
     private fun hasSelection(): Boolean = selectionAnchor >= 0 && selectionAnchor != cursorIndex
 
     private val selectionStart: Int
-        get() = Math.min(selectionAnchor, cursorIndex)
+        get() = minOf(selectionAnchor, cursorIndex)
 
     private val selectionEnd: Int
-        get() = Math.max(selectionAnchor, cursorIndex)
+        get() = maxOf(selectionAnchor, cursorIndex)
 
     private fun clearSelection() {
         selectionAnchor = -1

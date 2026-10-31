@@ -18,6 +18,7 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.ceil
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
@@ -133,7 +134,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun doMaceAttack(currentTarget: LivingEntity, vclipValue: Double) {
-        val currentSlot = player.inventory.getSelectedSlot()
+        val currentSlot = player.inventory.selectedSlot
         var swappedInventory = false
 
         val hotbar: FindItemResult = InvUtils.findInHotbar(Items.MACE)
@@ -146,7 +147,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             if (!inv.found()) return
             InvUtils.invSwap(inv.slot)
             swappedInventory = true
-            InvUtils.swap(player.inventory.getSelectedSlot(), true)
+            InvUtils.swap(player.inventory.selectedSlot, true)
         }
 
         val startPos: Vec3 = player.position()
@@ -179,7 +180,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             sendMovePacket(to, onGround)
             return
         }
-        var steps = Math.ceil(dist / maxDistance).toInt()
+        var steps = ceil(dist / maxDistance).toInt()
         if (maxPackets > 0 && steps > maxPackets) steps = maxPackets
         val delta = to.subtract(from)
         for (i in 1..steps) {

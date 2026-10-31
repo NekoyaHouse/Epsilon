@@ -167,7 +167,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             }
             val lowMomentum = isLowMomentum()
             val waitTicks = if (lowMomentum) {
-                Math.min(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay)
+                minOf(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay)
             } else {
                 elytraFly.boostDelay
             }
@@ -275,7 +275,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
 
     private fun applyCeilingPitchGuard(pitch: Float): Float {
         if (shouldAvoidCeilingLift()) {
-            return Math.max(pitch, CEILING_ESCAPE_PITCH)
+            return maxOf(pitch, CEILING_ESCAPE_PITCH)
         }
         return Mth.clamp(pitch, -90f, 90f)
     }
@@ -290,7 +290,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         } else {
             player.deltaMovement.y
         }
-        val probeDistance = CEILING_PROBE_DISTANCE + Math.max(0.0, climb)
+        val probeDistance = CEILING_PROBE_DISTANCE + maxOf(0.0, climb)
         val ceilingProbe = AABB(
             box.minX + CEILING_PROBE_EPSILON,
             box.maxY - CEILING_PROBE_EPSILON,

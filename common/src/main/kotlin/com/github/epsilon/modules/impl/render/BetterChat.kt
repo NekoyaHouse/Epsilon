@@ -16,6 +16,9 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.screens.ChatScreen
@@ -95,13 +98,10 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
         val verticalPadding = CHAT_VERTICAL_PADDING * (if (focused || hasQueue) 1.0f else panelOpacity)
 
         val chatX = INPUT_X
-        val chatWidth = Math.min(
-            screenWidth - INPUT_X * 2.0f,
-            contentWidth + CHAT_HORIZONTAL_PADDING * 2.0f * chatScale
-        )
-        val targetChatY = Math.max(0.0f, chatBottom - contentHeight - verticalPadding)
+        val chatWidth = minOf(screenWidth - INPUT_X * 2.0f, contentWidth + CHAT_HORIZONTAL_PADDING * 2.0f * chatScale)
+        val targetChatY = maxOf(0.0f, chatBottom - contentHeight - verticalPadding)
         val targetChatHeight =
-            Math.min(screenHeight - targetChatY, contentHeight + contentBelowChat + verticalPadding * 2.0f)
+            minOf(screenHeight - targetChatY, contentHeight + contentBelowChat + verticalPadding * 2.0f)
         if (drawChatPanel) {
             lastChatBottom = targetChatY + targetChatHeight
             lastPanelOpacity = panelOpacity
@@ -132,7 +132,7 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
         val inputY = screenHeight - INPUT_BOTTOM_OFFSET - INPUT_HEIGHT + (1.0f - inputProgress) * INPUT_SLIDE_DISTANCE
         val inputWidth = screenWidth - INPUT_X * 2.0f
 
-        val chatRadius = Math.min(this.chatRadius.toFloat(), animatedChatHeight * 0.5f)
+        val chatRadius = minOf(this.chatRadius.toFloat(), animatedChatHeight * 0.5f)
         val inputRadius = this.inputRadius.toFloat()
         val blur = blurStrength.toFloat()
         val coordinateScale = (mc.window.guiScale / LuminRenderSystem.getGuiScale()).toFloat()
@@ -205,10 +205,10 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
             return
         }
 
-        val left = Math.max(0, Math.floor(x.toDouble()).toInt())
-        val top = Math.max(0, Math.floor(y.toDouble()).toInt())
-        val right = Math.min(screenWidth.toInt(), Math.ceil((x + width).toDouble()).toInt())
-        val bottom = Math.min(screenHeight.toInt(), Math.ceil((y + height).toDouble()).toInt())
+        val left = maxOf(0, floor(x.toDouble()).toInt())
+        val top = maxOf(0, floor(y.toDouble()).toInt())
+        val right = minOf(screenWidth.toInt(), ceil((x + width).toDouble()).toInt())
+        val bottom = minOf(screenHeight.toInt(), ceil((y + height).toDouble()).toInt())
         chatTextScissor =
             if (right > left && bottom > top) ScreenRectangle(left, top, right - left, bottom - top) else null
     }
@@ -232,6 +232,6 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
     }
 
     private fun withOpacity(color: Color, opacity: Float): Color =
-        Color(color.red, color.green, color.blue, Math.round(color.alpha * opacity))
+        Color(color.red, color.green, color.blue, (color.alpha * opacity).roundToInt())
 
 }

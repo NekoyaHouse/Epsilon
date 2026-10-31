@@ -472,7 +472,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         val maceResult: FindItemResult = findMace()
         if (!maceResult.found()) return
 
-        val selectedSlot = player.inventory.getSelectedSlot()
+        val selectedSlot = player.inventory.selectedSlot
         if (maceResult.slot == selectedSlot) {
             attackEntity(entity)
             return
@@ -520,8 +520,8 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private fun getRelativeSpeedTo(entity: Entity): Double {
         val look = RotationUtils.getRotationsToEntity(entity)
         val direction = Vec3.directionFromRotation(look.pitch, look.yaw)
-        val relativeMotion = player.getKnownSpeed().subtract(entity.getKnownSpeed()).scale(20.0)
-        return Math.max(0.0, direction.dot(relativeMotion))
+        val relativeMotion = player.knownSpeed.subtract(entity.knownSpeed).scale(20.0)
+        return maxOf(0.0, direction.dot(relativeMotion))
     }
 
     private fun resetState() {

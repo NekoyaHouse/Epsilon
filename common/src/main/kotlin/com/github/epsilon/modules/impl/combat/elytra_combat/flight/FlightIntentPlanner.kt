@@ -30,7 +30,7 @@ class FlightIntentPlanner {
         }
 
         val desired = rawIntent.desiredVelocity
-        val probe = Math.clamp(desired.length() * 4.0, 4.0, LOCAL_PROBE_DISTANCE)
+        val probe = (desired.length() * 4.0).coerceIn(4.0, LOCAL_PROBE_DISTANCE)
         val directEnd = player.position().add(desired.normalize().scale(probe))
         if (LocalFlightAvoidance.isSegmentClear(player, player.position(), directEnd)) {
             // 保留避障方向偏好，使再次进入避障时的选择连续。

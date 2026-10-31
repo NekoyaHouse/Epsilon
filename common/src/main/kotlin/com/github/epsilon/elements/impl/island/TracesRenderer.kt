@@ -5,6 +5,8 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.WorldToScreen
+import kotlin.math.abs
+import kotlin.math.sqrt
 import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.world.entity.player.Player
@@ -35,15 +37,15 @@ object TracesRenderer {
         val nn = NonNullContext.current ?: return 0
         return context(nn) {
             val self = player
-            val connection = Constants.client.getConnection()
+            val connection = Constants.client.connection
 
             val centerX = islandX + islandWidth * 0.5f
             val centerY = islandY + islandHeight * 0.5f
-            val halfWidth = Math.max(0.0f, islandWidth * 0.5f)
-            val halfHeight = Math.max(0.0f, islandHeight * 0.5f)
-            val maxDistanceSquared = Math.max(0.0, maxDistance * maxDistance)
+            val halfWidth = maxOf(0.0f, islandWidth * 0.5f)
+            val halfHeight = maxOf(0.0f, islandHeight * 0.5f)
+            val maxDistanceSquared = maxOf(0.0, maxDistance * maxDistance)
             val partialTick = if (level.tickRateManager().isFrozen) 1.0f
-            else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
             var rendered = 0
 
             for (player in level.players()) {
@@ -87,7 +89,7 @@ object TracesRenderer {
     }
 
     private fun isInsideIsland(x: Float, y: Float, centerX: Float, centerY: Float, halfWidth: Float, halfHeight: Float): Boolean {
-        return Math.abs(x - centerX) <= halfWidth && Math.abs(y - centerY) <= halfHeight
+        return abs(x - centerX) <= halfWidth && abs(y - centerY) <= halfHeight
     }
 
     private fun resolveIslandEdge(
@@ -104,14 +106,14 @@ object TracesRenderer {
         if (length <= 0.001f) return floatArrayOf(centerX, centerY)
         val unitX = directionX / length
         val unitY = directionY / length
-        val edgeDistanceX = if (Math.abs(unitX) <= 0.001f) Float.POSITIVE_INFINITY else halfWidth / Math.abs(unitX)
-        val edgeDistanceY = if (Math.abs(unitY) <= 0.001f) Float.POSITIVE_INFINITY else halfHeight / Math.abs(unitY)
-        val edgeDistance = Math.min(edgeDistanceX, edgeDistanceY) + ISLAND_EDGE_GAP
+        val edgeDistanceX = if (abs(unitX) <= 0.001f) Float.POSITIVE_INFINITY else halfWidth / abs(unitX)
+        val edgeDistanceY = if (abs(unitY) <= 0.001f) Float.POSITIVE_INFINITY else halfHeight / abs(unitY)
+        val edgeDistance = minOf(edgeDistanceX, edgeDistanceY) + ISLAND_EDGE_GAP
         return floatArrayOf(centerX + unitX * edgeDistance, centerY + unitY * edgeDistance)
     }
 
     private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
-        return Math.sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat()
+        return sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat()
     }
 
     private data class ScreenPoint(val x: Float, val y: Float)

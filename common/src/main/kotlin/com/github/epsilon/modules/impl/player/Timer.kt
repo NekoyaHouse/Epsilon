@@ -156,7 +156,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                         event.cancel()
                     } else {
                         balanceTime -= if (releasing) 100L else 50L
-                        balanceTime = Math.max(-3000L, balanceTime)
+                        balanceTime = maxOf(-3000L, balanceTime)
                     }
 
                     val now = System.currentTimeMillis()
@@ -264,7 +264,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
         if (!lagging && packets.isNotEmpty()) {
             while (true) {
                 val packet = packets.poll() ?: break
-                val connection = mc.getConnection() ?: break
+                val connection = mc.connection ?: break
                 packet.handle(connection)
             }
         }

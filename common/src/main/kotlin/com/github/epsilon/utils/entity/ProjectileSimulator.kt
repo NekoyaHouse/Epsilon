@@ -1,5 +1,9 @@
 package com.github.epsilon.utils.entity
 
+import com.github.epsilon.utils.math.toRadians
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.core.BlockPos
 import net.minecraft.core.SectionPos
 import net.minecraft.tags.FluidTags
@@ -202,14 +206,14 @@ class ProjectileSimulator(private val level: Level) {
 
     private fun configureShot(user: Entity, angleOffset: Double, partialTick: Float, data: MotionData, piercing: Int) {
         positionVec = user.getPosition(partialTick).add(0.0, user.getEyeHeight(user.pose) - 0.1, 0.0)
-        val yaw = Math.toRadians(user.getYRot(partialTick).toDouble())
-        val pitch = Math.toRadians((user.getXRot(partialTick) + data.roll).toDouble())
-        var direction = Vec3(-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch))
+        val yaw = (user.getYRot(partialTick).toDouble()).toRadians()
+        val pitch = ((user.getXRot(partialTick) + data.roll).toDouble()).toRadians()
+        var direction = Vec3(-sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
 
         if (angleOffset != 0.0) {
             val axis = user.getUpVector(partialTick).normalize()
-            val cos = Math.cos(angleOffset)
-            val sin = Math.sin(angleOffset)
+            val cos = cos(angleOffset)
+            val sin = sin(angleOffset)
             direction = direction.scale(cos).add(axis.cross(direction).scale(sin)).add(axis.scale(axis.dot(direction) * (1.0 - cos)))
         }
 
@@ -221,12 +225,12 @@ class ProjectileSimulator(private val level: Level) {
     }
 
     private fun configureFishing(user: Entity, partialTick: Float) {
-        val yaw = Math.toRadians(user.getYRot(partialTick).toDouble())
-        val pitch = Math.toRadians(user.getXRot(partialTick).toDouble())
-        val yawCos = Math.cos(-yaw - Math.PI)
-        val yawSin = Math.sin(-yaw - Math.PI)
-        val pitchCos = -Math.cos(-pitch)
-        val pitchSin = Math.sin(-pitch)
+        val yaw = (user.getYRot(partialTick).toDouble()).toRadians()
+        val pitch = (user.getXRot(partialTick).toDouble()).toRadians()
+        val yawCos = cos(-yaw - PI)
+        val yawSin = sin(-yaw - PI)
+        val pitchCos = -cos(-pitch)
+        val pitchSin = sin(-pitch)
 
         positionVec = user.getPosition(partialTick)
             .subtract(yawSin * 0.3, 0.0, yawCos * 0.3)

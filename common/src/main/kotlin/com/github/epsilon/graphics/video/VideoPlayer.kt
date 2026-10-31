@@ -4,6 +4,7 @@ import com.github.epsilon.Constants
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import kotlin.math.abs
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_RGBA
@@ -106,10 +107,10 @@ object VideoPlayer {
                 if (first != null && first.image != null) {
                     val fb = copyFrameLocked(first)
                     latestFrame.set(fb)
-                    lastPtsUs = if (first.timestamp > 0) first.timestamp else newGrabber.getTimestamp()
+                    lastPtsUs = if (first.timestamp > 0) first.timestamp else newGrabber.timestamp
                 }
 
-                mediaStartUs = newGrabber.getTimestamp()
+                mediaStartUs = newGrabber.timestamp
                 wallStartNs = System.nanoTime()
                 lastPtsUs = mediaStartUs
             }
@@ -267,17 +268,17 @@ object VideoPlayer {
                             grabber.setTimestamp(0)
                             val first = grabber.grabImage()
                             if (first != null && first.image != null) {
-                                ptsUs = if (first.timestamp > 0) first.timestamp else grabber.getTimestamp()
+                                ptsUs = if (first.timestamp > 0) first.timestamp else grabber.timestamp
                                 lastPtsUs = ptsUs
 
                                 latestFrame.set(copyFrameLocked(first))
-                                mediaStartUs = grabber.getTimestamp()
+                                mediaStartUs = grabber.timestamp
                                 wallStartNs = System.nanoTime()
                             }
                             continue
                         }
 
-                        ptsUs = if (frame.timestamp > 0) frame.timestamp else grabber.getTimestamp()
+                        ptsUs = if (frame.timestamp > 0) frame.timestamp else grabber.timestamp
                         lastPtsUs = ptsUs
                         decodedFrame = copyFrameLocked(frame)
                     }
@@ -286,7 +287,7 @@ object VideoPlayer {
                     while (!stopped && !paused) {
                         val sleepNs = targetNs - System.nanoTime()
                         if (sleepNs <= 0L) break
-                        LockSupport.parkNanos(Math.min(sleepNs, 5_000_000L))
+                        LockSupport.parkNanos(minOf(sleepNs, 5_000_000L))
                         if (Thread.interrupted()) {
                             throw InterruptedException()
                         }
@@ -314,11 +315,11 @@ object VideoPlayer {
         val dst = acquire(size)
         dst.clear()
 
-        val stride = Math.abs(frame.imageStride)
+        val stride = abs(frame.imageStride)
         if (stride == rowBytes) {
             val contiguous = src.duplicate()
             contiguous.rewind()
-            contiguous.limit(Math.min(contiguous.remaining(), size))
+            contiguous.limit(minOf(contiguous.remaining(), size))
             dst.put(contiguous)
         } else {
             for (row in 0 until h) {
@@ -326,7 +327,7 @@ object VideoPlayer {
                 val start = sourceRow * stride
                 val line = src.duplicate()
                 line.position(start)
-                line.limit(Math.min(start + rowBytes, src.capacity()))
+                line.limit(minOf(start + rowBytes, src.capacity()))
                 dst.put(line)
             }
         }

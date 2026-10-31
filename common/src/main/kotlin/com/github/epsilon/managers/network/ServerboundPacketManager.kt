@@ -26,7 +26,7 @@ object ServerboundPacketManager {
     fun flush() {
         while (packets.isNotEmpty()) {
             try {
-                Constants.client.getConnection()!!.send(packets.poll())
+                Constants.client.connection!!.send(packets.poll())
             } catch (e: Exception) {
                 NotificationManager.error(
                     "Serverbound Packet",

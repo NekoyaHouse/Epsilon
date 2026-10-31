@@ -28,6 +28,7 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.systems.RenderSystem
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
@@ -130,11 +131,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         var cascaded = false
         for (row in rows) {
             var rowHeight = 0.0f
-            for (window in row) rowHeight = Math.max(rowHeight, window.bounds.height)
-            val top = if (cascaded) nextTop else Math.clamp(height - rowHeight, 0.0f, nextTop)
+            for (window in row) rowHeight = maxOf(rowHeight, window.bounds.height)
+            val top = if (cascaded) nextTop else (height - rowHeight).coerceIn(0.0f, nextTop)
             var x = 0.0f
             for (window in row) {
-                window.position(x, if (cascaded) top else Math.clamp(height - window.bounds.height, 0.0f, nextTop))
+                window.position(x, if (cascaded) top else (height - window.bounds.height).coerceIn(0.0f, nextTop))
                 x += window.bounds.width + gap
             }
             val stacked = top + rowHeight + gap
@@ -149,21 +150,21 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
         val friendWindow = this.friendWindow
         if (friendWindow != null) {
-            friendWindow.position(Math.max(0.0f, width - friendWindow.bounds.width - gap), gap)
+            friendWindow.position(maxOf(0.0f, width - friendWindow.bounds.width - gap), gap)
         }
         val configWindow = this.configWindow
         if (configWindow != null) {
             val configY = gap + (if (friendWindow == null) 0.0f else friendWindow.bounds.height + gap)
-            configWindow.position(Math.max(0.0f, width - configWindow.bounds.width - gap), configY)
+            configWindow.position(maxOf(0.0f, width - configWindow.bounds.width - gap), configY)
         }
     }
 
     private fun screenWidth(): Float {
-        return Math.max(1.0f, LuminRenderSystem.getScaledWidth())
+        return maxOf(1.0f, LuminRenderSystem.getScaledWidth())
     }
 
     private fun screenHeight(): Float {
-        return Math.max(1.0f, LuminRenderSystem.getScaledHeight())
+        return maxOf(1.0f, LuminRenderSystem.getScaledHeight())
     }
 
     private fun layoutWindows() {
@@ -177,9 +178,9 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private fun updateToggleBounds() {
         val screenWidth = screenWidth()
         val screenHeight = screenHeight()
-        val y = Math.max(0.0f, screenHeight - TOGGLE_MARGIN - TOGGLE_SIZE)
-        val configX = Math.max(0.0f, screenWidth - TOGGLE_MARGIN - TOGGLE_SIZE)
-        val friendX = Math.max(0.0f, configX - TOGGLE_GAP - TOGGLE_SIZE)
+        val y = maxOf(0.0f, screenHeight - TOGGLE_MARGIN - TOGGLE_SIZE)
+        val configX = maxOf(0.0f, screenWidth - TOGGLE_MARGIN - TOGGLE_SIZE)
+        val friendX = maxOf(0.0f, configX - TOGGLE_GAP - TOGGLE_SIZE)
         friendToggleBounds = UiRect(friendX, y, TOGGLE_SIZE, TOGGLE_SIZE)
         configToggleBounds = UiRect(configX, y, TOGGLE_SIZE, TOGGLE_SIZE)
     }
@@ -211,7 +212,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         pendingFrameHeight = screenHeight()
         pendingWindowBlurStrength = GuiSetting.blurStrength.toFloat() * openProgress
         pendingFullscreenBlurStrength = if (GuiSetting.backgroundBlur) {
-            Math.max(1.5f, GuiSetting.blurStrength.toFloat()) * openProgress
+            maxOf(1.5f, GuiSetting.blurStrength.toFloat()) * openProgress
         } else {
             0.0f
         }
@@ -219,7 +220,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             graphics.blurBeforeThisStratum()
             pendingBackground = frame.batch(UiLayer.BACKGROUND)
             if (GuiSetting.background) {
-                val backgroundAlpha = Math.round(144.0f * openProgress)
+                val backgroundAlpha = (144.0f * openProgress).roundToInt()
                 pendingBackground!!.render(
                     UiTree.build { scope ->
                         scope.rect(0.0f, 0.0f, pendingFrameWidth, pendingFrameHeight, Color(0, 0, 0, backgroundAlpha))
@@ -295,7 +296,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     ) {
         val windowProgress = window.getOpenProgress()
         val fullHeight = window.bounds.height
-        val revealHeight = window.headerHeight + Math.max(0.0f, fullHeight - window.headerHeight) * windowProgress
+        val revealHeight = window.headerHeight + maxOf(0.0f, fullHeight - window.headerHeight) * windowProgress
         if (revealHeight <= 0.01f) return
 
         val clip = UiRect(window.bounds.x, window.bounds.y, window.bounds.width, revealHeight)
@@ -316,10 +317,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             drawToggleButton(scope, friendToggleBounds, IconChars.PEOPLE, friendWindowOpen, mouseX, mouseY, friendToggleHover)
             drawToggleButton(scope, configToggleBounds, IconChars.SETTINGS, configWindowOpen, mouseX, mouseY, configToggleHover)
         }
-        val left = Math.min(friendToggleBounds.x, configToggleBounds.x)
-        val top = Math.min(friendToggleBounds.y, configToggleBounds.y)
-        val right = Math.max(friendToggleBounds.right(), configToggleBounds.right())
-        val bottom = Math.max(friendToggleBounds.bottom(), configToggleBounds.bottom())
+        val left = minOf(friendToggleBounds.x, configToggleBounds.x)
+        val top = minOf(friendToggleBounds.y, configToggleBounds.y)
+        val right = maxOf(friendToggleBounds.right(), configToggleBounds.right())
+        val bottom = maxOf(friendToggleBounds.bottom(), configToggleBounds.bottom())
         val blurRects = floatArrayOf(
             friendToggleBounds.x, friendToggleBounds.y, friendToggleBounds.width, friendToggleBounds.height,
             configToggleBounds.x, configToggleBounds.y, configToggleBounds.width, configToggleBounds.height
@@ -628,7 +629,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     override fun openRegistryListSettingPopup(setting: RegistryListSetting<*>) {
         popupHost.open(
             RegistryListSelectPopup.create(
-                popupHost.getCenteredBounds(Math.min(360.0f, screenWidth()), Math.min(300.0f, screenHeight())),
+                popupHost.getCenteredBounds(minOf(360.0f, screenWidth()), minOf(300.0f, screenHeight())),
                 setting
             )
         )
@@ -637,7 +638,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     override fun openStringListSettingPopup(setting: StringListSetting) {
         popupHost.open(
             StringListSelectPopup(
-                popupHost.getCenteredBounds(Math.min(300.0f, screenWidth()), Math.min(260.0f, screenHeight())),
+                popupHost.getCenteredBounds(minOf(300.0f, screenWidth()), minOf(260.0f, screenHeight())),
                 setting,
                 { value -> setting.add(value) },
                 { value -> setting.remove(value) }

@@ -7,6 +7,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
+import kotlin.random.Random
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -98,7 +99,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
         interaction.attack(player, crystal)
         PlayerUtils.swingHand(InteractionHand.MAIN_HAND)
 
-        attackCooldown = 1 + (Math.random() * 2).toInt()
+        attackCooldown = 1 + (Random.nextDouble() * 2).toInt()
     }
 
     context(nn: NonNullContext)
@@ -142,7 +143,7 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
 
         PlayerUtils.swingHand(crystalHand)
 
-        placeCooldown = 1 + (Math.random() * 2).toInt()
+        placeCooldown = 1 + (Random.nextDouble() * 2).toInt()
     }
 
     context(nn: NonNullContext)

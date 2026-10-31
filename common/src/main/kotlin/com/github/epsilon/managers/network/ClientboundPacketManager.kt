@@ -84,7 +84,7 @@ object ClientboundPacketManager {
     @Suppress("UNCHECKED_CAST")
     private fun dispatch(packet: Packet<*>?) {
         if (packet == null) return
-        val connection = Constants.client.getConnection() ?: return
+        val connection = Constants.client.connection ?: return
         (packet as Packet<ClientGamePacketListener>).handle(connection)
     }
 

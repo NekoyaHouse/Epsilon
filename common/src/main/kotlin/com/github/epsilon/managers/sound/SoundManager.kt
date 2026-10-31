@@ -26,12 +26,12 @@ object SoundManager {
         if (now - lastUiPlayTimeMs < UI_DEBOUNCE_MS) return
         lastUiPlayTimeMs = now
 
-        Constants.client.getSoundManager().play(createSoundInstance(key, pitch, volume))
+        Constants.client.soundManager.play(createSoundInstance(key, pitch, volume))
     }
 
     fun playTracked(key: SoundKey, volume: Float): Optional<SoundInstance> {
         val instance = createSoundInstance(key, 1.0f, volume)
-        val result = Constants.client.getSoundManager().play(instance)
+        val result = Constants.client.soundManager.play(instance)
         return if (result == SoundEngine.PlayResult.NOT_STARTED) Optional.empty() else Optional.of(instance)
     }
 
@@ -53,12 +53,12 @@ object SoundManager {
     }
 
     fun stop(key: SoundKey) {
-        Constants.client.getSoundManager().stop(key.id(), null)
+        Constants.client.soundManager.stop(key.id(), null)
     }
 
     fun stopAllSounds() {
         for (key in SoundKey.entries) {
-            Constants.client.getSoundManager().stop(key.id(), null)
+            Constants.client.soundManager.stop(key.id(), null)
         }
     }
 

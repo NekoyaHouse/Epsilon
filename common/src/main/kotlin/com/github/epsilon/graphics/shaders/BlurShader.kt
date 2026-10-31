@@ -50,7 +50,7 @@ object BlurShader {
 
     private fun clampSegmentCount(segmentRects: FloatArray?, segmentCount: Int): Int {
         if (segmentRects == null || segmentCount <= 0) return 0
-        return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.size / 4))
+        return minOf(MAX_SEGMENTS, minOf(segmentCount, segmentRects.size / 4))
     }
 
     private var pipeline: RenderPipeline? = null
@@ -139,12 +139,12 @@ object BlurShader {
         val pxW = width * scale
         val pxH = height * scale
 
-        val rTLPx = Math.max(0.0f, rTL * scale)
-        val rTRPx = Math.max(0.0f, rTR * scale)
-        val rBRPx = Math.max(0.0f, rBR * scale)
-        val rBLPx = Math.max(0.0f, rBL * scale)
+        val rTLPx = maxOf(0.0f, rTL * scale)
+        val rTRPx = maxOf(0.0f, rTR * scale)
+        val rBRPx = maxOf(0.0f, rBR * scale)
+        val rBLPx = maxOf(0.0f, rBL * scale)
 
-        val quality = Math.max(0.0f, blurStrength)
+        val quality = maxOf(0.0f, blurStrength)
         val count = clampSegmentCount(segmentRects, segmentCount)
 
         val encoder: CommandEncoder = RenderSystem.getDevice().createCommandEncoder()
@@ -223,7 +223,7 @@ object BlurShader {
             fb.width, fb.height
         )
 
-        val quality = Math.max(0.0f, blurStrength.toFloat())
+        val quality = maxOf(0.0f, blurStrength.toFloat())
         val boxBlurUniforms: GpuBufferSlice = LuminRenderSystem.writeDynamicUniform(
             "box_blur_uniforms",
             "Lumin 3D Box Blur UBO",
@@ -329,7 +329,7 @@ object BlurShader {
             for (i in 0 until MAX_SEGMENTS) {
                 val radii = segmentRadii
                 val radius = if (radii != null && i < segmentCount && i < radii.size) {
-                    Math.max(0.0f, radii[i] * scale)
+                    maxOf(0.0f, radii[i] * scale)
                 } else {
                     0.0f
                 }

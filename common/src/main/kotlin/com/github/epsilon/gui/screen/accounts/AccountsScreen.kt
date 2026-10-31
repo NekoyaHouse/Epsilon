@@ -169,8 +169,8 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     private fun layout(w: Int, h: Int) {
-        panelW = Math.min(460, w - 24).toFloat()
-        panelH = Math.min(560, h - 24).toFloat()
+        panelW = minOf(460, w - 24).toFloat()
+        panelH = minOf(560, h - 24).toFloat()
         panelX = (w - panelW) / 2.0f
         panelY = (h - panelH) / 2.0f
 
@@ -187,7 +187,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         searchBounds = UiRect(panelX + PAD, toolbarY, panelW - PAD * 2.0f - sortWidth - 6.0f, TOOLBAR_HEIGHT)
 
         val listTop = toolbarY + TOOLBAR_HEIGHT + 8.0f
-        listViewport = UiRect(panelX + PAD, listTop, panelW - PAD * 2.0f, Math.max(0.0f, addBarY - listTop - 10.0f))
+        listViewport = UiRect(panelX + PAD, listTop, panelW - PAD * 2.0f, maxOf(0.0f, addBarY - listTop - 10.0f))
 
         formTitleY = contentTop + 12.0f
         formFieldBounds = UiRect(panelX + PAD, contentTop + 52.0f, panelW - PAD * 2.0f, 40.0f)
@@ -197,7 +197,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         rebuildVisible()
 
         val contentHeight = visible.size * (AccountRow.HEIGHT + AccountRow.GAP)
-        maxScroll = Math.max(0.0f, contentHeight - (listViewport?.height ?: 0.0f))
+        maxScroll = maxOf(0.0f, contentHeight - (listViewport?.height ?: 0.0f))
         rowWidth = if (maxScroll > 0.0f) (listViewport?.width ?: 0.0f) - UiScrollBar.TOTAL_WIDTH else (listViewport?.width ?: 0.0f)
     }
 
@@ -227,7 +227,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
 
         if (previouslyFocused == null) {
-            focusedIndex = if (visible.isEmpty()) -1 else Math.min(focusedIndex, visible.size - 1)
+            focusedIndex = if (visible.isEmpty()) -1 else minOf(focusedIndex, visible.size - 1)
             return
         }
 
@@ -670,7 +670,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         if (focusedIndex < 0) {
             focusedIndex = if (delta > 0) 0 else visible.size - 1
         } else {
-            focusedIndex = Math.floorMod(focusedIndex + delta, visible.size)
+            focusedIndex = (focusedIndex + delta).mod(visible.size)
         }
         scrollIntoView()
     }

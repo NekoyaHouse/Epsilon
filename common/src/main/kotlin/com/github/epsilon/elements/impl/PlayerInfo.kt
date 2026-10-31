@@ -16,6 +16,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.google.common.base.Suppliers
+import kotlin.math.roundToInt
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.AbstractClientPlayer
@@ -114,7 +115,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
         val dividerY = panelY + layout.paddingY + layout.headerHeight + layout.headerBodyGap * 0.5f
         scope.rect(
-            panelX + layout.paddingX, dividerY, layout.tableWidth, Math.max(0.5f, layout.scale * 0.75f),
+            panelX + layout.paddingX, dividerY, layout.tableWidth, maxOf(0.5f, layout.scale * 0.75f),
             withAlpha(headerColor, 0.14f)
         )
 
@@ -166,7 +167,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
         players.sortWith(compareBy<AbstractClientPlayer> { self.distanceToSqr(it) })
 
-        val count = Math.min(maxPlayers, players.size)
+        val count = minOf(maxPlayers, players.size)
         val rows: MutableList<PlayerRow> = ArrayList(count)
         for (i in 0 until count) {
             val player = players[i]
@@ -175,9 +176,9 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             } else {
                 player.health + player.absorptionAmount
             }
-            val maxHealth = Math.max(1.0f, player.maxHealth + Math.max(0.0f, player.absorptionAmount))
-            val distance = Math.round(self.distanceTo(player))
-            val direction = Math.round(Mth.wrapDegrees(player.yRot))
+            val maxHealth = maxOf(1.0f, player.maxHealth + maxOf(0.0f, player.absorptionAmount))
+            val distance = (self.distanceTo(player)).roundToInt()
+            val direction = (Mth.wrapDegrees(player.yRot)).roundToInt()
 
             rows.add(
                 PlayerRow(
@@ -224,17 +225,17 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         var directionWidth = textRenderer.getWidth(EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), headerScale)
 
         for (row in rows) {
-            distanceWidth = Math.max(distanceWidth, textRenderer.getWidth(row.distance, textScale))
-            healthWidth = Math.max(healthWidth, textRenderer.getWidth(row.health, textScale))
-            popsWidth = Math.max(popsWidth, textRenderer.getWidth(row.pops, textScale))
-            directionWidth = Math.max(directionWidth, textRenderer.getWidth(row.direction, textScale))
+            distanceWidth = maxOf(distanceWidth, textRenderer.getWidth(row.distance, textScale))
+            healthWidth = maxOf(healthWidth, textRenderer.getWidth(row.health, textScale))
+            popsWidth = maxOf(popsWidth, textRenderer.getWidth(row.pops, textScale))
+            directionWidth = maxOf(directionWidth, textRenderer.getWidth(row.direction, textScale))
         }
 
         val panelWidth = panelWidthSetting.toFloat() * scale
         val tableWidth = panelWidth - paddingX * 2.0f
-        val nameWidth = Math.max(0.0f, tableWidth - distanceWidth - healthWidth - popsWidth - directionWidth - columnGap * 4.0f)
+        val nameWidth = maxOf(0.0f, tableWidth - distanceWidth - healthWidth - popsWidth - directionWidth - columnGap * 4.0f)
         val headerHeight = textRenderer.getHeight(headerScale)
-        val bodyHeight = Math.max(1, rows.size) * rowHeight
+        val bodyHeight = maxOf(1, rows.size) * rowHeight
         val panelHeight = paddingY * 2.0f + headerHeight + headerBodyGap + bodyHeight
 
         return Layout(
@@ -278,7 +279,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             x += layout.headSize + layout.headTextGap
         }
 
-        val nameTextWidth = Math.max(0.0f, layout.nameWidth - layout.headSize - layout.headTextGap)
+        val nameTextWidth = maxOf(0.0f, layout.nameWidth - layout.headSize - layout.headTextGap)
         val fullNameWidth = textRenderer.getWidth(row.name, layout.textScale)
         val playerId = row.playerId
         if (nameTextWidth > 0.0f && fullNameWidth > nameTextWidth) {
@@ -318,7 +319,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {
-        val alpha = Mth.clamp(Math.round(color.alpha * multiplier), 0, 255)
+        val alpha = Mth.clamp((color.alpha * multiplier).roundToInt(), 0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

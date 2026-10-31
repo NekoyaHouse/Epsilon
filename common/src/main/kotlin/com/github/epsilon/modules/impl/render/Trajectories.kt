@@ -14,6 +14,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.entity.ProjectileSimulator
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.EnchantmentUtils
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -79,7 +80,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         dependency = { positionBoxes }
     ).apply { group(renderGroup) }
 
-    private val MULTISHOT_OFFSET: Double = Math.toRadians(10.0)
+    private val MULTISHOT_OFFSET: Double = (10.0).toRadians()
 
     init {
         handler<Render3DEvent> { onRender3D(it) }
@@ -88,7 +89,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     private fun onRender3D(event: Render3DEvent) {
         val level = mc.level ?: return
         val partialTick =
-            if (level.tickRateManager().isFrozen()) 1.0F else mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            if (level.tickRateManager().isFrozen()) 1.0F else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
 
         for (targetPlayer in level.players()) {
             if (!otherPlayers && targetPlayer !== mc.player) continue
@@ -187,7 +188,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
                 val size = positionBoxSize
                 val box = AABB(to.x - size, to.y - size, to.z - size, to.x + size, to.y + size, to.z + size)
                 Render3DScheduler.addFilledBox(box, positionFillColor)
-                Render3DScheduler.addOutlineBox(box, positionOutlineColor, Math.min(width, 1.5F))
+                Render3DScheduler.addOutlineBox(box, positionOutlineColor, minOf(width, 1.5F))
             }
         }
 
@@ -225,7 +226,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         }
 
         for (entity in path.entityHits) {
-            val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val offset = entity.getPosition(partialTick).subtract(entity.position())
             val box = entity.boundingBox.move(offset)
             if (impactFill) Render3DScheduler.addFilledBox(box, impactFillColor)

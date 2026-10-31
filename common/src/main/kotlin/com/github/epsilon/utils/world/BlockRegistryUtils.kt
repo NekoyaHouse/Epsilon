@@ -78,7 +78,7 @@ object BlockRegistryUtils {
         if (block == null) {
             return ""
         }
-        return block.getName().getString()
+        return block.name.string
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.settings.impl.DoubleSetting
+import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.text.DecimalFormat
 import java.util.function.Predicate
@@ -15,7 +16,7 @@ class DoubleSliderWidget(setting: DoubleSetting) :
     override fun updateValueFromRatio(rawRatio: Float) {
         val range = setting.max - setting.min
         val step = setting.step
-        val value = setting.min + Math.round(rawRatio * range / step) * step
+        val value = setting.min + (rawRatio * range / step).roundToInt() * step
         previewValue(Mth.clamp(value, setting.min, setting.max))
     }
 

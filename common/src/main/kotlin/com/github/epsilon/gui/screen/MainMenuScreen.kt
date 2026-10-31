@@ -19,6 +19,9 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.PI
+import kotlin.math.roundToInt
+import kotlin.math.sin
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
@@ -383,7 +386,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val width = LuminRenderSystem.getScaledWidthInt()
         val height = LuminRenderSystem.getScaledHeightInt()
         val sourceAspect = textureWidth / textureHeight.toFloat()
-        val targetAspect = width / Math.max(1, height).toFloat()
+        val targetAspect = width / maxOf(1, height).toFloat()
         var u0 = 0.0f
         var u1 = 1.0f
         var v0 = 0.0f
@@ -433,14 +436,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val width = LuminRenderSystem.getScaledWidthInt()
         val height = LuminRenderSystem.getScaledHeightInt()
         val scale = resolutionScale(width, height)
-        val layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale)
-        val layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale)
+        val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
+        val layoutHeight = (MENU_REFERENCE_HEIGHT * scale).roundToInt()
         val layoutX = (width - layoutWidth).toFloat()
         val layoutY = (height - layoutHeight).toFloat()
         val layoutMouseX = mouseX - layoutX
         val layoutMouseY = mouseY - layoutY
         val menuCenterCorrectionX = (width - layoutWidth) * 0.2f
-        val introElapsed = Math.max(0L, now - introStartMs)
+        val introElapsed = maxOf(0L, now - introStartMs)
         val titleProgress = Easing.EASE_OUT_CUBIC.function.apply(
             Mth.clamp((introElapsed - COLUMBINA_TITLE_DELAY_MS) / COLUMBINA_TITLE_DURATION_MS.toFloat(), 0.0f, 1.0f)
         )
@@ -457,7 +460,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val titleVisibility = titleProgress * menuVisibility
         val subtitleVisibility = subtitleProgress * menuVisibility
 
-        val rightMargin = Math.max(46.5f * scale, layoutWidth * 0.055f)
+        val rightMargin = maxOf(46.5f * scale, layoutWidth * 0.055f)
         val menuWidth = Mth.clamp(layoutWidth * 0.25f, 294.5f * scale, 418.5f * scale)
         val restingMenuX = layoutWidth - rightMargin - menuWidth - menuCenterCorrectionX
         val menuX = restingMenuX + exit * 34.1f * scale
@@ -467,7 +470,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val titleWidth = metrics.getWidth(clientName, titleScale, StaticFontLoader.CINZEL_DECORATIVE)
         val titleHeight = metrics.getHeight(titleScale, StaticFontLoader.CINZEL_DECORATIVE)
         val titleX = titleCenterX - titleWidth * 0.5f + (1.0f - titleProgress) * 18.6f * scale + exit * 27.9f * scale
-        val titleBaseY = Math.max(37.2f * scale, layoutHeight * 0.095f)
+        val titleBaseY = maxOf(37.2f * scale, layoutHeight * 0.095f)
         val titleY = titleBaseY + (1.0f - titleProgress) * 4.65f * scale
         val subtitleScale = 1.705f * scale
         val subtitle = "COLUMBINA / " + Constants.VERSION
@@ -475,11 +478,11 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val subtitleX = titleCenterX - subtitleWidth * 0.5f + (1.0f - subtitleProgress) * 18.6f * scale + exit * 27.9f * scale
         val subtitleBaseY = titleBaseY + titleHeight - 6.2f * scale
         val subtitleY = subtitleBaseY + (1.0f - subtitleProgress) * 4.65f * scale
-        val menuTop = Math.max(layoutHeight * 0.315f, subtitleBaseY + 52.7f * scale)
+        val menuTop = maxOf(layoutHeight * 0.315f, subtitleBaseY + 52.7f * scale)
         val footerReserve = 52.7f * scale
-        val availableRows = Math.max(1.0f, layoutHeight - menuTop - footerReserve)
-        val rowStride = Math.min(80.6f * scale, availableRows / entries.size)
-        val rowHeight = Math.min(58.9f * scale, rowStride * 0.78f)
+        val availableRows = maxOf(1.0f, layoutHeight - menuTop - footerReserve)
+        val rowStride = minOf(80.6f * scale, availableRows / entries.size)
+        val rowHeight = minOf(58.9f * scale, rowStride * 0.78f)
 
         scene.beginFrame()
         val tree = UiTree.build { scope ->
@@ -587,15 +590,15 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         if (hover > 0.001f) {
                             layer.roundRect(
                                 labelX, rowY + rowHeight - 2.3f * scale,
-                                labelWidth * (0.18f + hover * 0.28f), Math.max(1.0f, 1.55f * scale),
-                                Math.max(0.8f, 0.78f * scale),
+                                labelWidth * (0.18f + hover * 0.28f), maxOf(1.0f, 1.55f * scale),
+                                maxOf(0.8f, 0.78f * scale),
                                 applyAlpha(Color(210, 229, 255), itemVisibility * hover * 0.78f)
                             )
                         }
                     }
                 }
 
-                val footerY = layoutHeight - Math.max(27.9f * scale, layoutHeight * 0.045f)
+                val footerY = layoutHeight - maxOf(27.9f * scale, layoutHeight * 0.045f)
                 val user = this.minecraft!!.user.name
                 content.layer(-50) { layer ->
                     val userWidth = metrics.getWidth(user, 1.55f * scale)
@@ -622,8 +625,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS.toFloat(), 0.0f, 1.0f)
         )
         val scale = resolutionScale(width, height)
-        val layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale)
-        val layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale)
+        val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
+        val layoutHeight = (MENU_REFERENCE_HEIGHT * scale).roundToInt()
         val layoutX = (width - layoutWidth) * 0.5f
         val layoutY = (height - layoutHeight) * 0.5f
         val layoutMouseX = mouseX - layoutX
@@ -631,14 +634,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         // LOGO 仍以左上角为锚点，整体等比放大，标题、副标题、强调线与间距一起缩放。
         val logoScale = 1.5f
-        val titleX = Math.max(18.6f * scale, layoutWidth / 15.0f)
-        val titleY = Math.max(12.4f * scale, titleX * 0.5f)
+        val titleX = maxOf(18.6f * scale, layoutWidth / 15.0f)
+        val titleY = maxOf(12.4f * scale, titleX * 0.5f)
         val titleScale = 3.658f * logoScale * scale
         val subtitleScale = 0.961f * logoScale * scale
         val titleSubtitleGap = 18.6f * logoScale * scale
         val titleAccentGap = 9.3f * logoScale * scale
         val titleAccentWidth = 105.4f * logoScale * scale
-        val titleAccentHeight = Math.max(1.6f, 2.79f * logoScale * scale)
+        val titleAccentHeight = maxOf(1.6f, 2.79f * logoScale * scale)
 
         val titleColor = applyAlpha(Color(230, 224, 233), 0.96f * menuVisibility)
         val subtitleColor = applyAlpha(Color(202, 196, 208), 0.90f * menuVisibility)
@@ -654,7 +657,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         // Classic 菜单入口在左下角纵向排列：文字在上、横条在下，与标题左对齐。
         val buttonColumnX = titleX
         val buttonWidth = 230.0f * scale
-        val buttonLineHeight = Math.max(2.0f, 3.875f * scale)
+        val buttonLineHeight = maxOf(2.0f, 3.875f * scale)
         val buttonStride = 70.0f * scale
         val buttonHitPaddingX = 12.4f * scale
         val buttonHitPaddingTop = 12.4f * scale
@@ -663,7 +666,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val preferredButtonTextScale = 2.55f * scale
         val buttonTextHeight = metrics.getHeight(preferredButtonTextScale)
         val buttonTextToLineGap = 5.0f * scale
-        val buttonListHeight = Math.max(0, entries.size - 1) * buttonStride +
+        val buttonListHeight = maxOf(0, entries.size - 1) * buttonStride +
                 buttonTextHeight + buttonTextToLineGap + buttonLineHeight
         val buttonsY = layoutHeight - 74.4f * scale - buttonListHeight
 
@@ -744,8 +747,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         if (reisaGreetingStartMs < 0L) return
 
         val now = Util.getMillis()
-        val elapsed = Math.max(0L, now - reisaGreetingStartMs)
-        val exitElapsed = if (reisaExitStartMs < 0L) -1L else Math.max(0L, now - reisaExitStartMs)
+        val elapsed = maxOf(0L, now - reisaGreetingStartMs)
+        val exitElapsed = if (reisaExitStartMs < 0L) -1L else maxOf(0L, now - reisaExitStartMs)
         val entrance = Mth.clamp(elapsed / REISA_ENTRANCE_DURATION_MS.toFloat(), 0.0f, 1.0f)
         val slide = Easing.EASE_OUT_BACK.function.apply(entrance)
         val entranceUnfold = 0.04f + 0.96f * Easing.EASE_OUT_CUBIC.function.apply(
@@ -760,14 +763,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val liftEase = Easing.EASE_IN_OUT_CUBIC.function.apply(moveProgress)
         val fadeProgress = Mth.clamp((moveProgress - 0.25f) / 0.75f, 0.0f, 1.0f)
         val fadeEase = Easing.EASE_OUT_CUBIC.function.apply(fadeProgress)
-        val imageHeight = Math.min(height * 0.78f, width * 0.58f)
+        val imageHeight = minOf(height * 0.78f, width * 0.58f)
         val imageWidth = imageHeight * REISA_ASPECT_RATIO
-        val targetX = width - imageWidth - Math.max(4.0f, 15.5f * scale)
+        val targetX = width - imageWidth - maxOf(4.0f, 15.5f * scale)
         val entranceX = Mth.lerp(slide, width + imageWidth * 0.08f, targetX)
-        val exitDistance = Math.max(111.6f * scale, imageWidth * 0.34f)
+        val exitDistance = maxOf(111.6f * scale, imageWidth * 0.34f)
         val imageX = entranceX + exitDistance * moveEase
         val bob = if (entrance >= 1.0f && exitElapsed < 0L) {
-            Math.sin(((elapsed - REISA_ENTRANCE_DURATION_MS) * 0.0024f).toDouble()).toFloat() * 2.17f * scale
+            sin(((elapsed - REISA_ENTRANCE_DURATION_MS) * 0.0024f).toDouble()).toFloat() * 2.17f * scale
         } else {
             0.0f
         }
@@ -823,8 +826,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         maskWidth: Int,
         maskHeight: Int,
     ) {
-        val elapsed = Math.max(0L, now - reisaShutdownStartMs)
-        val exitElapsed = if (reisaShutdownExitStartMs < 0L) -1L else Math.max(0L, now - reisaShutdownExitStartMs)
+        val elapsed = maxOf(0L, now - reisaShutdownStartMs)
+        val exitElapsed = if (reisaShutdownExitStartMs < 0L) -1L else maxOf(0L, now - reisaShutdownExitStartMs)
         val entranceProgress = Mth.clamp(
             (elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS) / REISA_SHUTDOWN_ENTRANCE_DURATION_MS.toFloat(), 0.0f, 1.0f
         )
@@ -832,12 +835,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val exitProgress = if (exitElapsed < 0L) 0.0f
         else Mth.clamp(exitElapsed / REISA_SHUTDOWN_EXIT_DURATION_MS.toFloat(), 0.0f, 1.0f)
         val exitEase = Easing.EASE_IN_CUBIC.function.apply(exitProgress)
-        val imageHeight = Math.min(height * 0.80f, width * 0.60f)
+        val imageHeight = minOf(height * 0.80f, width * 0.60f)
         val imageWidth = imageHeight * REISA_ASPECT_RATIO
-        val targetX = width - imageWidth - Math.max(4.0f, 15.5f * scale)
+        val targetX = width - imageWidth - maxOf(4.0f, 15.5f * scale)
         val imageX = Mth.lerp(entranceEase, width + imageWidth * 0.12f, targetX) + exitEase * (imageWidth * 0.56f + 65.1f * scale)
         val bob = if (entranceProgress >= 1.0f && exitProgress <= 0.0f) {
-            Math.sin(((elapsed - REISA_SHUTDOWN_ENTRANCE_DURATION_MS) * 0.0031f).toDouble()).toFloat() * 2.48f * scale
+            sin(((elapsed - REISA_SHUTDOWN_ENTRANCE_DURATION_MS) * 0.0031f).toDouble()).toFloat() * 2.48f * scale
         } else {
             0.0f
         }
@@ -867,21 +870,21 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         exitProgress: Float,
         scale: Float,
     ) {
-        val trailEnvelope = Math.sin((exitProgress * Math.PI).toDouble()).toFloat()
+        val trailEnvelope = sin((exitProgress * PI).toDouble()).toFloat()
         if (trailEnvelope <= 0.001f) return
         val startX = imageX + imageWidth * 0.34f
-        val maxWidth = Math.max(0.0f, LuminRenderSystem.getScaledWidth() - startX)
+        val maxWidth = maxOf(0.0f, LuminRenderSystem.getScaledWidth() - startX)
         val bright = applyAlpha(Color(235, 211, 255), trailEnvelope * 0.62f)
         val soft = applyAlpha(Color(183, 146, 245), 0.0f)
         scope.layer(-22) { layer ->
-            layer.rectHorizontalGradient(startX, imageY + imageHeight * 0.24f, maxWidth, Math.max(1.0f, 2.325f * scale), bright, soft)
+            layer.rectHorizontalGradient(startX, imageY + imageHeight * 0.24f, maxWidth, maxOf(1.0f, 2.325f * scale), bright, soft)
             layer.rectHorizontalGradient(
                 startX + imageWidth * 0.08f, imageY + imageHeight * 0.49f, maxWidth * 0.78f,
-                Math.max(1.0f, 1.55f * scale), applyAlpha(bright, 0.68f), soft
+                maxOf(1.0f, 1.55f * scale), applyAlpha(bright, 0.68f), soft
             )
             layer.rectHorizontalGradient(
                 startX - imageWidth * 0.03f, imageY + imageHeight * 0.71f, maxWidth * 0.88f,
-                Math.max(1.0f, 1.86f * scale), applyAlpha(bright, 0.48f), soft
+                maxOf(1.0f, 1.86f * scale), applyAlpha(bright, 0.48f), soft
             )
         }
     }
@@ -901,24 +904,18 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         )
         val bubbleOut = if (exitElapsed < 0L) 1.0f
         else 1.0f - Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(exitElapsed / 300.0f, 0.0f, 1.0f))
-        val visibility = Math.min(bubbleIn, bubbleOut)
+        val visibility = minOf(bubbleIn, bubbleOut)
         if (visibility <= 0.001f) return
 
         val name = "UZAWA REISA"
         val farewell = EpsilonTranslations.Gui.MAINMENU_REISA_FAREWELL.getTranslatedName()
         val metrics = scene.scheduler().textMetrics()
         val contentInset = 20.15f * scale
-        val maxBubbleWidth = Math.clamp(348.75f * scale, 161.2f * scale, width * 0.44f)
-        val availableTextWidth = Math.max(1.0f, maxBubbleWidth - contentInset * 2.0f)
+        val maxBubbleWidth = (348.75f * scale).coerceIn(161.2f * scale, width * 0.44f)
+        val availableTextWidth = maxOf(1.0f, maxBubbleWidth - contentInset * 2.0f)
         val nameScale = 0.961f * scale
         val messageScale = fitTextScale(farewell, 1.054f * scale, availableTextWidth)
-        val bubbleWidth = Math.min(
-            maxBubbleWidth,
-            Math.max(
-                metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT),
-                metrics.getWidth(farewell, messageScale)
-            ) + contentInset * 2.0f
-        )
+        val bubbleWidth = minOf(maxBubbleWidth, maxOf(metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT), metrics.getWidth(farewell, messageScale)) + contentInset * 2.0f)
         val topPadding = 11.625f * scale
         val rowGap = 3.875f * scale
         val bottomPadding = 13.95f * scale
@@ -942,7 +939,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val contentOffsetY = -3.1f * scale
         val nameY = bubbleY + topPadding + contentOffsetY
         val messageY = nameY + nameHeight + rowGap
-        val progressBarHeight = Math.max(3.0f, 4.65f * scale)
+        val progressBarHeight = maxOf(3.0f, 4.65f * scale)
         val progressBarY = bubbleY + bubbleHeight - 12.4f * scale
 
         scope.layer(20) { layer ->
@@ -951,7 +948,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 applyAlpha(Color(0, 0, 0), visibility * REISA_SHUTDOWN_BUBBLE_SHADOW_ALPHA)
             )
             layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface)
-            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, Math.max(1.0f, 1.55f * scale), outline)
+            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, maxOf(1.0f, 1.55f * scale), outline)
             layer.roundRect(bubbleX + 10.075f * scale, nameY, 3.1f * scale, nameHeight, 1.55f * scale, accentColor)
             layer.roundRect(
                 bubbleX + contentInset, progressBarY, (bubbleWidth - contentInset * 2.0f) * speechProgress,
@@ -999,7 +996,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         val centerX = imageX + imageWidth * 0.55f
         val lineWidth = imageWidth * widthProgress
-        val lineHeight = Math.max(1.0f, 1.7825f * scale)
+        val lineHeight = maxOf(1.0f, 1.7825f * scale)
         val lineY = height - lineHeight
         val glowHeight = 52.7f * scale
 
@@ -1026,7 +1023,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         moveProgress: Float,
         scale: Float,
     ) {
-        val trailEnvelope = Math.sin((moveProgress * Math.PI).toDouble()).toFloat()
+        val trailEnvelope = sin((moveProgress * PI).toDouble()).toFloat()
         val trailAlpha = alpha * poseProgress * trailEnvelope
         if (trailAlpha <= 0.001f) return
 
@@ -1092,14 +1089,14 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             val center = (u0 + u1) * 0.5f
             val sliceX = hingeX - imageWidth * (1.0f - u0) * unfold
             val sliceRight = hingeX - imageWidth * (1.0f - u1) * unfold
-            val curl = Math.sin((center * Math.PI).toDouble()).toFloat() * (1.0f - unfold) * 20.15f * scale
+            val curl = sin((center * PI).toDouble()).toFloat() * (1.0f - unfold) * 20.15f * scale
             val shade = 1.0f - (1.0f - unfold) *
-                    (0.18f + 0.38f * Math.sin((center * Math.PI).toDouble()).toFloat())
+                    (0.18f + 0.38f * sin((center * PI).toDouble()).toFloat())
             val sliceColor = applyAlpha(Color.WHITE, alpha * shade)
             scope.layer(-20) { layer ->
                 layer.texture(
                     welcome, sliceX, imageY + curl,
-                    Math.max(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
+                    maxOf(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
                     u0, 0.0f, u1, 1.0f, sliceColor, true
                 )
             }
@@ -1109,7 +1106,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val edgeAlpha = alpha * (1.0f - unfold) * 0.72f
         scope.layer(-19) { layer ->
             layer.rect(
-                foldEdgeX, imageY + imageHeight * 0.05f, Math.max(1.0f, 3.875f * scale), imageHeight * 0.90f,
+                foldEdgeX, imageY + imageHeight * 0.05f, maxOf(1.0f, 3.875f * scale), imageHeight * 0.90f,
                 applyAlpha(Color(245, 224, 255), edgeAlpha)
             )
         }
@@ -1129,21 +1126,21 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val bubbleExit = if (exitElapsed < 0L) 0.0f
         else Easing.EASE_OUT_CUBIC.function.apply(Mth.clamp(exitElapsed / 260.0f, 0.0f, 1.0f))
         val bubbleOut = 1.0f - bubbleExit
-        val visibility = Math.min(bubbleIn, bubbleOut)
+        val visibility = minOf(bubbleIn, bubbleOut)
         if (visibility <= 0.001f) return
 
         val name = "UZAWA REISA"
         val greeting = EpsilonTranslations.Gui.MAINMENU_REISA_GREETING.getTranslatedName()
         val metrics = scene.scheduler().textMetrics()
         val contentInset = 20.15f * scale
-        val maxBubbleWidth = Math.clamp(317.75f * scale, 148.8f * scale, width * 0.40f)
-        val minBubbleWidth = Math.min(224.75f * scale, maxBubbleWidth)
-        val availableTextWidth = Math.max(1.0f, maxBubbleWidth - contentInset * 2.0f)
+        val maxBubbleWidth = (317.75f * scale).coerceIn(148.8f * scale, width * 0.40f)
+        val minBubbleWidth = minOf(224.75f * scale, maxBubbleWidth)
+        val availableTextWidth = maxOf(1.0f, maxBubbleWidth - contentInset * 2.0f)
         val nameScale = 0.961f * scale
         val messageScale = fitTextScale(greeting, 1.054f * scale, availableTextWidth)
         val nameWidth = metrics.getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT)
         val messageWidth = metrics.getWidth(greeting, messageScale)
-        val bubbleWidth = Mth.clamp(Math.max(nameWidth, messageWidth) + contentInset * 2.0f, minBubbleWidth, maxBubbleWidth)
+        val bubbleWidth = Mth.clamp(maxOf(nameWidth, messageWidth) + contentInset * 2.0f, minBubbleWidth, maxBubbleWidth)
         val topPadding = 11.625f * scale
         val rowGap = 3.875f * scale
         val bottomPadding = 12.4f * scale
@@ -1171,7 +1168,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 applyAlpha(Color(0, 0, 0), visibility * REISA_GREETING_BUBBLE_SHADOW_ALPHA)
             )
             layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface)
-            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, Math.max(1.0f, 1.55f * scale), outline)
+            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, maxOf(1.0f, 1.55f * scale), outline)
             layer.roundRect(bubbleX + 10.075f * scale, nameY, 3.1f * scale, nameHeight, 1.55f * scale, accentColor)
             layer.roundRect(
                 bubbleX + bubbleWidth - 20.15f * scale, bubbleY + bubbleHeight - 3.1f * scale,
@@ -1196,8 +1193,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             val width = LuminRenderSystem.getScaledWidthInt()
             val height = LuminRenderSystem.getScaledHeightInt()
             val scale = resolutionScale(width, height)
-            val layoutWidth = Math.round(MENU_REFERENCE_WIDTH * scale)
-            val layoutHeight = Math.round(MENU_REFERENCE_HEIGHT * scale)
+            val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
+            val layoutHeight = (MENU_REFERENCE_HEIGHT * scale).roundToInt()
             val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
             val layoutX = if (columbinaStyle) (width - layoutWidth).toFloat() else (width - layoutWidth) * 0.5f
             val layoutY = if (columbinaStyle) (height - layoutHeight).toFloat() else (height - layoutHeight) * 0.5f
@@ -1260,7 +1257,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     private fun resolutionScale(width: Int, height: Int): Float {
-        return Math.min(width / MENU_REFERENCE_WIDTH, height / MENU_REFERENCE_HEIGHT)
+        return minOf(width / MENU_REFERENCE_WIDTH, height / MENU_REFERENCE_HEIGHT)
     }
 
     private fun localizedTitle(title: String): String {
@@ -1276,7 +1273,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     private fun applyAlpha(color: Color, alphaFactor: Float): Color {
         val factor = Mth.clamp(alphaFactor, 0.0f, 1.0f)
-        return Color(color.red, color.green, color.blue, Math.round(color.alpha * factor))
+        return Color(color.red, color.green, color.blue, (color.alpha * factor).roundToInt())
     }
 
     private class MenuEntry(val title: String, val action: Runnable) {

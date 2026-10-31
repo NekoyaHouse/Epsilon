@@ -386,7 +386,7 @@ object ClientSetting : Module("Client Setting", null) {
     }
 
     private fun applyFontGlyphUploadBudget(maxGlyphsPerFrame: Int) {
-        val budget = Math.max(1, maxGlyphsPerFrame)
+        val budget = maxOf(1, maxGlyphsPerFrame)
         TtfFontLoader.setMaxGlyphUploadsPerFrame(budget)
     }
 

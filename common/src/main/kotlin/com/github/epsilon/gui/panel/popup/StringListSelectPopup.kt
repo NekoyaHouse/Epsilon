@@ -15,6 +15,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -59,7 +60,7 @@ class StringListSelectPopup(
         val entries = entries()
         val contentHeight = entries.size * (ROW_HEIGHT + ROW_GAP)
         val viewport = getViewport()
-        maxScroll = Math.max(0.0f, contentHeight - viewport.height)
+        maxScroll = maxOf(0.0f, contentHeight - viewport.height)
         scroll = Mth.clamp(scroll, 0.0f, maxScroll)
         updateSmoothScroll(partialTick)
 
@@ -286,7 +287,7 @@ class StringListSelectPopup(
             resetScroll()
             return
         }
-        if (Math.abs(scrollVelocity) <= 0.01f || partialTick <= 0.0f) return
+        if (abs(scrollVelocity) <= 0.01f || partialTick <= 0.0f) return
         val nextScroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll)
         if (nextScroll.compareTo(scroll) == 0) {
             scrollVelocity = 0.0f
@@ -294,7 +295,7 @@ class StringListSelectPopup(
         }
         scroll = nextScroll
         scrollVelocity *= SCROLL_DECAY
-        if (Math.abs(scrollVelocity) < MIN_SCROLL_VELOCITY) scrollVelocity = 0.0f
+        if (abs(scrollVelocity) < MIN_SCROLL_VELOCITY) scrollVelocity = 0.0f
     }
 
     private fun resetScroll() {
@@ -312,8 +313,8 @@ class StringListSelectPopup(
 
     private fun trim(value: String?, scale: Float, maxWidth: Float): String {
         if (value == null || value.isEmpty()) return ""
-        val maxChars = Math.max(3, (maxWidth / (5.0f * scale)).toInt())
-        return if (value.length <= maxChars) value else value.substring(0, Math.max(0, maxChars - 3)) + "..."
+        val maxChars = maxOf(3, (maxWidth / (5.0f * scale)).toInt())
+        return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
 
     private fun centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {

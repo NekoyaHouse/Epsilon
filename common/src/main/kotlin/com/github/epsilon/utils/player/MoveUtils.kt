@@ -1,7 +1,10 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * 依据当前旋转与移动输入计算水平速度向量。
@@ -19,10 +22,10 @@ object MoveUtils {
     fun forwardWithoutStrafe(speed: Double): DoubleArray {
         val yaw = RotationManager.INSTANCE.getYaw()
 
-        val rad = Math.toRadians((yaw + 90.0f).toDouble())
+        val rad = ((yaw + 90.0f).toDouble()).toRadians()
 
-        val d4 = speed * Math.cos(rad)
-        val d5 = speed * Math.sin(rad)
+        val d4 = speed * cos(rad)
+        val d5 = speed * sin(rad)
 
         return doubleArrayOf(d4, d5)
     }
@@ -54,10 +57,10 @@ object MoveUtils {
             }
         }
 
-        val rad = Math.toRadians((yaw + 90.0f).toDouble())
+        val rad = ((yaw + 90.0f).toDouble()).toRadians()
 
-        val sin = Math.sin(rad)
-        val cos = Math.cos(rad)
+        val sin = sin(rad)
+        val cos = cos(rad)
 
         val d4 = forward * speed * cos + left * speed * sin
         val d5 = forward * speed * sin - left * speed * cos

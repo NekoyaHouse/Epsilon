@@ -21,7 +21,7 @@ class ConfigDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("config", Eps
     override fun computeContentHeight(): Float {
         val configCount = configsForFrame().size
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + BUTTON_HEIGHT * 3.0f + GAP * 3.0f +
-                Math.max(ROW_HEIGHT, configCount * (ROW_HEIGHT + GAP)) +
+                maxOf(ROW_HEIGHT, configCount * (ROW_HEIGHT + GAP)) +
                 (if (status.isEmpty()) 0.0f else ROW_HEIGHT)
     }
 

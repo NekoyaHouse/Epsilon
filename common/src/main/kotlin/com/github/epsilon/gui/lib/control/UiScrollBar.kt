@@ -125,7 +125,7 @@ class UiScrollBar(theme: UiTheme) {
             val thumbHeight = Mth.clamp(viewport.height / contentHeight * trackHeight, MIN_THUMB_HEIGHT, trackHeight)
             val thumbTravel = trackHeight - thumbHeight
             val scrollRatio = if (maxScroll > 0.0f) scroll / maxScroll else 0.0f
-            val thumbY = viewport.y + thumbTravel * Math.clamp(scrollRatio, 0.0f, 1.0f)
+            val thumbY = viewport.y + thumbTravel * (scrollRatio).coerceIn(0.0f, 1.0f)
             val thumbX = viewport.right() - RIGHT_INSET
             val trackX = viewport.right() - HIT_WIDTH
             return Geometry(thumbX, thumbY, WIDTH, thumbHeight, trackX, viewport.y, HIT_WIDTH, trackHeight)
@@ -141,7 +141,7 @@ class UiScrollBar(theme: UiTheme) {
                 return 0.0f
             }
             val ratio = (thumbTopY - geometry.trackY) / thumbTravel
-            return Math.clamp(ratio, 0.0f, 1.0f) * maxScroll
+            return (ratio).coerceIn(0.0f, 1.0f) * maxScroll
         }
 
         private fun draw(scope: UiTree.Scope, geometry: Geometry, hoverProgress: Float, theme: UiTheme) {

@@ -12,6 +12,8 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.network.NetworkUtils
+import kotlin.math.abs
+import kotlin.math.sign
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
@@ -245,14 +247,14 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private fun isFacingUnloadedChunk(moveX: Double, moveZ: Double): Boolean {
         var directionX = moveX
         var directionZ = moveZ
-        if (Math.abs(directionX) < 1.0E-3 && Math.abs(directionZ) < 1.0E-3) {
+        if (abs(directionX) < 1.0E-3 && abs(directionZ) < 1.0E-3) {
             val velocity = player.deltaMovement
             directionX = velocity.x
             directionZ = velocity.z
         }
 
-        val signX = Math.signum(directionX).toInt()
-        val signZ = Math.signum(directionZ).toInt()
+        val signX = sign(directionX).toInt()
+        val signZ = sign(directionZ).toInt()
         if (signX == 0 && signZ == 0) return false
 
         val chunkX = SectionPos.blockToSectionCoord(player.x)
@@ -287,7 +289,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
      * 旧版本（服务端速度包放大本地速度）下会出现异常的水平速度，此时不应该继续加速。
      */
     private fun isLegacyVelocity(velocity: Vec3): Boolean {
-        return Math.abs(velocity.x) >= LEGACY_VELOCITY_THRESHOLD || Math.abs(velocity.z) >= LEGACY_VELOCITY_THRESHOLD
+        return abs(velocity.x) >= LEGACY_VELOCITY_THRESHOLD || abs(velocity.z) >= LEGACY_VELOCITY_THRESHOLD
     }
 
 }

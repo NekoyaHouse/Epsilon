@@ -298,7 +298,7 @@ class SpearBehavior : ElytraCombatBehavior {
         val start = eye.add(facing.scale(bot.spearMinRange))
         val end = eye.add(
             facing.scale(
-                bot.spearEngageRange + Math.max(0.0, reach) + bot.spearAntiSpearExtra
+                bot.spearEngageRange + maxOf(0.0, reach) + bot.spearAntiSpearExtra
             )
         )
         if (bot.player().boundingBox.clip(start, end).isEmpty()) {

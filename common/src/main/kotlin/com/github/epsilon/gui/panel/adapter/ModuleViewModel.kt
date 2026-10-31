@@ -17,7 +17,7 @@ data class ModuleViewModel(
         fun from(module: Module): ModuleViewModel {
             val displayName = module.translatedName
             val description = module.name
-            val categoryName = module.category!!.getName()
+            val categoryName = module.category!!.name
             val searchText = (displayName + " " + description + " " + categoryName).lowercase()
             return ModuleViewModel(module, displayName, description, module.isEnabled, module.category, searchText)
         }

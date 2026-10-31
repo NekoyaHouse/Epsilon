@@ -16,6 +16,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.safety.*
+import kotlin.math.roundToInt
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -179,8 +180,8 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
         val radiusSquared = radius * radius
         val minX = Mth.floor(center.x - radius)
         val maxX = Mth.floor(center.x + radius)
-        val minY = Math.max(level.getMinY() + 1, Mth.floor(center.y - radius))
-        val maxY = Math.min(level.getMaxY() - 2, Mth.floor(center.y + radius))
+        val minY = maxOf(level.minY + 1, Mth.floor(center.y - radius))
+        val maxY = minOf(level.maxY - 2, Mth.floor(center.y + radius))
         val minZ = Mth.floor(center.z - radius)
         val maxZ = Mth.floor(center.z + radius)
 
@@ -387,14 +388,14 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
     private fun getDistanceAlpha(position: Vec3): Double {
         val player = mc.player ?: return 1.0
         val renderDistance = distance
-        val fadeStart = Math.min(startFade, renderDistance)
+        val fadeStart = minOf(startFade, renderDistance)
         val blockDistance = player.position().distanceTo(position)
         if (blockDistance <= fadeStart || fadeStart >= renderDistance) return 1.0
         return Mth.clamp((renderDistance - blockDistance) / (renderDistance - fadeStart), 0.0, 1.0)
     }
 
     private fun withAlpha(color: Color, multiplier: Double): Int {
-        val alpha = Mth.clamp(Math.round(color.alpha * multiplier).toInt(), 0, 255)
+        val alpha = Mth.clamp((color.alpha * multiplier).roundToInt(), 0, 255)
         return Color(color.red, color.green, color.blue, alpha).rgb
     }
 

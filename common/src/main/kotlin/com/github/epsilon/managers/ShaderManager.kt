@@ -148,7 +148,7 @@ object ShaderManager {
 
     fun beginHandOutlineCapture(width: Int, height: Int) {
         if (Shaders.hands) {
-            ensureHandTarget(Math.max(1, width), Math.max(1, height))
+            ensureHandTarget(maxOf(1, width), maxOf(1, height))
             if (!capturedHands) {
                 val encoder = RenderSystem.getDevice().createCommandEncoder()
                 encoder.clearColorAndDepthTextures(
@@ -402,10 +402,10 @@ object ShaderManager {
         screenWidth: Int, screenHeight: Int, settings: Shaders.ShaderSettings,
         writeColors: Boolean, useTargetColors: Boolean,
     ): ShaderUniforms {
-        val width = Math.max(1.0f, screenWidth.toFloat())
-        val height = Math.max(1.0f, screenHeight.toFloat())
-        val scaledWidth = Math.max(1.0f, Constants.client.window.guiScaledWidth.toFloat())
-        val scaledHeight = Math.max(1.0f, Constants.client.window.guiScaledHeight.toFloat())
+        val width = maxOf(1.0f, screenWidth.toFloat())
+        val height = maxOf(1.0f, screenHeight.toFloat())
+        val scaledWidth = maxOf(1.0f, Constants.client.window.guiScaledWidth.toFloat())
+        val scaledHeight = maxOf(1.0f, Constants.client.window.guiScaledHeight.toFloat())
         val outline = settings.outlineColor
         val smokeOutline1 = settings.smokeOutlineColor1
         val smokeOutline2 = settings.smokeOutlineColor2

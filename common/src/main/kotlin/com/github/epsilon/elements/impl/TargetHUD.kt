@@ -13,6 +13,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
+import kotlin.math.roundToInt
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.player.AbstractClientPlayer
@@ -86,7 +87,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val panelHeight = panelHeightSetting.toFloat() * panelScale
         setBounds(panelWidth, panelHeight)
 
-        val frameTime = deltaTracker.getGameTimeDeltaTicks() / 20.0f
+        val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         val target = updateRenderedTarget(resolveTarget())
         val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
         if (target == null || animationScale <= 0.01f) return
@@ -99,11 +100,11 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val healthPercent: Float
         if (liveTarget === target) {
             val health = HealthManager.getHealth(target)
-            maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
+            maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
             lastKnownMaxHealth = maxHealth
             healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
         } else {
-            maxHealth = Math.max(1.0f, lastKnownMaxHealth)
+            maxHealth = maxOf(1.0f, lastKnownMaxHealth)
             displayedHealth = Mth.clamp(displayedHealth, 0.0f, maxHealth)
             delayedHealth = Mth.clamp(delayedHealth, 0.0f, maxHealth)
             healthPercent = Mth.clamp(displayedHealth / maxHealth, 0.0f, 1.0f)
@@ -114,18 +115,18 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val cornerRadius = radius.toFloat() * panelScale
         val barHeight = healthBarHeight.toFloat() * panelScale
         val barRadius = healthBarRadius.toFloat() * panelScale
-        val barWidth = Math.max(1.0f, panelWidth - pad * 2.0f)
+        val barWidth = maxOf(1.0f, panelWidth - pad * 2.0f)
         val delayedBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * delayHealthPercent)
         val filledBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * healthPercent)
 
-        val innerHeight = Math.max(1.0f, panelHeight - pad * 2.0f)
-        val contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight)
-        val headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f)
-        val textScale = Math.max(0.45f, nameSize.toFloat() / 14.0f) * panelScale
+        val innerHeight = maxOf(1.0f, panelHeight - pad * 2.0f)
+        val contentAreaHeight = maxOf(1.0f, innerHeight - pad - barHeight)
+        val headSize = minOf(contentAreaHeight, maxOf(26.0f * panelScale, panelHeight * 0.6f) * 1.05f)
+        val textScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
         val textHeight = textRenderer.getHeight(textScale)
-        val contentRowHeight = Math.max(headSize, textHeight)
+        val contentRowHeight = maxOf(headSize, textHeight)
         val contentBlockHeight = contentRowHeight + pad + barHeight
-        val contentStartY = y + pad + Math.max(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
+        val contentStartY = y + pad + maxOf(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
         val headY = contentStartY + (contentRowHeight - headSize) / 2.0f
         val headX = x + pad
         val barY = contentStartY + contentRowHeight + pad
@@ -245,14 +246,14 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
         val pad = 5.0f * panelScale
         val barHeight = healthBarHeight.toFloat() * panelScale
-        val innerHeight = Math.max(1.0f, panelHeight - pad * 2.0f)
-        val contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight)
-        val headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f)
-        val textScale = Math.max(0.45f, nameSize.toFloat() / 14.0f) * panelScale
+        val innerHeight = maxOf(1.0f, panelHeight - pad * 2.0f)
+        val contentAreaHeight = maxOf(1.0f, innerHeight - pad - barHeight)
+        val headSize = minOf(contentAreaHeight, maxOf(26.0f * panelScale, panelHeight * 0.6f) * 1.05f)
+        val textScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
         val textHeight = textRenderer.getHeight(textScale)
-        val contentRowHeight = Math.max(headSize, textHeight)
+        val contentRowHeight = maxOf(headSize, textHeight)
         val contentBlockHeight = contentRowHeight + pad + barHeight
-        val contentStartY = y + pad + Math.max(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
+        val contentStartY = y + pad + maxOf(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
         val headY = contentStartY + (contentRowHeight - headSize) / 2.0f
         val headX = x + pad
         val textStartX = headX + headSize + pad
@@ -309,7 +310,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
      */
     private fun renderAkrien(deltaTracker: DeltaTracker) {
         val panelScale = scale.toFloat()
-        val frameTime = deltaTracker.getGameTimeDeltaTicks() / 20.0f
+        val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         val target = updateRenderedTarget(resolveTarget())
         val animationScale = Easing.EASE_OUT_SINE.function.apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f))
         if (target == null || animationScale <= 0.01f) {
@@ -317,7 +318,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             return
         }
 
-        val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
+        val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
         val health = HealthManager.getHealth(target)
         val healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
         val armorPercent = Mth.clamp(target.armorValue / 20.0f, 0.0f, 1.0f)
@@ -325,18 +326,15 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val headScale = 1.0f - damageProgress * AKRIEN_HEAD_DAMAGE_SCALE_FACTOR
 
         val textRenderer = textRendererSupplier.get()
-        val nameScale = Math.max(0.45f, nameSize.toFloat() / 14.0f) * panelScale
-        val bodyScale = Math.max(0.4f, nameScale * 0.78f)
+        val nameScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
+        val bodyScale = maxOf(0.4f, nameScale * 0.78f)
         val name = target.name.string
         val healthText = String.format(Locale.ROOT, "Health: %.1f", health)
         val self = NonNullContext.current?.player
         val distance = if (self == null) 0.0f else self.distanceTo(target)
         val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
-        val textWidth = Math.max(
-            textRenderer.getWidth(name, nameScale),
-            Math.max(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale))
-        )
-        val panelWidth = Math.max(110.0f * panelScale, textWidth + 40.0f * panelScale)
+        val textWidth = maxOf(textRenderer.getWidth(name, nameScale), maxOf(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale)))
+        val panelWidth = maxOf(110.0f * panelScale, textWidth + 40.0f * panelScale)
         val panelHeight = 39.0f * panelScale
         setBounds(panelWidth, panelHeight)
 
@@ -348,9 +346,9 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scaledHeight = panelHeight * animationScale
         val scaled = panelScale * animationScale
         val pad = 2.5f * scaled
-        val barWidth = Math.max(1.0f, scaledWidth - 4.5f * scaled)
-        val healthWidth = Math.max(0.0f, barWidth * healthPercent)
-        val armorWidth = Math.max(0.0f, barWidth * armorPercent)
+        val barWidth = maxOf(1.0f, scaledWidth - 4.5f * scaled)
+        val healthWidth = maxOf(0.0f, barWidth * healthPercent)
+        val armorWidth = maxOf(0.0f, barWidth * armorPercent)
         val background = withAlpha(Color(8, 8, 8, 225), 0.62f * animationScale)
         val track = withAlpha(Color(0, 0, 0, 205), animationScale)
         val border = withAlpha(Color(0, 0, 0, 235), animationScale)
@@ -358,7 +356,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scope: UiTree.Scope = renderScope()
 
         BlurShader.render(panelX, panelY, scaledWidth, scaledHeight, 0.0f, blurStrength.toFloat())
-        val shadowBlurRadius = Math.max(6.0f, blurStrength.toFloat() * 1.35f) * animationScale
+        val shadowBlurRadius = maxOf(6.0f, blurStrength.toFloat() * 1.35f) * animationScale
         scope.shadow(panelX, panelY, scaledWidth, scaledHeight, 0.0f, shadowBlurRadius, shadow)
         scope.rect(panelX, panelY, scaledWidth, scaledHeight, background)
         scope.rect(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, track)
@@ -395,7 +393,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
                 panelX + 3.0f * scaled, panelY + 3.0f * scaled, 25.0f * scaled, 25.0f * scaled,
                 withAlpha(Color(35, 35, 35, 220), animationScale)
             )
-            val questionScale = Math.max(0.72f * panelScale, nameScale * 1.45f) * animationScale
+            val questionScale = maxOf(0.72f * panelScale, nameScale * 1.45f) * animationScale
             val questionWidth = textRenderer.getWidth("?", questionScale)
             val questionHeight = textRenderer.getHeight(questionScale)
             val questionX = panelX + 3.0f * scaled + (25.0f * scaled - questionWidth) / 2.0f
@@ -443,7 +441,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
         if (liveTarget != null) {
             renderedTarget = liveTarget
-            visibilityProgress = Math.min(1.0f, visibilityProgress + delta)
+            visibilityProgress = minOf(1.0f, visibilityProgress + delta)
             return renderedTarget
         }
 
@@ -452,7 +450,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
             return null
         }
 
-        visibilityProgress = Math.max(0.0f, visibilityProgress - delta)
+        visibilityProgress = maxOf(0.0f, visibilityProgress - delta)
         if (visibilityProgress <= 0.01f) {
             renderedTarget = null
             resetAnimatedState()
@@ -462,15 +460,15 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     }
 
     private fun tintColor(baseColor: Color, damageProgress: Float): Color {
-        val greenBlue = Mth.clamp(Math.round(255.0f - 155.0f * damageProgress), 100, 255)
-        val red = Mth.clamp(Math.round(baseColor.red + (255 - baseColor.red) * damageProgress), 0, 255)
-        val green = Mth.clamp(Math.round(baseColor.green * greenBlue / 255.0f), 0, 255)
-        val blue = Mth.clamp(Math.round(baseColor.blue * greenBlue / 255.0f), 0, 255)
+        val greenBlue = Mth.clamp((255.0f - 155.0f * damageProgress).roundToInt(), 100, 255)
+        val red = Mth.clamp((baseColor.red + (255 - baseColor.red) * damageProgress).roundToInt(), 0, 255)
+        val green = Mth.clamp((baseColor.green * greenBlue / 255.0f).roundToInt(), 0, 255)
+        val blue = Mth.clamp((baseColor.blue * greenBlue / 255.0f).roundToInt(), 0, 255)
         return Color(red, green, blue, baseColor.alpha)
     }
 
     private fun withAlpha(color: Color, alphaScale: Float): Color {
-        val alpha = Mth.clamp(Math.round(color.alpha * alphaScale), 0, 255)
+        val alpha = Mth.clamp((color.alpha * alphaScale).roundToInt(), 0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

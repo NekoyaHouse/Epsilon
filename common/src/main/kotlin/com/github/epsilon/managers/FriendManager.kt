@@ -8,7 +8,7 @@ object FriendManager {
     private val friends = HashSet<String>()
 
     fun isFriend(player: Player): Boolean {
-        return friends.contains(player.getGameProfile().name())
+        return friends.contains(player.gameProfile.name())
     }
 
     fun isFriend(name: String): Boolean {

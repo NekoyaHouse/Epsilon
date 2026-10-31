@@ -11,9 +11,14 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -78,7 +83,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             if (mode == Mode.Strafe) {
                 if (packet is ClientboundSetEntityMotionPacket) {
                     if (packet.id == player.id && velocity) {
-                        val packetSpeed = Math.hypot(packet.movement.x, packet.movement.z)
+                        val packetSpeed = hypot(packet.movement.x, packet.movement.z)
 
                         this.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
                             packetSpeed
@@ -101,7 +106,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     if (explosions) {
                         if (player.position().distanceTo(packet.center) < 15) {
                             val knockback = packet.playerKnockback.orElse(Vec3.ZERO)
-                            val packetSpeed = Math.hypot(knockback.x, knockback.z)
+                            val packetSpeed = hypot(knockback.x, knockback.z)
                             this.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
                                 packetSpeed
                             } else {
@@ -140,18 +145,18 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 for (entity in level.entitiesForRendering()) {
                     val entityBox = entity.boundingBox
                     if (boat && player.onGround() && entity is Boat && box.intersects(entityBox.inflate(boatExpand))) {
-                        val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
+                        val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
                         val boatBoost = boatSpeed
-                        player.deltaMovement = Vec3(-Math.sin(yaw) * boatBoost, boatJump, Math.cos(yaw) * boatBoost)
+                        player.deltaMovement = Vec3(-sin(yaw) * boatBoost, boatJump, cos(yaw) * boatBoost)
                         return@nonNullHandler
                     } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(entityBox)) {
                         collisions++
                     }
                 }
 
-                val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
+                val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
                 val collisionBoost = collideSpeed * collisions
-                player.push(-Math.sin(yaw) * collisionBoost, 0.0, Math.cos(yaw) * collisionBoost)
+                player.push(-sin(yaw) * collisionBoost, 0.0, cos(yaw) * collisionBoost)
             }
         }
 
@@ -205,8 +210,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     speed = distance - distance / 159.0
                 }
 
-                speed = Math.min(speed, 10.0)
-                speed = Math.max(speed, getSpeed(slow, strafeSpeed))
+                speed = minOf(speed, 10.0)
+                speed = maxOf(speed, getSpeed(slow, strafeSpeed))
                 val moveVector = player.input.moveVector
                 val n = moveVector.y.toDouble()
                 val n2 = moveVector.x.toDouble()
@@ -215,8 +220,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     event.x = 0.0
                     event.z = 0.0
                 }
-                event.x = (n * speed * -Math.sin(Math.toRadians(n3)) + n2 * speed * Math.cos(Math.toRadians(n3))) * 0.99
-                event.z = (n * speed * Math.cos(Math.toRadians(n3)) - n2 * speed * -Math.sin(Math.toRadians(n3))) * 0.99
+                event.x = (n * speed * -sin((n3).toRadians()) + n2 * speed * cos((n3).toRadians())) * 0.99
+                event.z = (n * speed * cos((n3).toRadians()) - n2 * speed * -sin((n3).toRadians())) * 0.99
                 event.cancel()
 
                 stage++
@@ -263,10 +268,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     speed = distance - distance / 159.0
                 }
                 strictTicks++
-                speed = Math.max(speed, base)
+                speed = maxOf(speed, base)
                 val baseMax = 0.465 * speedEffect / slowEffect
                 val baseMin = 0.44 * speedEffect / slowEffect
-                speed = Math.min(speed, if (strictTicks > 25) baseMax else baseMin)
+                speed = minOf(speed, if (strictTicks > 25) baseMax else baseMin)
                 if (strictTicks > 50) {
                     strictTicks = 0
                 }
@@ -297,8 +302,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO
         }
-        val rx = Math.cos(Math.toRadians(yaw.toDouble())).toFloat()
-        val rz = (-Math.sin(Math.toRadians(yaw.toDouble()))).toFloat()
+        val rx = cos((yaw.toDouble()).toRadians()).toFloat()
+        val rz = (-sin((yaw.toDouble()).toRadians())).toFloat()
         return Vec2((forward * speed * rz) + (strafe * speed * rx), (forward * speed * rx) - (strafe * speed * rz))
     }
 
@@ -354,7 +359,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private fun getDistance2D(): Double {
         val xDist = player.x - player.xo
         val zDist = player.z - player.zo
-        return Math.sqrt(xDist * xDist + zDist * zDist)
+        return sqrt(xDist * xDist + zDist * zDist)
     }
 
     private fun getSprintYaw(yaw: Float): Float {

@@ -7,6 +7,10 @@ import com.github.epsilon.utils.safety.*
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.*
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -61,11 +65,11 @@ object CircleESP {
             val ticks = (System.currentTimeMillis() % 1000000).toFloat() * 0.004f
             val alpha = 0.35f + 0.65f * ((Mth.sin((ticks * 1.8f).toDouble()) + 1.0f) * 0.5f) * alphaFactor
 
-            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
+            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val cameraPos = Constants.client.entityRenderDispatcher.camera!!.position()
 
             val x = Mth.lerp(tickDelta.toDouble(), target.xo, target.x) - cameraPos.x
-            val y = Mth.lerp(tickDelta.toDouble(), target.yo, target.y) - cameraPos.y + Math.sin(ticks.toDouble()) + 1
+            val y = Mth.lerp(tickDelta.toDouble(), target.yo, target.y) - cameraPos.y + sin(ticks.toDouble()) + 1
             val z = Mth.lerp(tickDelta.toDouble(), target.zo, target.z) - cameraPos.z
 
             poseStack.pushPose()
@@ -83,20 +87,20 @@ object CircleESP {
             val radiusFloat = radius.toFloat()
 
             var i = 0.0f
-            while (i <= Math.PI * 2) {
-                val vecX = (radiusFloat * Math.cos(i.toDouble())).toFloat()
-                val vecZ = (radiusFloat * Math.sin(i.toDouble())).toFloat()
+            while (i <= PI * 2) {
+                val vecX = (radiusFloat * cos(i.toDouble())).toFloat()
+                val vecZ = (radiusFloat * sin(i.toDouble())).toFloat()
 
                 triBuilder.vertex(
-                    matrix, vecX, (-Math.sin((ticks + 1.0f).toDouble()) / 2.7f).toFloat(), vecZ,
-                    Color(sideColor.alpha / 255.0f, sideColor.green / 255.0f, sideColor.blue / 255.0f, 0.0f).getRGB()
+                    matrix, vecX, (-sin((ticks + 1.0f).toDouble()) / 2.7f).toFloat(), vecZ,
+                    Color(sideColor.alpha / 255.0f, sideColor.green / 255.0f, sideColor.blue / 255.0f, 0.0f).rgb
                 )
                 triBuilder.vertex(
                     matrix, vecX, 0.0f, vecZ,
-                    Color(sideColor.alpha / 255.0f, sideColor.green / 255.0f, sideColor.blue / 255.0f, 0.52f * alpha).getRGB()
+                    Color(sideColor.alpha / 255.0f, sideColor.green / 255.0f, sideColor.blue / 255.0f, 0.52f * alpha).rgb
                 )
 
-                i += (Math.PI.toFloat() * 2) / 64.0f
+                i += (PI.toFloat() * 2) / 64.0f
             }
 
             triBuilder.end()
@@ -107,8 +111,8 @@ object CircleESP {
 
             var j = 0
             while (j <= 180) {
-                val radAngle = (j * Math.PI * 2 / 90).toFloat()
-                val nextAngle = ((j + 1) * Math.PI * 2 / 90).toFloat()
+                val radAngle = (j * PI * 2 / 90).toFloat()
+                val nextAngle = ((j + 1) * PI * 2 / 90).toFloat()
 
                 val nextPoint = getPoint(nextAngle, radiusFloat)
                 val linePoint = getPoint(radAngle, radiusFloat)
@@ -116,12 +120,12 @@ object CircleESP {
 
                 lineBuilder.vertex(
                     matrix, entry, linePoint[0], 0.0f, linePoint[1],
-                    Color(lineColor.red, lineColor.green, lineColor.blue, Math.round(lineColor.alpha * alpha)).getRGB(),
+                    Color(lineColor.red, lineColor.green, lineColor.blue, (lineColor.alpha * alpha).roundToInt()).rgb,
                     normal[0], 0.0f, normal[1], 2.0f
                 )
                 lineBuilder.vertex(
                     matrix, entry, nextPoint[0], 0.0f, nextPoint[1],
-                    Color(lineColor.red, lineColor.green, lineColor.blue, Math.round(lineColor.alpha * alpha)).getRGB(),
+                    Color(lineColor.red, lineColor.green, lineColor.blue, (lineColor.alpha * alpha).roundToInt()).rgb,
                     normal[0], 0.0f, normal[1], 2.0f
                 )
 
@@ -135,11 +139,11 @@ object CircleESP {
     }
 
     private fun getPoint(radAngle: Float, radius: Float): FloatArray {
-        return floatArrayOf((-Math.sin(radAngle.toDouble()) * radius).toFloat(), (Math.cos(radAngle.toDouble()) * radius).toFloat())
+        return floatArrayOf((-sin(radAngle.toDouble()) * radius).toFloat(), (cos(radAngle.toDouble()) * radius).toFloat())
     }
 
     private fun getNormal(radAngle: Float): FloatArray {
-        return floatArrayOf((-Math.cos(radAngle.toDouble())).toFloat(), (-Math.sin(radAngle.toDouble())).toFloat())
+        return floatArrayOf((-cos(radAngle.toDouble())).toFloat(), (-sin(radAngle.toDouble())).toFloat())
     }
 
 }

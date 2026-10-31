@@ -29,6 +29,9 @@ import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.BlockUtils
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.sign
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -293,7 +296,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             }
 
             val hitState = level.getBlockState(hitPos)
-            val anchorStack = Items.RESPAWN_ANCHOR.getDefaultInstance()
+            val anchorStack = Items.RESPAWN_ANCHOR.defaultInstance
             val placePos = if (!hitState.isAir && BlockUtils.canBeReplacedWith(hitState, anchorStack)) {
                 hitPos
             } else {
@@ -506,7 +509,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
 
     private fun calculateChargeActions(state: BlockState): Int {
         val currentCharge = state.getValue(RespawnAnchorBlock.CHARGE)
-        val availableCharges = Math.max(0, 4 - currentCharge)
+        val availableCharges = maxOf(0, 4 - currentCharge)
         if (availableCharges <= 0) return 0
 
         var charges = 1
@@ -514,7 +517,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
             charges += randomInclusive(minExtraCharges, maxExtraCharges)
         }
 
-        return Math.min(charges, availableCharges)
+        return minOf(charges, availableCharges)
     }
 
     context(nn: NonNullContext)
@@ -647,8 +650,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         shieldSidePlacement = false
         shieldDiagonal = false
 
-        val min = Math.min(shieldDistanceMin, shieldDistanceMax)
-        val max = Math.max(shieldDistanceMin, shieldDistanceMax)
+        val min = minOf(shieldDistanceMin, shieldDistanceMax)
+        val max = maxOf(shieldDistanceMin, shieldDistanceMax)
 
         var pos = findDistanceShieldPos(min, max)
         if (pos != null) return pos
@@ -665,7 +668,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (distance < 1.0) return null
 
         val dir = toAnchor.scale(1.0 / distance)
-        val start = Math.min(distance - 0.5, 3.5)
+        val start = minOf(distance - 0.5, 3.5)
         val end = 1.5
         var d = start
         while (d >= end) {
@@ -680,18 +683,18 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (placeMode == PlaceMode.Cover && player.isShiftKeyDown) {
             val dx = playerPos.x - (currentAnchorPos!!.x + 0.5)
             val dz = playerPos.z - (currentAnchorPos!!.z + 0.5)
-            val absX = Math.abs(dx)
-            val absZ = Math.abs(dz)
+            val absX = abs(dx)
+            val absZ = abs(dz)
             val xDir = if (dx > 0) Direction.EAST else Direction.WEST
             val zDir = if (dz > 0) Direction.SOUTH else Direction.NORTH
-            val diagonalArea = absX > 0 && absZ > 0 && Math.min(absX, absZ) / Math.max(absX, absZ) > 0.5
+            val diagonalArea = absX > 0 && absZ > 0 && minOf(absX, absZ) / maxOf(absX, absZ) > 0.5
 
             val sides = if (diagonalArea) {
                 arrayOf(xDir, zDir)
             } else {
                 arrayOf(if (absX > absZ) xDir else zDir)
             }
-            val glowStack = Items.GLOWSTONE.getDefaultInstance()
+            val glowStack = Items.GLOWSTONE.defaultInstance
             for (side in sides) {
                 val sidePos = currentAnchorPos!!.relative(side)
                 if (isValidShieldPos(sidePos, side, glowStack)) {
@@ -717,10 +720,10 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val candidates = ArrayList<BlockPos>()
         for (dx in -max..max) {
             for (dz in -max..max) {
-                val dist = Math.max(Math.abs(dx), Math.abs(dz))
+                val dist = maxOf(abs(dx), abs(dz))
                 if (dist < min || dist > max) continue
                 val pos = currentAnchorPos!!.offset(dx, 0, dz)
-                val glowStack = Items.GLOWSTONE.getDefaultInstance()
+                val glowStack = Items.GLOWSTONE.defaultInstance
                 if (isValidShieldPos(pos, Direction.UP, glowStack) && isSupportedOnGround(pos)) {
                     candidates.add(pos)
                 }
@@ -739,8 +742,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val anchorPos = Vec3.atCenterOf(currentAnchorPos!!)
         val dx = playerPos.x - anchorPos.x
         val dz = playerPos.z - anchorPos.z
-        val facing = Direction.getNearest(Math.signum(dx).toInt(), 0, Math.signum(dz).toInt(), Direction.NORTH) ?: Direction.NORTH
-        val glowStack = Items.GLOWSTONE.getDefaultInstance()
+        val facing = Direction.getNearest(sign(dx).toInt(), 0, sign(dz).toInt(), Direction.NORTH) ?: Direction.NORTH
+        val glowStack = Items.GLOWSTONE.defaultInstance
 
         val sidePos = currentAnchorPos!!.relative(facing)
         if (isValidShieldPos(sidePos, facing, glowStack) && isSupportedOnGround(sidePos)) {
@@ -772,7 +775,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun trySetShieldPlacement(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
-        val glowStack = Items.GLOWSTONE.getDefaultInstance()
+        val glowStack = Items.GLOWSTONE.defaultInstance
         if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), glowStack)) return false
         if (BlockUtils.hasBlockingEntity(AABB(pos))) return false
 
@@ -838,7 +841,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val below = pos.below()
         if (below == currentAnchorPos) return false
         val state = level.getBlockState(below)
-        return !state.isAir && !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.getDefaultInstance()) &&
+        return !state.isAir && !BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance) &&
             !state.getCollisionShape(level, below).isEmpty
     }
 
@@ -858,7 +861,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (distance < 1.0) return false
 
         val dir = toAnchor.scale(1.0 / distance)
-        val start = Math.min(distance, 3.5)
+        val start = minOf(distance, 3.5)
         val end = 0.5
         var d = start
         while (d >= end) {
@@ -888,7 +891,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private fun isExistingShield(pos: BlockPos): Boolean {
         if (pos == currentAnchorPos) return false
         val state = level.getBlockState(pos)
-        if (BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.getDefaultInstance())) return false
+        if (BlockUtils.canBeReplacedWith(state, Items.GLOWSTONE.defaultInstance)) return false
         return Block.isShapeFullBlock(state.getCollisionShape(level, pos))
     }
 
@@ -903,7 +906,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val pppp = DamageUtils.anchorDamage(player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPPP)
         val ppbp = DamageUtils.anchorDamage(player, explosionCenter, DamageUtils.ArmorEnchantmentMode.PPBP)
 
-        var worstDamage = Math.max(actual, Math.max(pppp, ppbp))
+        var worstDamage = maxOf(actual, maxOf(pppp, ppbp))
         worstDamage *= 1.12f
 
         return health - worstDamage > threshold
@@ -969,8 +972,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         val rotation = targetRotation ?: return
         if (!rotate) return
         val patchedTarget = RotationUtils.applySensitivityPatch(rotation)
-        val minSpeed = Math.min(rotationSpeedMin, rotationSpeedMax)
-        val maxSpeed = Math.max(rotationSpeedMin, rotationSpeedMax)
+        val minSpeed = minOf(rotationSpeedMin, rotationSpeedMax)
+        val maxSpeed = maxOf(rotationSpeedMin, rotationSpeedMax)
         val speedValue = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1)
         RotationManager.INSTANCE.setRotations(patchedTarget, speedValue.toDouble(), Priority.High)
     }
@@ -984,15 +987,15 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         } else {
             Rot2f(player.yRot, player.xRot)
         }
-        val yawDiff = Math.abs(Mth.wrapDegrees(rotation.yaw - currentRot.yaw))
-        val pitchDiff = Math.abs(rotation.pitch - currentRot.pitch)
+        val yawDiff = abs(Mth.wrapDegrees(rotation.yaw - currentRot.yaw))
+        val pitchDiff = abs(rotation.pitch - currentRot.pitch)
         return yawDiff < 0.5f && pitchDiff < 0.5f
     }
 
 
     context(nn: NonNullContext)
     private fun getTargetRotation(targetPos: Vec3): Rot2f {
-        return RotationUtils.calculate(player.getEyePosition(), targetPos)
+        return RotationUtils.calculate(player.eyePosition, targetPos)
     }
 
     context(nn: NonNullContext)
@@ -1068,7 +1071,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun tryAssistShieldPlace(pos: BlockPos, interactPos: BlockPos, interactSide: Direction): Boolean {
         if (pos == currentAnchorPos || placedShields.contains(pos)) return false
-        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), Items.GLOWSTONE.getDefaultInstance())) return false
+        if (!BlockUtils.canBeReplacedWith(level.getBlockState(pos), Items.GLOWSTONE.defaultInstance)) return false
         if (BlockUtils.hasBlockingEntity(AABB(pos))) return false
 
         val glowstone = InvUtils.findInHotbar(Items.GLOWSTONE)
@@ -1167,7 +1170,7 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
         if (prediction) {
             val extrapolatedBox: AABB? = ExtrapolationManager.extrapolate(
                 player,
-                Math.ceil(predictionStrength).toInt(),
+                ceil(predictionStrength).toInt(),
                 2,
             )
             if (extrapolatedBox != null) {
@@ -1191,8 +1194,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     }
 
     private fun getDelayMs(minDelay: Double, maxDelay: Double): Int {
-        val min = Math.max(0.0, minDelay * 10).toInt()
-        val max = Math.max(min + 1.0, maxDelay * 10).toInt()
+        val min = maxOf(0.0, minDelay * 10).toInt()
+        val max = maxOf(min + 1.0, maxDelay * 10).toInt()
         return randomInclusive(min, max)
     }
 
@@ -1204,8 +1207,8 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     }
 
     private fun randomInclusive(min: Int, max: Int): Int {
-        val actualMin = Math.max(0, Math.min(min, max))
-        val actualMax = Math.max(actualMin, Math.max(min, max))
+        val actualMin = maxOf(0, minOf(min, max))
+        val actualMax = maxOf(actualMin, maxOf(min, max))
         return ThreadLocalRandom.current().nextInt(actualMin, actualMax + 1)
     }
 

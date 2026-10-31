@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.managers.RendererManager
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
@@ -14,6 +15,8 @@ import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
@@ -177,7 +180,7 @@ class TextureRenderer private constructor() : IRenderer {
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES)
         batch.buffer.tryMap()
 
-        val argb = ARGB.toABGR(color.getRGB())
+        val argb = ARGB.toABGR(color.rgb)
 
         val x2 = x + width
         val y2 = y + height
@@ -207,12 +210,12 @@ class TextureRenderer private constructor() : IRenderer {
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES)
         batch.buffer.tryMap()
 
-        val argb = ARGB.toABGR(color.getRGB())
+        val argb = ARGB.toABGR(color.rgb)
         val x2 = x + width
         val y2 = y + height
-        val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
-        val cos = Math.cos(radians.toDouble()).toFloat()
-        val sin = Math.sin(radians.toDouble()).toFloat()
+        val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+        val cos = cos(radians.toDouble()).toFloat()
+        val sin = sin(radians.toDouble()).toFloat()
 
         val rx1 = rotateX(x, y, originX, originY, cos, sin)
         val ry1 = rotateY(x, y, originX, originY, cos, sin)
@@ -346,7 +349,7 @@ class TextureRenderer private constructor() : IRenderer {
 
             batch.preparedTexture = resolveTexture(key)
             if (batch.preparedTexture == null) continue
-            maxIndexCount = Math.max(maxIndexCount, batch.vertexCount / 4 * 6)
+            maxIndexCount = maxOf(maxIndexCount, batch.vertexCount / 4 * 6)
         }
         return maxIndexCount
     }
@@ -354,16 +357,16 @@ class TextureRenderer private constructor() : IRenderer {
     private fun resolveTexture(key: TextureKey): PreparedTexture? {
         val texture = key.texture
         if (texture is Identifier) {
-            val abstractTexture = Constants.client.getTextureManager().getTexture(texture)
+            val abstractTexture = Constants.client.textureManager.getTexture(texture)
             val sampler = if (key.linearFilter) {
                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
             } else {
-                abstractTexture.getSampler()
+                abstractTexture.sampler
             }
-            return PreparedTexture(abstractTexture.getTextureView(), sampler)
+            return PreparedTexture(abstractTexture.textureView, sampler)
         }
         if (texture is LuminTexture) {
-            return PreparedTexture(texture.getTextureView(), texture.getSampler())
+            return PreparedTexture(texture.textureView, texture.sampler)
         }
         return null
     }

@@ -45,7 +45,7 @@ class SnapRotationManager : RotationManager() {
         if (yaw.isNaN() || pitch.isNaN()) return
 
         val player = Constants.client.player!!
-        Constants.client.getConnection()!!.send(
+        Constants.client.connection!!.send(
             ServerboundMovePlayerPacket.PosRot(
                 player.position(), yaw, pitch,
                 player.onGround(), player.horizontalCollision

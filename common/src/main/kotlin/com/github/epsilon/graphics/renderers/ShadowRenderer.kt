@@ -59,7 +59,7 @@ class ShadowRenderer private constructor() : IRenderer {
             if (segmentRects == null || segmentCount <= 0) {
                 return 0
             }
-            return Math.min(MAX_SEGMENTS, Math.min(segmentCount, segmentRects.size / 4))
+            return minOf(MAX_SEGMENTS, minOf(segmentCount, segmentRects.size / 4))
         }
 
         private fun segmentedUniformsSize(): Int {
@@ -91,7 +91,7 @@ class ShadowRenderer private constructor() : IRenderer {
         buffer.ensureCapacity(currentOffset + SHADOW_BYTES)
         buffer.tryMap()
 
-        val abgr = ARGB.toABGR(color.getRGB())
+        val abgr = ARGB.toABGR(color.rgb)
 
         addVertex(left, top, x, y, x2, y2, rTL, rTR, rBR, rBL, blurRadius, abgr)
         addVertex(left, bottom, x, y, x2, y2, rTL, rTR, rBR, rBL, blurRadius, abgr)
@@ -142,12 +142,12 @@ class ShadowRenderer private constructor() : IRenderer {
             val offset = i * 4
             val segmentX = rectsInput[offset]
             val segmentY = rectsInput[offset + 1]
-            val segmentWidth = Math.max(0.0f, rectsInput[offset + 2])
-            val segmentHeight = Math.max(0.0f, rectsInput[offset + 3])
-            minX = Math.min(minX, segmentX)
-            minY = Math.min(minY, segmentY)
-            maxX = Math.max(maxX, segmentX + segmentWidth)
-            maxY = Math.max(maxY, segmentY + segmentHeight)
+            val segmentWidth = maxOf(0.0f, rectsInput[offset + 2])
+            val segmentHeight = maxOf(0.0f, rectsInput[offset + 3])
+            minX = minOf(minX, segmentX)
+            minY = minOf(minY, segmentY)
+            maxX = maxOf(maxX, segmentX + segmentWidth)
+            maxY = maxOf(maxY, segmentY + segmentHeight)
         }
 
         if (!minX.isFinite() || !minY.isFinite() || maxX <= minX || maxY <= minY) {
@@ -155,7 +155,7 @@ class ShadowRenderer private constructor() : IRenderer {
             return
         }
 
-        val range = Math.max(0.0f, blurRadius)
+        val range = maxOf(0.0f, blurRadius)
         val left = minX - range
         val top = minY - range
         val right = maxX + range
@@ -252,7 +252,7 @@ class ShadowRenderer private constructor() : IRenderer {
         if (segmentedBuffer.isMapped()) segmentedBuffer.unmap()
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false
 
-        val info = LuminRenderSystem.prepareQuadRendering(Math.max(vertexCount, segmentedVertexCount), applyProjection)
+        val info = LuminRenderSystem.prepareQuadRendering(maxOf(vertexCount, segmentedVertexCount), applyProjection)
         sharedInfo = info
         if (info == null || info.colorView == null) return false
 
@@ -382,8 +382,8 @@ class ShadowRenderer private constructor() : IRenderer {
                     builder.putVec4(
                         shadow.rects[offset],
                         shadow.rects[offset + 1],
-                        Math.max(0.0f, shadow.rects[offset + 2]),
-                        Math.max(0.0f, shadow.rects[offset + 3])
+                        maxOf(0.0f, shadow.rects[offset + 2]),
+                        maxOf(0.0f, shadow.rects[offset + 3])
                     )
                 } else {
                     builder.putVec4(0.0f, 0.0f, 0.0f, 0.0f)
@@ -391,7 +391,7 @@ class ShadowRenderer private constructor() : IRenderer {
             }
 
             for (i in 0 until MAX_SEGMENTS) {
-                val radius = if (i < shadow.count) Math.max(0.0f, shadow.radii[i]) else 0.0f
+                val radius = if (i < shadow.count) maxOf(0.0f, shadow.radii[i]) else 0.0f
                 builder.putVec4(radius, 0.0f, 0.0f, 0.0f)
             }
 

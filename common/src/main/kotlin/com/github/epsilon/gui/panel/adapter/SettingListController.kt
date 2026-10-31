@@ -160,7 +160,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     ): Float {
         val nest = groupNestInset(depth, width)
         val cardX = x + nest
-        val cardWidth = Math.max(1.0f, width - nest * 2.0f)
+        val cardWidth = maxOf(1.0f, width - nest * 2.0f)
         val sectionBounds = UiRect(cardX, y, cardWidth, getSectionHeight(section))
         val headerBounds = UiRect(cardX, y, cardWidth, GROUP_HEADER_HEIGHT)
         sectionEntries.add(SectionEntry(section, headerBounds))
@@ -171,7 +171,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         }
 
         val innerX = cardX + GROUP_ROW_INSET
-        val innerWidth = Math.max(1.0f, cardWidth - GROUP_ROW_INSET * 2.0f)
+        val innerWidth = maxOf(1.0f, cardWidth - GROUP_ROW_INSET * 2.0f)
         var cursor = y + GROUP_HEADER_HEIGHT + GROUP_ROW_INSET
         for (element in section.elements()) {
             when (element) {
@@ -390,7 +390,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 GROUP_OUTLINE_INSET,
                 groupBounds.width - GROUP_OUTLINE_INSET * 2.0f,
                 groupBounds.height - GROUP_OUTLINE_INSET * 2.0f,
-                Math.max(1.0f, MD3Theme.CARD_RADIUS - GROUP_OUTLINE_INSET),
+                maxOf(1.0f, MD3Theme.CARD_RADIUS - GROUP_OUTLINE_INSET),
                 MD3Theme.lerp(groupSurface(depth), MD3Theme.SURFACE_CONTAINER, expandProgress)
             )
             if (hoverProgress > 0.01f) {
@@ -489,9 +489,9 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
      * 嵌套层级缩进；达到上限后不再增加，并在宽度不足时收敛，避免内容宽度塌缩。
      */
     private fun groupNestInset(depth: Int, availableWidth: Float): Float {
-        val limit = Math.max(0.0f, (availableWidth - GROUP_MIN_WIDTH) * 0.5f)
-        val clampedDepth = Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT)
-        return Math.min(GROUP_NEST_INSET * clampedDepth, limit)
+        val limit = maxOf(0.0f, (availableWidth - GROUP_MIN_WIDTH) * 0.5f)
+        val clampedDepth = minOf(maxOf(depth, 0), GROUP_DEPTH_LIMIT)
+        return minOf(GROUP_NEST_INSET * clampedDepth, limit)
     }
 
     /**
@@ -501,7 +501,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         if (depth <= 0) {
             return MD3Theme.SURFACE_CONTAINER_LOW
         }
-        val clampedDepth = Math.min(depth, GROUP_DEPTH_LIMIT)
+        val clampedDepth = minOf(depth, GROUP_DEPTH_LIMIT)
         val ratio = clampedDepth / GROUP_DEPTH_LIMIT.toFloat() * 0.65f
         return MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_LOW, MD3Theme.SURFACE_CONTAINER_HIGH, ratio)
     }
@@ -510,8 +510,8 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         if (depth <= 0) {
             return MD3Theme.OUTLINE_SOFT
         }
-        val clampedDepth = Math.min(depth, GROUP_DEPTH_LIMIT)
-        return MD3Theme.withAlpha(MD3Theme.OUTLINE, Math.min(160, 96 + 12 * clampedDepth))
+        val clampedDepth = minOf(depth, GROUP_DEPTH_LIMIT)
+        return MD3Theme.withAlpha(MD3Theme.OUTLINE, minOf(160, 96 + 12 * clampedDepth))
     }
 
     private fun createAnimation(duration: Long, startValue: Float): Animation {
@@ -575,10 +575,10 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     private fun createEnumPopup(enumRow: EnumSettingRow, rowBounds: UiRect, popupBounds: UiRect): EnumSelectPopup {
         val chipBounds = enumRow.getChipBounds(measureTextRenderer, rowBounds)
         val optionCount = enumRow.getSetting().modes.size
-        val visibleCount = Math.min(optionCount, EnumSelectPopup.MAX_VISIBLE_ITEMS)
+        val visibleCount = minOf(optionCount, EnumSelectPopup.MAX_VISIBLE_ITEMS)
         val popupHeight = visibleCount * 24.0f + 12.0f
-        val popupWidth = Math.max(108.0f, chipBounds.width + 24.0f)
-        val popupX = Math.max(popupBounds.x + MD3Theme.PANEL_VIEWPORT_INSET, chipBounds.right() - popupWidth)
+        val popupWidth = maxOf(108.0f, chipBounds.width + 24.0f)
+        val popupX = maxOf(popupBounds.x + MD3Theme.PANEL_VIEWPORT_INSET, chipBounds.right() - popupWidth)
         var popupY = chipBounds.bottom() + 4.0f
         val maxBottom = popupBounds.bottom() - MD3Theme.PANEL_VIEWPORT_INSET
         if (popupY + popupHeight > maxBottom) {
@@ -592,7 +592,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         val channelCount = if (colorRow.getSetting().isAllowAlpha()) 4 else 3
         val popupWidth = 156.0f
         val popupHeight = 58.0f + channelCount * 24.0f
-        val popupX = Math.max(popupBounds.x + MD3Theme.PANEL_VIEWPORT_INSET, swatchBounds.right() - popupWidth)
+        val popupX = maxOf(popupBounds.x + MD3Theme.PANEL_VIEWPORT_INSET, swatchBounds.right() - popupWidth)
         var popupY = swatchBounds.bottom() + 4.0f
         val maxBottom = popupBounds.bottom() - MD3Theme.PANEL_VIEWPORT_INSET
         if (popupY + popupHeight > maxBottom) {
@@ -603,7 +603,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     private fun createStringListSettingPopup(row: StringListSettingRow, popupBounds: UiRect): PanelPopupHost.Popup {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(300.0f, popupBounds.width - 24.0f), Math.min(220.0f, popupBounds.height - 24.0f)
+            minOf(300.0f, popupBounds.width - 24.0f), minOf(220.0f, popupBounds.height - 24.0f)
         )
         val setting = row.getSetting()
         return StringListSelectPopup(bounds, setting, { value -> setting.add(value) }, { value -> setting.remove(value) })
@@ -611,7 +611,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     private fun createRegistryListSettingPopup(row: RegistryListSettingRow, popupBounds: UiRect): PanelPopupHost.Popup {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(360.0f, popupBounds.width - 24.0f), Math.min(246.0f, popupBounds.height - 24.0f)
+            minOf(360.0f, popupBounds.width - 24.0f), minOf(246.0f, popupBounds.height - 24.0f)
         )
         return RegistryListSelectPopup.create(bounds, row.getSetting())
     }

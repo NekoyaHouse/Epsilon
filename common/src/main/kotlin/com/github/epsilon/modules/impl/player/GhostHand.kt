@@ -5,6 +5,7 @@ import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -23,15 +24,15 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
         nonNullHandler<StartUseItemEvent> { event ->
             if (!mc.options.keyUse.isDown) return@nonNullHandler
 
-            val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val normalHit = player.pick(player.blockInteractionRange(), partialTick, false)
             if (level.getBlockState(BlockPos.containing(normalHit.location)).hasBlockEntity()) {
                 return@nonNullHandler
             }
 
             val direction = Vec3(0.0, 0.0, 0.1)
-                .xRot(-Math.toRadians(player.xRot.toDouble()).toFloat())
-                .yRot(-Math.toRadians(player.yRot.toDouble()).toFloat())
+                .xRot(-(player.xRot.toDouble()).toRadians().toFloat())
+                .yRot(-(player.yRot.toDouble()).toRadians().toFloat())
 
             posList.clear()
 

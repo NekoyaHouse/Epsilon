@@ -11,6 +11,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
+import kotlin.math.pow
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
 import java.awt.Color
@@ -82,16 +83,16 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     }
 
     private fun getDisplayBlockCount(): Int {
-        val liveBlockCount = Math.max(0, Scaffold.getBlockCount())
+        val liveBlockCount = maxOf(0, Scaffold.getBlockCount())
         if (mc.gui.screen() is HudEditorScreen) {
-            return Math.max(64, liveBlockCount)
+            return maxOf(64, liveBlockCount)
         }
         return liveBlockCount
     }
 
     private fun createAnimationState(): AnimationState {
         val rawVisibility = Mth.clamp(visibilityProgress, 0.0f, 1.0f)
-        val easedVisibility = Math.pow(rawVisibility.toDouble(), 3.0).toFloat()
+        val easedVisibility = (rawVisibility.toDouble()).pow(3.0).toFloat()
         val panelProgress = Easing.EASE_OUT_SINE.function.apply(easedVisibility)
         val contentProgress = Easing.EASE_OUT_SINE.function.apply(Mth.clamp((rawVisibility - 0.08f) / 0.92f, 0.0f, 1.0f))
         val contentAlpha = contentProgress * contentProgress * (3.0f - 2.0f * contentProgress)
@@ -114,7 +115,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private fun drawBackground(scope: UiTree.Scope, layout: Layout, animation: AnimationState) {
         val animatedWidth = layout.totalWidth * animation.panelProgress
         val animatedX = Mth.lerp(animation.panelProgress, layout.centerX, layout.renderX)
-        val animatedRadius = Math.min(layout.radius, animatedWidth / 2.0f)
+        val animatedRadius = minOf(layout.radius, animatedWidth / 2.0f)
 
         if (backgroundBlur) {
             BlurShader.render(animatedX, y, animatedWidth, layout.height, animatedRadius, blurStrength.toFloat())
@@ -183,7 +184,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
             return
         }
 
-        val frameTime = deltaTracker.getGameTimeDeltaTicks() / 20.0f
+        val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         if (nextText != targetCountText) {
             pendingCountText = nextText
             delayTimer += frameTime
@@ -198,7 +199,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         }
 
         if (numberAnimProgress < 1.0f) {
-            numberAnimProgress = Math.min(1.0f, numberAnimProgress + frameTime * 3.0f)
+            numberAnimProgress = minOf(1.0f, numberAnimProgress + frameTime * 3.0f)
             if (numberAnimProgress >= 1.0f) {
                 previousCountText = targetCountText
             }
@@ -215,17 +216,14 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         lastVisibilityUpdateMs = now
 
         if (shouldShow) {
-            visibilityProgress = Math.min(1.0f, visibilityProgress + delta)
+            visibilityProgress = minOf(1.0f, visibilityProgress + delta)
         } else {
-            visibilityProgress = Math.max(0.0f, visibilityProgress - delta)
+            visibilityProgress = maxOf(0.0f, visibilityProgress - delta)
         }
     }
 
     private fun getNumberColumnWidth(textRenderer: TextRenderer, numberScale: Float): Float {
-        val width = Math.max(
-            textRenderer.getWidth(previousCountText, numberScale),
-            textRenderer.getWidth(targetCountText, numberScale)
-        )
+        val width = maxOf(textRenderer.getWidth(previousCountText, numberScale), textRenderer.getWidth(targetCountText, numberScale))
         return width + 4.0f * scale.toFloat()
     }
 
@@ -240,12 +238,9 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     ) {
         val previous = previousCountText
         val target = targetCountText
-        val maxLen = Math.max(previous.length, target.length)
-        val contentWidth = Math.max(
-            textRenderer.getWidth(previous, numberScale),
-            textRenderer.getWidth(target, numberScale)
-        )
-        var charX = columnX + Math.max(0.0f, (columnWidth - contentWidth) / 2.0f)
+        val maxLen = maxOf(previous.length, target.length)
+        val contentWidth = maxOf(textRenderer.getWidth(previous, numberScale), textRenderer.getWidth(target, numberScale))
+        var charX = columnX + maxOf(0.0f, (columnWidth - contentWidth) / 2.0f)
         val slideOffset = 4.0f * scale.toFloat()
 
         for (i in 0 until maxLen) {
@@ -254,10 +249,10 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 
             var slotWidth = 0.0f
             if (previousChar != '\u0000') {
-                slotWidth = Math.max(slotWidth, textRenderer.getWidth(previousChar.toString(), numberScale))
+                slotWidth = maxOf(slotWidth, textRenderer.getWidth(previousChar.toString(), numberScale))
             }
             if (targetChar != '\u0000') {
-                slotWidth = Math.max(slotWidth, textRenderer.getWidth(targetChar.toString(), numberScale))
+                slotWidth = maxOf(slotWidth, textRenderer.getWidth(targetChar.toString(), numberScale))
             }
 
             if (previousChar == targetChar) {

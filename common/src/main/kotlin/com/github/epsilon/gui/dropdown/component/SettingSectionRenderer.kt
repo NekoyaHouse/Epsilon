@@ -202,7 +202,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                 contentHeight * progress + DropdownTheme.SETTING_GAP
             ) { clippedScope ->
                 val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
-                val innerWidth = Math.max(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
+                val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
                 drawElements(
                     clippedScope, textMetrics, mouseX, mouseY, node, depth + 1, innerX,
                     contentY + DropdownTheme.GROUP_INSET, innerWidth, hitOffsetX, hitOffsetY
@@ -261,7 +261,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
         val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
-        val innerWidth = Math.max(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
+        val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
         return clickElements(node, depth + 1, innerX, contentY + DropdownTheme.GROUP_INSET, innerWidth, mouseX, mouseY, button)
     }
 
@@ -365,7 +365,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     private fun sectionWidth(width: Float): Float {
-        return Math.max(1.0f, width - DropdownTheme.SETTING_INDENT * 2.0f)
+        return maxOf(1.0f, width - DropdownTheme.SETTING_INDENT * 2.0f)
     }
 
     private fun card(node: Node, depth: Int, x: Float, width: Float): Card {
@@ -373,7 +373,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             return Card(x, width)
         }
         val nest = DropdownTheme.groupNestInset(depth, width)
-        return Card(x + nest, Math.max(1.0f, width - nest * 2.0f))
+        return Card(x + nest, maxOf(1.0f, width - nest * 2.0f))
     }
 
     private fun isHovered(mouseX: Double, mouseY: Double, x: Float, y: Float, width: Float, height: Float): Boolean {

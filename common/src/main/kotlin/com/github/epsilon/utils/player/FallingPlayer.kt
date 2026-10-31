@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.player
 
 import com.github.epsilon.utils.safety.*
+import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -66,8 +67,8 @@ class FallingPlayer(
             sr *= movement
             fw *= movement
 
-            val sin = Mth.sin((yaw * (Math.PI.toFloat() / 180.0F)).toDouble())
-            val cos = Mth.cos((yaw * (Math.PI.toFloat() / 180.0F)).toDouble())
+            val sin = Mth.sin((yaw * (PI.toFloat() / 180.0F)).toDouble())
+            val cos = Mth.cos((yaw * (PI.toFloat() / 180.0F)).toDouble())
             motionX += sr * cos - fw * sin
             motionZ += fw * cos + sr * sin
         }

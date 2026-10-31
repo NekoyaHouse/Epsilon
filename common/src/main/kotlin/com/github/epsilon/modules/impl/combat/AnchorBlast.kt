@@ -9,6 +9,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import kotlin.math.roundToInt
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -54,7 +55,7 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
                 if (phase != Phase.IDLE && originalSlot >= 0) {
                     player.inventory.setSelectedSlot(originalSlot)
                 }
-                originalSlot = player.inventory.getSelectedSlot()
+                originalSlot = player.inventory.selectedSlot
                 cooldown = 0
                 phase = Phase.PLACE_ANCHOR
             }
@@ -167,11 +168,11 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
      * rhythm across our combat automation modules.
      */
     private fun humanizedCooldownTicks(cps: Int): Int {
-        val baseTicks = Math.max(1, 20 / cps)
+        val baseTicks = maxOf(1, 20 / cps)
         val baseMs = baseTicks * 50.0
         val jitter = baseMs * 0.25 * ThreadLocalRandom.current().nextGaussian()
-        val adjustedMs = Math.max(50.0, baseMs + jitter)
-        return Math.max(1, Math.round(adjustedMs / 50.0).toInt())
+        val adjustedMs = maxOf(50.0, baseMs + jitter)
+        return maxOf(1, (adjustedMs / 50.0).roundToInt())
     }
 
     private fun resetState() {

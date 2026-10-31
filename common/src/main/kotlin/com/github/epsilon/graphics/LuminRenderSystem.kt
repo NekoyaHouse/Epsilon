@@ -22,6 +22,8 @@ import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.DynamicGpuDataStorageMapped
@@ -108,11 +110,11 @@ object LuminRenderSystem {
     }
 
     fun getScaledWidthInt(): Int {
-        return Math.ceil(getScaledWidth().toDouble()).toInt()
+        return ceil(getScaledWidth().toDouble()).toInt()
     }
 
     fun getScaledHeightInt(): Int {
-        return Math.ceil(getScaledHeight().toDouble()).toInt()
+        return ceil(getScaledHeight().toDouble()).toInt()
     }
 
     fun toEpsilonMouseX(mouseX: Double): Double {
@@ -132,11 +134,11 @@ object LuminRenderSystem {
     }
 
     fun toEpsilonMouseX(mouseX: Int): Int {
-        return Math.round(toEpsilonMouseX(mouseX.toDouble())).toInt()
+        return (toEpsilonMouseX(mouseX.toDouble())).roundToInt()
     }
 
     fun toEpsilonMouseY(mouseY: Int): Int {
-        return Math.round(toEpsilonMouseY(mouseY.toDouble())).toInt()
+        return (toEpsilonMouseY(mouseY.toDouble())).roundToInt()
     }
 
     fun toEpsilonMouseEvent(event: MouseButtonEvent): MouseButtonEvent {

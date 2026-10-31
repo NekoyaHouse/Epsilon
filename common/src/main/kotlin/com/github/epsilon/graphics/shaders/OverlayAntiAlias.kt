@@ -74,7 +74,7 @@ object OverlayAntiAlias {
 
         val width = destination.getWidth(0)
         val height = destination.getHeight(0)
-        val maxSize = RenderSystem.getDevice().getDeviceInfo().limits().maxTextureSize()
+        val maxSize = RenderSystem.getDevice().deviceInfo.limits().maxTextureSize()
         val scale = chooseScale(width, height, requestedScale, maxSize)
         if (scale == 1) {
             close()

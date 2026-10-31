@@ -57,18 +57,18 @@ abstract class TrollWindow protected constructor() {
     fun size(width: Float, height: Float, screenWidth: Float, screenHeight: Float) {
         var targetWidth = if (manualWidth > 0.0f) manualWidth else width
         var targetHeight = if (manualHeight > 0.0f) manualHeight else height
-        targetWidth = Math.clamp(targetWidth, minimumWidth(), Math.max(1.0f, screenWidth))
-        targetHeight = Math.clamp(targetHeight, minimumHeight(), Math.max(1.0f, screenHeight))
+        targetWidth = (targetWidth).coerceIn(minimumWidth(), maxOf(1.0f, screenWidth))
+        targetHeight = (targetHeight).coerceIn(minimumHeight(), maxOf(1.0f, screenHeight))
 
-        val maxX = Math.max(0.0f, screenWidth - targetWidth)
+        val maxX = maxOf(0.0f, screenWidth - targetWidth)
         val maxY = if (allowHeaderOnly()) {
-            Math.max(0.0f, screenHeight - Math.min(targetHeight, headerHeight))
+            maxOf(0.0f, screenHeight - minOf(targetHeight, headerHeight))
         } else {
-            Math.max(0.0f, screenHeight - targetHeight)
+            maxOf(0.0f, screenHeight - targetHeight)
         }
         bounds = UiRect(
-            Math.clamp(bounds.x, 0.0f, maxX),
-            Math.clamp(bounds.y, 0.0f, maxY),
+            (bounds.x).coerceIn(0.0f, maxX),
+            (bounds.y).coerceIn(0.0f, maxY),
             targetWidth,
             targetHeight
         )
@@ -80,7 +80,7 @@ abstract class TrollWindow protected constructor() {
     }
 
     protected open fun minimumHeight(): Float {
-        return Math.max(40.0f, headerHeight + 12.0f)
+        return maxOf(40.0f, headerHeight + 12.0f)
     }
 
     protected open fun resizable(): Boolean {
@@ -174,28 +174,28 @@ abstract class TrollWindow protected constructor() {
         if (resizeEdge.hasTop()) top += dy
         if (resizeEdge.hasBottom()) bottom += dy
 
-        val screenWidth = Math.max(1.0f, LuminRenderSystem.getScaledWidth())
-        val screenHeight = Math.max(1.0f, LuminRenderSystem.getScaledHeight())
-        val minWidth = Math.min(minimumWidth(), screenWidth)
-        val minHeight = Math.min(minimumHeight(), screenHeight)
+        val screenWidth = maxOf(1.0f, LuminRenderSystem.getScaledWidth())
+        val screenHeight = maxOf(1.0f, LuminRenderSystem.getScaledHeight())
+        val minWidth = minOf(minimumWidth(), screenWidth)
+        val minHeight = minOf(minimumHeight(), screenHeight)
 
-        if (resizeEdge.hasLeft()) left = Math.min(left, right - minWidth)
-        if (resizeEdge.hasRight()) right = Math.max(right, left + minWidth)
-        if (resizeEdge.hasTop()) top = Math.min(top, bottom - minHeight)
-        if (resizeEdge.hasBottom()) bottom = Math.max(bottom, top + minHeight)
+        if (resizeEdge.hasLeft()) left = minOf(left, right - minWidth)
+        if (resizeEdge.hasRight()) right = maxOf(right, left + minWidth)
+        if (resizeEdge.hasTop()) top = minOf(top, bottom - minHeight)
+        if (resizeEdge.hasBottom()) bottom = maxOf(bottom, top + minHeight)
 
-        left = Math.max(0.0f, left)
-        top = Math.max(0.0f, top)
-        right = Math.min(screenWidth, right)
-        bottom = Math.min(screenHeight, bottom)
+        left = maxOf(0.0f, left)
+        top = maxOf(0.0f, top)
+        right = minOf(screenWidth, right)
+        bottom = minOf(screenHeight, bottom)
 
         if (right - left < minWidth) {
-            if (resizeEdge.hasLeft()) left = Math.max(0.0f, right - minWidth)
-            else if (resizeEdge.hasRight()) right = Math.min(screenWidth, left + minWidth)
+            if (resizeEdge.hasLeft()) left = maxOf(0.0f, right - minWidth)
+            else if (resizeEdge.hasRight()) right = minOf(screenWidth, left + minWidth)
         }
         if (bottom - top < minHeight) {
-            if (resizeEdge.hasTop()) top = Math.max(0.0f, bottom - minHeight)
-            else if (resizeEdge.hasBottom()) bottom = Math.min(screenHeight, top + minHeight)
+            if (resizeEdge.hasTop()) top = maxOf(0.0f, bottom - minHeight)
+            else if (resizeEdge.hasBottom()) bottom = minOf(screenHeight, top + minHeight)
         }
 
         bounds = UiRect(left, top, right - left, bottom - top)
@@ -225,8 +225,8 @@ abstract class TrollWindow protected constructor() {
         viewport = UiRect(
             bounds.x + TrollTheme.xMargin(),
             bounds.y + headerHeight,
-            Math.max(1.0f, bounds.width - TrollTheme.xMargin() * 2.0f),
-            Math.max(0.0f, bounds.height - headerHeight)
+            maxOf(1.0f, bounds.width - TrollTheme.xMargin() * 2.0f),
+            maxOf(0.0f, bounds.height - headerHeight)
         )
     }
 

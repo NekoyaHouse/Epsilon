@@ -10,6 +10,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
+import kotlin.math.roundToInt
 
 class NVIDIANotification(private val owner: Notifications) {
 
@@ -57,7 +58,7 @@ class NVIDIANotification(private val owner: Notifications) {
         }
         if (entries.isEmpty()) return
 
-        val resolvedHeight = Math.max(toastHeight, totalHeight)
+        val resolvedHeight = maxOf(toastHeight, totalHeight)
         var currentY = getBaseY(resolvedHeight)
         for (entry in entries) {
             val renderX = getRenderX(anchorWidth, anchorWidth)
@@ -167,7 +168,7 @@ class NVIDIANotification(private val owner: Notifications) {
         scope.scissorIf(
             clip, x, y, boxWidth, boxHeight
         ) { textScope ->
-            renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, Math.round(255.0f * progress))
+            renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, (255.0f * progress).roundToInt())
         }
         val accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress)
         val accentX = if (owner.horizontalAnchor == HudModule.HorizontalAnchor.Left) x + boxWidth - accentWidth else x
@@ -201,7 +202,7 @@ class NVIDIANotification(private val owner: Notifications) {
         if (hasSubtitle) {
             scope.text(
                 notification.subTitle, textX, titleY + titleHeight + lineGap, subtitleScale,
-                notification.mode.getColor(Math.round(alpha * 0.86f))
+                notification.mode.getColor((alpha * 0.86f).roundToInt())
             )
         }
     }
@@ -213,12 +214,9 @@ class NVIDIANotification(private val owner: Notifications) {
         scale: Float,
         desiredTextScale: Float,
     ): Float {
-        val maxWidth = Math.max(
-            metrics.getWidth(notification.title, desiredTextScale),
-            metrics.getWidth(notification.subTitle, desiredTextScale * SUBTITLE_SCALE)
-        )
-        val availableWidth = Math.max(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale)
-        return Math.max(0.35f, desiredTextScale * (if (maxWidth > availableWidth) availableWidth / maxWidth else 1.0f))
+        val maxWidth = maxOf(metrics.getWidth(notification.title, desiredTextScale), metrics.getWidth(notification.subTitle, desiredTextScale * SUBTITLE_SCALE))
+        val availableWidth = maxOf(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale)
+        return maxOf(0.35f, desiredTextScale * (if (maxWidth > availableWidth) availableWidth / maxWidth else 1.0f))
     }
 
     private fun textExceedsBox(
@@ -231,11 +229,8 @@ class NVIDIANotification(private val owner: Notifications) {
     ): Boolean {
         val fittedScale = getFittedTextScale(metrics, notification, boxWidth, scale, desiredTextScale)
         val subtitleScale = fittedScale * SUBTITLE_SCALE
-        val maxWidth = Math.max(
-            metrics.getWidth(notification.title, fittedScale),
-            metrics.getWidth(notification.subTitle, subtitleScale)
-        )
-        val availableWidth = Math.max(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale)
+        val maxWidth = maxOf(metrics.getWidth(notification.title, fittedScale), metrics.getWidth(notification.subTitle, subtitleScale))
+        val availableWidth = maxOf(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale)
         val titleHeight = metrics.getHeight(fittedScale)
         if (notification.subTitle.isEmpty()) return maxWidth > availableWidth || titleHeight > boxHeight
         val subtitleHeight = metrics.getHeight(subtitleScale)

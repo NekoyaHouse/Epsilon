@@ -24,6 +24,9 @@ import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.item.PrimedTnt
@@ -77,14 +80,14 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
             val render = scheduler.get()
             render.clear()
             val layer = render.layer(0)
-            val partial = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partial = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
                 val anchor = entity.getPosition(partial).add(0.0, entity.bbHeight + 0.4, 0.0)
                 val screen = WorldToScreen.calcWorld2Screen(anchor) ?: continue
                 if (!screen.x.isFinite() || !screen.y.isFinite()) continue
-                val label = String.format(Locale.US, "%.1fs", Math.max(0, entity.fuse) / 20.0f)
-                val scale = Math.max(0.45f, WorldToScreen.calcScale(anchor) * 0.7f)
+                val label = String.format(Locale.US, "%.1fs", maxOf(0, entity.fuse) / 20.0f)
+                val scale = maxOf(0.45f, WorldToScreen.calcScale(anchor) * 0.7f)
                 val width = render.textMetrics().getWidth(label, scale)
                 layer.addText(label, screen.x - width * 0.5f, screen.y, scale, Color.WHITE, StaticFontLoader.defaultFont())
             }
@@ -96,7 +99,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         runSafe {
             val stack = event.poseStack
             val camera = mc.gameRenderer.mainCamera().position()
-            val pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val segments = segmentsSetting
             val rings = ringsSetting
             val alpha = Mth.clamp(alphaSetting, 0, 255)
@@ -190,12 +193,12 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         x: Double, y: Double, z: Double, radius: Float, thickness: Float, segments: Int, color: Int,
     ) {
         for (i in 0 until segments) {
-            val a0 = i * Math.PI * 2.0 / segments
-            val a1 = (i + 1) * Math.PI * 2.0 / segments
-            val x0 = (x + Math.cos(a0) * radius).toFloat()
-            val z0 = (z + Math.sin(a0) * radius).toFloat()
-            val x1 = (x + Math.cos(a1) * radius).toFloat()
-            val z1 = (z + Math.sin(a1) * radius).toFloat()
+            val a0 = i * PI * 2.0 / segments
+            val a1 = (i + 1) * PI * 2.0 / segments
+            val x0 = (x + cos(a0) * radius).toFloat()
+            val z0 = (z + sin(a0) * radius).toFloat()
+            val x1 = (x + cos(a1) * radius).toFloat()
+            val z1 = (z + sin(a1) * radius).toFloat()
             val dx = x1 - x0
             val dz = z1 - z0
             val len = Mth.sqrt(dx * dx + dz * dz)
@@ -209,11 +212,11 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         x: Double, y: Double, z: Double, radius: Float, rings: Int, segments: Int, color: Int,
     ) {
         for (r in 0 until rings) {
-            val p0 = Math.PI * r / rings - Math.PI / 2.0
-            val p1 = Math.PI * (r + 1) / rings - Math.PI / 2.0
+            val p0 = PI * r / rings - PI / 2.0
+            val p1 = PI * (r + 1) / rings - PI / 2.0
             for (s in 0 until segments) {
-                val a0 = Math.PI * 2.0 * s / segments
-                val a1 = Math.PI * 2.0 * (s + 1) / segments
+                val a0 = PI * 2.0 * s / segments
+                val a1 = PI * 2.0 * (s + 1) / segments
                 val v0 = sphereVertex(x, y, z, radius, p0, a0)
                 val v1 = sphereVertex(x, y, z, radius, p0, a1)
                 val v2 = sphereVertex(x, y, z, radius, p1, a1)
@@ -231,26 +234,26 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         x: Double, y: Double, z: Double, radius: Float, rings: Int, segments: Int, color: Int,
     ) {
         for (r in 1 until rings) {
-            val p = Math.PI * r / rings - Math.PI / 2.0
-            val h = Math.cos(p) * radius
-            val yy = y + Math.sin(p) * radius
+            val p = PI * r / rings - PI / 2.0
+            val h = cos(p) * radius
+            val yy = y + sin(p) * radius
             drawRing(out, m, pose, x, yy, z, h.toFloat(), 1.0f, segments, color)
         }
         for (s in 0 until segments) {
-            val a = Math.PI * 2.0 * s / segments
-            val px = (x + Math.cos(a) * radius).toFloat()
-            val pz = (z + Math.sin(a) * radius).toFloat()
+            val a = PI * 2.0 * s / segments
+            val px = (x + cos(a) * radius).toFloat()
+            val pz = (z + sin(a) * radius).toFloat()
             out.vertex(m, pose, px, (y - radius).toFloat(), pz, color, 0.0f, 1.0f, 0.0f, 1.0f)
             out.vertex(m, pose, px, (y + radius).toFloat(), pz, color, 0.0f, 1.0f, 0.0f, 1.0f)
         }
     }
 
     private fun sphereVertex(x: Double, y: Double, z: Double, radius: Float, pitch: Double, yaw: Double): FloatArray {
-        val cp = Math.cos(pitch).toFloat()
+        val cp = cos(pitch).toFloat()
         return floatArrayOf(
-            (x + radius * cp * Math.cos(yaw)).toFloat(),
-            (y + radius * Math.sin(pitch)).toFloat(),
-            (z + radius * cp * Math.sin(yaw)).toFloat()
+            (x + radius * cp * cos(yaw)).toFloat(),
+            (y + radius * sin(pitch)).toFloat(),
+            (z + radius * cp * sin(yaw)).toFloat()
         )
     }
 

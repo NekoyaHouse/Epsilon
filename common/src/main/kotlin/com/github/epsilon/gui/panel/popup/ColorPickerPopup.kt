@@ -9,6 +9,8 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -253,12 +255,12 @@ class ColorPickerPopup(
             }
 
             InputConstants.KEY_LEFT -> {
-                cursorIndex = Math.max(0, cursorIndex - 1)
+                cursorIndex = maxOf(0, cursorIndex - 1)
                 true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursorIndex = Math.min(getDisplayBuffer().length, cursorIndex + 1)
+                cursorIndex = minOf(getDisplayBuffer().length, cursorIndex + 1)
                 true
             }
 
@@ -335,7 +337,7 @@ class ColorPickerPopup(
     private fun updateChannelFromMouse(channel: Channel, mouseX: Double, trackBounds: UiRect) {
         var progress = (mouseX - trackBounds.x) / trackBounds.width
         progress = Mth.clamp(progress, 0.0, 1.0)
-        val value = Mth.clamp(Math.round(progress * 255.0).toInt(), 0, 255)
+        val value = Mth.clamp((progress * 255.0).roundToInt(), 0, 255)
         val current = getVisibleColor()
         val updated = when (channel) {
             Channel.RED -> Color(value, current.green, current.blue, current.alpha)
@@ -392,7 +394,7 @@ class ColorPickerPopup(
             box.text(valueText, textX, textY, textScale, textColor)
             if (focused) {
                 val caretX = textX + textRenderer.getWidth(
-                    valueText.substring(0, Math.min(cursorIndex, valueText.length)), textScale
+                    valueText.substring(0, minOf(cursorIndex, valueText.length)), textScale
                 )
                 box.rect(caretX, 3.0f, 1.0f, bounds.height - 6.0f, MD3Theme.INVERSE_ON_SURFACE)
             }
@@ -408,11 +410,11 @@ class ColorPickerPopup(
         while (y < bounds.bottom() - inset) {
             var x = bounds.x + inset
             while (x < bounds.right() - inset) {
-                val ix = Math.floor(((x - bounds.x) / cell).toDouble()).toInt()
-                val iy = Math.floor(((y - bounds.y) / cell).toDouble()).toInt()
+                val ix = floor(((x - bounds.x) / cell).toDouble()).toInt()
+                val iy = floor(((y - bounds.y) / cell).toDouble()).toInt()
                 val color = if ((ix + iy) and 1 == 0) light else dark
-                val width = Math.min(cell, bounds.right() - inset - x)
-                val height = Math.min(cell, bounds.bottom() - inset - y)
+                val width = minOf(cell, bounds.right() - inset - x)
+                val height = minOf(cell, bounds.bottom() - inset - y)
                 scope.roundRect(x, y, width, height, 0.0f, color)
                 x += cell
             }

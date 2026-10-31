@@ -11,6 +11,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.mojang.blaze3d.platform.NativeImage
+import kotlin.math.sin
 import me.sofurry.smtc.SmtcService
 import me.sofurry.smtc.SmtcSnapshot
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -59,13 +60,10 @@ class MusicInstance(
         val title = title(snapshot)
         val artist = artist(snapshot)
         val metadata = metadata(snapshot)
-        val desiredContent = Math.max(
-            textRenderer.getWidth(title, TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP,
-            Math.max(textRenderer.getWidth(artist, ARTIST_SCALE), textRenderer.getWidth(metadata, META_SCALE))
-        )
+        val desiredContent = maxOf(textRenderer.getWidth(title, TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP, maxOf(textRenderer.getWidth(artist, ARTIST_SCALE), textRenderer.getWidth(metadata, META_SCALE)))
         val desiredWidth = PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent
-        val screenMaxWidth = Math.max(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
-        targetWidth = Mth.clamp(desiredWidth, MIN_WIDTH, Math.min(MAX_WIDTH, screenMaxWidth))
+        val screenMaxWidth = maxOf(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
+        targetWidth = Mth.clamp(desiredWidth, MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
     }
 
     override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
@@ -77,7 +75,7 @@ class MusicInstance(
         val textX = PADDING + COVER_SIZE + COVER_GAP
         val contentRight = width - PADDING
         val titleRight = contentRight - WAVE_WIDTH - TITLE_STATUS_GAP
-        val titleViewport = Math.max(1f, titleRight - textX)
+        val titleViewport = maxOf(1f, titleRight - textX)
 
         val titleY = PADDING + 1f
         drawMarqueeTitle(scope, textRenderer, title(snapshot), textX, titleY, titleViewport)
@@ -86,13 +84,13 @@ class MusicInstance(
         val artistY = titleY + textRenderer.getHeight(TITLE_SCALE) + 3f
         drawIconText(
             scope, IconChars.ARTIST, artist(snapshot), textX, artistY,
-            Math.max(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY
+            maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY
         )
 
         val metaY = height - PADDING - textRenderer.getHeight(META_SCALE) - 1f
         drawIconText(
             scope, if (snapshot.albumTitle().isBlank()) IconChars.AUDIO_FILE else IconChars.ALBUM,
-            metadata(snapshot), textX, metaY, Math.max(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
+            metadata(snapshot), textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
         )
     }
 
@@ -135,7 +133,7 @@ class MusicInstance(
         }
 
         val elapsedSeconds = (System.nanoTime() - marqueeStartedAtNs) / 1_000_000_000.0f
-        val scrollSeconds = Math.max(0f, elapsedSeconds - MARQUEE_START_HOLD_SECONDS)
+        val scrollSeconds = maxOf(0f, elapsedSeconds - MARQUEE_START_HOLD_SECONDS)
         val cycle = textWidth + MARQUEE_GAP
         val offset = -(scrollSeconds * MARQUEE_SPEED % cycle)
         val clip = UiRect(x, y - 1f, viewportWidth, textRenderer.getHeight(TITLE_SCALE) + 2f)
@@ -161,7 +159,7 @@ class MusicInstance(
         scope.text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
 
         val textX = x + iconWidth + 3f
-        val textViewport = Math.max(1f, viewportWidth - iconWidth - 3f)
+        val textViewport = maxOf(1f, viewportWidth - iconWidth - 3f)
         val clip = UiRect(textX, y - 1f, textViewport, textRenderer.getHeight(textScale) + 2f)
         scope.scissor(clip) { inner -> inner.text(text, textX, y, textScale, fade(color)) }
     }
@@ -173,8 +171,8 @@ class MusicInstance(
         val time = System.nanoTime() / 1_000_000_000.0
 
         for (index in 0 until bars) {
-            val amplitude = 0.28f + 0.72f * ((Math.sin(time * 4.8 + index * 1.7) + 1.0) * 0.5).toFloat()
-            val barHeight = Math.max(2f, height * amplitude)
+            val amplitude = 0.28f + 0.72f * ((sin(time * 4.8 + index * 1.7) + 1.0) * 0.5).toFloat()
+            val barHeight = maxOf(2f, height * amplitude)
             val barX = x + index * (barWidth + gap)
             val barY = y + (height - barHeight) * 0.5f
             val color = if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT
@@ -234,7 +232,7 @@ class MusicInstance(
             throw IOException("Unsupported SMTC thumbnail image format")
         }
 
-        val cropSize = Math.min(source.width, source.height)
+        val cropSize = minOf(source.width, source.height)
         val cropX = (source.width - cropSize) / 2
         val cropY = (source.height - cropSize) / 2
         val normalized = BufferedImage(COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, BufferedImage.TYPE_INT_ARGB)

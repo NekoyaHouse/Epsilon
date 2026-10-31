@@ -15,10 +15,16 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toDegrees
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
 import com.github.epsilon.utils.world.hole.HoleUtils
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -89,8 +95,8 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
             TimerManager.set(timer.toFloat())
 
-            val yaw = Math.cos(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
-            val pitch = Math.sin(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
+            val yaw = cos(((getAngle(hole.middle) + 90.0f).toDouble()).toRadians())
+            val pitch = sin(((getAngle(hole.middle) + 90.0f).toDouble()).toRadians())
 
             if (player.x == hole.middle.x && player.z == hole.middle.z) {
                 if (player.y == hole.middle.y) {
@@ -135,8 +141,8 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             }
 
             boostLeft--
-            event.x = if (Math.abs(motionX) < Math.abs(distanceX)) motionX else distanceX
-            event.z = if (Math.abs(motionZ) < Math.abs(distanceZ)) motionZ else distanceZ
+            event.x = if (abs(motionX) < abs(distanceX)) motionX else distanceX
+            event.z = if (abs(motionZ) < abs(distanceZ)) motionZ else distanceZ
             event.cancel()
         }
 
@@ -180,17 +186,17 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
         var maxZ = Double.NEGATIVE_INFINITY
 
         for (pos in hole.positions) {
-            minX = Math.min(minX, pos.x.toDouble())
-            minZ = Math.min(minZ, pos.z.toDouble())
-            maxX = Math.max(maxX, pos.x + 1.0)
-            maxZ = Math.max(maxZ, pos.z + 1.0)
+            minX = minOf(minX, pos.x.toDouble())
+            minZ = minOf(minZ, pos.z.toDouble())
+            maxX = maxOf(maxX, pos.x + 1.0)
+            maxZ = maxOf(maxZ, pos.z + 1.0)
         }
 
         val deltaX = playerPos.x - hole.middle.x
         val deltaZ = playerPos.z - hole.middle.z
-        val xRatio = Math.abs(deltaX) / ((maxX - minX) * 0.5)
-        val zRatio = Math.abs(deltaZ) / ((maxZ - minZ) * 0.5)
-        val ratio = Math.max(xRatio, zRatio)
+        val xRatio = abs(deltaX) / ((maxX - minX) * 0.5)
+        val zRatio = abs(deltaZ) / ((maxZ - minZ) * 0.5)
+        val ratio = maxOf(xRatio, zRatio)
         val scale = if (ratio > 1.0) 1.0 / ratio else 1.0
 
         return Vec3(
@@ -249,7 +255,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private fun getAngle(pos: Vec3): Float {
         val deltaX = pos.x - player.x
         val deltaZ = pos.z - player.z
-        val targetYaw = Math.toDegrees(Math.atan2(deltaZ, deltaX)).toFloat() - 90.0f
+        val targetYaw = (atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f
         return player.yRot + Mth.wrapDegrees(targetYaw - player.yRot)
     }
 

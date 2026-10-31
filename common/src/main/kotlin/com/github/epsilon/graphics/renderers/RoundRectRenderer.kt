@@ -83,10 +83,10 @@ class RoundRectRenderer private constructor() : IRenderer {
         buffer.tryMap()
         val x2 = x + width
         val y2 = y + height
-        val argbTL = ARGB.toABGR(cTL.getRGB())
-        val argbBL = ARGB.toABGR(cBL.getRGB())
-        val argbBR = ARGB.toABGR(cBR.getRGB())
-        val argbTR = ARGB.toABGR(cTR.getRGB())
+        val argbTL = ARGB.toABGR(cTL.rgb)
+        val argbBL = ARGB.toABGR(cBL.rgb)
+        val argbBR = ARGB.toABGR(cBR.rgb)
+        val argbTR = ARGB.toABGR(cTR.rgb)
 
         addVertex(x, y, x, y, x2, y2, rTL, rTR, rBR, rBL, argbTL)
         addVertex(x, y2, x, y, x2, y2, rTL, rTR, rBR, rBL, argbBL)

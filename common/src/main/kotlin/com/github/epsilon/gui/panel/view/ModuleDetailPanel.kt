@@ -25,6 +25,7 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -75,10 +76,10 @@ class ModuleDetailPanel(
         this.bounds = bounds
         this.guiHeight = guiGraphics.guiHeight()
 
-        if (Math.abs(scrollVelocity) > 0.01f) {
+        if (abs(scrollVelocity) > 0.01f) {
             state.scrollDetail((scrollVelocity * partialTick).toDouble())
             scrollVelocity *= 0.86f
-            if (Math.abs(scrollVelocity) < 0.3f) {
+            if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
             markDirty()
@@ -127,7 +128,7 @@ class ModuleDetailPanel(
         val settingOwnerKey = getSettingOwnerKey(module)
         val contentHeight = settingListController.getContentHeight(settingOwnerKey, settings)
         state.setMaxDetailScroll(contentHeight - viewport.height)
-        val maxDetailScroll = Math.max(0.0f, contentHeight - viewport.height)
+        val maxDetailScroll = maxOf(0.0f, contentHeight - viewport.height)
         val hasScrollBar = maxDetailScroll > 0
         val rowWidth = if (hasScrollBar) viewport.width - ScrollBarUtils.TOTAL_WIDTH else viewport.width
         val contentSignature = buildContentSignature(module, settings, settingOwnerKey)

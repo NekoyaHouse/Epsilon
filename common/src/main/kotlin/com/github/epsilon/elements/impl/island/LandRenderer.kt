@@ -95,7 +95,7 @@ class LandRenderer(
 
         if (w < 1f || h < 1f) return
 
-        val radius = Math.min(w, h) * 0.4f * Mth.clamp(radiusAnim.value, 0f, 1f)
+        val radius = minOf(w, h) * 0.4f * Mth.clamp(radiusAnim.value, 0f, 1f)
 
         if (island.backgroundBlur) {
             BlurShader.render(x, y, w, h, radius, island.blurStrength.toFloat())
@@ -134,7 +134,7 @@ class LandRenderer(
         if (Constants.client.isLocalServer) {
             serverAddress = "Singleplayer"
         } else {
-            val serverData: ServerData? = Constants.client.getCurrentServer()
+            val serverData: ServerData? = Constants.client.currentServer
             serverAddress = if (serverData == null || serverData.ip.isBlank()) "Unknown server" else serverData.ip
         }
 
@@ -166,7 +166,7 @@ class LandRenderer(
     }
 
     private fun getPlayerCount(): Int {
-        val connection: ClientPacketListener? = Constants.client.getConnection()
+        val connection: ClientPacketListener? = Constants.client.connection
         if (connection != null) {
             val listed = connection.listedOnlinePlayers.size
             if (listed > 0) return listed
@@ -181,7 +181,7 @@ class LandRenderer(
         if (Constants.client.isLocalServer) return 0
 
         val player = NonNullContext.current?.player
-        val connection: ClientPacketListener? = Constants.client.getConnection()
+        val connection: ClientPacketListener? = Constants.client.connection
         if (connection != null && player != null) {
             val playerInfo: PlayerInfo? = connection.getPlayerInfo(player.uuid)
             if (playerInfo != null && playerInfo.latency >= 0) {
@@ -189,9 +189,9 @@ class LandRenderer(
             }
         }
 
-        val serverData: ServerData? = Constants.client.getCurrentServer()
+        val serverData: ServerData? = Constants.client.currentServer
         if (serverData == null || serverData.ping < 0) return -1
-        return Math.min(serverData.ping, Int.MAX_VALUE.toLong()).toInt()
+        return minOf(serverData.ping, Int.MAX_VALUE.toLong()).toInt()
     }
 
     private fun getLatencyColor(latency: Int): Color {

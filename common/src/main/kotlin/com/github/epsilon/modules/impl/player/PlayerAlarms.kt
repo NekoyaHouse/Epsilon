@@ -372,7 +372,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         if (gameType == GameType.SPECTATOR) {
             return EpsilonTranslations.PlayerAlarms.GAMEMODE_SPECTATOR.getTranslatedName()
         }
-        return gameType.getName()
+        return gameType.name
     }
 
 }

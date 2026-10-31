@@ -117,15 +117,15 @@ object MD3Theme {
 
     fun withAlpha(color: Color, alpha: Int): Color {
         val clampedAlpha = Mth.clamp(alpha, 0, 255)
-        return Color(color.getRed(), color.getGreen(), color.getBlue(), clampedAlpha)
+        return Color(color.red, color.green, color.blue, clampedAlpha)
     }
 
     fun lerp(start: Color, end: Color, delta: Float): Color {
         val t = Mth.clamp(delta, 0.0f, 1.0f)
-        val r = (start.getRed() + (end.getRed() - start.getRed()) * t).toInt()
-        val g = (start.getGreen() + (end.getGreen() - start.getGreen()) * t).toInt()
-        val b = (start.getBlue() + (end.getBlue() - start.getBlue()) * t).toInt()
-        val a = (start.getAlpha() + (end.getAlpha() - start.getAlpha()) * t).toInt()
+        val r = (start.red + (end.red - start.red) * t).toInt()
+        val g = (start.green + (end.green - start.green) * t).toInt()
+        val b = (start.blue + (end.blue - start.blue) * t).toInt()
+        val a = (start.alpha + (end.alpha - start.alpha) * t).toInt()
         return Color(r, g, b, a)
     }
 
@@ -418,7 +418,7 @@ object MD3Theme {
 
     private fun color(hex: String, alpha: Int): Color {
         val base = Color.decode(hex)
-        return Color(base.getRed(), base.getGreen(), base.getBlue(), alpha)
+        return Color(base.red, base.green, base.blue, alpha)
     }
 
     private data class ThemePalette(

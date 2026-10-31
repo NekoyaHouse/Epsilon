@@ -8,6 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
+import kotlin.math.ceil
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Items
 import java.util.Random
@@ -87,7 +88,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
         val randomValue = random.nextDouble() * randomDelayValue
         val totalDelay = baseDelay + randomValue
 
-        return Math.ceil(totalDelay).toInt()
+        return ceil(totalDelay).toInt()
     }
 
 }

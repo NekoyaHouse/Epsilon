@@ -462,7 +462,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     }
 
     override fun onDisable() {
-        val connection = mc.getConnection()
+        val connection = mc.connection
         val player = mc.player
         val closeSilentInventory = inventoryOpen && mode == Mode.Silent && connection != null && player != null
         clickOffHand = false

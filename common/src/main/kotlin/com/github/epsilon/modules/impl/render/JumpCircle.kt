@@ -21,6 +21,9 @@ import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -84,7 +87,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
                 } else if (groundedCache.remove(id)) {
                     circles.add(
                         Circle(
-                            Vec3(candidate.x, Math.floor(candidate.y) + 0.001, candidate.z),
+                            Vec3(candidate.x, floor(candidate.y) + 0.001, candidate.z),
                             TimerUtils()
                         )
                     )
@@ -121,7 +124,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
     ) {
         val colorAnim = circle.timer.getMs().toFloat() / 6000f
         val sizeProgress = 1f - (circle.timer.getMs() * (if (easeOut) 2f else 1f)) / 5000f
-        val sizeAnim = circleScale.toFloat() - Math.pow(sizeProgress.toDouble(), 4.0).toFloat()
+        val sizeAnim = circleScale.toFloat() - (sizeProgress.toDouble()).pow(4.0).toFloat()
 
         val camera: Camera = mc.gameRenderer.mainCamera()
         val pos = circle.pos
@@ -149,7 +152,7 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
     }
 
     private fun applyOpacity(color: Color, opacity: Float): Color {
-        val alpha = Mth.clamp(Math.round(color.alpha * Mth.clamp(opacity, 0.0f, 1.0f)), 0, 255)
+        val alpha = Mth.clamp((color.alpha * Mth.clamp(opacity, 0.0f, 1.0f)).roundToInt(), 0, 255)
         return Color(color.red, color.green, color.blue, alpha)
     }
 

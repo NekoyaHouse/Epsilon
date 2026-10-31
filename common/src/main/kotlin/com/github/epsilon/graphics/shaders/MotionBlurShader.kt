@@ -16,6 +16,7 @@ import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
+import kotlin.math.roundToInt
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -102,12 +103,12 @@ object MotionBlurShader {
             val activeMode: VideoMode? = Constants.client.window.activeVideoMode
             val refreshRate = if (activeMode == null) 0.0F else activeMode.refreshRate
             if (refreshRate > 0.0F) {
-                frameScale = Math.max(1.0f, (1.0 / frameTime).toFloat() / refreshRate)
+                frameScale = maxOf(1.0f, (1.0 / frameTime).toFloat() / refreshRate)
             }
         }
 
         val scaledStrength = settings.strength * frameScale
-        val scaledSamples = Mth.clamp(Math.round(settings.samples * frameScale), 4, MAX_SAMPLES)
+        val scaledSamples = Mth.clamp((settings.samples * frameScale).roundToInt(), 4, MAX_SAMPLES)
         val uniformData = MotionBlurUniforms(
             Matrix4f(view).invert(),
             Matrix4f(projection).invert(),
@@ -117,7 +118,7 @@ object MotionBlurShader {
             target.width.toFloat(),
             target.height.toFloat(),
             scaledStrength,
-            RenderSystem.getDevice().getDeviceInfo().isZZeroToOne(),
+            RenderSystem.getDevice().deviceInfo.isZZeroToOne(),
             scaledSamples,
             settings.algorithm,
             settings.depthBlur

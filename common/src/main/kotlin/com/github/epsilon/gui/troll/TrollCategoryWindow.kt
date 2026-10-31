@@ -18,7 +18,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
     private var visibleModules: List<Module> = emptyList()
 
     private fun title(): String {
-        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.getName()
+        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name
     }
 
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
@@ -31,17 +31,17 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
             .filter { module -> module.category == category }
             .sorted(order)
             .toList()
-        var width = Math.max(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
+        var width = maxOf(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (module in visibleModules) {
             val row = rows.getOrPut(module) {
                 TrollSettingRow(module, TrollSettingRow.ModuleAction.TOGGLE)
             }
-            width = Math.max(width, row.minimumWidth(metrics) + TrollTheme.xMargin() * 2.0f)
+            width = maxOf(width, row.minimumWidth(metrics) + TrollTheme.xMargin() * 2.0f)
         }
         headerHeight = TrollTheme.headerHeight(metrics)
-        size(Math.min(Math.min(width, 300.0f), screenWidth), Math.min(600.0f, screenHeight), screenWidth, screenHeight)
+        size(minOf(minOf(width, 300.0f), screenWidth), minOf(600.0f, screenHeight), screenWidth, screenHeight)
         val step = TrollTheme.rowHeight(metrics) + TrollTheme.yMargin()
-        scrollPosition = scroll.update(Math.max(0.0f, visibleModules.size * step + TrollTheme.yMargin() - viewport.height))
+        scrollPosition = scroll.update(maxOf(0.0f, visibleModules.size * step + TrollTheme.yMargin() - viewport.height))
         var y = viewport.y + TrollTheme.yMargin() - scrollPosition
         for (module in visibleModules) {
             rows.getValue(module).layout(UiRect(viewport.x, y, viewport.width, TrollTheme.rowHeight(metrics)))

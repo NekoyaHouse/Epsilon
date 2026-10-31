@@ -6,10 +6,10 @@ import com.github.epsilon.gui.theme.MD3Theme
 object PanelLayout {
 
     fun compute(screenWidth: Int, screenHeight: Int, railWidth: Float): Layout {
-        var panelWidth = Math.min(screenWidth * 0.56f, 584.0f)
-        var panelHeight = Math.min(screenHeight * 0.56f, 324.0f)
-        panelWidth = Math.max(panelWidth, 528.0f)
-        panelHeight = Math.max(panelHeight, 300.0f)
+        var panelWidth = minOf(screenWidth * 0.56f, 584.0f)
+        var panelHeight = minOf(screenHeight * 0.56f, 324.0f)
+        panelWidth = maxOf(panelWidth, 528.0f)
+        panelHeight = maxOf(panelHeight, 300.0f)
 
         val x = (screenWidth - panelWidth) / 2.0f
         val y = (screenHeight - panelHeight) / 2.0f
@@ -19,7 +19,7 @@ object PanelLayout {
         val railX = x + MD3Theme.OUTER_PADDING
         val modulesX = railX + railWidth + gap
         val maxContentRight = x + panelWidth - MD3Theme.OUTER_PADDING
-        val moduleWidth = Math.min(164.0f, panelWidth * 0.292f)
+        val moduleWidth = minOf(164.0f, panelWidth * 0.292f)
         val detailX = modulesX + moduleWidth + gap
         val detailWidth = maxContentRight - detailX
 

@@ -1,6 +1,9 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Rot2f
+import kotlin.math.abs
+import kotlin.math.atan2
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -342,8 +345,8 @@ object ElytraDirectionSolver {
      */
     private fun angleToLastEscape(yaw: Float, pitch: Float): Double {
         val previous = lastEscapeRotation ?: return 0.0
-        return Math.abs(Mth.wrapDegrees(yaw - previous.yaw).toDouble()) +
-                0.75 * Math.abs((pitch - previous.pitch).toDouble())
+        return abs(Mth.wrapDegrees(yaw - previous.yaw).toDouble()) +
+                0.75 * abs((pitch - previous.pitch).toDouble())
     }
 
     /**
@@ -363,7 +366,7 @@ object ElytraDirectionSolver {
 
         // yaw 直接取期望方向；pitch 先 5 度粗采样，再在最优区间二分细化。
         val desiredDirection = desiredVelocity.normalize()
-        var yaw = Math.toDegrees(Math.atan2(desiredDirection.z, desiredDirection.x)).toFloat() - 90.0f
+        var yaw = (atan2(desiredDirection.z, desiredDirection.x)).toDegrees().toFloat() - 90.0f
         yaw = Mth.wrapDegrees(yaw)
 
         var bestPitch = Mth.clamp(pitchOf(desiredDirection), -89.0f, 89.0f)
@@ -378,8 +381,8 @@ object ElytraDirectionSolver {
             pitch += 5.0f
         }
 
-        var low = Math.max(-89.0f, bestPitch - 5.0f)
-        var high = Math.min(89.0f, bestPitch + 5.0f)
+        var low = maxOf(-89.0f, bestPitch - 5.0f)
+        var high = minOf(89.0f, bestPitch + 5.0f)
         for (i in 0 until 20) {
             val mid = (low + high) * 0.5f
             val left = velocityAlignment(movement, gravity, desiredDirection, yaw, mid - 0.001f)
@@ -437,7 +440,7 @@ object ElytraDirectionSolver {
         }
 
         val box = player.boundingBox
-        val probeDistance = CEILING_PROBE_DISTANCE + Math.max(0.0, intendedClimb)
+        val probeDistance = CEILING_PROBE_DISTANCE + maxOf(0.0, intendedClimb)
         val ceilingProbe = AABB(
             box.minX + CEILING_PROBE_EPSILON,
             box.maxY - CEILING_PROBE_EPSILON,
@@ -457,18 +460,18 @@ object ElytraDirectionSolver {
     }
 
     private fun applyCeilingEscape(pitch: Float, ceilingEscape: Boolean): Float {
-        return if (ceilingEscape) Math.max(pitch, CEILING_ESCAPE_PITCH) else pitch
+        return if (ceilingEscape) maxOf(pitch, CEILING_ESCAPE_PITCH) else pitch
     }
 
     private fun pitchOf(direction: Vec3): Float {
-        val horizontal = Math.max(0.001, direction.horizontalDistance())
-        return -Math.toDegrees(Math.atan2(direction.y, horizontal)).toFloat()
+        val horizontal = maxOf(0.001, direction.horizontalDistance())
+        return -(atan2(direction.y, horizontal)).toDegrees().toFloat()
     }
 
     fun effectiveGravity(player: LocalPlayer): Double {
         // 与原版 LivingEntity.getEffectiveGravity 一致：下落且缓降时重力和 0.01 取小。
         if (player.deltaMovement.y <= 0.0 && player.hasEffect(MobEffects.SLOW_FALLING)) {
-            return Math.min(player.gravity, 0.01)
+            return minOf(player.gravity, 0.01)
         }
         return player.gravity
     }
@@ -483,7 +486,7 @@ object ElytraDirectionSolver {
                 if (yaw == 0.0f && pitch == 0.0f) {
                     continue
                 }
-                offsets.add(RotationOffset(yaw, pitch, (Math.abs(yaw) + Math.abs(pitch) * 0.75f).toDouble()))
+                offsets.add(RotationOffset(yaw, pitch, (abs(yaw) + abs(pitch) * 0.75f).toDouble()))
             }
         }
         offsets.sortWith(Comparator.comparingDouble<RotationOffset> { offset -> offset.penalty })

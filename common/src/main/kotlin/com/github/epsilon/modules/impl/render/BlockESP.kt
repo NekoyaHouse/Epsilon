@@ -109,8 +109,8 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
 
         val startX = Mth.floor(player.x - range)
         val endX = Mth.ceil(player.x + range)
-        val startY = level.getMinY() + 1
-        val endY = level.getMaxY()
+        val startY = level.minY + 1
+        val endY = level.maxY
         val startZ = Mth.floor(player.z - range)
         val endZ = Mth.ceil(player.z + range)
 

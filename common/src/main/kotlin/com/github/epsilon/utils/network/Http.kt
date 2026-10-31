@@ -78,7 +78,7 @@ object Http {
             }
 
             val total = response.headers().firstValueAsLong("Content-Length").orElse(-1L)
-            val parent = destination.getParent()
+            val parent = destination.parent
             if (parent != null) {
                 Files.createDirectories(parent)
             }
@@ -92,7 +92,7 @@ object Http {
                     var downloaded = 0L
                     var read = input.read(buffer)
                     while (read != -1) {
-                        if (cancelled != null && cancelled.getAsBoolean()) {
+                        if (cancelled != null && cancelled.asBoolean) {
                             throw IOException("Download cancelled")
                         }
                         output.write(buffer, 0, read)
@@ -117,7 +117,7 @@ object Http {
         try {
             val client = Constants.client
             if (client != null) {
-                val proxy = client.getProxy()
+                val proxy = client.proxy
                 if (proxy != null && proxy.type() == Proxy.Type.HTTP && proxy.address() is InetSocketAddress) {
                     return ProxySelector.of(proxy.address() as InetSocketAddress)
                 }

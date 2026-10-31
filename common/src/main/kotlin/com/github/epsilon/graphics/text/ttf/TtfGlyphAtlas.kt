@@ -30,8 +30,8 @@ class TtfGlyphAtlas(atlasId: Int) {
     private var currentRowHeight = 0
 
     init {
-        textureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_atlas/" + NEXT_TEXTURE_ID.getAndIncrement())
-        alphaTextureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_alpha_atlas/" + NEXT_TEXTURE_ID.getAndIncrement())
+        textureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_atlas/" + NEXT_TEXTURE_ID.andIncrement)
+        alphaTextureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_alpha_atlas/" + NEXT_TEXTURE_ID.andIncrement)
 
         val texture = RenderSystem.getDevice().createTexture(
             { "Lumin-TtfGlyphAtlas" },
@@ -65,8 +65,8 @@ class TtfGlyphAtlas(atlasId: Int) {
         this.alphaTexture = LuminTexture(alphaTexture, alphaTextureView, alphaSampler)
         fillTexture(texture, 0xFF.toByte())
         fillTexture(alphaTexture, 0x00.toByte())
-        Constants.client.getTextureManager().register(this.textureId, this.texture)
-        Constants.client.getTextureManager().register(this.alphaTextureId, this.alphaTexture)
+        Constants.client.textureManager.register(this.textureId, this.texture)
+        Constants.client.textureManager.register(this.alphaTextureId, this.alphaTexture)
     }
 
     /**
@@ -120,7 +120,7 @@ class TtfGlyphAtlas(atlasId: Int) {
         )
 
         currentX += cellWidth
-        currentRowHeight = Math.max(currentRowHeight, cellHeight)
+        currentRowHeight = maxOf(currentRowHeight, cellHeight)
 
         return uv
     }
@@ -138,8 +138,8 @@ class TtfGlyphAtlas(atlasId: Int) {
     }
 
     fun destroy() {
-        Constants.client.getTextureManager().release(this.textureId)
-        Constants.client.getTextureManager().release(this.alphaTextureId)
+        Constants.client.textureManager.release(this.textureId)
+        Constants.client.textureManager.release(this.alphaTextureId)
     }
 
     data class GlyphUV(val u0: Float, val v0: Float, val u1: Float, val v1: Float)

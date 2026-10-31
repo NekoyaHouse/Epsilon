@@ -9,9 +9,14 @@ import com.github.epsilon.events.impl.RaytraceEvent
 import com.github.epsilon.events.impl.RespawnEvent
 import com.github.epsilon.events.impl.RotationAnimationEvent
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.utils.math.toDegrees
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.random.Random
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.HitResult
@@ -25,7 +30,7 @@ import java.util.function.Function
  * 使用都必须重新读取 [INSTANCE]，不得长期缓存（AGENTS 约束）。
  *
  * INSTANCE 使用 `@Volatile` 保证跨线程可见性；Kotlin 侧沿用 `RotationManager.INSTANCE.xxx`
- * 语法，Java 侧 Phase B 改为 `RotationManager.Companion.getINSTANCE()`。
+ * 语法，Java 侧 Phase B 改为 `RotationManager.Companion.instance`。
  */
 abstract class RotationManager {
 
@@ -101,39 +106,34 @@ abstract class RotationManager {
             val raytrace = this.raytrace
 
             if (raytrace != null &&
-                (Math.abs(targetYaw - rotations.yaw) > 5 || Math.abs(targetPitch - rotations.pitch) > 5)
+                (abs(targetYaw - rotations.yaw) > 5 || abs(targetPitch - rotations.pitch) > 5)
             ) {
                 val trueTargetRotations = Rot2f(targetRotations!!.yaw, targetRotations!!.pitch)
 
-                val speed = (Math.random() * Math.random() * Math.random()) * 20
+                val speed = (Random.nextDouble() * Random.nextDouble() * Random.nextDouble()) * 20
                 randomAngle += (
-                    (20 + (Math.random() - 0.5).toFloat() *
-                        (Math.random() * Math.random() * Math.random() * 360).toFloat()) *
+                    (20 + (Random.nextDouble() - 0.5).toFloat() *
+                        (Random.nextDouble() * Random.nextDouble() * Random.nextDouble() * 360).toFloat()) *
                         (if (Constants.client.player!!.tickCount / 10 % 2 == 0) -1 else 1)
                     ).toFloat()
 
                 offset.set(
-                    (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
-                    (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
+                    (offset.yaw + -Mth.sin((randomAngle.toDouble()).toRadians()) * speed).toFloat(),
+                    (offset.pitch + Mth.cos((randomAngle.toDouble()).toRadians()) * speed).toFloat()
                 )
 
                 targetYaw += offset.yaw
                 targetPitch += offset.pitch
 
                 if (!raytrace.apply(Rot2f(targetYaw, targetPitch))) {
-                    randomAngle = (Math.toDegrees(
-                        Math.atan2(
-                            (trueTargetRotations.yaw - targetYaw).toDouble(),
-                            (targetPitch - trueTargetRotations.pitch).toDouble()
-                        )
-                    ) - 180).toFloat()
+                    randomAngle = ((atan2((trueTargetRotations.yaw - targetYaw).toDouble(), (targetPitch - trueTargetRotations.pitch).toDouble())).toDegrees() - 180).toFloat()
 
                     targetYaw -= offset.yaw
                     targetPitch -= offset.pitch
 
                     offset.set(
-                        (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
-                        (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
+                        (offset.yaw + -Mth.sin((randomAngle.toDouble()).toRadians()) * speed).toFloat(),
+                        (offset.pitch + Mth.cos((randomAngle.toDouble()).toRadians()) * speed).toFloat()
                     )
 
                     targetYaw = targetYaw + offset.yaw
@@ -143,12 +143,12 @@ abstract class RotationManager {
                 if (!raytrace.apply(Rot2f(targetYaw, targetPitch))) {
                     offset.set(0f, 0f)
 
-                    targetYaw = (targetRotations!!.yaw + Math.random() * 2).toFloat()
-                    targetPitch = (targetRotations!!.pitch + Math.random() * 2).toFloat()
+                    targetYaw = (targetRotations!!.yaw + Random.nextDouble() * 2).toFloat()
+                    targetPitch = (targetRotations!!.pitch + Random.nextDouble() * 2).toFloat()
                 }
             }
 
-            rotations = RotationUtils.smooth(Rot2f(targetYaw, targetPitch), rotationSpeed + Math.random())
+            rotations = RotationUtils.smooth(Rot2f(targetYaw, targetPitch), rotationSpeed + Random.nextDouble())
         }
 
         smoothed = true
@@ -324,8 +324,8 @@ abstract class RotationManager {
         if (active) {
             handleSendPosition(event)
 
-            if (Math.abs((rotations.yaw - player.yRot) % 360) < 1 &&
-                Math.abs(rotations.pitch - player.xRot) < 1
+            if (abs((rotations.yaw - player.yRot) % 360) < 1 &&
+                abs(rotations.pitch - player.xRot) < 1
             ) {
                 active = false
                 priority = 0

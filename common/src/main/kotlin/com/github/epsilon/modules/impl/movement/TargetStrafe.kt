@@ -13,9 +13,15 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -89,7 +95,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
             val deltaX = nextPosition.x - player.x
             val deltaZ = nextPosition.z - player.z
 
-            targetYaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(deltaZ, deltaX)).toFloat() - 90.0f)
+            targetYaw = Mth.wrapDegrees((atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f)
 
             RotationManager.INSTANCE.setRotations(
                 Rot2f(targetYaw, RotationManager.INSTANCE.getPitch()),
@@ -122,8 +128,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         val orbitRadius = radius
         val offsets = ArrayList<OrbitOffset>(pointCount)
         for (i in 0 until pointCount) {
-            val angle = i * (Math.PI * 2.0 / pointCount)
-            offsets.add(OrbitOffset(orbitRadius * Math.cos(angle), orbitRadius * Math.sin(angle)))
+            val angle = i * (PI * 2.0 / pointCount)
+            offsets.add(OrbitOffset(orbitRadius * cos(angle), orbitRadius * sin(angle)))
         }
         return offsets
     }
@@ -203,9 +209,9 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     private fun darken(color: Color, amount: Float): Color {
         val factor = 1.0f - Mth.clamp(amount, 0.0f, 1.0f)
         return Color(
-            Math.round(color.red * factor),
-            Math.round(color.green * factor),
-            Math.round(color.blue * factor),
+            (color.red * factor).roundToInt(),
+            (color.green * factor).roundToInt(),
+            (color.blue * factor).roundToInt(),
             color.alpha
         )
     }
@@ -219,10 +225,10 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         val orbitRadius = radius
 
         for (i in 0 until pointCount) {
-            val angle = i * (Math.PI * 2.0 / pointCount)
-            val nextAngle = (i + 1) * (Math.PI * 2.0 / pointCount)
-            val from = Vec3(x + Math.cos(angle) * orbitRadius, y, z + Math.sin(angle) * orbitRadius)
-            val to = Vec3(x + Math.cos(nextAngle) * orbitRadius, y, z + Math.sin(nextAngle) * orbitRadius)
+            val angle = i * (PI * 2.0 / pointCount)
+            val nextAngle = (i + 1) * (PI * 2.0 / pointCount)
+            val from = Vec3(x + cos(angle) * orbitRadius, y, z + sin(angle) * orbitRadius)
+            val to = Vec3(x + cos(nextAngle) * orbitRadius, y, z + sin(nextAngle) * orbitRadius)
             Render3DScheduler.addLine(from, to, color, width)
         }
     }

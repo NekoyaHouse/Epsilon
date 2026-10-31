@@ -21,6 +21,7 @@ import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -52,10 +53,10 @@ class GeneralClientSettingTab(
     ) {
         this.bounds = bounds
 
-        if (Math.abs(scrollVelocity) > 0.01f) {
+        if (abs(scrollVelocity) > 0.01f) {
             state.scrollClientSetting((scrollVelocity * partialTick).toDouble())
             scrollVelocity *= 0.86f
-            if (Math.abs(scrollVelocity) < 0.3f) {
+            if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
             markDirty()
@@ -64,7 +65,7 @@ class GeneralClientSettingTab(
         val settings = ClientSetting.settings.filter { setting -> setting.isAvailable }
         val contentHeight = settingListController.getContentHeight(SETTING_OWNER_KEY, settings)
         state.setMaxClientSettingScroll(contentHeight - bounds.height)
-        val maxScroll = Math.max(0.0f, contentHeight - bounds.height)
+        val maxScroll = maxOf(0.0f, contentHeight - bounds.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) bounds.width - ScrollBarUtils.TOTAL_WIDTH else bounds.width
         val contentSignature = buildContentSignature(settings)

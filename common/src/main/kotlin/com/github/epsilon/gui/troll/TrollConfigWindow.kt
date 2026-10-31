@@ -44,14 +44,14 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         }
 
         headerHeight = TrollTheme.headerHeight(metrics)
-        var width = Math.max(240.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
+        var width = maxOf(240.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (type in ActionButtonType.values()) {
-            width = Math.max(width, metrics.getWidth(type.label(), TrollTheme.VALUE_SCALE) * 2.0f + 32.0f)
+            width = maxOf(width, metrics.getWidth(type.label(), TrollTheme.VALUE_SCALE) * 2.0f + 32.0f)
         }
         for (config in configs) {
-            width = Math.max(width, metrics.getWidth(config, TrollTheme.TEXT_SCALE) + 74.0f)
+            width = maxOf(width, metrics.getWidth(config, TrollTheme.TEXT_SCALE) + 74.0f)
         }
-        width = Math.min(Math.min(width, 340.0f), screenWidth)
+        width = minOf(minOf(width, 340.0f), screenWidth)
 
         val contentTop = bounds.y + headerHeight + PADDING
         var actionTop = contentTop + FIELD_HEIGHT + GAP
@@ -60,14 +60,14 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         val statusHeight = if (status.isBlank()) 0.0f else ROW_HEIGHT
         var listTop = statusTop + statusHeight + GAP
         val fixedHeight = listTop - bounds.y
-        val listHeight = Math.max(ROW_HEIGHT, configs.size * (ROW_HEIGHT + GAP))
-        val height = Math.min(Math.min(fixedHeight + listHeight + PADDING, 300.0f), screenHeight)
+        val listHeight = maxOf(ROW_HEIGHT, configs.size * (ROW_HEIGHT + GAP))
+        val height = minOf(minOf(fixedHeight + listHeight + PADDING, 300.0f), screenHeight)
         size(width, height, screenWidth, screenHeight)
 
-        val contentWidth = Math.max(1.0f, bounds.width - PADDING * 2.0f)
+        val contentWidth = maxOf(1.0f, bounds.width - PADDING * 2.0f)
         inputBounds = UiRect(bounds.x + PADDING, bounds.y + headerHeight + PADDING, contentWidth, FIELD_HEIGHT)
         actionTop = inputBounds.bottom() + GAP
-        val buttonWidth = Math.max(1.0f, (contentWidth - GAP) / 2.0f)
+        val buttonWidth = maxOf(1.0f, (contentWidth - GAP) / 2.0f)
         actionButtons.clear()
         val types = ActionButtonType.values()
         for (i in types.indices) {
@@ -92,11 +92,11 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
             bounds.x + PADDING,
             listTop,
             contentWidth,
-            Math.max(1.0f, bounds.bottom() - PADDING - listTop)
+            maxOf(1.0f, bounds.bottom() - PADDING - listTop)
         )
 
         val contentHeight = configs.size * (ROW_HEIGHT + GAP)
-        scrollPosition = scroll.update(Math.max(0.0f, contentHeight - listViewport.height))
+        scrollPosition = scroll.update(maxOf(0.0f, contentHeight - listViewport.height))
 
         rows.clear()
         var rowY = listViewport.y - scrollPosition

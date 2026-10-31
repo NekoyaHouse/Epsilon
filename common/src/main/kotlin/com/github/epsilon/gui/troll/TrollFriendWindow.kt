@@ -27,22 +27,22 @@ class TrollFriendWindow : TrollWindow() {
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
         val friends = sortedFriends()
         headerHeight = TrollTheme.headerHeight(metrics)
-        var width = Math.max(190.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
+        var width = maxOf(190.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (friend in friends) {
-            width = Math.max(width, metrics.getWidth(friend, TrollTheme.TEXT_SCALE) + 72.0f)
+            width = maxOf(width, metrics.getWidth(friend, TrollTheme.TEXT_SCALE) + 72.0f)
         }
-        width = Math.min(Math.min(width, 280.0f), screenWidth)
+        width = minOf(minOf(width, 280.0f), screenWidth)
 
         val fixedHeight = headerHeight + PADDING + FIELD_HEIGHT + GAP + PADDING
-        val listHeight = Math.max(ROW_HEIGHT, friends.size * (ROW_HEIGHT + GAP))
-        val height = Math.min(Math.min(fixedHeight + listHeight, 220.0f), screenHeight)
+        val listHeight = maxOf(ROW_HEIGHT, friends.size * (ROW_HEIGHT + GAP))
+        val height = minOf(minOf(fixedHeight + listHeight, 220.0f), screenHeight)
         size(width, height, screenWidth, screenHeight)
 
-        val contentWidth = Math.max(1.0f, bounds.width - PADDING * 2.0f)
+        val contentWidth = maxOf(1.0f, bounds.width - PADDING * 2.0f)
         inputBounds = UiRect(
             bounds.x + PADDING,
             bounds.y + headerHeight + PADDING,
-            Math.max(1.0f, contentWidth - ADD_BUTTON_WIDTH - GAP),
+            maxOf(1.0f, contentWidth - ADD_BUTTON_WIDTH - GAP),
             FIELD_HEIGHT
         )
         addBounds = UiRect(inputBounds.right() + GAP, inputBounds.y, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
@@ -51,11 +51,11 @@ class TrollFriendWindow : TrollWindow() {
             bounds.x + PADDING,
             listTop,
             contentWidth,
-            Math.max(1.0f, bounds.bottom() - PADDING - listTop)
+            maxOf(1.0f, bounds.bottom() - PADDING - listTop)
         )
 
         val contentHeight = friends.size * (ROW_HEIGHT + GAP)
-        scrollPosition = scroll.update(Math.max(0.0f, contentHeight - listViewport.height))
+        scrollPosition = scroll.update(maxOf(0.0f, contentHeight - listViewport.height))
 
         rows.clear()
         var rowY = listViewport.y - scrollPosition

@@ -18,10 +18,10 @@ import java.awt.Color
 object SkeletonRenderer {
 
     fun render(player: AbstractClientPlayer, color: Color, lineWidth: Float) {
-        val dispatcher = Constants.client.getEntityRenderDispatcher()
+        val dispatcher = Constants.client.entityRenderDispatcher
         val partialTick = runSafe {
             if (level.tickRateManager().isFrozen) 1.0f
-            else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            else Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
         } ?: return
 
         val state = dispatcher.getRenderer(player).createRenderState(player, partialTick) as? AvatarRenderState ?: return
@@ -31,7 +31,7 @@ object SkeletonRenderer {
         val stack = PoseStack()
         prepareModelPose(avatarRenderer, state, stack)
 
-        val model: PlayerModel = avatarRenderer.getModel()
+        val model: PlayerModel = avatarRenderer.model
         model.setupAnim(state)
         model.root().translateAndRotate(stack)
 

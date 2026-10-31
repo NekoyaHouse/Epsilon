@@ -233,7 +233,7 @@ object Particles : Module("Particles", Category.RENDER) {
         override fun render(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
             if (trails.isEmpty()) return
 
-            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleSize = ffSize.toFloat()
 
             for (trail in trails) {
@@ -299,7 +299,7 @@ object Particles : Module("Particles", Category.RENDER) {
         }
 
         protected fun interpolatePos(): Vec3 {
-            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
             val cameraPos = Constants.client.gameRenderer.mainCamera().position()
             val x = Mth.lerp(tickDelta.toDouble(), prevPosX.toDouble(), posX.toDouble()) - cameraPos.x
             val y = Mth.lerp(tickDelta.toDouble(), prevPosY.toDouble(), posY.toDouble()) - cameraPos.y

@@ -4,6 +4,7 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
+import kotlin.math.sin
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
@@ -37,7 +38,7 @@ class ReisaDropdownCompanion {
         entranceAnim.run(1.0f)
 
         val now = Util.getMillis()
-        nextBlinkMs = now + 2_800L + Math.floorMod(newSessionId * 347L, 1_300L)
+        nextBlinkMs = now + 2_800L + (newSessionId * 347L).mod(1_300L)
         blinkEndsMs = 0L
         react(Action.PANEL_OPEN)
     }
@@ -87,7 +88,7 @@ class ReisaDropdownCompanion {
 
         val entrance = Mth.clamp(entranceAnim.value, 0.0f, 1.0f)
         val pulse = resolveActionPulse(now)
-        val bob = Math.sin((now % 3_896L) / 620.0).toFloat() * 1.15f
+        val bob = sin((now % 3_896L) / 620.0).toFloat() * 1.15f
         val motionX = resolveMotionX(now, pulse)
         val motionY = resolveMotionY(pulse)
         val actionScale = resolveActionScale(pulse)
@@ -132,7 +133,7 @@ class ReisaDropdownCompanion {
 
         if (now >= nextBlinkMs) {
             blinkEndsMs = now + 145L
-            nextBlinkMs = now + 3_200L + Math.floorMod(now, 1_500L)
+            nextBlinkMs = now + 3_200L + (now).mod(1_500L)
         }
         return if (now < blinkEndsMs) Action.BLINK else Action.IDLE
     }
@@ -165,7 +166,7 @@ class ReisaDropdownCompanion {
 
     private fun resolveMotionX(now: Long, pulse: Float): Float {
         if (activeAction === Action.DRAG) {
-            return Math.sin((now % 226L) / 36.0).toFloat() * 1.8f
+            return sin((now % 226L) / 36.0).toFloat() * 1.8f
         }
         if (activeAction === Action.SECONDARY_CLICK || activeAction === Action.KEY_BIND) {
             return -2.2f * pulse
@@ -210,17 +211,17 @@ class ReisaDropdownCompanion {
 
     private fun resolveLayout(screenWidth: Float, screenHeight: Float): Layout {
         var imageHeight = Mth.clamp(screenHeight * 0.60f, 150.0f, 520.0f)
-        val maxWidth = Math.max(90.0f, screenWidth * 0.24f)
-        imageHeight = Math.min(imageHeight, maxWidth / IMAGE_ASPECT_RATIO)
-        imageHeight = Math.min(imageHeight, screenHeight * 0.82f)
+        val maxWidth = maxOf(90.0f, screenWidth * 0.24f)
+        imageHeight = minOf(imageHeight, maxWidth / IMAGE_ASPECT_RATIO)
+        imageHeight = minOf(imageHeight, screenHeight * 0.82f)
         val imageWidth = imageHeight * IMAGE_ASPECT_RATIO
-        val imageX = screenWidth - imageWidth - Math.max(2.0f, DropdownTheme.PANEL_MARGIN_X * 0.45f)
+        val imageX = screenWidth - imageWidth - maxOf(2.0f, DropdownTheme.PANEL_MARGIN_X * 0.45f)
         val imageY = screenHeight - imageHeight
         return Layout(imageX, imageY, imageWidth, imageHeight)
     }
 
     private fun withAlpha(color: Color, alpha: Float): Color {
-        val value = Math.clamp((255.0f * Mth.clamp(alpha, 0.0f, 1.0f)).toInt().toLong(), 0, 255)
+        val value = ((255.0f * Mth.clamp(alpha, 0.0f, 1.0f)).toInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
         return Color(color.red, color.green, color.blue, value)
     }
 

@@ -4,10 +4,14 @@ import com.github.epsilon.utils.*
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
 import com.github.epsilon.managers.TimerManager
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.item.Items
@@ -133,13 +137,13 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val lookVec = Entity.calculateViewVector(-elytraFly.ncpUpPitch.toFloat(), player.getYRot(partialTick))
-            val lookDist = Math.sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z)
+            val lookDist = sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z)
 
             val movement = player.deltaMovement
             var x = movement.x
             var y = movement.y
             var z = movement.z
-            val motionDist = Math.sqrt(x * x + z * z)
+            val motionDist = sqrt(x * x + z * z)
 
             // 读取真实跳跃键，避免起飞时注入的 jump 影响移动。
             val jumping = mc.options.keyJump.isDown
@@ -180,7 +184,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
                 z *= 0.9900000095367432
             }
 
-            val finalDist = Math.sqrt(x * x + z * z)
+            val finalDist = sqrt(x * x + z * z)
             if (elytraFly.ncpSpeedLimit && finalDist > elytraFly.ncpMaxSpeed) {
                 x = x * elytraFly.ncpMaxSpeed / finalDist
                 z = z * elytraFly.ncpMaxSpeed / finalDist
@@ -217,8 +221,8 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             forward = if (forward > 0.0f) 1.0f else -1.0f
         }
 
-        val sin = Math.sin(Math.toRadians((yaw + 90.0f).toDouble()))
-        val cos = Math.cos(Math.toRadians((yaw + 90.0f).toDouble()))
+        val sin = sin(((yaw + 90.0f).toDouble()).toRadians())
+        val cos = cos(((yaw + 90.0f).toDouble()).toRadians())
         return doubleArrayOf(
             forward * speed * cos + side * speed * sin,
             forward * speed * sin - side * speed * cos

@@ -19,6 +19,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.DoubleSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.github.epsilon.utils.safety.*
+import kotlin.math.roundToInt
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
@@ -226,7 +227,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
         } else if (entity is ThrownEnderpearl) {
             val fade = distanceFade(entity, projectileFadeDistance.toFloat())
             val selected = if (pearlHitboxColors) pearlColor(entity) else Color(255, 255, 0)
-            val alpha = Math.round(fade * selected.alpha)
+            val alpha = (fade * selected.alpha).roundToInt()
             drawHitbox(entity, partialTicks, ARGB.color(alpha, selected.red, selected.green, selected.blue))
             return true
         } else if (entity is WindCharge) {

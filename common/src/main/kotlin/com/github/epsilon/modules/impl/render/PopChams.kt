@@ -16,6 +16,7 @@ import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.authlib.GameProfile
+import kotlin.math.roundToInt
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
@@ -95,7 +96,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
             setId(PopChams.nextEntityId++)
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+                else minecraft.deltaTracker.getGameTimeDeltaPartialTick(true)
             walkPosition = player.walkAnimation.position(tickDelta)
             walkSpeed = player.walkAnimation.speed(tickDelta)
             attackAnimation = player.getSwingAnimation(tickDelta)
@@ -113,13 +114,13 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
         }
 
         fun render(event: Render3DEvent): Boolean {
-            val frameTime = minecraft.getDeltaTracker().getGameTimeDeltaTicks() / 20.0f
+            val frameTime = minecraft.deltaTracker.gameTimeDeltaTicks / 20.0f
             timer += frameTime
             if (timer > PopChams.renderTime) return true
 
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+                else minecraft.deltaTracker.getGameTimeDeltaPartialTick(true)
             tickCount = (timer * 20.0).toInt()
 
             val progress = Mth.clamp((timer / PopChams.renderTime).toFloat(), 0.0f, 1.0f)
@@ -135,12 +136,12 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
             val alphaSide = PopChams.sideColor.alpha
             val alphaLine = PopChams.lineColor.alpha
             val fadeFactor =
-                if (PopChams.fadeOut) Math.max(0.0, 1.0 - timer / PopChams.renderTime).toFloat() else 1.0f
+                if (PopChams.fadeOut) maxOf(0.0, 1.0 - timer / PopChams.renderTime).toFloat() else 1.0f
 
             (walkAnimation as WalkAnimationStateAccessor).`epsilon$freeze`(walkPosition, walkSpeed, tickDelta)
 
-            val side = withAlpha(PopChams.sideColor, Math.round(alphaSide * fadeFactor))
-            val line = withAlpha(PopChams.lineColor, Math.round(alphaLine * fadeFactor))
+            val side = withAlpha(PopChams.sideColor, (alphaSide * fadeFactor).roundToInt())
+            val line = withAlpha(PopChams.lineColor, (alphaLine * fadeFactor).roundToInt())
 
             WireframeEntityRenderer.render(event.poseStack, this, scale, side, line, 2.0f)
             return false

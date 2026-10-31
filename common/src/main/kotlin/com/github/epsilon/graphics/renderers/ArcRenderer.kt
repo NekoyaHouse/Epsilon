@@ -4,10 +4,13 @@ import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.managers.RendererManager
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
+import kotlin.math.PI
+import kotlin.math.abs
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
@@ -39,7 +42,7 @@ class ArcRenderer private constructor() : IRenderer {
         private const val BUFFER_SIZE = 16 * 1024L
         private const val STRIDE = 56
         private const val ARC_BYTES = STRIDE * 4L
-        private val TAU = (Math.PI * 2.0).toFloat()
+        private val TAU = (PI * 2.0).toFloat()
 
         fun create(): ArcRenderer = RendererManager.register(ArcRenderer())
 
@@ -86,7 +89,7 @@ class ArcRenderer private constructor() : IRenderer {
     ) {
         if (radius <= 0.0f || strokeWidth <= 0.0f) return
 
-        val sweep = Math.clamp(Math.abs(sweepDegrees), 0.0f, 360.0f)
+        val sweep = (abs(sweepDegrees)).coerceIn(0.0f, 360.0f)
         if (sweep <= 0.0f) return
 
         val start = if (sweepDegrees < 0.0f) startDegrees + sweepDegrees else startDegrees
@@ -102,14 +105,14 @@ class ArcRenderer private constructor() : IRenderer {
         val x2 = centerX + extent
         val y2 = centerY + extent
 
-        val startRadians = Math.toRadians(start.toDouble()).toFloat()
-        val sweepRadians = if (sweep >= 360.0f) TAU else Math.toRadians(sweep.toDouble()).toFloat()
-        val gradientRotationRadians = Math.toRadians(gradientRotationDegrees.toDouble()).toFloat()
+        val startRadians = (start.toDouble()).toRadians().toFloat()
+        val sweepRadians = if (sweep >= 360.0f) TAU else (sweep.toDouble()).toRadians().toFloat()
+        val gradientRotationRadians = (gradientRotationDegrees.toDouble()).toRadians().toFloat()
         val cap = if (roundCap) 1.0f else 0.0f
 
-        val startAbgr = ARGB.toABGR(startColor.getRGB())
-        val middleAbgr = ARGB.toABGR(middleColor.getRGB())
-        val endAbgr = ARGB.toABGR(endColor.getRGB())
+        val startAbgr = ARGB.toABGR(startColor.rgb)
+        val middleAbgr = ARGB.toABGR(middleColor.rgb)
+        val endAbgr = ARGB.toABGR(endColor.rgb)
 
         addVertex(
             x1, y1, centerX, centerY, radius, halfStroke, startRadians, sweepRadians, cap,

@@ -9,6 +9,10 @@ import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -49,7 +53,7 @@ class MasEffectsParticleRenderer {
         drainPending()
         if (particles.isEmpty()) return
 
-        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
         val batches = LinkedHashMap<Identifier, MutableList<EffectParticle>>()
         for (particle in particles) {
             if (!particle.shouldRender()) continue
@@ -247,7 +251,7 @@ class MasEffectsParticleRenderer {
 
         internal fun texture(): Identifier {
             if (frames.size == 1) return frames[0]
-            val max = Math.max(1, frameDuration())
+            val max = maxOf(1, frameDuration())
             val index = Mth.clamp(frameAge(), 0, max) * (frames.size - 1) / max
             return frames[index]
         }
@@ -315,7 +319,7 @@ class MasEffectsParticleRenderer {
             y += adjusted.y
             z += adjusted.z
 
-            if (Math.abs(movement.y) >= 1.0E-5f && Math.abs(adjusted.y) < 1.0E-5f) {
+            if (abs(movement.y) >= 1.0E-5f && abs(adjusted.y) < 1.0E-5f) {
                 stoppedByCollision = true
             }
             if (movement.x != adjusted.x) xd = 0.0
@@ -344,16 +348,16 @@ class MasEffectsParticleRenderer {
             alpha = Mth.clamp(alphaControl * MasEffects.getMaceShockwaveOpacity(), 0.0f, 1.0f)
         }
 
-        override fun frameAge(): Int = Math.min(age, lifetime / 2)
+        override fun frameAge(): Int = minOf(age, lifetime / 2)
 
         override fun frameDuration(): Int = lifetime / 2
 
         override fun render(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads, partialTick: Float) {
-            renderPlane(poseStack, renderer, partialTick, Quaternionf().rotateX((Math.PI / 2.0f).toFloat()))
+            renderPlane(poseStack, renderer, partialTick, Quaternionf().rotateX((PI / 2.0f).toFloat()))
             if (crossed) {
                 renderPlane(
                     poseStack, renderer, partialTick,
-                    Quaternionf().rotateY((Math.PI / 4.0f).toFloat()).rotateX((Math.PI / 2.0f).toFloat())
+                    Quaternionf().rotateY((PI / 4.0f).toFloat()).rotateX((PI / 2.0f).toFloat())
                 )
             }
         }
@@ -468,7 +472,7 @@ class MasEffectsParticleRenderer {
 
             rotY += 20.0f
             alpha = Mth.clamp(
-                Math.sqrt(Math.sin(age.toDouble() / lifetime * Math.PI)).toFloat() / 1.2f, 0.0f, 1.0f
+                sqrt(sin(age.toDouble() / lifetime * PI)).toFloat() / 1.2f, 0.0f, 1.0f
             ) * opacity
             size = alpha / opacity * scale
         }
@@ -552,7 +556,7 @@ class MasEffectsParticleRenderer {
             yd *= 0.95
         }
 
-        override fun frameAge(): Int = Math.min(age, 30)
+        override fun frameAge(): Int = minOf(age, 30)
 
         override fun frameDuration(): Int = 30
     }

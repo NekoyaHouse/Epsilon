@@ -199,8 +199,8 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun withinMineRange(pos: BlockPos): Boolean {
-        val limit = Math.min(range, PacketMine.rangeLimit().toDouble())
-        return player.getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        val limit = minOf(range, PacketMine.rangeLimit().toDouble())
+        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
     context(nn: NonNullContext)
@@ -273,7 +273,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun collectCandidates(target: Player): MutableList<Candidate> {
         val candidates = ArrayList<Candidate>()
-        val limit = Math.min(range, PacketMine.rangeLimit().toDouble())
+        val limit = minOf(range, PacketMine.rangeLimit().toDouble())
         val feet = target.blockPosition()
 
         if (mineFeet) {
@@ -347,14 +347,14 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         if (state.getDestroySpeed(level, pos) < 0.0f) return false
         if (state.getCollisionShape(level, pos).isEmpty) return false
         // 严格小于 Packet Mine 的 farCancel 阈值，避免在临界距离被反复取消。
-        return player.getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
     context(nn: NonNullContext)
     private fun sortCandidates(candidates: MutableList<Candidate>) {
         val byDistance = Comparator<Candidate> { a, b ->
-            player.getEyePosition().distanceToSqr(Vec3.atCenterOf(a.pos))
-                .compareTo(player.getEyePosition().distanceToSqr(Vec3.atCenterOf(b.pos)))
+            player.eyePosition.distanceToSqr(Vec3.atCenterOf(a.pos))
+                .compareTo(player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
         }
 
         when (feetLogic.value) {

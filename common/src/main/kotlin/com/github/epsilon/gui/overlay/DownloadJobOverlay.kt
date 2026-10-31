@@ -12,6 +12,7 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.MouseButtonEvent
@@ -39,7 +40,7 @@ object DownloadJobOverlay : AutoCloseable {
 
         val width = LuminRenderSystem.getScaledWidth()
         val height = LuminRenderSystem.getScaledHeight()
-        val cardWidth = Math.min(WIDTH, width - MARGIN * 2.0f)
+        val cardWidth = minOf(WIDTH, width - MARGIN * 2.0f)
         if (cardWidth < 120.0f || height < HEIGHT + MARGIN * 2.0f) {
             close()
             return
@@ -52,7 +53,7 @@ object DownloadJobOverlay : AutoCloseable {
         )
         MD3Theme.syncFromSettings()
 
-        val window = minecraft.getWindow()
+        val window = minecraft.window
         if (scene == null) scene = UiScene(EpsilonUiTheme)
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("download-job-overlay", window.getWidth(), window.getHeight())
@@ -71,7 +72,7 @@ object DownloadJobOverlay : AutoCloseable {
         }
         graphics.nextStratum()
         graphics.blit(
-            target.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0.0f, 1.0f, 1.0f, 0.0f
+            target.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
         )
         renderedScreen = screen
         renderedJob = job
@@ -81,8 +82,8 @@ object DownloadJobOverlay : AutoCloseable {
         val cardBounds = bounds ?: return
         val current = job.currentAsset()
         val progress = job.progress()
-        val percent = Math.round(progress * 100.0f).toString() + "%"
-        val currentPercent = if (current == null) "" else Math.round(job.currentProgress() * 100.0f).toString() + "%"
+        val percent = (progress * 100.0f).roundToInt().toString() + "%"
+        val currentPercent = if (current == null) "" else (job.currentProgress() * 100.0f).roundToInt().toString() + "%"
         val title = EpsilonTranslations.Resources.TITLE.getTranslatedName()
         val resource = if (current == null) {
             EpsilonTranslations.Resources.JOB_PREPARING.getTranslatedName()
@@ -143,7 +144,7 @@ object DownloadJobOverlay : AutoCloseable {
     private fun fitScale(text: String, preferredScale: Float, maxWidth: Float): Float {
         val textWidth = scene!!.scheduler().textMetrics().getWidth(text, preferredScale)
         return if (textWidth > maxWidth && textWidth > 0.0f) {
-            preferredScale * Math.max(1.0f, maxWidth) / textWidth
+            preferredScale * maxOf(1.0f, maxWidth) / textWidth
         } else {
             preferredScale
         }

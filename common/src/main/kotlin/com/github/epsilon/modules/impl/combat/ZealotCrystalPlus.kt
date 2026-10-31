@@ -35,6 +35,10 @@ import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.hypot
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.Packet
@@ -407,7 +411,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         if (nullCheck() || !isEnabled) return
 
         when (val packet = event.packet) {
-            is ClientboundAddEntityPacket -> if (packet.getType() == EntityTypes.END_CRYSTAL) {
+            is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
                 handleSpawnPacket(packet)
             }
 
@@ -533,7 +537,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 }
 
                 if (snapshot.id == lastProcessedId) {
-                    waitForSignal(0L, Math.max(1, snapshot.settings.globalDelayNanos))
+                    waitForSignal(0L, maxOf(1, snapshot.settings.globalDelayNanos))
                     continue
                 }
 
@@ -549,7 +553,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 cachedPlaceInfo = asyncResult.placeInfo
                 cachedRotationBreakPlan = asyncResult.rotationBreakPlan
                 cachedBreakPlan = asyncResult.breakPlan
-                waitForSignal(0L, Math.max(1, snapshot.settings.globalDelayNanos))
+                waitForSignal(0L, maxOf(1, snapshot.settings.globalDelayNanos))
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
                 return
@@ -566,8 +570,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun waitForSignal(millis: Long, nanos: Int) {
-        var normalizedMillis = Math.max(0L, millis)
-        var normalizedNanos = Math.max(0, nanos)
+        var normalizedMillis = maxOf(0L, millis)
+        var normalizedNanos = maxOf(0, nanos)
         if (normalizedNanos >= 1_000_000) {
             normalizedMillis += normalizedNanos / 1_000_000L
             normalizedNanos %= 1_000_000
@@ -817,30 +821,30 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         var maxZ = minZ
 
         for (target in targets) {
-            minX = Math.min(minX, Mth.floor(target.pos.x))
-            minY = Math.min(minY, Mth.floor(target.pos.y))
-            minZ = Math.min(minZ, Mth.floor(target.pos.z))
-            maxX = Math.max(maxX, Mth.ceil(target.pos.x))
-            maxY = Math.max(maxY, Mth.ceil(target.pos.y + target.box.ysize))
-            maxZ = Math.max(maxZ, Mth.ceil(target.pos.z))
+            minX = minOf(minX, Mth.floor(target.pos.x))
+            minY = minOf(minY, Mth.floor(target.pos.y))
+            minZ = minOf(minZ, Mth.floor(target.pos.z))
+            maxX = maxOf(maxX, Mth.ceil(target.pos.x))
+            maxY = maxOf(maxY, Mth.ceil(target.pos.y + target.box.ysize))
+            maxZ = maxOf(maxZ, Mth.ceil(target.pos.z))
         }
 
         for (pos in placePositions) {
-            minX = Math.min(minX, pos.x)
-            minY = Math.min(minY, pos.y)
-            minZ = Math.min(minZ, pos.z)
-            maxX = Math.max(maxX, pos.x)
-            maxY = Math.max(maxY, pos.y + 2)
-            maxZ = Math.max(maxZ, pos.z)
+            minX = minOf(minX, pos.x)
+            minY = minOf(minY, pos.y)
+            minZ = minOf(minZ, pos.z)
+            maxX = maxOf(maxX, pos.x)
+            maxY = maxOf(maxY, pos.y + 2)
+            maxZ = maxOf(maxZ, pos.z)
         }
 
         for (crystal in crystals) {
-            minX = Math.min(minX, Mth.floor(crystal.pos.x))
-            minY = Math.min(minY, Mth.floor(crystal.pos.y))
-            minZ = Math.min(minZ, Mth.floor(crystal.pos.z))
-            maxX = Math.max(maxX, Mth.ceil(crystal.pos.x))
-            maxY = Math.max(maxY, Mth.ceil(crystal.pos.y + 2.0))
-            maxZ = Math.max(maxZ, Mth.ceil(crystal.pos.z))
+            minX = minOf(minX, Mth.floor(crystal.pos.x))
+            minY = minOf(minY, Mth.floor(crystal.pos.y))
+            minZ = minOf(minZ, Mth.floor(crystal.pos.z))
+            maxX = maxOf(maxX, Mth.ceil(crystal.pos.x))
+            maxY = maxOf(maxY, Mth.ceil(crystal.pos.y + 2.0))
+            maxZ = maxOf(maxZ, Mth.ceil(crystal.pos.z))
         }
 
         val expand = 12
@@ -902,7 +906,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
             val selfDamage = calcDamage(snapshot.self, crystalPos, snapshot.resistantBlocks)
             val collidingDamage = calcCollidingCrystalDamage(snapshot, placeBox)
-            val adjustedDamage = Math.max(selfDamage, collidingDamage - snapshot.settings.collidingCrystalExtraSelfDamageThreshold)
+            val adjustedDamage = maxOf(selfDamage, collidingDamage - snapshot.settings.collidingCrystalExtraSelfDamageThreshold)
 
             if (snapshot.self.totalHealth - adjustedDamage <= snapshot.settings.noSuicide) continue
             if (snapshot.self.totalHealth - collidingDamage <= snapshot.settings.noSuicide) continue
@@ -1349,7 +1353,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun handleExplosionPacketImpl(packet: ClientboundSoundPacket) {
-        if (packet.getSound() !== SoundEvents.GENERIC_EXPLODE) return
+        if (packet.sound !== SoundEvents.GENERIC_EXPLODE) return
 
         val soundPos = Vec3(packet.x, packet.y, packet.z)
         if (attackedPosMap.containsKey(BlockPos.containing(soundPos).asLong())) {
@@ -1519,9 +1523,9 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         var tMaxX = intBound(from.x, dx)
         var tMaxY = intBound(from.y, dy)
         var tMaxZ = intBound(from.z, dz)
-        val tDeltaX = if (stepX == 0) Double.POSITIVE_INFINITY else Math.abs(1.0 / dx)
-        val tDeltaY = if (stepY == 0) Double.POSITIVE_INFINITY else Math.abs(1.0 / dy)
-        val tDeltaZ = if (stepZ == 0) Double.POSITIVE_INFINITY else Math.abs(1.0 / dz)
+        val tDeltaX = if (stepX == 0) Double.POSITIVE_INFINITY else abs(1.0 / dx)
+        val tDeltaY = if (stepY == 0) Double.POSITIVE_INFINITY else abs(1.0 / dy)
+        val tDeltaZ = if (stepZ == 0) Double.POSITIVE_INFINITY else abs(1.0 / dz)
 
         for (i in 0 until 200) {
             if (resistantBlocks.isResistant(BlockPos.asLong(x, y, z))) {
@@ -1555,10 +1559,10 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun intBound(s: Double, ds: Double): Double {
         if (ds > 0.0) {
-            return (Math.floor(s + 1.0) - s) / ds
+            return (floor(s + 1.0) - s) / ds
         }
         if (ds < 0.0) {
-            return (s - Math.floor(s)) / -ds
+            return (s - floor(s)) / -ds
         }
         return Double.POSITIVE_INFINITY
     }
@@ -1566,7 +1570,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private fun applyDifficultyDamage(difficulty: Difficulty, damage: Float): Float {
         return when (difficulty) {
             Difficulty.PEACEFUL -> 0.0f
-            Difficulty.EASY -> Math.min(damage * 0.5f + 1.0f, damage)
+            Difficulty.EASY -> minOf(damage * 0.5f + 1.0f, damage)
             Difficulty.HARD -> damage * 1.5f
             else -> damage
         }
@@ -1651,7 +1655,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         for (entity in level.entitiesForRendering()) {
             if (!entity.isAlive) continue
 
-            val adjustedRange = Mth.ceil(rangeSq) - Math.ceil(((entity.bbWidth / 2.0f) * (entity.bbWidth / 2.0f) * 2.0f).toDouble())
+            val adjustedRange = Mth.ceil(rangeSq) - ceil(((entity.bbWidth / 2.0f) * (entity.bbWidth / 2.0f) * 2.0f).toDouble())
             val dist = entity.distanceToSqr(feetX + 0.5, feetY + 0.5, feetZ + 0.5)
             if (dist > adjustedRange) continue
 
@@ -1775,13 +1779,13 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             if (maxDamage <= 0) continue
             val remaining = maxDamage - armor.damageValue
             val percent = ((remaining / maxDamage.toDouble()) * 100.0).toInt().coerceIn(0, 100)
-            minDura = Math.min(minDura, percent)
+            minDura = minOf(minDura, percent)
         }
         return minDura
     }
 
     private fun getRealSpeed(entity: LivingEntity): Double {
-        return Math.hypot(entity.x - entity.xo, entity.z - entity.zo) * 20.0
+        return hypot(entity.x - entity.xo, entity.z - entity.zo) * 20.0
     }
 
     private fun getTotalHealth(entity: LivingEntity): Float {
@@ -1844,7 +1848,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun getRotationSpeed(): Double {
-        return Math.max(1.8, yawSpeed)
+        return maxOf(1.8, yawSpeed)
     }
 
     context(nn: NonNullContext)
@@ -1893,9 +1897,9 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     }
 
     private fun getRotationDelta(from: Rot2f, to: Rot2f): Float {
-        val yawDiff = Math.abs(Mth.wrapDegrees(to.yaw - from.yaw).toDouble())
-        val pitchDiff = Math.abs((to.pitch - from.pitch).toDouble())
-        return Math.hypot(yawDiff, pitchDiff).toFloat()
+        val yawDiff = abs(Mth.wrapDegrees(to.yaw - from.yaw).toDouble())
+        val pitchDiff = abs((to.pitch - from.pitch).toDouble())
+        return hypot(yawDiff, pitchDiff).toFloat()
     }
 
     private fun getCrystalPos(supportPos: BlockPos): Vec3 {
@@ -2143,7 +2147,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 var resistanceMultiplier = 1.0f
                 val resistance = entity.getEffect(MobEffects.RESISTANCE)
                 if (entity.hasEffect(MobEffects.RESISTANCE) && resistance != null) {
-                    resistanceMultiplier = Math.max(1.0f - (resistance.amplifier + 1) * 0.2f, 0.0f)
+                    resistanceMultiplier = maxOf(1.0f - (resistance.amplifier + 1) * 0.2f, 0.0f)
                 }
 
                 val epf = when (armorMode) {
@@ -2160,7 +2164,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                     }
                 }
 
-                val blastReduction = 1.0f - Math.min(epf, 20) / 25.0f
+                val blastReduction = 1.0f - minOf(epf, 20) / 25.0f
                 return DamageReductionData(armorValue, toughness, resistanceMultiplier, blastReduction)
             }
 
@@ -2400,7 +2404,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private fun toDelta(startTime: Long, lengthMs: Int): Float {
         val elapsed = System.currentTimeMillis() - startTime
-        return Math.clamp(elapsed.toFloat() / Math.max(1, lengthMs), 0.0f, 1.0f)
+        return (elapsed.toFloat() / maxOf(1, lengthMs)).coerceIn(0.0f, 1.0f)
     }
 
 }

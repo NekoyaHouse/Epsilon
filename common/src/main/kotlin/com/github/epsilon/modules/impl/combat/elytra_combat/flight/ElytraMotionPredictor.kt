@@ -1,5 +1,9 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
@@ -17,10 +21,10 @@ object ElytraMotionPredictor {
         // 严格按 LivingEntity.updateFallFlyingMovement 的顺序复算：重力、转向修正、阻力。
         var movement = movement0
         val lookAngle = calculateViewVector(pitch, yaw)
-        val leanAngle = pitch * (Math.PI / 180.0)
-        val lookHorizontalLength = Math.sqrt(lookAngle.x * lookAngle.x + lookAngle.z * lookAngle.z)
+        val leanAngle = pitch * (PI / 180.0)
+        val lookHorizontalLength = sqrt(lookAngle.x * lookAngle.x + lookAngle.z * lookAngle.z)
         val movementHorizontalLength = movement.horizontalDistance()
-        val liftForce = Math.cos(leanAngle) * Math.cos(leanAngle)
+        val liftForce = cos(leanAngle) * cos(leanAngle)
 
         movement = movement.add(0.0, gravity * (-1.0 + liftForce * 0.75), 0.0)
         if (movement.y < 0.0 && lookHorizontalLength > 0.0) {
@@ -33,7 +37,7 @@ object ElytraMotionPredictor {
         }
 
         if (leanAngle < 0.0 && lookHorizontalLength > 0.0) {
-            val convert = movementHorizontalLength * -Math.sin(leanAngle) * 0.04
+            val convert = movementHorizontalLength * -sin(leanAngle) * 0.04
             movement = movement.add(
                 -lookAngle.x * convert / lookHorizontalLength,
                 convert * 3.2,
@@ -53,8 +57,8 @@ object ElytraMotionPredictor {
     }
 
     private fun calculateViewVector(pitch: Float, yaw: Float): Vec3 {
-        val realPitch = pitch * (Math.PI / 180.0).toFloat()
-        val realYaw = -yaw * (Math.PI / 180.0).toFloat()
+        val realPitch = pitch * (PI / 180.0).toFloat()
+        val realYaw = -yaw * (PI / 180.0).toFloat()
         val yawCos = Mth.cos(realYaw.toDouble())
         val yawSin = Mth.sin(realYaw.toDouble())
         val pitchCos = Mth.cos(realPitch.toDouble())

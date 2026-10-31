@@ -38,7 +38,7 @@ object TrollTheme {
     }
 
     fun alpha(color: Color, alpha: Int): Color {
-        return Color(color.red, color.green, color.blue, Math.clamp(alpha.toLong(), 0, 255))
+        return Color(color.red, color.green, color.blue, (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
     }
 
     fun window(scope: UiTree.Scope, bounds: UiRect, headerHeight: Float, title: String, metrics: TextRenderer) {

@@ -4,6 +4,8 @@ import com.github.epsilon.Constants
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import kotlin.math.floor
+import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
@@ -112,7 +114,7 @@ object DamageUtils {
         val afterResistance = applyResistanceReduction(target, afterArmor)
         val afterEnchants = applyEnchantmentReduction(target, afterResistance, mode)
 
-        return Math.max(0f, afterEnchants)
+        return maxOf(0f, afterEnchants)
     }
 
     /**
@@ -126,7 +128,7 @@ object DamageUtils {
     context(nn: NonNullContext)
     fun rawExplosionDamage(target: LivingEntity, explosionPos: Vec3, radius: Float): Float {
         val doubleRadius = radius * 2.0f
-        val dist = Math.sqrt(target.distanceToSqr(explosionPos)) / doubleRadius
+        val dist = sqrt(target.distanceToSqr(explosionPos)) / doubleRadius
         if (dist > 1.0) return 0f
 
         val exposure = getSeenPercent(explosionPos, target)
@@ -163,8 +165,8 @@ object DamageUtils {
         val xs = 1.0 / ((bb.maxX - bb.minX) * 2.0 + 1.0)
         val ys = 1.0 / ((bb.maxY - bb.minY) * 2.0 + 1.0)
         val zs = 1.0 / ((bb.maxZ - bb.minZ) * 2.0 + 1.0)
-        val xOffset = (1.0 - Math.floor(1.0 / xs) * xs) / 2.0
-        val zOffset = (1.0 - Math.floor(1.0 / zs) * zs) / 2.0
+        val xOffset = (1.0 - floor(1.0 / xs) * xs) / 2.0
+        val zOffset = (1.0 - floor(1.0 / zs) * zs) / 2.0
 
         if (xs < 0.0 || ys < 0.0 || zs < 0.0) return 0.0f
 
@@ -216,7 +218,7 @@ object DamageUtils {
         val difficulty = player.level().difficulty
         return when (difficulty) {
             Difficulty.PEACEFUL -> 0f
-            Difficulty.EASY -> Math.min(damage / 2.0f + 1.0f, damage)
+            Difficulty.EASY -> minOf(damage / 2.0f + 1.0f, damage)
             Difficulty.NORMAL -> damage
             Difficulty.HARD -> damage * 1.5f
         }
@@ -256,7 +258,7 @@ object DamageUtils {
         val reduction = (amplifier + 1) * 5 // 5 per level
         val remaining = 25 - reduction
         val reduced = damage * remaining
-        return Math.max(reduced / 25.0f, 0.0f)
+        return maxOf(reduced / 25.0f, 0.0f)
     }
 
     // ── 附魔保护 ───────────────────────────────────────────────────────────
@@ -333,8 +335,8 @@ object DamageUtils {
     fun getPredictedBoundingBox(entity: LivingEntity, pos: Vec3): AABB {
         val width = entity.bbWidth
         val height = entity.bbHeight
-        val halfWidth = Math.min(width, 2.0f) / 2.0
-        val clampedHeight = Math.min(height.toDouble(), 3.0)
+        val halfWidth = minOf(width, 2.0f) / 2.0
+        val clampedHeight = minOf(height.toDouble(), 3.0)
 
         return AABB(
             pos.x - halfWidth, pos.y, pos.z - halfWidth,

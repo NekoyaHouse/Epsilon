@@ -13,7 +13,7 @@ object ExecutorManager {
         executor = Executors.newCachedThreadPool { task ->
             val thread = Thread(task)
             thread.isDaemon = true
-            thread.name = "Epsilon-Executor-" + threadNumber.getAndIncrement()
+            thread.name = "Epsilon-Executor-" + threadNumber.andIncrement
             thread
         }
     }

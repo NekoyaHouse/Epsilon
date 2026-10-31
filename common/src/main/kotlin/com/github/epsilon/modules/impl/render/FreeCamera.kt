@@ -26,6 +26,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.sqrt
 import net.minecraft.client.CameraType
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket
@@ -141,7 +142,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
 
             if (a && b) {
-                val diagonal = 1 / Math.sqrt(2.0)
+                val diagonal = 1 / sqrt(2.0)
                 velX *= diagonal
                 velZ *= diagonal
             }

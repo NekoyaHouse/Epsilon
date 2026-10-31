@@ -13,6 +13,7 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.random.Random
 import net.minecraft.world.item.Items
 
 class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
@@ -266,7 +267,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     }
 
     private fun randPitch(pitch: Float, bound: Float): Float {
-        return (pitch + bound * (Math.random() - 0.5)).toFloat()
+        return (pitch + bound * (Random.nextDouble() - 0.5)).toFloat()
     }
 
     private companion object {

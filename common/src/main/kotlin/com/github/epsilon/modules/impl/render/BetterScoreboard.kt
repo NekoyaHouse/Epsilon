@@ -15,6 +15,7 @@ import com.github.epsilon.settings.impl.DoubleSetting
 import com.google.common.base.Suppliers
 import java.awt.Color
 import java.util.function.Supplier
+import kotlin.math.roundToInt
 
 object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
 
@@ -54,10 +55,10 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
     }
 
     fun captureVanillaBackground(x0: Int, y0: Int, x1: Int, y1: Int) {
-        val left = Math.min(x0, x1).toFloat()
-        val top = Math.min(y0, y1).toFloat()
-        val right = Math.max(x0, x1).toFloat()
-        val bottom = Math.max(y0, y1).toFloat()
+        val left = minOf(x0, x1).toFloat()
+        val top = minOf(y0, y1).toFloat()
+        val right = maxOf(x0, x1).toFloat()
+        val bottom = maxOf(y0, y1).toFloat()
         val bounds = ScoreboardBounds(left, top, right, bottom)
         val current = pendingBounds
         pendingBounds = if (current == null) bounds else current.include(bounds)
@@ -90,9 +91,9 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
         renderScheduler.flushAndClear()
     }
 
-    fun getRoundedXOffset(): Int = Math.round(xOffset.toFloat())
+    fun getRoundedXOffset(): Int = (xOffset.toFloat()).roundToInt()
 
-    fun getRoundedYOffset(): Int = Math.round(yOffset.toFloat())
+    fun getRoundedYOffset(): Int = (yOffset.toFloat()).roundToInt()
 
     private data class ScoreboardBounds(val left: Float, val top: Float, val right: Float, val bottom: Float) {
 
@@ -101,10 +102,10 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
         fun height(): Float = bottom - top
 
         fun include(other: ScoreboardBounds): ScoreboardBounds = ScoreboardBounds(
-            Math.min(left, other.left),
-            Math.min(top, other.top),
-            Math.max(right, other.right),
-            Math.max(bottom, other.bottom)
+            minOf(left, other.left),
+            minOf(top, other.top),
+            maxOf(right, other.right),
+            maxOf(bottom, other.bottom)
         )
 
     }

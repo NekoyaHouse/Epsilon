@@ -20,6 +20,8 @@ import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -279,7 +281,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
         val secondPosValue = secondPos
         if (secondPosValue != null && doubleBreak) {
-            if (farCancel && Math.sqrt(player.eyePosition.distanceToSqr(Vec3.atCenterOf(secondPosValue))) > range) {
+            if (farCancel && sqrt(player.eyePosition.distanceToSqr(Vec3.atCenterOf(secondPosValue))) > range) {
                 secondPos = null
                 return
             }
@@ -322,7 +324,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
         val targetPosValue = targetPos
         if (targetPosValue != null) {
-            if (farCancel && Math.sqrt(player.eyePosition.distanceToSqr(Vec3.atCenterOf(targetPosValue))) > range) {
+            if (farCancel && sqrt(player.eyePosition.distanceToSqr(Vec3.atCenterOf(targetPosValue))) > range) {
                 targetPos = null
                 return
             }
@@ -620,13 +622,13 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         if (isSolidForFade(renderPos) && !paused) {
             renderProgress = fadeTime + renderTime
         } else {
-            renderProgress = Math.max(0.0, renderProgress - delta)
+            renderProgress = maxOf(0.0, renderProgress - delta)
         }
 
         if (isSolidForFade(secondRenderPos) && !paused) {
             secondRenderProgress = fadeTime + renderTime
         } else {
-            secondRenderProgress = Math.max(0.0, secondRenderProgress - delta)
+            secondRenderProgress = maxOf(0.0, secondRenderProgress - delta)
         }
     }
 
@@ -642,14 +644,14 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
         val side = fadeSideColor
         val line = fadeLineColor
-        val alphaScale = Math.min(1.0, progress / fadeTime)
+        val alphaScale = minOf(1.0, progress / fadeTime)
         val color1 = Color(
             side.red, side.green, side.blue,
-            Math.round(side.alpha * alphaScale).toInt(),
+            (side.alpha * alphaScale).roundToInt(),
         )
         val color2 = Color(
             line.red, line.green, line.blue,
-            Math.round(line.alpha * alphaScale).toInt(),
+            (line.alpha * alphaScale).roundToInt(),
         )
         val box = AABB(pos)
         Render3DScheduler.addFilledBox(box, color1)
@@ -685,7 +687,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             }
 
             RenderMode.Shrink -> {
-                val maxBound = Math.round(rawProgress * 100.0) / 100.0
+                val maxBound = (rawProgress * 100.0).roundToInt() / 100.0
                 val box = AABB(target).deflate(1.0 - maxBound)
                 Render3DScheduler.addFilledBox(box, color1)
                 Render3DScheduler.addOutlineBox(box, color2)
@@ -722,7 +724,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             }
 
             RenderMode.Shrink -> {
-                val maxBound = Math.round(rawProgress * 100.0) / 100.0
+                val maxBound = (rawProgress * 100.0).roundToInt() / 100.0
                 val box = AABB(second).deflate(1.0 - maxBound)
                 Render3DScheduler.addFilledBox(box, color1)
                 Render3DScheduler.addOutlineBox(box, color2)

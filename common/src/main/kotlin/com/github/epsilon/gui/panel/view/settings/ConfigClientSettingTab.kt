@@ -22,6 +22,7 @@ import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -60,10 +61,10 @@ class ConfigClientSettingTab(
     ) {
         this.bounds = bounds
 
-        if (Math.abs(scrollVelocity) > 0.01f) {
+        if (abs(scrollVelocity) > 0.01f) {
             state.scrollConfig((scrollVelocity * partialTick).toDouble())
             scrollVelocity *= 0.86f
-            if (Math.abs(scrollVelocity) < 0.3f) {
+            if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
             markDirty()
@@ -75,7 +76,7 @@ class ConfigClientSettingTab(
         val listViewport = getListViewport(bounds)
         val contentHeight = configs.size * (ROW_HEIGHT + MD3Theme.ROW_GAP)
         state.setMaxConfigScroll(contentHeight - listViewport.height)
-        val maxScroll = Math.max(0.0f, contentHeight - listViewport.height)
+        val maxScroll = maxOf(0.0f, contentHeight - listViewport.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
         val contentSignature = buildContentSignature(configs, activeConfig)
@@ -633,7 +634,7 @@ class ConfigClientSettingTab(
         val inputBounds = getInputSectionBounds(bounds)
         val y = bounds.y
         val bottom = inputBounds.y - SECTION_GAP
-        return UiRect(bounds.x, y, bounds.width, Math.max(0.0f, bottom - y))
+        return UiRect(bounds.x, y, bounds.width, maxOf(0.0f, bottom - y))
     }
 
     private fun getInputFieldBounds(inputBounds: UiRect): UiRect {

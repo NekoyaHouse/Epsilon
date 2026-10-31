@@ -17,7 +17,7 @@ class FriendDropdownPanel(panelIndex: Int) : AbstractDropdownPanel("friend", Eps
 
     override fun computeContentHeight(): Float {
         val friendCount = FriendManager.getFriends().size
-        return PADDING * 2.0f + FIELD_HEIGHT + GAP + Math.max(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP))
+        return PADDING * 2.0f + FIELD_HEIGHT + GAP + maxOf(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP))
     }
 
     override fun drawPanelContent(

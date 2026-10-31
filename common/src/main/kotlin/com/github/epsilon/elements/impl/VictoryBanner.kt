@@ -26,6 +26,8 @@ import com.github.epsilon.settings.impl.StringSetting
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.Packet
@@ -139,7 +141,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
             updateKillTrigger()
             if (!active) return
 
-            val elapsed = Math.max(0L, System.currentTimeMillis() - animationStartMs)
+            val elapsed = maxOf(0L, System.currentTimeMillis() - animationStartMs)
             if (elapsed >= totalDuration()) {
                 active = false
                 currentTitle = null
@@ -254,9 +256,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
         val frameProgress = if (preview) 1.0f else frameProgress(elapsed)
         val contentAlpha = if (preview) 1.0f else contentAlpha(elapsed)
-        val visibleWidth = Math.max(1.0f, layout.width * frameProgress)
+        val visibleWidth = maxOf(1.0f, layout.width * frameProgress)
         val visibleX = x + (layout.width - visibleWidth) * 0.5f
-        val frameAlpha = Math.min(1.0f, frameProgress * 1.8f)
+        val frameAlpha = minOf(1.0f, frameProgress * 1.8f)
         val offset = (1.0f - Easing.EASE_OUT_CUBIC.function.apply(contentAlpha)) * 5.0f * uiScale
 
         if (backgroundBlur) {
@@ -281,9 +283,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val requestedSubtitleScale = subtitleScale.toFloat() * uiScale
         val titleWidth = renderer.getWidth(bannerTitle, requestedTitleScale)
         val subtitleWidth = renderer.getWidth(bannerSubtitle, requestedSubtitleScale)
-        val desired = Math.max(IDEAL_WIDTH * uiScale, Math.max(titleWidth, subtitleWidth) + 230.0f * uiScale)
-        val available = Math.max(1.0f, LuminRenderSystem.getScaledWidth() - 24.0f)
-        val width = Math.min(available, Mth.clamp(desired, MIN_WIDTH * uiScale, MAX_WIDTH * uiScale))
+        val desired = maxOf(IDEAL_WIDTH * uiScale, maxOf(titleWidth, subtitleWidth) + 230.0f * uiScale)
+        val available = maxOf(1.0f, LuminRenderSystem.getScaledWidth() - 24.0f)
+        val width = minOf(available, Mth.clamp(desired, MIN_WIDTH * uiScale, MAX_WIDTH * uiScale))
         return Layout(width, BASE_HEIGHT * uiScale)
     }
 
@@ -315,7 +317,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val left = x + 84.0f * uiScale
         val showStatus = layout.width >= 360.0f * uiScale
         val right = x + layout.width - (if (showStatus) 88.0f else 18.0f) * uiScale
-        val available = Math.max(80.0f * uiScale, right - left)
+        val available = maxOf(80.0f * uiScale, right - left)
 
         val eyebrow = if (preview) "SYSTEM // VISUAL PREVIEW" else "COMBAT // ELIMINATION CONFIRMED"
         val eyebrowScale = 0.55f * uiScale
@@ -361,7 +363,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val numberHeight = renderer.getHeight(numberScale)
         val labelHeight = renderer.getHeight(labelScale)
         val statusHeight = renderer.getHeight(statusScale)
-        val primaryHeight = Math.max(numberHeight, labelHeight)
+        val primaryHeight = maxOf(numberHeight, labelHeight)
         val groupHeight = primaryHeight + 3.0f * uiScale + statusHeight
         val groupY = y + (layout.height - groupHeight) * 0.5f + offset
 
@@ -399,7 +401,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun holdDurationMs(): Long {
-        return Math.round(holdTime * 1_000.0)
+        return (holdTime * 1_000.0).roundToLong()
     }
 
     private fun clearRuntimeState() {
@@ -461,7 +463,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
     private fun withAlpha(color: Color?, alphaMultiplier: Float): Color {
         val source = color ?: Color.WHITE
-        val alpha = Mth.clamp(Math.round(source.alpha * Mth.clamp(alphaMultiplier, 0.0f, 1.0f)), 0, 255)
+        val alpha = Mth.clamp((source.alpha * Mth.clamp(alphaMultiplier, 0.0f, 1.0f)).roundToInt(), 0, 255)
         return Color(source.red, source.green, source.blue, alpha)
     }
 

@@ -143,6 +143,8 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 ## 代码规范
 
 - Java 25 / Kotlin、UTF-8，沿用相邻代码格式和命名；Kotlin 与 Java 共用 JDK 25 toolchain 与 JVM target 25。
+- 优先使用 Kotlin 原生写法：`java.lang.Math` 改用 `kotlin.math`（`abs`/`sqrt`/`sin`/`atan2`/`hypot`/`pow`/`floor`/`ceil`/`ln`/`log10`/`sign`/`exp`/`PI`/`E`）、`maxOf`/`minOf`、`coerceIn`、`roundToInt`、`floorDiv`/`mod`、`nextUp`、`Random.nextDouble()`；角度/弧度转换用 `com.github.epsilon.utils.math` 中的 `Double.toRadians()` / `Double.toDegrees()` 扩展。无 Kotlin 等价物的 `Math.toIntExact` / `Math.multiplyExact` 保留。
+- Java getter 调用一律改用 Kotlin 属性访问（`player.getX()` → `player.x`）；Kotlin 自定义的 `getXxx()` 方法保持函数调用，不得为同名属性替换。
 - Kotlin 源码目录固定：共享代码放 `common/src/main/kotlin`（loader 会重复编译），加载器专属代码放各自的 `src/main/kotlin`。
 - Kotlin 上下文参数使用 2.4 已稳定的 `context(...)` 语法；不得使用已废弃的 context receivers，也不需要为此添加 `-Xcontext-parameters` 等实验性编译参数。
 - 新增 Javadoc 与解释性注释使用中文；只对不明显的约束、线程或算法原因编写注释。

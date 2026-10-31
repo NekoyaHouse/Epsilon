@@ -19,6 +19,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
+import kotlin.math.roundToInt
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet
@@ -263,7 +264,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             if (enemy !== target) {
                 pending.addAll(drainAllLocked())
                 target = enemy
-                trackedPosition = enemy.getPositionCodec().getBase()
+                trackedPosition = enemy.positionCodec.base
             }
             backtracking = true
         }
@@ -275,8 +276,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         if (!isValidTarget(candidate)) return false
 
         val distance = candidate.boundingBox.distanceToSqr(player.eyePosition)
-        val min = Math.min(minRange, maxRange)
-        val max = Math.max(minRange, maxRange)
+        val min = minOf(minRange, maxRange)
+        val max = maxOf(minRange, maxRange)
         val inRange = distance >= min * min && distance <= max * max
         if (inRange) {
             lastInRangeAt = now
@@ -306,8 +307,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun findRangeTarget(): LivingEntity? {
-        val min = Math.min(minRange, maxRange)
-        val max = Math.max(minRange, maxRange)
+        val min = minOf(minRange, maxRange)
+        val max = maxOf(minRange, maxRange)
         val minSquared = min * min
         val maxSquared = max * max
         val eyePosition = player.eyePosition
@@ -335,7 +336,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         if (entity is Monster) return mobs
         if (entity is Animal) return animals
 
-        val category: MobCategory = entity.type.getCategory()
+        val category: MobCategory = entity.type.category
         return when (category) {
             MobCategory.AMBIENT, MobCategory.WATER_AMBIENT -> ambient
             MobCategory.WATER_CREATURE, MobCategory.AXOLOTLS, MobCategory.UNDERGROUND_WATER_CREATURE -> water
@@ -461,15 +462,15 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     }
 
     private fun randomBetween(first: Int, second: Int): Int {
-        val min = Math.min(first, second)
-        val max = Math.max(first, second)
+        val min = minOf(first, second)
+        val max = maxOf(first, second)
         return if (min == max) min else ThreadLocalRandom.current().nextInt(min, max + 1)
     }
 
     private fun decodeRelative(base: Vec3, x: Long, y: Long, z: Long): Vec3 {
-        val decodedX = if (x == 0L) base.x else (Math.round(base.x * 4096.0) + x) / 4096.0
-        val decodedY = if (y == 0L) base.y else (Math.round(base.y * 4096.0) + y) / 4096.0
-        val decodedZ = if (z == 0L) base.z else (Math.round(base.z * 4096.0) + z) / 4096.0
+        val decodedX = if (x == 0L) base.x else ((base.x * 4096.0).roundToInt() + x) / 4096.0
+        val decodedY = if (y == 0L) base.y else ((base.y * 4096.0).roundToInt() + y) / 4096.0
+        val decodedZ = if (z == 0L) base.z else ((base.z * 4096.0).roundToInt() + z) / 4096.0
         return Vec3(decodedX, decodedY, decodedZ)
     }
 

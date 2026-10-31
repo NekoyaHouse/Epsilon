@@ -16,6 +16,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.ceil
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -90,7 +91,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
             val target = findTarget() ?: return@nonNullHandler
 
-            val targetRotation = RotationUtils.calculate(player.getEyePosition(), target.hit.location)
+            val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
             RotationManager.INSTANCE.setRotations(
                 targetRotation,
                 turnSpeed,
@@ -175,9 +176,9 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun findTarget(): Target? {
-        val radius = Math.ceil(range).toInt()
+        val radius = ceil(range).toInt()
         val origin = player.blockPosition()
-        val eyes = player.getEyePosition()
+        val eyes = player.eyePosition
 
         var best: Target? = null
         var bestDistance = Double.MAX_VALUE

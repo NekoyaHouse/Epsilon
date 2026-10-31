@@ -65,7 +65,7 @@ object TargetManager {
                     sharedTarget = candidates.first()
                 }
 
-                val maxTargets = Math.max(1, request.maxTargets)
+                val maxTargets = maxOf(1, request.maxTargets)
                 if (candidates.size > maxTargets) {
                     candidates.subList(0, maxTargets).toList()
                 } else {
@@ -166,7 +166,7 @@ object TargetManager {
     }
 
     private fun getTeam(entity: Entity): String? {
-        val playerInfo: PlayerInfo = Constants.client.getConnection()!!.getPlayerInfo(entity.uuid) ?: return null
+        val playerInfo: PlayerInfo = Constants.client.connection!!.getPlayerInfo(entity.uuid) ?: return null
         val team = playerInfo.team ?: return null
         return team.name
     }

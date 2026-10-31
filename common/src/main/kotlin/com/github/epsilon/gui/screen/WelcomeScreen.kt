@@ -5,6 +5,7 @@ import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.BoolSetting
 import com.mojang.blaze3d.Blaze3D
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.CycleButton
@@ -80,7 +81,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         super.init()
         openedAtMs = Util.getMillis()
 
-        val buttonWidth = Math.clamp((width - 40).toLong(), 160, 200)
+        val buttonWidth = ((width - 40).toLong()).coerceIn((160).toLong(), (200).toLong()).toInt()
         val buttonX = (width - buttonWidth) / 2
         val cardHeight = getCardHeight()
         val buttonY = getCardY(cardHeight) + cardHeight - BUTTON_BOTTOM_PADDING - BUTTON_BLOCK_HEIGHT
@@ -119,18 +120,18 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         val font = this.font ?: return
         val fade = Mth.clamp((Util.getMillis() - openedAtMs) / 250.0f, 0.0f, 1.0f)
-        val alpha = Math.round(255.0f * fade)
+        val alpha = (255.0f * fade).roundToInt()
 
-        val cardWidth = Math.min(560, width - CARD_MARGIN * 2)
+        val cardWidth = minOf(560, width - CARD_MARGIN * 2)
         val bodyWidth = cardWidth - CARD_PADDING * 2
         val cardHeight = getCardHeight()
         val cardX = (width - cardWidth) / 2
         val cardY = getCardY(cardHeight)
 
-        val cardColor = Color(20, 20, 24, Math.min(235, alpha)).getRGB()
-        val outlineColor = Color(120, 124, 132, Math.min(120, alpha)).getRGB()
-        val titleColor = Color(245, 245, 245, alpha).getRGB()
-        val bodyColor = Color(220, 223, 230, alpha).getRGB()
+        val cardColor = Color(20, 20, 24, minOf(235, alpha)).rgb
+        val outlineColor = Color(120, 124, 132, minOf(120, alpha)).rgb
+        val titleColor = Color(245, 245, 245, alpha).rgb
+        val bodyColor = Color(220, 223, 230, alpha).rgb
 
         graphics.fill(cardX, cardY, cardX + cardWidth, cardY + cardHeight, cardColor)
         graphics.outline(cardX, cardY, cardWidth, cardHeight, outlineColor)
@@ -184,7 +185,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
 
     private fun getCardHeight(): Int {
         val font = this.font ?: return 0
-        val cardWidth = Math.min(560, width - CARD_MARGIN * 2)
+        val cardWidth = minOf(560, width - CARD_MARGIN * 2)
         val bodyWidth = cardWidth - CARD_PADDING * 2
         var bodyHeight = 0
         for (line in BODY_LINES) {
@@ -194,10 +195,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         if (bodyHeight > 0) {
             bodyHeight -= BODY_BLOCK_GAP
         }
-        return Math.min(
-            height - CARD_MARGIN * 2,
-            TITLE_TOP + TITLE_TO_BODY_GAP + bodyHeight + BUTTON_BOTTOM_PADDING + BUTTON_BLOCK_HEIGHT
-        )
+        return minOf(height - CARD_MARGIN * 2, TITLE_TOP + TITLE_TO_BODY_GAP + bodyHeight + BUTTON_BOTTOM_PADDING + BUTTON_BLOCK_HEIGHT)
     }
 
     private fun getCardY(cardHeight: Int): Int {

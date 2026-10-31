@@ -234,7 +234,7 @@ class TtfFontLoader : IFontLoader {
         val advance = getAdvance(codepoint)
         return GlyphDescriptor(
             fallbackAtlas!!, fallbackUv!!, fallbackWidth, fallbackHeight,
-            Math.floorDiv(advance - fallbackWidth, 2), fallbackYOffset, advance
+            (advance - fallbackWidth).floorDiv(2), fallbackYOffset, advance
         )
     }
 
@@ -403,7 +403,7 @@ class TtfFontLoader : IFontLoader {
         }
 
         fun setMaxGlyphUploadsPerFrame(maxGlyphUploadsPerFrame: Int) {
-            TtfFontLoader.maxGlyphUploadsPerFrame = Math.max(1, maxGlyphUploadsPerFrame)
+            TtfFontLoader.maxGlyphUploadsPerFrame = maxOf(1, maxGlyphUploadsPerFrame)
         }
 
         fun beginRenderFrame() {

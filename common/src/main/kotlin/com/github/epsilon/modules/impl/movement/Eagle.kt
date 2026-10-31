@@ -11,6 +11,7 @@ import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
+import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
@@ -100,13 +101,13 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         var inputMagnitude = strafeInput * strafeInput + forwardInput * forwardInput
         if (inputMagnitude < 1.0E-4f) return Vec3.ZERO
 
-        inputMagnitude = Math.max(Mth.sqrt(inputMagnitude), 1.0f)
+        inputMagnitude = maxOf(Mth.sqrt(inputMagnitude), 1.0f)
         val inputScale = getAllowedHorizontalDistance() / inputMagnitude
         strafeInput *= inputScale
         forwardInput *= inputScale
 
-        val sinYaw = Mth.sin((player.yRot * (Math.PI / 180.0).toFloat()).toDouble())
-        val cosYaw = Mth.cos((player.yRot * (Math.PI / 180.0).toFloat()).toDouble())
+        val sinYaw = Mth.sin((player.yRot * (PI / 180.0).toFloat()).toDouble())
+        val cosYaw = Mth.cos((player.yRot * (PI / 180.0).toFloat()).toDouble())
         return Vec3(
             (strafeInput * cosYaw - forwardInput * sinYaw).toDouble(),
             0.0,

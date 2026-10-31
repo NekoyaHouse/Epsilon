@@ -1,6 +1,9 @@
 package com.github.epsilon.graphics.text.ttf
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 import net.minecraft.resources.Identifier
 import org.lwjgl.stb.STBTTFontinfo
 import org.lwjgl.stb.STBTruetype
@@ -112,7 +115,7 @@ class TtfFontFile private constructor(
 
             val glyphWidth = width.get(0)
             val glyphHeight = height.get(0)
-            val alphaPixels = MemoryUtil.memCalloc(Math.max(1, glyphWidth * glyphHeight))
+            val alphaPixels = MemoryUtil.memCalloc(maxOf(1, glyphWidth * glyphHeight))
             val bitmapStack = MemoryStack.stackPush()
             try {
                 val bitmapWidth = bitmapStack.callocInt(1)
@@ -125,8 +128,8 @@ class TtfFontFile private constructor(
                 )
                 try {
                     if (bitmap != null && glyphWidth > 0 && glyphHeight > 0) {
-                        val copyWidth = Math.min(bitmapWidth.get(0), glyphWidth)
-                        val copyHeight = Math.min(bitmapHeight.get(0), glyphHeight)
+                        val copyWidth = minOf(bitmapWidth.get(0), glyphWidth)
+                        val copyHeight = minOf(bitmapHeight.get(0), glyphHeight)
                         val dstX = bitmapX.get(0) - xOff.get(0)
                         val dstY = bitmapY.get(0) - yOff.get(0)
                         for (row in 0 until copyHeight) {
@@ -181,12 +184,12 @@ class TtfFontFile private constructor(
      * 外部落在 128 以上；着色器按 `1 - r` 解释该纹理，墨迹才是可见部分。
      */
     fun generateFallbackGlyph(): TtfGlyph {
-        val ascent = Math.max(pixelAscent, 1)
-        val boxHeight = Math.max(3, Math.round(ascent * FALLBACK_HEIGHT_RATIO))
-        val boxWidth = Math.max(3, Math.round(boxHeight * FALLBACK_WIDTH_RATIO))
+        val ascent = maxOf(pixelAscent, 1)
+        val boxHeight = maxOf(3, (ascent * FALLBACK_HEIGHT_RATIO).roundToInt())
+        val boxWidth = maxOf(3, (boxHeight * FALLBACK_WIDTH_RATIO).roundToInt())
         // 笔画不能太细（缩放后会消失），也不能填满方框（环会退化成实心块）。
-        val maxStroke = Math.max(1, (Math.min(boxWidth, boxHeight) - 1) / 2)
-        val stroke = Math.clamp(Math.round(boxHeight * FALLBACK_STROKE_RATIO).toLong(), 1, maxStroke)
+        val maxStroke = maxOf(1, (minOf(boxWidth, boxHeight) - 1) / 2)
+        val stroke = ((boxHeight * FALLBACK_STROKE_RATIO).roundToInt().toLong()).coerceIn(((1).toLong()).toLong(), ((maxStroke).toLong()).toLong()).toInt().toInt()
 
         val bitmapWidth = boxWidth + FALLBACK_PADDING * 2
         val bitmapHeight = boxHeight + FALLBACK_PADDING * 2
@@ -200,8 +203,8 @@ class TtfFontFile private constructor(
         val halfHeight = boxHeight / 2.0
         val centerX = halfWidth
         val centerY = -halfHeight
-        val innerHalfWidth = Math.max(halfWidth - stroke, 0.0)
-        val innerHalfHeight = Math.max(halfHeight - stroke, 0.0)
+        val innerHalfWidth = maxOf(halfWidth - stroke, 0.0)
+        val innerHalfHeight = maxOf(halfHeight - stroke, 0.0)
         val onEdgeValue = 128.0
         val pixelDistScale = -onEdgeValue / padding
 
@@ -215,8 +218,8 @@ class TtfFontFile private constructor(
                     halfWidth, halfHeight, innerHalfWidth, innerHalfHeight
                 )
                 val index = row * bitmapWidth + column
-                sdfPixels.put(index, Math.clamp(onEdgeValue + pixelDistScale * -distance, 0.0, 255.0).toInt().toByte())
-                alphaPixels.put(index, (Math.clamp(0.5 - distance, 0.0, 1.0) * 255.0).toInt().toByte())
+                sdfPixels.put(index, (onEdgeValue + pixelDistScale * -distance).coerceIn(0.0, 255.0).toInt().toByte())
+                alphaPixels.put(index, ((0.5 - distance).coerceIn(0.0, 1.0) * 255.0).toInt().toByte())
             }
         }
 
@@ -277,8 +280,8 @@ class TtfFontFile private constructor(
                     continue
                 }
 
-                minY = Math.min(minY, y0.get(0))
-                maxY = Math.max(maxY, y1.get(0))
+                minY = minOf(minY, y0.get(0))
+                maxY = maxOf(maxY, y1.get(0))
             }
 
             return if (maxY > minY) (maxY - minY).toFloat() else fontHeight.toFloat()
@@ -312,17 +315,14 @@ private fun ringDistance(
     x: Double, y: Double, halfWidth: Double, halfHeight: Double,
     innerHalfWidth: Double, innerHalfHeight: Double
 ): Double {
-    return Math.max(
-        boxDistance(x, y, halfWidth, halfHeight),
-        -boxDistance(x, y, innerHalfWidth, innerHalfHeight)
-    )
+    return maxOf(boxDistance(x, y, halfWidth, halfHeight), -boxDistance(x, y, innerHalfWidth, innerHalfHeight))
 }
 
 /**
  * 矩形有符号距离，内部为负。
  */
 private fun boxDistance(x: Double, y: Double, halfWidth: Double, halfHeight: Double): Double {
-    val qx = Math.abs(x) - halfWidth
-    val qy = Math.abs(y) - halfHeight
-    return Math.hypot(Math.max(qx, 0.0), Math.max(qy, 0.0)) + Math.min(Math.max(qx, qy), 0.0)
+    val qx = abs(x) - halfWidth
+    val qy = abs(y) - halfHeight
+    return hypot(maxOf(qx, 0.0), maxOf(qy, 0.0)) + minOf(maxOf(qx, qy), 0.0)
 }

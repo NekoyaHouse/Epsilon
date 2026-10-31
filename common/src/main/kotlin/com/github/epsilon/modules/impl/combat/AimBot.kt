@@ -9,10 +9,17 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -125,7 +132,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             return
         }
 
-        val targetYaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(dz, dx)).toFloat() - 90.0f)
+        val targetYaw = Mth.wrapDegrees((atan2(dz, dx)).toDegrees().toFloat() - 90.0f)
 
         bowTargetYaw = targetYaw
         bowTargetPitch = targetPitch
@@ -184,9 +191,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
 
             val deltaYaw = Mth.wrapDegrees(
-                Math.toDegrees(
-                    Math.atan2(nearestTarget.getEyePosition().z - player.z, nearestTarget.getEyePosition().x - player.x)
-                ).toFloat() - 90.0f - rotationYaw
+                (atan2(nearestTarget.eyePosition.z - player.z, nearestTarget.eyePosition.x - player.x)).toDegrees().toFloat() - 90.0f - rotationYaw
             )
             var fixedDeltaYaw = deltaYaw
             if (fixedDeltaYaw > 180.0f) {
@@ -194,7 +199,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
             val yawStep = Mth.clamp(Mth.abs(fixedDeltaYaw), -aimSmooth.toFloat(), aimSmooth.toFloat())
             val newYaw = rotationYaw + (if (fixedDeltaYaw > 0.0f) yawStep else -yawStep)
-            val gcdFix = Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0) * 1.2
+            val gcdFix = (mc.options.sensitivity().get() * 0.6 + 0.2).pow(3.0) * 1.2
             rotationYaw = (newYaw - (newYaw - rotationYaw) % gcdFix).toFloat()
         } else {
             resetAimAssist()
@@ -208,7 +213,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     }
 
     private fun computeProjectilePitch(dx: Double, dz: Double, dy: Double, velocity: Double): Float {
-        val horizontalDist = Math.sqrt(dx * dx + dz * dz)
+        val horizontalDist = sqrt(dx * dx + dz * dz)
         val v2 = velocity * velocity
         val v4 = v2 * v2
         val g = 0.05
@@ -216,8 +221,8 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         val discriminant = v4 - g * (g * horizontalDist * horizontalDist + 2.0 * dy * v2)
         if (discriminant < 0.0) return Float.NaN
 
-        val tanTheta = (v2 - Math.sqrt(discriminant)) / (g * horizontalDist)
-        return -Math.toDegrees(Math.atan(tanTheta)).toFloat()
+        val tanTheta = (v2 - sqrt(discriminant)) / (g * horizontalDist)
+        return -(atan(tanTheta)).toDegrees().toFloat()
     }
 
     context(nn: NonNullContext)
@@ -234,16 +239,14 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             val distSq = player.distanceToSqr(candidate)
             if (distSq > rangeSq) continue
 
-            val yawDiff = Math.abs(
-                Mth.wrapDegrees(
+            val yawDiff = abs(Mth.wrapDegrees(
                     getYawBetween(player.yRot, player.x, player.z, candidate.x, candidate.z) - player.yRot
-                )
-            )
+                ))
             if (yawDiff > halfFov) continue
 
             if (!ignoreWalls && !player.hasLineOfSight(candidate)) continue
 
-            val score = yawDiff * Math.sqrt(distSq)
+            val score = yawDiff * sqrt(distSq)
             if (score < bestScore) {
                 best = candidate
                 bestScore = score
@@ -281,7 +284,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private fun getYawBetween(yaw: Float, srcX: Double, srcZ: Double, destX: Double, destZ: Double): Float {
         val xDist = destX - srcX
         val zDist = destZ - srcZ
-        val yaw1 = (StrictMath.atan2(zDist, xDist) * 180.0 / Math.PI).toFloat() - 90.0f
+        val yaw1 = (StrictMath.atan2(zDist, xDist) * 180.0 / PI).toFloat() - 90.0f
         return yaw + Mth.wrapDegrees(yaw1 - yaw)
     }
 

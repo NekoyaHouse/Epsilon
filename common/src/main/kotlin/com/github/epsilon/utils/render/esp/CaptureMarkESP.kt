@@ -7,6 +7,8 @@ import com.github.epsilon.utils.render.ColorUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
+import kotlin.math.PI
+import kotlin.math.sin
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -42,8 +44,8 @@ object CaptureMarkESP {
         val timeSeconds = System.nanoTime() * 1.0E-9
         val rotation = (-((timeSeconds * rotSpeed * 60.0) % 360.0)).toFloat()
 
-        val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
-        val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val cameraPos = Constants.client.entityRenderDispatcher.camera!!.position()
+        val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
         val ex = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - cameraPos.x
         val ey = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - cameraPos.y
         val ez = Mth.lerp(tickDelta.toDouble(), target.zOld, target.z) - cameraPos.z
@@ -67,17 +69,17 @@ object CaptureMarkESP {
         val c3 = getColorForProgress(0.5f, waveSpeed, color1, color2, timeSeconds)
         val c4 = getColorForProgress(0.75f, waveSpeed, color1, color2, timeSeconds)
 
-        renderer.vertex(matrix, -size, -size, 0f, 0f, 0f, c1.getRGB())
-        renderer.vertex(matrix, -size, size, 0f, 0f, 1f, c2.getRGB())
-        renderer.vertex(matrix, size, size, 0f, 1f, 1f, c3.getRGB())
-        renderer.vertex(matrix, size, -size, 0f, 1f, 0f, c4.getRGB())
+        renderer.vertex(matrix, -size, -size, 0f, 0f, 0f, c1.rgb)
+        renderer.vertex(matrix, -size, size, 0f, 0f, 1f, c2.rgb)
+        renderer.vertex(matrix, size, size, 0f, 1f, 1f, c3.rgb)
+        renderer.vertex(matrix, size, -size, 0f, 1f, 0f, c4.rgb)
         renderer.end()
 
         poseStack.popPose()
     }
 
     private fun getColorForProgress(progress: Float, waveSpeed: Double, color1: Color, color2: Color, timeSeconds: Double): Color {
-        var wave = Math.sin((progress * Math.PI * 2.0) + (timeSeconds * waveSpeed)).toFloat()
+        var wave = sin((progress * PI * 2.0) + (timeSeconds * waveSpeed)).toFloat()
         wave = (wave + 1f) / 2f
         return ColorUtils.interpolateColor(color1, color2, wave)
     }

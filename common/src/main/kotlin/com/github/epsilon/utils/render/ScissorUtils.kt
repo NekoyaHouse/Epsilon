@@ -3,6 +3,7 @@ package com.github.epsilon.utils.render
 import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.mojang.renderpearl.api.commands.RenderPass
+import kotlin.math.roundToInt
 import net.minecraft.client.renderer.state.WindowRenderState
 
 object ScissorUtils {
@@ -19,10 +20,10 @@ object ScissorUtils {
     fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float): LuminRenderSystem.ScissorRect {
         val scale = LuminRenderSystem.getGuiScale()
         val framebufferHeight = getFramebufferHeight()
-        val sx = Math.round(x * scale).toInt()
-        val sy = Math.round(framebufferHeight - (y + height) * scale).toInt()
-        val sw = Math.max(0, Math.round(width * scale).toInt())
-        val sh = Math.max(0, Math.round(height * scale).toInt())
+        val sx = (x * scale).roundToInt()
+        val sy = (framebufferHeight - (y + height) * scale).roundToInt()
+        val sw = maxOf(0, (width * scale).roundToInt())
+        val sh = maxOf(0, (height * scale).roundToInt())
         return clampFramebufferScissor(sx, sy, sw, sh)
     }
 
@@ -38,10 +39,10 @@ object ScissorUtils {
      */
     fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, guiHeight: Float): LuminRenderSystem.ScissorRect {
         val scale = LuminRenderSystem.getGuiScale()
-        val sx = Math.round(x * scale).toInt()
-        val sy = Math.round((guiHeight - y - height) * scale).toInt()
-        val sw = Math.max(0, Math.round(width * scale).toInt())
-        val sh = Math.max(0, Math.round(height * scale).toInt())
+        val sx = (x * scale).roundToInt()
+        val sy = ((guiHeight - y - height) * scale).roundToInt()
+        val sw = maxOf(0, (width * scale).roundToInt())
+        val sh = maxOf(0, (height * scale).roundToInt())
         return clampFramebufferScissor(sx, sy, sw, sh)
     }
 
@@ -57,10 +58,10 @@ object ScissorUtils {
      * @return 操作结果
      */
     fun toFramebufferScissor(x: Float, y: Float, width: Float, height: Float, scale: Double, framebufferHeight: Int): LuminRenderSystem.ScissorRect {
-        val sx = Math.round(x * scale).toInt()
-        val sy = Math.round(framebufferHeight - (y + height) * scale).toInt()
-        val sw = Math.max(0, Math.round(width * scale).toInt())
-        val sh = Math.max(0, Math.round(height * scale).toInt())
+        val sx = (x * scale).roundToInt()
+        val sy = (framebufferHeight - (y + height) * scale).roundToInt()
+        val sw = maxOf(0, (width * scale).roundToInt())
+        val sh = maxOf(0, (height * scale).roundToInt())
         return clampFramebufferScissor(sx, sy, sw, sh)
     }
 
@@ -76,11 +77,11 @@ object ScissorUtils {
     fun clampFramebufferScissor(x: Int, y: Int, width: Int, height: Int): LuminRenderSystem.ScissorRect {
         val areaWidth = getFramebufferWidth()
         val areaHeight = getFramebufferHeight()
-        val left = Math.clamp(x.toLong(), 0, areaWidth)
-        val top = Math.clamp(y.toLong(), 0, areaHeight)
-        val right = Math.clamp((x + width).toLong(), 0, areaWidth)
-        val bottom = Math.clamp((y + height).toLong(), 0, areaHeight)
-        return LuminRenderSystem.ScissorRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top))
+        val left = (x.toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
+        val top = (y.toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
+        val right = ((x + width).toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
+        val bottom = ((y + height).toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
+        return LuminRenderSystem.ScissorRect(left, top, maxOf(0, right - left), maxOf(0, bottom - top))
     }
 
     /**

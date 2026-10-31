@@ -140,7 +140,7 @@ object ExtrapolationManager {
     private fun getMotion(vecs: List<Vec3>, max: Int): Vec3 {
         var avg = Vec3(0.0, (vecs.first().y - 0.08) * 0.98, 0.0)
 
-        val s = Math.min(vecs.size, max)
+        val s = minOf(vecs.size, max)
         for (i in 0 until s) {
             avg = avg.add(vecs[i].x, 0.0, vecs[i].z)
         }

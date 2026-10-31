@@ -283,7 +283,7 @@ object SystemEmojiAtlas : AutoCloseable {
                 val numColorRecords = u16(data, base + 6)
                 val offsetFirstColorRecord = i32(data, base + 8)
                 val firstPaletteIndex = u16(data, base + 12)
-                val colorsToRead = Math.min(numPaletteEntries, Math.max(0, numColorRecords - firstPaletteIndex))
+                val colorsToRead = minOf(numPaletteEntries, maxOf(0, numColorRecords - firstPaletteIndex))
                 val colors = Array(colorsToRead) { Color.WHITE }
                 for (i in colors.indices) {
                     val colorRecord = base + offsetFirstColorRecord + (firstPaletteIndex + i) * 4

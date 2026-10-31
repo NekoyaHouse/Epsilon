@@ -9,6 +9,8 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
+import kotlin.math.sign
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
@@ -39,19 +41,17 @@ class TargetInstance(
         val nameWidth = textRenderer.getWidth(target.name.string, NAME_SCALE)
         val desired = PADDING + HEAD_SIZE + HEAD_GAP + nameWidth + NAME_ICON_GAP + ICON_SIZE + ICON_RIGHT_PADDING
         val screenMaxWidth = LuminRenderSystem.getScaledWidthInt() - 50f
-        targetWidth = Mth.clamp(desired, MIN_WIDTH, Math.max(MIN_WIDTH, screenMaxWidth))
-        val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
+        targetWidth = Mth.clamp(desired, MIN_WIDTH, maxOf(MIN_WIDTH, screenMaxWidth))
+        val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
         val health = HealthManager.getHealth(target)
-        val healthRowHeight = Math.max(BAR_HEIGHT, textRenderer.getHeight(HEALTH_SCALE))
+        val healthRowHeight = maxOf(BAR_HEIGHT, textRenderer.getHeight(HEALTH_SCALE))
         targetHeight = PADDING * 2f + HEAD_SIZE + HEALTH_ROW_GAP + healthRowHeight
 
         val healthTextWidth = textRenderer.getWidth(formatHealth(health), HEALTH_SCALE)
         val maxHealthTextWidth = textRenderer.getWidth(formatHealth(maxHealth), HEALTH_SCALE)
-        val maxBarWidth = Math.max(
-            1f, targetWidth - HEALTH_TEXT_INSET * 2f
-                    - healthTextWidth - maxHealthTextWidth - HEALTH_BAR_GAP * 2f
-        )
-        val currentBarWidth = Math.max(1f, maxBarWidth * (health / maxHealth))
+        val maxBarWidth = maxOf(1f, targetWidth - HEALTH_TEXT_INSET * 2f
+                    - healthTextWidth - maxHealthTextWidth - HEALTH_BAR_GAP * 2f)
+        val currentBarWidth = maxOf(1f, maxBarWidth * (health / maxHealth))
 
         if (!healthInitialized) {
             healthWidth = currentBarWidth
@@ -88,7 +88,7 @@ class TargetInstance(
 
         drawTargetIcon(scope, iconX + ICON_SIZE * 0.5f, headY + ICON_TOP_OFFSET + ICON_SIZE * 0.5f)
 
-        val maxHealth = Math.max(1.0f, target.maxHealth + Math.max(0.0f, target.absorptionAmount))
+        val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
         val health = HealthManager.getHealth(target)
 
         val healthText = formatHealth(health)
@@ -96,13 +96,13 @@ class TargetInstance(
         val healthTextHeight = textRenderer.getHeight(HEALTH_SCALE)
         val healthTextWidth = textRenderer.getWidth(healthText, HEALTH_SCALE)
         val maxHealthTextWidth = textRenderer.getWidth(maxHealthText, HEALTH_SCALE)
-        val healthRowHeight = Math.max(BAR_HEIGHT, healthTextHeight)
+        val healthRowHeight = maxOf(BAR_HEIGHT, healthTextHeight)
         val healthRowY = headY + HEAD_SIZE + HEALTH_ROW_GAP
         val healthY = healthRowY + (healthRowHeight - healthTextHeight) * 0.5f
 
         val barX = HEALTH_TEXT_INSET + healthTextWidth + HEALTH_BAR_GAP
         val barRight = width - HEALTH_TEXT_INSET - maxHealthTextWidth - HEALTH_BAR_GAP
-        val barWidth = Math.max(1f, barRight - barX)
+        val barWidth = maxOf(1f, barRight - barX)
         val barY = healthRowY + (healthRowHeight - BAR_HEIGHT) * 0.5f
         val barRadius = BAR_HEIGHT * 0.5f
 
@@ -165,10 +165,10 @@ class TargetInstance(
 
         private fun moveTowards(current: Float, target: Float, speed: Float): Float {
             val difference = target - current
-            if (Math.abs(difference) <= speed) {
+            if (abs(difference) <= speed) {
                 return target
             }
-            return current + Math.signum(difference) * speed
+            return current + sign(difference) * speed
         }
 
     }

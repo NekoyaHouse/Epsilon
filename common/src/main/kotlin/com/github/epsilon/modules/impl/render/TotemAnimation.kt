@@ -10,6 +10,10 @@ import com.github.epsilon.settings.impl.IntSetting
 import com.mojang.blaze3d.platform.Lighting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
 import net.minecraft.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
@@ -68,15 +72,15 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
                 25.5f * progressCubed -
                 13.8f * progressSquared +
                 4.0f * animationProgress
-        val oscillationRadians = oscillationFactor * Math.PI.toFloat()
+        val oscillationRadians = oscillationFactor * PI.toFloat()
         val adjustedProgress = elapsedTime + tickDelta
         val scale = 50.0f + 175.0f * Mth.sin(oscillationRadians.toDouble())
 
         poseStack.pushPose()
         when (mode) {
             Mode.FadeOut -> {
-                val x = Math.sin((adjustedProgress * 112.0f / 180.0f).toDouble()).toFloat() * 100.0f
-                val y = Math.cos((adjustedProgress * 112.0f / 180.0f).toDouble()).toFloat() * 50.0f
+                val x = sin((adjustedProgress * 112.0f / 180.0f).toDouble()).toFloat() * 100.0f
+                val y = cos((adjustedProgress * 112.0f / 180.0f).toDouble()).toFloat() * 50.0f
                 poseStack.translate(x * 0.008f, y * 0.008f, -10.0f)
                 poseStack.scale(scale * 0.016f, scale * 0.016f, scale * 0.016f)
             }
@@ -102,7 +106,7 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
             }
 
             Mode.Fall -> {
-                val downFactor = Math.pow(adjustedProgress.toDouble(), 3.0).toFloat() * 0.2f
+                val downFactor = (adjustedProgress.toDouble()).pow(3.0).toFloat() * 0.2f
                 poseStack.translate(0.0f, downFactor * 0.008f, -10.0f)
                 poseStack.rotateDegrees(Axis.ZP, adjustedProgress * 5.0f)
                 val size = 200.0f - adjustedProgress * 1.5f
@@ -110,7 +114,7 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
             }
 
             Mode.Rocket -> {
-                val downFactor = Math.pow(adjustedProgress.toDouble(), 3.0).toFloat() * 0.2f - 20.0f
+                val downFactor = (adjustedProgress.toDouble()).pow(3.0).toFloat() * 0.2f - 20.0f
                 poseStack.translate(0.0f, -downFactor * 0.008f, -10.0f)
                 poseStack.rotateDegrees(Axis.YP, adjustedProgress * floatingItemTimeLeft * 2.0f)
                 val size = 200.0f - adjustedProgress * 1.5f
@@ -118,7 +122,7 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
             }
 
             Mode.Roll -> {
-                val rightFactor = Math.pow(adjustedProgress.toDouble(), 2.0).toFloat() * 4.5f
+                val rightFactor = (adjustedProgress.toDouble()).pow(2.0).toFloat() * 4.5f
                 poseStack.translate(rightFactor * 0.008f, 0.0f, -10.0f)
                 poseStack.rotateDegrees(Axis.ZP, adjustedProgress * 40.0f)
                 val size = 200.0f - adjustedProgress * 1.5f
@@ -136,9 +140,9 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
     private fun getTime(): Int {
         val invertedSpeed = 101 - speed
         return when (mode) {
-            Mode.FadeOut -> Math.max(1, invertedSpeed / 4)
-            Mode.Insert -> Math.max(1, invertedSpeed / 2)
-            else -> Math.max(1, invertedSpeed)
+            Mode.FadeOut -> maxOf(1, invertedSpeed / 4)
+            Mode.Insert -> maxOf(1, invertedSpeed / 2)
+            else -> maxOf(1, invertedSpeed)
         }
     }
 

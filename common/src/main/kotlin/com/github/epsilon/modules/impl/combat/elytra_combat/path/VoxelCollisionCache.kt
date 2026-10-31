@@ -151,12 +151,12 @@ class VoxelCollisionCache(private val gridSize: Int) {
     }
 
     private fun isCoarseVolumeFree(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int): Boolean {
-        val minCellX = Math.floorDiv(minX, COARSE_SIZE)
-        val minCellY = Math.floorDiv(minY, COARSE_SIZE)
-        val minCellZ = Math.floorDiv(minZ, COARSE_SIZE)
-        val maxCellX = Math.floorDiv(maxX, COARSE_SIZE)
-        val maxCellY = Math.floorDiv(maxY, COARSE_SIZE)
-        val maxCellZ = Math.floorDiv(maxZ, COARSE_SIZE)
+        val minCellX = (minX).floorDiv(COARSE_SIZE)
+        val minCellY = (minY).floorDiv(COARSE_SIZE)
+        val minCellZ = (minZ).floorDiv(COARSE_SIZE)
+        val maxCellX = (maxX).floorDiv(COARSE_SIZE)
+        val maxCellY = (maxY).floorDiv(COARSE_SIZE)
+        val maxCellZ = (maxZ).floorDiv(COARSE_SIZE)
 
         for (x in minCellX..maxCellX) {
             for (y in minCellY..maxCellY) {
@@ -218,9 +218,9 @@ class VoxelCollisionCache(private val gridSize: Int) {
     }
 
     private fun updateCoarseAggregate(x: Int, y: Int, z: Int, delta: Int, blockedDelta: Int) {
-        val coarseX = Math.floorDiv(x, COARSE_SIZE)
-        val coarseY = Math.floorDiv(y, COARSE_SIZE)
-        val coarseZ = Math.floorDiv(z, COARSE_SIZE)
+        val coarseX = (x).floorDiv(COARSE_SIZE)
+        val coarseY = (y).floorDiv(COARSE_SIZE)
+        val coarseZ = (z).floorDiv(COARSE_SIZE)
         val coarseIndex = index(coarseX, coarseY, coarseZ, this.coarseSide)
         val packedCoarse = BlockPos.asLong(coarseX, coarseY, coarseZ)
         if (this.coarsePositions[coarseIndex] != packedCoarse) {
@@ -274,9 +274,9 @@ class VoxelCollisionCache(private val gridSize: Int) {
 
         private fun mediumCoordinate(coordinate: Int): Int {
             // 5 格固定拆成 2/2/1 三段，避免 5 不能被 2 整除的歧义。
-            val local = Math.floorMod(coordinate, COARSE_SIZE)
+            val local = (coordinate).mod(COARSE_SIZE)
             val child = if (local < 2) 0 else if (local < 4) 1 else 2
-            return Math.floorDiv(coordinate, COARSE_SIZE) * 3 + child
+            return (coordinate).floorDiv(COARSE_SIZE) * 3 + child
         }
 
         private fun mediumCellVolume(x: Int, y: Int, z: Int): Int {
@@ -284,13 +284,13 @@ class VoxelCollisionCache(private val gridSize: Int) {
         }
 
         private fun mediumChildSize(coordinate: Int): Int {
-            return if (Math.floorMod(coordinate, 3) < 2) 2 else 1
+            return if ((coordinate).mod(3) < 2) 2 else 1
         }
 
         private fun index(x: Int, y: Int, z: Int, side: Int): Int {
-            val wrappedX = Math.floorMod(x, side)
-            val wrappedY = Math.floorMod(y, side)
-            val wrappedZ = Math.floorMod(z, side)
+            val wrappedX = (x).mod(side)
+            val wrappedY = (y).mod(side)
+            val wrappedZ = (z).mod(side)
             return (wrappedX * side + wrappedY) * side + wrappedZ
         }
 

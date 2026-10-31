@@ -23,6 +23,7 @@ import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.PI
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
@@ -73,8 +74,8 @@ object Hat : Module("Hat", Category.RENDER) {
 
     private fun computeChineseHatPoints(points: Int, radius: Double) {
         for (i in 0..points) {
-            val circleX = radius * StrictMath.cos(i * Math.PI * 2 / points)
-            val circleZ = radius * StrictMath.sin(i * Math.PI * 2 / points)
+            val circleX = radius * StrictMath.cos(i * PI * 2 / points)
+            val circleZ = radius * StrictMath.sin(i * PI * 2 / points)
             this.positions[i][0] = circleX
             this.positions[i][1] = circleZ
         }
@@ -111,7 +112,7 @@ object Hat : Module("Hat", Category.RENDER) {
         }
 
         val camera = mc.gameRenderer.mainCamera().position()
-        val tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false)
+        val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(false)
         val x = Mth.lerp(tickDelta.toDouble(), player.xOld, player.x) - camera.x
         val y = Mth.lerp(tickDelta.toDouble(), player.yOld, player.y) - camera.y
         val z = Mth.lerp(tickDelta.toDouble(), player.zOld, player.z) - camera.z
@@ -211,7 +212,7 @@ object Hat : Module("Hat", Category.RENDER) {
         if (progress == 0.0) {
             return table[i - 1]
         }
-        val max = Math.max(0.0, (1.0 - progress) * (i - 1))
+        val max = maxOf(0.0, (1.0 - progress) * (i - 1))
         val min = max.toInt()
         return this.fadeBetween(table[min], table[min + 1], max - min)
     }

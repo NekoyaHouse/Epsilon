@@ -10,6 +10,8 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.modules.impl.render.ACSpoof
 import com.github.epsilon.utils.safety.*
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.components.PlayerTabOverlay
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.PlayerInfo
@@ -57,29 +59,29 @@ class TabListInstance(
         font = StaticFontLoader.defaultFont()
 
         val nn = NonNullContext.current
-        val connection: ClientPacketListener? = Constants.client.getConnection()
+        val connection: ClientPacketListener? = Constants.client.connection
         val scoreboard: Scoreboard? = nn?.level?.scoreboard
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)
         val showScore = objective != null && objective.renderType != ObjectiveCriteria.RenderType.HEARTS
 
         rebuildEntries(getSortedPlayers(connection), scoreboard, objective, showScore)
 
-        val total = Math.min(entries.size, MAX_COLS * MAX_ROWS_PER_COL)
+        val total = minOf(entries.size, MAX_COLS * MAX_ROWS_PER_COL)
         if (entries.size > total) {
             entries.subList(total, entries.size).clear()
         }
 
         var computedColumns = 1
-        while (computedColumns < MAX_COLS && Math.ceil(total / computedColumns.toDouble()) > MAX_ROWS_PER_COL) {
+        while (computedColumns < MAX_COLS && ceil(total / computedColumns.toDouble()) > MAX_ROWS_PER_COL) {
             computedColumns++
         }
         columns = computedColumns
-        rows = if (total == 0) 0 else Math.ceil(total / columns.toDouble()).toInt()
+        rows = if (total == 0) 0 else ceil(total / columns.toDouble()).toInt()
 
-        val gapsWidth = COL_GAP * Math.max(0, columns - 1)
-        val screenMaxWidth = Math.max(1f, Constants.client.window!!.guiScaledWidth - 50f)
-        val maxColumnWidth = Math.max(1f, (screenMaxWidth - gapsWidth) / columns)
-        val columnWidth = Math.min(computeBaseRowWidth(showScore), maxColumnWidth)
+        val gapsWidth = COL_GAP * maxOf(0, columns - 1)
+        val screenMaxWidth = maxOf(1f, Constants.client.window!!.guiScaledWidth - 50f)
+        val maxColumnWidth = maxOf(1f, (screenMaxWidth - gapsWidth) / columns)
+        val columnWidth = minOf(computeBaseRowWidth(showScore), maxColumnWidth)
 
         columnWidths.fill(columnWidth)
         contentWidth = columnWidth * columns + gapsWidth
@@ -92,7 +94,7 @@ class TabListInstance(
         headerBoxHeight = if (headerLines.isEmpty()) 0f else headerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
         footerBoxHeight = if (footerLines.isEmpty()) 0f else footerLines.size * HEADER_LINE_HEIGHT + HEADER_FOOTER_PADDING_Y * 2f
 
-        listWidth = Math.max(contentWidth, computeMaxLineWidth() + INNER_PADDING * 2f)
+        listWidth = maxOf(contentWidth, computeMaxLineWidth() + INNER_PADDING * 2f)
         if (listWidth > contentWidth && columns > 0) {
             val extraPerColumn = (listWidth - contentWidth) / columns
             for (i in 0 until columns) {
@@ -101,7 +103,7 @@ class TabListInstance(
             contentWidth = listWidth
         }
 
-        listHeight = Math.max(1, rows) * ROW_HEIGHT + LIST_INNER_PADDING_Y * 2f
+        listHeight = maxOf(1, rows) * ROW_HEIGHT + LIST_INNER_PADDING_Y * 2f
         val headerHeight = if (headerLines.isEmpty()) 0f else headerBoxHeight + LINE_GAP
         val footerHeight = if (footerLines.isEmpty()) 0f else footerBoxHeight + LINE_GAP
 
@@ -158,8 +160,8 @@ class TabListInstance(
             }
 
             entries.add(Entry(info.skin.body().texturePath(), display, info.latency, scoreText, scoreWidth))
-            maxNameWidth = Math.max(maxNameWidth, displayWidth)
-            maxScoreWidth = Math.max(maxScoreWidth, scoreWidth)
+            maxNameWidth = maxOf(maxNameWidth, displayWidth)
+            maxScoreWidth = maxOf(maxScoreWidth, scoreWidth)
         }
     }
 
@@ -272,7 +274,7 @@ class TabListInstance(
 
         for (i in lines.indices) {
             val line = lines[i]
-            var x = Math.round(left + (listWidth - lineWidth(line)) * 0.5f).toFloat()
+            var x = (left + (listWidth - lineWidth(line)) * 0.5f).roundToInt().toFloat()
             val textY = centerTextY(renderer, HEADER_SCALE, contentTop + i * HEADER_LINE_HEIGHT, HEADER_LINE_HEIGHT)
             for (segment in line) {
                 drawShadowedText(scope, segment.text, x, textY, HEADER_SCALE, segment.color)
@@ -455,9 +457,9 @@ class TabListInstance(
         var segments = raw
         if (ACSpoof.isEnabled) {
             val original = FormattedCharSequence.composite(
-                segments.map { FormattedCharSequence.forward(it.text, Style.EMPTY.withColor(it.color.getRGB())) }
+                segments.map { FormattedCharSequence.forward(it.text, Style.EMPTY.withColor(it.color.rgb)) }
             )
-            val replacement = ACSpoof.text(original, TEXT_DEFAULT.getRGB())
+            val replacement = ACSpoof.text(original, TEXT_DEFAULT.rgb)
             if (replacement !== original) {
                 val spoofed: MutableList<TextSegment> = ArrayList()
                 replacement.accept(object : FormattedCharSink {
@@ -506,8 +508,8 @@ class TabListInstance(
 
     private fun computeMaxLineWidth(): Float {
         var max = 0f
-        for (line in headerLines) max = Math.max(max, lineWidth(line))
-        for (line in footerLines) max = Math.max(max, lineWidth(line))
+        for (line in headerLines) max = maxOf(max, lineWidth(line))
+        for (line in footerLines) max = maxOf(max, lineWidth(line))
         return max
     }
 
@@ -598,8 +600,8 @@ class TabListInstance(
         }
 
         private fun approximateGnRadius(width: Float, height: Float, targetRadiusPixels: Float): Float {
-            val maximum = Math.min(width, height) * 0.5f
-            return Math.min(targetRadiusPixels, maximum) * 0.8f
+            val maximum = minOf(width, height) * 0.5f
+            return minOf(targetRadiusPixels, maximum) * 0.8f
         }
 
         private fun legacyColor(code: Char): Color? {

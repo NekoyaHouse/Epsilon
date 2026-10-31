@@ -25,6 +25,8 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -105,7 +107,7 @@ class TrollSettingRow {
         }
         return when (val s = setting) {
             is KeybindSetting -> KeybindUtils.format(s.value)
-            is IntSetting -> Math.round(numberValue()).toInt().toString()
+            is IntSetting -> (numberValue()).roundToInt().toString()
             is DoubleSetting -> formatNumber(numberValue())
             is EnumSetting<*> ->
                 if (previewEnum && pendingEnumIndex >= 0 && pendingEnumIndex < modesOf(s).size) {
@@ -122,9 +124,9 @@ class TrollSettingRow {
 
     fun minimumWidth(metrics: TextRenderer): Float {
         if (setting is ColorSetting) {
-            return Math.max(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getHeight(TrollTheme.TEXT_SCALE) + 39.0f)
+            return maxOf(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getHeight(TrollTheme.TEXT_SCALE) + 39.0f)
         }
-        return Math.max(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getWidth(valueText(), TrollTheme.VALUE_SCALE) + 24.0f)
+        return maxOf(120.0f, metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getWidth(valueText(), TrollTheme.VALUE_SCALE) + 24.0f)
     }
 
     fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
@@ -154,7 +156,7 @@ class TrollSettingRow {
         val valueWidth = if (setting is ColorSetting) {
             metrics.getHeight(TrollTheme.TEXT_SCALE) + 9.0f
         } else {
-            Math.min(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width * 0.48f)
+            minOf(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width * 0.48f)
         }
         val scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - (if (dragging) 0.1f else 0.0f))
         val text = if (setting != null && !setting.isPlatformSupported()) TrollTheme.alpha(TrollTheme.text(), 110) else TrollTheme.text()
@@ -179,11 +181,11 @@ class TrollSettingRow {
         val labelScale = TrollTheme.TEXT_SCALE
         val valueScale = TrollTheme.VALUE_SCALE
         val textY = bounds.y + 2.25f
-        val valueWidth = Math.min(metrics.getWidth(text, valueScale), bounds.width * 0.48f)
+        val valueWidth = minOf(metrics.getWidth(text, valueScale), bounds.width * 0.48f)
         val valueX = bounds.right() - valueWidth - 3.0f
 
         scope.text(
-            3, TrollTheme.trim(label(), metrics, labelScale, Math.max(1.0f, bounds.width - valueWidth - 10.5f)),
+            3, TrollTheme.trim(label(), metrics, labelScale, maxOf(1.0f, bounds.width - valueWidth - 10.5f)),
             bounds.x + 3.0f, textY, labelScale, TrollTheme.text()
         )
         scope.text(
@@ -194,7 +196,7 @@ class TrollSettingRow {
 
         val cursor = activeInput.getCursorIndex()
         var caretX = valueX + metrics.getWidth(text.substring(0, cursor), valueScale)
-        caretX = Math.min(caretX, bounds.right() - 3.0f)
+        caretX = minOf(caretX, bounds.right() - 3.0f)
         val caretY = bounds.bottom() - metrics.getHeight(valueScale) - 3.0f
         if (System.currentTimeMillis() % 1000 > 500) {
             scope.rect(4, caretX, caretY, 0.8f, metrics.getHeight(valueScale), TrollTheme.text())
@@ -266,10 +268,10 @@ class TrollSettingRow {
         if (!dragging || event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false
         val setting = this.setting
         if (setting is EnumSetting<*>) {
-            enumDragged = enumDragged || Math.abs(event.x() - dragStartX) > 2.0
+            enumDragged = enumDragged || abs(event.x() - dragStartX) > 2.0
             if (enumDragged) {
                 val modeCount = modesOf(setting).size
-                pendingEnumIndex = Math.clamp(((event.x() - bounds.x) / bounds.width * modeCount).toInt().toLong(), 0, modeCount - 1)
+                pendingEnumIndex = (((event.x() - bounds.x) / bounds.width * modeCount).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((modeCount - 1).toLong()).toLong()).toInt().toInt()
             }
         } else {
             updateNumber(event.x(), event.modifiers())
@@ -355,7 +357,7 @@ class TrollSettingRow {
         if (isEditing()) return
         val original = if (setting is StringSetting) (setting as StringSetting).value else valueText()
         originalText = original
-        val created = DropdownTextField(Math.max(256, original.length))
+        val created = DropdownTextField(maxOf(256, original.length))
         created.text = original
         created.focus()
         input = created
@@ -373,7 +375,7 @@ class TrollSettingRow {
         } else if (commit) {
             try {
                 val value = text.toDouble()
-                if (value.isFinite()) applyNumber(Math.clamp(value, minimum(), maximum()))
+                if (value.isFinite()) applyNumber((value).coerceIn(minimum(), maximum()))
             } catch (exception: NumberFormatException) {
                 Constants.LOGGER.debug("Troll GUI 数值输入无效: {} = {}", setting?.name, text, exception)
             }
@@ -436,25 +438,21 @@ class TrollSettingRow {
     private fun updateNumber(mouseX: Double, modifiers: Int) {
         val setting = this.setting
         var step = if (setting is IntSetting) setting.step.toDouble() else (setting as DoubleSetting).step
-        var fraction = Math.clamp((mouseX - bounds.x) / Math.max(1.0f, bounds.width).toDouble(), 0.0, 1.0)
+        var fraction = ((mouseX - bounds.x) / maxOf(1.0f, bounds.width).toDouble()).coerceIn(0.0, 1.0)
         if ((modifiers and InputConstants.MOD_ALT) != 0) {
-            fraction = Math.clamp(
-                (numberValue() - minimum() + (mouseX - dragStartX) * (maximum() - minimum()) / bounds.width * 0.1) / Math.max(0.000001, maximum() - minimum()),
-                0.0,
-                1.0
-            )
+            fraction = ((numberValue() - minimum() + (mouseX - dragStartX) * (maximum() - minimum()) / bounds.width * 0.1) / maxOf(0.000001, maximum() - minimum())).coerceIn(0.0, 1.0)
             if (setting is DoubleSetting) step *= 0.1
         }
         dragStartX = mouseX
-        var value = minimum() + Math.round(fraction * (maximum() - minimum()) / Math.max(0.000001, step)) * step
-        value = Math.clamp(value, minimum(), maximum())
+        var value = minimum() + (fraction * (maximum() - minimum()) / maxOf(0.000001, step)).roundToInt() * step
+        value = (value).coerceIn(minimum(), maximum())
         if (setting!!.isApplyWhenRelease) pendingNumber = value else applyNumber(value)
     }
 
     private fun applyNumber(value: Double) {
         val setting = this.setting
-        if (setting is IntSetting && setting.value != Math.round(value).toInt()) {
-            setting.value = Math.round(value).toInt()
+        if (setting is IntSetting && setting.value != (value).roundToInt()) {
+            setting.value = (value).roundToInt()
         } else if (setting is DoubleSetting && setting.value.compareTo(value) != 0) {
             setting.value = value
         }
@@ -472,10 +470,10 @@ class TrollSettingRow {
         }
         return when (val s = setting) {
             is BoolSetting -> if (s.value) 1.0f else 0.0f
-            is IntSetting -> Math.clamp((numberValue() - minimum()) / Math.max(1.0, maximum() - minimum()), 0.0, 1.0).toFloat()
-            is DoubleSetting -> Math.clamp((numberValue() - minimum()) / Math.max(0.000001, maximum() - minimum()), 0.0, 1.0).toFloat()
+            is IntSetting -> ((numberValue() - minimum()) / maxOf(1.0, maximum() - minimum())).coerceIn(0.0, 1.0).toFloat()
+            is DoubleSetting -> ((numberValue() - minimum()) / maxOf(0.000001, maximum() - minimum())).coerceIn(0.0, 1.0).toFloat()
             is EnumSetting<*> ->
-                (if (pendingEnumIndex >= 0) pendingEnumIndex else s.modeIndex) / Math.max(1, modesOf(s).size - 1).toFloat()
+                (if (pendingEnumIndex >= 0) pendingEnumIndex else s.modeIndex) / maxOf(1, modesOf(s).size - 1).toFloat()
             is StringSetting -> if (isEditing()) 0.0f else 1.0f
             is ColorSetting -> 0.0f
             else -> 0.0f

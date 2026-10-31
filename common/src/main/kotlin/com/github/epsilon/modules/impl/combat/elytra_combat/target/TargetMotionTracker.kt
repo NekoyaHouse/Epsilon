@@ -1,6 +1,9 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.target
 
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
+import com.github.epsilon.utils.math.toDegrees
+import kotlin.math.abs
+import kotlin.math.acos
 import net.minecraft.client.Minecraft
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -152,7 +155,7 @@ class TargetMotionTracker {
         }
 
         val dot = ab.dot(bc) / denominator
-        val angle = Math.toDegrees(Math.acos(Math.clamp(dot, -1.0, 1.0)))
+        val angle = (acos((dot).coerceIn(-1.0, 1.0))).toDegrees()
         if (angle >= STRAIGHT_ANGLE_DEGREES) {
             return TargetAction.CIRCLING
         }
@@ -164,7 +167,7 @@ class TargetMotionTracker {
     }
 
     private fun recentSamples(count: Int): List<Sample> {
-        val size = Math.min(Math.max(1, count), this.samples.size)
+        val size = minOf(maxOf(1, count), this.samples.size)
         val result = ArrayList<Sample>(size)
         val skip = this.samples.size - size
         var index = 0
@@ -294,7 +297,7 @@ class TargetMotionTracker {
             for (column in 0 until 3) {
                 var pivot = column
                 for (row in column + 1 until 3) {
-                    if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivot][column])) {
+                    if (abs(matrix[row][column]) > abs(matrix[pivot][column])) {
                         pivot = row
                     }
                 }
@@ -302,7 +305,7 @@ class TargetMotionTracker {
                 matrix[column] = matrix[pivot]
                 matrix[pivot] = swap
                 val divisor = matrix[column][column]
-                if (Math.abs(divisor) < 1.0E-9) {
+                if (abs(divisor) < 1.0E-9) {
                     return doubleArrayOf(0.0, 0.0, values[values.size - 1])
                 }
                 for (i in column until 4) {

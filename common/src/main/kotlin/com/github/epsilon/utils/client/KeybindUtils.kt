@@ -47,7 +47,7 @@ object KeybindUtils {
      * @return 获取或计算得到的结果
      */
     fun getKey(keyMapping: KeyMapping): Int {
-        return keyMapping.key.getValue()
+        return keyMapping.key.value
     }
 
     /**
@@ -103,7 +103,7 @@ object KeybindUtils {
         if (isMouseButton(keyBind)) {
             return "Mouse " + (decodeMouseButton(keyBind) + 1)
         }
-        return InputConstants.Type.KEYBOARD.getOrCreate(keyBind).getDisplayName().getString()
+        return InputConstants.Type.KEYBOARD.getOrCreate(keyBind).displayName.string
     }
 
 }

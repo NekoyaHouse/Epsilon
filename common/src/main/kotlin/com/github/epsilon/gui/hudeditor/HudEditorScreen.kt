@@ -26,6 +26,7 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
@@ -74,7 +75,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        val window = minecraft.getWindow()
+        val window = minecraft.window
         val target = getRenderTarget(window.getWidth(), window.getHeight())
         target.resize(window.getWidth(), window.getHeight())
         target.clear()
@@ -102,8 +103,8 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             0,
             0.0f,
             window.getHeight().toFloat(),
-            window.getGuiScaledWidth(),
-            window.getGuiScaledHeight(),
+            window.guiScaledWidth,
+            window.guiScaledHeight,
             window.getWidth(),
             -window.getHeight(),
             window.getWidth(),
@@ -181,7 +182,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
         for (element in HudElementManager.getElements()) {
             if (element.isEnabled) {
-                element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40))
+                element.renderWithBatch(minecraft.deltaTracker, scene.batch(UiLayer.CONTENT, -40))
             }
         }
         scene.flush()
@@ -203,12 +204,12 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     private fun drawElementOverlays(graphics: GuiGraphicsExtractor) {
-        val overlayScale = (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale()).toFloat()
+        val overlayScale = (LuminRenderSystem.getGuiScale() / minecraft.window.guiScale).toFloat()
         graphics.pose().pushMatrix()
         graphics.pose().scale(overlayScale, overlayScale)
         for (element in HudElementManager.getElements()) {
             if (!element.isEnabled) continue
-            element.renderOverlay(graphics, minecraft.getDeltaTracker())
+            element.renderOverlay(graphics, minecraft.deltaTracker)
         }
         graphics.pose().popMatrix()
     }
@@ -241,7 +242,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             val clipY = panel.contentClipY
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
-            val actualClipH = Math.min(clipH, revealedBottom - clipY)
+            val actualClipH = minOf(clipH, revealedBottom - clipY)
             if (actualClipH > 0.5f) {
                 beginEditorLayer(10)
                 val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
@@ -264,7 +265,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val subW = textMetrics.getWidth(subtitle, subtitleScale)
         val titleH = textMetrics.getHeight(titleScale)
         val subtitleH = textMetrics.getHeight(subtitleScale)
-        val boxW = Math.max(titleW, subW) + 24.0f
+        val boxW = maxOf(titleW, subW) + 24.0f
         val boxH = 32.0f
         val radius = 8.0f
         val middlePadding = 3.0f
@@ -543,9 +544,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         var verticalGuide = Float.NaN
         var horizontalGuide = Float.NaN
 
-        val leftDelta = Math.abs(targetX)
-        val centerDelta = Math.abs(targetX + element.width / 2.0f - screenW / 2.0f)
-        val rightDelta = Math.abs(targetX + element.width - screenW)
+        val leftDelta = abs(targetX)
+        val centerDelta = abs(targetX + element.width / 2.0f - screenW / 2.0f)
+        val rightDelta = abs(targetX + element.width - screenW)
         var bestX = leftDelta
         var bestXIndex = 0
         if (centerDelta < bestX) {
@@ -569,9 +570,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             }
         }
 
-        val topDelta = Math.abs(targetY)
-        val middleDelta = Math.abs(targetY + element.height / 2.0f - screenH / 2.0f)
-        val bottomDelta = Math.abs(targetY + element.height - screenH)
+        val topDelta = abs(targetY)
+        val middleDelta = abs(targetY + element.height / 2.0f - screenH / 2.0f)
+        val bottomDelta = abs(targetY + element.height - screenH)
         var bestY = topDelta
         var bestYIndex = 0
         if (middleDelta < bestY) {
@@ -659,21 +660,21 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     private fun resolveMaxPanelHeight(): Float {
-        return Math.min(LuminRenderSystem.getScaledHeight() * 0.72f, 350.0f)
+        return minOf(LuminRenderSystem.getScaledHeight() * 0.72f, 350.0f)
     }
 
     override fun openRegistryListSettingPopup(setting: RegistryListSetting<*>) {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-            Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+            minOf(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+            minOf(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
         popupHost.open(RegistryListSelectPopup.create(bounds, setting))
     }
 
     override fun openStringListSettingPopup(setting: StringListSetting) {
         val bounds = popupHost.getCenteredBounds(
-            Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-            Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+            minOf(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+            minOf(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         )
         popupHost.open(StringListSelectPopup(bounds, setting, { value -> setting.add(value) }, { value -> setting.remove(value) }))
     }

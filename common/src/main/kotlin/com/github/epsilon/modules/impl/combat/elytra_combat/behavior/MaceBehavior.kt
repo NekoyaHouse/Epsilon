@@ -8,6 +8,10 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightIntentP
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.FlightPlanConfig
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.LocalFlightAvoidance
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
+import com.github.epsilon.utils.math.toRadians
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.tan
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
@@ -221,11 +225,11 @@ class MaceBehavior : ElytraCombatBehavior {
             movement.y < 0.0 &&
             bot.player().y > target.entity.y + bot.maceFollowMinHeight
         ) {
-            val horizontal = Math.max(0.001, movement.horizontalDistance())
+            val horizontal = maxOf(0.001, movement.horizontalDistance())
             val downAngle = if (bot.maceAngleOptimize) bot.maceDownAngle else 30.5
             movement = Vec3(
                 movement.x,
-                -horizontal * Math.tan(Math.toRadians(downAngle)),
+                -horizontal * tan((downAngle).toRadians()),
                 movement.z,
             )
         }
@@ -269,7 +273,7 @@ class MaceBehavior : ElytraCombatBehavior {
             return recover(bot, targetPos, target)
         }
 
-        if (Math.abs(bot.player().y - target.entity.y) < MISS_ALTITUDE_BAND) {
+        if (abs(bot.player().y - target.entity.y) < MISS_ALTITUDE_BAND) {
             this.strikeTicks = 0
             beginRecoveryPullUp(missReason(bot, target))
             return recover(bot, targetPos, target)
@@ -296,7 +300,7 @@ class MaceBehavior : ElytraCombatBehavior {
         val height = if (target.supported) bot.maceGroundHeight else bot.maceHeight
         val climb = targetPos.y + height - player.y
         return horizontal.normalize().scale(RECOVERY_HORIZONTAL_SPEED)
-            .add(0.0, Math.max(RECOVERY_CLIMB, climb), 0.0)
+            .add(0.0, maxOf(RECOVERY_CLIMB, climb), 0.0)
     }
 
     /**
@@ -318,7 +322,7 @@ class MaceBehavior : ElytraCombatBehavior {
             return ensureMinimumLength(targetEye.subtract(playerPos), 5.0)
         }
 
-        val radius = Math.min(4, Math.max(1, Math.ceil(bot.maceEngageRange).toInt()))
+        val radius = minOf(4, maxOf(1, ceil(bot.maceEngageRange).toInt()))
         val hitPos = hit.blockPos
         val candidates = ArrayList<BlockPos>((radius * 2 + 1) * (radius * 2 + 1) * (radius * 2 + 1))
         for (x in hitPos.x - radius..hitPos.x + radius) {

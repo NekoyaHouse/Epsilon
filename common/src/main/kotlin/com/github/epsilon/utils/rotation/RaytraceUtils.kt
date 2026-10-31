@@ -83,7 +83,7 @@ object RaytraceUtils {
 
         var distToBlock = range
         if (objectMouseOver.type != HitResult.Type.MISS) {
-            distToBlock = objectMouseOver.getLocation().distanceTo(eyePos)
+            distToBlock = objectMouseOver.location.distanceTo(eyePos)
         }
 
         val entitySearchEndVec = eyePos.add(lookVec.scale(range))

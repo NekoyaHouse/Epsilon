@@ -44,9 +44,9 @@ class TextGlitchEffect(
     val noiseStrength: Float = clampFinite(noiseStrength, 0.0f, 1.0f)
 
     fun requiredPadding(): Float {
-        val chromaticPadding = Math.max(chromaticX, chromaticY) * 1.5f
+        val chromaticPadding = maxOf(chromaticX, chromaticY) * 1.5f
         val glitchPadding = sliceAmount * glitchStrength
-        return Math.max(glowRadius, Math.max(chromaticPadding, glitchPadding)) + 2.0f
+        return maxOf(glowRadius, maxOf(chromaticPadding, glitchPadding)) + 2.0f
     }
 
     override fun equals(other: Any?): Boolean {
@@ -88,7 +88,7 @@ class TextGlitchEffect(
     private companion object {
 
         fun clampFinite(value: Float, min: Float, max: Float): Float {
-            return if (value.isFinite()) Math.clamp(value, min, max) else min
+            return if (value.isFinite()) (value).coerceIn(min, max) else min
         }
 
     }

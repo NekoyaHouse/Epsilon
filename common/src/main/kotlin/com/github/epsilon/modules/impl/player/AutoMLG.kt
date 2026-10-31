@@ -18,6 +18,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -100,7 +101,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     if (bucket.found()) {
                         val waterPos = grimFindCollectableWater()
                         if (waterPos != null) {
-                            val eyesPos = player.getEyePosition()
+                            val eyesPos = player.eyePosition
                             val hitX = Mth.clamp(eyesPos.x, waterPos.x.toDouble(), waterPos.x + 1.0)
                             val hitZ = Mth.clamp(eyesPos.z, waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
@@ -150,7 +151,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             return@nonNullHandler
                         }
 
-                        val dist = player.getEyePosition().distanceTo(Vec3.atCenterOf(bestPos).add(0.0, 0.5, 0.0))
+                        val dist = player.eyePosition.distanceTo(Vec3.atCenterOf(bestPos).add(0.0, 0.5, 0.0))
 
                         if (dist < 10) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
@@ -159,7 +160,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             RotationManager.INSTANCE.setRotations(rotation, 180.0, Priority.High)
 
                             if (rotation.pitch > 45) {
-                                val eyesPos = player.getEyePosition()
+                                val eyesPos = player.eyePosition
                                 val neighbor = bestPos.below()
 
                                 val hitX = Mth.clamp(eyesPos.x, neighbor.x.toDouble(), neighbor.x + 1.0)
@@ -215,7 +216,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun grimFindCollectableWater(): BlockPos? {
-        val eyesPos = player.getEyePosition()
+        val eyesPos = player.eyePosition
         val base = BlockPos.containing(player.x, player.y, player.z)
         var bestPos: BlockPos? = null
         var bestDistance = Double.MAX_VALUE
@@ -333,8 +334,8 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
     private fun isFacing(target: Rot2f, yawTolerance: Float, pitchTolerance: Float): Boolean {
         val current = RotationManager.INSTANCE.getRotation()
-        val yawDiff = Math.abs(Mth.wrapDegrees(current.yaw - target.yaw))
-        val pitchDiff = Math.abs(Mth.wrapDegrees(current.pitch - target.pitch))
+        val yawDiff = abs(Mth.wrapDegrees(current.yaw - target.yaw))
+        val pitchDiff = abs(Mth.wrapDegrees(current.pitch - target.pitch))
         return yawDiff <= yawTolerance && pitchDiff <= pitchTolerance
     }
 

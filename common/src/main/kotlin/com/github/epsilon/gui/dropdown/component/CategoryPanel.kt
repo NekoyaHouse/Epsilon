@@ -30,7 +30,7 @@ class CategoryPanel : AbstractDropdownPanel {
     private var cachedContentHeight: Float = 0.0f
 
     constructor(category: Category, panelIndex: Int) :
-            super("category:$category", TitleSupplier { category.getName() }, category.icon, panelIndex) {
+            super("category:$category", TitleSupplier { category.name }, category.icon, panelIndex) {
         this.category = category
         val modules = ModuleManager.getModules().stream()
             .filter { m -> m.category == category }
@@ -225,7 +225,7 @@ class CategoryPanel : AbstractDropdownPanel {
             val module = button.module
             val translated = module.translatedName ?: ""
             val name = module.name
-            val categoryName = module.category?.getName() ?: ""
+            val categoryName = module.category?.name ?: ""
             searchTextCache[button] = (translated + '\n' + name + '\n' + categoryName).lowercase(Locale.ROOT)
         }
         cachedSearchTextRevision = revision

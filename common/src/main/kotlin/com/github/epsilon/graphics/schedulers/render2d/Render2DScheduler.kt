@@ -14,6 +14,7 @@ import com.github.epsilon.graphics.renderers.TriangleRenderer
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.modules.impl.ClientSetting
+import com.github.epsilon.utils.math.toRadians
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
@@ -24,6 +25,8 @@ import java.awt.Color
 import java.util.LinkedHashMap
 import java.util.Optional
 import java.util.OptionalDouble
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * 2D GUI 渲染调度器。
@@ -41,7 +44,7 @@ class Render2DScheduler : AutoCloseable {
     constructor() : this(DEFAULT_QUADTREE_THRESHOLD)
 
     constructor(quadtreeThreshold: Int) {
-        commandStore = CommandStore(Math.max(1, quadtreeThreshold))
+        commandStore = CommandStore(maxOf(1, quadtreeThreshold))
     }
 
     fun layer(layer: Int): LayerHandle = layerHandles.computeIfAbsent(layer) { LayerHandle(this, layer) }
@@ -638,7 +641,7 @@ class Render2DScheduler : AutoCloseable {
             if (!java.lang.Float.isFinite(blurRadius) || blurRadius <= 0.0f) {
                 return
             }
-            val clampedBlur = Math.min(blurRadius, MAX_FONT_BLUR_RADIUS)
+            val clampedBlur = minOf(blurRadius, MAX_FONT_BLUR_RADIUS)
             val metrics = scheduler.textMetrics()
             val width = if (fontLoader != null) metrics.getWidth(text, scale, fontLoader) else metrics.getWidth(text, scale)
             val height = if (fontLoader != null) metrics.getHeight(scale, fontLoader) else metrics.getHeight(scale)
@@ -722,9 +725,9 @@ class Render2DScheduler : AutoCloseable {
                 x: Float, y: Float, width: Float, height: Float,
                 originX: Float, originY: Float, rotationDegrees: Float,
             ): Render2DBounds {
-                val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
-                val cos = Math.cos(radians.toDouble()).toFloat()
-                val sin = Math.sin(radians.toDouble()).toFloat()
+                val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+                val cos = cos(radians.toDouble()).toFloat()
+                val sin = sin(radians.toDouble()).toFloat()
                 val x1 = rotateX(x, y, originX, originY, cos, sin)
                 val y1 = rotateY(x, y, originX, originY, cos, sin)
                 val x2 = rotateX(x, y + height, originX, originY, cos, sin)
@@ -733,10 +736,10 @@ class Render2DScheduler : AutoCloseable {
                 val y3 = rotateY(x + width, y + height, originX, originY, cos, sin)
                 val x4 = rotateX(x + width, y, originX, originY, cos, sin)
                 val y4 = rotateY(x + width, y, originX, originY, cos, sin)
-                val minX = Math.min(Math.min(x1, x2), Math.min(x3, x4))
-                val minY = Math.min(Math.min(y1, y2), Math.min(y3, y4))
-                val maxX = Math.max(Math.max(x1, x2), Math.max(x3, x4))
-                val maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4))
+                val minX = minOf(minOf(x1, x2), minOf(x3, x4))
+                val minY = minOf(minOf(y1, y2), minOf(y3, y4))
+                val maxX = maxOf(maxOf(x1, x2), maxOf(x3, x4))
+                val maxY = maxOf(maxOf(y1, y2), maxOf(y3, y4))
                 return Render2DBounds.of(minX, minY, maxX - minX, maxY - minY)
             }
 
@@ -843,7 +846,7 @@ class Render2DScheduler : AutoCloseable {
 
         private companion object {
             fun padded(bounds: Render2DBounds): Render2DBounds {
-                val size = Math.max(Math.max(bounds.width, bounds.height), 1.0f)
+                val size = maxOf(maxOf(bounds.width, bounds.height), 1.0f)
                 return Render2DBounds.of(bounds.x - 1.0f, bounds.y - 1.0f, size + 2.0f, size + 2.0f)
             }
         }

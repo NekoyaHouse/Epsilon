@@ -138,7 +138,7 @@ class PanelState {
     }
 
     fun setMaxModuleScroll(maxModuleScroll: Float) {
-        this.maxModuleScroll = Math.max(0.0f, maxModuleScroll)
+        this.maxModuleScroll = maxOf(0.0f, maxModuleScroll)
         moduleScroll = clampScroll(moduleScroll, this.maxModuleScroll)
     }
 
@@ -151,7 +151,7 @@ class PanelState {
     }
 
     fun setMaxDetailScroll(maxDetailScroll: Float) {
-        this.maxDetailScroll = Math.max(0.0f, maxDetailScroll)
+        this.maxDetailScroll = maxOf(0.0f, maxDetailScroll)
         detailScroll = clampScroll(detailScroll, this.maxDetailScroll)
     }
 
@@ -193,7 +193,7 @@ class PanelState {
     private fun matchesSearch(module: Module, loweredSearch: String): Boolean {
         return module.name.lowercase().contains(loweredSearch) ||
                 module.translatedName.lowercase().contains(loweredSearch) ||
-                module.category!!.getName().lowercase().contains(loweredSearch)
+                module.category!!.name.lowercase().contains(loweredSearch)
     }
 
     fun isClientSettingMode(): Boolean {
@@ -240,7 +240,7 @@ class PanelState {
     }
 
     fun setMaxClientSettingScroll(maxClientSettingScroll: Float) {
-        this.maxClientSettingScroll = Math.max(0.0f, maxClientSettingScroll)
+        this.maxClientSettingScroll = maxOf(0.0f, maxClientSettingScroll)
         clientSettingScroll = clampScroll(clientSettingScroll, this.maxClientSettingScroll)
     }
 
@@ -271,7 +271,7 @@ class PanelState {
     }
 
     fun setMaxFriendScroll(maxFriendScroll: Float) {
-        this.maxFriendScroll = Math.max(0.0f, maxFriendScroll)
+        this.maxFriendScroll = maxOf(0.0f, maxFriendScroll)
         friendScroll = clampScroll(friendScroll, this.maxFriendScroll)
     }
 
@@ -292,12 +292,12 @@ class PanelState {
     }
 
     fun setMaxConfigScroll(maxConfigScroll: Float) {
-        this.maxConfigScroll = Math.max(0.0f, maxConfigScroll)
+        this.maxConfigScroll = maxOf(0.0f, maxConfigScroll)
         configScroll = clampScroll(configScroll, this.maxConfigScroll)
     }
 
     private fun clampScroll(scroll: Float, maxScroll: Float): Float {
-        return Math.clamp(scroll, 0.0f, maxScroll)
+        return (scroll).coerceIn(0.0f, maxScroll)
     }
 
 }

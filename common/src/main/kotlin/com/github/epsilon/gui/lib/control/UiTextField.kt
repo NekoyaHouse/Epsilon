@@ -132,12 +132,12 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_LEFT -> {
-                cursor = Math.max(0, cursor - 1)
+                cursor = maxOf(0, cursor - 1)
                 true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursor = Math.min(text.length, cursor + 1)
+                cursor = minOf(text.length, cursor + 1)
                 true
             }
 
@@ -188,7 +188,7 @@ class UiTextField(maxLength: Int) {
         if (text.length > maxLength) {
             text = text.substring(0, maxLength)
         }
-        cursor = Math.min(cursor, text.length)
+        cursor = minOf(cursor, text.length)
     }
 
     fun clear() {
@@ -197,7 +197,7 @@ class UiTextField(maxLength: Int) {
     }
 
     private fun safeCursor(): Int {
-        return Math.clamp(cursor.toLong(), 0, text.length)
+        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
     }
 
     private fun handleControlShortcut(key: Int): Boolean {
@@ -208,7 +208,7 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_V -> {
-                val clipboard = Constants.client.keyboardHandler.getClipboard()
+                val clipboard = Constants.client.keyboardHandler.clipboard
                 if (!clipboard.isEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }

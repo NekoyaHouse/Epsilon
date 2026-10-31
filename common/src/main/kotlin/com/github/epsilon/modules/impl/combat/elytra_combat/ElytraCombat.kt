@@ -46,8 +46,12 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Rot2f
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
@@ -507,20 +511,15 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
         val previousDirection = previous.normalize()
         val nextDirection = desired.normalize()
-        val previousYaw = Math.toDegrees(Math.atan2(-previousDirection.x, previousDirection.z)).toFloat()
-        val previousPitch = -Math.toDegrees(
-            Math.atan2(
-                previousDirection.y,
-                Math.max(1.0E-4, previousDirection.horizontalDistance()),
-            )
-        ).toFloat()
+        val previousYaw = (atan2(-previousDirection.x, previousDirection.z)).toDegrees().toFloat()
+        val previousPitch = -(atan2(previousDirection.y, maxOf(1.0E-4, previousDirection.horizontalDistance()))).toDegrees().toFloat()
 
         // 目标方向接近垂直时 yaw 没有意义，保持上一 tick 的 yaw，只允许俯仰变化。
         val yaw: Float
         if (nextDirection.horizontalDistance() < 1.0E-3) {
             yaw = previousYaw
         } else {
-            val nextYaw = Math.toDegrees(Math.atan2(-nextDirection.x, nextDirection.z)).toFloat()
+            val nextYaw = (atan2(-nextDirection.x, nextDirection.z)).toDegrees().toFloat()
             yaw = if (unlimited) {
                 nextYaw
             } else {
@@ -532,15 +531,10 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
             }
         }
 
-        val nextPitch = -Math.toDegrees(
-            Math.atan2(
-                nextDirection.y,
-                Math.max(1.0E-4, nextDirection.horizontalDistance()),
-            )
-        ).toFloat()
+        val nextPitch = -(atan2(nextDirection.y, maxOf(1.0E-4, nextDirection.horizontalDistance()))).toDegrees().toFloat()
         val pitchDelta = nextPitch - previousPitch
-        if (Math.abs(Mth.wrapDegrees(yaw - previousYaw).toDouble()) < TURN_DEAD_ZONE_DEGREES &&
-            Math.abs(pitchDelta.toDouble()) < TURN_DEAD_ZONE_DEGREES
+        if (abs(Mth.wrapDegrees(yaw - previousYaw).toDouble()) < TURN_DEAD_ZONE_DEGREES &&
+            abs(pitchDelta.toDouble()) < TURN_DEAD_ZONE_DEGREES
         ) {
             return FlightIntent(
                 previousDirection.scale(desired.length()),
@@ -604,7 +598,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
     private fun directionInput(yawDelta: Float): DirectionInput {
         // 每个扇区覆盖 45 度，命中边界时向相邻方向同时按键以平滑转向。
-        val sector = Math.floorMod(Math.round(yawDelta / 45.0f), 8)
+        val sector = ((yawDelta / 45.0f).roundToInt()).mod(8)
         return when (sector) {
             0 -> DirectionInput(true, false, false, false)
             1 -> DirectionInput(true, false, false, true)
@@ -646,7 +640,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private fun cycleMode() {
         // 切换模式时立即重置行为状态和路径请求，避免沿用上个模式的速度/状态。
         val modes = ElytraCombatMode.entries
-        val next = Math.floorMod(this.mode.ordinal + 1, modes.size)
+        val next = (this.mode.ordinal + 1).mod(modes.size)
         this.mode = modes[next]
         resetState()
     }

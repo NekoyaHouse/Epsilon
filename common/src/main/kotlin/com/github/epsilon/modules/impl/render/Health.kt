@@ -154,7 +154,7 @@ object Health : Module("Health", Category.RENDER) {
         for (i in containerCount - 1 downTo 0) {
             val row = i / HEARTS_PER_ROW
             val column = i % HEARTS_PER_ROW
-            val columnsInRow = Math.min(HEARTS_PER_ROW, containerCount - row * HEARTS_PER_ROW)
+            val columnsInRow = minOf(HEARTS_PER_ROW, containerCount - row * HEARTS_PER_ROW)
             val rowX = centerX - (columnsInRow * HEART_SPACING + 1) / 2.0f
             var x = rowX + column * HEART_SPACING
             var y = (baseY - row * ROW_HEIGHT).toFloat()

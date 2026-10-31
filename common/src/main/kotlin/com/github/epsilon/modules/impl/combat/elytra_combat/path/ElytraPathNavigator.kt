@@ -2,6 +2,8 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.path
 
 import com.github.epsilon.Constants
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraMotionPredictor
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -131,7 +133,7 @@ class ElytraPathNavigator {
         window: WindowSnapshot,
     ) {
         // 有效半径必须留在体素窗口内，否则 A* 查询会大量落到 OUTSIDE_WINDOW。
-        val effectiveRadius = Math.max(6, Math.min(config.searchRadius, window.size / 2 - 1))
+        val effectiveRadius = maxOf(6, minOf(config.searchRadius, window.size / 2 - 1))
         this.pendingRequest.set(
             SearchRequest(
                 window.epoch,
@@ -187,7 +189,7 @@ class ElytraPathNavigator {
                 val now = System.nanoTime()
                 val waitNanos = SEARCH_INTERVAL_NANOS - (now - lastSearchNanos)
                 if (waitNanos > 0L) {
-                    waitForWork(Math.max(1L, waitNanos / 1_000_000L))
+                    waitForWork(maxOf(1L, waitNanos / 1_000_000L))
                     if (!isWorkerRunning(generation)) {
                         return
                     }
@@ -242,7 +244,7 @@ class ElytraPathNavigator {
     private fun drainSampleBatches() {
         var batch = this.sampleBatches.poll()
         while (batch != null) {
-            this.queuedSampleBatches.updateAndGet { value -> Math.max(0, value - 1) }
+            this.queuedSampleBatches.updateAndGet { value -> maxOf(0, value - 1) }
             if (batch.epoch < this.workerEpoch) {
                 batch = this.sampleBatches.poll()
                 continue
@@ -369,7 +371,7 @@ class ElytraPathNavigator {
             this.invalidated = false
             this.initialFillPending = true
             this.initialFillCursor = 0
-            this.queue = LongQueue(Math.min(16_384, Math.max(64, size * size)))
+            this.queue = LongQueue(minOf(16_384, maxOf(64, size * size)))
             this.scheduledPositions = LongArray(size * size * size)
             java.util.Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
 
@@ -401,9 +403,9 @@ class ElytraPathNavigator {
             val newMaxY = newY + size - 1
             val newMaxZ = newZ + size - 1
 
-            val deltaX = Math.abs(newX - this.originX)
-            val deltaY = Math.abs(newY - this.originY)
-            val deltaZ = Math.abs(newZ - this.originZ)
+            val deltaX = abs(newX - this.originX)
+            val deltaY = abs(newY - this.originY)
+            val deltaZ = abs(newZ - this.originZ)
             val exposedUpperBound = size * size * (deltaX + deltaY + deltaZ)
             // 小范围滚动只给新增切片排样；位移过大或初始填充时直接重建队列。
             val rescheduleWindow = this.initialFillPending ||
@@ -412,7 +414,7 @@ class ElytraPathNavigator {
                     deltaZ > size ||
                     exposedUpperBound > MAX_SAMPLES_PER_TICK * 4
             if (rescheduleWindow) {
-                this.queue = LongQueue(Math.min(16_384, Math.max(64, size * size)))
+                this.queue = LongQueue(minOf(16_384, maxOf(64, size * size)))
                 this.scheduledPositions = LongArray(size * size * size)
                 java.util.Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
                 this.originX = newX
@@ -471,12 +473,12 @@ class ElytraPathNavigator {
         }
 
         private fun enqueueNeighborhood(center: BlockPos, radius: Int) {
-            val minX = Math.max(this.originX, center.x - radius)
-            val minY = Math.max(this.originY, center.y - radius)
-            val minZ = Math.max(this.originZ, center.z - radius)
-            val maxX = Math.min(this.originX + this.dataSize - 1, center.x + radius)
-            val maxY = Math.min(this.originY + this.dataSize - 1, center.y + radius)
-            val maxZ = Math.min(this.originZ + this.dataSize - 1, center.z + radius)
+            val minX = maxOf(this.originX, center.x - radius)
+            val minY = maxOf(this.originY, center.y - radius)
+            val minZ = maxOf(this.originZ, center.z - radius)
+            val maxX = minOf(this.originX + this.dataSize - 1, center.x + radius)
+            val maxY = minOf(this.originY + this.dataSize - 1, center.y + radius)
+            val maxZ = minOf(this.originZ + this.dataSize - 1, center.z + radius)
             enqueueRegion(minX, minY, minZ, maxX, maxY, maxZ)
         }
 
@@ -579,9 +581,9 @@ class ElytraPathNavigator {
         }
 
         private fun index(x: Int, y: Int, z: Int): Int {
-            val wrappedX = Math.floorMod(x, this.dataSize)
-            val wrappedY = Math.floorMod(y, this.dataSize)
-            val wrappedZ = Math.floorMod(z, this.dataSize)
+            val wrappedX = (x).mod(this.dataSize)
+            val wrappedY = (y).mod(this.dataSize)
+            val wrappedZ = (z).mod(this.dataSize)
             return (wrappedX * this.dataSize + wrappedY) * this.dataSize + wrappedZ
         }
 
@@ -593,7 +595,7 @@ class ElytraPathNavigator {
         /**
          * 为方块采样设计的原始 long 环形队列，避免装箱和递归队列开销。
          */
-        private var values: LongArray = LongArray(Math.max(16, initialCapacity))
+        private var values: LongArray = LongArray(maxOf(16, initialCapacity))
         private var head: Int = 0
         private var count: Int = 0
 
@@ -689,7 +691,7 @@ class ElytraPathNavigator {
 
         internal fun normalizeDataSize(size: Int): Int {
             val clamped = size.coerceIn(MIN_DATA_SIZE, MAX_DATA_SIZE)
-            return Math.round(clamped.toFloat() / DATA_SIZE_ALIGNMENT) * DATA_SIZE_ALIGNMENT
+            return (clamped.toFloat() / DATA_SIZE_ALIGNMENT).roundToInt() * DATA_SIZE_ALIGNMENT
         }
 
         /**
@@ -714,7 +716,7 @@ class ElytraPathNavigator {
                 if (projection < 1.0) {
                     // 找到玩家当前所在航段，再从该段向前取固定前视距离的航点。
                     var next = i + 1
-                    val projected = from.add(segment.scale(Math.clamp(projection, 0.0, 1.0)))
+                    val projected = from.add(segment.scale((projection).coerceIn(0.0, 1.0)))
                     var remaining = projected.distanceTo(points[next])
                     while (next < points.size - 1) {
                         val step = points[next].distanceTo(points[next + 1])
@@ -773,5 +775,5 @@ class ElytraPathNavigator {
  */
 private fun alignedWindowOrigin(center: Int, size: Int): Int {
     val origin = center - size / 2
-    return Math.floorDiv(origin, DATA_SIZE_ALIGNMENT) * DATA_SIZE_ALIGNMENT
+    return (origin).floorDiv(DATA_SIZE_ALIGNMENT) * DATA_SIZE_ALIGNMENT
 }

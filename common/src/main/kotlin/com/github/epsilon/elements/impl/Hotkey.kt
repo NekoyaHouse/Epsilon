@@ -86,13 +86,13 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
         var maxRowWidth = 0.0f
         var contentHeight = 0.0f
         for (entry in entries) {
-            maxRowWidth = Math.max(maxRowWidth, ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f)
+            maxRowWidth = maxOf(maxRowWidth, ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f)
             contentHeight += (ROW_HEIGHT + ROW_GAP) * entry.animation
         }
         if (!entries.isEmpty()) {
             contentHeight -= ROW_GAP * entries.last().animation
         }
-        setBounds(Math.max(ICON_SIZE, maxRowWidth), Math.max(ROW_HEIGHT, contentHeight))
+        setBounds(maxOf(ICON_SIZE, maxRowWidth), maxOf(ROW_HEIGHT, contentHeight))
         if (entries.isEmpty()) return
 
         var rowY = this.y
@@ -101,7 +101,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
             val rowWidth = ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f
             val rowX = this.x - rowWidth * (1.0f - animation)
             val animatedHeight = ROW_HEIGHT * animation
-            val animatedRadius = Math.min(CORNER_RADIUS, animatedHeight * 0.5f)
+            val animatedRadius = minOf(CORNER_RADIUS, animatedHeight * 0.5f)
             val textX = rowX + ICON_SIZE + ICON_TEXT_GAP + TEXT_PADDING
             val textBackgroundX = textX - TEXT_PADDING
             val textBackgroundWidth = entry.textWidth + TEXT_PADDING * 2.0f
@@ -119,7 +119,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
             val rowWidth = ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f
             val rowX = this.x - rowWidth * (1.0f - animation)
             val animatedHeight = ROW_HEIGHT * animation
-            val animatedRadius = Math.min(CORNER_RADIUS, animatedHeight * 0.5f)
+            val animatedRadius = minOf(CORNER_RADIUS, animatedHeight * 0.5f)
             val textBackgroundX = rowX + ICON_SIZE + ICON_TEXT_GAP
             val textBackgroundWidth = entry.textWidth + TEXT_PADDING * 2.0f
             val rowColor = resolveTextColor(colorIndex++)

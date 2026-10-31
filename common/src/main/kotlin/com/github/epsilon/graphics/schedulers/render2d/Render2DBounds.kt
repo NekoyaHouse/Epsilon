@@ -21,16 +21,16 @@ data class Render2DBounds(val x: Float, val y: Float, val width: Float, val heig
         other.x >= x && other.right() <= right() && other.y >= y && other.bottom() <= bottom()
 
     fun include(other: Render2DBounds): Render2DBounds {
-        val nx = Math.min(x, other.x)
-        val ny = Math.min(y, other.y)
-        val nr = Math.max(right(), other.right())
-        val nb = Math.max(bottom(), other.bottom())
-        return Render2DBounds(nx, ny, Math.max(0.0f, nr - nx), Math.max(0.0f, nb - ny))
+        val nx = minOf(x, other.x)
+        val ny = minOf(y, other.y)
+        val nr = maxOf(right(), other.right())
+        val nb = maxOf(bottom(), other.bottom())
+        return Render2DBounds(nx, ny, maxOf(0.0f, nr - nx), maxOf(0.0f, nb - ny))
     }
 
     companion object {
         fun of(x: Float, y: Float, width: Float, height: Float): Render2DBounds =
-            Render2DBounds(x, y, Math.max(0.0f, width), Math.max(0.0f, height))
+            Render2DBounds(x, y, maxOf(0.0f, width), maxOf(0.0f, height))
 
         fun point(x: Float, y: Float): Render2DBounds = Render2DBounds(x, y, 0.0f, 0.0f)
     }

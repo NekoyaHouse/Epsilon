@@ -9,6 +9,8 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -147,7 +149,7 @@ object DeobfESP {
         wobble: Float,
         flyHeight: Float,
     ) {
-        val baseWidth = Math.max(0.01f, size)
+        val baseWidth = maxOf(0.01f, size)
         val baseHeight = baseWidth * (if (KillAura.deobfMode == TextureMode.Niuren) 751.0f / 376.0f else 1280.0f / 1073.0f)
         val drawWidth: Float
         val drawHeight: Float
@@ -168,7 +170,7 @@ object DeobfESP {
             drawHeight = baseHeight * pop * (1.0f - squash * 0.55f)
             rotation = aliveRotation(effect, now, spins, wobble)
             offsetX = Mth.sin((reactionProgress * Mth.PI * 24.0f).toDouble()) * damping * baseWidth * 0.09f * wobble
-            offsetY = -Math.abs(Mth.sin((reactionProgress * Mth.PI * 8.0f).toDouble())) * damping * baseWidth * 0.08f * wobble
+            offsetY = -abs(Mth.sin((reactionProgress * Mth.PI * 8.0f).toDouble())) * damping * baseWidth * 0.08f * wobble
             tint = hitTint(reactionProgress, 255)
             anchor = livingAnchor(effect.target, partialTick)
         } else {
@@ -184,7 +186,7 @@ object DeobfESP {
             offsetY = 0.0f
 
             val fadeProgress = Mth.clamp((killProgress - 0.58f) / 0.42f, 0.0f, 1.0f)
-            val alpha = Mth.clamp(Math.round(255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))), 0, 255)
+            val alpha = Mth.clamp((255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(fadeProgress))).roundToInt(), 0, 255)
             val redProgress = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(killProgress)
             tint = redTint(redProgress, alpha)
             anchor = effect.deathAnchor!!.add(0.0, (drawHeight / 2.0f + flyProgress * flyHeight).toDouble(), 0.0)
@@ -216,11 +218,11 @@ object DeobfESP {
     }
 
     private fun aliveRotation(effect: Effect, now: Long, spins: Float, wobble: Float): Float {
-        val aliveElapsed = Math.max(0L, now - effect.createdAtMs)
+        val aliveElapsed = maxOf(0L, now - effect.createdAtMs)
         val introProgress = progress(aliveElapsed, INTRO_DURATION_MS)
-        val reactionProgress = progress(Math.max(0L, now - effect.lastHitAtMs), INTRO_DURATION_MS)
+        val reactionProgress = progress(maxOf(0L, now - effect.lastHitAtMs), INTRO_DURATION_MS)
         val introRotation = spins * 360.0f * Easing.EASE_OUT_EXPO.function.apply(introProgress)
-        val continuousSeconds = Math.max(0L, aliveElapsed - INTRO_DURATION_MS) / 1000.0f
+        val continuousSeconds = maxOf(0L, aliveElapsed - INTRO_DURATION_MS) / 1000.0f
         val reactionWobble = Mth.sin((reactionProgress * Mth.PI * 12.0f).toDouble()) *
                 (1.0f - reactionProgress) * 28.0f * wobble
         return introRotation + continuousSeconds * CONTINUOUS_ROTATION_SPEED + reactionWobble
@@ -232,7 +234,7 @@ object DeobfESP {
     }
 
     private fun redTint(redProgress: Float, alpha: Int): Color {
-        val greenBlue = Mth.clamp(Math.round(Mth.lerp(Mth.clamp(redProgress, 0.0f, 1.0f), 255.0f, 42.0f)), 0, 255)
+        val greenBlue = Mth.clamp((Mth.lerp(Mth.clamp(redProgress, 0.0f, 1.0f), 255.0f, 42.0f)).roundToInt(), 0, 255)
         return Color(255, greenBlue, greenBlue, Mth.clamp(alpha, 0, 255))
     }
 

@@ -168,7 +168,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     return
                 }
 
-                val prevSlot = player.inventory.getSelectedSlot()
+                val prevSlot = player.inventory.selectedSlot
                 var swappedForWeakness = false
 
                 if ((entity is EndCrystal || entity is Slime) && antiWeakness && cantBreakCrystal()) {

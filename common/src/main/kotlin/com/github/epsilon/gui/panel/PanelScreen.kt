@@ -70,7 +70,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
      * 最后在统一的 render 提交阶段执行 flush。
      */
     override fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val window = minecraft.getWindow()
+        val window = minecraft.window
         var target = renderTarget
         if (target == null) {
             target = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight())
@@ -178,7 +178,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             guiGraphics.setPreeditOverlay(overlay)
         }
         guiGraphics.blit(
-            target.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0.0f, 1.0f, 1.0f, 0.0f
+            target.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
         )
         popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
     }

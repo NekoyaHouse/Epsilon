@@ -9,6 +9,7 @@ import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.ITextRenderer
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.modules.impl.ClientSetting
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
@@ -16,6 +17,8 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
@@ -90,10 +93,10 @@ class TtfTextRenderer : ITextRenderer {
     constructor() : this(64L * 1024)
 
     override fun addText(text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader) {
-        if (text.isEmpty() || color.getAlpha() == 0) return
+        if (text.isEmpty() || color.alpha == 0) return
 
         fontLoader.prepareChars(text)
-        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), 0.0f)
+        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.rgb), 0.0f)
     }
 
     override fun addBlurredText(
@@ -103,11 +106,11 @@ class TtfTextRenderer : ITextRenderer {
         if (mode != Mode.FONT_BLUR) {
             throw IllegalStateException("Font blur text requires TextRenderer.createFontBlur().")
         }
-        if (text.isEmpty() || color.getAlpha() == 0 || !blurRadius.isFinite() || blurRadius <= 0.0f) return
+        if (text.isEmpty() || color.alpha == 0 || !blurRadius.isFinite() || blurRadius <= 0.0f) return
 
         fontLoader.prepareChars(text)
-        val clampedBlur = Math.clamp(blurRadius, 0.0f, MAX_FONT_BLUR_RADIUS)
-        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), clampedBlur)
+        val clampedBlur = (blurRadius).coerceIn(0.0f, MAX_FONT_BLUR_RADIUS)
+        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.rgb), clampedBlur)
     }
 
     override fun addGlitchText(
@@ -117,21 +120,21 @@ class TtfTextRenderer : ITextRenderer {
         if (mode != Mode.GLITCH) {
             throw IllegalStateException("Glitch text requires TextRenderer.createGlitch().")
         }
-        if (text.isEmpty() || color.getAlpha() == 0 || effect == null) return
+        if (text.isEmpty() || color.alpha == 0 || effect == null) return
 
         fontLoader.prepareChars(text)
-        emitGlitchLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), effect)
+        emitGlitchLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.rgb), effect)
     }
 
     override fun addRotatedText(
         text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader,
         originX: Float, originY: Float, rotationDegrees: Float
     ) {
-        if (text.isEmpty() || color.getAlpha() == 0) return
+        if (text.isEmpty() || color.alpha == 0) return
 
         fontLoader.prepareChars(text)
         emitRotatedLayout(
-            layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()),
+            layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.rgb),
             originX, originY, rotationDegrees
         )
     }
@@ -140,12 +143,12 @@ class TtfTextRenderer : ITextRenderer {
         text: String, x: Float, y: Float, scale: Float, startColor: Color, endColor: Color,
         fontLoader: TtfFontLoader
     ) {
-        if (text.isEmpty() || startColor.getAlpha() == 0 && endColor.getAlpha() == 0) return
+        if (text.isEmpty() || startColor.alpha == 0 && endColor.alpha == 0) return
 
         fontLoader.prepareChars(text)
         val layout = layoutFor(text, fontLoader)
         val totalWidth = if (layout.complete) layout.width else baseWidth(text, fontLoader)
-        emitGradientLayout(layout, x, y, scale, totalWidth, startColor.getRGB(), endColor.getRGB())
+        emitGradientLayout(layout, x, y, scale, totalWidth, startColor.rgb, endColor.rgb)
     }
 
     private fun layoutFor(text: String, fontLoader: TtfFontLoader): TextLayout {
@@ -186,7 +189,7 @@ class TtfTextRenderer : ITextRenderer {
                 continue
             }
             if (codepoint == '\n'.code) {
-                maxLine = Math.max(maxLine, xOffset)
+                maxLine = maxOf(maxLine, xOffset)
                 xOffset = 0.0f
                 yOffset += lineHeight
                 continue
@@ -217,7 +220,7 @@ class TtfTextRenderer : ITextRenderer {
             glyphCount++
         }
 
-        maxLine = Math.max(maxLine, xOffset)
+        maxLine = maxOf(maxLine, xOffset)
 
         val runs = ArrayList<LayoutRun>(runBuilders.size)
         for (builder in runBuilders.values) {
@@ -266,9 +269,9 @@ class TtfTextRenderer : ITextRenderer {
     ) {
         if (layout.glyphCount == 0) return
 
-        val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
-        val cos = Math.cos(radians.toDouble()).toFloat()
-        val sin = Math.sin(radians.toDouble()).toFloat()
+        val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+        val cos = cos(radians.toDouble()).toFloat()
+        val sin = sin(radians.toDouble()).toFloat()
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, 0.0f)
             var p = batch.beginWrite(run.glyphCount)
@@ -289,7 +292,7 @@ class TtfTextRenderer : ITextRenderer {
     ) {
         if (layout.glyphCount == 0) return
 
-        val totalWidth = Math.max(width, 1.0f)
+        val totalWidth = maxOf(width, 1.0f)
         for (run in layout.runs) {
             val batch = batchFor(run.atlas, 0.0f)
             var p = batch.beginWrite(run.glyphCount)
@@ -336,14 +339,14 @@ class TtfTextRenderer : ITextRenderer {
             if (codepoint == ' '.code) {
                 currentLine += spaceWidth
             } else if (codepoint == '\n'.code) {
-                maxLine = Math.max(maxLine, currentLine)
+                maxLine = maxOf(maxLine, currentLine)
                 currentLine = 0.0f
             } else {
                 currentLine += fontLoader.getAdvance(codepoint) * scaledFont + SPACING
             }
         }
 
-        val width = Math.max(maxLine, currentLine)
+        val width = maxOf(maxLine, currentLine)
         widthCache[key] = width
         return width
     }
@@ -414,7 +417,7 @@ class TtfTextRenderer : ITextRenderer {
             }
 
             val vertexCount = (batch.offsetInAtlas / stride).toInt()
-            maxIndexCount = Math.max(maxIndexCount, vertexCount / 4 * 6)
+            maxIndexCount = maxOf(maxIndexCount, vertexCount / 4 * 6)
             if (mode == Mode.FONT_BLUR) {
                 batch.blurUniforms = LuminRenderSystem.writeDynamicUniform(
                     "font_blur_uniforms",
@@ -456,7 +459,7 @@ class TtfTextRenderer : ITextRenderer {
 
             pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice())
             val fontTexture: LuminTexture = if (mode == Mode.STANDARD) atlas.getTexture() else atlas.getAlphaTexture()
-            pass.setUniform("Sampler0", fontTexture.getTextureView(), fontTexture.getSampler())
+            pass.setUniform("Sampler0", fontTexture.textureView, fontTexture.sampler)
             if (mode == Mode.FONT_BLUR) {
                 pass.setUniform("FontBlurUniforms", batch.blurUniforms!!)
             } else if (mode == Mode.GLITCH) {
@@ -572,7 +575,7 @@ class TtfTextRenderer : ITextRenderer {
             Std140Builder.intoBuffer(buffer)
                 .putVec4(effect.chromaticX, effect.chromaticY, effect.glowRadius, effect.glowIntensity)
                 .putVec4(effect.sliceHeight, effect.sliceAmount, effect.glitchStrength, effect.scanlineStrength)
-                .putVec4(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, effect.noiseStrength)
+                .putVec4(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, effect.noiseStrength)
                 .putVec4(time, 0.0f, 0.0f, 0.0f)
         }
     }
@@ -619,7 +622,7 @@ class TtfTextRenderer : ITextRenderer {
             if (required <= data.size) {
                 return
             }
-            data = data.copyOf(Math.max(required, data.size * 2))
+            data = data.copyOf(maxOf(required, data.size * 2))
         }
 
         fun build(): LayoutRun {
@@ -676,8 +679,8 @@ private fun writeEffectGlyph(
     val v0 = data[base + 5]
     val u1 = data[base + 6]
     val v1 = data[base + 7]
-    val uPadding = padding * (u1 - u0) / Math.max(x2 - x1, 0.0001f)
-    val vPadding = padding * (v1 - v0) / Math.max(y2 - y1, 0.0001f)
+    val uPadding = padding * (u1 - u0) / maxOf(x2 - x1, 0.0001f)
+    val vPadding = padding * (v1 - v0) / maxOf(y2 - y1, 0.0001f)
 
     writeFontBlurVertex(
         p, x1 - padding, y1 - padding, u0 - uPadding, v0 - vPadding,
@@ -744,7 +747,7 @@ private fun writeRotatedVertex(
 }
 
 private fun clamp01(value: Float): Float {
-    return Math.clamp(value, 0.0f, 1.0f)
+    return (value).coerceIn(0.0f, 1.0f)
 }
 
 private fun glitchTime(): Float {

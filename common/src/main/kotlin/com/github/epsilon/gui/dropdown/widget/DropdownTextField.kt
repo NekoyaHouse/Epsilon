@@ -23,7 +23,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     var text: String = ""
         set(value) {
             field = clamp(value)
-            cursor = Math.min(cursor, field.length)
+            cursor = minOf(cursor, field.length)
         }
 
     private var cursor: Int = 0
@@ -44,7 +44,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         scope.text(trimToWidth(display, textScale, width - 8.0f, textMetrics), textX, textY, textScale, if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY)
 
         if (isFocused) {
-            val safeCursor = Math.min(cursor, text.length)
+            val safeCursor = minOf(cursor, text.length)
             val caretX = textX + textMetrics.textWidth(text.substring(0, safeCursor), textScale)
             drawCaret(scope, textMetrics, caretX, textY, textScale)
             IMEFocusHelper.updateCursorPos(caretX, textY)
@@ -69,7 +69,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         scope.text(visibleText, textX, textY, textScale, if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY)
 
         if (isFocused) {
-            val safeCursor = Math.min(cursor, text.length)
+            val safeCursor = minOf(cursor, text.length)
             val beforeCursor = text.substring(0, safeCursor)
             val caretX = caretBaseX + textMetrics.textWidth(beforeCursor, textScale)
             drawCaret(scope, textMetrics, caretX, textY, textScale)
@@ -134,11 +134,11 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
                 true
             }
             InputConstants.KEY_LEFT -> {
-                cursor = Math.max(0, cursor - 1)
+                cursor = maxOf(0, cursor - 1)
                 true
             }
             InputConstants.KEY_RIGHT -> {
-                cursor = Math.min(text.length, cursor + 1)
+                cursor = minOf(text.length, cursor + 1)
                 true
             }
             InputConstants.KEY_HOME -> {
@@ -164,7 +164,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     }
 
     fun getCursorIndex(): Int {
-        return Math.clamp(cursor.toLong(), 0, text.length)
+        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
     }
 
     fun clear() {

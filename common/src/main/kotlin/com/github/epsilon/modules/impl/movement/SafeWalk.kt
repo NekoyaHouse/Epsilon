@@ -8,6 +8,8 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
+import kotlin.math.abs
+import kotlin.math.sign
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BlockItem
@@ -56,12 +58,12 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
             var movementX = event.x
             var movementZ = event.z
-            val stepX = Math.signum(movementX) * 0.05
-            val stepZ = Math.signum(movementZ) * 0.05
+            val stepX = sign(movementX) * 0.05
+            val stepZ = sign(movementZ) * 0.05
             val maxDownStep = player.maxUpStep()
 
             while (movementX != 0.0 && canFallAtLeast(movementX, 0.0, maxDownStep.toDouble())) {
-                if (Math.abs(movementX) <= 0.05) {
+                if (abs(movementX) <= 0.05) {
                     movementX = 0.0
                     break
                 }
@@ -69,7 +71,7 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
             }
 
             while (movementZ != 0.0 && canFallAtLeast(0.0, movementZ, maxDownStep.toDouble())) {
-                if (Math.abs(movementZ) <= 0.05) {
+                if (abs(movementZ) <= 0.05) {
                     movementZ = 0.0
                     break
                 }
@@ -77,13 +79,13 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
             }
 
             while (movementX != 0.0 && movementZ != 0.0 && canFallAtLeast(movementX, movementZ, maxDownStep.toDouble())) {
-                if (Math.abs(movementX) <= 0.05) {
+                if (abs(movementX) <= 0.05) {
                     movementX = 0.0
                 } else {
                     movementX -= stepX
                 }
 
-                if (Math.abs(movementZ) <= 0.05) {
+                if (abs(movementZ) <= 0.05) {
                     movementZ = 0.0
                 } else {
                     movementZ -= stepZ

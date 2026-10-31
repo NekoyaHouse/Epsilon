@@ -38,8 +38,8 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
     fun inset(horizontal: Float, vertical: Float): UiRect {
         return UiRect(
             x + horizontal, y + vertical,
-            Math.max(0.0f, width - horizontal * 2.0f),
-            Math.max(0.0f, height - vertical * 2.0f)
+            maxOf(0.0f, width - horizontal * 2.0f),
+            maxOf(0.0f, height - vertical * 2.0f)
         )
     }
 
@@ -56,10 +56,10 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
     }
 
     fun intersect(other: UiRect): UiRect? {
-        val intersectionX = Math.max(x, other.x)
-        val intersectionY = Math.max(y, other.y)
-        val intersectionRight = Math.min(right(), other.right())
-        val intersectionBottom = Math.min(bottom(), other.bottom())
+        val intersectionX = maxOf(x, other.x)
+        val intersectionY = maxOf(y, other.y)
+        val intersectionRight = minOf(right(), other.right())
+        val intersectionBottom = minOf(bottom(), other.bottom())
         if (intersectionRight <= intersectionX || intersectionBottom <= intersectionY) {
             return null
         }

@@ -72,7 +72,7 @@ class ModuleRow(private val moduleView: ModuleViewModel, private val rowBounds: 
         val keyWidth = textRenderer.getWidth(keybindText, keyScale)
         val localToggleBounds = toggleArea.relativeTo(rowBounds)
         val clipRight = localToggleBounds.x - KEYBIND_TOGGLE_GAP
-        val clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH)
+        val clipWidth = minOf(keyWidth, KEYBIND_CLIP_WIDTH)
         val clipX = clipRight - clipWidth
         val keybindClip = UiRect(clipX, keyY, clipWidth, keyHeight)
 
@@ -88,7 +88,7 @@ class ModuleRow(private val moduleView: ModuleViewModel, private val rowBounds: 
         }
 
         scope.text(moduleView.displayName, PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor)
-        scope.text(moduleView.module.category!!.getName(), PanelElements.ROW_LABEL_INSET, subY, subScale, subColor)
+        scope.text(moduleView.module.category!!.name, PanelElements.ROW_LABEL_INSET, subY, subScale, subColor)
         scope.toggle(localToggleBounds, toggleProgress, toggleHoverProgress)
 
         if (keyWidth <= KEYBIND_CLIP_WIDTH + 0.5f) {

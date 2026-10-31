@@ -35,7 +35,7 @@ object EnchantmentUtils {
             }
 
             for (entry in itemEnchantments) {
-                enchantments.put(entry.key, entry.getIntValue())
+                enchantments.put(entry.key, entry.intValue)
             }
         }
     }
@@ -61,7 +61,7 @@ object EnchantmentUtils {
      */
     fun getEnchantmentLevel(itemEnchantments: Object2IntMap<Holder<Enchantment>>, enchantment: ResourceKey<Enchantment>): Int {
         for (entry in Object2IntMaps.fastIterable(itemEnchantments)) {
-            if (entry.key.`is`(enchantment)) return entry.getIntValue()
+            if (entry.key.`is`(enchantment)) return entry.intValue
         }
         return 0
     }

@@ -322,15 +322,15 @@ object LuminUiRenderer {
         handleWidth: Float, handleHeight: Float, handleRadius: Float, handleColor: Color
     ) {
         val layer = target.layer
-        val clampedProgress = Math.clamp(progress, 0.0f, 1.0f)
-        val safeHandleWidth = Math.max(1.0f, handleWidth)
+        val clampedProgress = (progress).coerceIn(0.0f, 1.0f)
+        val safeHandleWidth = maxOf(1.0f, handleWidth)
         val handleX = bounds.x + bounds.width * clampedProgress - safeHandleWidth / 2.0f
         val handleY = bounds.centerY() - handleHeight / 2.0f
-        val activeWidth = Math.max(activeMinWidth, bounds.width * clampedProgress - activeEndInset)
+        val activeWidth = maxOf(activeMinWidth, bounds.width * clampedProgress - activeEndInset)
 
         layer.addRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, trackRadius, trackColor)
         if (activeWidth > 0.0f) {
-            val clampedActiveWidth = Math.min(bounds.width, activeWidth)
+            val clampedActiveWidth = minOf(bounds.width, activeWidth)
             layer.addRoundRect(
                 bounds.x, bounds.y, clampedActiveWidth, bounds.height, trackRadius,
                 1.0f, 1.0f, trackRadius, activeColor
@@ -358,7 +358,7 @@ object LuminUiRenderer {
         val indicatorX = innerX + indicatorInset + segmentWidth * progress
         val indicatorY = innerY + indicatorInset
         val indicatorHeight = innerHeight - indicatorInset * 2.0f
-        val indicatorRadius = Math.max(4.0f, outerRadius - 2.0f)
+        val indicatorRadius = maxOf(4.0f, outerRadius - 2.0f)
         val labelScale = 0.52f
         val labelY = innerY + (innerHeight - metrics.getHeight(labelScale)) / 2.0f
         val inactiveLabel = theme.segmentedControlInactiveLabel()
@@ -366,12 +366,12 @@ object LuminUiRenderer {
 
         layer.addRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, outerRadius, theme.outlineSoft())
         layer.addRoundRect(
-            innerX, innerY, innerWidth, innerHeight, Math.max(outerRadius - shellInset, 1.0f),
+            innerX, innerY, innerWidth, innerHeight, maxOf(outerRadius - shellInset, 1.0f),
             theme.segmentedControlSurface()
         )
         if (hoverProgress > 0.01f) {
             layer.addRoundRect(
-                innerX, innerY, innerWidth, innerHeight, Math.max(outerRadius - shellInset, 1.0f),
+                innerX, innerY, innerWidth, innerHeight, maxOf(outerRadius - shellInset, 1.0f),
                 theme.stateLayer(theme.textPrimary(), hoverProgress, if (theme.light()) 10 else 14)
             )
         }
@@ -398,7 +398,7 @@ object LuminUiRenderer {
         val track = theme.switchTrack(toggleProgress)
         val knob = theme.switchKnob(toggleProgress)
         val outline = theme.switchTrackOutline(toggleProgress, hoverProgress)
-        val clampedToggle = Math.clamp(toggleProgress, 0.0f, 1.0f)
+        val clampedToggle = (toggleProgress).coerceIn(0.0f, 1.0f)
         val knobSize = theme.switchHandleSizeOff() +
                 (theme.switchHandleSizeOn() - theme.switchHandleSizeOff()) * clampedToggle
         val stretchFactor = 4.0f * clampedToggle * (1.0f - clampedToggle)
@@ -468,8 +468,8 @@ object LuminUiRenderer {
                 val selection = element.selection
                 val selectionColor = element.selectionColor
                 if (selection != null && selectionColor != null) {
-                    val start = Math.clamp(selection.start.toLong(), 0, text.length)
-                    val end = Math.clamp(selection.end.toLong(), start, text.length)
+                    val start = (selection.start.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
+                    val end = (selection.end.toLong()).coerceIn(((start).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
                     if (end > start) {
                         val selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale)
                         val selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale)
@@ -483,7 +483,7 @@ object LuminUiRenderer {
             val caretIndex = element.caretIndex
             val caretColor = element.caretColor
             if (caretIndex != null && caretColor != null) {
-                val safeCaretIndex = Math.clamp(caretIndex.toLong(), 0, text.length)
+                val safeCaretIndex = (caretIndex.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
                 val caretX = textX + metrics.getWidth(text.substring(0, safeCaretIndex), element.textScale)
                 layer.addRect(caretX, bounds.y + 4.0f, 1.0f, bounds.height - 8.0f, caretColor)
             }
@@ -534,11 +534,11 @@ object LuminUiRenderer {
         if (b == null) {
             return a
         }
-        val x = Math.max(a.x, b.x)
-        val y = Math.max(a.y, b.y)
-        val right = Math.min(a.x + a.width, b.x + b.width)
-        val bottom = Math.min(a.y + a.height, b.y + b.height)
-        return Render2DScissor(x, y, Math.max(0, right - x), Math.max(0, bottom - y))
+        val x = maxOf(a.x, b.x)
+        val y = maxOf(a.y, b.y)
+        val right = minOf(a.x + a.width, b.x + b.width)
+        val bottom = minOf(a.y + a.height, b.y + b.height)
+        return Render2DScissor(x, y, maxOf(0, right - x), maxOf(0, bottom - y))
     }
 
     private data class RenderTarget(

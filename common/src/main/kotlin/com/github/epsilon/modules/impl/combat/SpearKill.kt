@@ -11,6 +11,7 @@ import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.RotationUtils
+import kotlin.math.roundToInt
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -148,7 +149,7 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
             else -> 10
         }
 
-        return Math.round(value * (chargeTimeModifier / 100.0f))
+        return (value * (chargeTimeModifier / 100.0f)).roundToInt()
     }
 
     context(nn: NonNullContext)

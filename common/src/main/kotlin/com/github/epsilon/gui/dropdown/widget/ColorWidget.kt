@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import java.awt.Color
 
@@ -33,7 +34,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         val channelCount = channels.size
         val expandedHeight = PICKER_HEIGHT + PICKER_TO_HUE_GAP + HUE_HEIGHT + HUE_TO_CHANNEL_GAP +
                 channelCount * CHANNEL_ROW_HEIGHT +
-                Math.max(0, channelCount - 1) * CHANNEL_GAP +
+                maxOf(0, channelCount - 1) * CHANNEL_GAP +
                 BOTTOM_PADDING
         return DropdownTheme.SETTING_HEIGHT + expandedHeight * openAnim.value
     }
@@ -378,7 +379,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     private fun updateChannelFromMouse(channel: Channel, mouseX: Double) {
         val trackX = trackX
         val trackW = trackWidth
-        val value = Mth.clamp(Math.round(Mth.clamp(((mouseX - trackX) / trackW).toFloat(), 0.0f, 1.0f) * 255.0f), 0, 255)
+        val value = Mth.clamp((Mth.clamp(((mouseX - trackX) / trackW).toFloat(), 0.0f, 1.0f) * 255.0f).roundToInt(), 0, 255)
         setChannelValue(channel, value, true)
     }
 

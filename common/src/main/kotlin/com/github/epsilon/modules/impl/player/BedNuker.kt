@@ -52,7 +52,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
 
             val maxRange = range
-            val eyes = player.getEyePosition()
+            val eyes = player.eyePosition
             val bedTargetNow: Boolean
 
             if (isCurrentBreakStillValid(eyes, maxRange)) {
@@ -170,7 +170,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         val level = manager.level
         val maxRange = range
         val maxRangeSq = maxRange * maxRange
-        val eyes = player.getEyePosition()
+        val eyes = player.eyePosition
         val playerPos = player.blockPosition()
         val radius = Mth.ceil(maxRange)
         var best: TargetData? = null
@@ -215,7 +215,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
         val manager = NonNullContext.current ?: return null
         val maxRange = range
-        val eyes = manager.player.getEyePosition()
+        val eyes = manager.player.eyePosition
         val target = getBedFaceTarget(bedPos, bedFace, maxRange, eyes)
         if (target != null && target.bedTarget) {
             return target

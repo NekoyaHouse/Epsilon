@@ -48,7 +48,7 @@ class ClientSettingTextField(private val maxLength: Int) {
             focusProgress, MD3Theme.PRIMARY, 1.0f,
             textInset, display, textScale, textColor,
             null, null,
-            if (focused) Math.min(cursor, text.length) else null,
+            if (focused) minOf(cursor, text.length) else null,
             if (focused) MD3Theme.TEXT_PRIMARY else null,
             if (showTrailing) trailingHint else null,
             0.56f,
@@ -56,7 +56,7 @@ class ClientSettingTextField(private val maxLength: Int) {
         )
 
         if (focused) {
-            val safeCursor = Math.min(cursor, text.length)
+            val safeCursor = minOf(cursor, text.length)
             val caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor), textScale)
             IMEFocusHelper.updateCursorPos(caretX, textY)
         }
@@ -105,12 +105,12 @@ class ClientSettingTextField(private val maxLength: Int) {
             }
 
             InputConstants.KEY_LEFT -> {
-                cursor = Math.max(0, cursor - 1)
+                cursor = maxOf(0, cursor - 1)
                 true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursor = Math.min(text.length, cursor + 1)
+                cursor = minOf(text.length, cursor + 1)
                 true
             }
 
@@ -154,7 +154,7 @@ class ClientSettingTextField(private val maxLength: Int) {
 
     fun setText(text: String?) {
         this.text = text?.let { clampToMaxLength(it) } ?: ""
-        this.cursor = Math.min(this.cursor, this.text.length)
+        this.cursor = minOf(this.cursor, this.text.length)
     }
 
     fun clear() {
@@ -174,7 +174,7 @@ class ClientSettingTextField(private val maxLength: Int) {
             }
 
             InputConstants.KEY_V -> {
-                val clipboard = Constants.client.keyboardHandler.getClipboard()
+                val clipboard = Constants.client.keyboardHandler.clipboard
                 if (!clipboard.isEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }

@@ -22,6 +22,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -79,10 +80,10 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         this.bounds = bounds
         this.guiHeight = guiGraphics.guiHeight()
 
-        if (Math.abs(scrollVelocity) > 0.01f) {
+        if (abs(scrollVelocity) > 0.01f) {
             state.scrollModules((scrollVelocity * partialTick).toDouble())
             scrollVelocity *= 0.86f
-            if (Math.abs(scrollVelocity) < 0.3f) {
+            if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
             markDirty()
@@ -92,7 +93,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         val modules = state.getVisibleModules()
         val contentHeight = modules.size * (ModuleRow.HEIGHT + MD3Theme.ROW_GAP)
         state.setMaxModuleScroll(contentHeight - viewport.height)
-        val maxModuleScroll = Math.max(0.0f, contentHeight - viewport.height)
+        val maxModuleScroll = maxOf(0.0f, contentHeight - viewport.height)
         val hasScrollBar = maxModuleScroll > 0
         val rowWidth = if (hasScrollBar) viewport.width - ScrollBarUtils.TOTAL_WIDTH else viewport.width
         val contentSignature = buildContentSignature(modules)
@@ -109,7 +110,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         val tree = UiTree.build { scope ->
             scope.pushAbsolute(bounds) { panel ->
                 panel.text(
-                    state.getSelectedCategory().getName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
+                    state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
                     MD3Theme.TEXT_PRIMARY
                 )
                 panel.text(
@@ -316,13 +317,13 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
             }
 
             InputConstants.KEY_LEFT -> {
-                searchCursorIndex = Math.max(0, searchCursorIndex - 1)
+                searchCursorIndex = maxOf(0, searchCursorIndex - 1)
                 markDirty()
                 true
             }
 
             InputConstants.KEY_RIGHT -> {
-                searchCursorIndex = Math.min(state.getSearchQuery().length, searchCursorIndex + 1)
+                searchCursorIndex = minOf(state.getSearchQuery().length, searchCursorIndex + 1)
                 markDirty()
                 true
             }
@@ -445,7 +446,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         val searchBounds = getSearchBounds()
         val hoverProgress = scope.animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         val focusProgress = scope.animate(searchFocusAnimation, searchFocused)
-        val fieldHover = Math.max(hoverProgress, focusProgress * 0.85f)
+        val fieldHover = maxOf(hoverProgress, focusProgress * 0.85f)
 
         val query = state.getSearchQuery()
         val showPlaceholder = query.isEmpty() && !searchFocused
@@ -470,7 +471,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
             val textY = searchBounds.y + (searchBounds.height - textRenderer.getHeight(scale)) / 2.0f
             val textX = searchBounds.x + 8.0f
             val caretX = textX + textRenderer.getWidth(
-                query.substring(0, Math.min(searchCursorIndex, query.length)), scale
+                query.substring(0, minOf(searchCursorIndex, query.length)), scale
             )
             IMEFocusHelper.updateCursorPos(caretX, textY)
         }

@@ -9,6 +9,7 @@ import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.roundToInt
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -56,7 +57,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
         val trackBounds = getTrackBounds(bounds)
         val fieldBounds = getFieldBounds(bounds)
         val progress = getProgress()
-        val visualProgress = Math.clamp(progress, 0.0f, 1.0f)
+        val visualProgress = (progress).coerceIn(0.0f, 1.0f)
         val handleWidth = 2.0f - animatedPress * 2.0f
         val handleHeight = 14.0f
         val handleX = trackBounds.x + trackBounds.width * visualProgress - handleWidth / 2.0f
@@ -101,7 +102,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
         scope.input(
             fieldBounds.relativeTo(bounds), focusedState, fieldHover,
             displayX - fieldBounds.x, display, displayScale, MD3Theme.filledFieldContent(focusedState),
-            if (focusedState) Math.min(cursorIndex, display.length) else null,
+            if (focusedState) minOf(cursorIndex, display.length) else null,
             if (focusedState) MD3Theme.filledFieldCaret(focusedState) else null,
             null, 0.0f, null
         )
@@ -178,12 +179,12 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
             }
 
             InputConstants.KEY_LEFT -> {
-                cursorIndex = Math.max(0, cursorIndex - 1)
+                cursorIndex = maxOf(0, cursorIndex - 1)
                 return true
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursorIndex = Math.min(getDisplayBuffer().length, cursorIndex + 1)
+                cursorIndex = minOf(getDisplayBuffer().length, cursorIndex + 1)
                 return true
             }
 
@@ -225,10 +226,10 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     fun updateFromMouse(bounds: UiRect, mouseX: Double) {
         val trackBounds = getTrackBounds(bounds)
         var progress = (mouseX - trackBounds.x) / trackBounds.width
-        progress = Math.clamp(progress, 0.0, 1.0)
+        progress = (progress).coerceIn(0.0, 1.0)
         val rawValue = intSetting.min + (intSetting.max - intSetting.min) * progress
-        val step = Math.max(1, intSetting.step)
-        val snapped = intSetting.min + Math.round((rawValue - intSetting.min) / step).toInt() * step
+        val step = maxOf(1, intSetting.step)
+        val snapped = intSetting.min + ((rawValue - intSetting.min) / step).roundToInt() * step
         previewValue(snapped)
     }
 
@@ -306,7 +307,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
 
     private fun getFieldTextScale(textRenderer: TextRenderer, text: String, fieldBounds: UiRect): Float {
         val textWidth = textRenderer.getWidth(text, FIELD_TEXT_SCALE)
-        val maxTextWidth = Math.max(1.0f, fieldBounds.width - FIELD_TEXT_PADDING * 2.0f)
+        val maxTextWidth = maxOf(1.0f, fieldBounds.width - FIELD_TEXT_PADDING * 2.0f)
         if (textWidth <= maxTextWidth || textWidth <= 0.0f) {
             return FIELD_TEXT_SCALE
         }

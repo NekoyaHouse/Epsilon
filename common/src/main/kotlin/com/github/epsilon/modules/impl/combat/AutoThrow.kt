@@ -17,6 +17,9 @@ import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rot2f
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
@@ -79,7 +82,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
                         val dx = entity.x - player.x
                         val dz = entity.z - player.z
-                        if (Math.sqrt(dx * dx + dz * dz) < minRange) continue
+                        if (sqrt(dx * dx + dz * dz) < minRange) continue
 
                         if (distSq < minDstSq) {
                             minDstSq = distSq
@@ -205,7 +208,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     // 通过离散模拟计算可行的命中方向，移植自现有实现并适配 Vec3
     context(nn: NonNullContext)
     private fun getAimVec(livingEntity: LivingEntity): Vec3 {
-        val shooterPosNow = player.getEyePosition()
+        val shooterPosNow = player.eyePosition
         val shooterVelNow = player.deltaMovement
 
         val targetPosNow = livingEntity.boundingBox.center
@@ -247,7 +250,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         for (n in 2..nMax) {
             val rhX = r.x + targetVelXZ.x * n
             val rhZ = r.z + targetVelXZ.z * n
-            val rhLen = Math.sqrt(rhX * rhX + rhZ * rhZ)
+            val rhLen = sqrt(rhX * rhX + rhZ * rhZ)
             if (rhLen < 1e-6) continue
 
             val dirHx = rhX / rhLen
@@ -265,7 +268,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             if (norm2 > 1.0005) continue
 
             var dir = Vec3(dirHx * cosTheta, sinTheta, dirHz * cosTheta)
-            val l = Math.sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z)
+            val l = sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z)
             if (l < 1e-6) continue
             dir = Vec3(dir.x / l, dir.y / l, dir.z / l)
 
@@ -291,7 +294,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             shooterPosNow.add(bestDir)
         } else {
             val d = shooterPosNow.distanceTo(targetPosNow)
-            val t = Math.max(d / Math.max(s, 1e-3), 0.05)
+            val t = maxOf(d / maxOf(s, 1e-3), 0.05)
             val lead = targetPosNow.add(targetVelXZ.scale(t))
             Vec3(lead.x, lead.y + 0.5 * g * t * t, lead.z)
         }
@@ -343,23 +346,23 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     }
 
     private fun distancePointToAABB(point: Vec3, center: Vec3, hx: Double, hy: Double, hz: Double): Double {
-        val dx = Math.max(0.0, Math.abs(point.x - center.x) - hx)
-        val dy = Math.max(0.0, Math.abs(point.y - center.y) - hy)
-        val dz = Math.max(0.0, Math.abs(point.z - center.z) - hz)
-        return Math.sqrt(dx * dx + dy * dy + dz * dz)
+        val dx = maxOf(0.0, abs(point.x - center.x) - hx)
+        val dy = maxOf(0.0, abs(point.y - center.y) - hy)
+        val dz = maxOf(0.0, abs(point.z - center.z) - hz)
+        return sqrt(dx * dx + dy * dy + dz * dz)
     }
 
     private fun geomSum(k: Double, n: Int): Double {
         if (n <= 0) return 0.0
-        if (Math.abs(1.0 - k) < 1e-9) return n.toDouble()
-        return (1.0 - Math.pow(k, n.toDouble())) / (1.0 - k)
+        if (abs(1.0 - k) < 1e-9) return n.toDouble()
+        return (1.0 - (k).pow(n.toDouble())) / (1.0 - k)
     }
 
     private fun triGeomSum(k: Double, n: Int): Double {
         if (n <= 1) return 0.0
-        if (Math.abs(1.0 - k) < 1e-9) return (n - 1) * n / 2.0
+        if (abs(1.0 - k) < 1e-9) return (n - 1) * n / 2.0
         val oneMinusK = (1.0 - k)
-        return ((n - 1) / oneMinusK) - (k * (1.0 - Math.pow(k, (n - 1).toDouble())) / (oneMinusK * oneMinusK))
+        return ((n - 1) / oneMinusK) - (k * (1.0 - (k).pow((n - 1).toDouble())) / (oneMinusK * oneMinusK))
     }
 
 }

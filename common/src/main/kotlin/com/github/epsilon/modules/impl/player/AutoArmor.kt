@@ -15,6 +15,7 @@ import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.player.ClickSlotUtils
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvUtils
+import kotlin.math.ceil
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -139,7 +140,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         if (stack.isEmpty) return null
 
         val equippable: Equippable? = stack.get(DataComponents.EQUIPPABLE)
-        if (equippable == null || equippable.slot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
+        if (equippable == null || equippable.slot().type != EquipmentSlot.Type.HUMANOID_ARMOR) {
             return null
         }
 
@@ -228,7 +229,7 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
 
         if (!elytra && armor <= 0.0 && toughness <= 0.0) return 0
 
-        return ((armor + Math.ceil(toughness)) * 10.0).toInt() + enchantmentScore
+        return ((armor + ceil(toughness)) * 10.0).toInt() + enchantmentScore
     }
 
     private class ArmorData(

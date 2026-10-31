@@ -135,7 +135,7 @@ object AssetManager {
             for (asset in assetList) {
                 total += asset.expectedBytes()
             }
-            totalBytes = Math.max(1L, total)
+            totalBytes = maxOf(1L, total)
         }
 
         fun assets(): List<Asset> {
@@ -160,14 +160,14 @@ object AssetManager {
 
         fun progress(): Float {
             val done = completedBytes + currentBytes
-            return Math.clamp(done / totalBytes.toFloat(), 0.0f, 1.0f)
+            return (done / totalBytes.toFloat()).coerceIn(0.0f, 1.0f)
         }
 
         fun currentProgress(): Float {
             if (currentTotal <= 0L) {
                 return 0.0f
             }
-            return Math.clamp(currentBytes / currentTotal.toFloat(), 0.0f, 1.0f)
+            return (currentBytes / currentTotal.toFloat()).coerceIn(0.0f, 1.0f)
         }
 
         fun cancel() {

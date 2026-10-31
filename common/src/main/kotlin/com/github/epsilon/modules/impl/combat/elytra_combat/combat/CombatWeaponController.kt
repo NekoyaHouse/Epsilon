@@ -132,7 +132,7 @@ object CombatWeaponController {
             // 首次判定单独处理，避免 tickCount - Integer.MIN_VALUE 溢出。
             val tick = player.tickCount
             val restartedRecently = lastSpearRestartTick != Int.MIN_VALUE &&
-                    tick - lastSpearRestartTick < Math.max(1, spearReadyTicks())
+                    tick - lastSpearRestartTick < maxOf(1, spearReadyTicks())
             if (restartedRecently) {
                 return true
             }
@@ -208,7 +208,7 @@ object CombatWeaponController {
             return 8
         }
         val weapon = player.useItem.get(DataComponents.KINETIC_WEAPON)
-        return if (weapon != null) Math.max(1, weapon.delayTicks()) else 8
+        return if (weapon != null) maxOf(1, weapon.delayTicks()) else 8
     }
 
     /**

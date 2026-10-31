@@ -32,7 +32,7 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
 
         val keyText = if (listening) "..." else KeybindUtils.format(setting.value)
         val textW = textMetrics.textWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE)
-        buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f)
+        buttonW = maxOf(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f)
         buttonH = DropdownTheme.KEYBIND_HEIGHT
         val localButtonX = width - DropdownTheme.SETTING_PADDING_X - buttonW
         val localButtonY = labelTextY + (lineHeight - buttonH) * 0.5f

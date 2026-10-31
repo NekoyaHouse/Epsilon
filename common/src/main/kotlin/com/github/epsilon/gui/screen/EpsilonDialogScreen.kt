@@ -89,8 +89,8 @@ abstract class EpsilonDialogScreen protected constructor(
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
 
-        val cardW = Math.min(cardWidth(), width - 20.0f)
-        val cardH = Math.min(cardHeight(), height - 20.0f)
+        val cardW = minOf(cardWidth(), width - 20.0f)
+        val cardH = minOf(cardHeight(), height - 20.0f)
         cardArea = UiRect((width - cardW) * 0.5f, (height - cardH) * 0.5f, cardW, cardH)
         val hits = layoutButtons()
 
@@ -183,7 +183,7 @@ abstract class EpsilonDialogScreen protected constructor(
         var totalWidth = BUTTON_GAP * (buttons.size - 1)
         for (i in buttons.indices) {
             val textWidth = metrics.getWidth(buttons[i].label, 0.62f)
-            widths[i] = Math.max(BUTTON_MIN_WIDTH, textWidth + 26.0f)
+            widths[i] = maxOf(BUTTON_MIN_WIDTH, textWidth + 26.0f)
             totalWidth += widths[i]
         }
 

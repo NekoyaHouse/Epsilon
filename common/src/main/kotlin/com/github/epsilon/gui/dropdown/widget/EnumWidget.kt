@@ -191,7 +191,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             return
         }
 
-        val visibleHeight = Math.min(OPTION_HEIGHT, visibleBottom - optionY)
+        val visibleHeight = minOf(OPTION_HEIGHT, visibleBottom - optionY)
         if (visibleHeight <= 0.0f) {
             return
         }
@@ -223,7 +223,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         } else {
             DropdownTheme.settingLabelMuted()
         }
-        textColor = MD3Theme.withAlpha(textColor, Math.clamp((textColor.alpha * alpha).toInt().toLong(), 0, 255))
+        textColor = MD3Theme.withAlpha(textColor, ((textColor.alpha * alpha).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt())
         scope.text(
             setting.getTranslatedValueUnchecked(mode),
             listX + FIELD_TEXT_PADDING_X,
@@ -251,7 +251,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         val scale = 0.5f
         val width = textMetrics.textWidth(label, scale) + 16.0f
         val height = 12.0f
-        val x = Math.max(DropdownTheme.SETTING_PADDING_X, trailingX - width)
+        val x = maxOf(DropdownTheme.SETTING_PADDING_X, trailingX - width)
         val labelHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)
         val y = 1.0f + (labelHeight - height) * 0.5f
         scope.chip(
@@ -281,11 +281,11 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
     private fun getListHeight(): Float {
         val hiddenCount = getHiddenModeCount()
         if (hiddenCount <= 0) return 0.0f
-        return LIST_PADDING_Y * 2.0f + hiddenCount * OPTION_HEIGHT + Math.max(0, hiddenCount - 1) * OPTION_GAP
+        return LIST_PADDING_Y * 2.0f + hiddenCount * OPTION_HEIGHT + maxOf(0, hiddenCount - 1) * OPTION_GAP
     }
 
     private fun getHiddenModeCount(): Int {
-        return Math.max(0, modes().size - 1)
+        return maxOf(0, modes().size - 1)
     }
 
     private fun getHiddenModes(): Array<Enum<*>> {

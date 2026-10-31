@@ -14,6 +14,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.util.Mth
 
 abstract class AbstractDropdownPanel protected constructor(
@@ -268,8 +269,8 @@ abstract class AbstractDropdownPanel protected constructor(
     }
 
     protected fun computeVisibleContentHeight(contentHeight: Float): Float {
-        val maxContentHeight = Math.max(0.0f, maxPanelHeight - DropdownTheme.PANEL_HEADER_HEIGHT - DropdownTheme.PANEL_BOTTOM_PADDING)
-        return Math.min(contentHeight, maxContentHeight)
+        val maxContentHeight = maxOf(0.0f, maxPanelHeight - DropdownTheme.PANEL_HEADER_HEIGHT - DropdownTheme.PANEL_BOTTOM_PADDING)
+        return minOf(contentHeight, maxContentHeight)
     }
 
     protected fun getRenderFrameId(): Int {
@@ -312,7 +313,7 @@ abstract class AbstractDropdownPanel protected constructor(
     }
 
     private fun updateScroll(contentHeight: Float, visibleHeight: Float, animate: Boolean) {
-        maxScroll = Math.max(0.0f, contentHeight - visibleHeight)
+        maxScroll = maxOf(0.0f, contentHeight - visibleHeight)
         targetScroll = Mth.clamp(targetScroll, 0.0f, maxScroll)
         scroll = Mth.clamp(scroll, 0.0f, maxScroll)
         if (maxScroll <= 0.0f) {
@@ -323,7 +324,7 @@ abstract class AbstractDropdownPanel protected constructor(
             return
         }
 
-        if (Math.abs(scroll - targetScroll) <= SCROLL_EPSILON) {
+        if (abs(scroll - targetScroll) <= SCROLL_EPSILON) {
             scroll = targetScroll
         } else {
             scroll = Mth.lerp(SCROLL_SMOOTHING, scroll, targetScroll)

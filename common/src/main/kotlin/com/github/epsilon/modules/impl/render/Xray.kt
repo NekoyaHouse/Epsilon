@@ -206,9 +206,9 @@ object Xray : Module("Xray", Category.RENDER) {
 
     private fun getArea(): AABB {
         val player = mc.player ?: return AABB(BlockPos.ZERO)
-        val radiusValue = if (plugin.`is`(Plugin.New)) Math.min(4, radius) else radius
-        val downValue = if (plugin.`is`(Plugin.New)) Math.min(3, down) else down
-        val upValue = if (plugin.`is`(Plugin.New)) Math.min(4, up) else up
+        val radiusValue = if (plugin.`is`(Plugin.New)) minOf(4, radius) else radius
+        val downValue = if (plugin.`is`(Plugin.New)) minOf(3, down) else down
+        val upValue = if (plugin.`is`(Plugin.New)) minOf(4, up) else up
         return AABB(
             player.x - radiusValue, player.y - downValue, player.z - radiusValue,
             player.x + radiusValue, player.y + upValue, player.z + radiusValue
@@ -241,9 +241,9 @@ object Xray : Module("Xray", Category.RENDER) {
     private fun getBlocks(): MutableList<BlockPos> {
         val player = mc.player ?: return ArrayList()
         val level = mc.level ?: return ArrayList()
-        val radiusValue = if (plugin.`is`(Plugin.New)) Math.min(4, radius) else radius
-        val downValue = if (plugin.`is`(Plugin.New)) Math.min(3, down) else down
-        val upValue = if (plugin.`is`(Plugin.New)) Math.min(4, up) else up
+        val radiusValue = if (plugin.`is`(Plugin.New)) minOf(4, radius) else radius
+        val downValue = if (plugin.`is`(Plugin.New)) minOf(3, down) else down
+        val upValue = if (plugin.`is`(Plugin.New)) minOf(4, up) else up
 
         val positions = ArrayList<BlockPos>()
         for (x in (player.x - radiusValue).toInt() until (player.x + radiusValue).toInt()) {

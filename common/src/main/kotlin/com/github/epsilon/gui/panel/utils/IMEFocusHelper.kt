@@ -45,7 +45,7 @@ object IMEFocusHelper {
      */
     fun deactivate() {
         // 减少引用计数；仅最后一个失去焦点的文本框真正关闭 IME 输入
-        refCount = Math.max(0, refCount - 1)
+        refCount = maxOf(0, refCount - 1)
         if (refCount == 0) {
             val screen: Screen? = Constants.client.gui.screen()
             if (screen != null) {

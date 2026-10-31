@@ -4,6 +4,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.safety.*
+import kotlin.math.abs
 import net.minecraft.util.Mth
 
 object MovementFix : Module("Movement Fix", Category.MOVEMENT) {
@@ -56,9 +57,9 @@ object MovementFix : Module("Movement Fix", Category.MOVEMENT) {
 
             val angleUnit = 45
             val angleTolerance = 22.5f
-            val directionFactor = Math.max(Math.abs(forward), Math.abs(strafe))
+            val directionFactor = maxOf(abs(forward), abs(strafe))
             val angleDifference = Mth.wrapDegrees(getDirection(player.yRot, forward, strafe) - yaw).toDouble()
-            val angleDistance = Math.abs(angleDifference)
+            val angleDistance = abs(angleDifference)
 
             forward = 0.0f
             strafe = 0.0f

@@ -11,6 +11,7 @@ import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import kotlin.math.ceil
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.font.TextRenderable
@@ -143,7 +144,7 @@ class EpsilonGuiRenderer(
             val dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(Matrix4f().setTranslation(0.0f, 0.0f, -11000.0f))
             if (firstDrawIndexAfterBlur > 0) {
                 executeDrawRange(
-                    Supplier { "GUI before blur" }, mainRenderTarget, dynamicTransforms, 0, Math.min(firstDrawIndexAfterBlur, draws.size)
+                    Supplier { "GUI before blur" }, mainRenderTarget, dynamicTransforms, 0, minOf(firstDrawIndexAfterBlur, draws.size)
                 )
             }
 
@@ -193,7 +194,7 @@ class EpsilonGuiRenderer(
             previousPipeline = pipeline
             previousTextureSetup = textureSetup
             previousScissorArea = scissorArea
-            val appendDraw = vertexBuffer.appendDraw(pipeline.getVertexFormatBinding(0)!!, pipeline.getPrimitiveTopology())
+            val appendDraw = vertexBuffer.appendDraw(pipeline.getVertexFormatBinding(0)!!, pipeline.primitiveTopology)
             previousDraw = appendDraw
             draws.add(Draw(appendDraw, pipeline, textureSetup, scissorArea))
         }
@@ -219,7 +220,7 @@ class EpsilonGuiRenderer(
             val guiScale = getGuiScaleInvalidatingItemAtlasIfChanged()
             val itemAtlas = prepareItemAtlas(
                 itemsInFrame,
-                Math.max(1, Math.ceil((DEFAULT_ITEM_SIZE * LuminRenderSystem.getGuiScale())).toInt())
+                maxOf(1, ceil((DEFAULT_ITEM_SIZE * LuminRenderSystem.getGuiScale())).toInt())
             )
             val hasOversizedItems = MutableBoolean(false)
             renderState.forEachItem { itemState ->
@@ -311,7 +312,7 @@ class EpsilonGuiRenderer(
             cachedGuiScale = guiScale
         }
 
-        return Math.max(1, Math.ceil(guiScale).toInt())
+        return maxOf(1, ceil(guiScale).toInt())
     }
 
     private fun invalidateItemAtlas() {

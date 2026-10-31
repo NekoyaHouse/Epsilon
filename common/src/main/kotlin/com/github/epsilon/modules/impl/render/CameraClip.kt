@@ -6,6 +6,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.settings.impl.DoubleSetting
+import kotlin.math.exp
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
@@ -41,7 +42,7 @@ object CameraClip : Module("Camera Clip", Category.RENDER) {
             return
         }
 
-        val smoothFactor = actionSmoothness * (1.0 - Math.exp(-distanceToTarget / maxDistance))
+        val smoothFactor = actionSmoothness * (1.0 - exp(-distanceToTarget / maxDistance))
 
         cameraPos = Vec3(
             Mth.lerp(smoothFactor, current.x, targetPos.x),

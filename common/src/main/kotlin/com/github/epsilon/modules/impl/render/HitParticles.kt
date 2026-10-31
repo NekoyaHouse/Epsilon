@@ -25,6 +25,7 @@ import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import kotlin.math.sqrt
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
@@ -160,7 +161,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         private var lastRenderTime: Long = spawnTime
 
         fun tick(): Boolean {
-            val horizontalSpeed = Math.sqrt((motionX * motionX + motionZ * motionZ).toDouble())
+            val horizontalSpeed = sqrt((motionX * motionX + motionZ * motionZ).toDouble())
 
             prevX = x
             prevY = y
@@ -199,7 +200,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         }
 
         fun renderTexture(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
-            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleScale = 0.07f
             val size = HitParticles.scale.toFloat()
             val position = interpolatedCameraRelativePosition(partialTick)
@@ -239,7 +240,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
 
         private fun nextRotation(): Float {
             val now = System.currentTimeMillis()
-            val delta = Math.max(0.0f, (now - lastRenderTime) / 1000.0f)
+            val delta = maxOf(0.0f, (now - lastRenderTime) / 1000.0f)
             lastRenderTime = now
             rotationAngle += delta * rotationSpeed
             return rotationAngle

@@ -13,6 +13,7 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.ceil
 import net.minecraft.util.Mth
 import java.util.ArrayList
 import java.util.function.BooleanSupplier
@@ -33,10 +34,10 @@ class MainDropdownPanel(
         settingsContent = SettingsContent("client-settings:dropdown-main", ClientSetting.settings)
         isVisible = true
         isOpened = true
-        add(LabelSupplier { Category.COMBAT.getName() }, Category.COMBAT.icon, "category:combat", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.PLAYER.getName() }, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.MOVEMENT.getName() }, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver)
-        add(LabelSupplier { Category.RENDER.getName() }, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver)
+        add(LabelSupplier { Category.COMBAT.name }, Category.COMBAT.icon, "category:combat", togglePanel, panelVisibleResolver)
+        add(LabelSupplier { Category.PLAYER.name }, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver)
+        add(LabelSupplier { Category.MOVEMENT.name }, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver)
+        add(LabelSupplier { Category.RENDER.name }, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver)
         add(
             LabelSupplier { EpsilonTranslations.Gui.TAB_FRIEND.getTranslatedName() },
             IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver
@@ -81,7 +82,7 @@ class MainDropdownPanel(
 
     override fun computeContentHeight(): Float {
         val rows = iconRows
-        return CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING +
+        return CONTENT_PADDING + rows * ICON_SIZE + maxOf(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING +
                 settingsContent.computeContentHeight(getRenderFrameId())
     }
 
@@ -131,7 +132,7 @@ class MainDropdownPanel(
             }
         }
         val rows = iconRows
-        currentY += rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 4.0f + CONTENT_PADDING
+        currentY += rows * ICON_SIZE + maxOf(0, rows - 1) * ICON_GAP + 4.0f + CONTENT_PADDING
         scope.rect(
             x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f,
             MD3Theme.withAlpha(MD3Theme.OUTLINE, 55)
@@ -153,7 +154,7 @@ class MainDropdownPanel(
             }
         }
         val rows = iconRows
-        val settingsY = currentY + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING
+        val settingsY = currentY + rows * ICON_SIZE + maxOf(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING
         return settingsContent.mouseClicked(mouseX, mouseY, button, x, settingsY, width)
     }
 
@@ -177,16 +178,16 @@ class MainDropdownPanel(
     private fun getSettingsY(): Float {
         val rows = iconRows
         return y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING + rows * ICON_SIZE +
-                Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING
+                maxOf(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING
     }
 
     private val iconRows: Int
-        get() = Math.ceil(entries.size / ICON_COLUMNS.toDouble()).toInt()
+        get() = ceil(entries.size / ICON_COLUMNS.toDouble()).toInt()
 
     private fun getIconX(index: Int): Float {
         val rowStart = (index / ICON_COLUMNS) * ICON_COLUMNS
-        val rowCount = Math.min(ICON_COLUMNS, entries.size - rowStart)
-        val rowWidth = rowCount * ICON_SIZE + Math.max(0, rowCount - 1) * ICON_GAP
+        val rowCount = minOf(ICON_COLUMNS, entries.size - rowStart)
+        val rowWidth = rowCount * ICON_SIZE + maxOf(0, rowCount - 1) * ICON_GAP
         val rowX = x + (width - rowWidth) * 0.5f
         return rowX + (index - rowStart) * (ICON_SIZE + ICON_GAP)
     }
@@ -206,7 +207,7 @@ class MainDropdownPanel(
         val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
 
         fun isActive(): Boolean {
-            return activeSupplier != null && activeSupplier.getAsBoolean()
+            return activeSupplier != null && activeSupplier.asBoolean
         }
     }
 

@@ -188,7 +188,7 @@ object DropdownTheme {
      * 分组卡片描边；层级越深越明显，但受 [GROUP_DEPTH_LIMIT] 限制。
      */
     fun groupCardOutline(depth: Int): Color {
-        return MD3Theme.withAlpha(MD3Theme.OUTLINE, 32 + 10 * Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT))
+        return MD3Theme.withAlpha(MD3Theme.OUTLINE, 32 + 10 * minOf(maxOf(depth, 0), GROUP_DEPTH_LIMIT))
     }
 
     /**
@@ -202,7 +202,7 @@ object DropdownTheme {
      * 分组卡片圆角：折叠时保持胶囊样式，展开后过渡到卡片圆角。
      */
     fun groupCardRadius(expandProgress: Float): Float {
-        val progress = Math.max(0.0f, Math.min(1.0f, expandProgress))
+        val progress = maxOf(0.0f, minOf(1.0f, expandProgress))
         return BUTTON_RADIUS + (GROUP_CARD_RADIUS - BUTTON_RADIUS) * progress
     }
 
@@ -210,13 +210,13 @@ object DropdownTheme {
      * 嵌套层级缩进；达到 [GROUP_DEPTH_LIMIT] 后不再增加，并在宽度不足时收敛。
      */
     fun groupNestInset(depth: Int, availableWidth: Float): Float {
-        val limit = Math.max(0.0f, (availableWidth - GROUP_CARD_MIN_WIDTH) * 0.5f)
-        val clampedDepth = Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT)
-        return Math.min(GROUP_NEST_INSET * clampedDepth, limit)
+        val limit = maxOf(0.0f, (availableWidth - GROUP_CARD_MIN_WIDTH) * 0.5f)
+        val clampedDepth = minOf(maxOf(depth, 0), GROUP_DEPTH_LIMIT)
+        return minOf(GROUP_NEST_INSET * clampedDepth, limit)
     }
 
     private fun depthRatio(depth: Int): Float {
-        val clampedDepth = Math.min(Math.max(depth, 0), GROUP_DEPTH_LIMIT)
+        val clampedDepth = minOf(maxOf(depth, 0), GROUP_DEPTH_LIMIT)
         return clampedDepth / GROUP_DEPTH_LIMIT.toFloat()
     }
 

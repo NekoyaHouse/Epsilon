@@ -18,6 +18,7 @@ import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.abs
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -50,10 +51,10 @@ class FriendClientSettingTab(
     ) {
         this.bounds = bounds
 
-        if (Math.abs(scrollVelocity) > 0.01f) {
+        if (abs(scrollVelocity) > 0.01f) {
             state.scrollFriend((scrollVelocity * partialTick).toDouble())
             scrollVelocity *= 0.86f
-            if (Math.abs(scrollVelocity) < 0.3f) {
+            if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
             markDirty()
@@ -64,7 +65,7 @@ class FriendClientSettingTab(
         val friends = FriendManager.getFriends().sortedWith(String.CASE_INSENSITIVE_ORDER)
         val contentHeight = friends.size * (FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP)
         state.setMaxFriendScroll(contentHeight - listViewport.height)
-        val maxScroll = Math.max(0.0f, contentHeight - listViewport.height)
+        val maxScroll = maxOf(0.0f, contentHeight - listViewport.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
         val contentSignature = buildContentSignature(friends)

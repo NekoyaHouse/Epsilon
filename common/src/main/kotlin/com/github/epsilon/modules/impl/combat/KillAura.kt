@@ -27,6 +27,7 @@ import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -171,7 +172,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val velocity = Velocity
 
             if (velocity.delay) {
-                targets!!.sortBy { o -> Math.abs(velocity.yaw - RotationUtils.calculate(o).yaw).toDouble() }
+                targets!!.sortBy { o -> abs(velocity.yaw - RotationUtils.calculate(o).yaw).toDouble() }
             }
 
             when (targetMode) {
@@ -200,7 +201,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 PriorityMode.Range -> targets!!.sortBy { o -> o.distanceTo(player).toDouble() }
 
                 PriorityMode.Fov -> {
-                    targets!!.sortBy { o -> Math.abs(Mth.wrapDegrees(player.xRot - RotationUtils.calculate(o).yaw)).toDouble() }
+                    targets!!.sortBy { o -> abs(Mth.wrapDegrees(player.xRot - RotationUtils.calculate(o).yaw)).toDouble() }
                 }
 
                 PriorityMode.Health -> {
@@ -239,7 +240,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
             val attackEntity = getAttackEntity()
             if (hitSelect && attackEntity is Player && !AntiBot.isBot(attackEntity) && !TargetManager.isSameTeam(attackEntity) && velocity.attackQueue <= 0) {
-                val connection = mc.getConnection()
+                val connection = mc.connection
                 val localPlayerInfo = connection?.getPlayerInfo(player.uuid)
                 val latencyTicks = localPlayerInfo?.latency?.div(50) ?: 0
                 if (attackEntity.hurtTime <= latencyTicks + 1 || (player.hurtTime >= 6 && !Velocity.isEnabled) || Criticals.fallTicks == 2) {

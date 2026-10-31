@@ -56,8 +56,8 @@ class PanelPopupHost {
      */
     fun getCenteredBounds(width: Float, height: Float): UiRect {
         val baseBounds = overlayBounds ?: UiRect(0.0f, 0.0f, width, height)
-        val popupWidth = Math.min(width, baseBounds.width)
-        val popupHeight = Math.min(height, baseBounds.height)
+        val popupWidth = minOf(width, baseBounds.width)
+        val popupHeight = minOf(height, baseBounds.height)
         return UiRect(
             baseBounds.x + (baseBounds.width - popupWidth) / 2.0f,
             baseBounds.y + (baseBounds.height - popupHeight) / 2.0f,

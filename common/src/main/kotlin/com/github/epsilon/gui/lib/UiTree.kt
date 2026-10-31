@@ -1069,8 +1069,8 @@ class UiTree private constructor(
             }
 
             fun item(height: Float): UiRect {
-                val rect = UiRect(bounds.x, cursor, bounds.width, Math.max(0.0f, height))
-                cursor += Math.max(0.0f, height)
+                val rect = UiRect(bounds.x, cursor, bounds.width, maxOf(0.0f, height))
+                cursor += maxOf(0.0f, height)
                 return rect
             }
 
@@ -1101,15 +1101,15 @@ class UiTree private constructor(
             }
 
             fun gap(gap: Float) {
-                cursor += Math.max(0.0f, gap)
+                cursor += maxOf(0.0f, gap)
             }
 
             fun offset(xOffset: Float, yOffset: Float, widthOffset: Float, heightOffset: Float): UiRect {
                 return UiRect(
                     bounds.x + xOffset,
                     cursor + yOffset,
-                    Math.max(0.0f, bounds.width + widthOffset),
-                    Math.max(0.0f, heightOffset)
+                    maxOf(0.0f, bounds.width + widthOffset),
+                    maxOf(0.0f, heightOffset)
                 )
             }
 
@@ -1198,18 +1198,18 @@ class UiTree private constructor(
         private var cursor = if (axis == Axis.VERTICAL) bounds.y else bounds.x
 
         fun item(size: Float, content: (LayoutScope) -> Unit) {
-            val rect = nextRect(Math.max(0.0f, size))
+            val rect = nextRect(maxOf(0.0f, size))
             content(LayoutScope(draw, rect))
             cursor += size + gap
         }
 
         fun fill(content: (LayoutScope) -> Unit) {
             val end = if (axis == Axis.VERTICAL) bounds.bottom() else bounds.right()
-            item(Math.max(0.0f, end - cursor), content)
+            item(maxOf(0.0f, end - cursor), content)
         }
 
         fun spacer(size: Float) {
-            cursor += Math.max(0.0f, size) + gap
+            cursor += maxOf(0.0f, size) + gap
         }
 
         private fun nextRect(size: Float): UiRect {
@@ -1231,8 +1231,8 @@ class UiTree private constructor(
             return UiRect(
                 rect.x + left,
                 rect.y + top,
-                Math.max(0.0f, rect.width - left - right),
-                Math.max(0.0f, rect.height - top - bottom)
+                maxOf(0.0f, rect.width - left - right),
+                maxOf(0.0f, rect.height - top - bottom)
             )
         }
 

@@ -116,7 +116,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
         val width = textMetrics.textWidth(label, scale) + 16.0f
         val height = 12.0f
-        val x = Math.max(DropdownTheme.SETTING_PADDING_X, trailingX - width)
+        val x = maxOf(DropdownTheme.SETTING_PADDING_X, trailingX - width)
         val y = (getHeight() - SWITCH_HEIGHT) * 0.5f + (SWITCH_HEIGHT - height) * 0.5f
         scope.chip(
             UiRect(x, y, width, height), label, scale,

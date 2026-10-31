@@ -2,7 +2,14 @@ package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.Constants
 import com.github.epsilon.managers.rotation.RotationManager
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
+import kotlin.random.Random
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -130,7 +137,7 @@ object RotationUtils {
     context(nn: NonNullContext)
     fun isInFov(entity: Entity, fov: Float): Boolean {
         if (fov >= 360f) return true
-        val yawDiff = Math.abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - player.yRot))
+        val yawDiff = abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - player.yRot))
         return yawDiff <= fov / 2.0
     }
 
@@ -147,9 +154,9 @@ object RotationUtils {
         val dx = targetPos.x - eyePos.x
         val dy = targetPos.y - eyePos.y
         val dz = targetPos.z - eyePos.z
-        val dist = Math.sqrt(dx * dx + dz * dz)
-        val yaw = Math.toDegrees(-Math.atan2(dx, dz)).toFloat()
-        val pitch = Math.toDegrees(-Math.atan2(dy, dist)).toFloat()
+        val dist = sqrt(dx * dx + dz * dz)
+        val yaw = (-atan2(dx, dz)).toDegrees().toFloat()
+        val pitch = (-atan2(dy, dist)).toDegrees().toFloat()
         return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
     }
 
@@ -163,10 +170,10 @@ object RotationUtils {
     fun getEyeDistanceToEntity(entity: LivingEntity): Double {
         val eyePos = player.eyePosition
         val box = entity.boundingBox
-        val dx = Math.max(box.minX - eyePos.x, Math.max(0.0, eyePos.x - box.maxX))
-        val dy = Math.max(box.minY - eyePos.y, Math.max(0.0, eyePos.y - box.maxY))
-        val dz = Math.max(box.minZ - eyePos.z, Math.max(0.0, eyePos.z - box.maxZ))
-        return Math.sqrt(dx * dx + dy * dy + dz * dz)
+        val dx = maxOf(box.minX - eyePos.x, maxOf(0.0, eyePos.x - box.maxX))
+        val dy = maxOf(box.minY - eyePos.y, maxOf(0.0, eyePos.y - box.maxY))
+        val dz = maxOf(box.minZ - eyePos.z, maxOf(0.0, eyePos.z - box.maxZ))
+        return sqrt(dx * dx + dy * dy + dz * dz)
     }
 
     /**
@@ -178,9 +185,9 @@ object RotationUtils {
      */
     fun calculate(from: Vec3, to: Vec3): Rot2f {
         val diff = to.subtract(from)
-        val distance = Math.hypot(diff.x, diff.z)
-        val yaw = Math.toDegrees(Mth.atan2(diff.z, diff.x)).toFloat() - 90.0f
-        val pitch = (-Math.toDegrees(Mth.atan2(diff.y, distance))).toFloat()
+        val distance = hypot(diff.x, diff.z)
+        val yaw = (Mth.atan2(diff.z, diff.x)).toDegrees().toFloat() - 90.0f
+        val pitch = (-(Mth.atan2(diff.y, distance)).toDegrees()).toFloat()
         return Rot2f(yaw, pitch)
     }
 
@@ -258,7 +265,7 @@ object RotationUtils {
                 }
                 xPercent -= 0.5
             }
-            yPercent -= 0.25 + Math.random() * 0.1
+            yPercent -= 0.25 + Random.nextDouble() * 0.1
         }
 
         return normalRotations
@@ -339,9 +346,9 @@ object RotationUtils {
         val diffY = vec.y - eyesPos.y
         val diffZ = vec.z - eyesPos.z
 
-        val yaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(diffZ, diffX)).toFloat() - 90f)
+        val yaw = Mth.wrapDegrees((atan2(diffZ, diffX)).toDegrees().toFloat() - 90f)
         val pitch = Mth.wrapDegrees(
-            -Math.toDegrees(Math.atan2(diffY, Math.sqrt(diffX * diffX + diffZ * diffZ))).toFloat()
+            -(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toDegrees().toFloat()
         )
 
         return Rot2f(yaw, pitch)
@@ -359,13 +366,13 @@ object RotationUtils {
             RotationManager.INSTANCE.getLastRotation().pitch
         )
         val mouseSensitivity = (
-            Constants.client.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
+            Constants.client.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
         ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
-            (Math.round((rotation.yaw - previousRotation.yaw) / multiplier) * multiplier).toFloat()
+            (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
-            (Math.round((rotation.pitch - previousRotation.pitch) / multiplier) * multiplier).toFloat()
+            (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
         return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
     }
 
@@ -378,13 +385,13 @@ object RotationUtils {
      */
     fun applySensitivityPatch(rotation: Rot2f, previousRotation: Rot2f): Rot2f {
         val mouseSensitivity = (
-            Constants.client.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
+            Constants.client.options.sensitivity().get() * (1 + Random.nextDouble() / 10000000) * 0.6f + 0.2f
         ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
-            (Math.round((rotation.yaw - previousRotation.yaw) / multiplier) * multiplier).toFloat()
+            (((rotation.yaw - previousRotation.yaw) / multiplier).roundToInt() * multiplier).toFloat()
         val pitch = previousRotation.pitch +
-            (Math.round((rotation.pitch - previousRotation.pitch) / multiplier) * multiplier).toFloat()
+            (((rotation.pitch - previousRotation.pitch) / multiplier).roundToInt() * multiplier).toFloat()
         return Rot2f(yaw, Mth.clamp(pitch, -90f, 90f))
     }
 
@@ -441,9 +448,9 @@ object RotationUtils {
             val deltaYaw = Mth.wrapDegrees(targetRotation.yaw - lastRotation.yaw).toDouble()
             val deltaPitch = (targetRotation.pitch - lastRotation.pitch).toDouble()
 
-            val distance = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch)
-            val distributionYaw = Math.abs(deltaYaw / distance)
-            val distributionPitch = Math.abs(deltaPitch / distance)
+            val distance = sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch)
+            val distributionYaw = abs(deltaYaw / distance)
+            val distributionPitch = abs(deltaPitch / distance)
 
             val maxYaw = speed * distributionYaw
             val maxPitch = speed * distributionPitch
@@ -488,11 +495,11 @@ object RotationUtils {
             yaw = lastYaw + move.yaw
             pitch = lastPitch + move.pitch
 
-            val iterations = (Constants.client.fps / 20f + Math.random() * 10).toInt()
+            val iterations = (Constants.client.fps / 20f + Random.nextDouble() * 10).toInt()
             for (i in 1..iterations) {
-                if (Math.abs(move.yaw) + Math.abs(move.pitch) > 0.0001) {
-                    yaw += ((Math.random() - 0.5) / 1000).toFloat()
-                    pitch -= (Math.random() / 200).toFloat()
+                if (abs(move.yaw) + abs(move.pitch) > 0.0001) {
+                    yaw += ((Random.nextDouble() - 0.5) / 1000).toFloat()
+                    pitch -= (Random.nextDouble() / 200).toFloat()
                 }
 
                 /*

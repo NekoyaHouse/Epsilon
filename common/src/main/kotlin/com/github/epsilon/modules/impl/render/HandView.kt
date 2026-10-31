@@ -15,6 +15,7 @@ import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.IntSetting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import kotlin.math.PI
 import net.minecraft.tags.ItemTags
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -122,7 +123,7 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     fun applyBlockingTransform(poseStack: PoseStack, arm: HumanoidArm, attack: Float, inverseArmHeight: Float) {
         val side = if (arm == HumanoidArm.RIGHT) 1 else -1
-        val progress = Mth.sin(Mth.sqrt(attack).toDouble() * Math.PI)
+        val progress = Mth.sin(Mth.sqrt(attack).toDouble() * PI)
 
         when (blockingMode.value) {
             BlockMode.V1_7 -> {
@@ -184,8 +185,8 @@ object HandView : Module("Hand View", Category.RENDER) {
     }
 
     private fun applySourceSwingTransform(poseStack: PoseStack, side: Float, swingProgress: Float) {
-        val ySwing = Mth.sin((swingProgress * swingProgress).toDouble() * Math.PI)
-        val xzSwing = Mth.sin(Mth.sqrt(swingProgress).toDouble() * Math.PI)
+        val ySwing = Mth.sin((swingProgress * swingProgress).toDouble() * PI)
+        val xzSwing = Mth.sin(Mth.sqrt(swingProgress).toDouble() * PI)
         poseStack.rotateDegrees(Axis.YP, side * ySwing * -20.0F)
         poseStack.rotateDegrees(Axis.ZP, side * xzSwing * -20.0F)
         poseStack.rotateDegrees(Axis.XP, side * xzSwing * -80.0F)
@@ -199,9 +200,9 @@ object HandView : Module("Hand View", Category.RENDER) {
     }
 
     private fun applyAttackTransform(poseStack: PoseStack, side: Int, attack: Float, scale: Float) {
-        val ySwingRotation = Mth.sin((attack * attack).toDouble() * Math.PI)
+        val ySwingRotation = Mth.sin((attack * attack).toDouble() * PI)
         poseStack.rotateDegrees(Axis.YP, side * (45.0F + ySwingRotation * -20.0F * scale))
-        val xzSwingRotation = Mth.sin(Mth.sqrt(attack).toDouble() * Math.PI)
+        val xzSwingRotation = Mth.sin(Mth.sqrt(attack).toDouble() * PI)
         poseStack.rotateDegrees(Axis.ZP, side * xzSwingRotation * -20.0F * scale)
         poseStack.rotateDegrees(Axis.XP, xzSwingRotation * -80.0F * scale)
         poseStack.rotateDegrees(Axis.YP, side * -45.0F)

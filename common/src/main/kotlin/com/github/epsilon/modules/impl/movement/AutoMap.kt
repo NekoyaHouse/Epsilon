@@ -9,10 +9,17 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.getValue
+import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rot2f
 import com.google.gson.JsonObject
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -20,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
     private const val STATE_VERSION = 1
-    private val TWO_PI = Math.PI * 2.0
+    private val TWO_PI = PI * 2.0
 
     private val autoLaunch by boolSetting("Auto Launch", true)
     private val spiralSpacing by doubleSetting("Spiral Spacing", 192.0, 16.0, 1024.0, 1.0)
@@ -84,7 +91,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     override fun getInfo(): String? {
-        return if (routeLoaded) "R" + Math.round(spiralRadius) else null
+        return if (routeLoaded) "R" + (spiralRadius).roundToInt() else null
     }
 
     override fun resetCustomState() {
@@ -197,8 +204,8 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun currentTarget(): Vec3 = runSafeOrElse(Vec3.ZERO) {
-        val x = centerX + Math.cos(spiralAngle) * spiralRadius
-        val z = centerZ + Math.sin(spiralAngle) * spiralRadius
+        val x = centerX + cos(spiralAngle) * spiralRadius
+        val z = centerZ + sin(spiralAngle) * spiralRadius
         Vec3(x, player.y, z)
     }
 
@@ -209,11 +216,11 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun angleStep(): Double {
-        return TWO_PI / Math.max(1, pointsPerLap)
+        return TWO_PI / maxOf(1, pointsPerLap)
     }
 
     private fun radiusStep(): Double {
-        return spiralSpacing / Math.max(1, pointsPerLap)
+        return spiralSpacing / maxOf(1, pointsPerLap)
     }
 
     private fun horizontalDistanceSqr(target: Vec3): Double = runSafeOrElse(Double.MAX_VALUE) {
@@ -228,7 +235,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         if (dx * dx + dz * dz < 1.0E-6) {
             return@runSafeOrElse player.yRot
         }
-        Mth.wrapDegrees(Math.toDegrees(Math.atan2(dz, dx)).toFloat() - 90.0f)
+        Mth.wrapDegrees((atan2(dz, dx)).toDegrees().toFloat() - 90.0f)
     }
 
     private fun resetRecord(notify: Boolean) {
@@ -270,7 +277,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         if (activeTakeoffTargetHeight.isNaN() || takeoffBaseY.isNaN()) {
             true
         } else {
-            player.onGround() && !player.isFallFlying && Math.abs(player.y - takeoffBaseY) > 0.5
+            player.onGround() && !player.isFallFlying && abs(player.y - takeoffBaseY) > 0.5
         }
     }
 

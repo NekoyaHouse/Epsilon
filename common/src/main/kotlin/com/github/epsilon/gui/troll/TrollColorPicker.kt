@@ -7,6 +7,7 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.impl.ColorSetting
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.roundToInt
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 
@@ -38,27 +39,27 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         val channels = channelCount()
         val contentTop = headerHeight + CONTENT_PADDING
         size(
-            Math.min(441.0f, screenWidth),
-            Math.min(contentTop + (channels + 3) * step - 3.0f + CONTENT_PADDING, screenHeight),
+            minOf(441.0f, screenWidth),
+            minOf(contentTop + (channels + 3) * step - 3.0f + CONTENT_PADDING, screenHeight),
             screenWidth, screenHeight
         )
-        step = Math.clamp((bounds.height - contentTop - CONTENT_PADDING + 3.0f) / (channels + 3), 1.0f, step)
-        val fieldSize = Math.clamp(bounds.width * 0.48f - 27.0f, 18.0f, bounds.height - contentTop - CONTENT_PADDING)
+        step = ((bounds.height - contentTop - CONTENT_PADDING + 3.0f) / (channels + 3)).coerceIn(1.0f, step)
+        val fieldSize = (bounds.width * 0.48f - 27.0f).coerceIn(18.0f, bounds.height - contentTop - CONTENT_PADDING)
         field = UiRect(bounds.x + 6.0f, bounds.y + contentTop, fieldSize, fieldSize)
         hueBar = UiRect(field.right() + 9.0f, field.y, 12.0f, fieldSize)
         val sliderX = hueBar.right() + 12.0f
-        val sliderWidth = Math.max(1.0f, bounds.right() - 6.0f - sliderX)
+        val sliderWidth = maxOf(1.0f, bounds.right() - 6.0f - sliderX)
         for (i in 0 until channels) {
             sliders[i] = UiRect(sliderX, field.y + i * step, sliderWidth, step - 3.0f)
         }
-        val buttonWidth = Math.min(87.0f, sliderWidth * 0.48f)
+        val buttonWidth = minOf(87.0f, sliderWidth * 0.48f)
         for (i in buttons.indices) {
             buttons[i] = UiRect(
                 bounds.right() - 6.0f - buttonWidth,
                 field.y + (channels + i) * step, buttonWidth, step - 3.0f
             )
         }
-        val previewWidth = Math.max(1.0f, (sliderWidth - buttonWidth - 9.0f) / 2.0f)
+        val previewWidth = maxOf(1.0f, (sliderWidth - buttonWidth - 9.0f) / 2.0f)
         previousColor = UiRect(sliderX, buttons[0].y, previewWidth, step * 3.0f - 3.0f)
         currentColor = previousColor.translate(previewWidth + 3.0f, 0.0f)
     }
@@ -183,14 +184,14 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
 
     private fun update(x: Double, y: Double) {
         if (draggingPart == 0) {
-            saturation = Math.clamp((x - field.x) / field.width, 0.0, 1.0).toFloat()
-            brightness = Math.clamp(1.0 - (y - field.y) / field.height, 0.0, 1.0).toFloat()
+            saturation = ((x - field.x) / field.width).coerceIn(0.0, 1.0).toFloat()
+            brightness = (1.0 - (y - field.y) / field.height).coerceIn(0.0, 1.0).toFloat()
         } else if (draggingPart == 1) {
-            hue = Math.clamp((y - hueBar.y) / hueBar.height, 0.0, 1.0).toFloat()
+            hue = ((y - hueBar.y) / hueBar.height).coerceIn(0.0, 1.0).toFloat()
         } else if (draggingPart >= 2) {
             val channel = draggingPart - 2
             val slider = sliders[channel]
-            val value = Math.round(Math.clamp((x - slider.x) / slider.width, 0.0, 1.0) * 255.0).toInt()
+            val value = (((x - slider.x) / slider.width).coerceIn(0.0, 1.0) * 255.0).roundToInt()
             val current = color()
             when (channel) {
                 0 -> setRgb(Color(value, current.green, current.blue))

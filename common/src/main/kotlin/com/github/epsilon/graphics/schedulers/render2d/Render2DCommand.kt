@@ -32,7 +32,7 @@ sealed interface Render2DCommand {
     ) : Render2DCommand {
 
         override fun orderingBounds(): Render2DBounds {
-            val pad = Math.max(0.0f, blurRadius)
+            val pad = maxOf(0.0f, blurRadius)
             return Render2DBounds.of(
                 bounds.x - pad, bounds.y - pad,
                 bounds.width + pad * 2.0f, bounds.height + pad * 2.0f
@@ -61,7 +61,7 @@ sealed interface Render2DCommand {
     ) : Render2DCommand {
 
         override fun orderingBounds(): Render2DBounds {
-            val pad = Math.max(0.0f, blurRadius)
+            val pad = maxOf(0.0f, blurRadius)
             return Render2DBounds.of(
                 bounds.x - pad, bounds.y - pad,
                 bounds.width + pad * 2.0f, bounds.height + pad * 2.0f
@@ -105,7 +105,7 @@ sealed interface Render2DCommand {
     ) : Render2DCommand {
 
         override fun orderingBounds(): Render2DBounds {
-            val pad = Math.max(0.0f, outlineWidth * 0.5f)
+            val pad = maxOf(0.0f, outlineWidth * 0.5f)
             return Render2DBounds.of(
                 bounds.x - pad, bounds.y - pad,
                 bounds.width + pad * 2.0f, bounds.height + pad * 2.0f

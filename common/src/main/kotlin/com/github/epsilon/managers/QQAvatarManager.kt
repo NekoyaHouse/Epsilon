@@ -127,7 +127,7 @@ object QQAvatarManager {
     }
 
     private fun toNativeImage(source: BufferedImage): NativeImage {
-        val cropSize = Math.min(source.width, source.height)
+        val cropSize = minOf(source.width, source.height)
         val cropX = (source.width - cropSize) / 2
         val cropY = (source.height - cropSize) / 2
         val normalized = BufferedImage(TEXTURE_SIZE, TEXTURE_SIZE, BufferedImage.TYPE_INT_ARGB)

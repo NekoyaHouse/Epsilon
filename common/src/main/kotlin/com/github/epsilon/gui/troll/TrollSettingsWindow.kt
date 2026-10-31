@@ -45,14 +45,14 @@ class TrollSettingsWindow(
         for (row in previous) {
             if (entries.none { it.row === row }) row!!.resetInput()
         }
-        var width = Math.max(180.0f, metrics.getWidth(module.translatedName, TrollTheme.TEXT_SCALE) + 18.0f)
+        var width = maxOf(180.0f, metrics.getWidth(module.translatedName, TrollTheme.TEXT_SCALE) + 18.0f)
         for (entry in entries) {
             val entryWidth = if (entry.row != null) {
                 entry.row.minimumWidth(metrics)
             } else {
                 metrics.getWidth(entry.section!!.title(), TrollTheme.TEXT_SCALE) + 30.0f
             }
-            width = Math.max(width, entryWidth + entry.depth * 15.0f + TrollTheme.xMargin() * 2.0f)
+            width = maxOf(width, entryWidth + entry.depth * 15.0f + TrollTheme.xMargin() * 2.0f)
         }
         headerHeight = TrollTheme.headerHeight(metrics)
         val rowHeight = TrollTheme.rowHeight(metrics)
@@ -62,15 +62,15 @@ class TrollSettingsWindow(
             contentHeight += rowHeight + rowGap + (entry.leadingGroupInsets + entry.closingGroups.size) * GROUP_INSET
         }
         size(
-            Math.min(Math.min(width, 390.0f), screenWidth),
-            Math.min(Math.min(headerHeight + contentHeight, 300.0f), screenHeight),
+            minOf(minOf(width, 390.0f), screenWidth),
+            minOf(minOf(headerHeight + contentHeight, 300.0f), screenHeight),
             screenWidth, screenHeight
         )
-        scrollPosition = scroll.update(Math.max(0.0f, contentHeight - viewport.height))
+        scrollPosition = scroll.update(maxOf(0.0f, contentHeight - viewport.height))
         var cursor = viewport.y + rowGap - scrollPosition
         for (entry in entries) {
             cursor += entry.leadingGroupInsets * GROUP_INSET
-            val inset = Math.min(entry.depth * 7.5f, viewport.width * 0.25f)
+            val inset = minOf(entry.depth * 7.5f, viewport.width * 0.25f)
             entry.bounds = UiRect(viewport.x + inset, cursor, viewport.width - inset * 2.0f, rowHeight)
             entry.groupBounds = entry.bounds
             entry.row?.layout(entry.bounds)

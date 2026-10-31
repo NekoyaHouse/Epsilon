@@ -22,6 +22,7 @@ import com.github.epsilon.settings.impl.IntSetting
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.safety.*
 import com.google.common.base.Suppliers
+import kotlin.math.roundToInt
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -97,7 +98,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     }
 
     private fun collectTags(metrics: TextRenderer): MutableList<TagLayout> {
-        val partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val screenWidth = LuminRenderSystem.getScaledWidth()
         val screenHeight = LuminRenderSystem.getScaledHeight()
         val maxDistanceSquared = Mth.square(range)
@@ -118,7 +119,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
             var renderScale = perspectiveScale * scale.toFloat()
             // 选择性限制最小尺寸：避免远距离或低视野缩放下标签过小
             if (limitMinScale) {
-                renderScale = Math.max(renderScale, minScale.toFloat())
+                renderScale = maxOf(renderScale, minScale.toFloat())
             }
             val tag = createLayout(metrics, entity, projected.x, projected.y, renderScale)
             if (tag.x + tag.width < 0.0f || tag.y + tag.height < 0.0f ||
@@ -179,12 +180,12 @@ object NameTags : Module("Name Tags", Category.RENDER) {
             val iconHeight = if (content.icon == null) 0.0f else metrics.getHeight(renderScale, StaticFontLoader.ICONS)
             val contentWidth = textWidth + iconWidth + (if (content.icon == null) 0.0f else iconGap)
             val width = contentWidth + paddingX * 2.0f
-            val height = Math.max(textHeight, iconHeight) + paddingY * 2.0f
+            val height = maxOf(textHeight, iconHeight) + paddingY * 2.0f
             measured.add(MeasuredSegment(content, width, height, textWidth, textHeight, iconWidth, iconHeight))
             totalWidth += width
-            tagHeight = Math.max(tagHeight, height)
+            tagHeight = maxOf(tagHeight, height)
         }
-        totalWidth += segmentGap * Math.max(0, measured.size - 1)
+        totalWidth += segmentGap * maxOf(0, measured.size - 1)
 
         val startX = centerX - totalWidth * 0.5f
         val startY = anchorY - tagHeight - 2.0f * renderScale
@@ -231,7 +232,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
             if (outline) {
                 layer.addOutline(
                     segment.x, segment.y, segment.width, segment.height, segment.radius,
-                    Math.max(0.45f, 0.55f * tag.scale), outlineColor
+                    maxOf(0.45f, 0.55f * tag.scale), outlineColor
                 )
             }
             renderSegmentContent(layer, segment, tag.scale)
@@ -263,7 +264,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
 
         val maxBlurSegments = 64
         for (start in segments.indices step maxBlurSegments) {
-            val count = Math.min(maxBlurSegments, segments.size - start)
+            val count = minOf(maxBlurSegments, segments.size - start)
             val rects = FloatArray(count * 4)
             val radii = FloatArray(count)
             var minX = Float.POSITIVE_INFINITY
@@ -279,10 +280,10 @@ object NameTags : Module("Name Tags", Category.RENDER) {
                 rects[offset + 2] = segment.width
                 rects[offset + 3] = segment.height
                 radii[index] = segment.radius
-                minX = Math.min(minX, segment.x)
-                minY = Math.min(minY, segment.y)
-                maxX = Math.max(maxX, segment.x + segment.width)
-                maxY = Math.max(maxY, segment.y + segment.height)
+                minX = minOf(minX, segment.x)
+                minY = minOf(minY, segment.y)
+                maxX = maxOf(maxX, segment.x + segment.width)
+                maxY = maxOf(maxY, segment.y + segment.height)
             }
 
             BlurShader.render(minX, minY, maxX - minX, maxY - minY, 0.0f, strength, rects, radii, count)
@@ -314,9 +315,9 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         val clamped = Mth.clamp(amount, 0.0f, 1.0f)
         val inverse = 1.0f - clamped
         return Color(
-            Math.round(first.red * inverse + second.red * clamped),
-            Math.round(first.green * inverse + second.green * clamped),
-            Math.round(first.blue * inverse + second.blue * clamped),
+            (first.red * inverse + second.red * clamped).roundToInt(),
+            (first.green * inverse + second.green * clamped).roundToInt(),
+            (first.blue * inverse + second.blue * clamped).roundToInt(),
             first.alpha
         )
     }

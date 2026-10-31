@@ -172,7 +172,7 @@ class ClientSettingPanel(
 
             tabs.rect(0.0f, tabBar.height - 1.0f, tabBar.width, 1.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 40))
 
-            val indicatorWidth = Math.min(56.0f, segmentWidth - 24.0f)
+            val indicatorWidth = minOf(56.0f, segmentWidth - 24.0f)
             val indicatorX = indicatorProgress * segmentWidth + (segmentWidth - indicatorWidth) / 2.0f
             val indicatorY = tabBar.height - TAB_INDICATOR_HEIGHT
             tabs.roundRect(

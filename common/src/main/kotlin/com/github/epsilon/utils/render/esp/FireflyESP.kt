@@ -3,11 +3,14 @@ package com.github.epsilon.utils.render.esp
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.ColorUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
+import kotlin.math.cos
+import kotlin.math.sin
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
@@ -78,7 +81,7 @@ object FireflyESP {
             val canSee = player.hasLineOfSight(target)
 
             val camera: Camera = Constants.client.gameRenderer.mainCamera()
-            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val tickDelta = Constants.client.deltaTracker.getGameTimeDeltaPartialTick(true)
 
             val tPosX = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - camera.position().x
             val tPosY = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - camera.position().y
@@ -90,25 +93,23 @@ object FireflyESP {
 
             for (j in 0 until 3) {
                 for (i in 0..espLength) {
-                    val radians = Math.toRadians(
-                        (((i.toFloat() / 1.5f + iAge) * factor + (j * 120)) % (factor * 360)).toDouble()
-                    )
-                    val sinQuad = Math.sin(Math.toRadians((iAge * 2.5f + i * (j + 1)).toDouble()) * amplitude) / shaking
+                    val radians = ((((i.toFloat() / 1.5f + iAge) * factor + (j * 120)) % (factor * 360)).toDouble()).toRadians()
+                    val sinQuad = sin(((iAge * 2.5f + i * (j + 1)).toDouble()).toRadians() * amplitude) / shaking
 
                     val offset = i.toFloat() / espLength.toFloat()
 
                     stack.pushPose()
                     stack.translate(
-                        tPosX + Math.cos(radians) * target.bbWidth,
+                        tPosX + cos(radians) * target.bbWidth,
                         tPosY + target.bbHeight * 0.5 + sinQuad,
-                        tPosZ + Math.sin(radians) * target.bbWidth
+                        tPosZ + sin(radians) * target.bbWidth
                     )
                     stack.rotateDegrees(Axis.YP, -camera.yRot())
                     stack.rotateDegrees(Axis.XP, camera.xRot())
 
                     val matrix: Matrix4f = stack.last().pose()
 
-                    val scale = Math.max(0.24f * (offset), 0.2f)
+                    val scale = maxOf(0.24f * (offset), 0.2f)
 
                     val renderColor = resolveColor(
                         iAge,
@@ -123,7 +124,7 @@ object FireflyESP {
                         rainbowSpeed.toFloat(),
                         rainbowSaturation.toFloat(),
                         rainbowBrightness.toFloat()
-                    ).getRGB()
+                    ).rgb
 
                     renderer.vertex(matrix, -scale, scale, 0f, 0f, 1f, renderColor)
                     renderer.vertex(matrix, scale, scale, 0f, 1f, 1f, renderColor)

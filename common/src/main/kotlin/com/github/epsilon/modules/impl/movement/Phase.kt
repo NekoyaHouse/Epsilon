@@ -16,6 +16,7 @@ import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.MoveUtils
 import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.rotation.RotationUtils
+import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -75,8 +76,8 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             }
 
             if (mode == Mode.ForceMine) {
-                val xDelta = Math.abs(playerPos.x - event.pos.x).toFloat()
-                val zDelta = Math.abs(playerPos.z - event.pos.z).toFloat()
+                val xDelta = abs(playerPos.x - event.pos.x).toFloat()
+                val zDelta = abs(playerPos.z - event.pos.z).toFloat()
 
                 if (xDelta != 0.0f && zDelta != 0.0f && strict) {
                     return@nonNullHandler

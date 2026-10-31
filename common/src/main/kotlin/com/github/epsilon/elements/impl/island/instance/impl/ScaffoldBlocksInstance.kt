@@ -11,6 +11,9 @@ import com.github.epsilon.utils.safety.*
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import net.minecraft.client.color.block.BlockTintSource
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.util.Mth
@@ -27,7 +30,7 @@ class ScaffoldBlocksInstance(
     pattern: CheckPattern,
 ) : LandInstance(pattern, 4) {
 
-    private val max: Int = Math.max(1, countSupplier.get())
+    private val max: Int = maxOf(1, countSupplier.get())
 
     private val progress = Animation(Easing.DECELERATE, 100)
     private val countAnim = Animation(Easing.DECELERATE, 560)
@@ -42,7 +45,7 @@ class ScaffoldBlocksInstance(
     private var targetCount: Int
 
     init {
-        val initial = Math.max(0, countSupplier.get())
+        val initial = maxOf(0, countSupplier.get())
         this.startCount = initial
         this.targetCount = initial
         this.countAnim.startValue = initial.toFloat()
@@ -51,17 +54,17 @@ class ScaffoldBlocksInstance(
     override fun update() {
         targetRadius = 1.0f
         targetWidth = PADDING * 2f + ICON_SIZE + GAP + RING_SIZE
-        targetHeight = PADDING * 2f + Math.max(ICON_SIZE, RING_SIZE)
+        targetHeight = PADDING * 2f + maxOf(ICON_SIZE, RING_SIZE)
 
-        val count = Math.max(0, countSupplier.get())
+        val count = maxOf(0, countSupplier.get())
         progress.run(Mth.clamp(count / max.toFloat(), 0f, 1f))
 
         if (count != targetCount) {
-            startCount = Math.round(countAnim.value)
+            startCount = (countAnim.value).roundToInt()
             targetCount = count
         }
         countAnim.run(count.toFloat())
-        if (startCount != targetCount && Math.round(countAnim.value) == targetCount) {
+        if (startCount != targetCount && (countAnim.value).roundToInt() == targetCount) {
             startCount = targetCount
         }
 
@@ -121,7 +124,7 @@ class ScaffoldBlocksInstance(
         scope.roundedTexture(
             sprite.atlasLocation(),
             PADDING, iconY, ICON_SIZE, ICON_SIZE, ICON_RADIUS,
-            sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
+            sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             fade(iconTint)
         )
     }
@@ -132,21 +135,21 @@ class ScaffoldBlocksInstance(
         val baseY = centerY - textHeight / 2f
 
         if (startCount == targetCount) {
-            drawCentered(scope, Math.max(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
+            drawCentered(scope, maxOf(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
             return
         }
 
         val direction = if (targetCount > startCount) 1 else -1
-        val distance = Math.abs(targetCount - startCount)
+        val distance = abs(targetCount - startCount)
         if (distance <= 0) {
-            drawCentered(scope, Math.max(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
+            drawCentered(scope, maxOf(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
             return
         }
 
-        val progressed = Math.abs(countAnim.value - startCount)
-        val step = Math.min(Math.floor(progressed.toDouble()).toInt(), distance)
+        val progressed = abs(countAnim.value - startCount)
+        val step = minOf(floor(progressed.toDouble()).toInt(), distance)
         if (step >= distance) {
-            drawCentered(scope, Math.max(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
+            drawCentered(scope, maxOf(0, targetCount).toString(), centerX, baseY, fade(Color.WHITE))
             return
         }
 
@@ -165,9 +168,9 @@ class ScaffoldBlocksInstance(
         direction: Int,
         localProgress: Float,
     ) {
-        val currentText = Math.max(0, current).toString()
-        val nextText = Math.max(0, next).toString()
-        val length = Math.max(currentText.length, nextText.length)
+        val currentText = maxOf(0, current).toString()
+        val nextText = maxOf(0, next).toString()
+        val length = maxOf(currentText.length, nextText.length)
 
         val cellWidths = FloatArray(length)
         var totalWidth = 0f
@@ -175,7 +178,7 @@ class ScaffoldBlocksInstance(
         for (i in 0 until length) {
             val a = paddedChar(currentText, length, i)
             val b = paddedChar(nextText, length, i)
-            val cell = Math.max(Math.max(charWidth(textRenderer, a), charWidth(textRenderer, b)), zeroWidth)
+            val cell = maxOf(maxOf(charWidth(textRenderer, a), charWidth(textRenderer, b)), zeroWidth)
             cellWidths[i] = cell
             totalWidth += cell
         }

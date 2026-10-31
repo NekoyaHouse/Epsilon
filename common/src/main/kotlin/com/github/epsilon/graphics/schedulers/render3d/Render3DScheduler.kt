@@ -56,7 +56,7 @@ object Render3DScheduler {
     }
 
     fun addFilledBox(box: AABB, color: Color) {
-        addFilledBox(box, color.getRGB())
+        addFilledBox(box, color.rgb)
     }
 
     fun addFilledBox(box: AABB, color: Int) {
@@ -72,11 +72,11 @@ object Render3DScheduler {
     }
 
     fun addOutlineBox(box: AABB, color: Color) {
-        addOutlineBox(box, color.getRGB())
+        addOutlineBox(box, color.rgb)
     }
 
     fun addOutlineBox(box: AABB, color: Color, thickness: Float) {
-        addOutlineBox(box, color.getRGB(), thickness)
+        addOutlineBox(box, color.rgb, thickness)
     }
 
     fun addOutlineBox(box: AABB, color: Int) {
@@ -96,7 +96,7 @@ object Render3DScheduler {
     }
 
     fun addLine(from: Vec3, to: Vec3, color: Color, thickness: Float) {
-        addLine(from, to, color.getRGB(), thickness)
+        addLine(from, to, color.rgb, thickness)
     }
 
     fun addLine(from: Vec3, to: Vec3, color: Int, thickness: Float) {
@@ -145,7 +145,7 @@ object Render3DScheduler {
         val builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE)
         val matrix = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
         // 3D 渲染阶段 camera 必然已由 GameRenderer 准备好；原 Java 同样直接解引用，这里保留相同的 NPE 时机。
-        val camPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
+        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
 
         for (command in filledBoxes) {
             emitFilledBox(builder, matrix, camPos, command)
@@ -164,7 +164,7 @@ object Render3DScheduler {
         }
 
         val builder = LuminImmediateRenderer.beginLines(LINES_PIPELINE)
-        val camPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
+        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
         val pose = stack.last()
         val matrix = pose.pose()
 

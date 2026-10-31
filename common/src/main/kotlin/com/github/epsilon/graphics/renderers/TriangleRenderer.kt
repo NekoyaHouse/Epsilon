@@ -48,8 +48,8 @@ class TriangleRenderer private constructor() : IRenderer {
         buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES)
         buffer.tryMap()
 
-        val abgr = ARGB.toABGR(color.getRGB())
-        val clampedProgress = Math.clamp(progress, 0.0f, 1.0f)
+        val abgr = ARGB.toABGR(color.rgb)
+        val clampedProgress = (progress).coerceIn(0.0f, 1.0f)
 
         val tipXR = centerX + size
         val tipYR = centerY
@@ -83,7 +83,7 @@ class TriangleRenderer private constructor() : IRenderer {
         buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES)
         buffer.tryMap()
 
-        val abgr = ARGB.toABGR(color.getRGB())
+        val abgr = ARGB.toABGR(color.rgb)
         addVertex(x1, y1, abgr)
         addVertex(x2, y2, abgr)
         addVertex(x3, y3, abgr)
