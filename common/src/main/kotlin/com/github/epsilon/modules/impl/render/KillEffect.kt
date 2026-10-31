@@ -81,7 +81,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     private fun processRemovedTargets() {
         if (pendingTargets.isEmpty()) return
 
-        val level = Constants.mc.level ?: return
+        val level = Constants.client.level ?: return
         val iterator = pendingTargets.iterator()
         while (iterator.hasNext()) {
             val target = iterator.next()
@@ -104,7 +104,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     }
 
     private fun killEffect(target: LivingEntity) {
-        val mc = Constants.mc
+        val mc = Constants.client
         val level = mc.level ?: return
         val player = mc.player ?: return
 
@@ -170,7 +170,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         private val animation: Animation
 
         init {
-            val level = Constants.mc.level!!
+            val level = Constants.client.level!!
             entity = Squid(EntityTypes.SQUID, level)
             entity.setId(KillEffect.nextLocalEntityId())
             entity.setNoAi(true)
@@ -184,7 +184,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
 
         fun tick(): Boolean {
-            val level = Constants.mc.level
+            val level = Constants.client.level
             if (entity.isRemoved || level == null || level.getEntity(entity.id) !== entity) {
                 return true
             }
@@ -198,7 +198,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
             if (animation.isFinished) {
                 for (i in 0..8) {
-                    Constants.mc.particleEngine.createTrackingEmitter(entity, ParticleTypes.FLAME)
+                    Constants.client.particleEngine.createTrackingEmitter(entity, ParticleTypes.FLAME)
                 }
                 return true
             }
@@ -207,7 +207,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
         fun remove() {
             KillEffect.effectSquids.remove(entity)
-            val level = Constants.mc.level
+            val level = Constants.client.level
             if (level != null && level.getEntity(entity.id) === entity) {
                 level.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
             }

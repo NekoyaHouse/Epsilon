@@ -85,7 +85,7 @@ object ClientboundPacketManager {
     @Suppress("UNCHECKED_CAST")
     private fun dispatch(packet: Packet<*>?) {
         if (packet == null) return
-        val connection = Constants.mc.getConnection() ?: return
+        val connection = Constants.client.getConnection() ?: return
         (packet as Packet<ClientGamePacketListener>).handle(connection)
     }
 
@@ -98,7 +98,7 @@ object ClientboundPacketManager {
     }
 
     fun onPacketReceive(packet: Packet<*>): Boolean {
-        if (Constants.mc.player == null || Constants.mc.level == null) return false
+        if (Constants.client.player == null || Constants.client.level == null) return false
 
         if (shouldFlush) {
             flush()

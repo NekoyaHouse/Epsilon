@@ -198,7 +198,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         }
 
         fun renderTexture(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
-            val partialTick = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             val particleScale = 0.07f
             val size = HitParticles.scale.toFloat()
             val position = interpolatedCameraRelativePosition(partialTick)
@@ -223,7 +223,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         }
 
         private fun interpolatedCameraRelativePosition(partialTick: Float): Vec3 {
-            val camera: Camera = Constants.mc.gameRenderer.mainCamera()
+            val camera: Camera = Constants.client.gameRenderer.mainCamera()
             val renderX = Mth.lerp(partialTick.toDouble(), prevX.toDouble(), x.toDouble()) - camera.position().x
             val renderY = Mth.lerp(partialTick.toDouble(), prevY.toDouble(), y.toDouble()) - camera.position().y
             val renderZ = Mth.lerp(partialTick.toDouble(), prevZ.toDouble(), z.toDouble()) - camera.position().z
@@ -231,7 +231,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         }
 
         private fun applyCameraRotation(poseStack: PoseStack) {
-            val camera = Constants.mc.gameRenderer.mainCamera()
+            val camera = Constants.client.gameRenderer.mainCamera()
             poseStack.rotateDegrees(Axis.YP, -camera.yRot())
             poseStack.rotateDegrees(Axis.XP, camera.xRot())
         }
@@ -245,7 +245,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         }
 
         private fun isSolidBlock(x: Double, y: Double, z: Double): Boolean {
-            val level = Constants.mc.level ?: return false
+            val level = Constants.client.level ?: return false
             val state = level.getBlockState(BlockPos.containing(x, y, z))
             return !state.isAir && !state.`is`(Blocks.WATER) && !state.`is`(Blocks.LAVA)
         }

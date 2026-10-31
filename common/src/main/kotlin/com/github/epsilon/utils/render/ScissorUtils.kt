@@ -140,7 +140,7 @@ object ScissorUtils {
             return activeTarget.width()
         }
 
-        val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
         return windowState.width
     }
 
@@ -150,7 +150,7 @@ object ScissorUtils {
             return activeTarget.height()
         }
 
-        val windowState: WindowRenderState = Constants.mc.gameRenderer.gameRenderState().windowRenderState
+        val windowState: WindowRenderState = Constants.client.gameRenderer.gameRenderState().windowRenderState
         return windowState.height
     }
 

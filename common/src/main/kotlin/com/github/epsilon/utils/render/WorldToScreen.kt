@@ -24,8 +24,8 @@ object WorldToScreen {
      * @return 未执行深度剔除的屏幕坐标
      */
     fun calcWorld2ScreenRaw(pos: Vec3): Vector3f {
-        val camera = Constants.mc.gameRenderer.mainCamera()
-        val cameraState = Constants.mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
+        val camera = Constants.client.gameRenderer.mainCamera()
+        val cameraState = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
         val cameraRelativePos = pos.subtract(camera.position()).toVector3f()
         val viewPos = camera.getViewRotationMatrix(STABLE_VIEW_MATRIX).transformPosition(cameraRelativePos, Vector3f())
         val projected = worldProjection(cameraState).transformProject(viewPos, Vector3f())
@@ -47,7 +47,7 @@ object WorldToScreen {
         WORLD_PROJECTION_MATRIX.set(cameraState.projectionMatrix)
         VIEW_BOBBING_MATRIX.identity()
 
-        if (Constants.mc.gameRenderer.gameRenderState().optionsRenderState.bobView && cameraState.entityRenderState.isPlayer) {
+        if (Constants.client.gameRenderer.gameRenderState().optionsRenderState.bobView && cameraState.entityRenderState.isPlayer) {
             val walkDistance = cameraState.entityRenderState.backwardsInterpolatedWalkDistance
             val bob = cameraState.entityRenderState.bob
             val sin = Mth.sin((walkDistance * Math.PI.toFloat()).toDouble())
@@ -87,7 +87,7 @@ object WorldToScreen {
      * @return 透视 UI 缩放；无效深度返回 0
      */
     fun calcScale(pos: Vec3): Float {
-        val camera = Constants.mc.gameRenderer.mainCamera()
+        val camera = Constants.client.gameRenderer.mainCamera()
         val cameraRelativePos = pos.subtract(camera.position()).toVector3f()
         val depth = -camera.getViewRotationMatrix(STABLE_VIEW_MATRIX).transformPosition(cameraRelativePos, Vector3f()).z
         if (depth < Camera.PROJECTION_Z_NEAR) return 0.0f

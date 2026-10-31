@@ -57,8 +57,8 @@ object HudElementManager {
     }
 
     private fun onRender2D(event: Render2DEvent.HUD) {
-        if (ClientUtils.isLoading() || Constants.mc.level == null ||
-            Constants.mc.gui.screen() is HudEditorScreen
+        if (ClientUtils.isLoading() || Constants.client.level == null ||
+            Constants.client.gui.screen() is HudEditorScreen
         ) return
 
         scene.beginFrame()
@@ -66,14 +66,14 @@ object HudElementManager {
             if (element.isEnabled) {
                 element.updateLayout()
                 // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
-                element.renderWithBatch(Constants.mc.deltaTracker, scene.batch(UiLayer.CONTENT))
+                element.renderWithBatch(Constants.client.deltaTracker, scene.batch(UiLayer.CONTENT))
             }
         }
         scene.endFrame()
 
         for (element in elements) {
             if (element.isEnabled) {
-                element.renderOverlay(event.guiGraphics, Constants.mc.deltaTracker)
+                element.renderOverlay(event.guiGraphics, Constants.client.deltaTracker)
             }
         }
     }

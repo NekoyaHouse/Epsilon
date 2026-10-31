@@ -62,8 +62,8 @@ object CircleESP {
             val ticks = (System.currentTimeMillis() % 1000000).toFloat() * 0.004f
             val alpha = 0.35f + 0.65f * ((Mth.sin((ticks * 1.8f).toDouble()) + 1.0f) * 0.5f) * alphaFactor
 
-            val tickDelta = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            val cameraPos = Constants.mc.getEntityRenderDispatcher().camera!!.position()
+            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
 
             val x = Mth.lerp(tickDelta.toDouble(), target.xo, target.x) - cameraPos.x
             val y = Mth.lerp(tickDelta.toDouble(), target.yo, target.y) - cameraPos.y + Math.sin(ticks.toDouble()) + 1

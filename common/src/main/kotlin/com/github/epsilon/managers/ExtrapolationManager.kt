@@ -23,8 +23,8 @@ object ExtrapolationManager {
     }
 
     private fun onClientTick() {
-        val level = Constants.mc.level
-        if (Constants.mc.player == null || level == null || level.players().isEmpty()) return
+        val level = Constants.client.level
+        if (Constants.client.player == null || level == null || level.players().isEmpty()) return
 
         val newMotions = HashMap<AbstractClientPlayer, List<Vec3>>()
 
@@ -87,7 +87,7 @@ object ExtrapolationManager {
         var onGround = inside(player, box.move(0.0, -0.04, 0.0))
 
         for (i in 0 until extrapolation) {
-            val level = Constants.mc.level!!
+            val level = Constants.client.level!!
             val list: List<VoxelShape> = level.getEntityCollisions(player, box.contract(x, y, z))
             val movement = Vec3(x, y, z)
             var vec3d = if (movement.lengthSqr() == 0.0) {
@@ -135,7 +135,7 @@ object ExtrapolationManager {
     }
 
     private fun inside(player: Player, box: AABB): Boolean {
-        return Constants.mc.level!!.getBlockCollisions(player, box).iterator().hasNext()
+        return Constants.client.level!!.getBlockCollisions(player, box).iterator().hasNext()
     }
 
     private fun getMotion(vecs: List<Vec3>, max: Int): Vec3 {

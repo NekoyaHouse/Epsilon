@@ -10,7 +10,7 @@ object ClientUtils {
      * @return 仍在加载时返回 true
      */
     fun isLoading(): Boolean {
-        val state = Constants.mc.reloadStateTracker.reloadState
+        val state = Constants.client.reloadStateTracker.reloadState
         return state == null || !state.finished
     }
 

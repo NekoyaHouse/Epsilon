@@ -208,7 +208,7 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_V -> {
-                val clipboard = Constants.mc.keyboardHandler.getClipboard()
+                val clipboard = Constants.client.keyboardHandler.getClipboard()
                 if (!clipboard.isEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }

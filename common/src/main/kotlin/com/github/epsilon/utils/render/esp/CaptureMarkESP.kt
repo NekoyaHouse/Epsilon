@@ -42,8 +42,8 @@ object CaptureMarkESP {
         val timeSeconds = System.nanoTime() * 1.0E-9
         val rotation = (-((timeSeconds * rotSpeed * 60.0) % 360.0)).toFloat()
 
-        val cameraPos = Constants.mc.getEntityRenderDispatcher().camera!!.position()
-        val tickDelta = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
+        val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         val ex = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - cameraPos.x
         val ey = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - cameraPos.y
         val ez = Mth.lerp(tickDelta.toDouble(), target.zOld, target.z) - cameraPos.z
@@ -53,7 +53,7 @@ object CaptureMarkESP {
         poseStack.pushPose()
         poseStack.translate(ex, ey + target.bbHeight * 0.5, ez)
 
-        val camera: Camera = Constants.mc.gameRenderer.mainCamera()
+        val camera: Camera = Constants.client.gameRenderer.mainCamera()
         poseStack.rotateDegrees(Axis.YP, -camera.yRot())
         poseStack.rotateDegrees(Axis.XP, camera.xRot())
         poseStack.rotateDegrees(Axis.ZP, rotation)

@@ -321,7 +321,7 @@ object LuminImmediateRenderer {
 
                 val texture = this.texture
                 val textureObject: AbstractTexture? =
-                    if (texture == null) null else Constants.mc.textureManager.getTexture(texture)
+                    if (texture == null) null else Constants.client.textureManager.getTexture(texture)
 
                 RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                     { "Lumin Immediate Draw" },

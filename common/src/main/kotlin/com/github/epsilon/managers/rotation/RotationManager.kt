@@ -109,7 +109,7 @@ abstract class RotationManager {
                 randomAngle += (
                     (20 + (Math.random() - 0.5).toFloat() *
                         (Math.random() * Math.random() * Math.random() * 360).toFloat()) *
-                        (if (Constants.mc.player!!.tickCount / 10 % 2 == 0) -1 else 1)
+                        (if (Constants.client.player!!.tickCount / 10 % 2 == 0) -1 else 1)
                     ).toFloat()
 
                 offset.set(
@@ -155,13 +155,13 @@ abstract class RotationManager {
 
         updateHitResult()
         if (shouldModifyCrosshair()) {
-            Constants.mc.pick(1.0f)
+            Constants.client.pick(1.0f)
         }
     }
 
     private fun updateHitResult() {
-        val player = Constants.mc.player
-        if (!hasActiveRotation() || player == null || Constants.mc.level == null) {
+        val player = Constants.client.player
+        if (!hasActiveRotation() || player == null || Constants.client.level == null) {
             rotationHitResult = null
             return
         }
@@ -202,7 +202,7 @@ abstract class RotationManager {
     }
 
     fun getRotation(): Rot2f {
-        val player = Constants.mc.player!!
+        val player = Constants.client.player!!
         return if (active) rotations else Rot2f(player.yRot, player.xRot)
     }
 
@@ -216,7 +216,7 @@ abstract class RotationManager {
      * @return 当前逻辑命中结果
      */
     fun getHitResult(): HitResult? {
-        return if (hasActiveRotation() && rotationHitResult != null) rotationHitResult else Constants.mc.hitResult
+        return if (hasActiveRotation() && rotationHitResult != null) rotationHitResult else Constants.client.hitResult
     }
 
     fun isActive(): Boolean {
@@ -277,7 +277,7 @@ abstract class RotationManager {
 
     @EventHandler(priority = -1000)
     protected open fun onPlayerTick(event: PlayerTickEvent.Pre) {
-        val player = Constants.mc.player!!
+        val player = Constants.client.player!!
         if (!active || targetRotations == null) {
             val current = Rot2f(player.yRot, player.xRot)
             rotations = current
@@ -308,7 +308,7 @@ abstract class RotationManager {
 
     @EventHandler(priority = EventPriority.LOWEST)
     protected open fun onSendPosition(event: SendPositionEvent) {
-        val player = Constants.mc.player
+        val player = Constants.client.player
         if (player == null) {
             active = false
             priority = 0

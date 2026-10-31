@@ -143,9 +143,9 @@ object Render3DScheduler {
         }
 
         val builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE)
-        val matrix = Constants.mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
+        val matrix = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
         // 3D 渲染阶段 camera 必然已由 GameRenderer 准备好；原 Java 同样直接解引用，这里保留相同的 NPE 时机。
-        val camPos = Constants.mc.getEntityRenderDispatcher().camera!!.position()
+        val camPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
 
         for (command in filledBoxes) {
             emitFilledBox(builder, matrix, camPos, command)
@@ -164,7 +164,7 @@ object Render3DScheduler {
         }
 
         val builder = LuminImmediateRenderer.beginLines(LINES_PIPELINE)
-        val camPos = Constants.mc.getEntityRenderDispatcher().camera!!.position()
+        val camPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
         val pose = stack.last()
         val matrix = pose.pose()
 

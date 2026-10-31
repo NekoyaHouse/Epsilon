@@ -293,7 +293,7 @@ object ModuleManager {
     }
 
     private fun onKeyPress(event: KeyPressEvent) {
-        if (Constants.mc.level == null || Constants.mc.gui.screen() != null ||
+        if (Constants.client.level == null || Constants.client.gui.screen() != null ||
             event.getKey() == InputConstants.UNKNOWN.value
         ) return
 
@@ -301,14 +301,14 @@ object ModuleManager {
         val action = event.action
 
         if (keyCode == ClientSetting.guiKeybind && action == InputConstants.PRESS) {
-            Constants.mc.gui.setScreen(ClientSetting.getGuiScreen())
+            Constants.client.gui.setScreen(ClientSetting.getGuiScreen())
         }
 
         dispatchKeyBind(keyCode, action)
     }
 
     private fun onMousePress(event: MousePressEvent) {
-        if (Constants.mc.level != null && Constants.mc.gui.screen() == null) {
+        if (Constants.client.level != null && Constants.client.gui.screen() == null) {
             dispatchKeyBind(KeybindUtils.encodeMouseButton(event.button), event.action)
         }
     }

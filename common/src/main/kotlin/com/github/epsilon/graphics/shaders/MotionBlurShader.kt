@@ -99,7 +99,7 @@ object MotionBlurShader {
         var frameScale = 1.0f
         if (settings.refreshRateScaling) {
             // 26.3 的 Window 不再直接暴露刷新率，需要从当前显示模式读取。
-            val activeMode: VideoMode? = Constants.mc.window.activeVideoMode
+            val activeMode: VideoMode? = Constants.client.window.activeVideoMode
             val refreshRate = if (activeMode == null) 0.0F else activeMode.refreshRate
             if (refreshRate > 0.0F) {
                 frameScale = Math.max(1.0f, (1.0 / frameTime).toFloat() / refreshRate)

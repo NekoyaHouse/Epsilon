@@ -35,12 +35,12 @@ object EpsilonLanguageManager {
             target = EpsilonLanguage.English
         }
         selectedLanguage = target
-        reload(Constants.mc.getResourceManager())
+        reload(Constants.client.getResourceManager())
     }
 
     fun refreshCustomLanguage() {
         if (selectedLanguage.isCustom()) {
-            reload(Constants.mc.getResourceManager())
+            reload(Constants.client.getResourceManager())
         }
     }
 

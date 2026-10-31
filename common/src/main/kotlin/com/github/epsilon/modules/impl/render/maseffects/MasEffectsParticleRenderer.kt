@@ -49,7 +49,7 @@ class MasEffectsParticleRenderer {
         drainPending()
         if (particles.isEmpty()) return
 
-        val partialTick = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         val batches = LinkedHashMap<Identifier, MutableList<EffectParticle>>()
         for (particle in particles) {
             if (!particle.shouldRender()) continue
@@ -259,14 +259,14 @@ class MasEffectsParticleRenderer {
         internal open fun render(
             poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads, partialTick: Float,
         ) {
-            renderPlane(poseStack, renderer, partialTick, Constants.mc.gameRenderer.mainCamera().rotation())
+            renderPlane(poseStack, renderer, partialTick, Constants.client.gameRenderer.mainCamera().rotation())
         }
 
         protected fun renderPlane(
             poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads,
             partialTick: Float, rotation: Quaternionf,
         ) {
-            val camera: Camera = Constants.mc.gameRenderer.mainCamera()
+            val camera: Camera = Constants.client.gameRenderer.mainCamera()
             val renderX = Mth.lerp(partialTick.toDouble(), xo, x) - camera.position().x
             val renderY = Mth.lerp(partialTick.toDouble(), yo, y) - camera.position().y
             val renderZ = Mth.lerp(partialTick.toDouble(), zo, z) - camera.position().z
@@ -293,7 +293,7 @@ class MasEffectsParticleRenderer {
         }
 
         protected fun target(entityId: Int): Entity? {
-            val level = Constants.mc.level ?: return null
+            val level = Constants.client.level ?: return null
             return level.getEntity(entityId)
         }
 
@@ -301,7 +301,7 @@ class MasEffectsParticleRenderer {
             if (stoppedByCollision) return
 
             val movement = Vec3(xd, yd, zd)
-            val level = Constants.mc.level
+            val level = Constants.client.level
             if (!physics || level == null || movement.lengthSqr() >= 10000.0) {
                 x += xd
                 y += yd
@@ -310,7 +310,7 @@ class MasEffectsParticleRenderer {
             }
 
             val box = AABB(x - 0.1, y, z - 0.1, x + 0.1, y + 0.2, z + 0.1)
-            val adjusted = Entity.collideBoundingBox(Constants.mc.player!!, movement, box, level, emptyList())
+            val adjusted = Entity.collideBoundingBox(Constants.client.player!!, movement, box, level, emptyList())
             x += adjusted.x
             y += adjusted.y
             z += adjusted.z
@@ -584,7 +584,7 @@ class MasEffectsParticleRenderer {
             this.yd = motion.y + randomInclusive(-10, 10).toDouble() * 0.005
             this.zd = motion.z + randomInclusive(-10, 10).toDouble() * 0.005
             this.friction = 0.98f
-            val player = Constants.mc.player
+            val player = Constants.client.player
             if (player != null && player.position().distanceTo(position) < 6.0) {
                 alphaControl -= 0.8f
             }
@@ -594,7 +594,7 @@ class MasEffectsParticleRenderer {
         override fun afterTick() {
             size = (1.0f - age.toFloat() / lifetime) * 0.15f
             alphaControl -= 0.1f
-            val player = Constants.mc.player
+            val player = Constants.client.player
             if (player != null && player.position().distanceTo(Vec3(x, y, z)) < 6.0) {
                 alphaControl -= 0.8f
             }

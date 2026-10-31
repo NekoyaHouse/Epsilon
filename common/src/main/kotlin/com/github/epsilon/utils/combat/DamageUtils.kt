@@ -345,7 +345,7 @@ object DamageUtils {
      */
     fun breakCrosshairCrystal(): Boolean {
         val ctx = NonNullContext.current ?: return false
-        if (Constants.mc.cameraEntity == null) return false
+        if (Constants.client.cameraEntity == null) return false
 
         val player = ctx.player
         val world = ctx.world

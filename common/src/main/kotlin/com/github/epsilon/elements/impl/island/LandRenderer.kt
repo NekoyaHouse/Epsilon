@@ -131,10 +131,10 @@ class LandRenderer(
         val nn = NonNullContext.current
         val playerName = nn?.player?.gameProfile?.name ?: "Player"
         val serverAddress: String
-        if (Constants.mc.isLocalServer) {
+        if (Constants.client.isLocalServer) {
             serverAddress = "Singleplayer"
         } else {
-            val serverData: ServerData? = Constants.mc.getCurrentServer()
+            val serverData: ServerData? = Constants.client.getCurrentServer()
             serverAddress = if (serverData == null || serverData.ip.isBlank()) "Unknown server" else serverData.ip
         }
 
@@ -148,7 +148,7 @@ class LandRenderer(
             WatermarkSegment(IconChars.GROUPS, getPlayerCount().toString(), IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
             WatermarkSegment(IconChars.PUBLIC, serverAddress, IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false),
             WatermarkSegment(IconChars.NETWORK_PING, latencyText, latencyColor, latencyColor, false),
-            WatermarkSegment(IconChars.SPEED, Constants.mc.fps.toString() + " FPS", IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false)
+            WatermarkSegment(IconChars.SPEED, Constants.client.fps.toString() + " FPS", IslandPalette.TEXT_SECONDARY, IslandPalette.TEXT_SECONDARY, false)
         )
 
         var contentWidth = 0f
@@ -166,7 +166,7 @@ class LandRenderer(
     }
 
     private fun getPlayerCount(): Int {
-        val connection: ClientPacketListener? = Constants.mc.getConnection()
+        val connection: ClientPacketListener? = Constants.client.getConnection()
         if (connection != null) {
             val listed = connection.listedOnlinePlayers.size
             if (listed > 0) return listed
@@ -178,10 +178,10 @@ class LandRenderer(
     }
 
     private fun getLatency(): Int {
-        if (Constants.mc.isLocalServer) return 0
+        if (Constants.client.isLocalServer) return 0
 
         val nn = NonNullContext.current
-        val connection: ClientPacketListener? = Constants.mc.getConnection()
+        val connection: ClientPacketListener? = Constants.client.getConnection()
         if (connection != null && nn != null) {
             val playerInfo: PlayerInfo? = connection.getPlayerInfo(nn.player.uuid)
             if (playerInfo != null && playerInfo.latency >= 0) {
@@ -189,7 +189,7 @@ class LandRenderer(
             }
         }
 
-        val serverData: ServerData? = Constants.mc.getCurrentServer()
+        val serverData: ServerData? = Constants.client.getCurrentServer()
         if (serverData == null || serverData.ping < 0) return -1
         return Math.min(serverData.ping, Int.MAX_VALUE.toLong()).toInt()
     }

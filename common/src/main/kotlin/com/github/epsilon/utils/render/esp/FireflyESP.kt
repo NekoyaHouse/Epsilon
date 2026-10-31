@@ -78,8 +78,8 @@ object FireflyESP {
         runSafe {
             val canSee = player.hasLineOfSight(target)
 
-            val camera: Camera = Constants.mc.gameRenderer.mainCamera()
-            val tickDelta = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val camera: Camera = Constants.client.gameRenderer.mainCamera()
+            val tickDelta = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
 
             val tPosX = Mth.lerp(tickDelta.toDouble(), target.xOld, target.x) - camera.position().x
             val tPosY = Mth.lerp(tickDelta.toDouble(), target.yOld, target.y) - camera.position().y

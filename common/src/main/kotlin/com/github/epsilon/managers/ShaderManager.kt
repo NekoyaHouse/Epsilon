@@ -177,7 +177,7 @@ object ShaderManager {
 
     fun prepareChestOutline(texture: Identifier): RenderType {
         if (!preparedChests) {
-            val mainTarget = Constants.mc.gameRenderer.mainRenderTarget()
+            val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
             prepareChestOutlineTarget(mainTarget)
             preparedChests = true
         }
@@ -249,7 +249,7 @@ object ShaderManager {
         modelViewStack.pushMatrix()
         modelViewStack.mul(modelViewMatrix)
 
-        Constants.mc.gameRenderer.featureRenderDispatcher().prepareFrame(chestOutlineStorage).use { frame ->
+        Constants.client.gameRenderer.featureRenderDispatcher().prepareFrame(chestOutlineStorage).use { frame ->
             renderOutlinePass("epsilon_chest_outline", chestTarget!!, frame)
         }
 
@@ -381,8 +381,8 @@ object ShaderManager {
             GlowParams(
                 targetWidth.toFloat(),
                 targetHeight.toFloat(),
-                Constants.mc.window.guiScaledWidth.toFloat(),
-                Constants.mc.window.guiScaledHeight.toFloat(),
+                Constants.client.window.guiScaledWidth.toFloat(),
+                Constants.client.window.guiScaledHeight.toFloat(),
                 color,
                 settings.glowColor1,
                 settings.glowColor2,
@@ -404,8 +404,8 @@ object ShaderManager {
     ): ShaderUniforms {
         val width = Math.max(1.0f, screenWidth.toFloat())
         val height = Math.max(1.0f, screenHeight.toFloat())
-        val scaledWidth = Math.max(1.0f, Constants.mc.window.guiScaledWidth.toFloat())
-        val scaledHeight = Math.max(1.0f, Constants.mc.window.guiScaledHeight.toFloat())
+        val scaledWidth = Math.max(1.0f, Constants.client.window.guiScaledWidth.toFloat())
+        val scaledHeight = Math.max(1.0f, Constants.client.window.guiScaledHeight.toFloat())
         val outline = settings.outlineColor
         val smokeOutline1 = settings.smokeOutlineColor1
         val smokeOutline2 = settings.smokeOutlineColor2

@@ -20,7 +20,7 @@ class SnapRotationManager : RotationManager() {
             restoreSnappedRotation(snapped, false)
         }
 
-        snappedRot = Rot2f(Constants.mc.player!!.yRot, Constants.mc.player!!.xRot)
+        snappedRot = Rot2f(Constants.client.player!!.yRot, Constants.client.player!!.xRot)
         sendRotationPacket(rotations)
     }
 
@@ -33,7 +33,7 @@ class SnapRotationManager : RotationManager() {
         if (finishRotation) {
             active = false
             priority = 0
-            targetRotations = Rot2f(Constants.mc.player!!.yRot, Constants.mc.player!!.xRot)
+            targetRotations = Rot2f(Constants.client.player!!.yRot, Constants.client.player!!.xRot)
         }
     }
 
@@ -44,8 +44,8 @@ class SnapRotationManager : RotationManager() {
         val pitch = rotation.pitch
         if (yaw.isNaN() || pitch.isNaN()) return
 
-        val player = Constants.mc.player!!
-        Constants.mc.getConnection()!!.send(
+        val player = Constants.client.player!!
+        Constants.client.getConnection()!!.send(
             ServerboundMovePlayerPacket.PosRot(
                 player.position(), yaw, pitch,
                 player.onGround(), player.horizontalCollision

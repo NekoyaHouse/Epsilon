@@ -555,7 +555,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {
         if (preview.stack.isEmpty()) return
         val scale = preview.size / 16.0f
-        val window = Constants.mc.getWindow()
+        val window = Constants.client.getWindow()
         val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.getGuiScale()).toFloat()
         val guiX = toMinecraftGuiX(preview.x)
         val guiY = toMinecraftGuiY(preview.y)
@@ -709,7 +709,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         private fun collectEnchantments(): List<String> {
             val ids = ArrayList<String>()
-            val level = Constants.mc.level
+            val level = Constants.client.level
             if (level != null) {
                 level.registryAccess().lookup(Registries.ENCHANTMENT).ifPresent { registry ->
                     registry.listElementIds()
@@ -724,7 +724,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         private fun enchantmentDisplayName(id: String): String {
             val identifier = Identifier.tryParse(id)
-            val level = Constants.mc.level
+            val level = Constants.client.level
             if (identifier == null || level == null) {
                 return formatPath(id)
             }

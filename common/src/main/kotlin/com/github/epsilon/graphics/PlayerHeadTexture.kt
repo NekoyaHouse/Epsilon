@@ -34,7 +34,7 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
 
         private fun loadSteveHead(): NativeImage {
             return try {
-                Constants.mc.resourceManager
+                Constants.client.resourceManager
                     .getResourceOrThrow(ResourceLocationUtils.getIdentifier("textures/gui/steve.png"))
                     .open()
                     .use { stream -> NativeImage.read(stream) }

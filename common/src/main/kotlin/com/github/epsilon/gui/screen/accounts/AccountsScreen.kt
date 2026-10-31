@@ -262,7 +262,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             titleScale, MD3Theme.TEXT_PRIMARY, StaticFontLoader.JURA_LIGHT,
         )
 
-        val currentName = Constants.mc.user.name
+        val currentName = Constants.client.user.name
         if (currentName.isNotBlank()) {
             val scale = 0.6f
             val labelWidth = textRenderer.getWidth(currentName, scale)
@@ -723,7 +723,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         microsoftError = false
         val session = ++microsoftSession
         MicrosoftLogin.getRefreshToken { token ->
-            Constants.mc.execute {
+            Constants.client.execute {
                 if (session != microsoftSession) return@execute
 
                 microsoftWaiting = false
@@ -784,10 +784,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun isCurrent(account: Account<*>): Boolean {
         val cachedUuid = account.cache.uuid
         if (!cachedUuid.isNullOrBlank()) {
-            val currentUuid = Constants.mc.user.profileId.toString().replace("-", "")
+            val currentUuid = Constants.client.user.profileId.toString().replace("-", "")
             return currentUuid.equals(cachedUuid.replace("-", ""), ignoreCase = true)
         }
-        return Constants.mc.user.name.equals(account.username, ignoreCase = true)
+        return Constants.client.user.name.equals(account.username, ignoreCase = true)
     }
 
     private fun close() {

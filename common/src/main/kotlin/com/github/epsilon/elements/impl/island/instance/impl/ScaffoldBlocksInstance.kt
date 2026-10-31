@@ -105,9 +105,9 @@ class ScaffoldBlocksInstance(
         val blockItem = stack.item as? BlockItem ?: return
 
         val state: BlockState = blockItem.block.defaultBlockState()
-        iconSprite = Constants.mc.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
+        iconSprite = Constants.client.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
 
-        val tintSource: BlockTintSource = Constants.mc.blockColors.getTintSource(state, 0) ?: return
+        val tintSource: BlockTintSource = Constants.client.blockColors.getTintSource(state, 0) ?: return
         val nn = NonNullContext.current ?: return
 
         val tint = tintSource.colorAsTerrainParticle(state, nn.world, nn.player.blockPosition())

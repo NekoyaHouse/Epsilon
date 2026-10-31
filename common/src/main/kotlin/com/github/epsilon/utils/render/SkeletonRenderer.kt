@@ -19,10 +19,10 @@ import java.awt.Color
 object SkeletonRenderer {
 
     fun render(player: AbstractClientPlayer, color: Color, lineWidth: Float) {
-        val dispatcher = Constants.mc.getEntityRenderDispatcher()
+        val dispatcher = Constants.client.getEntityRenderDispatcher()
         val partialTick = runSafe {
             if (world.tickRateManager().isFrozen) 1.0f
-            else Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         } ?: return
 
         val state = dispatcher.getRenderer(player).createRenderState(player, partialTick) as? AvatarRenderState ?: return

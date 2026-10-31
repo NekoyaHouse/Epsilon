@@ -28,7 +28,7 @@ class AccountCache {
 
     fun loadHead(callback: Runnable?) {
         if (headTexture != null || uuid.isBlank()) {
-            if (callback != null) Constants.mc.execute(callback)
+            if (callback != null) Constants.client.execute(callback)
             return
         }
 
@@ -38,7 +38,7 @@ class AccountCache {
 
         ExecutorManager.execute {
             val head = SkinManager.fetchHead(UndashedUuid.fromStringLenient(uuid))
-            Constants.mc.execute {
+            Constants.client.execute {
                 if (head != null) headTexture = PlayerHeadTexture(head)
                 loadingHead = false
                 callback?.run()

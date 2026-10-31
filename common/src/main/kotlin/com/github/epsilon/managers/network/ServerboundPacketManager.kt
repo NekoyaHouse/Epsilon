@@ -27,7 +27,7 @@ object ServerboundPacketManager {
     fun flush() {
         while (packets.isNotEmpty()) {
             try {
-                Constants.mc.getConnection()!!.send(packets.poll())
+                Constants.client.getConnection()!!.send(packets.poll())
             } catch (e: Exception) {
                 NotificationManager.error(
                     "Serverbound Packet",
@@ -54,7 +54,7 @@ object ServerboundPacketManager {
 
         if (!blinking) return false
 
-        if (Constants.mc.player == null || Constants.mc.level == null) return false
+        if (Constants.client.player == null || Constants.client.level == null) return false
 
         packets.add(packet)
         return true

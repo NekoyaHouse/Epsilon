@@ -42,7 +42,7 @@ class SilentRotationManager : RotationManager() {
 
     @EventHandler(priority = EventPriority.HIGH)
     private fun onMoveInput(event: KeyboardInputEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.mc.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
             MovementFix.fixMovement(event, rotations.yaw)
         }
     }
@@ -61,14 +61,14 @@ class SilentRotationManager : RotationManager() {
 
     @EventHandler
     private fun onStrafe(event: StrafeEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.mc.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }
 
     @EventHandler
     private fun onJump(event: JumpEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.mc.player!!.isFallFlying) {
+        if (MovementFix.isEnabled && hasActiveRotation() && !Constants.client.player!!.isFallFlying) {
             event.yaw = rotations.yaw
         }
     }

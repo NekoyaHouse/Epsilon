@@ -209,7 +209,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+                else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             walkPosition = player.walkAnimation.position(tickDelta)
             walkSpeed = player.walkAnimation.speed(tickDelta)
             attackAnimation = player.getSwingAnimation(tickDelta)
@@ -230,7 +230,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
         fun render(poseStack: PoseStack) {
             val tickDelta =
                 if (level.tickRateManager().isFrozen()) 1.0f
-                else Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+                else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             (walkAnimation as WalkAnimationStateAccessor).`epsilon$freeze`(walkPosition, walkSpeed, tickDelta)
 
             WireframeEntityRenderer.render(

@@ -57,7 +57,7 @@ class TabListInstance(
         font = StaticFontLoader.defaultFont()
 
         val nn = NonNullContext.current
-        val connection: ClientPacketListener? = Constants.mc.getConnection()
+        val connection: ClientPacketListener? = Constants.client.getConnection()
         val scoreboard: Scoreboard? = nn?.world?.scoreboard
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)
         val showScore = objective != null && objective.renderType != ObjectiveCriteria.RenderType.HEARTS
@@ -77,14 +77,14 @@ class TabListInstance(
         rows = if (total == 0) 0 else Math.ceil(total / columns.toDouble()).toInt()
 
         val gapsWidth = COL_GAP * Math.max(0, columns - 1)
-        val screenMaxWidth = Math.max(1f, Constants.mc.window!!.guiScaledWidth - 50f)
+        val screenMaxWidth = Math.max(1f, Constants.client.window!!.guiScaledWidth - 50f)
         val maxColumnWidth = Math.max(1f, (screenMaxWidth - gapsWidth) / columns)
         val columnWidth = Math.min(computeBaseRowWidth(showScore), maxColumnWidth)
 
         columnWidths.fill(columnWidth)
         contentWidth = columnWidth * columns + gapsWidth
 
-        val overlay: PlayerTabOverlay = Constants.mc.gui.hud.tabList
+        val overlay: PlayerTabOverlay = Constants.client.gui.hud.tabList
         val textRenderer = textRendererSupplier.get()
         splitComponentByNewline(overlay.header, TEXT_HEADER, HEADER_SCALE, headerLines, textRenderer)
         splitComponentByNewline(overlay.footer, TEXT_HEADER, HEADER_SCALE, footerLines, textRenderer)
@@ -137,7 +137,7 @@ class TabListInstance(
     }
 
     private fun rebuildEntries(players: List<PlayerInfo>, scoreboard: Scoreboard?, objective: Objective?, showScore: Boolean) {
-        val overlay: PlayerTabOverlay = Constants.mc.gui.hud.tabList
+        val overlay: PlayerTabOverlay = Constants.client.gui.hud.tabList
         val textRenderer = textRendererSupplier.get()
 
         for (info in players) {

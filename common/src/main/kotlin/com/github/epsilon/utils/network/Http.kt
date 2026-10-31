@@ -115,7 +115,7 @@ object Http {
      */
     private fun resolveProxySelector(): ProxySelector {
         try {
-            val client = Constants.mc
+            val client = Constants.client
             if (client != null) {
                 val proxy = client.getProxy()
                 if (proxy != null && proxy.type() == Proxy.Type.HTTP && proxy.address() is InetSocketAddress) {

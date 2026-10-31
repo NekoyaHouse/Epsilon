@@ -354,7 +354,7 @@ class TextureRenderer private constructor() : IRenderer {
     private fun resolveTexture(key: TextureKey): PreparedTexture? {
         val texture = key.texture
         if (texture is Identifier) {
-            val abstractTexture = Constants.mc.getTextureManager().getTexture(texture)
+            val abstractTexture = Constants.client.getTextureManager().getTexture(texture)
             val sampler = if (key.linearFilter) {
                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
             } else {

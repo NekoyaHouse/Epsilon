@@ -1,5 +1,6 @@
 package com.github.epsilon.neoforge
 
+import com.github.epsilon.BuildConfig
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.LanguageReloadListener
 import com.github.epsilon.assets.resources.ResourceLocationUtils
@@ -16,7 +17,7 @@ import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent
  * 在类上直接定义静态方法，因此这里用 `@JvmStatic` 生成带注解的静态桥接方法。
  * 这是整次迁移中唯一保留的 JVM 互操作注解，属平台事件扫描的硬性要求。
  */
-@EventBusSubscriber(modid = Constants.MOD_ID, value = [Dist.CLIENT])
+@EventBusSubscriber(modid = BuildConfig.MOD_ID, value = [Dist.CLIENT])
 class NeoForgeEventHandler {
 
     companion object {

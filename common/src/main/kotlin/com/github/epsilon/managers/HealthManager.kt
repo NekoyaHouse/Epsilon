@@ -27,7 +27,7 @@ object HealthManager {
     }
 
     private fun onPacket(event: PacketEvent.Receive) {
-        if (Constants.mc.player == null || Constants.mc.level == null) return
+        if (Constants.client.player == null || Constants.client.level == null) return
 
         val packet = event.packet
         if (packet is ClientboundSetScorePacket) {

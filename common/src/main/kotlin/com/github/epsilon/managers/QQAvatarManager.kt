@@ -61,7 +61,7 @@ object QQAvatarManager {
         generation++
         state = State.UNINITIALIZED
         if (avatarTexture != null) {
-            Constants.mc.textureManager.release(AVATAR_TEXTURE)
+            Constants.client.textureManager.release(AVATAR_TEXTURE)
             avatarTexture = null
         }
     }
@@ -71,14 +71,14 @@ object QQAvatarManager {
         try {
             image = downloadAvatar(qq)
         } catch (e: IOException) {
-            Constants.mc.execute { fail(requestGeneration) }
+            Constants.client.execute { fail(requestGeneration) }
             return
         } catch (e: RuntimeException) {
-            Constants.mc.execute { fail(requestGeneration) }
+            Constants.client.execute { fail(requestGeneration) }
             return
         }
 
-        Constants.mc.execute { uploadAvatar(image, requestGeneration) }
+        Constants.client.execute { uploadAvatar(image, requestGeneration) }
     }
 
     private fun uploadAvatar(source: BufferedImage, requestGeneration: Long) {
@@ -90,7 +90,7 @@ object QQAvatarManager {
             image = toNativeImage(source)
             texture = DynamicTexture({ "Epsilon local QQ avatar" }, image)
             image = null
-            Constants.mc.textureManager.register(AVATAR_TEXTURE, texture)
+            Constants.client.textureManager.register(AVATAR_TEXTURE, texture)
             avatarTexture = texture
             texture = null
             state = State.READY

@@ -61,7 +61,7 @@ object FilterShader {
     }
 
     fun renderToMainTarget(color: Color?) {
-        render(Constants.mc.gameRenderer.mainRenderTarget(), color)
+        render(Constants.client.gameRenderer.mainRenderTarget(), color)
     }
 
     fun render(framebuffer: RenderTarget?, color: Color?) {

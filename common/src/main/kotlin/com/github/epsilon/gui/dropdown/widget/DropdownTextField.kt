@@ -199,13 +199,13 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
                 cursor = text.length
                 true
             }
-            InputConstants.KEY_V -> insertText(Constants.mc.keyboardHandler.clipboard)
+            InputConstants.KEY_V -> insertText(Constants.client.keyboardHandler.clipboard)
             else -> false
         }
     }
 
     private fun isControlDown(): Boolean {
-        val window = Constants.mc.window
+        val window = Constants.client.window
         return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL)
     }
 

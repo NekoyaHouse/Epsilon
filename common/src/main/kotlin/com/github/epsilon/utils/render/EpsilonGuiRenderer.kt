@@ -138,7 +138,7 @@ class EpsilonGuiRenderer(
                 1000.0f, 11000.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true
             )
             RenderSystem.setProjectionMatrix(guiProjectionMatrixBuffer.getBuffer(guiProjection), ProjectionType.ORTHOGRAPHIC)
-            val minecraft = Constants.mc
+            val minecraft = Constants.client
             val mainRenderTarget = minecraft.gameRenderer.mainRenderTarget()
             val dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(Matrix4f().setTranslation(0.0f, 0.0f, -11000.0f))
             if (firstDrawIndexAfterBlur > 0) {
@@ -363,7 +363,7 @@ class EpsilonGuiRenderer(
     }
 
     private fun enableScissor(rectangle: ScreenRectangle, renderPass: RenderPass): Boolean {
-        val window = Constants.mc.gameRenderer.gameRenderState().windowRenderState
+        val window = Constants.client.gameRenderer.gameRenderState().windowRenderState
         val scissor = ScissorUtils.toFramebufferScissor(
             rectangle.left().toFloat(),
             rectangle.top().toFloat(),

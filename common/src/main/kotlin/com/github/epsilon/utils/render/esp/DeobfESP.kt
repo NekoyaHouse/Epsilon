@@ -74,7 +74,7 @@ object DeobfESP {
         }
         context(nn) {
             val now = System.currentTimeMillis()
-            val partialTick = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
             val iterator = effects.values.iterator()
 
             while (iterator.hasNext()) {
@@ -112,8 +112,8 @@ object DeobfESP {
         }
         context(nn) {
             val now = System.currentTimeMillis()
-            val partialTick = Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
-            val camera: Camera = Constants.mc.gameRenderer.mainCamera()
+            val partialTick = Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            val camera: Camera = Constants.client.gameRenderer.mainCamera()
             val texture = KillAura.deobfMode.texture
             val renderer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, texture)
             val iterator = effects.values.iterator()

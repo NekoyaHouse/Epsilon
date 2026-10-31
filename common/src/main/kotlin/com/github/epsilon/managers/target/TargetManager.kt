@@ -30,7 +30,7 @@ object TargetManager {
     }
 
     private fun onClientTick() {
-        if (Constants.mc.player == null || Constants.mc.level == null) {
+        if (Constants.client.player == null || Constants.client.level == null) {
             sharedTarget = null
             return
         }
@@ -46,7 +46,7 @@ object TargetManager {
     }
 
     fun acquireTargets(request: TargetRequest): List<LivingEntity> {
-        if (Constants.mc.player == null || Constants.mc.level == null) return emptyList()
+        if (Constants.client.player == null || Constants.client.level == null) return emptyList()
 
         val candidates = collectTargets(request)
         if (candidates.isEmpty()) return candidates
@@ -82,9 +82,9 @@ object TargetManager {
     private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in Constants.mc.level!!.entitiesForRendering()) {
+        for (entity in Constants.client.level!!.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === Constants.mc.player) continue
+            if (entity === Constants.client.player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }
@@ -95,9 +95,9 @@ object TargetManager {
 
     private fun isSharedTargetAlive(): Boolean {
         val shared = sharedTarget ?: return false
-        if (shared === Constants.mc.player) return false
+        if (shared === Constants.client.player) return false
         if (!shared.isAlive || shared.isDeadOrDying) return false
-        if (shared.level() !== Constants.mc.level) return false
+        if (shared.level() !== Constants.client.level) return false
         return !AntiBot.isBot(shared)
     }
 
@@ -152,16 +152,16 @@ object TargetManager {
         }
         if (entity is Player) {
             return if (teams.`is`(ClientSetting.Teams.Color)) {
-                entity.teamColor == Constants.mc.player!!.teamColor
+                entity.teamColor == Constants.client.player!!.teamColor
             } else {
-                Objects.equals(getTeam(entity), getTeam(Constants.mc.player!!))
+                Objects.equals(getTeam(entity), getTeam(Constants.client.player!!))
             }
         }
         return false
     }
 
     private fun getTeam(entity: Entity): String? {
-        val playerInfo: PlayerInfo = Constants.mc.getConnection()!!.getPlayerInfo(entity.uuid) ?: return null
+        val playerInfo: PlayerInfo = Constants.client.getConnection()!!.getPlayerInfo(entity.uuid) ?: return null
         val team = playerInfo.team ?: return null
         return team.name
     }

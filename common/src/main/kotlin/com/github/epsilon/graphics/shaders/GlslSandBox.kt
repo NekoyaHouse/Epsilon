@@ -70,8 +70,8 @@ object GlslSandBox : AutoCloseable {
         val colorView: GpuTextureView = LuminRenderSystem.resolveColorView() ?: return
 
         val activeTarget = LuminRenderSystem.getActiveTarget()
-        val targetWidth = if (activeTarget != null) activeTarget.width() else Constants.mc.gameRenderer.mainRenderTarget().width
-        val targetHeight = if (activeTarget != null) activeTarget.height() else Constants.mc.gameRenderer.mainRenderTarget().height
+        val targetWidth = if (activeTarget != null) activeTarget.width() else Constants.client.gameRenderer.mainRenderTarget().width
+        val targetHeight = if (activeTarget != null) activeTarget.height() else Constants.client.gameRenderer.mainRenderTarget().height
 
         if (targetWidth <= 0 || targetHeight <= 0) return
 

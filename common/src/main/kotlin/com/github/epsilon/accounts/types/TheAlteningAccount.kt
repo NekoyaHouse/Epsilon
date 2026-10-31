@@ -114,7 +114,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
         private val ENVIRONMENT = Environment(API_HOST + "/discovery", "The Altening")
 
         private val SERVICE: MinecraftServicesDiscoveryService =
-            MinecraftServicesDiscoveryService.create(Constants.mc.proxy, true, ENVIRONMENT)
+            MinecraftServicesDiscoveryService.create(Constants.client.proxy, true, ENVIRONMENT)
 
     }
 

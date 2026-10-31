@@ -349,7 +349,7 @@ object RotationUtils {
             RotationManager.INSTANCE.getLastRotation().pitch
         )
         val mouseSensitivity = (
-            Constants.mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
+            Constants.client.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
         ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
@@ -368,7 +368,7 @@ object RotationUtils {
      */
     fun applySensitivityPatch(rotation: Rot2f, previousRotation: Rot2f): Rot2f {
         val mouseSensitivity = (
-            Constants.mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
+            Constants.client.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6f + 0.2f
         ).toFloat()
         val multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0f * 0.15
         val yaw = previousRotation.yaw +
@@ -478,7 +478,7 @@ object RotationUtils {
             yaw = lastYaw + move.yaw
             pitch = lastPitch + move.pitch
 
-            val iterations = (Constants.mc.getFps() / 20f + Math.random() * 10).toInt()
+            val iterations = (Constants.client.getFps() / 20f + Math.random() * 10).toInt()
             for (i in 1..iterations) {
                 if (Math.abs(move.yaw) + Math.abs(move.pitch) > 0.0001) {
                     yaw += ((Math.random() - 0.5) / 1000).toFloat()

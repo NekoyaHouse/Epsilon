@@ -105,7 +105,7 @@ object BlurShader {
             return
         }
 
-        val mainTarget = Constants.mc.gameRenderer.mainRenderTarget()
+        val mainTarget = Constants.client.gameRenderer.mainRenderTarget()
         val activeTarget = LuminRenderSystem.getActiveTarget()
         val sourceTexture: GpuTexture? = if (source == null) mainTarget.colorTexture else source.colorTexture()
         val sourceWidth: Int = if (source == null) mainTarget.width else source.width()
@@ -192,7 +192,7 @@ object BlurShader {
     fun render3DBox(box: AABB, blurStrength: Double) {
         this.ensureBoxProgram()
 
-        val fb: RenderTarget = Constants.mc.gameRenderer.mainRenderTarget()
+        val fb: RenderTarget = Constants.client.gameRenderer.mainRenderTarget()
         if (fb.width <= 0 || fb.height <= 0) {
             return
         }
@@ -241,7 +241,7 @@ object BlurShader {
     }
 
     private fun addBoxVertices(renderer: LuminImmediateRenderer.PosColorQuads, box: AABB) {
-        val camPos = Constants.mc.entityRenderDispatcher.camera!!.position()
+        val camPos = Constants.client.entityRenderDispatcher.camera!!.position()
 
         val minX = (box.minX - camPos.x).toFloat()
         val minY = (box.minY - camPos.y).toFloat()
@@ -250,7 +250,7 @@ object BlurShader {
         val maxY = (box.maxY - camPos.y).toFloat()
         val maxZ = (box.maxZ - camPos.z).toFloat()
 
-        val matrix: Matrix4f = Constants.mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
+        val matrix: Matrix4f = Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix
 
         vertex(renderer, matrix, minX, minY, minZ)
         vertex(renderer, matrix, minX, minY, maxZ)

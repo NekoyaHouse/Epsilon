@@ -198,7 +198,7 @@ class MusicInstance(
             if (existingTexture == null) {
                 newTexture = DynamicTexture(Supplier { "Epsilon SMTC album art" }, image)
                 image = null
-                Constants.mc.textureManager.register(COVER_TEXTURE, newTexture)
+                Constants.client.textureManager.register(COVER_TEXTURE, newTexture)
                 coverTexture = newTexture
                 newTexture = null
             } else {
@@ -263,7 +263,7 @@ class MusicInstance(
 
     private fun releaseCoverTexture() {
         if (coverTexture != null) {
-            Constants.mc.textureManager.release(COVER_TEXTURE)
+            Constants.client.textureManager.release(COVER_TEXTURE)
             coverTexture = null
         }
         coverAvailable = false

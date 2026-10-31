@@ -34,7 +34,7 @@ abstract class Account<T : Account<T>>(
     abstract fun fetchInfo(): Boolean
 
     open fun login(): Boolean {
-        applyLoginEnvironment(MinecraftServicesDiscoveryService.create(Constants.mc.proxy))
+        applyLoginEnvironment(MinecraftServicesDiscoveryService.create(Constants.client.proxy))
         return true
     }
 
@@ -64,19 +64,19 @@ abstract class Account<T : Account<T>>(
     companion object {
 
         fun setSession(session: User) {
-            Constants.mc.user = session
+            Constants.client.user = session
 
-            val discoveryService = MinecraftServicesDiscoveryService.create(Constants.mc.proxy)
+            val discoveryService = MinecraftServicesDiscoveryService.create(Constants.client.proxy)
 
             val apiService: UserApiService = discoveryService.createUserApiService(session.accessToken)
             val friendsService: FriendsService = discoveryService.createFriendsService(session.accessToken)
-            val remoteFriendListUpdateHandler = RemoteFriendListUpdateHandler(friendsService, Constants.mc)
-            Constants.mc.userApiService = apiService
-            Constants.mc.playerSocialManager = PlayerSocialManager(Constants.mc, apiService, friendsService, remoteFriendListUpdateHandler)
-            Constants.mc.profileKeyPairManager = ProfileKeyPairManager.create(apiService, session, Constants.mc.gameDirectory.toPath())
-            Constants.mc.reportingContext = ReportingContext.create(ReportEnvironment.local(), apiService)
-            Constants.mc.profileFuture = CompletableFuture.supplyAsync(
-                { Constants.mc.services().sessionService().fetchProfile(Constants.mc.user.profileId, true) },
+            val remoteFriendListUpdateHandler = RemoteFriendListUpdateHandler(friendsService, Constants.client)
+            Constants.client.userApiService = apiService
+            Constants.client.playerSocialManager = PlayerSocialManager(Constants.client, apiService, friendsService, remoteFriendListUpdateHandler)
+            Constants.client.profileKeyPairManager = ProfileKeyPairManager.create(apiService, session, Constants.client.gameDirectory.toPath())
+            Constants.client.reportingContext = ReportingContext.create(ReportEnvironment.local(), apiService)
+            Constants.client.profileFuture = CompletableFuture.supplyAsync(
+                { Constants.client.services().sessionService().fetchProfile(Constants.client.user.profileId, true) },
                 Util.ioPool(),
             )
         }
@@ -92,14 +92,14 @@ abstract class Account<T : Account<T>>(
          */
         fun applyLoginEnvironment(discoveryService: MinecraftServicesDiscoveryService) {
             SignatureValidator.from(discoveryService.servicesKeySet, ServicesKeyType.PROFILE_KEY)
-            val skinCache: SkinManager.TextureCache = Constants.mc.skinManager.skinTextures
+            val skinCache: SkinManager.TextureCache = Constants.client.skinManager.skinTextures
             val skinCachePath: Path = skinCache.root
-            Constants.mc.services = Services.create(discoveryService, Constants.mc.gameDirectory)
-            Constants.mc.skinManager = SkinManager(
+            Constants.client.services = Services.create(discoveryService, Constants.client.gameDirectory)
+            Constants.client.skinManager = SkinManager(
                 skinCachePath,
-                Constants.mc.services(),
-                SkinTextureDownloader(Constants.mc.proxy, Constants.mc.textureManager, Constants.mc),
-                Constants.mc,
+                Constants.client.services(),
+                SkinTextureDownloader(Constants.client.proxy, Constants.client.textureManager, Constants.client),
+                Constants.client,
             )
         }
 

@@ -66,7 +66,7 @@ object FXAAShader {
     }
 
     fun renderMainTarget() {
-        render(Constants.mc.gameRenderer.mainRenderTarget())
+        render(Constants.client.gameRenderer.mainRenderTarget())
     }
 
     fun render(framebuffer: RenderTarget?) {

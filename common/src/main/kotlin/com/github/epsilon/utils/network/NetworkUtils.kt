@@ -14,7 +14,7 @@ object NetworkUtils {
      * @param packet 待发送或过滤的网络包
      */
     fun sendPacketNoEvent(packet: Packet<*>) {
-        val connection = Constants.mc.getConnection() ?: return
+        val connection = Constants.client.getConnection() ?: return
         bypassedPackets.add(packet)
         connection.send(packet)
     }

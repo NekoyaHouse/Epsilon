@@ -16,7 +16,7 @@ class StringListSettingWidget(setting: StringListSetting) : AbstractSetSettingWi
     }
 
     override fun openPopup() {
-        val screen = Constants.mc.gui.screen()
+        val screen = Constants.client.gui.screen()
         if (screen is ListSettingPopupScreen) {
             screen.openStringListSettingPopup(setting)
         }

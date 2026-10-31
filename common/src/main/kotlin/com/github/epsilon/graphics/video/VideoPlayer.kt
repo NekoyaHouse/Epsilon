@@ -60,7 +60,7 @@ object VideoPlayer {
         if (registeredTexture == null) {
             return
         }
-        Constants.mc.textureManager.release(GUI_TEXTURE_ID)
+        Constants.client.textureManager.release(GUI_TEXTURE_ID)
         registeredTexture = null
     }
 
@@ -211,7 +211,7 @@ object VideoPlayer {
         if (texture == null) return null
 
         if (registeredTexture !== texture) {
-            Constants.mc.textureManager.register(GUI_TEXTURE_ID, texture)
+            Constants.client.textureManager.register(GUI_TEXTURE_ID, texture)
             registeredTexture = texture
         }
 

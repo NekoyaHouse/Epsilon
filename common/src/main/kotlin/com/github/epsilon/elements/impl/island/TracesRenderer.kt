@@ -34,7 +34,7 @@ object TracesRenderer {
 
         val nn = NonNullContext.current ?: return 0
         val self = nn.player
-        val connection = Constants.mc.getConnection()
+        val connection = Constants.client.getConnection()
 
         val centerX = islandX + islandWidth * 0.5f
         val centerY = islandY + islandHeight * 0.5f
@@ -42,7 +42,7 @@ object TracesRenderer {
         val halfHeight = Math.max(0.0f, islandHeight * 0.5f)
         val maxDistanceSquared = Math.max(0.0, maxDistance * maxDistance)
         val partialTick = if (nn.world.tickRateManager().isFrozen) 1.0f
-        else Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+        else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         var rendered = 0
 
         for (player in nn.world.players()) {

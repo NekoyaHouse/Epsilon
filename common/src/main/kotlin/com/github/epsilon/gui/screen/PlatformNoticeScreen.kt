@@ -92,7 +92,7 @@ class PlatformNoticeScreen private constructor(
             if (requirement == null || requirement == PlatformRequirement.ANY || requirement.isSatisfied()) {
                 return
             }
-            val minecraft = Constants.mc
+            val minecraft = Constants.client
             if (minecraft == null || !OPEN_KEYS.add(key)) {
                 return
             }
@@ -106,7 +106,7 @@ class PlatformNoticeScreen private constructor(
             if (setting == null) {
                 return
             }
-            val minecraft = Constants.mc
+            val minecraft = Constants.client
             val parent = if (minecraft != null) minecraft.gui.screen() else null
             show(parent, setting.noticeKey, setting.displayName, setting.platformRequirement)
         }
@@ -120,7 +120,7 @@ class PlatformNoticeScreen private constructor(
             }
             val requirement = setting.getModeRequirementUnchecked(mode)
             val feature = setting.displayName + " · " + setting.getTranslatedValueUnchecked(mode)
-            val minecraft = Constants.mc
+            val minecraft = Constants.client
             val parent = if (minecraft != null) minecraft.gui.screen() else null
             show(parent, setting.noticeKey + "#" + mode.name, feature, requirement)
         }

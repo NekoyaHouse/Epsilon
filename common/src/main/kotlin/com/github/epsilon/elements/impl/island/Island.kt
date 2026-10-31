@@ -90,7 +90,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     }
 
     private fun renderTraces() {
-        if (!traces || nullCheck() || Constants.mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
+        if (!traces || nullCheck() || Constants.client.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
             rectRenderer?.clear()
             return
         }

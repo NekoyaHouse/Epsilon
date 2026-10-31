@@ -339,12 +339,12 @@ object AssetManager {
                 selected.add(asset)
             }
         }
-        Constants.mc.execute {
-            if (Constants.mc.gui.screen() is AssetDownloadScreen) {
+        Constants.client.execute {
+            if (Constants.client.gui.screen() is AssetDownloadScreen) {
                 return@execute
             }
             normalizeFfmpegDownloadUrl()
-            Constants.mc.gui.setScreen(AssetDownloadScreen(Constants.mc.gui.screen(), selected, declineOnClose))
+            Constants.client.gui.setScreen(AssetDownloadScreen(Constants.client.gui.screen(), selected, declineOnClose))
         }
     }
 
@@ -418,7 +418,7 @@ object AssetManager {
     }
 
     private fun notifyResult(success: Boolean, error: String?) {
-        Constants.mc.execute {
+        Constants.client.execute {
             if (success) {
                 NotificationManager.success(
                     EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_TITLE.getTranslatedName(),
@@ -629,7 +629,7 @@ object AssetManager {
                 val image = NativeImage.read(input)
                 val texture = DynamicTexture({ "Epsilon $label" }, image)
                 val identifier = Identifier.fromNamespaceAndPath("epsilon_assets", resourcePath)
-                Constants.mc.textureManager.register(identifier, texture)
+                Constants.client.textureManager.register(identifier, texture)
                 registeredTextures[key] = identifier
                 return identifier
             }
@@ -645,7 +645,7 @@ object AssetManager {
         if (registered.isEmpty() || !RenderSystem.isOnRenderThread()) {
             return
         }
-        registered.values.forEach { identifier -> Constants.mc.textureManager.release(identifier) }
+        registered.values.forEach { identifier -> Constants.client.textureManager.release(identifier) }
     }
 
     /**
@@ -692,7 +692,7 @@ object AssetManager {
                 if (Files.exists(videoFile)) {
                     return
                 }
-                val legacy = Constants.mc.gameDirectory.toPath().resolve("epsilon-video").resolve(VIDEO_FILE_NAME)
+                val legacy = Constants.client.gameDirectory.toPath().resolve("epsilon-video").resolve(VIDEO_FILE_NAME)
                 if (Files.notExists(legacy) || Files.size(legacy) < MIN_VIDEO_BYTES) {
                     return
                 }

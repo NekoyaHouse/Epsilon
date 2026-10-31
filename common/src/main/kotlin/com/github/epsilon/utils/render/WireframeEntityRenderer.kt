@@ -77,7 +77,7 @@ object WireframeEntityRenderer {
 
         val partialTick = runSafe {
             if (world.tickRateManager().isFrozen) 1.0f
-            else Constants.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+            else Constants.client.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         }
         if (partialTick != null) {
             renderEntity(entity, scale, sideColor, lineColor, lineWidth, partialTick)
@@ -105,7 +105,7 @@ object WireframeEntityRenderer {
         offsetZ = Mth.lerp(partialTick.toDouble(), entity.zOld, entity.z)
 
         @Suppress("UNCHECKED_CAST")
-        val renderer = Constants.mc.getEntityRenderDispatcher().getRenderer(entity) as EntityRenderer<Entity, EntityRenderState>
+        val renderer = Constants.client.getEntityRenderDispatcher().getRenderer(entity) as EntityRenderer<Entity, EntityRenderState>
         val state: EntityRenderState = renderer.createRenderState(entity, partialTick)
 
         val renderOffset = renderer.getRenderOffset(state)
@@ -119,7 +119,7 @@ object WireframeEntityRenderer {
             state,
             modelPoseStack,
             submitNodeStorage,
-            Constants.mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
+            Constants.client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
         )
         modelPoseStack.popPose()
         vertexConsumer.reset()
@@ -160,7 +160,7 @@ object WireframeEntityRenderer {
         x3: Float, y3: Float, z3: Float,
         x4: Float, y4: Float, z4: Float,
     ) {
-        val cameraPos = Constants.mc.getEntityRenderDispatcher().camera!!.position()
+        val cameraPos = Constants.client.getEntityRenderDispatcher().camera!!.position()
         val rx1 = (offsetX + x1 - cameraPos.x).toFloat()
         val ry1 = (offsetY + y1 - cameraPos.y).toFloat()
         val rz1 = (offsetZ + z1 - cameraPos.z).toFloat()

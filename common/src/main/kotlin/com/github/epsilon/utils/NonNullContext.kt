@@ -75,7 +75,7 @@ class NonNullContext private constructor(
 ) {
 
     val mc: Minecraft
-        get() = checkNotNull(Constants.mc) { "Minecraft 尚未初始化" }
+        get() = Constants.client
 
     companion object {
 

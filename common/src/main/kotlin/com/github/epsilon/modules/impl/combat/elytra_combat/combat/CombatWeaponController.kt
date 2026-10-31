@@ -24,7 +24,7 @@ import java.util.function.Predicate
 object CombatWeaponController {
 
     private val mc: Minecraft
-        get() = Constants.mc
+        get() = Constants.client
 
     /**
      * 26.3 全部长矛材质；识别 kinetic 组件时不依赖具体物品名硬编码延迟。

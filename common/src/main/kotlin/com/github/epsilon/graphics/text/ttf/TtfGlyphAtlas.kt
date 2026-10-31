@@ -65,8 +65,8 @@ class TtfGlyphAtlas(atlasId: Int) {
         this.alphaTexture = LuminTexture(alphaTexture, alphaTextureView, alphaSampler)
         fillTexture(texture, 0xFF.toByte())
         fillTexture(alphaTexture, 0x00.toByte())
-        Constants.mc.getTextureManager().register(this.textureId, this.texture)
-        Constants.mc.getTextureManager().register(this.alphaTextureId, this.alphaTexture)
+        Constants.client.getTextureManager().register(this.textureId, this.texture)
+        Constants.client.getTextureManager().register(this.alphaTextureId, this.alphaTexture)
     }
 
     /**
@@ -138,8 +138,8 @@ class TtfGlyphAtlas(atlasId: Int) {
     }
 
     fun destroy() {
-        Constants.mc.getTextureManager().release(this.textureId)
-        Constants.mc.getTextureManager().release(this.alphaTextureId)
+        Constants.client.getTextureManager().release(this.textureId)
+        Constants.client.getTextureManager().release(this.alphaTextureId)
     }
 
     data class GlyphUV(val u0: Float, val v0: Float, val u1: Float, val v1: Float)

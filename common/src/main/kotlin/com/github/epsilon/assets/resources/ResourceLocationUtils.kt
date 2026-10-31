@@ -14,7 +14,7 @@ object ResourceLocationUtils {
     }
 
     fun loadResource(identifier: Identifier): ByteBuffer {
-        val manager = Constants.mc.getResourceManager()
+        val manager = Constants.client.getResourceManager()
         val resource: Optional<Resource> = manager.getResource(identifier)
 
         if (resource.isEmpty) {
