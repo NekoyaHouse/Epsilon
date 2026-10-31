@@ -53,8 +53,8 @@ fun <E : Any> EventBus.handler(
  * }
  * ```
  *
- * [NonNullContext] 提供 `player`/`world`/`interaction`/`netHandler` 等上下文属性，
- * 在其它包中需要导入对应属性（或 `com.github.epsilon.utils.*`），也可以改用 `contextOf<NonNullContext>()`。
+ * [NonNullContext] 提供 `player`/`level`/`interaction`/`connection` 等上下文属性，
+ * 其它包使用时一律 `import com.github.epsilon.utils.safety.*`，不得写成 `nn.player` 这类显式访问。
  */
 inline fun <reified E : Any> EventBus.nonNullHandler(
     priority: Int = DEFAULT_HANDLER_PRIORITY,

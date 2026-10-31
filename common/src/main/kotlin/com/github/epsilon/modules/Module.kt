@@ -2,6 +2,7 @@ package com.github.epsilon.modules
 
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.nonNullHandler
 import com.github.epsilon.events.bus.EventBus
 import com.github.epsilon.events.bus.EventPriority
 import com.github.epsilon.events.bus.listeners.IListener
@@ -89,40 +90,29 @@ open class Module(
 
     // ---- 事件注册 ----
     // 模块在 object 的 init 块中声明监听器：
-    //   init { nonNullHandler<ClientTickEvent.Pre> { ... } }
+    //   init { nonNullListener<ClientTickEvent.Pre> { ... } }
     // 监听器在模块对象初始化时注册一次，事件派发时按 isEnabled 过滤，
     // 因此禁用状态下不会执行，与原先「启用才 subscribe」的行为一致；
     // 依赖玩家/世界的监听器会在上下文缺失时自动跳过。
 
-    protected inline fun <reified E : Any> nonNullHandler(
-        priority: Int = EventPriority.MEDIUM,
-        noinline block: context(NonNullContext) (E) -> Unit,
-    ) {
-        EventBus.handler(E::class.java, priority) { event ->
-            if (isEnabled) {
-                runSafe { block(event) }
-            }
-        }
-    }
-
-    /** [nonNullHandler] 的别名，便于按“监听器”命名习惯书写。 */
+    /** [EventBus.nonNullHandler] 的模块作用域版本，额外按 [isEnabled] 过滤。 */
     protected inline fun <reified E : Any> nonNullListener(
         priority: Int = EventPriority.MEDIUM,
         noinline block: context(NonNullContext) (E) -> Unit,
     ) {
-        EventBus.handler(E::class.java, priority) { event ->
+        EventBus.nonNullHandler<E>(priority) { event ->
             if (isEnabled) {
-                runSafe { block(event) }
+                block(event)
             }
         }
     }
 
-    /** 不依赖世界的事件监听器（菜单、渲染、按键等）。 */
+    /** 不依赖世界的事件监听器（菜单、渲染、按键等），额外按 [isEnabled] 过滤。 */
     protected inline fun <reified E : Any> handler(
         priority: Int = EventPriority.MEDIUM,
         noinline block: (E) -> Unit,
     ) {
-        EventBus.handler(E::class.java, priority) { event ->
+        EventBus.handler<E>(priority) { event ->
             if (isEnabled) {
                 block(event)
             }
@@ -152,7 +142,7 @@ open class Module(
     }
 
     private val notificationHash: Int
-        get() = ("epsilon:" + name).hashCode()
+        get() = "epsilon:$name".hashCode()
 
     open fun reset() {
         isEnabled = false
