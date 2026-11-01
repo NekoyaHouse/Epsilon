@@ -759,7 +759,13 @@
         "swing hand": "Swing Hand",
         "support": "Support Blocks",
         "break crystal": "Break Crystal",
-        "break delay": "Break Delay"
+        "break delay": "Break Delay",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color"
       },
       "double anchor": {
         "_value": "Double Anchor",

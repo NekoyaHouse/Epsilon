@@ -2,16 +2,17 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.events.impl.*
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.*
+import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
@@ -36,6 +37,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
 import java.util.concurrent.ConcurrentLinkedQueue
 
 object FeetTrap : Module("Feet Trap", Category.COMBAT) {
@@ -67,6 +69,12 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val swingHand by boolSetting("Swing Hand", true)
     private val breakCrystal by boolSetting("Break Crystal", false)
     private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
+    private val render by boolSetting("Render", true)
+    private val fade by boolSetting("Fade", true, { render })
+    private val fadeTime by intSetting("Fade Time", 500, 0..3000, 50, { render && fade })
+    private val shrink by boolSetting("Shrink", false, { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), true, { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), true, { render })
 
     private val placeTimer = TimerUtils()
     private val breakTimer = TimerUtils()
@@ -83,6 +91,8 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val surroundDirections = arrayOf(
         Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST
     )
+
+    private val renderBoxes: MutableList<RenderInfo> = ArrayList()
 
     init {
         onEnable {
@@ -147,6 +157,57 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             }
 
             runPlacing(getPlacements(), blocks)
+        }
+
+        handler<Render3DEvent>(alwaysListening = true) {
+            if (!render || mc.level == null) {
+                renderBoxes.clear()
+                return@handler
+            }
+
+            if (renderBoxes.isEmpty()) return@handler
+
+            val time = System.currentTimeMillis()
+            val fadeMillis = fadeTime.toLong().coerceAtLeast(1L)
+
+            renderBoxes.removeAll { box -> time - box.startTime >= fadeMillis }
+
+            for (box in renderBoxes) {
+                val progress = ((time - box.startTime).toFloat() / fadeMillis).coerceIn(0.0f, 1.0f)
+
+                var scale = 1.0
+                if (box.shrink) {
+                    scale = 1.0 - Easing.EASE_IN_OUT_EXPO.function.apply(progress)
+                    if (scale < 0) scale = 0.0
+                }
+
+                val alphaFactor = if (box.fade) (1.0f - progress).coerceIn(0.0f, 1.0f) else 1.0f
+
+                val boxSideColor = box.sideColor
+                val boxLineColor = box.lineColor
+
+                val side = Color(
+                    boxSideColor.red, boxSideColor.green, boxSideColor.blue,
+                    (boxSideColor.alpha * alphaFactor).toInt()
+                )
+                val line = Color(
+                    boxLineColor.red, boxLineColor.green, boxLineColor.blue,
+                    (boxLineColor.alpha * alphaFactor).toInt()
+                )
+
+                var renderBox = box.aabb
+                if (box.shrink) {
+                    renderBox = AABB.ofSize(
+                        renderBox.center,
+                        renderBox.xsize * scale,
+                        renderBox.ysize * scale,
+                        renderBox.zsize * scale
+                    )
+                }
+
+                Render3DScheduler.addFilledBox(renderBox, side)
+                Render3DScheduler.addOutlineBox(renderBox, line)
+            }
         }
     }
 
@@ -399,23 +460,24 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
         if (blockUpdates == null) blockUpdates = ConcurrentLinkedQueue()
 
-        val success = try {
-            val result = if (rotate && rotationMode == RotationMode.Packet) {
-                LegacyPlacement.placeBlock(hand, info.hit)
-            } else {
-                nn.gameMode.useItemOn(nn.player, hand, info.hit)
-            }
-            SwingMode.of(swingHand).interactSwing(hand)
-            result.consumesAction()
-        } finally {
-            if (swap) {
-                if (inventorySwap) InvUtils.invSwapBack() else InvUtils.swapBack()
-            }
+        val result = if (rotate && rotationMode == RotationMode.Packet) {
+            LegacyPlacement.placeBlock(hand, info.hit)
+        } else {
+            nn.gameMode.useItemOn(nn.player, hand, info.hit)
         }
 
-        if (success && !nn.level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
+        SwingMode.of(swingHand).interactSwing(hand)
+
+        if (swap) {
+            if (inventorySwap) InvUtils.invSwapBack() else InvUtils.swapBack()
+        }
+
+        if (result.consumesAction() && !nn.level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
         if (pendingBlocks.isEmpty()) blockUpdates = null
-        if (!success) return false
+        if (!result.consumesAction()) return false
+        if (render) {
+            renderBoxes.add(RenderInfo(AABB(info.pos), lineColor, sideColor, System.currentTimeMillis(), fade, shrink))
+        }
         placeTimer.reset()
         return true
     }
@@ -440,5 +502,14 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private class PlaceInfo(val pos: BlockPos, val hit: BlockHitResult, val rotation: Rotation)
 
     private class BlockUpdate(val level: ClientLevel, val event: PacketEvent.Receive)
+
+    private data class RenderInfo(
+        val aabb: AABB,
+        val lineColor: Color,
+        val sideColor: Color,
+        val startTime: Long,
+        val fade: Boolean,
+        val shrink: Boolean,
+    )
 
 }

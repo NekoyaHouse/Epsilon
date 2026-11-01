@@ -759,7 +759,13 @@
         "swing hand": "挥手",
         "support": "辅助方块上限",
         "break crystal": "破坏水晶",
-        "break delay": "破坏间隔"
+        "break delay": "破坏间隔",
+        "render": "渲染",
+        "fade": "淡出",
+        "fade time": "淡出时间",
+        "shrink": "缩小",
+        "side color": "填充颜色",
+        "line color": "边框颜色"
       },
       "double anchor": {
         "_value": "双重重生锚",
