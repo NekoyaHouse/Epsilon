@@ -1,10 +1,13 @@
 package com.github.epsilon.modules.impl.combat
 
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.events.impl.GameLeftEvent
+import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.events.impl.RespawnEvent
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -39,8 +42,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val extend by boolSetting("Extend", true)
     private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
     private val rotate by boolSetting("Rotate", true)
-    private val rotationSpeed by intSetting(
-        "Rotation Speed", 180, 18..180, 18, { rotate })
+    private val rotationSpeed by intSetting("Rotation Speed", 180, 18..180, 18, { rotate })
     private val enderChest by boolSetting("Ender Chest", true)
     private val inventorySwap by boolSetting("Inventory Swap", true)
 
@@ -49,6 +51,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private var startZ = 0.0
     private var progress = 0
     private var rotation: Rotation? = null
+    private var waitingForRotation = false
 
     private val timer = TimerUtils()
 
@@ -58,11 +61,16 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     init {
         onEnable {
+            resetPlacementState()
             runSafe {
                 startX = player.x
                 startY = player.y
                 startZ = player.z
             } ?: toggle()
+        }
+
+        onDisable {
+            resetPlacementState()
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
@@ -73,9 +81,16 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         }
 
         safeEventHandler<ClientTickEvent.Pre> {
+            if (!rotate) rotation = null
+
+            if (pauseOnEat && PlayerUtils.isEating() || !inAir && !player.onGround()) {
+                resetPlacementState()
+                return@safeEventHandler
+            }
+
             if (!timer.passedMillise(placeDelay.toLong())) return@safeEventHandler
 
-            progress = 0
+            resetPlacementState()
 
             if (!player.isMoving && !mc.options.keyJump.isDown) {
                 startX = player.x
@@ -97,21 +112,16 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
                 return@safeEventHandler
             }
 
-            if (pauseOnEat && PlayerUtils.isEating()) {
-                return@safeEventHandler
-            }
-
-            if (!inAir && !player.onGround()) {
-                return@safeEventHandler
-            }
-
             doSurround(BlockPos.containing(player.x, player.y, player.z), result.slot)
             doSurround(BlockPos.containing(player.x, player.y + 0.8, player.z), result.slot)
         }
     }
 
-    private fun contextVisibility(): com.github.epsilon.settings.Setting.Visibility =
-        { rotate }
+    private fun resetPlacementState() {
+        progress = 0
+        rotation = null
+        waitingForRotation = false
+    }
 
     context(nn: NonNullContext)
     private fun doSurround(pos: BlockPos, slot: Int) {
@@ -180,17 +190,15 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun tryPlaceBlock(pos: BlockPos, slot: Int) {
-        if (!(progress < blocksPerTick)) return
+        if (progress >= blocksPerTick || waitingForRotation) return
         val side = getPlaceSide(pos) ?: return
         if (!BlockUtils.canPlaceAt(pos)) return
 
         if (rotate) {
             rotation = RotationUtils.calculate(hitVec(pos, side))
-            if (RaytraceUtils.overBlock(RotationManager.getRotation(), pos.relative(side))) {
-                // 在这个 tick 转头已经到达，无需继续设置转头
-                rotation = null
-            } else {
-                // 没到，给劳资转！
+            if (!RaytraceUtils.overBlock(RotationManager.getRotation(), pos.relative(side))) {
+                // 等待当前目标对准，不能被本轮后续候选位置覆盖。
+                waitingForRotation = true
                 return
             }
         }

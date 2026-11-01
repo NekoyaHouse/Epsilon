@@ -49,20 +49,176 @@ object RotationManager : AlwaysListening {
     private var priority = 0
 
     init {
-        handler<RespawnEvent>(alwaysListening = true) { onRespawn(it) }
-        handler<RaytraceEvent>(alwaysListening = true) { onRaytrace(it) }
-        handler<PlayerTickEvent.Pre>(priority = -1000, alwaysListening = true) { onPlayerTick(it) }
-        handler<RotationAnimationEvent>(alwaysListening = true) { onAnimation(it) }
-        handler<SendPositionEvent>(EventPriority.LOWEST, alwaysListening = true) { onSendPosition(it) }
-        handler<KeyboardInputEvent>(EventPriority.HIGH, alwaysListening = true) { onMoveInput(it) }
-        handler<UseItemRaytraceEvent>(alwaysListening = true) { onItemRaytrace(it) }
-        handler<StrafeEvent>(alwaysListening = true) { onStrafe(it) }
-        handler<JumpEvent>(alwaysListening = true) { onJump(it) }
-        handler<FallFlyingEvent>(alwaysListening = true) { onFallFlying(it) }
-        handler<UseItemEvent>(alwaysListening = true) { onUseItem(it) }
-        handler<FireworkRotationEvent>(alwaysListening = true) { onFireworkUpdate(it) }
-        handler<AttackYawEvent>(alwaysListening = true) { onAttack(it) }
-        handler<PacketEvent.Send>(alwaysListening = true) { onPacketSend(it) }
+        handler<RespawnEvent>(alwaysListening = true) {
+            offset.set(0f, 0f)
+            rotations = Rotation(0f, 0f)
+            lastRotations = Rotation(0f, 0f)
+            targetRotations = null
+            animationRotation = null
+            lastAnimationRotation = null
+            active = false
+            priority = 0
+            smoothed = false
+            raytrace = null
+            randomAngle = 0f
+            rotationHitResult = null
+            calculatingHitResult = false
+            useItemRotation = null
+        }
+
+        handler<RaytraceEvent>(alwaysListening = true) { event ->
+            if (hasActiveRotation() && (calculatingHitResult || shouldModifyCrosshair())) {
+                event.yaw = rotations.yaw
+                event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+            }
+        }
+
+        handler<PlayerTickEvent.Pre>(priority = -1000, alwaysListening = true) {
+            val player = mc.player!!
+            if (!active || targetRotations == null) {
+                val current = Rotation(player.yRot, player.xRot)
+                rotations = current
+                lastRotations = current
+                targetRotations = current
+            }
+
+            if (hasActiveRotation()) {
+                smooth()
+            }
+        }
+
+        handler<RotationAnimationEvent>(alwaysListening = true) { event ->
+            val animation = animationRotation
+            val lastAnimation = lastAnimationRotation
+            if (active && animation != null && lastAnimation != null) {
+                event.yaw = animation.yaw
+                event.lastYaw = lastAnimation.yaw
+                event.pitch = animation.pitch
+                event.lastPitch = lastAnimation.pitch
+            }
+        }
+
+        handler<SendPositionEvent>(EventPriority.LOWEST, alwaysListening = true) { event ->
+            val player = mc.player
+            if (player == null) {
+                active = false
+                priority = 0
+                targetRotations = null
+                raytrace = null
+                smoothed = false
+                rotationHitResult = null
+                calculatingHitResult = false
+                useItemRotation = null
+            } else {
+                if (active) {
+                    // Item use is sent before LocalPlayer ticks; keep both packets on the same server rotation.
+                    val useItemRotation = useItemRotation
+                    if (useItemRotation != null) {
+                        rotations = useItemRotation
+                        this.useItemRotation = null
+                    }
+
+                    val yaw = rotations.yaw
+                    val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+
+                    if (!yaw.isNaN() && !pitch.isNaN()) {
+                        event.yaw = yaw
+                        event.pitch = pitch
+                    }
+
+                    if (abs((rotations.yaw - player.yRot) % 360) < 1 &&
+                        abs(rotations.pitch - player.xRot) < 1
+                    ) {
+                        active = false
+                        priority = 0
+                        this.correctDisabledRotations(player)
+                    }
+
+                    lastRotations = rotations
+                } else {
+                    lastRotations = Rotation(player.yRot, player.xRot)
+                }
+
+                lastAnimationRotation = animationRotation
+                animationRotation = Rotation(event.yaw, event.pitch)
+                targetRotations = Rotation(player.yRot, player.xRot)
+                raytrace = null
+                smoothed = false
+            }
+        }
+
+        handler<KeyboardInputEvent>(EventPriority.HIGH, alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+                MovementFix.fixMovement(event, rotations.yaw)
+            }
+        }
+
+        handler<UseItemRaytraceEvent>(alwaysListening = true) { event ->
+            if (hasActiveRotation()) {
+                event.yaw = rotations.yaw
+                event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+            }
+        }
+
+        handler<StrafeEvent>(alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+                event.yaw = rotations.yaw
+            }
+        }
+
+        handler<JumpEvent>(alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+                event.yaw = rotations.yaw
+            }
+        }
+
+        handler<FallFlyingEvent>(alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation()) {
+                event.yaw = rotations.yaw
+                event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+            }
+        }
+
+        handler<UseItemEvent>(alwaysListening = true) { event ->
+            if (hasActiveRotation()) {
+                event.yaw = rotations.yaw
+                event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+            }
+        }
+
+        handler<FireworkRotationEvent>(alwaysListening = true) { event ->
+            if (hasActiveRotation()) {
+                event.yaw = rotations.yaw
+                event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+            }
+        }
+
+        handler<AttackYawEvent>(alwaysListening = true) { event ->
+            if (hasActiveRotation()) {
+                event.yaw = rotations.yaw
+            }
+        }
+
+        handler<PacketEvent.Send>(alwaysListening = true) { event ->
+            val packet = event.packet
+            if (packet is ServerboundClientTickEndPacket) {
+                useItemRotation = null
+            } else if (hasActiveRotation() && packet is ServerboundUseItemPacket) {
+                val yaw = rotations.yaw
+                val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
+                if (!yaw.isNaN() && !pitch.isNaN()) {
+                    useItemRotation = Rotation(yaw, pitch)
+                    if (packet.yRot() != yaw || packet.xRot() != pitch) {
+                        event.packet = ServerboundUseItemPacket(
+                            packet.hand(),
+                            packet.sequence(),
+                            yaw,
+                            pitch
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun setRotations(rotations: Rotation?, rotationSpeed: Double) {
@@ -231,178 +387,6 @@ object RotationManager : AlwaysListening {
 
     fun updateSmoothed(smoothed: Boolean) {
         this.smoothed = smoothed
-    }
-
-    private fun onRespawn(event: RespawnEvent) {
-        offset.set(0f, 0f)
-        rotations = Rotation(0f, 0f)
-        lastRotations = Rotation(0f, 0f)
-        targetRotations = null
-        animationRotation = null
-        lastAnimationRotation = null
-        active = false
-        priority = 0
-        smoothed = false
-        raytrace = null
-        randomAngle = 0f
-        rotationHitResult = null
-        calculatingHitResult = false
-        useItemRotation = null
-    }
-
-    private fun onRaytrace(event: RaytraceEvent) {
-        if (!hasActiveRotation() || (!calculatingHitResult && !shouldModifyCrosshair())) return
-
-        event.yaw = rotations.yaw
-        event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-    }
-
-    private fun onPlayerTick(event: PlayerTickEvent.Pre) {
-        val player = mc.player!!
-        if (!active || targetRotations == null) {
-            val current = Rotation(player.yRot, player.xRot)
-            rotations = current
-            lastRotations = current
-            targetRotations = current
-        }
-
-        if (hasActiveRotation()) {
-            smooth()
-        }
-    }
-
-    private fun onAnimation(event: RotationAnimationEvent) {
-        val animation = animationRotation
-        val lastAnimation = lastAnimationRotation
-        if (active && animation != null && lastAnimation != null) {
-            event.yaw = animation.yaw
-            event.lastYaw = lastAnimation.yaw
-            event.pitch = animation.pitch
-            event.lastPitch = lastAnimation.pitch
-        }
-    }
-
-    private fun onSendPosition(event: SendPositionEvent) {
-        val player = mc.player
-        if (player == null) {
-            active = false
-            priority = 0
-            targetRotations = null
-            raytrace = null
-            smoothed = false
-            rotationHitResult = null
-            calculatingHitResult = false
-            useItemRotation = null
-            return
-        }
-
-        if (active) {
-            // Item use is sent before LocalPlayer ticks; keep both packets on the same server rotation.
-            val useItemRotation = useItemRotation
-            if (useItemRotation != null) {
-                rotations = useItemRotation
-                this.useItemRotation = null
-            }
-
-            val yaw = rotations.yaw
-            val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-
-            if (!yaw.isNaN() && !pitch.isNaN()) {
-                event.yaw = yaw
-                event.pitch = pitch
-            }
-
-            if (abs((rotations.yaw - player.yRot) % 360) < 1 &&
-                abs(rotations.pitch - player.xRot) < 1
-            ) {
-                active = false
-                priority = 0
-                this.correctDisabledRotations(player)
-            }
-
-            lastRotations = rotations
-        } else {
-            lastRotations = Rotation(player.yRot, player.xRot)
-        }
-
-        lastAnimationRotation = animationRotation
-        animationRotation = Rotation(event.yaw, event.pitch)
-        targetRotations = Rotation(player.yRot, player.xRot)
-        raytrace = null
-        smoothed = false
-    }
-
-    private fun onMoveInput(event: KeyboardInputEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
-            MovementFix.fixMovement(event, rotations.yaw)
-        }
-    }
-
-    private fun onItemRaytrace(event: UseItemRaytraceEvent) {
-        if (hasActiveRotation()) {
-            event.yaw = rotations.yaw
-            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-        }
-    }
-
-    private fun onStrafe(event: StrafeEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
-            event.yaw = rotations.yaw
-        }
-    }
-
-    private fun onJump(event: JumpEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
-            event.yaw = rotations.yaw
-        }
-    }
-
-    private fun onFallFlying(event: FallFlyingEvent) {
-        if (MovementFix.isEnabled && hasActiveRotation()) {
-            event.yaw = rotations.yaw
-            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-        }
-    }
-
-    private fun onUseItem(event: UseItemEvent) {
-        if (hasActiveRotation()) {
-            event.yaw = rotations.yaw
-            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-        }
-    }
-
-    private fun onFireworkUpdate(event: FireworkRotationEvent) {
-        if (hasActiveRotation()) {
-            event.yaw = rotations.yaw
-            event.pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-        }
-    }
-
-    private fun onAttack(event: AttackYawEvent) {
-        if (hasActiveRotation()) {
-            event.yaw = rotations.yaw
-        }
-    }
-
-    private fun onPacketSend(event: PacketEvent.Send) {
-        val packet = event.packet
-        if (packet is ServerboundClientTickEndPacket) {
-            useItemRotation = null
-        } else if (hasActiveRotation() && packet is ServerboundUseItemPacket) {
-            val yaw = rotations.yaw
-            val pitch = rotations.pitch.coerceIn(-90.0f, 90.0f)
-            if (!yaw.isNaN() && !pitch.isNaN()) {
-                useItemRotation = Rotation(yaw, pitch)
-                if (packet.yRot() != yaw || packet.xRot() != pitch) {
-                    event.packet = ServerboundUseItemPacket(
-                        packet.hand(),
-                        packet.sequence(),
-                        yaw,
-                        pitch
-                    )
-                }
-            }
-        }
     }
 
 }
