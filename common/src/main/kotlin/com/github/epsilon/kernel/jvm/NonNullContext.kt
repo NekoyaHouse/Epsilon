@@ -78,10 +78,6 @@ abstract class AbstractContext {
     abstract val cameraEntity: Entity?
 }
 
-/**
- * Minecraft 生命周期边界维护的非空快照；业务入口通过 runSafe 系列或 safeEventHandler 获取。
- * 辅助方法使用 context(nn: NonNullContext) 传递同一快照，延迟回调应在执行时重新获取。
- */
 open class NonNullContext internal constructor(
     override val level: ClientLevel,
     override val player: LocalPlayer,
@@ -94,8 +90,7 @@ open class NonNullContext internal constructor(
 
     companion object {
         @Volatile
-        var instance: NonNullContext? = null
-            private set
+        var instance: NonNullContext? = null; private set
 
         @JvmStatic
         fun update() {

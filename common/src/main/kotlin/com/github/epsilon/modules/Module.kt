@@ -64,23 +64,13 @@ open class Module(
         }
     }
 
-    /** 在 init 中注册启用回调；依赖世界的操作放入 runSafe，回调按注册顺序执行。 */
     protected fun onEnable(block: () -> Unit) {
         enableCallbacks.add(block)
     }
 
-    /** 在 init 中注册禁用回调；不依赖世界的清理不能放入 runSafe，以保证退服后仍能执行。 */
     protected fun onDisable(block: () -> Unit) {
         disableCallbacks.add(block)
     }
-
-    // ---- 事件注册 ----
-    // 模块在 object 的 init 块中注册监听器（import com.github.epsilon.events.api.safeEventHandler / handler）：
-    //   init { safeEventHandler<ClientTickEvent.Pre> { ... } }
-    // 注册的隐式 owner 是模块；safeEventHandler 的 lambda receiver 是 NonNullContext。
-    // 监听器是否派发由 isEnabled 的
-    // subscribe() / unsubscribe() 决定，因此禁用状态下不会再收到事件；
-    // 依赖玩家/世界的监听器会在上下文缺失时自动跳过。
 
     fun toggle() {
         isEnabled = !isEnabled
@@ -132,7 +122,9 @@ open class Module(
 
     private companion object {
 
-        /** 递归初始化分组翻译组件；子分组 key 逐级拼接在父分组 key 之下。 */
+        /**
+         * 递归初始化分组翻译组件；子分组 key 逐级拼接在父分组 key 之下。
+         */
         fun initGroupI18n(parentComponent: TranslateComponent, group: SettingGroup) {
             val component = parentComponent.createChild(group.name.lowercase())
             group.initTranslateComponent(component)

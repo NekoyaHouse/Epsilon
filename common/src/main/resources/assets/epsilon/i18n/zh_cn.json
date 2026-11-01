@@ -1309,9 +1309,9 @@
         "swing mode": {
           "_value": "挥手模式",
           "both": "两者",
-          "none": "无",
+          "packet": "数据包",
           "client": "客户端",
-          "packet": "数据包"
+          "none": "无"
         },
         "swing hand": {
           "_value": "挥手手位",
@@ -1385,7 +1385,7 @@
         "switch back": "切换回来",
         "switch delay": "切换延迟"
       },
-      "auto kouzi": {
+      "auto kou zi": {
         "_value": "自动扣字",
         "mode": {
           "_value": "模式",
@@ -1788,20 +1788,20 @@
           "strafestrict": "严格侧移",
           "grim": "Grim"
         },
-        "collidespeed": "碰撞加速",
+        "collide speed": "碰撞加速",
         "strict": "严格",
-        "boatlongjump": "船只远跳",
-        "boatexpand": "船只碰撞扩展",
-        "boatspeed": "船只速度",
-        "boatjump": "船只跳跃",
-        "inwater": "水中启用",
-        "inblock": "方块内启用",
-        "airstop": "空中停止",
-        "lagtime": "回弹等待时间",
+        "boat longjump": "船只远跳",
+        "boat expand": "船只碰撞扩展",
+        "boat speed": "船只速度",
+        "boa tjump": "船只跳跃",
+        "in water": "水中启用",
+        "in block": "方块内启用",
+        "air stop": "空中停止",
+        "lag time": "回弹等待时间",
         "jump": "自动跳跃",
         "speed": "速度",
-        "explosionsboost": "爆炸加速",
-        "velocityboost": "击退加速",
+        "explosions boost": "爆炸加速",
+        "velocity boost": "击退加速",
         "h-factor": "水平系数",
         "v-factor": "垂直系数",
         "cooldown": "加速冷却时间",

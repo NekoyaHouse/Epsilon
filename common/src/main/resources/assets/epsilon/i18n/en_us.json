@@ -1309,9 +1309,9 @@
         "swing mode": {
           "_value": "Swing Mode",
           "both": "Both",
-          "none": "None",
+          "packet": "Packet",
           "client": "Client",
-          "packet": "Packet"
+          "none": "None"
         },
         "swing hand": {
           "_value": "Swing Hand",
@@ -1385,8 +1385,8 @@
         "switch back": "Switch Back",
         "switch delay": "Switch Delay"
       },
-      "auto kouzi": {
-        "_value": "Auto Kouzi",
+      "auto kou zi": {
+        "_value": "Auto Kou Zi",
         "mode": {
           "_value": "Mode",
           "txt": "Text",
@@ -1788,20 +1788,20 @@
           "strafestrict": "Strafe Strict",
           "grim": "Grim"
         },
-        "collidespeed": "Collide Speed",
+        "collide speed": "Collide Speed",
         "strict": "Strict",
-        "boatlongjump": "Boat Long Jump",
-        "boatexpand": "Boat Expand",
-        "boatspeed": "Boat Speed",
-        "boatjump": "Boat Jump",
-        "inwater": "In Water",
-        "inblock": "In Block",
-        "airstop": "Air Stop",
-        "lagtime": "Lag Time",
+        "boat longjump": "Boat Long Jump",
+        "boat expand": "Boat Expand",
+        "boat speed": "Boat Speed",
+        "boa tjump": "Boat Jump",
+        "in water": "In Water",
+        "in block": "In Block",
+        "air stop": "Air Stop",
+        "lag time": "Lag Time",
         "jump": "Jump",
         "speed": "Speed",
-        "explosionsboost": "Explosion Boost",
-        "velocityboost": "Velocity Boost",
+        "explosions boost": "Explosion Boost",
+        "velocity boost": "Velocity Boost",
         "h-factor": "Horizontal Factor",
         "v-factor": "Vertical Factor",
         "cooldown": "Cooldown",

@@ -79,7 +79,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## 事件与 Mixin 约束
 
-- 事件总线位于 `events.api`：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型，不得恢复旧的全局 `EventBus.post(event)`。
+- 事件总线位于 `events.api`：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型。
 - 每个具体事件独立派发，不向父类型冒泡；监听 `ClientTickEvent.Pre` / `.Post` 等实际发布的类型，不得监听仅用于分组的基类。
 - EventBus 只接受显式 `Handler`；不得新增注解扫描、反射方法绑定或隐式全局监听。查找事件 Companion / object 总线的反射不用于发现监听方法。
 - Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `IListening.safeEventHandler` / `IListening.handler` 扩展，在 owner 的 `init` 中直接注册，不得添加模块级转发包装。`safeEventHandler` 的 lambda receiver 是 `NonNullContext`，访问 owner 的显式 `this` 时须写 `this@模块名`，避免接收者变化引起状态或通知 hash 错误。
@@ -88,7 +88,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。
 - `NonNullContext` 由共享 Mixin 在 Minecraft 生命周期边界直接维护，不订阅业务事件，也不需要 `hashCode()` 预热：发布 `ClientTickEvent.Pre` 前刷新；断开连接、清理世界和更新渲染引擎世界前清空；登录与重生在线程校验通过后先清空，处理完毕且发布对应事件前刷新。不得只靠下一次 tick 修复旧快照，同维度重生也会更换玩家，过渡界面可能立即渲染。缺失必需字段时必须清空，不能复用旧世界对象。`hitResult` / `cameraEntity` 可空，不作为上下文可用的前置条件。世界更新的清理监听器使用普通 `handler`，不能因上下文已清空而跳过。
 - 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.kernel.jvm.NonNullContext`；统一用通配导入 `import com.github.epsilon.kernel.jvm.*` 一次性引入上下文类型与工具（`NonNullContext`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
-- 在 `context(nn: NonNullContext)` 或 `context(nn) { }` 作用域内，通过 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 显式访问上下文；不得恢复同名顶层属性扩展来省略 `nn.`：
+- 在 `context(nn: NonNullContext)` 或 `context(nn) { }` 作用域内，通过 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 显式访问上下文；
 
   ```kotlin
   context(nn: NonNullContext)
@@ -150,7 +150,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Kotlin 上下文参数使用 2.4 已稳定的 `context(...)` 语法；不得使用已废弃的 context receivers，也不需要为此添加 `-Xcontext-parameters` 等实验性编译参数。
 - 新增 Javadoc 与解释性注释使用中文；只对不明显的约束、线程或算法原因编写注释。
 - Logger 使用 `Constants.LOGGER`。
-- Minecraft 实例统一来自 `MinecraftWrapper.mc`，该单例声明为 `@JvmField`；Java 使用 `import static com.github.epsilon.kernel.MinecraftWrapper.mc;` 后直接访问 `mc`；仅 wrapper 内允许调用 `Minecraft.getInstance()`，不得恢复 `Constants.mc`。Module/HudModule 内优先使用继承的 `mc`，它同样委托给 wrapper。
+- Minecraft 实例统一来自 `MinecraftWrapper.mc`，该单例声明为 `@JvmField`；Java 使用 `import static com.github.epsilon.kernel.MinecraftWrapper.mc;` 后直接访问 `mc`；仅 wrapper 内允许调用 `Minecraft.getInstance()`。Module/HudModule 内优先使用继承的 `mc`，它同样委托给 wrapper。
 - 不得吞异常。边界层隔离单个资源或子系统失败时，记录包含上下文的日志。
 - 不做与任务无关的重构、批量格式化或生成文件改写。
 - 修改 `native/smtc` 时必须同步重建 `common/src/main/resources/natives/windows-x86_64/epsilon_smtc.dll`，并保持 Java 侧 JNI 签名一致。
