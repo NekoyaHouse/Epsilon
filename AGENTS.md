@@ -78,13 +78,13 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## 事件与 Mixin 约束
 
-- 事件总线位于 `events.api`，遵循 CLion 的独立总线模型：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型，不得恢复旧的全局 `EventBus.post(event)`。
+- 事件总线位于 `events.api`：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型，不得恢复旧的全局 `EventBus.post(event)`。
 - 每个具体事件独立派发，不向父类型冒泡；监听 `ClientTickEvent.Pre` / `.Post` 等实际发布的类型，不得监听仅用于分组的基类。
 - EventBus 只接受显式 `Handler`；不得新增注解扫描、反射方法绑定或隐式全局监听。查找事件 Companion / object 总线的反射不用于发现监听方法。
 - Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `IListening.safeEventHandler` / `IListening.handler` 扩展，在 owner 的 `init` 中直接注册，不得添加模块级转发包装。`safeEventHandler` 的 lambda receiver 是 `NonNullContext`，访问 owner 的显式 `this` 时须写 `this@模块名`，避免接收者变化引起状态或通知 hash 错误。
 - Module 继承 `ListenerOwner`；默认监听器绑定到 owner，生效与否由 owner 的 `subscribe()` / `unsubscribe()` 决定（Module 即 `isEnabled` 切换），不得在处理器内重复过滤 `isEnabled`。
 - 确需在模块禁用期间继续监听时显式传 `alwaysListening = true`。Manager 等常驻监听器实现 `AlwaysListening`，不能使用未订阅的普通 `ListenerOwner`。
-- 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。旋转在 `PlayerTickEvent.Pre` 的 `-1000` 结算，3D scheduler 在 `Render3DEvent` 的 `-999` flush，不得反转顺序。
+- 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。
 - `NonNullContext` 由共享 Mixin 在 Minecraft 生命周期边界直接维护，不订阅业务事件，也不需要 `hashCode()` 预热：发布 `ClientTickEvent.Pre` 前刷新；断开连接、清理世界和更新渲染引擎世界前清空；登录与重生在线程校验通过后先清空，处理完毕且发布对应事件前刷新。不得只靠下一次 tick 修复旧快照，同维度重生也会更换玩家，过渡界面可能立即渲染。缺失必需字段时必须清空，不能复用旧世界对象。`hitResult` / `cameraEntity` 可空，不作为上下文可用的前置条件。世界更新的清理监听器使用普通 `handler`，不能因上下文已清空而跳过。
 - 需要非空世界、玩家、交互管理器或连接时使用 `com.github.epsilon.kernel.jvm.NonNullContext`；统一用通配导入 `import com.github.epsilon.kernel.jvm.*` 一次性引入上下文类型与工具（`NonNullContext`、`runSafe` 等），不得逐项 import，也不得重复写 `mc.player!!` 或手写判空。
 - 在 `context(nn: NonNullContext)` 或 `context(nn) { }` 作用域内，通过 `nn.player` / `nn.level` / `nn.gameMode` / `nn.connection` / `nn.mc` 显式访问上下文；不得恢复同名顶层属性扩展来省略 `nn.`：
@@ -156,7 +156,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## 提交前检查
 
-- EventBus 或 NonNullContext 改动运行 `:common:eventBusRegression`（已接入 `check`），检查优先级、订阅、具体事件总线与自身泛型、链式发布返回原实例、取消/修改传播及上下文失效。
 - 运行与改动范围匹配的任务。共享行为至少检查 Fabric 和 NeoForge 编译；Mixin、资源、启动或 Gradle 变更运行完整 `buildRelease`。
 - 最终执行 `git diff --check`、`git diff -- AGENTS.md` 和 `git status --short`。
 - 文档入口为 [`README.md`](README.md) 与 [`README_zh.md`](README_zh.md)；移动或重命名文档时必须修复仓库内链接。
