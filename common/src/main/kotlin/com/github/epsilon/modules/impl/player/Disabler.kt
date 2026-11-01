@@ -58,7 +58,6 @@ object Disabler : Module("Disabler", Category.PLAYER) {
             if (grimTrident && !player.isUsingItem) useTrident()
         }
 
-        // 先处理疾跑状态，避免 InputDisabler 的无事件重发绕过本模块。
         safeEventHandler<PacketEvent.Send>(EventPriority.HIGH) { event ->
             if (event.isCancelled) return@safeEventHandler
             val packet = event.packet
