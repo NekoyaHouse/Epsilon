@@ -89,8 +89,10 @@ object SettingLayoutPlanner {
         signature = signature * 31L + (if (section.isCollapsed()) 1 else 0)
         for (element in section.elements()) {
             when (element) {
-                is Section.SettingElement ->
+                is Section.SettingElement -> {
                     signature = signature * 31L + element.setting().name.hashCode()
+                    signature = signature * 31L + if (element.setting().isSupported()) 1L else 0L
+                }
 
                 is Section.GroupElement -> signature = mixSignature(signature, element.section())
             }

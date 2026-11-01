@@ -151,6 +151,11 @@ object EpsilonTranslations {
         Resources.CLEAR_SUCCESS_TITLE,
         Resources.CLEAR_SUCCESS_MESSAGE,
         Resources.OPEN_FOLDER_FAILED,
+        ViaOnly.TITLE,
+        ViaOnly.REQUIREMENT,
+        ViaOnly.CURRENT,
+        ViaOnly.HINT,
+        ViaOnly.UNAVAILABLE,
         PlatformOnly.BADGE,
         PlatformOnly.TITLE,
         PlatformOnly.FEATURE,
@@ -361,6 +366,14 @@ object EpsilonTranslations {
         val CLEAR_SUCCESS_TITLE: TranslateComponent = create("gui", "resource.cleared.title")
         val CLEAR_SUCCESS_MESSAGE: TranslateComponent = create("gui", "resource.cleared.message")
         val OPEN_FOLDER_FAILED: TranslateComponent = create("gui", "resource.open_folder_failed")
+    }
+
+    object ViaOnly {
+        val TITLE: TranslateComponent = create("gui", "via_only.title")
+        val REQUIREMENT: TranslateComponent = create("gui", "via_only.requirement")
+        val CURRENT: TranslateComponent = create("gui", "via_only.current")
+        val HINT: TranslateComponent = create("gui", "via_only.hint")
+        val UNAVAILABLE: TranslateComponent = create("gui", "via_only.unavailable")
     }
 
     object PlatformOnly {

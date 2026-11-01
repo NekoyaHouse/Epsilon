@@ -6,11 +6,13 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.gui.panel.popup.*
+import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
+import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
@@ -131,7 +133,14 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 val row = rowFor(setting) ?: continue
                 val rowBounds = UiRect(viewport.x, rowY, rowWidth, row.getHeight())
                 settingEntries.add(SettingEntry(row, rowBounds))
-                callback.render(setting, row, rowBounds)
+                if (setting !is BoolSetting && !setting.isViaSupported()) {
+                    scope.pushAbsolute(rowBounds) { disabled ->
+                        disabled.text(
+                            setting.displayName + " · " + setting.viaRequirement!!.displayName(),
+                            MD3Theme.ROW_CONTENT_INSET, 5.0f, 0.68f, MD3Theme.TEXT_MUTED
+                        )
+                    }
+                } else callback.render(setting, row, rowBounds)
                 rowY += row.getHeight() + MD3Theme.ROW_GAP
             }
         }
@@ -169,7 +178,14 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                     val row = rowFor(setting) ?: continue
                     val rowBounds = UiRect(innerX, cursor, innerWidth, row.getHeight())
                     settingEntries.add(SettingEntry(row, rowBounds))
-                    callback.render(setting, row, rowBounds)
+                    if (setting !is BoolSetting && !setting.isViaSupported()) {
+                        scope.pushAbsolute(rowBounds) { disabled ->
+                            disabled.text(
+                                setting.displayName + " · " + setting.viaRequirement!!.displayName(),
+                                MD3Theme.ROW_CONTENT_INSET, 5.0f, 0.68f, MD3Theme.TEXT_MUTED
+                            )
+                        }
+                    } else callback.render(setting, row, rowBounds)
                     cursor += row.getHeight() + MD3Theme.ROW_GAP
                 }
 
@@ -208,6 +224,10 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         }
 
         for (entry in settingEntries) {
+            if (!entry.row.getSetting().isViaSupported() && entry.bounds.contains(event.x(), event.y())) {
+                PlatformNoticeScreen.show(entry.row.getSetting())
+                return true
+            }
             if (interceptor != null && interceptor.handle(entry.row, entry.bounds, event, isDoubleClick)) {
                 draggingSliderEntry = null
                 return true
@@ -276,6 +296,10 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         if (dragging == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
         }
+        if (!dragging.row.getSetting().isViaSupported()) {
+            draggingSliderEntry = null
+            return false
+        }
         val intRow = dragging.row as? IntSettingRow
         if (intRow != null) {
             intRow.updateFromMouse(dragging.bounds, event.x())
@@ -291,7 +315,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     fun keyPressed(event: KeyEvent): Boolean {
         for (entry in settingEntries) {
-            if (entry.row.keyPressed(event)) {
+            if (entry.row.getSetting().isViaSupported() && entry.row.keyPressed(event)) {
                 return true
             }
         }
@@ -300,7 +324,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     fun charTyped(event: CharacterEvent): Boolean {
         for (entry in settingEntries) {
-            if (entry.row.charTyped(event)) {
+            if (entry.row.getSetting().isViaSupported() && entry.row.charTyped(event)) {
                 return true
             }
         }
@@ -309,7 +333,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     fun preeditUpdated(event: PreeditEvent): Boolean {
         for (entry in settingEntries) {
-            if (entry.row.preeditUpdated(event)) {
+            if (entry.row.getSetting().isViaSupported() && entry.row.preeditUpdated(event)) {
                 return true
             }
         }

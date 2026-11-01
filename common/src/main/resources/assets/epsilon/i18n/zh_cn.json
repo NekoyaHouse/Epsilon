@@ -232,6 +232,13 @@
         "current": "当前平台：%s",
         "hint": "该功能在当前平台上不可用。",
         "confirm": "知道了"
+      },
+      "via_only": {
+        "title": "Via 版本要求",
+        "requirement": "要求：%s",
+        "current": "当前 Via 目标版本：%s",
+        "hint": "请加载 Via 并选择符合要求的目标版本。",
+        "unavailable": "不可用"
       }
     },
     "modules": {
@@ -1310,9 +1317,26 @@
         "disable in hypixel lobby": "在 Hypixel 大厅中禁用"
       },
       "disabler": {
-        "_value": "禁用器",
-        "aca duplicate slot": "ACA Duplicate Slot",
-        "aca fast switch": "ACA Fast Switch"
+        "_value": "反作弊干扰",
+        "aca duplicateslot": "ACA 重复槽位",
+        "aca fastswitch": "ACA 快速切换",
+        "grim multiactionsc": "Grim 疾跑容器操作",
+        "position": {
+          "_value": "位置包模式",
+          "disabled": "关闭",
+          "grim": "Grim",
+          "grimv3": "Grim V3"
+        },
+        "only phased": "仅卡墙时",
+        "limited": "限制补发",
+        "yaw overflow": "偏航角溢出",
+        "grim trident": "Grim 三叉戟",
+        "ping": {
+          "_value": "延迟包模式",
+          "none": "关闭",
+          "drop": "丢弃奇数响应",
+          "spam": "重复响应"
+        }
       },
       "elytra swap": {
         "_value": "鞘翅切换",
@@ -2499,6 +2523,45 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
+      },
+      "self trap": {
+        "_value": "自我包围",
+        "no_block_found": "未找到可用方块",
+        "toggle on move": "移动时关闭",
+        "toggle on jump": "跳跃时关闭",
+        "in air": "空中放置",
+        "pause on eat": "进食时暂停",
+        "switch mode": {
+          "_value": "切换模式",
+          "silent": "静默切换",
+          "invswitch": "背包切换"
+        },
+        "use ender chest": "使用末影箱",
+        "place delay": "放置延迟",
+        "support": "辅助方块上限",
+        "blocks per tick": "每刻放置数",
+        "rotate": "转头",
+        "rotation mode": {
+          "_value": "转头模式",
+          "silent": "静默",
+          "packet": "发包"
+        },
+        "rotation speed": "转头速度",
+        "swing hand": "挥手",
+        "break crystal": "破坏水晶",
+        "break delay": "破坏间隔",
+        "render": "渲染",
+        "fade": "淡出",
+        "fade time": "淡出时间",
+        "shrink": "缩小",
+        "side color": "填充颜色",
+        "line color": "边框颜色",
+        "surround": "脚边包围",
+        "trap": "头部侧墙",
+        "stand head": "站立封顶",
+        "crawl head": "爬行封顶",
+        "floor": "填补脚下",
+        "toggle on death": "死亡时关闭"
       }
     },
     "elements": {

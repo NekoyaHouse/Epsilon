@@ -232,6 +232,13 @@
         "current": "Current platform: %s",
         "hint": "This feature is unavailable on the current platform.",
         "confirm": "Got it"
+      },
+      "via_only": {
+        "title": "Via Version Required",
+        "requirement": "Required: %s",
+        "current": "Current Via target: %s",
+        "hint": "Load Via and select a matching target version.",
+        "unavailable": "Unavailable"
       }
     },
     "modules": {
@@ -1311,8 +1318,25 @@
       },
       "disabler": {
         "_value": "Disabler",
-        "aca duplicate slot": "ACA Duplicate Slot",
-        "aca fast switch": "ACA Fast Switch"
+        "aca duplicateslot": "ACA DuplicateSlot",
+        "aca fastswitch": "ACA FastSwitch",
+        "grim multiactionsc": "Grim MultiActionsC",
+        "position": {
+          "_value": "Position",
+          "disabled": "Disabled",
+          "grim": "Grim",
+          "grimv3": "Grim V3"
+        },
+        "only phased": "Only Phased",
+        "limited": "Limited",
+        "yaw overflow": "Yaw Overflow",
+        "grim trident": "Grim Trident",
+        "ping": {
+          "_value": "Ping",
+          "none": "None",
+          "drop": "Drop",
+          "spam": "Spam"
+        }
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -2499,6 +2523,45 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
+      },
+      "self trap": {
+        "_value": "Self Trap",
+        "no_block_found": "No block found",
+        "toggle on move": "Toggle On Move",
+        "toggle on jump": "Toggle On Jump",
+        "in air": "In Air",
+        "pause on eat": "Pause On Eat",
+        "switch mode": {
+          "_value": "Switch Mode",
+          "silent": "Silent",
+          "invswitch": "Inventory Switch"
+        },
+        "use ender chest": "Use Ender Chest",
+        "place delay": "Place Delay",
+        "support": "Support Blocks",
+        "blocks per tick": "Blocks Per Tick",
+        "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "silent": "Silent",
+          "packet": "Packet"
+        },
+        "rotation speed": "Rotation Speed",
+        "swing hand": "Swing Hand",
+        "break crystal": "Break Crystal",
+        "break delay": "Break Delay",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color",
+        "surround": "Surround",
+        "trap": "Trap",
+        "stand head": "Stand Head",
+        "crawl head": "Crawl Head",
+        "floor": "Floor",
+        "toggle on death": "Toggle On Death"
       }
     },
     "elements": {

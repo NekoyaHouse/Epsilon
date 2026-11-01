@@ -483,7 +483,7 @@ object ConfigManager {
 
     private fun serializeSetting(setting: Setting<*>): JsonElement? {
         if (setting is KeybindSetting) return JsonPrimitive(setting.value)
-        if (setting is BoolSetting) return JsonPrimitive(setting.value)
+        if (setting is BoolSetting) return JsonPrimitive(setting.configuredValue)
         if (setting is IntSetting) return JsonPrimitive(setting.value)
         if (setting is DoubleSetting) return JsonPrimitive(setting.value)
         if (setting is StringSetting) return JsonPrimitive(setting.value)

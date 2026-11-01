@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -26,6 +27,24 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Shadow
     protected int sprintTriggerTime;
+
+    @Shadow
+    private double xLast;
+
+    @Shadow
+    private double yLast;
+
+    @Shadow
+    private double zLast;
+
+    @Shadow
+    private float yRotLast;
+
+    @Shadow
+    private float xRotLast;
+
+    @Shadow
+    private int positionReminder;
 
     @Unique
     private SendPositionEvent epsilon$sendPositionEvent;
@@ -59,11 +78,21 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()).post();
+        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround(), new Vec3(xLast, yLast, zLast), yRotLast, xRotLast, positionReminder).post();
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
             new AfterSendPositionEvent().post();
         }
+    }
+
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "move")
+    private boolean forcePositionPacket(boolean move) {
+        return move || epsilon$sendPositionEvent.getForcePosition();
+    }
+
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "rot")
+    private boolean forceRotationPacket(boolean rot) {
+        return rot || epsilon$sendPositionEvent.getForceRotation();
     }
 
     @Inject(method = "sendPosition", at = @At("TAIL"))

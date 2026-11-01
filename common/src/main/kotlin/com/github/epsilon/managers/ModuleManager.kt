@@ -96,7 +96,6 @@ object ModuleManager : AlwaysListening {
         addModule(ElytraSwap)
         addModule(FakePlayer)
         addModule(GhostHand)
-        addModule(InputDisabler)
         addModule(InvManager)
         addModule(JumpCooldown)
         addModule(KeyFriend)
