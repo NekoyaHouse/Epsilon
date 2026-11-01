@@ -25,6 +25,8 @@ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.tags.BlockTags
 import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.EntityBlock
 import net.minecraft.world.level.block.LeverBlock
@@ -32,6 +34,7 @@ import net.minecraft.world.level.block.NoteBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -39,7 +42,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     private enum class RotationMode {
         Silent,
-        Snap
+        Packet
     }
 
     private val toggleOnMove by boolSetting("Toggle On Move", true)
@@ -52,14 +55,24 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val support by intSetting("Support", 2, 0..8, 1)
     private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
     private val rotate by boolSetting("Rotate", true)
-    private val rotationMode by enumSetting("Rotation Mode", RotationMode.Snap, { rotate })
-    private val rotationSpeed by intSetting("Rotation Speed", 180, 18..180, 18, { rotate && rotationMode == RotationMode.Silent })
+    private val rotationMode by enumSetting("Rotation Mode", RotationMode.Packet, { rotate })
+    private val rotationSpeed by intSetting(
+        "Rotation Speed",
+        180,
+        18..180,
+        18,
+        { breakCrystal || rotate && rotationMode == RotationMode.Silent }
+    )
     private val inventorySwap by boolSetting("Inventory Swap", true)
     private val swingHand by boolSetting("Swing Hand", true)
+    private val breakCrystal by boolSetting("Break Crystal", false)
+    private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
 
     private val placeTimer = TimerUtils()
+    private val breakTimer = TimerUtils()
     private var startPos: Vec3? = null
     private var placing: PlaceInfo? = null
+    private var breakingCrystal: EndCrystal? = null
 
     // null 表示只有本地预测，非 null 表示已收到服务端方块状态
     private val pendingBlocks = mutableMapOf<BlockPos, BlockState?>()
@@ -92,8 +105,20 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
-            if (rotate && rotationMode == RotationMode.Silent) {
+            val target = breakingCrystal
+            val pos = placing?.pos
+            if (breakCrystal && target != null && pos != null && canAttackCrystal(target) &&
+                target.boundingBox.intersects(AABB(pos))
+            ) {
+                RotationManager.setRotations(
+                    RotationUtils.calculate(target.boundingBox.center),
+                    rotationSpeed.toDouble()
+                )
+            } else if (rotate && rotationMode == RotationMode.Silent) {
+                breakingCrystal = null
                 placing?.let { RotationManager.setRotations(it.rotation, rotationSpeed.toDouble()) }
+            } else {
+                breakingCrystal = null
             }
         }
 
@@ -109,6 +134,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
             if ((pauseOnEat && PlayerUtils.isEating()) || (!inAir && !player.onGround())) {
                 placing = null
+                breakingCrystal = null
                 return@safeEventHandler
             }
             if (!placeTimer.passedMillise(placeDelay.toLong())) return@safeEventHandler
@@ -125,8 +151,10 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     }
 
     private fun clearState() {
+        breakTimer.reset()
         startPos = null
         placing = null
+        breakingCrystal = null
         pendingBlocks.clear()
         // 正在入队的回调仍持有旧队列，不会污染下一批放置。
         blockUpdates = null
@@ -259,7 +287,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     context(nn: NonNullContext)
     private fun canPlace(pos: BlockPos): Boolean = pos !in pendingBlocks &&
             nn.level.isInWorldBounds(pos) && nn.level.worldBorder.isWithinBounds(pos) &&
-            nn.player.isWithinBlockInteractionRange(pos, 0.0) && BlockUtils.canPlaceAt(pos)
+            nn.player.isWithinBlockInteractionRange(pos, 0.0) && BlockUtils.canPlaceAt(pos, breakCrystal)
 
     context(nn: NonNullContext)
     private fun findPlacement(pos: BlockPos, rotation: Rotation): PlaceInfo? {
@@ -303,8 +331,20 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         if (currentIndex > 0) placements.add(0, placements.removeAt(currentIndex))
         placing = placements.firstOrNull()
 
-        for (index in 0 until minOf(blocksPerTick, placements.size)) {
-            val info = placements[index]
+        var placed = 0
+        for ((index, info) in placements.withIndex()) {
+            placing = info
+            if (breakCrystal && clearBlockingCrystal(info.pos)) {
+                // 水晶旋转与方块旋转互斥，等待命中期间保持当前目标。
+                if (breakingCrystal != null) return
+                placing = placements.getOrNull(index + 1)
+                continue
+            }
+            breakingCrystal = null
+            if (!BlockUtils.canPlaceAt(info.pos)) {
+                placing = placements.getOrNull(index + 1)
+                continue
+            }
             if (rotate && rotationMode == RotationMode.Silent && !RaytraceUtils.overBlock(
                     RotationManager.getRotation(),
                     info.hit.blockPos,
@@ -314,8 +354,38 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
             if (!placeBlock(info, blocks)) break
             // 达到本 tick 放置上限后，也能在随后的 PlayerTick 中开始转向下一处。
             placing = placements.getOrNull(index + 1)
+            if (++placed >= blocksPerTick) break
         }
+        breakingCrystal = null
     }
+
+    context(nn: NonNullContext)
+    private fun clearBlockingCrystal(pos: BlockPos): Boolean {
+        val crystals = nn.level.getEntitiesOfClass(EndCrystal::class.java, AABB(pos)) { it.isAlive }
+        val previous = breakingCrystal
+        breakingCrystal = null
+        if (crystals.isEmpty()) return false
+
+        if (breakTimer.passedMillise(breakDelay.toLong())) {
+            val target = previous?.takeIf { it in crystals && canAttackCrystal(it) }
+                ?: crystals.filter { canAttackCrystal(it) }.minByOrNull { nn.player.distanceToSqr(it) }
+            if (target != null) {
+                breakingCrystal = target
+                val hit = RaytraceUtils.raytrace(RotationManager.getRotation(), nn.player.entityInteractionRange())
+                if (hit !is EntityHitResult || hit.entity !== target) return true
+                nn.gameMode.attack(nn.player, target)
+                SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
+                breakTimer.reset()
+            }
+        }
+        // 攻击不代表服务端已移除实体；本轮跳过该位置，避免重复放置预测。
+        return true
+    }
+
+    context(nn: NonNullContext)
+    private fun canAttackCrystal(target: EndCrystal): Boolean = target.isAlive &&
+            nn.level.getEntity(target.id) === target && nn.level.worldBorder.isWithinBounds(target.blockPosition()) &&
+            nn.player.isWithinAttackRange(nn.player.mainHandItem, target.boundingBox, 0.0)
 
     context(nn: NonNullContext)
     private fun placeBlock(info: PlaceInfo, blocks: FindItemResult): Boolean {
@@ -330,7 +400,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         if (blockUpdates == null) blockUpdates = ConcurrentLinkedQueue()
 
         val success = try {
-            val result = if (rotate && rotationMode == RotationMode.Snap) {
+            val result = if (rotate && rotationMode == RotationMode.Packet) {
                 LegacyPlacement.placeBlock(hand, info.hit)
             } else {
                 nn.gameMode.useItemOn(nn.player, hand, info.hit)

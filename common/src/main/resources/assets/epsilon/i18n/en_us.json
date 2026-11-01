@@ -757,7 +757,9 @@
           "snap": "Snap"
         },
         "swing hand": "Swing Hand",
-        "support": "Support Blocks"
+        "support": "Support Blocks",
+        "break crystal": "Break Crystal",
+        "break delay": "Break Delay"
       },
       "double anchor": {
         "_value": "Double Anchor",
