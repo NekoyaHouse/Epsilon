@@ -337,6 +337,40 @@
         "gamemode sound": "音效",
         "gamemode chat message": "警报"
       },
+      "feet trap": {
+        "_value": "围脚",
+        "no_block_found": "未找到可用方块",
+        "toggle on move": "移动时关闭",
+        "toggle on jump": "跳跃时关闭",
+        "in air": "空中放置",
+        "pause on eat": "进食时暂停",
+        "switch mode": {
+          "_value": "",
+          "silent": "",
+          "invswitch": ""
+        },
+        "use ender chest": "",
+        "place delay": "放置延迟",
+        "extend": "扩展放置",
+        "support": "辅助方块上限",
+        "blocks per tick": "每刻放置数",
+        "rotate": "转头",
+        "rotation mode": {
+          "_value": "转头模式",
+          "silent": "静默",
+          "packet": ""
+        },
+        "rotation speed": "转头速度",
+        "swing hand": "挥手",
+        "break crystal": "破坏水晶",
+        "break delay": "破坏间隔",
+        "render": "渲染",
+        "fade": "淡出",
+        "fade time": "淡出时间",
+        "shrink": "缩小",
+        "side color": "填充颜色",
+        "line color": "边框颜色"
+      },
       "auto mine": {
         "_value": "自动挖掘",
         "packet_mine_required": "需要先启用数据包挖掘",
@@ -736,36 +770,6 @@
         "delay": "延迟",
         "swap back delay": "切换回原槽位延迟",
         "rotation speed": "旋转速度"
-      },
-      "feet trap": {
-        "_value": "围脚",
-        "toggle on move": "移动时关闭",
-        "toggle on jump": "跳跃时关闭",
-        "in air": "空中放置",
-        "pause on eat": "进食时暂停",
-        "place delay": "放置延迟",
-        "extend": "扩展放置",
-        "blocks per tick": "每刻放置数",
-        "rotate": "转头",
-        "rotation speed": "转头速度",
-        "ender chest": "使用末影箱",
-        "inventory swap": "背包切换",
-        "no_block_found": "未找到可用方块",
-        "rotation mode": {
-          "_value": "转头模式",
-          "silent": "静默",
-          "snap": "瞬间转头"
-        },
-        "swing hand": "挥手",
-        "support": "辅助方块上限",
-        "break crystal": "破坏水晶",
-        "break delay": "破坏间隔",
-        "render": "渲染",
-        "fade": "淡出",
-        "fade time": "淡出时间",
-        "shrink": "缩小",
-        "side color": "填充颜色",
-        "line color": "边框颜色"
       },
       "double anchor": {
         "_value": "双重重生锚",
@@ -1201,162 +1205,6 @@
         "random delay max": "随机延迟最大值",
         "attack cooldown": "攻击冷却",
         "crit fall distance": "暴击掉落距离"
-      },
-      "zealot crystal+": {
-        "_value": "狂暴水晶+",
-        "general": "常规",
-        "force place": "强制放置",
-        "calculation": "计算",
-        "place": "放置",
-        "break": "敲击",
-        "render": "渲染",
-        "players": "玩家",
-        "mobs": "怪物",
-        "animals": "动物",
-        "max targets": "最大目标数",
-        "target range": "目标范围",
-        "yaw speed": "转头速度",
-        "pre rotation": "预转头",
-        "place rotation range": "放置转头范围",
-        "break rotation range": "破坏转头范围",
-        "eating pause": "进食暂停",
-        "update delay": "更新延迟",
-        "global delay": "全局延迟",
-        "force place health": "强制放置生命值",
-        "force place armor rate": "强制放置护甲耐久阈值",
-        "force place min damage": "强制放置最小伤害",
-        "force place motion": "强制放置速度阈值",
-        "force place balance": "强制放置伤害平衡",
-        "force place while swording": "持剑时强制放置",
-        "assume instant mine": "假设瞬挖",
-        "no suicide": "防自杀",
-        "wall range": "穿墙范围",
-        "motion predict": "运动预测",
-        "predict ticks": "预测刻数",
-        "damage priority": {
-          "_value": "伤害优先级",
-          "efficient": "高效",
-          "aggressive": "激进"
-        },
-        "armor mode": {
-          "_value": "护甲模式",
-          "none": "无",
-          "pppp": "4保护",
-          "ppbp": "3保护1爆炸"
-        },
-        "lethal override": "斩杀覆盖",
-        "lethal threshold addition": "斩杀阈值附加",
-        "lethal max self damage": "斩杀最大自伤",
-        "safe max target damage reduction": "安全目标伤害损失上限",
-        "safe min self damage reduction": "安全自伤减少下限",
-        "colliding crystal extra self damage threshold": "碰撞水晶额外自伤阈值",
-        "place mode": {
-          "_value": "放置模式",
-          "off": "关闭",
-          "single": "单次",
-          "multi": "多次"
-        },
-        "packet place": {
-          "_value": "数据包放置",
-          "off": "关闭",
-          "weak": "弱",
-          "strong": "强"
-        },
-        "spam place": "连点放置",
-        "place switch mode": {
-          "_value": "放置切换模式",
-          "off": "关闭",
-          "legit": "正常",
-          "ghost": "静默"
-        },
-        "place swing": "放置挥手",
-        "place side bypass": {
-          "_value": "放置面绕过",
-          "up": "上",
-          "down": "下",
-          "closest": "最近"
-        },
-        "place min damage": "放置最小伤害",
-        "place max self damage": "放置最大自伤",
-        "place balance": "放置伤害平衡",
-        "place delay": "放置延迟",
-        "place range": "放置范围",
-        "place range mode": {
-          "_value": "放置范围模式",
-          "feet": "脚部",
-          "eyes": "眼睛"
-        },
-        "break mode": {
-          "_value": "破坏模式",
-          "off": "关闭",
-          "target": "目标",
-          "own": "自身",
-          "smart": "智能",
-          "all": "全部"
-        },
-        "2b2t": "2B2T",
-        "2b2t factor": "2B2T 因子",
-        "packet break": {
-          "_value": "数据包破坏",
-          "off": "关闭",
-          "target": "目标",
-          "own": "自身",
-          "smart": "智能",
-          "all": "全部"
-        },
-        "own timeout": "自身超时",
-        "anti weakness": {
-          "_value": "抗虚弱",
-          "off": "关闭",
-          "legit": "正常",
-          "ghost": "静默"
-        },
-        "swap delay": "切换延迟",
-        "break min damage": "破坏最小伤害",
-        "break max self damage": "破坏最大自伤",
-        "break balance": "破坏伤害平衡",
-        "break delay": "破坏延迟",
-        "break range": "破坏范围",
-        "break range mode": {
-          "_value": "破坏范围模式",
-          "feet": "脚部",
-          "eyes": "眼睛"
-        },
-        "swing mode": {
-          "_value": "挥手模式",
-          "both": "两者",
-          "packet": "数据包",
-          "client": "客户端",
-          "none": "无"
-        },
-        "swing hand": {
-          "_value": "挥手手位",
-          "auto": "自动",
-          "offhand": "副手",
-          "mainhand": "主手"
-        },
-        "render predict": {
-          "_value": "预测渲染",
-          "off": "关闭",
-          "single": "单目标",
-          "multi": "多目标"
-        },
-        "hud info": {
-          "_value": "HUD 信息",
-          "off": "关闭",
-          "speed": "速度",
-          "target": "目标",
-          "damage": "伤害",
-          "calculationtime": "计算耗时"
-        },
-        "filled alpha": "填充透明度",
-        "outline alpha": "边框透明度",
-        "target damage": "目标伤害",
-        "self damage": "自身伤害",
-        "render color": "渲染颜色",
-        "outline width": "边框宽度",
-        "moving length": "移动时长",
-        "fade length": "淡出时长"
       },
       "auto armor": {
         "_value": "自动穿甲",
@@ -2285,11 +2133,6 @@
         "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色"
-      },
-      "no ghost blocks": {
-        "_value": "无幽灵方块",
-        "breaking": "挖掘",
-        "placing": "放置"
       },
       "no render": {
         "_value": "移除渲染",
