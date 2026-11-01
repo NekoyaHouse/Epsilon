@@ -756,7 +756,8 @@
           "silent": "静默",
           "snap": "瞬间转头"
         },
-        "swing hand": "挥手"
+        "swing hand": "挥手",
+        "support": "辅助方块上限"
       },
       "double anchor": {
         "_value": "双重重生锚",

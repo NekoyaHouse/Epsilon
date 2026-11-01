@@ -756,7 +756,8 @@
           "silent": "Silent",
           "snap": "Snap"
         },
-        "swing hand": "Swing Hand"
+        "swing hand": "Swing Hand",
+        "support": "Support Blocks"
       },
       "double anchor": {
         "_value": "Double Anchor",

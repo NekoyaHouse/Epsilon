@@ -1,7 +1,6 @@
 package com.github.epsilon.utils.world
 
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.utils.player.SwingMode
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
@@ -10,7 +9,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.sqrt
