@@ -7,10 +7,13 @@ import com.github.epsilon.gui.dropdown.widget.*
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.screen.PlatformNoticeScreen
+import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
+import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 
@@ -251,7 +254,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     // 控件位置必须使用绝对坐标：UiTree.pushAbsolute 不会叠加当前 bound。
                     val bounds = UiRect(x + hitOffsetX, cursor + hitOffsetY, width, widget.getHeight())
                     scope.pushAbsolute(bounds) { itemScope ->
-                        widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds)
+                        if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
+                            itemScope.text(
+                                widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
+                                DropdownTheme.SETTING_PADDING_X,
+                                3.0f,
+                                DropdownTheme.SETTING_TEXT_SCALE,
+                                MD3Theme.TEXT_MUTED
+                            )
+                        } else widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds)
                     }
                     cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
                 }
@@ -311,6 +322,14 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     if (!widget.isVisible()) {
                         continue
                     }
+                    if (!widget.setting.isViaSupported()) {
+                        if (isHovered(mouseX, mouseY, x, cursor, width, widget.getHeight())) {
+                            PlatformNoticeScreen.show(widget.setting)
+                            return true
+                        }
+                        cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
+                        continue
+                    }
                     if (widget.mouseClicked(mouseX, mouseY, button)) {
                         return true
                     }
@@ -366,7 +385,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             when (element) {
                 is WidgetElement -> {
                     val widget = element.widget
-                    if (widget.isVisible() && action(widget)) {
+                    if (widget.isVisible() && widget.setting.isViaSupported() && action(widget)) {
                         return true
                     }
                 }

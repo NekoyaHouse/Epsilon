@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
@@ -34,7 +33,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
     }
 
     override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
-        val supported = setting.isPlatformSupported()
+        val supported = setting.isSupported()
         val target = if (setting.value) 1.0f else 0.0f
         toggleAnim.run(target)
         knobBounceAnim.run(target)
@@ -109,7 +108,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
             val sx = absoluteX(width - DropdownTheme.SETTING_PADDING_X - sw)
             val sy = absoluteY((getHeight() - sh) * 0.5f)
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
-                if (!setting.isPlatformSupported()) {
+                if (!setting.isSupported()) {
                     PlatformNoticeScreen.show(setting)
                     return true
                 }
@@ -126,7 +125,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
     }
 
     private fun drawPlatformBadge(scope: UiTree.Scope, textMetrics: UiTextMetrics, trailingX: Float) {
-        val label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
+        val label = setting.unsupportedLabel
         val scale = 0.5f
         // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
         val width = textMetrics.textWidth(label, scale) + 16.0f

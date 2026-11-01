@@ -30,7 +30,7 @@ class BoolSettingRow(private val boolSetting: BoolSetting) : SettingRow<BoolSett
         scope: UiTree.Scope, guiGraphics: GuiGraphicsExtractor, textRenderer: TextRenderer,
         bounds: UiRect, hoverProgress: Float, mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        val supported = boolSetting.isPlatformSupported()
+        val supported = boolSetting.isSupported()
         val labelScale = 0.68f
         val labelY = (bounds.height - textRenderer.getHeight(labelScale)) / 2.0f
         val animatedHover = scope.animate(hoverAnimation, if (supported) hoverProgress else 0.0f)
@@ -46,7 +46,7 @@ class BoolSettingRow(private val boolSetting: BoolSetting) : SettingRow<BoolSett
             if (supported) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_MUTED
         )
         if (!supported) {
-            LabelBadges.platformOnlyChip(scope, textRenderer, bounds, switchBounds)
+            LabelBadges.platformOnlyChip(scope, textRenderer, bounds, switchBounds, boolSetting.unsupportedLabel)
         }
         scope.toggle(switchBounds, if (supported) toggleProgress else 0.0f, animatedHover)
     }
@@ -57,7 +57,7 @@ class BoolSettingRow(private val boolSetting: BoolSetting) : SettingRow<BoolSett
         if (!bounds.contains(event.x, event.y) || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
         }
-        if (!boolSetting.isPlatformSupported()) {
+        if (!boolSetting.isSupported()) {
             PlatformNoticeScreen.show(boolSetting)
             return true
         }

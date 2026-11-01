@@ -2,6 +2,8 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.player.BreakCooldown;
+import com.github.epsilon.modules.impl.player.Disabler;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -11,6 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerInput;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,6 +33,11 @@ public class MixinMultiPlayerGameMode {
 
     @Unique
     private boolean epsilon$rotationModified;
+
+    @WrapMethod(method = "handleContainerInput")
+    private void wrapInventoryClick(int containerId, int slotNum, int buttonNum, ContainerInput containerInput, Player player, Operation<Void> original) {
+        Disabler.INSTANCE.handleInventoryClick(player, () -> original.call(containerId, slotNum, buttonNum, containerInput, player));
+    }
 
     @Inject(method = "useItem", at = @At("HEAD"))
     private void preUseItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {

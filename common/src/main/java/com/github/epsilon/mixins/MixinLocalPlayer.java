@@ -3,7 +3,9 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.player.InvManager;
+import com.github.epsilon.modules.impl.player.Disabler;
 import com.github.epsilon.modules.impl.render.TotemAnimation;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
@@ -18,14 +20,32 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LocalPlayer.class)
 public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Shadow
     protected int sprintTriggerTime;
+
+    @Shadow
+    private double xLast;
+
+    @Shadow
+    private double yLast;
+
+    @Shadow
+    private double zLast;
+
+    @Shadow
+    private float yRotLast;
+
+    @Shadow
+    private float xRotLast;
+
+    @Shadow
+    private int positionReminder;
 
     @Unique
     private SendPositionEvent epsilon$sendPositionEvent;
@@ -34,13 +54,14 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         super(level, gameProfile);
     }
 
-    @Inject(method = "canStartSprinting", at = @At("HEAD"), cancellable = true)
-    private void preventSprintDuringInventorySorting(CallbackInfoReturnable<Boolean> cir) {
+    @WrapMethod(method = "canStartSprinting")
+    private boolean preventSprintDuringInventorySorting(Operation<Boolean> original) {
         InvManager invManager = InvManager.INSTANCE;
-        if (invManager.isEnabled() && invManager.isSprintTransitionPending()) {
+        if ((invManager.isEnabled() && invManager.isSprintTransitionPending()) || Disabler.INSTANCE.isInventorySprintPaused()) {
             this.sprintTriggerTime = 0;
-            cir.setReturnValue(false);
+            return false;
         }
+        return original.call();
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
@@ -59,11 +80,21 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()).post();
+        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround(), new Vec3(xLast, yLast, zLast), yRotLast, xRotLast, positionReminder).post();
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
             new AfterSendPositionEvent().post();
         }
+    }
+
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "move")
+    private boolean forcePositionPacket(boolean move) {
+        return move || epsilon$sendPositionEvent.getForcePosition();
+    }
+
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "rot")
+    private boolean forceRotationPacket(boolean rot) {
+        return rot || epsilon$sendPositionEvent.getForceRotation();
     }
 
     @Inject(method = "sendPosition", at = @At("TAIL"))

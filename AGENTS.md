@@ -101,7 +101,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - `kernel.jvm.NonNullContext.kt` 提供 `NonNullContext` 与 `runSafe` 系列工具，不再提供 `player` / `level` / `gameMode` / `connection` / `mc` 顶层属性扩展；不得再为各 utils 编写上下文转发入口（例如把 `InvHelper.getInventoryStack` 包成同名顶层函数）。调用方直接 `import` 对应 utils 对象并按 `InvHelper.getInventoryStack(...)` / `RotationUtils.calculate(...)` 形式调用。
 - 上下文字段命名与 Minecraft 一致：世界用 `level`、连接用 `connection`；不得再使用 `world` / `netHandler` 等别名。
 - `Cancellable` 是实现 `ICancellable` 的类。使用 `cancel()` 和 Kotlin 的 `isCancelled` 属性（Java 使用 `isCancelled()`）；取消状态不可逆，不得通过 setter 取消已有的取消状态。
-- 有明确监听顺序时必须设置 priority，不得依赖跨对象的隐式注册顺序。
 - 修改 Minecraft 事件字段、构造参数或触发点前必须核对 `common/src/main/kotlin/com/github/epsilon/events/impl/` 和当前版本参考源码。
 - 共享 Mixin 目标优先放 `common/src/main/java/com/github/epsilon/mixins`，并在 `common/src/main/resources/epsilon.mixins.json` 注册；仅在加载器字节码或调用链不同时拆到 `fabric/` 或 `neoforge/` 的 mixin 包。
 - 新 Mixin 必须加入对应 JSON；删除或重命名时同步移除旧条目。

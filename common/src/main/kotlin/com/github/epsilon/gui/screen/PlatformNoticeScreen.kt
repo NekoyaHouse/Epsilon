@@ -3,8 +3,10 @@ package com.github.epsilon.gui.screen
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.hooks.ViaFabricPlusHooks
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.settings.Setting
+import com.github.epsilon.settings.ViaVersionRequirement
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
@@ -23,7 +25,11 @@ class PlatformNoticeScreen private constructor(
     private val noticeKey: String,
     private val featureName: String,
     private val requirement: PlatformRequirement,
-) : EpsilonDialogScreen(parent, Component.literal(EpsilonTranslations.PlatformOnly.TITLE.getTranslatedName())) {
+    private val viaRequirement: ViaVersionRequirement? = null,
+) : EpsilonDialogScreen(
+    parent,
+    Component.literal((if (viaRequirement == null) EpsilonTranslations.PlatformOnly.TITLE else EpsilonTranslations.ViaOnly.TITLE).getTranslatedName())
+) {
 
     override fun removed() {
         super.removed()
@@ -31,7 +37,7 @@ class PlatformNoticeScreen private constructor(
     }
 
     override fun titleText(): String {
-        return EpsilonTranslations.PlatformOnly.TITLE.getTranslatedName()
+        return (if (viaRequirement == null) EpsilonTranslations.PlatformOnly.TITLE else EpsilonTranslations.ViaOnly.TITLE).getTranslatedName()
     }
 
     override fun cardWidth(): Float {
@@ -52,17 +58,25 @@ class PlatformNoticeScreen private constructor(
         )
         y += ROW_HEIGHT
         scope.text(
-            String.format(EpsilonTranslations.PlatformOnly.REQUIREMENT.getTranslatedName(), requirement.displayName()),
+            String.format(
+                (if (viaRequirement == null) EpsilonTranslations.PlatformOnly.REQUIREMENT else EpsilonTranslations.ViaOnly.REQUIREMENT).getTranslatedName(),
+                viaRequirement?.displayName() ?: requirement.displayName()
+            ),
             CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
         )
         y += ROW_HEIGHT
         scope.text(
-            String.format(EpsilonTranslations.PlatformOnly.CURRENT.getTranslatedName(), ClientPlatform.displayName()),
+            String.format(
+                (if (viaRequirement == null) EpsilonTranslations.PlatformOnly.CURRENT else EpsilonTranslations.ViaOnly.CURRENT).getTranslatedName(),
+                if (viaRequirement == null) ClientPlatform.displayName() else
+                    ViaFabricPlusHooks.viaVersion?.toString()
+                        ?: EpsilonTranslations.ViaOnly.UNAVAILABLE.getTranslatedName()
+            ),
             CARD_PADDING, y, labelScale, MD3Theme.TEXT_SECONDARY
         )
         y += ROW_HEIGHT + 6.0f
         scope.text(
-            EpsilonTranslations.PlatformOnly.HINT.getTranslatedName(),
+            (if (viaRequirement == null) EpsilonTranslations.PlatformOnly.HINT else EpsilonTranslations.ViaOnly.HINT).getTranslatedName(),
             CARD_PADDING, y, labelScale, MD3Theme.TEXT_MUTED
         )
     }
@@ -108,7 +122,22 @@ class PlatformNoticeScreen private constructor(
             }
             val minecraft = mc
             val parent = if (minecraft != null) minecraft.gui.screen() else null
-            show(parent, setting.noticeKey, setting.displayName, setting.platformRequirement)
+            val via = setting.viaRequirement
+            if (setting.isPlatformSupported() && via != null && !via.isSatisfied()) {
+                if (OPEN_KEYS.add(setting.noticeKey)) {
+                    mc.gui.setScreen(
+                        PlatformNoticeScreen(
+                            parent,
+                            setting.noticeKey,
+                            setting.displayName,
+                            PlatformRequirement.ANY,
+                            via
+                        )
+                    )
+                }
+            } else {
+                show(parent, setting.noticeKey, setting.displayName, setting.platformRequirement)
+            }
         }
 
         /**

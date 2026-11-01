@@ -28,8 +28,10 @@ internal object LabelBadges {
      * @param bounds       行区域
      * @param trailing     行尾控件区域（同样为行内局部坐标）
      */
-    fun platformOnlyChip(scope: UiTree.Scope, textRenderer: TextRenderer, bounds: UiRect, trailing: UiRect) {
-        val label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
+    fun platformOnlyChip(
+        scope: UiTree.Scope, textRenderer: TextRenderer, bounds: UiRect, trailing: UiRect,
+        label: String = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName(),
+    ) {
         val width = textRenderer.getWidth(label, CHIP_TEXT_SCALE) + CHIP_PADDING * 2.0f
         val x = maxOf(MD3Theme.ROW_CONTENT_INSET, trailing.x - CHIP_GAP - width)
         val y = trailing.y + (trailing.height - CHIP_HEIGHT) * 0.5f

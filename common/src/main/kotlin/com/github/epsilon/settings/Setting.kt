@@ -1,5 +1,6 @@
 package com.github.epsilon.settings
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.utils.client.PlatformRequirement
 import kotlin.reflect.KProperty
@@ -42,6 +43,8 @@ abstract class Setting<V>(
 
     var platformRequirement: PlatformRequirement = PlatformRequirement.ANY
 
+    var viaRequirement: ViaVersionRequirement? = null
+
     var translateComponent: TranslateComponent? = null
 
     // 泛型值用 Any? 存储：Java 版本同样是未初始化的泛型字段，子类构造期写入。
@@ -69,6 +72,15 @@ abstract class Setting<V>(
      * 当前平台是否满足该设置的功能要求。
      */
     fun isPlatformSupported(): Boolean = platformRequirement.isSatisfied()
+
+    fun isViaSupported(): Boolean = viaRequirement?.isSatisfied() ?: true
+
+    fun isSupported(): Boolean = isPlatformSupported() && isViaSupported()
+
+    /** 设置行禁用时的简短提示；点击后查看完整要求。 */
+    val unsupportedLabel: String
+        get() = if (isPlatformSupported() && !isViaSupported()) viaRequirement!!.displayName()
+        else EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
 
     open fun setValueSilently(newValue: V) {
         valueStore = newValue
