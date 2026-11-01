@@ -240,10 +240,19 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
         val connection = mc.connection
         if (connection == null) {
             packets.clear()
-        } else {
-            while (true) {
-                val packet = packets.poll() ?: break
-                (packet as Packet<ClientPacketListener>).handle(connection)
+            return
+        }
+        // 收到位置包时 flush 会在 Netty 线程执行；此时直接 handle 会让 ClientPacketListener 判定跨线程并抛出
+        // RunningOnDifferentThreadException，该异常在事件监听器里会被当作监听失败并取消订阅。
+        // 因此离线线程上按原顺序把包交给 Minecraft 的包处理器，由主线程在下一个 tick 按序执行。
+        val onMainThread = mc.isSameThread
+        while (true) {
+            val queued = packets.poll() ?: break
+            val packet = queued as Packet<ClientPacketListener>
+            if (onMainThread) {
+                packet.handle(connection)
+            } else {
+                mc.packetProcessor().scheduleIfPossible(connection, packet)
             }
         }
     }

@@ -121,7 +121,9 @@ class UiScrollBar(theme: UiTheme) {
             if (trackHeight <= 0.5f) {
                 return null
             }
-            val thumbHeight = (viewport.height / contentHeight * trackHeight).coerceIn(MIN_THUMB_HEIGHT, trackHeight)
+            // 展开/收起动画会让视口高度小于最小滑块高度，此时下限必须收敛到轨道高度，否则 coerceIn 的区间为空会抛异常。
+            val minThumbHeight = minOf(MIN_THUMB_HEIGHT, trackHeight)
+            val thumbHeight = (viewport.height / contentHeight * trackHeight).coerceIn(minThumbHeight, trackHeight)
             val thumbTravel = trackHeight - thumbHeight
             val scrollRatio = if (maxScroll > 0.0f) scroll / maxScroll else 0.0f
             val thumbY = viewport.y + thumbTravel * (scrollRatio).coerceIn(0.0f, 1.0f)
