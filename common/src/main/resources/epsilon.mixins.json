@@ -65,7 +65,6 @@
     "MixinLivingEntity",
     "MixinLivingEntityRenderer",
     "MixinLocalPlayer",
-    "MixinTridentItem",
     "MixinMapRenderer",
     "MixinMinecraft",
     "MixinMouseHandler",

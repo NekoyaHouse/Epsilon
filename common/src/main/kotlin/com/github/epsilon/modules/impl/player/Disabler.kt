@@ -1,89 +1,75 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.EventPriority
+import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.events.impl.LevelUpdateEvent
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.SendPositionEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.ViaVersionComparison
 import com.github.epsilon.settings.viaOnly
 import com.github.epsilon.utils.network.NetworkUtils
-import com.github.epsilon.utils.player.EnchantmentUtils
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
-import net.minecraft.network.protocol.common.ServerboundPongPacket
-import net.minecraft.network.protocol.game.*
-import net.minecraft.world.InteractionHand
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.Items
-import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.phys.Vec3
 
 object Disabler : Module("Disabler", Category.PLAYER) {
 
-    private enum class PositionMode {
-        Disabled,
-        Grim,
-        GrimV3
-    }
+    private val multiActionsC by boolSetting("MultiActionsC", true).viaOnly(ViaVersionComparison.LESS_OR_EQUAL, "1.20.6")
 
-    private enum class PingMode {
-        None,
-        Drop,
-        Spam
-    }
+    private var sprintPause: SprintPause? = null
 
-    private val multiActionsC by boolSetting("MultiActionsC", true).viaOnly(
-        ViaVersionComparison.LESS_OR_EQUAL,
-        "1.20.6"
-    )
-    private val position by enumSetting("Position", PositionMode.Disabled)
-    private val onlyPhased by boolSetting("Only Phased", false, { position != PositionMode.Disabled })
-    private val limited by boolSetting("Limited", true, { position == PositionMode.GrimV3 })
-    private val yawOverflow by boolSetting("Yaw Overflow", false)
-    val grimTrident by boolSetting("Grim Trident", false)
-    private val ping by enumSetting("Ping", PingMode.None)
+    val isInventorySprintPaused: Boolean
+        get() = isEnabled && multiActionsC && sprintPause != null
 
     init {
-        safeEventHandler<SendPositionEvent>(-1000) { event ->
-            if (event.isCancelled) return@safeEventHandler
-            updatePosition(event)
-            if (yawOverflow && !player.isFallFlying) event.yaw += 36_000_000f
+        onEnable {
+            sprintPause = null
+        }
+
+        onDisable {
+            sprintPause = null
         }
 
         safeEventHandler<ClientTickEvent.Pre> {
-            if (grimTrident && !player.isUsingItem) useTrident()
+            val pause = sprintPause ?: return@safeEventHandler
+            if (!multiActionsC) {
+                sprintPause = null
+                return@safeEventHandler
+            }
+
+            player.isSprinting = false
+            if (++pause.ticksWithoutClick <= 1 || !pause.movementObserved) return@safeEventHandler
+
+            // 先结束暂停，原版 canStartSprinting 才不会被暂停守卫拦截。
+            sprintPause = null
+            if (pause.resumeSprinting && player.canStartSprinting()) player.isSprinting = true
         }
 
         safeEventHandler<PacketEvent.Send>(EventPriority.HIGH) { event ->
+            if (event.isCancelled || !multiActionsC) return@safeEventHandler
+            val packet = event.packet as? ServerboundContainerClickPacket ?: return@safeEventHandler
+            if (!player.wasSprinting && sprintPause == null) return@safeEventHandler
+
+            event.cancel()
+            withSprintStopped { NetworkUtils.sendPacketNoEvent(packet) }
+        }
+
+        // 最后观察移动包，跳过已被其他模块取消的包。
+        safeEventHandler<PacketEvent.Send>(-10000) { event ->
             if (event.isCancelled) return@safeEventHandler
-            val packet = event.packet
-
-            if (packet is ServerboundPongPacket) {
-                when (ping) {
-                    PingMode.None -> Unit
-                    PingMode.Drop -> if (packet.id % 2 != 0) event.cancel()
-                    PingMode.Spam -> {
-                        event.cancel()
-                        repeat(2) { NetworkUtils.sendPacketNoEvent(ServerboundPongPacket(packet.id)) }
-                    }
-                }
-            }
-
-            if (multiActionsC && packet is ServerboundContainerClickPacket && player.wasSprinting) {
-                event.cancel()
-                withSprintStopped { NetworkUtils.sendPacketNoEvent(packet) }
-                return@safeEventHandler
-            }
+            val pause = sprintPause ?: return@safeEventHandler
+            val packet = event.packet as? ServerboundMovePlayerPacket ?: return@safeEventHandler
+            if (isMovementBoundary(packet, pause)) pause.movementObserved = true
         }
     }
 
-    /**
-     * Via 你妈真死了吧
-     */
+    /** ViaFabricPlus 的旧版点击绕过原生发包事件，必须包住整个容器操作。 */
     fun handleInventoryClick(actor: Player, action: Runnable) {
         runSafe {
             if (isEnabled && multiActionsC && actor === player) {
@@ -96,84 +82,43 @@ object Disabler : Module("Disabler", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun withSprintStopped(action: Runnable) {
+        if (sprintPause == null && !nn.player.wasSprinting && !nn.player.isSprinting) {
+            action.run()
+            return
+        }
+
+        val pause = sprintPause ?: SprintPause(
+            nn.player.position(), nn.player.onGround(), nn.player.isSprinting
+        ).also { sprintPause = it }
+        pause.ticksWithoutClick = 0
+        nn.player.isSprinting = false
+
         if (nn.player.wasSprinting) {
             NetworkUtils.sendPacketNoEvent(
                 ServerboundPlayerCommandPacket(nn.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
             )
             nn.player.wasSprinting = false
-
-            action.run()
-
-            if (nn.player.isSprinting) {
-                NetworkUtils.sendPacketNoEvent(
-                    ServerboundPlayerCommandPacket(nn.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
-                )
-                nn.player.wasSprinting = true
-            }
-        } else action.run()
-    }
-
-    context(nn: NonNullContext)
-    private fun updatePosition(event: SendPositionEvent) {
-        if (position == PositionMode.Disabled || nn.player.isPassenger || onlyPhased && nn.level.getBlockCollisions(
-                nn.player,
-                nn.player.boundingBox
-            ).none { !it.isEmpty }
-        ) return
-
-        val moved = event.lastSentPosition.distanceToSqr(event.x, event.y, event.z) > 4.0E-8
-        val rotated = event.yaw != event.lastSentYaw || event.pitch != event.lastSentPitch
-        when (position) {
-            PositionMode.Disabled -> Unit
-            PositionMode.Grim -> {
-                if (!rotated && (moved || event.positionReminder < 19)) return
-                event.forcePosition = true
-                event.forceRotation = true
-            }
-
-            PositionMode.GrimV3 -> {
-                if (moved || !rotated) return
-                event.forcePosition = true
-                event.forceRotation = true
-                if (!limited || event.positionReminder >= 19) {
-                    nn.connection.send(
-                        ServerboundMovePlayerPacket.Pos(
-                            event.x, event.y, event.z, event.isOnGround, nn.player.horizontalCollision
-                        )
-                    )
-                }
-            }
         }
+        action.run()
     }
 
-    context(nn: NonNullContext)
-    private fun useTrident() {
-        val slot = (0..8).firstOrNull {
-            val stack = nn.player.inventory.getItem(it)
-            stack.`is`(Items.TRIDENT) && EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.RIPTIDE) > 0
-        } ?: return
-        val previousSlot = nn.player.inventory.selectedSlot
-        nn.player.inventory.selectedSlot = slot
+    private fun isMovementBoundary(packet: ServerboundMovePlayerPacket, pause: SprintPause): Boolean = when {
+        packet is ServerboundMovePlayerPacket.Pos || packet is ServerboundMovePlayerPacket.Rot -> true
+        packet.isOnGround != pause.onGround -> true
+        packet !is ServerboundMovePlayerPacket.PosRot -> false
+        // 旧协议可能忽略同位置的 PosRot，不能据此恢复疾跑。
+        else -> pause.position.distanceToSqr(
+            packet.getX(pause.position.x), packet.getY(pause.position.y), packet.getZ(pause.position.z)
+        ) > 0.03 * 0.03
+    }
 
-        nn.gameMode.ensureHasSentCarriedItem()
-        NetworkUtils.sendPacketNoEvent(
-            ServerboundUseItemPacket(
-                InteractionHand.MAIN_HAND,
-                nn.level.blockStatePredictionHandler.startPredicting().currentSequence(),
-                nn.player.yRot,
-                nn.player.xRot
-            )
-        )
-        NetworkUtils.sendPacketNoEvent(
-            ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
-                BlockPos.ZERO,
-                Direction.DOWN
-            )
-        )
-
-        nn.player.inventory.selectedSlot = previousSlot
-        nn.gameMode.ensureHasSentCarriedItem()
+    private class SprintPause(
+        val position: Vec3,
+        val onGround: Boolean,
+        val resumeSprinting: Boolean,
+    ) {
+        var ticksWithoutClick = 0
+        var movementObserved = false
     }
 
 }
