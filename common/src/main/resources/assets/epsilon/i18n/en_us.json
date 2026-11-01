@@ -749,7 +749,14 @@
         "rotate": "Rotate",
         "rotation speed": "Rotation Speed",
         "ender chest": "Ender Chest",
-        "inventory swap": "Inventory Swap"
+        "inventory swap": "Inventory Swap",
+        "no_block_found": "No block found",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "silent": "Silent",
+          "snap": "Snap"
+        },
+        "swing hand": "Swing Hand"
       },
       "double anchor": {
         "_value": "Double Anchor",

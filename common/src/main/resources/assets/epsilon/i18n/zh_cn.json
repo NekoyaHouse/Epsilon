@@ -749,7 +749,14 @@
         "rotate": "转头",
         "rotation speed": "转头速度",
         "ender chest": "使用末影箱",
-        "inventory swap": "背包切换"
+        "inventory swap": "背包切换",
+        "no_block_found": "未找到可用方块",
+        "rotation mode": {
+          "_value": "转头模式",
+          "silent": "静默",
+          "snap": "瞬间转头"
+        },
+        "swing hand": "挥手"
       },
       "double anchor": {
         "_value": "双重重生锚",

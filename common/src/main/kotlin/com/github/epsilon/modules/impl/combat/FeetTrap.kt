@@ -6,8 +6,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -15,11 +14,13 @@ import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
 import com.github.epsilon.utils.timer.TimerUtils
 import com.github.epsilon.utils.world.BlockUtils
+import com.github.epsilon.utils.world.LegacyPlacement
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -38,6 +39,12 @@ import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 object FeetTrap : Module("Feet Trap", Category.COMBAT) {
+
+    private enum class RotationMode {
+        Silent,
+        Snap
+    }
+
     private val toggleOnMove by boolSetting("Toggle On Move", true)
     private val toggleOnJump by boolSetting("Toggle On Jump", true)
     private val inAir by boolSetting("In Air", true)
@@ -46,9 +53,11 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val extend by boolSetting("Extend", true)
     private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
     private val rotate by boolSetting("Rotate", true)
-    private val rotationSpeed by intSetting("Rotation Speed", 180, 18..180, 18, { rotate })
+    private val rotationMode by enumSetting("Rotation Mode", RotationMode.Snap, { rotate })
+    private val rotationSpeed by intSetting("Rotation Speed", 180, 18..180, 18, { rotate && rotationMode == RotationMode.Silent })
     private val enderChest by boolSetting("Ender Chest", true)
     private val inventorySwap by boolSetting("Inventory Swap", true)
+    private val swingHand by boolSetting("Swing Hand", true)
 
     private val placeTimer = TimerUtils()
     private var startPos: Vec3? = null
@@ -85,7 +94,9 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
-            if (rotate) placing?.let { RotationManager.setRotations(it.rotation, rotationSpeed.toDouble()) }
+            if (rotate && rotationMode == RotationMode.Silent) {
+                placing?.let { RotationManager.setRotations(it.rotation, rotationSpeed.toDouble()) }
+            }
         }
 
         safeEventHandler<ClientTickEvent.Pre> {
@@ -245,7 +256,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         val ordered = if (current == null) placements else listOf(current) + (placements - current)
         for ((index, info) in ordered.take(blocksPerTick).withIndex()) {
             placing = info
-            if (rotate && !RaytraceUtils.overBlock(
+            if (rotate && rotationMode == RotationMode.Silent && !RaytraceUtils.overBlock(
                     RotationManager.getRotation(),
                     info.hit.blockPos,
                     info.hit.direction
@@ -267,7 +278,14 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
         if (blockUpdates == null) blockUpdates = ConcurrentLinkedQueue()
-        val result = nn.gameMode.useItemOn(nn.player, hand, info.hit)
+
+        val result = if (rotate && rotationMode == RotationMode.Snap) {
+            LegacyPlacement.placeBlock(hand, info.hit)
+        } else {
+            nn.gameMode.useItemOn(nn.player, hand, info.hit)
+        }
+
+        SwingMode.of(swingHand).interactSwing(hand)
 
         if (!blocks.isOffhand()) {
             if (inventorySwap) InvUtils.invSwapBack() else InvUtils.swapBack()

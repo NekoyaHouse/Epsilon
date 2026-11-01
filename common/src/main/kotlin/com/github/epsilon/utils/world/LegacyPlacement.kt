@@ -7,8 +7,10 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -16,7 +18,7 @@ import kotlin.math.sqrt
 object LegacyPlacement {
 
     context(nn: NonNullContext)
-    fun placeBlock(hand: InteractionHand, blockHitResult: BlockHitResult, swingHand: Boolean): Boolean {
+    fun placeBlock(hand: InteractionHand, blockHitResult: BlockHitResult): InteractionResult {
         val sprint = nn.player.isSprinting
         val oldInput = nn.player.input.keyPresses
         val sneak = oldInput.shift
@@ -60,7 +62,7 @@ object LegacyPlacement {
         )
 
         // Interact
-        nn.gameMode.useItemOn(nn.player, hand, blockHitResult)
+        val result = nn.gameMode.useItemOn(nn.player, hand, blockHitResult)
 
         // Snap back
         nn.connection.send(
@@ -86,9 +88,7 @@ object LegacyPlacement {
             )
         )
 
-        SwingMode.of(swingHand).interactSwing(hand)
-
-        return false
+        return result
     }
 
     private fun calculateAngle(from: Vec3, to: Vec3): FloatArray {
