@@ -187,6 +187,7 @@ object EpsilonTranslations {
         Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
         Notifications.KEY_FRIEND_ADDED,
         Notifications.KEY_FRIEND_REMOVED,
+        FeetTrap.NO_BLOCK_FOUND,
         AutoMine.PACKET_MINE_REQUIRED,
         AutoMine.PACKET_MINE_ENABLED,
         AutoMine.PACKET_MINE_DISABLED,
@@ -416,6 +417,10 @@ object EpsilonTranslations {
             create("notification", "clientbound_packet_flush_failed")
         val KEY_FRIEND_ADDED: TranslateComponent = create("notification", "key_friend_added")
         val KEY_FRIEND_REMOVED: TranslateComponent = create("notification", "key_friend_removed")
+    }
+
+    object FeetTrap {
+        val NO_BLOCK_FOUND: TranslateComponent = create("modules.feet trap", "no_block_found")
     }
 
     object AutoMine {
