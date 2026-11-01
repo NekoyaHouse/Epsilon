@@ -75,6 +75,14 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private val lagTimer = TimerUtils()
 
     init {
+        onEnable {
+            runSafe {
+                speed = getSpeed(false)
+                distance = getDistance2D()
+            }
+            stage = 4
+        }
+
         safeEventHandler<PacketEvent.Receive>(EventPriority.HIGH) { event ->
             val packet = event.packet
 
@@ -291,14 +299,6 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 strafe++
             }
         }
-    }
-
-    override fun onEnable() {
-        runSafe {
-            speed = getSpeed(false)
-            distance = getDistance2D()
-        }
-        stage = 4
     }
 
     context(nn: NonNullContext)

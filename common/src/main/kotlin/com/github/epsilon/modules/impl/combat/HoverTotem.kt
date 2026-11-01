@@ -23,6 +23,11 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
+        onEnable {
+            clock = 0
+            currentDelay = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen is InventoryScreen) {
@@ -67,11 +72,6 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                 clock = currentDelay
             }
         }
-    }
-
-    override fun onEnable() {
-        clock = 0
-        currentDelay = 0
     }
 
     private fun getRandomDelay(): Int {

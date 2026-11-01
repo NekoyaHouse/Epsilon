@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -56,6 +57,14 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     )
 
     init {
+        onEnable {
+            runSafe {
+                startX = player.x
+                startY = player.y
+                startZ = player.z
+            } ?: toggle()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             val currentRotation = rotation
             if (currentRotation != null && rotate) {
@@ -103,19 +112,6 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     private fun contextVisibility(): com.github.epsilon.settings.Setting.Visibility =
         { rotate }
-
-    override fun onEnable() {
-        val nn = NonNullContext.instance
-        if (nn == null) {
-            toggle()
-            return
-        }
-        context(nn) {
-            startX = nn.player.x
-            startY = nn.player.y
-            startZ = nn.player.z
-        }
-    }
 
     context(nn: NonNullContext)
     private fun doSurround(pos: BlockPos, slot: Int) {

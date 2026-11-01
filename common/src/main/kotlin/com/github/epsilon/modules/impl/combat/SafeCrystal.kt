@@ -27,6 +27,16 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
     private const val MAX_ATTACK_DISTANCE = 3.6
 
     init {
+        onEnable {
+            attackCooldown = 0
+            placeCooldown = 0
+        }
+
+        onDisable {
+            attackCooldown = 0
+            placeCooldown = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (autoBreak) {
                 handleAutoCrystalBreak()
@@ -36,16 +46,6 @@ object SafeCrystal : Module("Safe Crystal", Category.COMBAT) {
                 handleAutoCrystalPlace()
             }
         }
-    }
-
-    override fun onEnable() {
-        attackCooldown = 0
-        placeCooldown = 0
-    }
-
-    override fun onDisable() {
-        attackCooldown = 0
-        placeCooldown = 0
     }
 
     override fun getInfo(): String {

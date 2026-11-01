@@ -70,6 +70,10 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         .build()
 
     init {
+        onDisable {
+            particles.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             particles.removeAll { particle -> particle.tick() }
 
@@ -108,10 +112,6 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             }
             renderer.end()
         }
-    }
-
-    override fun onDisable() {
-        particles.clear()
     }
 
     private fun resolveColor(offset: Int): Color =

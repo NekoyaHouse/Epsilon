@@ -4,6 +4,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -118,6 +119,43 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private var autoEnabledPacketMine = false
 
     init {
+        onEnable {
+            switchTimer.setMs(FIRST_PICK_DELAY)
+            pauseNotifyTimer.reset()
+            failedUntil.clear()
+            pendingPos = null
+            autoEnabledPacketMine = false
+
+            runSafe {
+                if (PacketMine.isEnabled) return@runSafe
+
+                if (autoPacketMine) {
+                    PacketMine.isEnabled = true
+                    autoEnabledPacketMine = true
+                    NotificationManager.info(
+                        translatedName,
+                        EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.getTranslatedName()
+                    )
+                } else {
+                    NotificationManager.error(
+                        translatedName,
+                        EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.getTranslatedName()
+                    )
+                    isEnabled = false
+                }
+            } ?: toggle()
+        }
+
+        onDisable {
+            // 只回收本模块自动开启的 Packet Mine，用户原本就开启的状态保持不变。
+            if (autoEnabledPacketMine && PacketMine.isEnabled) {
+                PacketMine.isEnabled = false
+            }
+            autoEnabledPacketMine = false
+            failedUntil.clear()
+            pendingPos = null
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             if (!player.isAlive) return@safeEventHandler
 
@@ -144,46 +182,6 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
             PacketMine.mine(pendingPos!!)
             switchTimer.reset()
         }
-    }
-
-    override fun onEnable() {
-        switchTimer.setMs(FIRST_PICK_DELAY)
-        pauseNotifyTimer.reset()
-        failedUntil.clear()
-        pendingPos = null
-        autoEnabledPacketMine = false
-
-        if (NonNullContext.instance == null) {
-            toggle()
-            return
-        }
-
-        if (PacketMine.isEnabled) return
-
-        if (autoPacketMine) {
-            PacketMine.isEnabled = true
-            autoEnabledPacketMine = true
-            NotificationManager.info(
-                translatedName,
-                EpsilonTranslations.AutoMine.PACKET_MINE_ENABLED.getTranslatedName()
-            )
-        } else {
-            NotificationManager.error(
-                translatedName,
-                EpsilonTranslations.AutoMine.PACKET_MINE_REQUIRED.getTranslatedName()
-            )
-            isEnabled = false
-        }
-    }
-
-    override fun onDisable() {
-        // 只回收本模块自动开启的 Packet Mine，用户原本就开启的状态保持不变。
-        if (autoEnabledPacketMine && PacketMine.isEnabled) {
-            PacketMine.isEnabled = false
-        }
-        autoEnabledPacketMine = false
-        failedUntil.clear()
-        pendingPos = null
     }
 
     /** Packet Mine 空闲后仍未消失的方块视为服务端拒绝破坏，加入冷却名单。 */

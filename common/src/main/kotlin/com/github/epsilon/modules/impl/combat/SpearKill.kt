@@ -47,6 +47,20 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
     private var firstPhase = false
 
     init {
+        onEnable {
+            killtarget = null
+            currentlyCharging = false
+            aboveTargetPos = null
+            firstPhase = false
+        }
+
+        onDisable {
+            killtarget = null
+            currentlyCharging = false
+            aboveTargetPos = null
+            firstPhase = false
+        }
+
         // 每个具体事件独立派发，蓄力与目标更新必须监听实际发布的 Pre。
         safeEventHandler<PlayerTickEvent.Pre> {
             if (ElytraCombat.isControllingCombat()) {
@@ -79,20 +93,6 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
                 aboveTargetPos = null
             }
         }
-    }
-
-    override fun onEnable() {
-        killtarget = null
-        currentlyCharging = false
-        aboveTargetPos = null
-        firstPhase = false
-    }
-
-    override fun onDisable() {
-        killtarget = null
-        currentlyCharging = false
-        aboveTargetPos = null
-        firstPhase = false
     }
 
     context(nn: NonNullContext)

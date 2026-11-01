@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -59,6 +60,17 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private val visibleTime = TimerUtils()
 
     init {
+        onEnable {
+            runSafe {
+                target = null
+                assistAcceleration = 0.0f
+                aimTicks = 0
+                bowTargetYaw = Float.NaN
+                bowTargetPitch = Float.NaN
+                visibleTime.reset()
+            }
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             when (mode) {
                 Mode.AimAssist -> updateAimAssist()
@@ -82,16 +94,6 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
                 player.xRot = Mth.lerp(factor, player.xRot, bowTargetPitch)
             }
         }
-    }
-
-    override fun onEnable() {
-        if (mc.player == null) return
-        target = null
-        assistAcceleration = 0.0f
-        aimTicks = 0
-        bowTargetYaw = Float.NaN
-        bowTargetPitch = Float.NaN
-        visibleTime.reset()
     }
 
     context(nn: NonNullContext)

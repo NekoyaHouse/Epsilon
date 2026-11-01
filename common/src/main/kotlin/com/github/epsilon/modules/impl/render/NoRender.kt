@@ -56,12 +56,14 @@ object NoRender : Module("No Render", Category.RENDER) {
     val noDeadEntities by boolSetting("No Dead Entities", false)
     val noNametags by boolSetting("No Nametags", false)
 
-    override fun onEnable() {
-        if (caveCulling || textureRotations) mc.levelExtractor.allChanged()
-    }
+    init {
+        onEnable {
+            if (caveCulling || textureRotations) mc.levelExtractor.allChanged()
+        }
 
-    override fun onDisable() {
-        if (caveCulling || textureRotations) mc.levelExtractor.allChanged()
+        onDisable {
+            if (caveCulling || textureRotations) mc.levelExtractor.allChanged()
+        }
     }
 
     fun noEntity(entityType: EntityType<*>): Boolean = isEnabled && entities.contains(entityType)

@@ -36,6 +36,18 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     private val random = Random()
 
     init {
+        onEnable {
+            loadSentences()
+            sentSentences.clear()
+            lastSendTime = System.currentTimeMillis()
+            sendMessage("已加载 " + allSentences.size + " 条句子")
+        }
+
+        onDisable {
+            allSentences.clear()
+            sentSentences.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (!canSend()) return@safeEventHandler
 
@@ -47,18 +59,6 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
 
             lastSendTime = System.currentTimeMillis()
         }
-    }
-
-    override fun onEnable() {
-        loadSentences()
-        sentSentences.clear()
-        lastSendTime = System.currentTimeMillis()
-        sendMessage("已加载 " + allSentences.size + " 条句子")
-    }
-
-    override fun onDisable() {
-        allSentences.clear()
-        sentSentences.clear()
     }
 
     private fun canSend(): Boolean {

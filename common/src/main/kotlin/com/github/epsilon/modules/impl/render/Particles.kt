@@ -89,6 +89,11 @@ object Particles : Module("Particles", Category.RENDER) {
         .build()
 
     init {
+        onDisable {
+            fireFlies.clear()
+            particles.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             fireFlies.removeAll { particle -> particle.tick() }
             particles.removeAll { particle -> particle.tick() }
@@ -138,11 +143,6 @@ object Particles : Module("Particles", Category.RENDER) {
                 textureForMode(mode.value)?.let { renderParticleList(event.poseStack, particles, it) }
             }
         }
-    }
-
-    override fun onDisable() {
-        fireFlies.clear()
-        particles.clear()
     }
 
     private fun renderParticleList(

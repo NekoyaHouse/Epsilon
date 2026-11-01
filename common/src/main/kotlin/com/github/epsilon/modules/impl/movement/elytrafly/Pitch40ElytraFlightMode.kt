@@ -31,12 +31,9 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     override fun onEnable() {
         resetState()
 
-        if (NonNullContext.instance == null) {
+        runSafe { initializeInWorld() } ?: run {
             pendingActivationCheck = true
-            return
         }
-
-        initializeInWorld()
     }
 
     private fun resetState() {
@@ -50,20 +47,19 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         fireworkTimer.setMs(917813L)
     }
 
+    context(nn: NonNullContext)
     private fun initializeInWorld() {
-        runSafe {
-            val targetHeight = getTakeoffTargetHeight()
-            if (shouldStartTakeoff(targetHeight)) {
-                startTakeoff()
-                return@runSafe
-            }
-            if (elytraFly.pitch40AutoTakeoff) {
-                completedTakeoffTarget = targetHeight
-            }
+        val targetHeight = getTakeoffTargetHeight()
+        if (shouldStartTakeoff(targetHeight)) {
+            startTakeoff()
+            return
+        }
+        if (elytraFly.pitch40AutoTakeoff) {
+            completedTakeoffTarget = targetHeight
+        }
 
-            if (player.y - 40.0 < elytraFly.pitch40lowerBounds) {
-                fail(EpsilonTranslations.ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS)
-            }
+        if (nn.player.y - 40.0 < elytraFly.pitch40lowerBounds) {
+            fail(EpsilonTranslations.ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS)
         }
     }
 

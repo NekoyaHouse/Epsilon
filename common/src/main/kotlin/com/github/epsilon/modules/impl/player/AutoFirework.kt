@@ -27,6 +27,11 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
     private var isKeyDown = false
 
     init {
+        onEnable {
+            resetState()
+            isKeyDown = false
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
@@ -73,11 +78,6 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-        isKeyDown = false
     }
 
     context(nn: NonNullContext)

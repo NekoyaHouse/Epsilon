@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.ClickSlotUtils
@@ -35,10 +36,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
         }
     }
 
-    override fun getInfo(): String? {
-        val nn = NonNullContext.instance ?: return null
-        return context(nn) { InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString() }
-    }
+    override fun getInfo(): String? = runSafe { InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString() }
 
     context(nn: NonNullContext)
     private fun shouldHoldTotem(): Boolean {

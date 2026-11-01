@@ -102,6 +102,25 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     private var lastSetBackPacketTick = 0
 
     init {
+        onEnable {
+            pendingSetBackPacket = null
+            currentTryWorking = false
+            lastSetBackPacketTick = 0
+            lastKnownMovementSpeed = Vec3.ZERO
+            hasSentPosition = false
+            runSafe {
+                hasSentPosition = true
+                lastSentX = player.x
+                lastSentY = player.y
+                lastSentZ = player.z
+            }
+        }
+
+        onDisable {
+            pendingSetBackPacket = null
+            currentTryWorking = false
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             tickStartX = player.x
             tickStartY = player.y
@@ -160,25 +179,6 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
                 hasSentPosition = false
             }
         }
-    }
-
-    override fun onEnable() {
-        pendingSetBackPacket = null
-        currentTryWorking = false
-        lastSetBackPacketTick = 0
-        lastKnownMovementSpeed = Vec3.ZERO
-        hasSentPosition = false
-        runSafe {
-            hasSentPosition = true
-            lastSentX = player.x
-            lastSentY = player.y
-            lastSentZ = player.z
-        }
-    }
-
-    override fun onDisable() {
-        pendingSetBackPacket = null
-        currentTryWorking = false
     }
 
     /**

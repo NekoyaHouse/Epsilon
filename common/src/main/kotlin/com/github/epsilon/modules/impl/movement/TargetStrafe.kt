@@ -39,6 +39,10 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
     private var direction = 1
 
     init {
+        onDisable {
+            resetTarget()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
             val left = mc.options.keyLeft.isDown
             val right = mc.options.keyRight.isDown
@@ -111,10 +115,6 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
             drawCircle(target!!, darken(color, 0.2f), 3.0f)
             drawCircle(target!!, color, 1.5f)
         }
-    }
-
-    override fun onDisable() {
-        resetTarget()
     }
 
     private fun createOrbitOffsets(): MutableList<OrbitOffset> {

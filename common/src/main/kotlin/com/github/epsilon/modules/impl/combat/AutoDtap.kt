@@ -34,6 +34,17 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
     private var rightClicked = false
 
     init {
+        onEnable {
+            stepDelay = 0
+            step = 0
+            originalSlot = -1
+            rightClicked = false
+        }
+
+        onDisable {
+            resetState()
+        }
+
         handler<MousePressEvent> { event ->
             if (event.button == InputConstants.MOUSE_BUTTON_RIGHT && event.action == InputConstants.PRESS) {
                 rightClicked = true
@@ -55,17 +66,6 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
             // 状态机处理
             handleState()
         }
-    }
-
-    override fun onEnable() {
-        stepDelay = 0
-        step = 0
-        originalSlot = -1
-        rightClicked = false
-    }
-
-    override fun onDisable() {
-        resetState()
     }
 
     context(nn: NonNullContext)

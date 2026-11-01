@@ -42,12 +42,14 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun onEnable() {
-        resetAnimation()
-    }
+    init {
+        onEnable {
+            resetAnimation()
+        }
 
-    override fun onDisable() {
-        resetAnimation()
+        onDisable {
+            resetAnimation()
+        }
     }
 
     override fun render(deltaTracker: DeltaTracker) {

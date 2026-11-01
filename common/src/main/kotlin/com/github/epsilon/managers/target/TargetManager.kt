@@ -3,8 +3,9 @@ package com.github.epsilon.managers.target
 import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
@@ -26,12 +27,7 @@ object TargetManager : AlwaysListening {
 
     init {
         handler<ClientTickEvent.Pre>(alwaysListening = true) {
-            if (mc.player == null || mc.level == null) {
-                sharedTarget = null
-                return@handler
-            }
-
-            if (!isSharedTargetAlive()) {
+            if (!runSafeOrFalse { isSharedTargetAlive() }) {
                 sharedTarget = null
             }
         }
@@ -43,8 +39,7 @@ object TargetManager : AlwaysListening {
     }
 
     fun acquireTargets(request: TargetRequest): List<LivingEntity> {
-        val nn = NonNullContext.instance ?: return emptyList()
-        return context(nn) {
+        return runSafeOrElse(emptyList()) {
             val candidates = collectTargets(request)
             if (candidates.isEmpty()) {
                 candidates
@@ -73,7 +68,7 @@ object TargetManager : AlwaysListening {
     }
 
     fun getSharedTarget(): LivingEntity? {
-        if (!isSharedTargetAlive()) {
+        if (!runSafeOrFalse { isSharedTargetAlive() }) {
             sharedTarget = null
         }
         return sharedTarget
@@ -94,11 +89,12 @@ object TargetManager : AlwaysListening {
         return targets
     }
 
+    context(nn: NonNullContext)
     private fun isSharedTargetAlive(): Boolean {
         val shared = sharedTarget ?: return false
-        if (shared === mc.player) return false
+        if (shared === nn.player) return false
         if (!shared.isAlive || shared.isDeadOrDying) return false
-        if (shared.level() !== mc.level) return false
+        if (shared.level() !== nn.level) return false
         return !AntiBot.isBot(shared)
     }
 
@@ -148,22 +144,25 @@ object TargetManager : AlwaysListening {
     }
 
     fun isSameTeam(entity: Entity): Boolean {
-        val teams = ClientSetting.teams
-        if (teams.`is`(ClientSetting.Teams.None)) {
-            return false
-        }
-        if (entity is Player) {
-            return if (teams.`is`(ClientSetting.Teams.Color)) {
-                entity.teamColor == mc.player!!.teamColor
-            } else {
-                Objects.equals(getTeam(entity), getTeam(mc.player!!))
+        return runSafeOrFalse {
+            val teams = ClientSetting.teams
+            if (teams.`is`(ClientSetting.Teams.None)) {
+                return@runSafeOrFalse false
             }
+            if (entity is Player) {
+                return@runSafeOrFalse if (teams.`is`(ClientSetting.Teams.Color)) {
+                    entity.teamColor == player.teamColor
+                } else {
+                    Objects.equals(getTeam(entity), getTeam(player))
+                }
+            }
+            return@runSafeOrFalse false
         }
-        return false
     }
 
+    context(nn: NonNullContext)
     private fun getTeam(entity: Entity): String? {
-        val playerInfo: PlayerInfo = mc.connection!!.getPlayerInfo(entity.uuid) ?: return null
+        val playerInfo: PlayerInfo = nn.connection.getPlayerInfo(entity.uuid) ?: return null
         val team = playerInfo.team ?: return null
         return team.name
     }

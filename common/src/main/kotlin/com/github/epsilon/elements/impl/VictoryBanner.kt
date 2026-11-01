@@ -13,6 +13,7 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
@@ -87,6 +88,16 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     private var currentTitle: String? = null
 
     init {
+        onEnable {
+            clearRuntimeState()
+            QQAvatarManager.requestLoad()
+        }
+
+        onDisable {
+            clearRuntimeState()
+            QQAvatarManager.release()
+        }
+
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
         handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
         safeEventHandler<AttackEntityEvent> { event ->
@@ -108,16 +119,6 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     override fun reset() {
         super.reset()
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
-    }
-
-    override fun onEnable() {
-        clearRuntimeState()
-        QQAvatarManager.requestLoad()
-    }
-
-    override fun onDisable() {
-        clearRuntimeState()
-        QQAvatarManager.release()
     }
 
     override fun render(deltaTracker: DeltaTracker) {
@@ -176,8 +177,11 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun updateKillTrigger() {
-        val level = NonNullContext.instance?.level
-        if (triggerMode == TriggerMode.Kill && level != null) {
+        if (triggerMode != TriggerMode.Kill) {
+            recentTargets.clear()
+            return
+        }
+        runSafe {
             val now = System.currentTimeMillis()
             val iterator = recentTargets.entries.iterator()
             while (iterator.hasNext()) {
@@ -201,16 +205,14 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
                     play(null)
                 }
             }
-        } else {
-            recentTargets.clear()
-        }
+        } ?: recentTargets.clear()
     }
 
+    context(nn: NonNullContext)
     private fun confirmTrackedDeath(entityId: Int) {
         if (!isEnabled || triggerMode != TriggerMode.Kill) return
-        val level = NonNullContext.instance?.level ?: return
         val target = recentTargets[entityId]
-        if (target == null || target.player.level() !== level || !target.isRecent(System.currentTimeMillis())) {
+        if (target == null || target.player.level() !== nn.level || !target.isRecent(System.currentTimeMillis())) {
             return
         }
         recentTargets.remove(entityId)
@@ -218,10 +220,11 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun confirmDeathEvent(packet: ClientboundEntityEventPacket) {
-        if (!isEnabled || triggerMode != TriggerMode.Kill) return
-        val level = NonNullContext.instance?.level ?: return
-        val entity = packet.getEntity(level) ?: return
-        confirmTrackedDeath(entity.id)
+        runSafe {
+            if (!isEnabled || triggerMode != TriggerMode.Kill) return
+            val entity = packet.getEntity(level) ?: return
+            confirmTrackedDeath(entity.id)
+        }
     }
 
     private fun play(overrideTitle: String?) {

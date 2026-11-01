@@ -35,6 +35,10 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     private var delay = 0
 
     init {
+        onDisable {
+            delay = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@safeEventHandler
 
@@ -56,10 +60,6 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
             delay = MathUtils.getRandom(minDelay, maxDelay)
         }
-    }
-
-    override fun onDisable() {
-        delay = 0
     }
 
     context(nn: NonNullContext)
@@ -142,7 +142,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             return false
         }
 
-        if (!mc.options.keyJump.isDown) {
+        if (!nn.mc.options.keyJump.isDown) {
             return true
         }
 
@@ -162,14 +162,12 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
         return nn.player.isInWater || nn.level.getBlockState(pos).block === Blocks.WATER
     }
 
+    context(nn: NonNullContext)
     fun getAttackCooldown(): Float {
-        val nn = NonNullContext.instance ?: return 0.0f
-        return context(nn) {
-            val attackSpeed = nn.player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
-            val cooldownPerTick = 1.0f / attackSpeed * 20.0f
-            val lastAttackTicks = nn.player.getAttackStrengthScale(0.0f) * cooldownPerTick
-            minOf(1.0f, lastAttackTicks / cooldownPerTick)
-        }
+        val attackSpeed = nn.player.getAttributeValue(Attributes.ATTACK_SPEED).toFloat()
+        val cooldownPerTick = 1.0f / attackSpeed * 20.0f
+        val lastAttackTicks = nn.player.getAttackStrengthScale(0.0f) * cooldownPerTick
+        return minOf(1.0f, lastAttackTicks / cooldownPerTick)
     }
 
 }

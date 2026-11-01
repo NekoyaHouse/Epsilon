@@ -64,6 +64,93 @@ object Phase : Module("Phase", Category.MOVEMENT) {
     var afterPearlTime = 0
 
     init {
+        onEnable {
+            afterPearlTime = 0
+            clipTimer = 0
+
+            runSafe {
+                if (player.onGround() && mode == Mode.CCClip) {
+                    val diagonalOffset = MoveUtils.forwardWithoutStrafe(0.44)
+                    val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
+
+                    connection.send(
+                        ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
+                    )
+
+                    if (diagonal) {
+                        val directionVec = MoveUtils.forwardWithoutStrafe(0.51)
+
+                        var height = if (level.clip(
+                                ClipContext(
+                                    player.eyePosition,
+                                    player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
+                                    ClipContext.Block.COLLIDER,
+                                    ClipContext.Fluid.NONE,
+                                    player
+                                )
+                            ).type == HitResult.Type.MISS
+                        ) {
+                            1
+                        } else {
+                            2
+                        }
+
+                        player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
+                        connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+
+                        height = if (level.getBlockState(
+                                BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
+                            ).isAir
+                        ) {
+                            2
+                        } else {
+                            1
+                        }
+
+                        player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
+                        connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                        toggle()
+                    } else {
+                        val directionVec = MoveUtils.forwardWithoutStrafe(0.57)
+
+                        var height = if (level.clip(
+                                ClipContext(
+                                    player.eyePosition,
+                                    player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
+                                    ClipContext.Block.COLLIDER,
+                                    ClipContext.Fluid.NONE,
+                                    player
+                                )
+                            ).type == HitResult.Type.MISS
+                        ) {
+                            1
+                        } else {
+                            2
+                        }
+
+                        player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
+                        connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+
+                        player.setPos(player.x + directionVec[0], player.y, player.z + directionVec[1])
+                        connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+
+                        height = if (level.getBlockState(
+                                BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
+                            ).isAir
+                        ) {
+                            2
+                        } else {
+                            1
+                        }
+
+                        player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
+                        connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
+                        toggle()
+                    }
+                }
+            }
+        }
+
         handler<DestroyedBlockEvent> {
             clipTimer = afterBreak
         }
@@ -177,93 +264,6 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         player.yRot = prevYaw
                         player.xRot = prevPitch
                     }
-                }
-            }
-        }
-    }
-
-    override fun onEnable() {
-        afterPearlTime = 0
-        clipTimer = 0
-
-        runSafe {
-            if (player.onGround() && mode == Mode.CCClip) {
-                val diagonalOffset = MoveUtils.forwardWithoutStrafe(0.44)
-                val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
-
-                connection.send(
-                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
-                )
-
-                if (diagonal) {
-                    val directionVec = MoveUtils.forwardWithoutStrafe(0.51)
-
-                    var height = if (level.clip(
-                            ClipContext(
-                                player.eyePosition,
-                                player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
-                                ClipContext.Block.COLLIDER,
-                                ClipContext.Fluid.NONE,
-                                player
-                            )
-                        ).type == HitResult.Type.MISS
-                    ) {
-                        1
-                    } else {
-                        2
-                    }
-
-                    player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
-                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
-
-                    height = if (level.getBlockState(
-                            BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
-                        ).isAir
-                    ) {
-                        2
-                    } else {
-                        1
-                    }
-
-                    player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
-                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
-                    toggle()
-                } else {
-                    val directionVec = MoveUtils.forwardWithoutStrafe(0.57)
-
-                    var height = if (level.clip(
-                            ClipContext(
-                                player.eyePosition,
-                                player.eyePosition.add(diagonalOffset[0], 0.0, diagonalOffset[1]),
-                                ClipContext.Block.COLLIDER,
-                                ClipContext.Fluid.NONE,
-                                player
-                            )
-                        ).type == HitResult.Type.MISS
-                    ) {
-                        1
-                    } else {
-                        2
-                    }
-
-                    player.setPos(player.x + directionVec[0], player.y + height, player.z + directionVec[1])
-                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
-
-                    player.setPos(player.x + directionVec[0], player.y, player.z + directionVec[1])
-                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
-
-                    height = if (level.getBlockState(
-                            BlockPos.containing(player.position().add(diagonalOffset[0], -2.0, diagonalOffset[1]))
-                        ).isAir
-                    ) {
-                        2
-                    } else {
-                        1
-                    }
-
-                    player.setPos(player.x + directionVec[0], player.y - height, player.z + directionVec[1])
-                    connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
-                    toggle()
                 }
             }
         }

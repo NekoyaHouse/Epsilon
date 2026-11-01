@@ -8,7 +8,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.impl.render.ACSpoof
 import net.minecraft.client.gui.components.PlayerTabOverlay
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -53,9 +53,8 @@ class TabListInstance(
         resetLayout()
         font = StaticFontLoader.defaultFont()
 
-        val nn = NonNullContext.instance
         val connection: ClientPacketListener? = mc.connection
-        val scoreboard: Scoreboard? = nn?.level?.scoreboard
+        val scoreboard: Scoreboard? = runSafe { level.scoreboard }
         val objective: Objective? = scoreboard?.getDisplayObjective(DisplaySlot.LIST)
         val showScore = objective != null && objective.renderType != ObjectiveCriteria.RenderType.HEARTS
 

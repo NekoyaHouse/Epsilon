@@ -21,6 +21,16 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
     private val packets: Queue<Packet<*>> = ConcurrentLinkedQueue()
 
     init {
+        onEnable {
+            ticks = 20
+            stage = 0
+            packets.clear()
+        }
+
+        onDisable {
+            packets.clear()
+        }
+
         handler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (stage == 0) {
@@ -62,16 +72,6 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        ticks = 20
-        stage = 0
-        packets.clear()
-    }
-
-    override fun onDisable() {
-        packets.clear()
     }
 
 }

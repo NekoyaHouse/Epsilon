@@ -2,7 +2,6 @@ package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.utils.render.WorldToScreen
 import net.minecraft.client.Camera
@@ -19,6 +18,7 @@ object TracesRenderer {
     private const val ISLAND_EDGE_GAP = 3.0f
     private const val TARGET_HEIGHT_FACTOR = 0.5f
 
+    context(nn: NonNullContext)
     fun render(
         renderer: RectRenderer,
         islandX: Float,
@@ -33,41 +33,38 @@ object TracesRenderer {
         val screenHeight = LuminRenderSystem.getScaledHeight()
         if (screenWidth <= 1.0f || screenHeight <= 1.0f) return 0
 
-        val nn = NonNullContext.instance ?: return 0
-        return context(nn) {
-            val self = nn.player
-            val connection = mc.connection
+        val self = nn.player
+        val connection = nn.connection
 
-            val centerX = islandX + islandWidth * 0.5f
-            val centerY = islandY + islandHeight * 0.5f
-            val halfWidth = maxOf(0.0f, islandWidth * 0.5f)
-            val halfHeight = maxOf(0.0f, islandHeight * 0.5f)
-            val maxDistanceSquared = maxOf(0.0, maxDistance * maxDistance)
-            val partialTick = if (nn.level.tickRateManager().isFrozen) 1.0f
-            else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-            var rendered = 0
+        val centerX = islandX + islandWidth * 0.5f
+        val centerY = islandY + islandHeight * 0.5f
+        val halfWidth = maxOf(0.0f, islandWidth * 0.5f)
+        val halfHeight = maxOf(0.0f, islandHeight * 0.5f)
+        val maxDistanceSquared = maxOf(0.0, maxDistance * maxDistance)
+        val partialTick = if (nn.level.tickRateManager().isFrozen) 1.0f
+        else nn.mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        var rendered = 0
 
-            for (player in nn.level.players()) {
-                if (!shouldRender(player, maxDistanceSquared, self, connection)) continue
+        for (player in nn.level.players()) {
+            if (!shouldRender(player, maxDistanceSquared, self, connection)) continue
 
-                val position =
-                    player.getPosition(partialTick).add(0.0, (player.bbHeight * TARGET_HEIGHT_FACTOR).toDouble(), 0.0)
-                val projected = WorldToScreen.calcWorld2ScreenRaw(position)
-                val target = resolveTarget(projected, screenWidth, screenHeight)
-                if (target == null || isInsideIsland(target.x, target.y, centerX, centerY, halfWidth, halfHeight)) {
-                    continue
-                }
-
-                val start = resolveIslandEdge(centerX, centerY, halfWidth, halfHeight, target.x, target.y)
-                val lineLength = distance(start[0], start[1], target.x, target.y)
-                if (!lineLength.isFinite() || lineLength <= ISLAND_EDGE_GAP) continue
-
-                renderer.addLine(start[0], start[1], target.x, target.y, lineWidth, lineColor)
-                rendered++
+            val position =
+                player.getPosition(partialTick).add(0.0, (player.bbHeight * TARGET_HEIGHT_FACTOR).toDouble(), 0.0)
+            val projected = WorldToScreen.calcWorld2ScreenRaw(position)
+            val target = resolveTarget(projected, screenWidth, screenHeight)
+            if (target == null || isInsideIsland(target.x, target.y, centerX, centerY, halfWidth, halfHeight)) {
+                continue
             }
 
-            rendered
+            val start = resolveIslandEdge(centerX, centerY, halfWidth, halfHeight, target.x, target.y)
+            val lineLength = distance(start[0], start[1], target.x, target.y)
+            if (!lineLength.isFinite() || lineLength <= ISLAND_EDGE_GAP) continue
+
+            renderer.addLine(start[0], start[1], target.x, target.y, lineWidth, lineColor)
+            rendered++
         }
+
+        return rendered
     }
 
     private fun shouldRender(

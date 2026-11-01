@@ -55,6 +55,14 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
     private var pendingSwapBack = false
 
     init {
+        onEnable {
+            resetAll()
+        }
+
+        onDisable {
+            resetAll()
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             if (Scaffold.isEmergencyPlacementActive) return@safeEventHandler
 
@@ -192,14 +200,6 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        resetAll()
-    }
-
-    override fun onDisable() {
-        resetAll()
     }
 
     private fun resetAll() {

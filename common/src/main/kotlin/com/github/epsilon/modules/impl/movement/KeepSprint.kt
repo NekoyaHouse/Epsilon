@@ -20,6 +20,10 @@ object KeepSprint : Module("Keep Sprint", Category.MOVEMENT) {
     private var shouldReSprint = false
 
     init {
+        onDisable {
+            shouldReSprint = false
+        }
+
         handler<AttackSlowdownEvent> { event ->
             when (mode) {
                 Mode.Vanilla -> event.cancel()
@@ -35,10 +39,6 @@ object KeepSprint : Module("Keep Sprint", Category.MOVEMENT) {
                 player.isSprinting = true
             }
         }
-    }
-
-    override fun onDisable() {
-        shouldReSprint = false
     }
 
 }

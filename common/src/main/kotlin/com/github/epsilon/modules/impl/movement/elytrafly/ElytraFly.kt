@@ -122,6 +122,18 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
     private var sprintSuppressTicks = 0
 
     init {
+        onEnable {
+            activeModeType = mode
+            getActiveMode().armUnbreakingTimer()
+            getActiveMode().onEnable()
+            stopSprintOnce()
+        }
+
+        onDisable {
+            sprintSuppressTicks = 0
+            getMode(activeModeType).onDisable()
+        }
+
         modes[ElytraFlightModes.Control] = ControlElytraFlightMode(this)
         modes[ElytraFlightModes.Pitch40] = Pitch40ElytraFlightMode(this)
         modes[ElytraFlightModes.NCP] = NCPElytraFlightMode(this)
@@ -165,18 +177,6 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         safeEventHandler<RightClickEvent> {
             getActiveMode().onRightClick()
         }
-    }
-
-    override fun onEnable() {
-        activeModeType = mode
-        getActiveMode().armUnbreakingTimer()
-        getActiveMode().onEnable()
-        stopSprintOnce()
-    }
-
-    override fun onDisable() {
-        sprintSuppressTicks = 0
-        getMode(activeModeType).onDisable()
     }
 
     /**

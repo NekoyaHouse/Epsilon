@@ -34,6 +34,14 @@ object MotionBlur : Module("Motion Blur", Category.RENDER) {
     private var frameCaptured = false
 
     init {
+        onEnable {
+            resetHistory()
+        }
+
+        onDisable {
+            resetHistory()
+        }
+
         handler<AfterRender3DEvent>(EventPriority.HIGHEST) { onAfterRender3D(it) }
         handler<GameJoinedEvent> { onGameJoined(it) }
         handler<GameLeftEvent> { onGameLeft(it) }
@@ -78,14 +86,6 @@ object MotionBlur : Module("Motion Blur", Category.RENDER) {
     }
 
     private fun onLevelUpdate(event: LevelUpdateEvent) {
-        resetHistory()
-    }
-
-    override fun onEnable() {
-        resetHistory()
-    }
-
-    override fun onDisable() {
         resetHistory()
     }
 

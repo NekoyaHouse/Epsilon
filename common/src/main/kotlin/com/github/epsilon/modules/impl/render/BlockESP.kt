@@ -39,6 +39,11 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
     var boxes: MutableList<AABB> = ArrayList()
 
     init {
+        onEnable {
+            boxes.clear()
+            canContinue = true
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
         handler<Render3DEvent> { onRender3D(it) }
     }
@@ -53,11 +58,6 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
         blocks.add(Blocks.SHULKER_BOX)
         blocks.addAll(Blocks.DYED_SHULKER_BOX.asList())
         return blocks
-    }
-
-    override fun onEnable() {
-        boxes.clear()
-        canContinue = true
     }
 
     private fun onPlayerTick(event: PlayerTickEvent.Pre) {

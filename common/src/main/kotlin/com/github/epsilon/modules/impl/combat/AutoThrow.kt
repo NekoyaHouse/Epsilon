@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -40,6 +41,24 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     private var currentTarget: LivingEntity? = null
 
     init {
+        onEnable {
+            timer.reset()
+            shouldThrow = false
+            lastSlot = -1
+            currentTarget = null
+        }
+
+        onDisable {
+            shouldThrow = false
+            currentTarget = null
+            runSafe {
+                if (lastSlot != -1) {
+                    player.inventory.selectedSlot = lastSlot
+                }
+            }
+            lastSlot = -1
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             val slot = getThrowSlot()
             if (player.mainHandItem.`is`(Items.SNOWBALL) ||
@@ -138,23 +157,6 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
                 }
                 shouldThrow = false
             }
-        }
-    }
-
-    override fun onEnable() {
-        timer.reset()
-        shouldThrow = false
-        lastSlot = -1
-        currentTarget = null
-    }
-
-    override fun onDisable() {
-        shouldThrow = false
-        currentTarget = null
-        val localPlayer = mc.player
-        if (localPlayer != null && lastSlot != -1) {
-            localPlayer.inventory.selectedSlot = lastSlot
-            lastSlot = -1
         }
     }
 

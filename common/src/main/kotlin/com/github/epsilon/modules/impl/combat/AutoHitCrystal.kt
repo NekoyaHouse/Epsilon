@@ -55,6 +55,10 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
     private val renderBoxes: MutableList<RenderBox> = ArrayList()
 
     init {
+        onEnable {
+            resetState()
+        }
+
         // 渲染事件不受模块启用状态过滤：残留方块需要继续淡出。
         handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
@@ -205,10 +209,6 @@ object AutoHitCrystal : Module("Auto Hit Crystal", Category.COMBAT) {
                 event.cancel()
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
     }
 
     context(nn: NonNullContext)

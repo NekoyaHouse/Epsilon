@@ -90,6 +90,13 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     private val delayPackets: Queue<Packet<*>> = ArrayDeque()
 
     init {
+        onDisable {
+            flush()
+            flushDelay()
+            resetReduceState()
+            resetDelayState()
+        }
+
         safeEventHandler<PacketEvent.Receive> { event ->
             synchronized(packetLock) {
                 when (mode) {
@@ -196,13 +203,6 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             Mode.Reduce -> " " + (if (delay) (System.currentTimeMillis() - startDelay).toString() + "ms" else "")
             Mode.Delay -> " " + delayTicksRemaining + "t"
         }
-    }
-
-    override fun onDisable() {
-        flush()
-        flushDelay()
-        resetReduceState()
-        resetDelayState()
     }
 
     private fun onModeChanged(newMode: Mode) {

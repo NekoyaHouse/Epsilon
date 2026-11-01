@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.Constants
-import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -11,6 +10,7 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -356,57 +356,57 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
     private var explosionsThisWindow: Int = 0
 
     init {
+        onEnable {
+            placeTimer.reset()
+            breakTimer.reset()
+            snapshotTimer.setMs(updateDelay.toLong())
+            explosionSampleTimer.reset()
+            placedPosMap.clear()
+            crystalSpawnMap.clear()
+            attackedCrystalMap.clear()
+            attackedPosMap.clear()
+            explosionSamples.clear()
+            explosionsThisWindow = 0
+            lastSwapTime = 0L
+            lastActiveTime = 0L
+            target = null
+            pendingSnapshot = null
+            latestSnapshot = null
+            asyncResult = AsyncResult.EMPTY
+            cachedRotationPlaceInfo = null
+            cachedPlaceInfo = null
+            cachedRotationBreakPlan = null
+            cachedBreakPlan = null
+            resetRenderState()
+            signalWorker()
+        }
+
+        onDisable {
+            placedPosMap.clear()
+            crystalSpawnMap.clear()
+            attackedCrystalMap.clear()
+            attackedPosMap.clear()
+            pendingSnapshot = null
+            latestSnapshot = null
+            asyncResult = AsyncResult.EMPTY
+            cachedRotationPlaceInfo = null
+            cachedPlaceInfo = null
+            cachedRotationBreakPlan = null
+            cachedBreakPlan = null
+            target = null
+            explosionSamples.clear()
+            explosionsThisWindow = 0
+            resetRenderState()
+            signalWorker()
+        }
+
         workerThread.isDaemon = true
         workerThread.start()
 
         safeEventHandler<PlayerTickEvent.Pre> { onTick() }
-        handler<PacketEvent.Receive> { onPacketReceive(it) }
-        handler<Render3DEvent> { onRender3D() }
-        handler<Render2DEvent.Level> { onRender2D(it) }
-    }
-
-    override fun onEnable() {
-        placeTimer.reset()
-        breakTimer.reset()
-        snapshotTimer.setMs(updateDelay.toLong())
-        explosionSampleTimer.reset()
-        placedPosMap.clear()
-        crystalSpawnMap.clear()
-        attackedCrystalMap.clear()
-        attackedPosMap.clear()
-        explosionSamples.clear()
-        explosionsThisWindow = 0
-        lastSwapTime = 0L
-        lastActiveTime = 0L
-        target = null
-        pendingSnapshot = null
-        latestSnapshot = null
-        asyncResult = AsyncResult.EMPTY
-        cachedRotationPlaceInfo = null
-        cachedPlaceInfo = null
-        cachedRotationBreakPlan = null
-        cachedBreakPlan = null
-        resetRenderState()
-        signalWorker()
-    }
-
-    override fun onDisable() {
-        placedPosMap.clear()
-        crystalSpawnMap.clear()
-        attackedCrystalMap.clear()
-        attackedPosMap.clear()
-        pendingSnapshot = null
-        latestSnapshot = null
-        asyncResult = AsyncResult.EMPTY
-        cachedRotationPlaceInfo = null
-        cachedPlaceInfo = null
-        cachedRotationBreakPlan = null
-        cachedBreakPlan = null
-        target = null
-        explosionSamples.clear()
-        explosionsThisWindow = 0
-        resetRenderState()
-        signalWorker()
+        safeEventHandler<PacketEvent.Receive> { onPacketReceive(it) }
+        safeEventHandler<Render3DEvent> { onRender3D() }
+        safeEventHandler<Render2DEvent.Level> { onRender2D(it) }
     }
 
     context(nn: NonNullContext)
@@ -448,9 +448,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun onPacketReceive(event: PacketEvent.Receive) {
-        if (nullCheck() || !isEnabled) return
-
         when (val packet = event.packet) {
             is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
                 handleSpawnPacket(packet)
@@ -460,9 +459,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun onRender3D() {
-        if (nullCheck()) return
-
         renderTargetPredictions()
 
         val prevPos = renderPrevPos ?: return
@@ -544,7 +542,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 if (currentTarget != null) currentTarget.name.string else "None"
             }
 
-            HudInfo.Damage -> {
+            HudInfo.Damage -> runSafe {
                 var info = getValidPlaceInfo(cachedPlaceInfo, false)
                 if (info == null) {
                     info = getValidPlaceInfo(cachedRotationPlaceInfo, false)
@@ -554,7 +552,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
                 } else {
                     "0.0/0.0"
                 }
-            }
+            } ?: "0.0/0.0"
 
             HudInfo.CalculationTime -> String.format(Locale.ROOT, "%.2f ms", asyncResult.calculationNanos / 1_000_000.0)
         }
@@ -583,12 +581,12 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
                 lastProcessedId = snapshot.id
                 val start = System.nanoTime()
-                val nn = NonNullContext.instance
-                if (nn == null) {
+                val result = runSafe { evaluateSnapshot(snapshot, start) }
+                if (result == null) {
                     waitForSignal(50L, 0)
                     continue
                 }
-                asyncResult = context(nn) { evaluateSnapshot(snapshot, start) }
+                asyncResult = result
                 cachedRotationPlaceInfo = asyncResult.rotationPlaceInfo
                 cachedPlaceInfo = asyncResult.placeInfo
                 cachedRotationBreakPlan = asyncResult.rotationBreakPlan
@@ -1188,14 +1186,15 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return result.primaryTarget?.entity
     }
 
+    context(nn: NonNullContext)
     private fun getValidPlaceInfo(placeInfo: PlaceInfo?): PlaceInfo? {
         return getValidPlaceInfo(placeInfo, true)
     }
 
+    context(nn: NonNullContext)
     private fun getValidPlaceInfo(placeInfo: PlaceInfo?, requirePlaceable: Boolean): PlaceInfo? {
-        if (placeInfo == null || nullCheck()) return null
-        val player = this.mc.player ?: return null
-        if (this.mc.level == null) return null
+        if (placeInfo == null) return null
+        val player = nn.player
         if (placeDistanceSq(
                 player,
                 placeInfo.hitVec.x,
@@ -1213,8 +1212,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun getValidBreakPlan(breakPlan: BreakPlan?): BreakPlan? {
-        if (breakPlan == null || nullCheck()) return null
-        val level = this.mc.level ?: return null
+        if (breakPlan == null) return null
+        val level = nn.level
         val entity = level.getEntity(breakPlan.entityId)
         if (entity !is EndCrystal || !entity.isAlive) {
             return null
@@ -1378,13 +1377,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         return true
     }
 
-    private fun handleSpawnPacket(packet: ClientboundAddEntityPacket) {
-        val nn = NonNullContext.instance ?: return
-        context(nn) { handleSpawnPacketImpl(packet) }
-    }
-
     context(nn: NonNullContext)
-    private fun handleSpawnPacketImpl(packet: ClientboundAddEntityPacket) {
+    private fun handleSpawnPacket(packet: ClientboundAddEntityPacket) {
         crystalSpawnMap[packet.id] = System.currentTimeMillis()
         val snapshot = latestSnapshot
         if (snapshot == null || snapshot.targets.isEmpty() || bbtt) return
@@ -1429,13 +1423,8 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
         breakDirect(immediate)
     }
 
-    private fun handleExplosionPacket(packet: ClientboundSoundPacket) {
-        val nn = NonNullContext.instance ?: return
-        context(nn) { handleExplosionPacketImpl(packet) }
-    }
-
     context(nn: NonNullContext)
-    private fun handleExplosionPacketImpl(packet: ClientboundSoundPacket) {
+    private fun handleExplosionPacket(packet: ClientboundSoundPacket) {
         if (packet.sound !== SoundEvents.GENERIC_EXPLODE) return
 
         val soundPos = Vec3(packet.x, packet.y, packet.z)

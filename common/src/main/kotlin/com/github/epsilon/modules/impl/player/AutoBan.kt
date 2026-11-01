@@ -30,6 +30,16 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
     private var currentIndex = 0
 
     init {
+        onEnable {
+            loadWords()
+            countdownTicks = 60
+            currentIndex = 0
+        }
+
+        onDisable {
+            words.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (countdownTicks > 0) {
                 if (countdownTicks == 60) {
@@ -53,16 +63,6 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
                 lastSendTime = System.currentTimeMillis()
             }
         }
-    }
-
-    override fun onEnable() {
-        loadWords()
-        countdownTicks = 60
-        currentIndex = 0
-    }
-
-    override fun onDisable() {
-        words.clear()
     }
 
     private fun sendNextWord() {

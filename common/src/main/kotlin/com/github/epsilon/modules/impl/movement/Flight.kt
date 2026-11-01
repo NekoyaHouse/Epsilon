@@ -15,6 +15,12 @@ object Flight : Module("Flight", Category.MOVEMENT) {
     private val verticalSpeed by doubleSetting("Vertical Speed", 1.0, 0.1..5.0, 0.1)
 
     init {
+        onDisable {
+            runSafe {
+                if (stopOnDisable) player.deltaMovement = Vec3(0.0, 0.0, 0.0)
+            }
+        }
+
         safeEventHandler<SendPositionEvent> {
             var y = 0.0
 
@@ -26,12 +32,6 @@ object Flight : Module("Flight", Category.MOVEMENT) {
 
             val strafe = MoveUtils.forward(horizontalSpeed)
             player.deltaMovement = Vec3(strafe[0], y, strafe[1])
-        }
-    }
-
-    override fun onDisable() {
-        runSafe {
-            if (stopOnDisable) player.deltaMovement = Vec3(0.0, 0.0, 0.0)
         }
     }
 

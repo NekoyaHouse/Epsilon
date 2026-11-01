@@ -38,6 +38,16 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
     private var switchClock = 0
 
     init {
+        onEnable {
+            resetState()
+            pressed = false
+        }
+
+        onDisable {
+            resetState()
+            pressed = false
+        }
+
         handler<KeyPressEvent> { event ->
             if (event.getKey() == activateKey) {
                 if (event.action == InputConstants.RELEASE) {
@@ -116,16 +126,6 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-        pressed = false
-    }
-
-    override fun onDisable() {
-        resetState()
-        pressed = false
     }
 
     context(nn: NonNullContext)

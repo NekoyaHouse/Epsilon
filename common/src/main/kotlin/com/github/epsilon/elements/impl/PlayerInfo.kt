@@ -11,6 +11,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
 import com.google.common.base.Suppliers
@@ -58,6 +59,20 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private var rowsInitialized: Boolean = false
 
     init {
+        onEnable {
+            popCounts.clear()
+            nameScrollStartTimes.clear()
+            cachedRows = emptyList()
+            rowsInitialized = false
+        }
+
+        onDisable {
+            popCounts.clear()
+            nameScrollStartTimes.clear()
+            cachedRows = emptyList()
+            rowsInitialized = false
+        }
+
         safeEventHandler<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
         safeEventHandler<PlayerTickEvent.Post> { refreshRows() }
         handler<GameLeftEvent> {
@@ -68,23 +83,12 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         }
     }
 
-    override fun onEnable() {
-        popCounts.clear()
-        nameScrollStartTimes.clear()
-        cachedRows = emptyList()
-        rowsInitialized = false
-    }
-
-    override fun onDisable() {
-        popCounts.clear()
-        nameScrollStartTimes.clear()
-        cachedRows = emptyList()
-        rowsInitialized = false
-    }
-
     override fun render(deltaTracker: DeltaTracker) {
-        if (NonNullContext.instance == null) return
+        runSafe { renderPlayers() }
+    }
 
+    context(nn: NonNullContext)
+    private fun renderPlayers() {
         val textRenderer = textRendererSupplier.get()
         if (!rowsInitialized) {
             refreshRows()
@@ -151,9 +155,9 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun refreshRows() {
-        val nn = NonNullContext.instance ?: return
-        cachedRows = context(nn) { collectRows() }
+        cachedRows = collectRows()
         rowsInitialized = true
         pruneNameScrollState(cachedRows)
     }

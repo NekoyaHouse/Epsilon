@@ -56,6 +56,15 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
     private val attackTimer = TimerUtils()
 
     init {
+        onEnable {
+            target = null
+            attackTimer.reset()
+        }
+
+        onDisable {
+            target = null
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (ElytraCombat.isControllingCombat()) {
                 return@safeEventHandler
@@ -90,15 +99,6 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
             doAura(currentTarget)
         }
-    }
-
-    override fun onEnable() {
-        target = null
-        attackTimer.reset()
-    }
-
-    override fun onDisable() {
-        target = null
     }
 
     context(nn: NonNullContext)

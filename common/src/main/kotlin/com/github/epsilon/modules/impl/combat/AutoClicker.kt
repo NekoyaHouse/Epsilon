@@ -47,6 +47,11 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     private val rightState = ButtonState()
 
     init {
+        onDisable {
+            leftState.reset()
+            rightState.reset()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@safeEventHandler
 
@@ -64,11 +69,6 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
                 rightState.reset()
             }
         }
-    }
-
-    override fun onDisable() {
-        leftState.reset()
-        rightState.reset()
     }
 
     private fun isLeftButtonEnabled(): Boolean {

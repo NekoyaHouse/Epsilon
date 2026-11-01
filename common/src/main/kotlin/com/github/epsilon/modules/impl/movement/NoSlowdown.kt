@@ -50,6 +50,8 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
     private val packets: Queue<Packet<*>> = LinkedBlockingQueue()
 
     init {
+        onDisable { resetState() }
+
         safeEventHandler<SendPositionEvent> {
             if (mode != Mode.GrimBlink) {
                 return@safeEventHandler
@@ -64,7 +66,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                         EpsilonTranslations.Notifications.TRANSACTION_COUNT_TOO_HIGH.getTranslatedName()
                     )
                     mc.options.keyUse.isDown = false
-                    onDisable()
+                    resetState()
                 }
             }
 
@@ -190,7 +192,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
         }
     }
 
-    override fun onDisable() {
+    private fun resetState() {
         flush()
         eating = false
         ticks = 0

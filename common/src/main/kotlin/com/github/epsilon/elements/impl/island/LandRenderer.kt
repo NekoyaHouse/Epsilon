@@ -12,7 +12,8 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -128,8 +129,7 @@ class LandRenderer(
     }
 
     private fun updateWatermarkText() {
-        val nn = NonNullContext.instance
-        val playerName = nn?.player?.gameProfile?.name ?: "Player"
+        val playerName = runSafeOrElse("Player") { player.gameProfile.name }
         val serverAddress: String
         if (mc.isLocalServer) {
             serverAddress = "Singleplayer"
@@ -204,15 +204,13 @@ class LandRenderer(
             val online = connection.onlinePlayers.size
             if (online > 0) return online
         }
-        return NonNullContext.instance?.level?.players()?.size ?: 0
+        return runSafeOrElse(0) { level.players().size }
     }
 
     private fun getLatency(): Int {
         if (mc.isLocalServer) return 0
 
-        val player = NonNullContext.instance?.player
-        val connection: ClientPacketListener? = mc.connection
-        if (connection != null && player != null) {
+        runSafe {
             val playerInfo: PlayerInfo? = connection.getPlayerInfo(player.uuid)
             if (playerInfo != null && playerInfo.latency >= 0) {
                 return playerInfo.latency

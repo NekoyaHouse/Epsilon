@@ -26,6 +26,14 @@ object NoFall : Module("No Fall", Category.PLAYER) {
     private var lastFallDistance = 0.0
 
     init {
+        onEnable {
+            lastFallDistance = 0.0
+        }
+
+        onDisable {
+            lastFallDistance = 0.0
+        }
+
         safeEventHandler<SendPositionEvent> { event ->
             when (mode) {
                 Mode.GroundSpoof -> {
@@ -75,14 +83,6 @@ object NoFall : Module("No Fall", Category.PLAYER) {
                 jump = false
             }
         }
-    }
-
-    override fun onEnable() {
-        lastFallDistance = 0.0
-    }
-
-    override fun onDisable() {
-        lastFallDistance = 0.0
     }
 
 }

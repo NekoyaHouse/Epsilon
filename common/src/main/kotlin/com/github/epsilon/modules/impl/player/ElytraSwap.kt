@@ -34,6 +34,11 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
     private var isKeyDown = false
 
     init {
+        onEnable {
+            resetState()
+            isKeyDown = false
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@safeEventHandler
 
@@ -110,11 +115,6 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-        isKeyDown = false
     }
 
     context(nn: NonNullContext)

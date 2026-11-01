@@ -36,6 +36,12 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
     private var nextEntityId = Int.MIN_VALUE
 
     init {
+        onDisable {
+            synchronized(ghosts) {
+                ghosts.clear()
+            }
+        }
+
         safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
@@ -61,12 +67,6 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
                 ghosts.removeAll { ghostPlayer -> ghostPlayer.render(event) }
                 WireframeEntityRenderer.endBatch()
             }
-        }
-    }
-
-    override fun onDisable() {
-        synchronized(ghosts) {
-            ghosts.clear()
         }
     }
 

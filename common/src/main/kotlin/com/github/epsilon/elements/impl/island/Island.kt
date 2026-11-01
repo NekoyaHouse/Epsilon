@@ -11,6 +11,8 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
@@ -66,43 +68,45 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     private var target: LivingEntity? = null
 
     init {
+        onEnable {
+            if (music && ClientPlatform.isWindowsX64()) SmtcService.INSTANCE.start()
+        }
+
+        onDisable {
+            LandController.removeInstances(TargetInstance::class.java)
+            LandController.removeInstances(ScaffoldBlocksInstance::class.java)
+            LandController.removeInstances(BalanceInstance::class.java)
+            LandController.removeInstances(TabListInstance::class.java)
+            LandController.removeInstances(MusicInstance::class.java)
+            SmtcService.INSTANCE.stop()
+            rectRenderer?.clear()
+            target = null
+        }
+
         handler<Render2DEvent.Level> {
-            if (!traces || nullCheck() || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
+            if (!traces || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
                 rectRenderer?.clear()
                 return@handler
             }
 
-            var renderer = rectRenderer
-            if (renderer == null) {
-                renderer = RectRenderer.create()
-                rectRenderer = renderer
-            }
-            renderer.clear()
-            val activeRenderer = renderer
-            val traceCount = TracesRenderer.render(
-                activeRenderer,
-                landRenderer.x, landRenderer.y, landRenderer.width, landRenderer.height,
-                traceRange, traceWidth.toFloat(), traceColor
-            )
-            if (traceCount > 0) {
-                OverlayAntiAlias.render(4, Runnable { activeRenderer.drawAndClear() })
-            }
+            runSafe {
+                var renderer = rectRenderer
+                if (renderer == null) {
+                    renderer = RectRenderer.create()
+                    rectRenderer = renderer
+                }
+                renderer.clear()
+                val activeRenderer = renderer
+                val traceCount = TracesRenderer.render(
+                    activeRenderer,
+                    landRenderer.x, landRenderer.y, landRenderer.width, landRenderer.height,
+                    traceRange, traceWidth.toFloat(), traceColor
+                )
+                if (traceCount > 0) {
+                    OverlayAntiAlias.render(4, Runnable { activeRenderer.drawAndClear() })
+                }
+            } ?: rectRenderer?.clear()
         }
-    }
-
-    override fun onEnable() {
-        if (music && ClientPlatform.isWindowsX64()) SmtcService.INSTANCE.start()
-    }
-
-    override fun onDisable() {
-        LandController.removeInstances(TargetInstance::class.java)
-        LandController.removeInstances(ScaffoldBlocksInstance::class.java)
-        LandController.removeInstances(BalanceInstance::class.java)
-        LandController.removeInstances(TabListInstance::class.java)
-        LandController.removeInstances(MusicInstance::class.java)
-        SmtcService.INSTANCE.stop()
-        rectRenderer?.clear()
-        target = null
     }
 
     override fun render(deltaTracker: DeltaTracker) {
@@ -158,8 +162,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
         val instance = LandController.getInstance(ScaffoldBlocksInstance::class.java)
         if (instance == null) {
-            val nn = NonNullContext.instance ?: return
-            val count: Supplier<Int> = Supplier { context(nn) { InvHelper.getBlockCountInInventory() } }
+            val count: Supplier<Int> = Supplier { runSafeOrElse(0) { InvHelper.getBlockCountInInventory() } }
             val icon: Supplier<ItemStack> = Supplier { Scaffold.getBlockStack() }
             LandController.post(
                 ScaffoldBlocksInstance(
@@ -191,8 +194,9 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun updateTabListInstance() {
-        if (!tabList || nullCheck() || mc.gui.screen() != null || !mc.options.keyPlayerList.isDown) {
+        if (!tabList || nn.mc.gui.screen() != null || !nn.mc.options.keyPlayerList.isDown) {
             LandController.removeInstances(TabListInstance::class.java)
             return
         }
@@ -202,7 +206,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
                 TabListInstance(
                     textRendererSupplier,
                     CheckPattern {
-                        !tabList || nullCheck() || mc.gui.screen() != null || !mc.options.keyPlayerList.isDown
+                        !runSafeOrFalse { tabList && mc.gui.screen() == null && mc.options.keyPlayerList.isDown }
                     }
                 )
             )

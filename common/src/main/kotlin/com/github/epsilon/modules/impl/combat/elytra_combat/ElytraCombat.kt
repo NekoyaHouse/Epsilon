@@ -176,6 +176,44 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     var lastFallDistance: Double = 0.0
 
     init {
+        onEnable {
+            // 自动接管时先保存原 ElytraFly 状态，避免关闭模块后把用户设置覆盖掉。
+            this.currentBehavior = this.behaviors.getValue(this.mode)
+            this.capturedElytraEnabled = ElytraFly.isEnabled
+            this.capturedElytraMode = ElytraFly.mode
+            this.changedElytraControl = false
+            if (this.autoControlElytra) {
+                if (!ElytraFly.isEnabled) {
+                    ElytraFly.isEnabled = true
+                    this.changedElytraControl = true
+                }
+                if (ElytraFly.mode != ElytraFlightModes.Control) {
+                    ElytraFly.mode = ElytraFlightModes.Control
+                    this.changedElytraControl = true
+                }
+            }
+            this.flightPlanner.setDataSize(this.dataSize)
+            resetState()
+        }
+
+        onDisable {
+            // 释放长矛蓄力、停止后台寻路线程，并恢复接管前的 ElytraFly 状态。
+            CombatWeaponController.stopSpearUse()
+            this.flightPlanner.stop()
+            this.controlInput = null
+            this.target = null
+            this.latestIntent = FlightIntent.idle(Vec3.ZERO)
+            if (this.changedElytraControl) {
+                val capturedMode = this.capturedElytraMode
+                if (capturedMode != null && ElytraFly.mode != capturedMode) {
+                    ElytraFly.mode = capturedMode
+                }
+                if (!this.capturedElytraEnabled && ElytraFly.isEnabled) {
+                    ElytraFly.isEnabled = false
+                }
+            }
+        }
+
         // tick 顺序：刷新目标 → 更新预测快照 → 消费命中 → 行为状态机 → 限速 → 转控制输入。
         safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGH) { onPlayerTick() }
 
@@ -196,44 +234,6 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
         // 渲染 4 格期望方向，便于区分直飞、A* 航点和避障意图。
         handler<Render3DEvent> { onRender3D() }
-    }
-
-    override fun onEnable() {
-        // 自动接管时先保存原 ElytraFly 状态，避免关闭模块后把用户设置覆盖掉。
-        this.currentBehavior = this.behaviors.getValue(this.mode)
-        this.capturedElytraEnabled = ElytraFly.isEnabled
-        this.capturedElytraMode = ElytraFly.mode
-        this.changedElytraControl = false
-        if (this.autoControlElytra) {
-            if (!ElytraFly.isEnabled) {
-                ElytraFly.isEnabled = true
-                this.changedElytraControl = true
-            }
-            if (ElytraFly.mode != ElytraFlightModes.Control) {
-                ElytraFly.mode = ElytraFlightModes.Control
-                this.changedElytraControl = true
-            }
-        }
-        this.flightPlanner.setDataSize(this.dataSize)
-        resetState()
-    }
-
-    override fun onDisable() {
-        // 释放长矛蓄力、停止后台寻路线程，并恢复接管前的 ElytraFly 状态。
-        CombatWeaponController.stopSpearUse()
-        this.flightPlanner.stop()
-        this.controlInput = null
-        this.target = null
-        this.latestIntent = FlightIntent.idle(Vec3.ZERO)
-        if (this.changedElytraControl) {
-            val capturedMode = this.capturedElytraMode
-            if (capturedMode != null && ElytraFly.mode != capturedMode) {
-                ElytraFly.mode = capturedMode
-            }
-            if (!this.capturedElytraEnabled && ElytraFly.isEnabled) {
-                ElytraFly.isEnabled = false
-            }
-        }
     }
 
     fun getControlInput(): ElytraCombatInput? {

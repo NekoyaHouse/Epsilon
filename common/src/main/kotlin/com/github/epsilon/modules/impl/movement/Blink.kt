@@ -48,6 +48,49 @@ object Blink : Module("Blink", Category.MOVEMENT) {
     private var lastLerpZ = 0.0
 
     init {
+        onEnable {
+            runSafe {
+                serverX = player.x
+                prevServerX = serverX
+                serverY = player.y
+                prevServerY = serverY
+                serverZ = player.z
+                prevServerZ = serverZ
+                serverYRot = player.yRot
+                prevServerYRot = serverYRot
+                serverXRot = player.xRot
+                prevServerXRot = serverXRot
+                serverYHeadRot = player.yHeadRot
+                prevServerYHeadRot = serverYHeadRot
+                if (fakePlayer) {
+                    val fake = RemotePlayer(
+                        level,
+                        GameProfile(UUID.nameUUIDFromBytes("".toByteArray(StandardCharsets.UTF_8)), "")
+                    )
+                    fake.id = -1337
+                    fake.copyPosition(player)
+                    fake.yRot = player.yRot
+                    fake.xRot = player.xRot
+                    fake.yHeadRot = player.yHeadRot
+                    fake.health = player.health
+                    fake.absorptionAmount = player.absorptionAmount
+                    level.addEntity(fake)
+                    localPlayer = fake
+                }
+            }
+        }
+
+        onDisable {
+            runSafe {
+                if (fakePlayer) {
+                    localPlayer?.let { level.removeEntity(it.id, Entity.RemovalReason.DISCARDED) }
+                }
+                releaseAll()
+            }
+            packets.clear()
+            localPlayer = null
+        }
+
         safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundHelloPacket || packet is ClientIntentionPacket) return@safeEventHandler
@@ -99,48 +142,6 @@ object Blink : Module("Blink", Category.MOVEMENT) {
                     releaseTick()
                 }
             }
-        }
-    }
-
-    override fun onEnable() {
-        runSafe {
-            serverX = player.x
-            prevServerX = serverX
-            serverY = player.y
-            prevServerY = serverY
-            serverZ = player.z
-            prevServerZ = serverZ
-            serverYRot = player.yRot
-            prevServerYRot = serverYRot
-            serverXRot = player.xRot
-            prevServerXRot = serverXRot
-            serverYHeadRot = player.yHeadRot
-            prevServerYHeadRot = serverYHeadRot
-            if (fakePlayer) {
-                val fake = RemotePlayer(
-                    level,
-                    GameProfile(UUID.nameUUIDFromBytes("".toByteArray(StandardCharsets.UTF_8)), "")
-                )
-                fake.id = -1337
-                fake.copyPosition(player)
-                fake.yRot = player.yRot
-                fake.xRot = player.xRot
-                fake.yHeadRot = player.yHeadRot
-                fake.health = player.health
-                fake.absorptionAmount = player.absorptionAmount
-                level.addEntity(fake)
-                localPlayer = fake
-            }
-        }
-    }
-
-    override fun onDisable() {
-        runSafe {
-            if (fakePlayer) {
-                localPlayer?.let { level.removeEntity(it.id, Entity.RemovalReason.DISCARDED) }
-            }
-            releaseAll()
-            packets.clear()
         }
     }
 

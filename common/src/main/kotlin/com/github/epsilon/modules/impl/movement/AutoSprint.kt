@@ -11,6 +11,12 @@ import com.github.epsilon.modules.impl.player.InvManager
 object AutoSprint : Module("Auto Sprint", Category.MOVEMENT) {
 
     init {
+        onDisable {
+            if (mc.options.keySprint.isDown) {
+                mc.options.keySprint.isDown = false
+            }
+        }
+
         safeEventHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
             // ElytraFly 启动时会停一次疾跑，这段时间内不要立刻把疾跑键按回去。
             if (ElytraFly.isSprintSuppressed) return@safeEventHandler
@@ -19,12 +25,6 @@ object AutoSprint : Module("Auto Sprint", Category.MOVEMENT) {
             if (sprintTransition) return@safeEventHandler
 
             mc.options.keySprint.isDown = mc.gui.screen() == null
-        }
-    }
-
-    override fun onDisable() {
-        if (mc.options.keySprint.isDown) {
-            mc.options.keySprint.isDown = false
         }
     }
 

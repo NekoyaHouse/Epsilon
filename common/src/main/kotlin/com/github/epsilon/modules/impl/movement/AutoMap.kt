@@ -53,6 +53,18 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private var takeoffBaseY = Double.NaN
 
     init {
+        onEnable {
+            saveTicks = 0
+            runSafe {
+                initializeInWorld()
+            }
+        }
+
+        onDisable {
+            initializedInWorld = false
+            restoreFlightControl()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (!initializedInWorld) {
                 initializeInWorld()
@@ -72,18 +84,6 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
                 event.jump = true
             }
         }
-    }
-
-    override fun onEnable() {
-        saveTicks = 0
-        runSafe {
-            initializeInWorld()
-        }
-    }
-
-    override fun onDisable() {
-        initializedInWorld = false
-        restoreFlightControl()
     }
 
     override fun getInfo(): String? {
@@ -139,6 +139,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         saveTicks = 0
     }
 
+    context(nn: NonNullContext)
     private fun initializeInWorld() {
         initializedInWorld = true
 
@@ -235,27 +236,24 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     }
 
     private fun resetRecord(notify: Boolean) {
-        if (NonNullContext.instance == null) {
+        runSafe { resetRouteToPlayer(true) } ?: run {
             if (notify) sendMessage("当前没有可用的玩家位置")
             return
         }
-
-        resetRouteToPlayer(true)
         writeRecord(false)
         if (notify) sendMessage("已重置记录")
     }
 
+    context(nn: NonNullContext)
     private fun resetRouteToPlayer(dirty: Boolean) {
-        runSafe {
-            centerX = player.x
-            centerZ = player.z
-            dimensionId = currentDimension()
-            spiralAngle = normalizeAngle(angleStep())
-            spiralRadius = radiusStep()
-            routeLoaded = true
-            routeDirty = dirty
-            saveTicks = 0
-        }
+        centerX = nn.player.x
+        centerZ = nn.player.z
+        dimensionId = currentDimension()
+        spiralAngle = normalizeAngle(angleStep())
+        spiralRadius = radiusStep()
+        routeLoaded = true
+        routeDirty = dirty
+        saveTicks = 0
     }
 
     private fun updateTakeoffTarget(forceReset: Boolean) {
@@ -277,11 +275,10 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
     private fun writeRecord(notify: Boolean) {
         if (!routeLoaded) {
-            if (NonNullContext.instance == null) {
+            runSafe { resetRouteToPlayer(true) } ?: run {
                 if (notify) sendMessage("暂无可写入的记录")
                 return
             }
-            resetRouteToPlayer(true)
         }
 
         routeDirty = false

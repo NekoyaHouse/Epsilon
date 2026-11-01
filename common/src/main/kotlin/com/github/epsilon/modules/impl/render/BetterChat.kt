@@ -54,19 +54,19 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
     private var chatTextScissor: ScreenRectangle? = null
 
     init {
+        onEnable {
+            resetAnimations()
+        }
+
+        onDisable {
+            resetAnimations()
+        }
+
         setDefaultEnabled(true)
     }
 
     init {
         handler<Render2DEvent.HUD> { onRender2D(it) }
-    }
-
-    override fun onEnable() {
-        resetAnimations()
-    }
-
-    override fun onDisable() {
-        resetAnimations()
     }
 
     private fun onRender2D(event: Render2DEvent.HUD) {

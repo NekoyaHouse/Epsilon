@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
@@ -112,48 +113,47 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
     private val instantTimer = TimerUtils()
 
     init {
+        onEnable {
+            maxBreaksCount = 0
+            hasSwitch = false
+            secondHasSwitch = false
+            bypassTimer.setMs(917813L)
+            mineTimer.setMs(917813L)
+            instantTimer.setMs(917813L)
+            timer.setMs(917813L)
+            secondTimer.setMs(917813L)
+            targetPos = null
+            secondPos = null
+            started = false
+            secondStarted = false
+            mainProgressPercent = 0
+            secondProgressPercent = 0
+            progress = 0.0f
+            secondProgress = 0.0f
+            lastTime = System.currentTimeMillis()
+            secondLastTime = System.currentTimeMillis()
+            fadeLastTime = System.currentTimeMillis()
+            renderPos = null
+            secondRenderPos = null
+            renderProgress = 0.0
+            secondRenderProgress = 0.0
+        }
+
+        onDisable {
+            runSafe {
+                if (hasSwitch) {
+                    InvUtils.swap(oldSlot, false)
+                }
+                if (secondHasSwitch) {
+                    InvUtils.swap(oldSlot, false)
+                }
+            }
+            hasSwitch = false
+            secondHasSwitch = false
+        }
+
         safeEventHandler<StartDestroyBlockEvent> { onStartBreakingBlock(it) }
         safeEventHandler<Render3DEvent> { onRender(it) }
-    }
-
-    override fun onEnable() {
-        maxBreaksCount = 0
-        hasSwitch = false
-        secondHasSwitch = false
-        bypassTimer.setMs(917813L)
-        mineTimer.setMs(917813L)
-        instantTimer.setMs(917813L)
-        timer.setMs(917813L)
-        secondTimer.setMs(917813L)
-        targetPos = null
-        secondPos = null
-        started = false
-        secondStarted = false
-        mainProgressPercent = 0
-        secondProgressPercent = 0
-        progress = 0.0f
-        secondProgress = 0.0f
-        lastTime = System.currentTimeMillis()
-        secondLastTime = System.currentTimeMillis()
-        fadeLastTime = System.currentTimeMillis()
-        renderPos = null
-        secondRenderPos = null
-        renderProgress = 0.0
-        secondRenderProgress = 0.0
-    }
-
-    override fun onDisable() {
-        val nn = NonNullContext.instance ?: return
-        context(nn) {
-            if (hasSwitch) {
-                InvUtils.swap(oldSlot, false)
-                hasSwitch = false
-            }
-            if (secondHasSwitch) {
-                InvUtils.swap(oldSlot, false)
-                secondHasSwitch = false
-            }
-        }
     }
 
     private fun onStartBreakingBlock(event: StartDestroyBlockEvent) {

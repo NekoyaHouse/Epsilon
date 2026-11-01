@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -63,6 +64,65 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
     private var rotation: Rotation? = null
 
     init {
+        onEnable {
+            runSafe {
+                fovScale = mc.options.fovEffectScale().get()
+                bobView = mc.options.bobView().get()
+                if (staticView) {
+                    mc.options.fovEffectScale().set(0.0)
+                    mc.options.bobView().set(false)
+                }
+                yaw = player.yRot
+                pitch = player.xRot
+
+                perspective = mc.options.cameraType
+                speedValue = speed
+
+                val cameraPos = mc.gameRenderer.mainCamera().position()
+                pos.set(cameraPos.x, cameraPos.y, cameraPos.z)
+                prevPos.set(pos)
+
+                if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
+                    yaw += 180
+                    pitch *= -1
+                }
+
+                lastYaw = yaw
+                lastPitch = pitch
+
+                isSneaking = mc.options.keyShift.isDown
+
+                forward = KeybindUtils.isPressed(mc.options.keyUp)
+                backward = KeybindUtils.isPressed(mc.options.keyDown)
+                right = KeybindUtils.isPressed(mc.options.keyRight)
+                left = KeybindUtils.isPressed(mc.options.keyLeft)
+                up = KeybindUtils.isPressed(mc.options.keyJump)
+                down = KeybindUtils.isPressed(mc.options.keyShift)
+
+                unpress()
+
+                if (reloadChunks) {
+                    mc.levelExtractor.allChanged()
+                }
+            }
+        }
+
+        onDisable {
+            if (reloadChunks) {
+                mc.execute { mc.levelExtractor.allChanged() }
+            }
+
+            val persp = perspective
+            if (persp != null) mc.options.cameraType = persp
+
+            if (staticView) {
+                mc.options.fovEffectScale().set(fovScale)
+                mc.options.bobView().set(bobView)
+            }
+
+            isSneaking = false
+        }
+
         handler<OpenScreenEvent> {
             unpress()
 
@@ -199,64 +259,6 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
                 sendChatInfo("Toggled off because you changed dimensions.")
             }
         }
-    }
-
-    override fun onEnable() {
-        val player = mc.player ?: return
-        fovScale = mc.options.fovEffectScale().get()
-        bobView = mc.options.bobView().get()
-        if (staticView) {
-            mc.options.fovEffectScale().set(0.0)
-            mc.options.bobView().set(false)
-        }
-        yaw = player.yRot
-        pitch = player.xRot
-
-        perspective = mc.options.cameraType
-        speedValue = speed
-
-        val cameraPos = mc.gameRenderer.mainCamera().position()
-        pos.set(cameraPos.x, cameraPos.y, cameraPos.z)
-        prevPos.set(pos)
-
-        if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
-            yaw += 180
-            pitch *= -1
-        }
-
-        lastYaw = yaw
-        lastPitch = pitch
-
-        isSneaking = mc.options.keyShift.isDown
-
-        forward = KeybindUtils.isPressed(mc.options.keyUp)
-        backward = KeybindUtils.isPressed(mc.options.keyDown)
-        right = KeybindUtils.isPressed(mc.options.keyRight)
-        left = KeybindUtils.isPressed(mc.options.keyLeft)
-        up = KeybindUtils.isPressed(mc.options.keyJump)
-        down = KeybindUtils.isPressed(mc.options.keyShift)
-
-        unpress()
-
-        if (reloadChunks) {
-            mc.levelExtractor.allChanged()
-        }
-    }
-
-    override fun onDisable() {
-        if (reloadChunks) {
-            mc.execute { mc.levelExtractor.allChanged() }
-        }
-
-        val persp = perspective
-        if (persp != null) mc.options.cameraType = persp
-
-        if (staticView) {
-            mc.options.fovEffectScale().set(fovScale)
-            mc.options.bobView().set(bobView)
-        }
-
-        isSneaking = false
     }
 
     private fun unpress() {

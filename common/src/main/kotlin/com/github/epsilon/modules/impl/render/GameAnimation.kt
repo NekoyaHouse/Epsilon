@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.animation.Animation
@@ -21,9 +22,11 @@ object GameAnimation : Module("Game Animation", Category.RENDER) {
     val hotbar by boolSetting("Hotbar", true)
     val inventory by boolSetting("Inventory", true)
 
-    override fun onDisable() {
-        resetHotbarAnimation()
-        resetInventoryAnimation()
+    init {
+        onDisable {
+            resetHotbarAnimation()
+            resetInventoryAnimation()
+        }
     }
 
     fun getHotbarSelectionX(vanillaX: Int): Int {
@@ -64,9 +67,9 @@ object GameAnimation : Module("Game Animation", Category.RENDER) {
 
     fun getCurrentInventoryScale(): Float = if (shouldAnimateInventory()) inventoryAnimation.value else 1.0f
 
-    private fun shouldAnimateHotbar(): Boolean = isEnabled && hotbar && !nullCheck()
+    private fun shouldAnimateHotbar(): Boolean = runSafeOrFalse { isEnabled && hotbar }
 
-    private fun shouldAnimateInventory(): Boolean = isEnabled && inventory && !nullCheck()
+    private fun shouldAnimateInventory(): Boolean = runSafeOrFalse { isEnabled && inventory }
 
     private fun resetHotbarAnimation() {
         lastHotbarTargetX = Float.NaN

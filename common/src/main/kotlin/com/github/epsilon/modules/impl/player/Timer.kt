@@ -44,6 +44,24 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     val packets: Queue<Packet<ClientGamePacketListener>> = ConcurrentLinkedQueue()
 
     init {
+        onEnable {
+            resetState()
+            if (mode == Mode.Balance) {
+                timer.reset()
+                currentTime = System.currentTimeMillis()
+                updateTimerSpeed()
+            }
+            releaseAll()
+        }
+
+        onDisable {
+            lagging = false
+            releasing = false
+            shouldRelease = false
+            TimerManager.reset()
+            releaseAll()
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             // 先收回其他模块留下的临时倍率，再应用当前 Timer 模式。
             TimerManager.tryReset()
@@ -193,24 +211,6 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             Mode.Balance -> balanceTime.toString() + "ms"
             Mode.SlowBalance -> String.format("%.1f", balance) + " Ticks"
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-        if (mode == Mode.Balance) {
-            timer.reset()
-            currentTime = System.currentTimeMillis()
-            updateTimerSpeed()
-        }
-        releaseAll()
-    }
-
-    override fun onDisable() {
-        lagging = false
-        releasing = false
-        shouldRelease = false
-        TimerManager.reset()
-        releaseAll()
     }
 
     fun getBalanceTime(): Long {

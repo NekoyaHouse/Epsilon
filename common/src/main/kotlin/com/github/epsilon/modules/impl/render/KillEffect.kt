@@ -3,10 +3,12 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
+import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.sounds.SoundEvents
@@ -38,16 +40,16 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     private var localEntityIdCounter = -8
 
     init {
+        onEnable {
+            clearState()
+        }
+
+        onDisable {
+            clearState()
+        }
+
         safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
         safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
-    }
-
-    override fun onEnable() {
-        clearState()
-    }
-
-    override fun onDisable() {
-        clearState()
     }
 
     private fun onAttackEntity(event: AttackEntityEvent) {
@@ -57,13 +59,13 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun onPlayerTick(event: PlayerTickEvent.Pre) {
         tickKillEffect()
     }
 
+    context(nn: NonNullContext)
     private fun tickKillEffect() {
-        if (nullCheck()) return
-
         if (squidSetting) {
             tickSquids()
         } else {
@@ -73,10 +75,11 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         processRemovedTargets()
     }
 
+    context(nn: NonNullContext)
     private fun processRemovedTargets() {
         if (pendingTargets.isEmpty()) return
 
-        val level = mc.level ?: return
+        val level = nn.level
         val iterator = pendingTargets.iterator()
         while (iterator.hasNext()) {
             val target = iterator.next()
@@ -98,9 +101,10 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun killEffect(target: LivingEntity) {
-        val level = mc.level ?: return
-        val player = mc.player ?: return
+        val level = nn.level
+        val player = nn.player
 
         if (lightning) {
             val bolt = LightningBolt(EntityTypes.LIGHTNING_BOLT, level)
@@ -126,7 +130,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
 
         if (squidSetting) {
-            squidEffects.add(SquidEffect(target))
+            squidEffects.add(SquidEffect(nn.level, target))
         }
 
         if (blood) {
@@ -157,14 +161,13 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
 
     private fun nextLocalEntityId(): Int = localEntityIdCounter--
 
-    private class SquidEffect(target: LivingEntity) {
+    private class SquidEffect(level: ClientLevel, target: LivingEntity) {
 
         private val entity: Squid
         private val baseY: Double
         private val animation: Animation
 
         init {
-            val level = mc.level!!
             entity = Squid(EntityTypes.SQUID, level)
             entity.id = nextLocalEntityId()
             entity.isNoAi = true

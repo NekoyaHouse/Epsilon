@@ -2,6 +2,9 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
 import com.github.epsilon.utils.player.InvUtils
@@ -65,8 +68,7 @@ object CombatWeaponController {
         swingHand: Boolean,
         reachBuffer: Double,
     ): Boolean {
-        val nn = NonNullContext.instance ?: return false
-        return context(nn) { attackMaceImpl(target, antiShield, swingHand, reachBuffer) }
+        return runSafeOrFalse { attackMaceImpl(target, antiShield, swingHand, reachBuffer) }
     }
 
     context(nn: NonNullContext)
@@ -76,7 +78,7 @@ object CombatWeaponController {
         swingHand: Boolean,
         reachBuffer: Double,
     ): Boolean {
-        val player = mc.player ?: return false
+        val player = nn.player
         if (target == null || !target.isAlive) {
             return false
         }
@@ -89,7 +91,7 @@ object CombatWeaponController {
                 target.isBlocking &&
                 target.isUsingItem
         // 对方举盾时优先切斧破盾，否则切重锤；Selection 负责 finally 中恢复原槽位。
-        val gameMode = mc.gameMode ?: return false
+        val gameMode = nn.gameMode
         val selection = selectMainHand(
             if (shieldSwap) {
                 Predicate { stack -> InvHelper.isAxe(stack) }
@@ -108,14 +110,13 @@ object CombatWeaponController {
     }
 
     fun ensureSpearUse(): Boolean {
-        val nn = NonNullContext.instance ?: return false
-        return context(nn) { ensureSpearUseImpl() }
+        return runSafeOrFalse { ensureSpearUseImpl() }
     }
 
     context(nn: NonNullContext)
     private fun ensureSpearUseImpl(): Boolean {
-        val player = mc.player ?: return false
-        val gameMode = mc.gameMode ?: return false
+        val player = nn.player
+        val gameMode = nn.gameMode
         if (isUsingSpear(player)) {
             if (!isSpearWindowExpired(player)) {
                 holdSpearKey()
@@ -173,43 +174,40 @@ object CombatWeaponController {
         return !weapon.damageConditions().isEmpty && player.ticksUsingItem >= weapon.computeDamageUseDuration()
     }
 
-    fun canUseSpearAttack(): Boolean {
-        val player = mc.player ?: return false
+    fun canUseSpearAttack(): Boolean = runSafeOrFalse {
         if (!isUsingSpear(player)) {
-            return false
+            return@runSafeOrFalse false
         }
 
         val stack = player.useItem
         val weapon = stack.get(DataComponents.KINETIC_WEAPON)
         val ticksUsed = player.ticksUsingItem
         if (weapon == null) {
-            return ticksUsed >= 8
+            return@runSafeOrFalse ticksUsed >= 8
         }
 
         val maxDuration = weapon.computeDamageUseDuration()
         // delayTicks 是最短蓄力；maxDuration 大于 0 时还要在超时前出手。
-        return ticksUsed >= weapon.delayTicks() && (maxDuration <= 0 || ticksUsed < maxDuration)
+        ticksUsed >= weapon.delayTicks() && (maxDuration <= 0 || ticksUsed < maxDuration)
     }
 
-    fun spearReadyTicks(): Int {
-        val player = mc.player
-        if (player == null || !isUsingSpear(player)) {
-            return 8
+    fun spearReadyTicks(): Int = runSafeOrElse(8) {
+        if (!isUsingSpear(player)) {
+            return@runSafeOrElse 8
         }
         val weapon = player.useItem.get(DataComponents.KINETIC_WEAPON)
-        return if (weapon != null) maxOf(1, weapon.delayTicks()) else 8
+        if (weapon != null) maxOf(1, weapon.delayTicks()) else 8
     }
 
     /**
      * 当前长矛伤害窗口上界（tick）；未在使用长矛或缺少组件时返回 0。
      */
-    fun spearDamageWindowTicks(): Int {
-        val player = mc.player
-        if (player == null || !isUsingSpear(player)) {
-            return 0
+    fun spearDamageWindowTicks(): Int = runSafeOrElse(0) {
+        if (!isUsingSpear(player)) {
+            return@runSafeOrElse 0
         }
         val weapon = player.useItem.get(DataComponents.KINETIC_WEAPON)
-        return if (weapon != null) weapon.computeDamageUseDuration() else 0
+        if (weapon != null) weapon.computeDamageUseDuration() else 0
     }
 
     fun spearRestartCount(): Int {
@@ -219,37 +217,34 @@ object CombatWeaponController {
     /**
      * 手中物品是否仍与本次蓄力物品一致，与原版继续使用物品的判据相同。
      */
-    fun isSpearChargeConsistent(): Boolean {
-        val player = mc.player ?: return false
-        return isUsingSpear(player) &&
+    fun isSpearChargeConsistent(): Boolean = runSafeOrFalse {
+        return@runSafeOrFalse isUsingSpear(player) &&
                 ItemStack.isSameItem(player.getItemInHand(player.usedItemHand), player.useItem)
     }
 
     fun stopSpearUse() {
-        val nn = NonNullContext.instance ?: return
-        context(nn) {
-            // 先松开物品与右键，再按栈顺序恢复 inventory swap / hotbar。
-            val player = mc.player
-            if (player != null && isUsingSpear(player)) {
-                mc.gameMode?.releaseUsingItem(player)
+        // 按键和本地状态必须在上下文缺失时仍能清理，避免下次进服恢复旧槽位。
+        releaseSpearKey()
+        runSafe {
+            if (isUsingSpear(player)) {
+                gameMode.releaseUsingItem(player)
             }
-            releaseSpearKey()
             if (spearInventorySwapped) {
                 InvUtils.invSwapBack()
-                spearInventorySwapped = false
             }
             if (spearSavedHotbarSlot >= 0) {
                 InvUtils.swap(spearSavedHotbarSlot, false)
-                spearSavedHotbarSlot = -1
             }
         }
+        spearInventorySwapped = false
+        spearSavedHotbarSlot = -1
     }
 
     /**
      * 仅接管未被玩家按住的右键，以维持长矛蓄力。
      */
     private fun holdSpearKey() {
-        if (spearKeyHeld || mc.options == null || mc.options.keyUse.isDown) {
+        if (spearKeyHeld || mc.options.keyUse.isDown) {
             return
         }
         mc.options.keyUse.isDown = true
@@ -264,24 +259,21 @@ object CombatWeaponController {
             return
         }
         spearKeyHeld = false
-        if (mc.options != null) {
-            mc.options.keyUse.isDown = false
-        }
+        mc.options.keyUse.isDown = false
     }
 
     fun canUseAntiShield(target: Player?): Boolean {
         if (target == null || !target.isUsingItem || !target.isBlocking) {
             return false
         }
-        val nn = NonNullContext.instance ?: return false
-        return context(nn) {
+        return runSafeOrFalse {
             InvUtils.findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
         }
     }
 
     context(nn: NonNullContext)
     private fun selectMainHand(predicate: Predicate<ItemStack>): Selection? {
-        val player = mc.player ?: return null
+        val player = nn.player
         if (predicate.test(player.mainHandItem)) {
             return Selection(false, false, null)
         }

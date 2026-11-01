@@ -5,6 +5,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -122,6 +123,29 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
+        onEnable {
+            clickOffHand = false
+            inventoryOpen = false
+            actionState = ActionState.IDLE
+            actionConsumed = false
+            delayMs = MathUtils.getRandom(minDelay, maxDelay)
+            timer.reset()
+        }
+
+        onDisable {
+            val closeSilentInventory = inventoryOpen && mode == Mode.Silent
+            clickOffHand = false
+            inventoryOpen = false
+            actionState = ActionState.IDLE
+            actionConsumed = false
+            delayMs = 0
+            if (closeSilentInventory) {
+                runSafe {
+                    connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
+                }
+            }
+        }
+
         safeEventHandler<PacketEvent.Send> { event ->
             val packet = event.packet
             if (packet is ServerboundContainerClosePacket) {
@@ -475,29 +499,6 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     actionState = ActionState.READY_TO_EXECUTE
                 }
             }
-        }
-    }
-
-    override fun onEnable() {
-        clickOffHand = false
-        inventoryOpen = false
-        actionState = ActionState.IDLE
-        actionConsumed = false
-        delayMs = MathUtils.getRandom(minDelay, maxDelay)
-        timer.reset()
-    }
-
-    override fun onDisable() {
-        val connection = mc.connection
-        val player = mc.player
-        val closeSilentInventory = inventoryOpen && mode == Mode.Silent && connection != null && player != null
-        clickOffHand = false
-        inventoryOpen = false
-        actionState = ActionState.IDLE
-        actionConsumed = false
-        delayMs = 0
-        if (closeSilentInventory) {
-            connection.send(ServerboundContainerClosePacket(player.inventoryMenu.containerId))
         }
     }
 

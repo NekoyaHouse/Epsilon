@@ -29,20 +29,20 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
     private val scheduler: Supplier<Render2DScheduler> = Suppliers.memoize { Render2DScheduler() }
 
     init {
+        onEnable {
+            pendingBounds = null
+        }
+
+        onDisable {
+            pendingBounds = null
+        }
+
         setDefaultEnabled(true)
     }
 
 
     init {
         handler<Render2DEvent.HUD> { onRender2D(it) }
-    }
-
-    override fun onEnable() {
-        pendingBounds = null
-    }
-
-    override fun onDisable() {
-        pendingBounds = null
     }
 
     fun beginScoreboardExtraction() {

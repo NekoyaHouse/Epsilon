@@ -30,12 +30,14 @@ object SneakTweak : Module("Sneak Tweak", Category.RENDER) {
         false,
         onChanged = { _ -> refreshPlayerDimensions() })
 
-    override fun onEnable() {
-        refreshPlayerDimensions()
-    }
+    init {
+        onEnable {
+            refreshPlayerDimensions()
+        }
 
-    override fun onDisable() {
-        refreshPlayerDimensions()
+        onDisable {
+            refreshPlayerDimensions()
+        }
     }
 
     fun getCameraSmoothingModifier(defaultModifier: Float): Float {

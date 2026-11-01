@@ -26,6 +26,16 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
     private var lastDestroyTick = -1
 
     init {
+        onDisable {
+            runSafe {
+                if (oldSlot != -1) {
+                    player.inventory.selectedSlot = oldSlot
+                }
+            }
+            oldSlot = -1
+            lastDestroyTick = -1
+        }
+
         safeEventHandler<StartDestroyBlockEvent>(EventPriority.LOWEST) { event ->
             lastDestroyTick = player.tickCount
             val bestTool = getBestTool(event.blockPos)
@@ -55,49 +65,37 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
         }
     }
 
-    override fun onDisable() {
-        runSafe {
-            if (oldSlot != -1) {
-                player.inventory.selectedSlot = oldSlot
-            }
-        }
-        oldSlot = -1
-        lastDestroyTick = -1
-    }
-
+    context(nn: NonNullContext)
     fun getBestTool(pos: BlockPos): Int {
-        val nn = NonNullContext.instance ?: return -1
-        return context(nn) {
-            val blockState = nn.level.getBlockState(pos)
-            val block = blockState.block
-            var slot = 0
-            var dmg = 1.0F
+        val blockState = nn.level.getBlockState(pos)
+        val block = blockState.block
+        var slot = 0
+        var dmg = 1.0F
 
-            for (index in 0 until 9) {
-                val itemStack = nn.player.inventory.getItem(index)
-                if (
-                    !InvHelper.isGodItem(itemStack) &&
-                    !itemStack.isEmpty &&
-                    !blockState.isAir &&
-                    (!itemStack.`is`(ItemTags.SWORDS) || block is WebBlock)
-                ) {
-                    var strVsBlock = itemStack.item.getDestroySpeed(itemStack, blockState)
-                    if (strVsBlock > 1.0F && block !is DropExperienceBlock && block !is RedStoneOreBlock) {
-                        val level = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
-                        if (level > 0) {
-                            strVsBlock += (level * level + 1).toFloat()
-                        }
-                    }
-
-                    if (strVsBlock > dmg) {
-                        slot = index
-                        dmg = strVsBlock
+        for (index in 0 until 9) {
+            val itemStack = nn.player.inventory.getItem(index)
+            if (
+                !InvHelper.isGodItem(itemStack) &&
+                !itemStack.isEmpty &&
+                !blockState.isAir &&
+                (!itemStack.`is`(ItemTags.SWORDS) || block is WebBlock)
+            ) {
+                var strVsBlock = itemStack.item.getDestroySpeed(itemStack, blockState)
+                if (strVsBlock > 1.0F && block !is DropExperienceBlock && block !is RedStoneOreBlock) {
+                    val level = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
+                    if (level > 0) {
+                        strVsBlock += (level * level + 1).toFloat()
                     }
                 }
-            }
 
-            if (dmg > 1.0F) slot else -1
+                if (strVsBlock > dmg) {
+                    slot = index
+                    dmg = strVsBlock
+                }
+            }
         }
+
+        return if (dmg > 1.0F) slot else -1
     }
 
 }

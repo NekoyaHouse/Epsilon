@@ -37,6 +37,15 @@ object Step : Module("Step", Category.MOVEMENT) {
     private var packets = 0
 
     init {
+        onDisable {
+            TimerManager.reset()
+            timer = false
+            packets = 0
+            runSafe {
+                player.setStepHeight(0.6f)
+            }
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             if (sneakingPause && player.isCrouching || insideBlockPause && PlayerUtils.isInBlock() ||
                 player.isInLava || player.isInWater || inWebPause && PlayerUtils.isInWeb() ||
@@ -90,15 +99,6 @@ object Step : Module("Step", Category.MOVEMENT) {
 
     override fun getInfo(): String {
         return modeSetting.translatedValue
-    }
-
-    override fun onDisable() {
-        TimerManager.reset()
-        timer = false
-        packets = 0
-        runSafe {
-            player.setStepHeight(0.6f)
-        }
     }
 
     private fun getTimer(height: Double): Double {

@@ -54,6 +54,11 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
 
     init {
+        onEnable {
+            playerCache.clear()
+            logoutCache.clear()
+        }
+
         safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet
             if (packet is ClientboundPlayerInfoUpdatePacket) {
@@ -179,11 +184,6 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             rectRenderer.drawAndClear()
             textRenderer.drawAndClear()
         }
-    }
-
-    override fun onEnable() {
-        playerCache.clear()
-        logoutCache.clear()
     }
 
     private class LogoutPlayer(

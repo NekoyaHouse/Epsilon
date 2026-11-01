@@ -150,11 +150,12 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         return equippable.slot()
     }
 
+    context(nn: NonNullContext)
     private fun getProtection(stack: ItemStack): Int {
         if (stack.isEmpty) return -1
 
         val slot = getEquipmentSlot(stack) ?: return 0
-        val player = NonNullContext.instance?.player ?: return 0
+        val player = nn.player
 
         val elytra = stack.`is`(Items.ELYTRA)
         var enchantmentScore = 0
@@ -244,9 +245,9 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
         var newSlot = -1
         var newProtection = -1
 
+        context(nn: NonNullContext)
         fun reset() {
-            val player = NonNullContext.instance?.player
-            prevProtection = if (player == null) -1 else getProtection(player.inventory.getItem(inventorySlot))
+            prevProtection = getProtection(nn.player.inventory.getItem(inventorySlot))
             newSlot = -1
             newProtection = -1
         }

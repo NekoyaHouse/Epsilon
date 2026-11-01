@@ -153,6 +153,15 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
     )
 
     init {
+        onEnable {
+            clearResults()
+            updateTimer.setMs(updateDelay.toLong())
+        }
+
+        onDisable {
+            clearResults()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (scannedLevel !== level) updateTimer.setMs(updateDelay.toLong())
             if (!updateTimer.every(updateDelay.toLong())) return@safeEventHandler
@@ -193,15 +202,6 @@ object HoleESP : Module("Hole ESP", Category.RENDER) {
                 height
             )
         }
-    }
-
-    override fun onEnable() {
-        clearResults()
-        updateTimer.setMs(updateDelay.toLong())
-    }
-
-    override fun onDisable() {
-        clearResults()
     }
 
     private fun scan(): ScanResult {

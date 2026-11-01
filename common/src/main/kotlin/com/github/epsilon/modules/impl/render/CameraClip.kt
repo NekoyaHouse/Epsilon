@@ -16,12 +16,14 @@ object CameraClip : Module("Camera Clip", Category.RENDER) {
 
     private var cameraPos: Vec3? = null
 
-    override fun onEnable() {
-        cameraPos = null
-    }
+    init {
+        onEnable {
+            cameraPos = null
+        }
 
-    override fun onDisable() {
-        cameraPos = null
+        onDisable {
+            cameraPos = null
+        }
     }
 
     fun updateActionCamera(targetPos: Vec3) {

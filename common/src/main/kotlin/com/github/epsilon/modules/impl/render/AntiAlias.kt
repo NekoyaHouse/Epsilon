@@ -30,6 +30,10 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
      * SSAA 叠加层入口：仅 SSAA 模式下重定向绘制目标，其余模式直接执行原绘制。
      */
     init {
+        onDisable {
+            mc.execute { closeOffscreenTargets() }
+        }
+
         handler<AfterRender3DEvent> { onAfterRender3D(it) }
         handler<GameLeftEvent> { onGameLeft(it) }
     }
@@ -49,10 +53,6 @@ object AntiAlias : Module("Anti Alias", Category.RENDER) {
         if (mode == Mode.FXAA) {
             FXAAShader.renderMainTarget()
         }
-    }
-
-    override fun onDisable() {
-        mc.execute { closeOffscreenTargets() }
     }
 
     private fun onGameLeft(event: GameLeftEvent) {

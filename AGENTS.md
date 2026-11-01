@@ -71,7 +71,8 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - 本体模块优先使用 `public static final ... INSTANCE` 和私有构造函数；维护既有例外时遵循现状，不做无关统一。
 - Setting 必须是实例字段，通过 `SettingHost` DSL 自动注册。依赖条件使用 lambda 或方法引用延迟读取，不得在字段初始化时固化结果。
-- 世界内事件优先使用 `safeEventHandler`，由 `NonNullContext` 统一保证前置条件；普通 `handler` 中需要世界时先执行 `nullCheck()`。仅依赖主菜单或资源系统的处理器按实际前置条件检查。
+- 世界内事件优先使用 `safeEventHandler`，由 `NonNullContext` 统一保证前置条件；普通 `handler` 中需要世界时使用 `runSafe`。不得恢复 `nullCheck()`。仅依赖主菜单或资源系统的处理器按实际前置条件检查。
+- 生命周期回调统一在 `init {}` 中通过 `onEnable {}` / `onDisable {}` 注册，不再覆写同名方法；调用 `setDefaultEnabled(true)` 前必须先完成回调注册。依赖世界的操作放入 `runSafe`，不依赖世界的清理必须在上下文缺失时仍可执行。
 - 模块禁用必须恢复按键、计时器、物品栏、旋转 pending 状态、缓存和其他外部状态。
 - 内置模块必须加入 `ModuleManager.initModules()`；HUD 元素必须加入 `HudElementManager.initElements()`，不得只创建 `INSTANCE` 而漏注册。
 - 仅在确有 Setting 之外的持久状态时重写 `resetCustomState()`、`saveCustomState()`、`loadCustomState(JsonObject)`。

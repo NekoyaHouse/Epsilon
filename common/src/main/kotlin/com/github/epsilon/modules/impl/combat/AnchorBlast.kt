@@ -37,6 +37,14 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
     private var cooldown = 0
 
     init {
+        onEnable {
+            resetState()
+        }
+
+        onDisable {
+            resetState()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             val key = triggerKey
             if (key == -1) return@safeEventHandler
@@ -74,14 +82,6 @@ object AnchorBlast : Module("Anchor Blast", Category.COMBAT) {
                 }
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-    }
-
-    override fun onDisable() {
-        resetState()
     }
 
     context(nn: NonNullContext)

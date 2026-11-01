@@ -3,6 +3,7 @@ package com.github.epsilon.elements.impl
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.item.ItemStack
@@ -30,8 +31,11 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     private const val PADDING = 4.5f
 
     override fun render(deltaTracker: DeltaTracker) {
-        if (NonNullContext.instance == null) return
+        runSafe { renderInventory() }
+    }
 
+    context(nn: NonNullContext)
+    private fun renderInventory() {
         val scope = renderScope()
 
         val scale = this.scale.toFloat()
@@ -68,8 +72,11 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     }
 
     override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
-        val player = NonNullContext.instance?.player ?: return
+        runSafe { renderItems(graphics) }
+    }
 
+    context(nn: NonNullContext)
+    private fun renderItems(graphics: GuiGraphicsExtractor) {
         val scale = this.scale.toFloat()
         val slotSize = SLOT_SIZE * scale
         val gap = SLOT_GAP * scale
@@ -78,7 +85,7 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 val slotIndex = 9 + row * 9 + col
-                val stack = player.inventory.getItem(slotIndex)
+                val stack = nn.player.inventory.getItem(slotIndex)
                 if (!stack.isEmpty) {
                     val slotX = x + padding + col * (slotSize + gap)
                     val slotY = y + padding + row * (slotSize + gap)

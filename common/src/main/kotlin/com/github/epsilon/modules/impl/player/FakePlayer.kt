@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.authlib.GameProfile
@@ -25,6 +25,46 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
     private val positions: MutableList<PlayerState> = ArrayList()
 
     init {
+        onEnable {
+            runSafe {
+                movementTick = 0
+                deathTime = 0
+                if (!record) {
+                    positions.clear()
+                }
+
+                val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
+                val fake = RemotePlayer(level, GameProfile(uuid, nameSetting))
+                fakePlayer = fake
+                fake.id = -66123666
+                fake.copyPosition(player)
+                fake.yRot = player.yRot
+                fake.xRot = player.xRot
+                fake.setYHeadRot(player.yHeadRot)
+                fake.health = player.health
+                fake.absorptionAmount = player.absorptionAmount
+
+                if (copyInventory) {
+                    fake.inventory.replaceWith(player.inventory)
+                }
+
+                level.addEntity(fake)
+            } ?: toggle()
+        }
+
+        onDisable {
+            runSafe {
+                val fake = fakePlayer
+                if (fake != null) {
+                    level.removeEntity(fake.id, Entity.RemovalReason.DISCARDED)
+                }
+            }
+            fakePlayer = null
+            positions.clear()
+            movementTick = 0
+            deathTime = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (record) {
                 positions.add(PlayerState(player.x, player.y, player.z, player.yRot, player.xRot))
@@ -57,51 +97,6 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
                 deathTime = 0
             }
         }
-    }
-
-    override fun onEnable() {
-        val nn = NonNullContext.instance
-        if (nn == null) {
-            toggle()
-            return
-        }
-
-        context(nn) {
-            movementTick = 0
-            deathTime = 0
-            if (!record) {
-                positions.clear()
-            }
-
-            val uuid = UUID.nameUUIDFromBytes(("fake-player:" + nameSetting).toByteArray(StandardCharsets.UTF_8))
-            val fake = RemotePlayer(nn.level, GameProfile(uuid, nameSetting))
-            fakePlayer = fake
-            fake.id = -66123666
-            fake.copyPosition(nn.player)
-            fake.yRot = nn.player.yRot
-            fake.xRot = nn.player.xRot
-            fake.setYHeadRot(nn.player.yHeadRot)
-            fake.health = nn.player.health
-            fake.absorptionAmount = nn.player.absorptionAmount
-
-            if (copyInventory) {
-                fake.inventory.replaceWith(nn.player.inventory)
-            }
-
-            nn.level.addEntity(fake)
-        }
-    }
-
-    override fun onDisable() {
-        val level = mc.level
-        val fake = fakePlayer
-        if (level != null && fake != null) {
-            level.removeEntity(fake.id, Entity.RemovalReason.DISCARDED)
-        }
-        fakePlayer = null
-        positions.clear()
-        movementTick = 0
-        deathTime = 0
     }
 
     private data class PlayerState(

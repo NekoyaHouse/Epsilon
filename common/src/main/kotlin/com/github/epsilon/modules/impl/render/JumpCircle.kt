@@ -29,6 +29,11 @@ import kotlin.math.roundToInt
 object JumpCircle : Module("Jump Circle", Category.RENDER) {
 
     init {
+        onDisable {
+            circles.clear()
+            groundedCache.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> { onTick(it) }
         handler<Render3DEvent> { onRender3D(it) }
     }
@@ -56,11 +61,6 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
-
-    override fun onDisable() {
-        circles.clear()
-        groundedCache.clear()
-    }
 
     private fun onTick(event: PlayerTickEvent.Pre) {
         runSafe {

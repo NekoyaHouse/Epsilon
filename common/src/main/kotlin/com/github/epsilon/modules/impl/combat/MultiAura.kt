@@ -31,6 +31,10 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
     private var attacks = 0.0
 
     init {
+        onDisable {
+            attacks = 0.0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (pauseOnContainers && mc.gui.screen() != null) return@safeEventHandler
             if (player.isUsingItem || player.isBlocking) return@safeEventHandler
@@ -65,10 +69,6 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
 
             SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
         }
-    }
-
-    override fun onDisable() {
-        attacks = 0.0
     }
 
 }

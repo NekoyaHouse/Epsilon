@@ -77,6 +77,25 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private var boostLeft = 0
 
     init {
+        onEnable {
+            singleHole = runSafe { findHole() }
+            targetHole = singleHole
+            collisions = 0
+            rubberbands = 0
+            jumpTicks = 0
+            boostLeft = if (boost) boostTicks else 0
+        }
+
+        onDisable {
+            if (disableStep && step && Step.isEnabled) {
+                Step.isEnabled = false
+            }
+
+            TimerManager.reset()
+            singleHole = null
+            targetHole = null
+        }
+
         handler<PacketEvent.Receive> { event ->
             if (rubberbandLimit <= 0) return@handler
 
@@ -163,25 +182,6 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             Render3DScheduler.addLine(playerPos, topEdge, color, width)
             Render3DScheduler.addLine(topEdge, hole.middle, color, width)
         }
-    }
-
-    override fun onEnable() {
-        singleHole = runSafe { findHole() }
-        targetHole = singleHole
-        collisions = 0
-        rubberbands = 0
-        jumpTicks = 0
-        boostLeft = if (boost) boostTicks else 0
-    }
-
-    override fun onDisable() {
-        if (disableStep && step && Step.isEnabled) {
-            Step.isEnabled = false
-        }
-
-        TimerManager.reset()
-        singleHole = null
-        targetHole = null
     }
 
     private fun getTopEdge(hole: Hole, playerPos: Vec3): Vec3 {

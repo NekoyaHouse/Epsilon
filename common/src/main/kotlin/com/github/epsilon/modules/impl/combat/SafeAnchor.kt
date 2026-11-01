@@ -157,6 +157,16 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
     private const val STAGE_TIMEOUT_TICKS = 60
 
     init {
+        onEnable {
+            resetState()
+            wasKeyDown = false
+            holdingSequenceStarted = false
+        }
+
+        onDisable {
+            resetState()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) return@safeEventHandler
 
@@ -273,16 +283,6 @@ object SafeAnchor : Module("Safe Anchor", Category.COMBAT) {
                 Render3DScheduler.addOutlineBox(box, lineColor.rgb, lineWidth.toFloat())
             }
         }
-    }
-
-    override fun onEnable() {
-        resetState()
-        wasKeyDown = false
-        holdingSequenceStarted = false
-    }
-
-    override fun onDisable() {
-        resetState()
     }
 
     context(nn: NonNullContext)

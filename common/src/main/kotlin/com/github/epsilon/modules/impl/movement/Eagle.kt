@@ -32,6 +32,10 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
     private var sneakDelay = 0
 
     init {
+        onDisable {
+            sneakDelay = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOWEST) {
             if (sneakDelay > 0) {
                 sneakDelay--
@@ -62,10 +66,6 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         } else {
             minDelay.toString() + "-" + maxDelay.toString()
         }
-    }
-
-    override fun onDisable() {
-        sneakDelay = 0
     }
 
     override fun resetCustomState() {

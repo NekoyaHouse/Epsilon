@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -26,6 +26,17 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
     private var shouldSwapBack = false
 
     init {
+        onEnable {
+            shouldSwapBack = false
+        }
+
+        onDisable {
+            if (shouldSwapBack) {
+                runSafe { InvUtils.swapBack() }
+            }
+            shouldSwapBack = false
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
             if (!result.found()) return@safeEventHandler
@@ -43,17 +54,6 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
             } else {
                 shouldSwapBack = true
             }
-        }
-    }
-
-    override fun onEnable() {
-        shouldSwapBack = false
-    }
-
-    override fun onDisable() {
-        if (shouldSwapBack) {
-            val nn = NonNullContext.instance ?: return
-            context(nn) { InvUtils.swapBack() }
         }
     }
 

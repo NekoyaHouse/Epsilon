@@ -36,11 +36,11 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun handleInput(key: Int, action: Int): Boolean {
-        if (NonNullContext.instance == null) return false
-        if (mc.gui.screen() != null || key != activateKey || action != InputConstants.PRESS) return false
+        if (nn.mc.gui.screen() != null || key != activateKey || action != InputConstants.PRESS) return false
 
-        val hitResult = mc.hitResult
+        val hitResult = nn.mc.hitResult
         if (hitResult !is EntityHitResult) return false
 
         val target = hitResult.entity

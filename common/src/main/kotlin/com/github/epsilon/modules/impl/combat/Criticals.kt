@@ -16,6 +16,11 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     private var stopSprinting = false
 
     init {
+        onDisable {
+            fallTicks = 0
+            stopSprinting = false
+        }
+
         safeEventHandler<ClientTickEvent.Pre>(EventPriority.HIGHEST) {
             if (!canCrit(player) || player.fallDistance >= 1.0) {
                 fallTicks = 0
@@ -47,11 +52,6 @@ object Criticals : Module("Criticals", Category.COMBAT) {
                 mc.options.keySprint.isDown = false
             }
         }
-    }
-
-    override fun onDisable() {
-        fallTicks = 0
-        stopSprinting = false
     }
 
     private fun canCrit(player: LocalPlayer): Boolean {

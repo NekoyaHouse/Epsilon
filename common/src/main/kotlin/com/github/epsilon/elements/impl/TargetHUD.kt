@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
@@ -345,8 +345,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val bodyScale = maxOf(0.4f, nameScale * 0.78f)
         val name = target.name.string
         val healthText = String.format(Locale.ROOT, "Health: %.1f", health)
-        val self = NonNullContext.instance?.player
-        val distance = if (self == null) 0.0f else self.distanceTo(target)
+        val distance = runSafeOrElse(0.0f) { player.distanceTo(target) }
         val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
         val textWidth = maxOf(
             textRenderer.getWidth(name, nameScale),

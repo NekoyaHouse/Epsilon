@@ -6,7 +6,7 @@ import com.github.epsilon.elements.impl.notification.NotificationMode
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -112,6 +112,19 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     private val gamemodeRing = RingState()
 
     init {
+        onEnable {
+            playersInRender.clear()
+            gamemodeCache.clear()
+            alarmedJoinPlayers.clear()
+            lastConnection = null
+            lastLevel = null
+            resetRingState(joinRing)
+            resetRingState(leaveRing)
+            resetRingState(enterRDRing)
+            resetRingState(leaveRDRing)
+            resetRingState(gamemodeRing)
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             // Handle all rings
             handleRing(joinRing) { playSound(joinVolume, joinPitch, joinSound.value) }
@@ -273,19 +286,6 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         }
     }
 
-    override fun onEnable() {
-        playersInRender.clear()
-        gamemodeCache.clear()
-        alarmedJoinPlayers.clear()
-        lastConnection = null
-        lastLevel = null
-        resetRingState(joinRing)
-        resetRingState(leaveRing)
-        resetRingState(enterRDRing)
-        resetRingState(leaveRDRing)
-        resetRingState(gamemodeRing)
-    }
-
     private fun resetRingState(rs: RingState) {
         rs.ticks = 0
         rs.ringsLeft = 0
@@ -361,12 +361,11 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     private fun playSound(vol: Double, pitch: Double, sounds: List<SoundEvent>) {
-        val nn = NonNullContext.instance ?: return
         if (sounds.isEmpty()) return
         val sound = sounds[0]
-        context(nn) {
-            nn.level.playLocalSound(
-                nn.player.blockPosition(),
+        runSafe {
+            level.playLocalSound(
+                player.blockPosition(),
                 sound,
                 SoundSource.PLAYERS,
                 vol.toFloat(),
@@ -377,15 +376,14 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     private fun getPlayerName(id: UUID): String? {
-        val nn = NonNullContext.instance ?: return null
-        return context(nn) {
-            val player = nn.level.getPlayerByUUID(id)
-            if (player != null) return@context player.gameProfile.name()
+        return runSafe {
+            val player = level.getPlayerByUUID(id)
+            if (player != null) return@runSafe player.gameProfile.name()
             // fallback: try to get from network player list
-            val entry = nn.connection.getPlayerInfo(id)
+            val entry = connection.getPlayerInfo(id)
             if (entry != null) {
                 val profile = entry.profile
-                return@context profile.name()
+                return@runSafe profile.name()
             }
             null
         }
@@ -395,7 +393,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         val cached = gamemodeCache[id]
         if (cached != null) return translateGamemode(cached)
         // fallback: try to get from network info
-        val info = NonNullContext.instance?.connection?.getPlayerInfo(id)
+        val info = runSafe { connection.getPlayerInfo(id) }
         if (info != null) {
             val mode = info.gameMode
             if (mode != null) return translateGamemode(mode)

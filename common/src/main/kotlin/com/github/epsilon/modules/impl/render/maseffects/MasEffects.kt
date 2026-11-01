@@ -110,6 +110,10 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
     private val particleRenderer = MasEffectsParticleRenderer()
 
     init {
+        onDisable {
+            particleRenderer.clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             particleRenderer.tick()
 
@@ -194,10 +198,6 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
         handler<LevelUpdateEvent> {
             particleRenderer.clear()
         }
-    }
-
-    override fun onDisable() {
-        particleRenderer.clear()
     }
 
     fun onLevelEvent(type: Int, position: Vec3) {

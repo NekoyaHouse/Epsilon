@@ -56,6 +56,18 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
     private var openingStartedAt = 0L
 
     init {
+        onEnable {
+            opening = false
+            openingStartedAt = 0L
+            timer.reset()
+            updateTrackedLevel()
+        }
+
+        onDisable {
+            opening = false
+            openingStartedAt = 0L
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             updateTrackedLevel()
 
@@ -123,18 +135,6 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
                 finishOpening()
             }
         }
-    }
-
-    override fun onEnable() {
-        opening = false
-        openingStartedAt = 0L
-        timer.reset()
-        updateTrackedLevel()
-    }
-
-    override fun onDisable() {
-        opening = false
-        openingStartedAt = 0L
     }
 
     context(nn: NonNullContext)

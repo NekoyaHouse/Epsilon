@@ -212,6 +212,14 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private var pendingAttackClick = 0
 
     init {
+        onEnable {
+            resetState()
+        }
+
+        onDisable {
+            resetState()
+        }
+
         safeEventHandler<ClientTickEvent.Pre> {
             localPlayerId = player.id
             forceForward = false
@@ -437,14 +445,6 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
     override fun getInfo(): String? {
         return if (target == null) null else target!!.name.string
-    }
-
-    override fun onEnable() {
-        resetState()
-    }
-
-    override fun onDisable() {
-        resetState()
     }
 
     /**

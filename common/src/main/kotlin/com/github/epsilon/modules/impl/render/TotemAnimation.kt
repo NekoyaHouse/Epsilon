@@ -21,6 +21,11 @@ import kotlin.math.sin
 object TotemAnimation : Module("Totem Animation", Category.RENDER) {
 
     init {
+        onDisable {
+            floatingItem = null
+            floatingItemTimeLeft = 0
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
@@ -39,11 +44,6 @@ object TotemAnimation : Module("Totem Animation", Category.RENDER) {
 
     private var floatingItem: ItemStack? = null
     private var floatingItemTimeLeft = 0
-
-    override fun onDisable() {
-        floatingItem = null
-        floatingItemTimeLeft = 0
-    }
 
     private fun onPlayerTick(event: PlayerTickEvent.Pre) {
         if (floatingItemTimeLeft > 0 && --floatingItemTimeLeft == 0) {

@@ -3,6 +3,7 @@ package com.github.epsilon.modules
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.ListenerOwner
 import com.github.epsilon.kernel.MinecraftWrapper
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
@@ -24,24 +25,22 @@ open class Module(
     var bindMode: BindMode = BindMode.Toggle
     var isHidden: Boolean = true
 
+    private val enableCallbacks = ArrayList<() -> Unit>()
+    private val disableCallbacks = ArrayList<() -> Unit>()
+
     var isEnabled: Boolean = false
         set(value) {
             if (field == value) {
                 return
             }
             field = value
-            if (value) {
-                subscribe()
-                if (!nullCheck()) {
-                    NotificationManager.moduleState(translatedName, notificationHash, true)
-                }
-                onEnable()
-            } else {
-                unsubscribe()
-                if (!nullCheck()) {
-                    NotificationManager.moduleState(translatedName, notificationHash, false)
-                }
-                onDisable()
+            if (value) subscribe() else unsubscribe()
+            runSafe {
+                NotificationManager.moduleState(this@Module.translatedName, notificationHash, value)
+            }
+            val callbacks = if (value) enableCallbacks else disableCallbacks
+            for (callback in callbacks) {
+                callback()
             }
         }
 
@@ -65,12 +64,14 @@ open class Module(
         }
     }
 
-    protected fun nullCheck(): Boolean = mc.player == null || mc.level == null
-
-    protected open fun onEnable() {
+    /** 在 init 中注册启用回调；依赖世界的操作放入 runSafe，回调按注册顺序执行。 */
+    protected fun onEnable(block: () -> Unit) {
+        enableCallbacks.add(block)
     }
 
-    protected open fun onDisable() {
+    /** 在 init 中注册禁用回调；不依赖世界的清理不能放入 runSafe，以保证退服后仍能执行。 */
+    protected fun onDisable(block: () -> Unit) {
+        disableCallbacks.add(block)
     }
 
     // ---- 事件注册 ----

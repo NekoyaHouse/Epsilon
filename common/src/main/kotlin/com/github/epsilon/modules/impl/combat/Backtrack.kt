@@ -6,6 +6,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
@@ -81,6 +82,23 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
     private var currentDelay = 0
 
     init {
+        onEnable {
+            synchronized(packetLock) {
+                resetStateLocked(true)
+                chancePassed = rollChance()
+                currentDelay = randomBetween(minDelay, maxDelay)
+            }
+        }
+
+        onDisable {
+            val pending: MutableList<Packet<ClientPacketListener>>
+            synchronized(packetLock) {
+                pending = drainAllLocked()
+                resetStateLocked(false)
+            }
+            handlePackets(pending)
+        }
+
         safeEventHandler<AttackEntityEvent> { event ->
             val now = System.currentTimeMillis()
             synchronized(packetLock) {
@@ -137,49 +155,50 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             var skipSchedule = false
 
             synchronized(packetLock) {
-                when {
-                    packet is ClientboundDisconnectPacket -> {
-                        packetQueue.clear()
-                        resetStateLocked(false)
-                        skipSchedule = true
-                    }
-
-                    NonNullContext.instance == null -> {
-                        packetQueue.clear()
-                        resetStateLocked(false)
-                        skipSchedule = true
-                    }
-
-                    Velocity.ownsIncomingDelayQueue() -> {
-                        skipSchedule = true
-                    }
-
-                    packet is ClientboundPlayerPositionPacket ||
-                            (packet is ClientboundSetHealthPacket && packet.health <= 0.0f) -> {
-                        pending = drainAllLocked()
-                        clearTargetLocked(true)
-                    }
-
-                    isPassThrough(packet) -> {
-                        skipSchedule = true
-                    }
-
-                    backtracking || !packetQueue.isEmpty() -> {
-                        val newTrackedPosition = trackTargetPosition(packet)
-                        if (newTrackedPosition != null && isServerPositionCloser(newTrackedPosition)) {
-                            pending = drainAllLocked()
-                        } else {
-                            event.cancel()
-                            @Suppress("UNCHECKED_CAST")
-                            packetQueue.addLast(
-                                QueuedPacket(
-                                    packet as Packet<ClientPacketListener>,
-                                    System.currentTimeMillis()
-                                )
-                            )
+                runSafe {
+                    when {
+                        packet is ClientboundDisconnectPacket -> {
+                            packetQueue.clear()
+                            resetStateLocked(false)
                             skipSchedule = true
                         }
+
+                        Velocity.ownsIncomingDelayQueue() -> {
+                            skipSchedule = true
+                        }
+
+                        packet is ClientboundPlayerPositionPacket ||
+                                (packet is ClientboundSetHealthPacket && packet.health <= 0.0f) -> {
+                            pending = drainAllLocked()
+                            clearTargetLocked(true)
+                        }
+
+                        isPassThrough(packet) -> {
+                            skipSchedule = true
+                        }
+
+                        backtracking || !packetQueue.isEmpty() -> {
+                            val newTrackedPosition = trackTargetPosition(packet)
+                            if (newTrackedPosition != null && isServerPositionCloser(newTrackedPosition)) {
+                                pending = drainAllLocked()
+                            } else {
+                                event.cancel()
+                                @Suppress("UNCHECKED_CAST")
+                                packetQueue.addLast(
+                                    QueuedPacket(
+                                        packet as Packet<ClientPacketListener>,
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                                skipSchedule = true
+                            }
+                        }
                     }
+                    Unit
+                } ?: run {
+                    packetQueue.clear()
+                    resetStateLocked(false)
+                    skipSchedule = true
                 }
             }
 
@@ -213,23 +232,6 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             return if (backtracking && !packetQueue.isEmpty()) currentDelay.toString() + "ms"
             else targetModeSetting.translatedValue
         }
-    }
-
-    override fun onEnable() {
-        synchronized(packetLock) {
-            resetStateLocked(true)
-            chancePassed = rollChance()
-            currentDelay = randomBetween(minDelay, maxDelay)
-        }
-    }
-
-    override fun onDisable() {
-        val pending: MutableList<Packet<ClientPacketListener>>
-        synchronized(packetLock) {
-            pending = drainAllLocked()
-            resetStateLocked(false)
-        }
-        handlePackets(pending)
     }
 
     fun isLagging(): Boolean {

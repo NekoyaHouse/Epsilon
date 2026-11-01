@@ -6,7 +6,7 @@ import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.player.AbstractClientPlayer
@@ -82,9 +82,9 @@ class TargetInstance(
         val name = target.name.string
         scope.text(name, textX, headY + 2f, NAME_SCALE, fade(IslandPalette.TEXT_PRIMARY))
 
-        val self = NonNullContext.instance?.player
-        val distanceText =
-            if (self == null) "" else String.format(Locale.ROOT, "distance: %.1f", self.distanceTo(target))
+        val distanceText = runSafeOrElse("") {
+            String.format(Locale.ROOT, "distance: %.1f", player.distanceTo(target))
+        }
         val nameHeight = textRenderer.getHeight(NAME_SCALE)
         scope.text(distanceText, textX, headY + 2f + nameHeight + 3f, INFO_SCALE, fade(IslandPalette.TEXT_MUTED))
 

@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -42,6 +43,12 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     private var trackedBedFace: Direction? = null
 
     init {
+        onDisable {
+            resetBreaking()
+            trackedBedPos = null
+            trackedBedFace = null
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (shouldPauseBreaking()) {
                 clearBreakingState()
@@ -106,12 +113,6 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         }
     }
 
-    override fun onDisable() {
-        resetBreaking()
-        trackedBedPos = null
-        trackedBedFace = null
-    }
-
     fun getCurrentTarget(): BlockPos? {
         return currentTarget
     }
@@ -119,10 +120,11 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     val isBreakingTarget: Boolean
         get() = isEnabled && startedBreaking && currentTarget != null
 
+    context(nn: NonNullContext)
     private fun isCurrentBreakStillValid(eyes: Vec3, maxRange: Double): Boolean {
         val target = currentTarget ?: return false
         val face = currentFace ?: return false
-        val state = worldState(target) ?: return false
+        val state = worldState(target)
         if (state.isAir) {
             return false
         }
@@ -144,7 +146,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     private fun resetBreaking() {
         if (startedBreaking) {
-            NonNullContext.instance?.gameMode?.stopDestroyBlock()
+            runSafe { gameMode.stopDestroyBlock() }
         }
         clearBreakingState()
     }
@@ -162,9 +164,8 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             return followUpTarget
         }
 
-        val manager = NonNullContext.instance ?: return null
-        val player = manager.player
-        val level = manager.level
+        val player = nn.player
+        val level = nn.level
         val maxRange = range
         val maxRangeSq = maxRange * maxRange
         val eyes = player.eyePosition
@@ -204,15 +205,14 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         val bedPos = trackedBedPos ?: return null
         val bedFace = trackedBedFace ?: return null
 
-        if (worldState(bedPos)?.block !is BedBlock) {
+        if (worldState(bedPos).block !is BedBlock) {
             trackedBedPos = null
             trackedBedFace = null
             return null
         }
 
-        val manager = NonNullContext.instance ?: return null
         val maxRange = range
-        val eyes = manager.player.eyePosition
+        val eyes = nn.player.eyePosition
         val target = getBedFaceTarget(bedPos, bedFace, maxRange, eyes)
         if (target != null && target.bedTarget) {
             return target
@@ -243,7 +243,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getDirectBedTarget(bedPos: BlockPos, maxRange: Double, eyes: Vec3): TargetData? {
-        val level = NonNullContext.instance?.level ?: return null
+        val level = nn.level
         var best: TargetData? = null
 
         for (face in Direction.values()) {
@@ -281,7 +281,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
     context(nn: NonNullContext)
     private fun getBedFaceTarget(bedPos: BlockPos, bedFace: Direction, maxRange: Double, eyes: Vec3): TargetData? {
-        val level = NonNullContext.instance?.level ?: return null
+        val level = nn.level
         val adjacentPos = bedPos.relative(bedFace)
         val adjacentState: BlockState = level.getBlockState(adjacentPos)
         if (adjacentState.isAir) {
@@ -357,12 +357,14 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return result is BlockHitResult && isBedBlock(result.blockPos)
     }
 
+    context(nn: NonNullContext)
     private fun isBedBlock(pos: BlockPos): Boolean {
-        return worldState(pos)?.block is BedBlock
+        return worldState(pos).block is BedBlock
     }
 
-    private fun worldState(pos: BlockPos): BlockState? {
-        return NonNullContext.instance?.level?.getBlockState(pos)
+    context(nn: NonNullContext)
+    private fun worldState(pos: BlockPos): BlockState {
+        return nn.level.getBlockState(pos)
     }
 
     private data class TargetData(

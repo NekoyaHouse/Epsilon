@@ -7,7 +7,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.timer.TimerUtils
@@ -110,10 +110,10 @@ class ScaffoldBlocksInstance(
         iconSprite = mc.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
 
         val tintSource: BlockTintSource = mc.blockColors.getTintSource(state, 0) ?: return
-        val nn = NonNullContext.instance ?: return
-
-        val tint = context(nn) { tintSource.colorAsTerrainParticle(state, nn.level, nn.player.blockPosition()) }
-        iconTint = Color(tint, true)
+        runSafe {
+            val tint = tintSource.colorAsTerrainParticle(state, level, player.blockPosition())
+            iconTint = Color(tint, true)
+        }
     }
 
     private fun drawBlockTexture(scope: UiTree.Scope, height: Float) {

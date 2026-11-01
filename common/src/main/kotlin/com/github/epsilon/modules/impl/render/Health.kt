@@ -48,19 +48,19 @@ object Health : Module("Health", Category.RENDER) {
     private var blinkUntilTick = -1
 
     init {
+        onEnable {
+            resetHealthState()
+        }
+
+        onDisable {
+            resetHealthState()
+        }
+
         safeEventHandler<Render2DEvent.HUD> { event ->
             runSafe {
                 renderHealth(event.guiGraphics)
             }
         }
-    }
-
-    override fun onEnable() {
-        resetHealthState()
-    }
-
-    override fun onDisable() {
-        resetHealthState()
     }
 
     private fun renderHealth(graphics: GuiGraphicsExtractor) {

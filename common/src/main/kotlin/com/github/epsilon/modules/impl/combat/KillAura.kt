@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -216,17 +216,19 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
     private val switchTimer = TimerUtils()
 
     init {
-        handler<Render3DEvent>(alwaysListening = true) { event ->
-            val nn = NonNullContext.instance ?: return@handler
-            context(nn) {
-                DeobfESP.render(
-                    event.poseStack,
-                    deobfSize.toFloat(),
-                    deobfSpins.toFloat(),
-                    deobfWobble.toFloat(),
-                    deobfFlyHeight.toFloat(),
-                )
-            }
+        onDisable {
+            resetState()
+            runSafe { DeobfESP.retainRisingEffects() }
+        }
+
+        safeEventHandler<Render3DEvent>(alwaysListening = true) { event ->
+            DeobfESP.render(
+                event.poseStack,
+                deobfSize.toFloat(),
+                deobfSpins.toFloat(),
+                deobfWobble.toFloat(),
+                deobfFlyHeight.toFloat(),
+            )
         }
 
         safeEventHandler<ClientTickEvent.Pre> {
@@ -446,12 +448,6 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
 
     override fun getInfo(): String? {
         return target?.name?.string
-    }
-
-    override fun onDisable() {
-        resetState()
-        val nn = NonNullContext.instance ?: return
-        context(nn) { DeobfESP.retainRisingEffects() }
     }
 
     context(nn: NonNullContext)

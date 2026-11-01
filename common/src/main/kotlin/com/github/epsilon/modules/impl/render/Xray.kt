@@ -61,6 +61,23 @@ object Xray : Module("Xray", Category.RENDER) {
     private var area: AABB = AABB(BlockPos.ZERO)
 
     init {
+        onEnable {
+            ores.clear()
+            toCheck.clear()
+            checked.clear()
+            toCheck.addAll(getBlocks())
+            all = toCheck.size
+            done = 0
+            mc.smartCull = false
+            mc.levelExtractor.allChanged()
+            area = getArea()
+        }
+
+        onDisable {
+            mc.levelExtractor.allChanged()
+            mc.smartCull = true
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             if (plugin.`is`(Plugin.New)) {
                 checked.forEach { blockMemory ->
@@ -103,23 +120,6 @@ object Xray : Module("Xray", Category.RENDER) {
         }
 
         handler<Render3DEvent> { onRender3D(it.poseStack) }
-    }
-
-    override fun onEnable() {
-        ores.clear()
-        toCheck.clear()
-        checked.clear()
-        toCheck.addAll(getBlocks())
-        all = toCheck.size
-        done = 0
-        mc.smartCull = false
-        mc.levelExtractor.allChanged()
-        area = getArea()
-    }
-
-    override fun onDisable() {
-        mc.levelExtractor.allChanged()
-        mc.smartCull = true
     }
 
     private fun onRender3D(stack: PoseStack) {

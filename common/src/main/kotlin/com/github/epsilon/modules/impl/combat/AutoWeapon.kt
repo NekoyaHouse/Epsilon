@@ -155,13 +155,13 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private var awaitingBack: Boolean = false
 
     init {
+        onDisable {
+            backTimer.reset()
+            awaitingBack = false
+        }
+
         safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
         safeEventHandler<PlayerTickEvent.Pre> { onTick() }
-    }
-
-    override fun onDisable() {
-        backTimer.reset()
-        awaitingBack = false
     }
 
     context(nn: NonNullContext)

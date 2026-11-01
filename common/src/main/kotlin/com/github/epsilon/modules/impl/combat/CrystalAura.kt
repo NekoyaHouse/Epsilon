@@ -52,6 +52,16 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     var crystalling = false
 
     init {
+        onEnable {
+            resetClocks()
+            crystalling = false
+        }
+
+        onDisable {
+            resetClocks()
+            crystalling = false
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             onTick(it)
         }
@@ -75,16 +85,6 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     fun resetClocks() {
         placeClock = 0
         breakClock = 0
-    }
-
-    override fun onEnable() {
-        resetClocks()
-        crystalling = false
-    }
-
-    override fun onDisable() {
-        resetClocks()
-        crystalling = false
     }
 
     context(nn: NonNullContext)

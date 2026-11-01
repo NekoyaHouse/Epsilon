@@ -182,6 +182,28 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val renderBoxes: MutableList<RenderInfo> = ArrayList()
 
     init {
+        onEnable {
+            airTicks = 0
+            blockPos = null
+            direction = null
+            rotation = null
+            rotateCount = 0
+            blockResult = FindItemResult(-1, 0, 0)
+            shouldSwapBack = false
+            emergencyPlacementActive = false
+            pearlUsePacketSent = false
+        }
+
+        onDisable {
+            yLevel = 0
+            emergencyPlacementActive = false
+            pearlUsePacketSent = false
+            if (shouldSwapBack) {
+                runSafe { InvUtils.swapBack() }
+                shouldSwapBack = false
+            }
+        }
+
         // 渲染调试框需要在模块禁用时继续绘制，因此保持常驻监听语义。
         handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
@@ -357,28 +379,6 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     pearlUsePacketSent = true
                 }
             }
-        }
-    }
-
-    override fun onEnable() {
-        airTicks = 0
-        blockPos = null
-        direction = null
-        rotation = null
-        rotateCount = 0
-        blockResult = FindItemResult(-1, 0, 0)
-        shouldSwapBack = false
-        emergencyPlacementActive = false
-        pearlUsePacketSent = false
-    }
-
-    override fun onDisable() {
-        yLevel = 0
-        emergencyPlacementActive = false
-        pearlUsePacketSent = false
-        if (shouldSwapBack) {
-            NonNullContext.instance?.let { nn -> context(nn) { InvUtils.swapBack() } }
-            shouldSwapBack = false
         }
     }
 
