@@ -423,6 +423,10 @@ object EpsilonTranslations {
         val NO_BLOCK_FOUND: TranslateComponent = create("modules.feet trap", "no_block_found")
     }
 
+    object SelfTrap {
+        val NO_BLOCK_FOUND: TranslateComponent = create("modules.self trap", "no_block_found")
+    }
+
     object AutoMine {
         val PACKET_MINE_REQUIRED: TranslateComponent = create("modules.auto mine", "packet_mine_required")
         val PACKET_MINE_ENABLED: TranslateComponent = create("modules.auto mine", "packet_mine_enabled")
