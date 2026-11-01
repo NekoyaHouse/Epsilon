@@ -16,7 +16,6 @@ import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.EpsilonUiTheme
-import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.GuiSetting
@@ -786,7 +785,6 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         IMEFocusHelper.forceDeactivate()
         renderTarget?.close()
         renderTarget = null
-        ConfigManager.saveNow()
         super.removed()
     }
 

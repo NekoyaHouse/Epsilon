@@ -114,14 +114,9 @@ class UiScrollBar(theme: UiTheme) {
         }
 
         fun computeGeometry(viewport: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float): Geometry? {
-            if (maxScroll <= 0.0f || contentHeight <= viewport.height) {
-                return null
-            }
+            if (maxScroll <= 0.0f || contentHeight <= viewport.height) return null
             val trackHeight = viewport.height
-            if (trackHeight <= 0.5f) {
-                return null
-            }
-            // 展开/收起动画会让视口高度小于最小滑块高度，此时下限必须收敛到轨道高度，否则 coerceIn 的区间为空会抛异常。
+            if (trackHeight <= 0.5f) return null
             val minThumbHeight = minOf(MIN_THUMB_HEIGHT, trackHeight)
             val thumbHeight = (viewport.height / contentHeight * trackHeight).coerceIn(minThumbHeight, trackHeight)
             val thumbTravel = trackHeight - thumbHeight
