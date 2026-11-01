@@ -27,6 +27,7 @@ import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.world.LegacyPlacement
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -58,6 +59,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         Static,
         Hypixel,
         Heypixel,
+        Packet,
     }
 
     private enum class RaytraceMode {
@@ -130,13 +132,13 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val mode by enumSetting("Mode", Mode.TellyBridge)
     private val swapMode by enumSetting("Swap Mode", SwapMode.Normal)
     private val swapBack by boolSetting("Swap Back", true, { swapMode == SwapMode.Normal })
-    private val snap by boolSetting("Snap", false, { mode == Mode.GodBridge })
-    private val degrees45 by boolSetting("45 Degrees", false)
+    private val snap by boolSetting("Snap", false, { mode == Mode.GodBridge && rotationMode != RotationMode.Packet })
+    private val degrees45 by boolSetting("45 Degrees", false, { rotationMode != RotationMode.Packet })
     private val rotationMode by enumSetting("Rotation Mode", RotationMode.Static)
-    private val raytrace by enumSetting("Raytrace Mode", RaytraceMode.Normal)
+    private val raytrace by enumSetting("Raytrace Mode", RaytraceMode.Normal, { rotationMode != RotationMode.Packet })
     private val rotationSpeed by intSetting(
         "Rotation Speed", 127, 10..180, 10,
-        { rotationMode != RotationMode.Hypixel }
+        { rotationMode != RotationMode.Hypixel && rotationMode != RotationMode.Packet }
     )
     private val rotationSpeed2 by intSetting(
         "Rotation Speed 2", 36, 10..180, 10,
@@ -144,7 +146,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     )
     private val rotationBackSpeed by intSetting(
         "Rotation Back Speed", 180, 10..180, 10,
-        { mode == Mode.TellyBridge }
+        { mode == Mode.TellyBridge && rotationMode != RotationMode.Packet }
     )
     private val tellyTicks by intSetting(
         "Telly Ticks", 1, 0..6, 1,
@@ -286,46 +288,22 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     rotateCount++
                     val pos = blockPos ?: return@safeEventHandler
                     val face = direction ?: return@safeEventHandler
-                    val rotation = getRotation(pos, face)
-                    RotationManager.rotations = rotation
-                    RotationManager.updateActive(true)
+                    if (rotationMode != RotationMode.Packet) {
+                        val rotation = getRotation(pos, face)
+                        RotationManager.rotations = rotation
+                        RotationManager.updateActive(true)
 
-                    // 代替 sendPosition()
-                    connection.send(
-                        ServerboundMovePlayerPacket.Rot(
-                            rotation.yaw,
-                            rotation.pitch,
-                            player.onGround(),
-                            player.horizontalCollision
-                        )
-                    )
-
-                    swap()
-
-                    val hand = blockResult.getHand()
-
-                    val result = gameMode.useItemOn(
-                        player,
-                        hand,
-                        BlockHitResult(getVec3(pos, face), face, pos, false)
-                    )
-                    if (result.consumesAction()) {
-                        SwingMode.of(swingHand).interactSwing(hand)
-                        if (render) {
-                            renderBoxes.add(
-                                RenderInfo(
-                                    AABB(pos.relative(face)),
-                                    lineColor,
-                                    sideColor,
-                                    System.currentTimeMillis(),
-                                    fade,
-                                    shrink
-                                )
+                        // 代替 sendPosition()；Packet 模式由 LegacyPlacement 发送位置和旋转。
+                        connection.send(
+                            ServerboundMovePlayerPacket.Rot(
+                                rotation.yaw,
+                                rotation.pitch,
+                                player.onGround(),
+                                player.horizontalCollision
                             )
-                        }
+                        )
                     }
-
-                    swapBack()
+                    placeBlock(pos, face)
                     return@safeEventHandler
                 } else {
                     rotateCount = 0
@@ -411,6 +389,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     private fun handleTelly() {
         runSafe {
+            if (rotationMode == RotationMode.Packet) {
+                if (airTicks > tellyTicks) place()
+                return@runSafe
+            }
+
             if (player.onGround() && (strafeInput != 0.0f || forwardInput != 0.0f)) {
                 val current = rotation
                 RotationManager.setRotations(
@@ -442,12 +425,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
     private fun handleNormal() {
         runSafe {
-            if (Eagle.isOverEdge() || !snap or !player.onGround()) {
+            if (rotationMode != RotationMode.Packet && (Eagle.isOverEdge() || !snap || !player.onGround())) {
                 rotation = getRotation(blockPos, direction)
-                val current = rotation
-                if (current != null) {
-                    RotationManager.setRotations(current, rotationSpeed.toDouble())
-                }
+                RotationManager.setRotations(rotation, rotationSpeed.toDouble())
             }
             place()
         }
@@ -461,43 +441,51 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             val pos = blockPos ?: return@runSafe
             val face = direction ?: return@runSafe
 
-            val skip = when (raytrace) {
-                RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos)
-                RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos, face)
-            }
-            if (skip) {
-                return@runSafe
-            }
-
-            swap()
-
-            val hand = blockResult.getHand()
-
-            val result = gameMode.useItemOn(
-                player,
-                hand,
-                BlockHitResult(getVec3(pos, face), face, pos, false)
-            )
-
-            if (result.consumesAction()) {
-                SwingMode.of(swingHand).interactSwing(hand)
-
-                if (render) {
-                    renderBoxes.add(
-                        RenderInfo(
-                            AABB(pos.relative(face)),
-                            lineColor,
-                            sideColor,
-                            System.currentTimeMillis(),
-                            fade,
-                            shrink
-                        )
-                    )
+            if (rotationMode != RotationMode.Packet) {
+                val skip = when (raytrace) {
+                    RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos)
+                    RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos, face)
                 }
+                if (skip) return@runSafe
             }
 
-            swapBack()
+            placeBlock(pos, face)
         }
+    }
+
+    context(nn: NonNullContext)
+    private fun placeBlock(pos: BlockPos, face: Direction) {
+        swap()
+
+        val hand = blockResult.getHand()
+        val packetRotation = rotationMode == RotationMode.Packet
+        val hitVec = if (packetRotation) Vec3.atCenterOf(pos).relative(face, 0.5) else getVec3(pos, face)
+        val hit = BlockHitResult(hitVec, face, pos, false)
+
+        val result = if (packetRotation) {
+            LegacyPlacement.placeBlock(hand, hit)
+        } else {
+            nn.gameMode.useItemOn(nn.player, hand, hit)
+        }
+
+        if (result.consumesAction()) {
+            SwingMode.of(swingHand).interactSwing(hand)
+
+            if (render) {
+                renderBoxes.add(
+                    RenderInfo(
+                        AABB(pos.relative(face)),
+                        lineColor,
+                        sideColor,
+                        System.currentTimeMillis(),
+                        fade,
+                        shrink
+                    )
+                )
+            }
+        }
+
+        swapBack()
     }
 
     private fun getYLevel(): Int = runSafeOrElse(0) {

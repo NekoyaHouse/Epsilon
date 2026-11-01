@@ -2,12 +2,9 @@ package com.github.epsilon.utils.world
 
 import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
-import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
@@ -17,33 +14,6 @@ object LegacyPlacement {
 
     context(nn: NonNullContext)
     fun placeBlock(hand: InteractionHand, blockHitResult: BlockHitResult): InteractionResult {
-        val sprint = nn.player.isSprinting
-        val oldInput = nn.player.input.keyPresses
-        val sneak = oldInput.shift
-
-        if (sprint) nn.connection.send(
-            ServerboundPlayerCommandPacket(
-                nn.player,
-                ServerboundPlayerCommandPacket.Action.STOP_SPRINTING
-            )
-        )
-
-        if (sneak) {
-            nn.connection.send(
-                ServerboundPlayerInputPacket(
-                    Input(
-                        oldInput.forward,
-                        oldInput.backward,
-                        oldInput.left,
-                        oldInput.right,
-                        oldInput.jump,
-                        false,
-                        oldInput.sprint
-                    )
-                )
-            )
-        }
-
         val angle = calculateAngle(nn.player.eyePosition, blockHitResult.location)
 
         // Snap
@@ -72,17 +42,6 @@ object LegacyPlacement {
                 nn.player.xRot,
                 nn.player.onGround(),
                 nn.player.horizontalCollision
-            )
-        )
-
-        if (sneak) {
-            nn.connection.send(ServerboundPlayerInputPacket(oldInput))
-        }
-
-        if (sprint) nn.connection.send(
-            ServerboundPlayerCommandPacket(
-                nn.player,
-                ServerboundPlayerCommandPacket.Action.START_SPRINTING
             )
         )
 

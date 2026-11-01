@@ -1777,7 +1777,8 @@
           "_value": "旋转模式",
           "static": "静态",
           "hypixel": "Hypixel",
-          "heypixel": "Heypixel"
+          "heypixel": "布吉岛",
+          "packet": "发包"
         },
         "raytrace mode": {
           "_value": "射线追踪模式",

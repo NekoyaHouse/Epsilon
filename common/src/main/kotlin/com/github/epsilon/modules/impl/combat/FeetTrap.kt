@@ -4,13 +4,18 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.*
+import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.modules.impl.combat.FeetTrap.SwitchMode.InvSwitch
+import com.github.epsilon.modules.impl.combat.FeetTrap.SwitchMode.Silent
 import com.github.epsilon.utils.player.*
 import com.github.epsilon.utils.render.animation.Easing
 import com.github.epsilon.utils.rotation.RaytraceUtils
@@ -42,6 +47,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
+    private enum class SwitchMode {
+        Silent,
+        InvSwitch
+    }
+
     private enum class RotationMode {
         Silent,
         Packet
@@ -51,6 +61,7 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private val toggleOnJump by boolSetting("Toggle On Jump", true)
     private val inAir by boolSetting("In Air", true)
     private val pauseOnEat by boolSetting("Pause On Eat", true)
+    private val switchMode by enumSetting("Switch Mode", SwitchMode.InvSwitch)
     private val useEnderChest by boolSetting("Use Ender Chest", true)
     private val placeDelay by intSetting("Place Delay", 50, 0..500, 50)
     private val extend by boolSetting("Extend", true)
@@ -65,7 +76,6 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         18,
         { breakCrystal || rotate && rotationMode == RotationMode.Silent }
     )
-    private val inventorySwap by boolSetting("Inventory Swap", true)
     private val swingHand by boolSetting("Swing Hand", true)
     private val breakCrystal by boolSetting("Break Crystal", false)
     private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
@@ -453,8 +463,9 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
         val hand = blocks.getHand()
         val swap = !blocks.isOffhand()
 
-        if (swap) {
-            if (inventorySwap) InvUtils.invSwap(blocks.slot) else InvUtils.swap(blocks.slot, true)
+        if (swap) when (switchMode) {
+            Silent -> InvUtils.swap(blocks.slot, true)
+            InvSwitch -> InvUtils.invSwap(blocks.slot)
         }
 
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
@@ -468,8 +479,9 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
         SwingMode.of(swingHand).interactSwing(hand)
 
-        if (swap) {
-            if (inventorySwap) InvUtils.invSwapBack() else InvUtils.swapBack()
+        if (swap) when (switchMode) {
+            Silent -> InvUtils.swapBack()
+            InvSwitch -> InvUtils.invSwapBack()
         }
 
         if (result.consumesAction() && !nn.level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
@@ -494,9 +506,15 @@ object FeetTrap : Module("Feet Trap", Category.COMBAT) {
 
     context(nn: NonNullContext)
     private fun findBlocks(): FindItemResult {
-        val obsidian = if (inventorySwap) InvUtils.find(Items.OBSIDIAN) else InvUtils.findInHotbar(Items.OBSIDIAN)
+        val obsidian = when (switchMode) {
+            Silent -> InvUtils.findInHotbar(Items.OBSIDIAN)
+            InvSwitch -> InvUtils.find(Items.OBSIDIAN)
+        }
         if (obsidian.found() || !useEnderChest) return obsidian
-        return if (inventorySwap) InvUtils.find(Items.ENDER_CHEST) else InvUtils.findInHotbar(Items.ENDER_CHEST)
+        return when (switchMode) {
+            Silent -> InvUtils.findInHotbar(Items.ENDER_CHEST)
+            InvSwitch -> InvUtils.find(Items.ENDER_CHEST)
+        }
     }
 
     private class PlaceInfo(val pos: BlockPos, val hit: BlockHitResult, val rotation: Rotation)

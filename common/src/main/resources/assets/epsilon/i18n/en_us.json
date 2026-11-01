@@ -1777,7 +1777,8 @@
           "_value": "Rotation Mode",
           "static": "Static",
           "hypixel": "Hypixel",
-          "heypixel": "Heypixel"
+          "heypixel": "Heypixel",
+          "packet": "Packet"
         },
         "raytrace mode": {
           "_value": "Raytrace Mode",
