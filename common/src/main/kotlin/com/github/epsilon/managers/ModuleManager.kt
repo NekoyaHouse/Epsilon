@@ -66,6 +66,7 @@ object ModuleManager : AlwaysListening {
         addModule(CrystalAura)
         addModule(CrystalBlocker)
         addModule(FeetTrap)
+        addModule(SelfTrap)
         addModule(DoubleAnchor)
         addModule(ElytraCombat)
         addModule(HoverTotem)
