@@ -151,7 +151,6 @@ object ModuleManager : AlwaysListening {
         addModule(MasEffects)
         addModule(MotionBlur)
         addModule(NameTags)
-        addModule(NoGhostBlocks)
         addModule(NoRender)
         addModule(Particles)
         addModule(PopChams)
