@@ -8,6 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import java.awt.Color
+import java.util.PriorityQueue
 
 object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
@@ -22,24 +23,51 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
     private fun onRender3D(event: Render3DEvent) {
         runSafe {
-            var batching = false
+            val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
+            val cameraPos = cameraState.pos
+            val candidates = PriorityQueue(MAX_RENDERED_CRYSTALS, FARTHEST_FIRST)
 
             for (entity in level.entitiesForRendering()) {
                 if (entity !is EndCrystal) continue
-                if (!batching) {
-                    WireframeEntityRenderer.beginBatch(event.poseStack)
-                    batching = true
-                }
+                val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(!level.tickRateManager().isEntityFrozen(entity))
+                if (!mc.entityRenderDispatcher.shouldRender(
+                        entity, cameraState.cullFrustum, cameraPos.x, cameraPos.y, cameraPos.z, partialTick
+                    )
+                ) continue
 
-                WireframeEntityRenderer.render(
-                    event.poseStack, entity, scale, sideColor, lineColor, lineWidth.toFloat()
-                )
+                val distanceSquared = entity.distanceToSqr(cameraPos)
+                if (candidates.size < MAX_RENDERED_CRYSTALS) {
+                    candidates.add(CrystalCandidate(entity, distanceSquared))
+                } else {
+                    val farthest = candidates.peek()
+                    if (distanceSquared > farthest.distanceSquared ||
+                        distanceSquared == farthest.distanceSquared && entity.id >= farthest.entity.id
+                    ) continue
+                    candidates.poll()
+                    candidates.add(CrystalCandidate(entity, distanceSquared))
+                }
             }
 
-            if (batching) {
+            if (candidates.isEmpty()) return@runSafe
+
+            WireframeEntityRenderer.beginBatch(event.poseStack)
+            try {
+                for ((entity) in candidates.sortedWith(FARTHEST_FIRST.reversed())) {
+                    WireframeEntityRenderer.render(
+                        event.poseStack, entity, scale, sideColor, lineColor, lineWidth.toFloat()
+                    )
+                }
+            } finally {
                 WireframeEntityRenderer.endBatch()
             }
         }
     }
+
+    private data class CrystalCandidate(val entity: EndCrystal, val distanceSquared: Double)
+
+    private const val MAX_RENDERED_CRYSTALS = 256
+
+    // 密集实体场景下限制每帧的模型重建与描边顶点数量，优先保留镜头附近的水晶。
+    private val FARTHEST_FIRST = compareByDescending<CrystalCandidate> { it.distanceSquared }.thenByDescending { it.entity.id }
 
 }
