@@ -13,6 +13,7 @@ import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.modules.impl.combat.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
+import com.github.epsilon.modules.impl.combat.trap.AutoTrap
 import com.github.epsilon.modules.impl.combat.trap.FeetTrap
 import com.github.epsilon.modules.impl.combat.trap.SelfTrap
 import com.github.epsilon.modules.impl.movement.*
@@ -61,6 +62,7 @@ object ModuleManager : AlwaysListening {
         addModule(AutoMine)
         addModule(AutoThrow)
         addModule(AutoTotem)
+        addModule(AutoTrap)
         addModule(AutoWeapon)
         addModule(Criticals)
         addModule(FeetTrap)

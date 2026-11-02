@@ -193,6 +193,7 @@ object EpsilonTranslations {
         Notifications.KEY_FRIEND_ADDED,
         Notifications.KEY_FRIEND_REMOVED,
         FeetTrap.NO_BLOCK_FOUND,
+        AutoTrap.NO_BLOCK_FOUND,
         AutoMine.PACKET_MINE_REQUIRED,
         AutoMine.PACKET_MINE_ENABLED,
         AutoMine.PACKET_MINE_DISABLED,
@@ -438,6 +439,10 @@ object EpsilonTranslations {
 
     object SelfTrap {
         val NO_BLOCK_FOUND: TranslateComponent = create("modules.self trap", "no_block_found")
+    }
+
+    object AutoTrap {
+        val NO_BLOCK_FOUND: TranslateComponent = create("modules.auto trap", "no_block_found")
     }
 
     object AutoMine {

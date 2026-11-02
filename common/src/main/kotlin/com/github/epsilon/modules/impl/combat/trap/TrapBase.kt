@@ -28,20 +28,23 @@ import net.minecraft.tags.BlockTags
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.EntityBlock
 import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.NoteBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.EntityHitResult
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.*
 import java.awt.Color
 import java.util.concurrent.ConcurrentLinkedQueue
 
-abstract class TrapBase(name: String, private val noBlockFound: TranslateComponent) :
-    Module(name, Category.COMBAT) {
+abstract class TrapBase(
+    name: String,
+    private val noBlockFound: TranslateComponent,
+    private val anchorToPlayer: Boolean = true,
+) : Module(name, Category.COMBAT) {
 
     private enum class SwitchMode {
         Silent,
@@ -54,16 +57,19 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     }
 
     private val toggleOnDeath by boolSetting("Toggle On Death", true)
-    private val toggleOnMove by boolSetting("Toggle On Move", true)
-    private val toggleOnJump by boolSetting("Toggle On Jump", true)
+    private val toggleOnMove by boolSetting("Toggle On Move", anchorToPlayer, { anchorToPlayer })
+    private val toggleOnJump by boolSetting("Toggle On Jump", anchorToPlayer, { anchorToPlayer })
     private val inAir by boolSetting("In Air", true)
-    private val pauseOnEat by boolSetting("Pause On Eat", true)
-    private val switchMode by enumSetting("Switch Mode", SwitchMode.InvSwitch)
-    private val useEnderChest by boolSetting("Use Ender Chest", true)
-    private val placeDelay by intSetting("Place Delay", 50, 0..500, 50)
+    private val pauseOnEat by boolSetting("Pause On Eat", anchorToPlayer)
+    private val switchMode by enumSetting(
+        "Switch Mode",
+        if (anchorToPlayer) SwitchMode.InvSwitch else SwitchMode.Silent
+    )
+    private val useEnderChest by boolSetting("Use Ender Chest", true, { anchorToPlayer })
+    private val placeDelay by intSetting("Place Delay", if (anchorToPlayer) 50 else 100, 0..500, 50)
     private val support by intSetting("Support", 2, 0..8, 1)
     private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
-    private val rotate by boolSetting("Rotate", true)
+    private val rotate by boolSetting("Rotate", anchorToPlayer)
     private val rotationMode by enumSetting("Rotation Mode", RotationMode.Silent, { rotate })
     private val rotationSpeed by intSetting(
         "Rotation Speed",
@@ -72,7 +78,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
         18,
         { breakCrystal || rotate && rotationMode == RotationMode.Motion }
     )
-    private val breakCrystal by boolSetting("Break Crystal", false)
+    protected val breakCrystal by boolSetting("Break Crystal", !anchorToPlayer)
     private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
     private val swingHand by boolSetting("Swing Hand", true)
     private val render by boolSetting("Render", true)
@@ -87,6 +93,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     private var startPos: Vec3? = null
     private var placing: PlaceInfo? = null
     private var breakingCrystal: EndCrystal? = null
+    private var rotationRequest: Rotation? = null
 
     // null 表示只有本地预测，非 null 表示已收到服务端方块状态
     private val pendingBlocks = mutableMapOf<BlockPos, BlockState?>()
@@ -112,6 +119,11 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
             renderBoxes.clear()
         }
 
+        handler<RespawnEvent>(alwaysListening = true) {
+            clearState()
+            renderBoxes.clear()
+        }
+
         safeEventHandler<PacketEvent.Receive>(EventPriority.LOWEST) { event ->
             val updates = blockUpdates ?: return@safeEventHandler
             if (event.isCancelled) return@safeEventHandler
@@ -128,15 +140,14 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
             if (breakCrystal && target != null && pos != null && canAttackCrystal(target) &&
                 target.boundingBox.intersects(AABB(pos))
             ) {
-                RotationManager.setRotations(
-                    RotationUtils.calculate(target.boundingBox.center),
-                    rotationSpeed.toDouble()
-                )
+                requestRotation(RotationUtils.calculate(target.boundingBox.center))
             } else if (rotate && rotationMode == RotationMode.Motion) {
                 breakingCrystal = null
-                placing?.let { RotationManager.setRotations(it.rotation, rotationSpeed.toDouble()) }
+                val info = placing
+                if (info != null) requestRotation(info.rotation) else clearRotation()
             } else {
                 breakingCrystal = null
+                clearRotation()
             }
         }
 
@@ -147,16 +158,24 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
                 return@safeEventHandler
             }
 
-            if (!player.isMoving && !mc.options.keyJump.isDown) startPos = player.position()
-            val origin = startPos ?: player.position().also { startPos = it }
-            if ((toggleOnMove && player.distanceToSqr(origin) > 1.0) || (toggleOnJump && player.input.keyPresses.jump())) {
-                toggle()
-                return@safeEventHandler
+            if (anchorToPlayer) {
+                if (!player.isMoving && !mc.options.keyJump.isDown) startPos = player.position()
+                val origin = startPos ?: player.position().also { startPos = it }
+                if ((toggleOnMove && player.distanceToSqr(origin) > 1.0) || (toggleOnJump && player.input.keyPresses.jump())) {
+                    toggle()
+                    return@safeEventHandler
+                }
             }
 
-            if ((pauseOnEat && PlayerUtils.isEating()) || (!inAir && !player.onGround())) {
-                placing = null
-                breakingCrystal = null
+            if (player.isSpectator || (pauseOnEat && PlayerUtils.isEating()) || (!inAir && !player.onGround()) ||
+                (switchMode == SwitchMode.InvSwitch && player.containerMenu !== player.inventoryMenu)
+            ) {
+                clearPlacement()
+                return@safeEventHandler
+            }
+            val positions = getTargetPositions()
+            if (positions.isEmpty()) {
+                clearPlacement()
                 return@safeEventHandler
             }
             if (!placeTimer.passedMillise(placeDelay.toLong())) return@safeEventHandler
@@ -168,7 +187,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
                 return@safeEventHandler
             }
 
-            runPlacing(getPlacements(), blocks)
+            runPlacing(getPlacements(positions), blocks)
         }
 
         handler<Render3DEvent>(alwaysListening = true) {
@@ -224,13 +243,29 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     }
 
     private fun clearState() {
+        placeTimer.setMs(placeDelay.toLong())
         breakTimer.reset()
         startPos = null
-        placing = null
-        breakingCrystal = null
+        clearPlacement()
         pendingBlocks.clear()
         // 正在入队的回调仍持有旧队列，不会污染下一批放置。
         blockUpdates = null
+    }
+
+    protected fun clearPlacement() {
+        placing = null
+        breakingCrystal = null
+        clearRotation()
+    }
+
+    private fun requestRotation(rotation: Rotation) {
+        rotationRequest = rotation
+        RotationManager.setRotations(rotation, rotationSpeed.toDouble())
+    }
+
+    private fun clearRotation() {
+        rotationRequest?.let { RotationManager.clearRotations(it) }
+        rotationRequest = null
     }
 
     context(nn: NonNullContext)
@@ -263,12 +298,21 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     protected abstract fun getTargetPositions(): Set<BlockPos>
 
     context(nn: NonNullContext)
-    private fun getPlacements(): MutableList<PlaceInfo> {
+    protected open fun getPlaceRange(): Double = nn.player.blockInteractionRange()
+
+    context(nn: NonNullContext)
+    protected open fun getBreakRange(): Double = nn.player.entityInteractionRange()
+
+    protected open fun getBlockItems(): List<Item> =
+        if (useEnderChest) listOf(Items.OBSIDIAN, Items.ENDER_CHEST) else listOf(Items.OBSIDIAN)
+
+    context(nn: NonNullContext)
+    private fun getPlacements(positions: Set<BlockPos>): MutableList<PlaceInfo> {
         val unsupported = mutableListOf<BlockPos>()
         val placements = linkedMapOf<BlockPos, PlaceInfo>()
         val rotation = RotationManager.getRotation()
 
-        for (pos in getTargetPositions()) {
+        for (pos in positions) {
             if (!canPlace(pos)) continue
             val placement = findPlacement(pos, rotation)
             if (placement != null) {
@@ -332,7 +376,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     private fun canUseSupportFace(pos: BlockPos, face: Direction): Boolean {
         val hit = Vec3.atCenterOf(pos).relative(face, 0.5)
         val eye = nn.player.eyePosition
-        val range = nn.player.blockInteractionRange()
+        val range = getPlaceRange()
         if (eye.distanceToSqr(hit) > range * range) return false
         // 辅助块尚未放下，射线不会撞到它；额外排除放下后背向玩家的面。
         val facing = (eye.x - hit.x) * face.stepX + (eye.y - hit.y) * face.stepY + (eye.z - hit.z) * face.stepZ
@@ -340,9 +384,14 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     }
 
     context(nn: NonNullContext)
-    private fun canPlace(pos: BlockPos): Boolean = pos !in pendingBlocks &&
-            nn.level.isInWorldBounds(pos) && nn.level.worldBorder.isWithinBounds(pos) &&
-            nn.player.isWithinBlockInteractionRange(pos, 0.0) && BlockUtils.canPlaceAt(pos, breakCrystal)
+    private fun canPlace(pos: BlockPos): Boolean {
+        val range = getPlaceRange()
+        return pos !in pendingBlocks && nn.level.isInWorldBounds(pos) && nn.level.worldBorder.isWithinBounds(pos) &&
+                AABB(pos).distanceToSqr(nn.player.eyePosition) < range * range && BlockUtils.canPlaceAt(
+            pos,
+            breakCrystal
+        )
+    }
 
     context(nn: NonNullContext)
     private fun findPlacement(pos: BlockPos, rotation: Rotation): PlaceInfo? {
@@ -350,7 +399,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
         var bestDistance = Float.POSITIVE_INFINITY
         val current = placing?.takeIf { it.pos == pos }
         val eye = nn.player.eyePosition
-        val range = nn.player.blockInteractionRange()
+        val range = getPlaceRange()
         for (side in Direction.entries) {
             val neighbour = pos.relative(side)
             if (neighbour in pendingBlocks) continue
@@ -400,18 +449,22 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
                 placing = placements.getOrNull(index + 1)
                 continue
             }
-            if (rotate && rotationMode == RotationMode.Motion && !RaytraceUtils.overBlock(
-                    RotationManager.getRotation(),
-                    info.hit.blockPos,
-                    info.hit.direction
-                )
-            ) break
+            if (rotate && rotationMode == RotationMode.Motion && !isFacingPlacement(info)) break
             if (!placeBlock(info, blocks)) break
             // 达到本 tick 放置上限后，也能在随后的 PlayerTick 中开始转向下一处。
             placing = placements.getOrNull(index + 1)
             if (++placed >= blocksPerTick) break
         }
         breakingCrystal = null
+    }
+
+    context(nn: NonNullContext)
+    private fun isFacingPlacement(info: PlaceInfo): Boolean {
+        val rotation = RotationManager.getRotation()
+        val eye = nn.player.eyePosition
+        val end = eye.add(Vec3.directionFromRotation(rotation.pitch, rotation.yaw).scale(getPlaceRange()))
+        val hit = nn.level.clip(ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player))
+        return hit.type == HitResult.Type.BLOCK && hit.blockPos == info.hit.blockPos && hit.direction == info.hit.direction
     }
 
     context(nn: NonNullContext)
@@ -426,7 +479,7 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
                 ?: crystals.filter { canAttackCrystal(it) }.minByOrNull { nn.player.distanceToSqr(it) }
             if (target != null) {
                 breakingCrystal = target
-                val hit = RaytraceUtils.raytrace(RotationManager.getRotation(), nn.player.entityInteractionRange())
+                val hit = RaytraceUtils.raytrace(RotationManager.getRotation(), getBreakRange())
                 if (hit !is EntityHitResult || hit.entity !== target) return true
                 nn.gameMode.attack(nn.player, target)
                 SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
@@ -438,34 +491,46 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
     }
 
     context(nn: NonNullContext)
-    private fun canAttackCrystal(target: EndCrystal): Boolean = target.isAlive &&
-            nn.level.getEntity(target.id) === target && nn.level.worldBorder.isWithinBounds(target.blockPosition()) &&
-            nn.player.isWithinAttackRange(nn.player.mainHandItem, target.boundingBox, 0.0)
+    private fun canAttackCrystal(target: EndCrystal): Boolean {
+        val range = getBreakRange()
+        return target.isAlive && nn.level.getEntity(target.id) === target &&
+                nn.level.worldBorder.isWithinBounds(target.blockPosition()) &&
+                target.boundingBox.distanceToSqr(nn.player.eyePosition) < range * range &&
+                nn.player.isWithinAttackRange(nn.player.mainHandItem, target.boundingBox, 0.0)
+    }
 
     context(nn: NonNullContext)
     private fun placeBlock(info: PlaceInfo, blocks: FindItemResult): Boolean {
         val hand = blocks.getHand()
         val swap = !blocks.isOffhand()
+        val selectedSlot = nn.player.inventory.selectedSlot
+        val containerSlot = if (blocks.slot < 9) blocks.slot + InventoryMenu.USE_ROW_SLOT_START else blocks.slot
 
         if (swap) when (switchMode) {
-            SwitchMode.Silent -> InvUtils.swap(blocks.slot, true)
-            SwitchMode.InvSwitch -> InvUtils.invSwap(blocks.slot)
+            SwitchMode.Silent -> nn.player.inventory.selectedSlot = blocks.slot
+            SwitchMode.InvSwitch -> ClickSlotUtils.swap(containerSlot, selectedSlot)
         }
 
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
         if (blockUpdates == null) blockUpdates = ConcurrentLinkedQueue()
 
-        val result = if (rotate && rotationMode == RotationMode.Silent) {
-            LegacyPlacement.placeBlock(hand, info.hit)
-        } else {
-            nn.gameMode.useItemOn(nn.player, hand, info.hit)
-        }
+        val result = try {
+            val result = if (rotate && rotationMode == RotationMode.Silent) {
+                LegacyPlacement.placeBlock(hand, info.hit)
+            } else {
+                nn.gameMode.useItemOn(nn.player, hand, info.hit)
+            }
+            if (result.consumesAction()) SwingMode.of(swingHand).interactSwing(hand)
+            result
+        } finally {
+            if (swap) when (switchMode) {
+                SwitchMode.Silent -> {
+                    nn.player.inventory.selectedSlot = selectedSlot
+                    nn.gameMode.ensureHasSentCarriedItem()
+                }
 
-        SwingMode.of(swingHand).interactSwing(hand)
-
-        if (swap) when (switchMode) {
-            SwitchMode.Silent -> InvUtils.swapBack()
-            SwitchMode.InvSwitch -> InvUtils.invSwapBack()
+                SwitchMode.InvSwitch -> ClickSlotUtils.swap(containerSlot, selectedSlot)
+            }
         }
 
         if (result.consumesAction() && !nn.level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
@@ -490,15 +555,15 @@ abstract class TrapBase(name: String, private val noBlockFound: TranslateCompone
 
     context(nn: NonNullContext)
     private fun findBlocks(): FindItemResult {
-        val obsidian = when (switchMode) {
-            SwitchMode.Silent -> InvUtils.findInHotbar(Items.OBSIDIAN)
-            SwitchMode.InvSwitch -> InvUtils.find(Items.OBSIDIAN)
+        for (item in getBlockItems()) {
+            if (item === Items.AIR) continue
+            val result = when (switchMode) {
+                SwitchMode.Silent -> InvUtils.findInHotbar(item)
+                SwitchMode.InvSwitch -> InvUtils.find(item)
+            }
+            if (result.found()) return result
         }
-        if (obsidian.found() || !useEnderChest) return obsidian
-        return when (switchMode) {
-            SwitchMode.Silent -> InvUtils.findInHotbar(Items.ENDER_CHEST)
-            SwitchMode.InvSwitch -> InvUtils.find(Items.ENDER_CHEST)
-        }
+        return FindItemResult(-1, 0, 0)
     }
 
     private class PlaceInfo(val pos: BlockPos, val hit: BlockHitResult, val rotation: Rotation)

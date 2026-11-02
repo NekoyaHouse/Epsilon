@@ -2572,6 +2572,50 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
+      },
+      "auto trap": {
+        "_value": "Auto Trap",
+        "no_block_found": "No selected trap blocks found",
+        "target range": "Target Range",
+        "place range": "Place Range",
+        "break range": "Crystal Break Range",
+        "blocks": "Blocks",
+        "stand head": "Stand Head",
+        "crawl head": "Crawl Head",
+        "feet": "Feet",
+        "chest": "Chest",
+        "anti step": "Anti Step",
+        "floor": "Floor",
+        "toggle on death": "Toggle On Death",
+        "toggle on move": "Toggle On Move",
+        "toggle on jump": "Toggle On Jump",
+        "in air": "In Air",
+        "pause on eat": "Pause On Eat",
+        "switch mode": {
+          "_value": "Switch Mode",
+          "silent": "Silent Hotbar",
+          "invswitch": "Inventory Swap"
+        },
+        "use ender chest": "Use Ender Chest",
+        "place delay": "Place Delay (ms)",
+        "support": "Support Blocks",
+        "blocks per tick": "Blocks Per Tick",
+        "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "motion": "Motion",
+          "silent": "Silent"
+        },
+        "rotation speed": "Rotation Speed",
+        "break crystal": "Break Crystal",
+        "break delay": "Crystal Break Delay (ms)",
+        "swing hand": "Swing Hand",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time (ms)",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color"
       }
     },
     "elements": {

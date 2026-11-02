@@ -2572,6 +2572,50 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
+      },
+      "auto trap": {
+        "_value": "自动困人",
+        "no_block_found": "未找到所选的困人方块",
+        "target range": "目标范围",
+        "place range": "放置范围",
+        "break range": "水晶破坏范围",
+        "blocks": "方块列表",
+        "stand head": "站立封顶",
+        "crawl head": "爬行封顶",
+        "feet": "脚部",
+        "chest": "胸部",
+        "anti step": "防垫高",
+        "floor": "地板",
+        "toggle on death": "死亡时关闭",
+        "toggle on move": "移动时关闭",
+        "toggle on jump": "跳跃时关闭",
+        "in air": "空中放置",
+        "pause on eat": "进食时暂停",
+        "switch mode": {
+          "_value": "切换模式",
+          "silent": "静默快捷栏",
+          "invswitch": "背包交换"
+        },
+        "use ender chest": "使用末影箱",
+        "place delay": "放置延迟（毫秒）",
+        "support": "辅助支撑上限",
+        "blocks per tick": "每 Tick 放置数量",
+        "rotate": "旋转",
+        "rotation mode": {
+          "_value": "旋转模式",
+          "motion": "平滑旋转",
+          "silent": "静默瞬转"
+        },
+        "rotation speed": "旋转速度",
+        "break crystal": "破坏水晶",
+        "break delay": "水晶破坏延迟（毫秒）",
+        "swing hand": "挥手",
+        "render": "放置渲染",
+        "fade": "淡出",
+        "fade time": "淡出时间（毫秒）",
+        "shrink": "收缩",
+        "side color": "填充颜色",
+        "line color": "边框颜色"
       }
     },
     "elements": {
