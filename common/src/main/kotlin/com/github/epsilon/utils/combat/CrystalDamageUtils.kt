@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.combat
 
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.ExtrapolationManager
 import com.github.epsilon.utils.player.EnchantmentUtils
 import net.minecraft.client.player.AbstractClientPlayer
@@ -25,7 +25,8 @@ import kotlin.math.acos
 import kotlin.math.floor
 
 object CrystalDamageUtils {
-    val armorSlots = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.BODY)
+    val armorSlots =
+        listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.BODY)
 
     data class Snapshot(
         val id: Int, val position: Vec3, val box: AABB, val health: Double,
@@ -51,15 +52,24 @@ object CrystalDamageUtils {
     class WorldSnapshot internal constructor(private val boxes: Map<Long, List<AABB>>) : Visibility {
         // 在线程内构造独立形状，避免后台计算触碰世界或共享 VoxelShape 的懒加载缓存。
         private val shapes by lazy {
-            boxes.mapValues { (_, boxes) -> boxes.fold(Shapes.empty()) { shape, box -> Shapes.or(shape, Shapes.create(box)) } }
+            boxes.mapValues { (_, boxes) ->
+                boxes.fold(Shapes.empty()) { shape, box ->
+                    Shapes.or(
+                        shape,
+                        Shapes.create(box)
+                    )
+                }
+            }
         }
 
         override fun visible(from: Vec3, to: Vec3, base: BlockPos?, ignored: Set<BlockPos>): Boolean =
-            trace(from, to) { pos -> when {
-                pos in ignored -> Shapes.empty()
-                pos == base -> Shapes.block()
-                else -> shapes[pos.asLong()] ?: Shapes.empty()
-            } }
+            trace(from, to) { pos ->
+                when {
+                    pos in ignored -> Shapes.empty()
+                    pos == base -> Shapes.block()
+                    else -> shapes[pos.asLong()] ?: Shapes.empty()
+                }
+            }
     }
 
     context(nn: NonNullContext)
@@ -78,13 +88,21 @@ object CrystalDamageUtils {
             if (stack.maxDamage > 0) durability.add((stack.maxDamage - stack.damageValue) * 100.0 / stack.maxDamage)
         }
         return Snapshot(
-            entity.id, entity.position(), box, (entity.health + entity.absorptionAmount).toDouble(),
-            entity.armorValue.toFloat(), entity.getAttributeValue(Attributes.ARMOR_TOUGHNESS).toFloat(),
-            entity.getEffect(MobEffects.RESISTANCE)?.amplifier ?: -1, protection,
-            entity is Player && (entity.abilities.invulnerable || entity.isSpectator), entity is Player && entity.isCreative,
+            entity.id,
+            entity.position(),
+            box,
+            (entity.health + entity.absorptionAmount).toDouble(),
+            entity.armorValue.toFloat(),
+            entity.getAttributeValue(Attributes.ARMOR_TOUGHNESS).toFloat(),
+            entity.getEffect(MobEffects.RESISTANCE)?.amplifier ?: -1,
+            protection,
+            entity is Player && (entity.abilities.invulnerable || entity.isSpectator),
+            entity is Player && entity.isCreative,
             if (entity is Player) nn.level.difficulty.id else 2,
-            durability.minOrNull() ?: Double.NaN, durability.maxOrNull() ?: Double.NaN,
-            entity.itemBlockingWith?.get(DataComponents.BLOCKS_ATTACKS), Vec3.directionFromRotation(0.0f, entity.yHeadRot),
+            durability.minOrNull() ?: Double.NaN,
+            durability.maxOrNull() ?: Double.NaN,
+            entity.itemBlockingWith?.get(DataComponents.BLOCKS_ATTACKS),
+            Vec3.directionFromRotation(0.0f, entity.yHeadRot),
             nn.level.damageSources().explosion(nn.player, nn.player).typeHolder(),
         )
     }
@@ -92,8 +110,10 @@ object CrystalDamageUtils {
     context(nn: NonNullContext)
     fun captureWorld(bounds: AABB, ignoreTerrain: Boolean): WorldSnapshot {
         val boxes = HashMap<Long, List<AABB>>()
-        for (pos in BlockPos.betweenClosed(BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ).offset(-1, -1, -1),
-            BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ).offset(1, 1, 1))) {
+        for (pos in BlockPos.betweenClosed(
+            BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ).offset(-1, -1, -1),
+            BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ).offset(1, 1, 1)
+        )) {
             val state = nn.level.getBlockState(pos)
             if (state.isAir || ignoreTerrain && state.block.explosionResistance < 600.0f) continue
             val shape = state.getCollisionShape(nn.level, pos)
@@ -103,7 +123,13 @@ object CrystalDamageUtils {
     }
 
     context(nn: NonNullContext)
-    fun damage(snapshot: Snapshot, center: Vec3, ignoreTerrain: Boolean = false, base: BlockPos? = null, ignored: Set<BlockPos> = emptySet()): Double =
+    fun damage(
+        snapshot: Snapshot,
+        center: Vec3,
+        ignoreTerrain: Boolean = false,
+        base: BlockPos? = null,
+        ignored: Set<BlockPos> = emptySet()
+    ): Double =
         calculate(snapshot, center, { from, to, support, excluded ->
             trace(from, to) { pos ->
                 val state = nn.level.getBlockState(pos)
@@ -116,16 +142,35 @@ object CrystalDamageUtils {
             }
         }, base, ignored)
 
-    fun calculate(snapshot: Snapshot, center: Vec3, visibility: Visibility, base: BlockPos? = null, ignored: Set<BlockPos> = emptySet()): Double {
+    fun calculate(
+        snapshot: Snapshot,
+        center: Vec3,
+        visibility: Visibility,
+        base: BlockPos? = null,
+        ignored: Set<BlockPos> = emptySet()
+    ): Double {
         if (snapshot.immune) return 0.0
         val distance = snapshot.position.distanceTo(center)
         if (distance > 12.0) return 0.0
         val exposure = exposure(snapshot.box, center, visibility, base, ignored)
-        val damage = CrystalDamageRules.scaleForDifficulty(CrystalDamageRules.rawDamage(distance, exposure), snapshot.difficulty)
-        return CrystalDamageRules.reduceDamage(damage, snapshot.armor, snapshot.toughness, snapshot.resistance, snapshot.protection).toDouble()
+        val damage =
+            CrystalDamageRules.scaleForDifficulty(CrystalDamageRules.rawDamage(distance, exposure), snapshot.difficulty)
+        return CrystalDamageRules.reduceDamage(
+            damage,
+            snapshot.armor,
+            snapshot.toughness,
+            snapshot.resistance,
+            snapshot.protection
+        ).toDouble()
     }
 
-    private fun exposure(box: AABB, center: Vec3, visibility: Visibility, base: BlockPos?, ignored: Set<BlockPos>): Double {
+    private fun exposure(
+        box: AABB,
+        center: Vec3,
+        visibility: Visibility,
+        base: BlockPos?,
+        ignored: Set<BlockPos>
+    ): Double {
         val stepX = 1.0 / (box.xsize * 2.0 + 1.0)
         val stepY = 1.0 / (box.ysize * 2.0 + 1.0)
         val stepZ = 1.0 / (box.zsize * 2.0 + 1.0)
@@ -139,7 +184,11 @@ object CrystalDamageUtils {
             while (y <= 1.0) {
                 var z = 0.0
                 while (z <= 1.0) {
-                    val from = Vec3(box.minX + box.xsize * x + offsetX, box.minY + box.ysize * y, box.minZ + box.zsize * z + offsetZ)
+                    val from = Vec3(
+                        box.minX + box.xsize * x + offsetX,
+                        box.minY + box.ysize * y,
+                        box.minZ + box.zsize * z + offsetZ
+                    )
                     if (visibility.visible(from, center, base, ignored)) visible++
                     samples++
                     z += stepZ

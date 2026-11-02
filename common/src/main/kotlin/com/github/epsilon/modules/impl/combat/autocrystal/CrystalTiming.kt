@@ -21,11 +21,26 @@ internal class CrystalTiming(
     fun attackReady(delay: Double): Boolean = attackElapsedMillis > delay.toLong()
     fun placeReady(delay: Int): Boolean = (nanoTime() - placeStart) / 1_000_000L > delay
     fun swapReady(penalty: Double): Boolean = (nanoTime() - swapStart) / 1_000_000L > (penalty * 25.0).toLong()
-    fun tick() { baseTicks++ }
-    fun resetAttack() { attackStart = nanoTime() }
-    fun resetPlace() { placeStart = nanoTime() }
-    fun resetSwap() { swapStart = nanoTime() }
-    fun resetBase() { baseTicks = 0 }
+    fun tick() {
+        baseTicks++
+    }
+
+    fun resetAttack() {
+        attackStart = nanoTime()
+    }
+
+    fun resetPlace() {
+        placeStart = nanoTime()
+    }
+
+    fun resetSwap() {
+        swapStart = nanoTime()
+    }
+
+    fun resetBase() {
+        baseTicks = 0
+    }
+
     fun attackInterval(attackDelay: Double, attackFactor: Int): Double = attackDelay * (50.0 / maxOf(1, attackFactor))
     fun tickInterval(breakDelay: Int, timeout: Boolean, minimum: Double, extra: Double): Double =
         if (timeout) maxOf(minimum * 50.0, averageBreakMillis + extra * 50.0) else breakDelay.toDouble()
@@ -35,7 +50,10 @@ internal class CrystalTiming(
         attempts[id] = (attempts[id] ?: 0) + 1
     }
 
-    fun recordPlace(pos: Long) { placed[pos] = wallTime() }
+    fun recordPlace(pos: Long) {
+        placed[pos] = wallTime()
+    }
+
     fun onSpawn(pos: Long): Boolean = placed.remove(pos) != null
     fun blocksPlacement(id: Int, limit: Double): Boolean = (attempts[id] ?: 0) > limit * 10.0
 

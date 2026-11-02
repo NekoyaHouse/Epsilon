@@ -37,13 +37,24 @@ internal class CrystalPlacement(
                 val damage = CrystalDamageUtils.calculate(target.snapshot, center, world, pos)
                 val surrounding = target.snapshot.id in point.surroundTargets
                 if (!rules.accepts(damage, local, unsafe, target.rules, surrounding)) continue
-                val candidate = CrystalCandidate(pos, target, damage, local, supportHit = point.supportHit, antiSurround = surrounding)
+                val candidate = CrystalCandidate(
+                    pos,
+                    target,
+                    damage,
+                    local,
+                    supportHit = point.supportHit,
+                    antiSurround = surrounding
+                )
                 if (best == null || damage > best.damage ||
-                    point.supportHit == null && best.supportHit != null && damage > maxOverride) best = candidate
+                    point.supportHit == null && best.supportHit != null && damage > maxOverride
+                ) best = candidate
                 if (point.supportHit == null && surrounding && (surround == null ||
-                    Vec3.atCenterOf(pos).distanceToSqr(self.position) < Vec3.atCenterOf(surround.pos).distanceToSqr(self.position))) surround = candidate
+                            Vec3.atCenterOf(pos).distanceToSqr(self.position) < Vec3.atCenterOf(surround.pos)
+                        .distanceToSqr(self.position))
+                ) surround = candidate
             }
         }
-        return best?.takeIf { it.damage >= rules.minimum(it.target.rules, it.damage) } ?: surround.takeIf { antiSurround }
+        return best?.takeIf { it.damage >= rules.minimum(it.target.rules, it.damage) }
+            ?: surround.takeIf { antiSurround }
     }
 }
