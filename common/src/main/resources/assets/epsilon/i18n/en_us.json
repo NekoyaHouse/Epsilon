@@ -653,24 +653,6 @@
         "_value": "Auto DTap",
         "swapback": "Swap Back"
       },
-      "auto hit crystal": {
-        "_value": "Auto Hit Crystal",
-        "activate key": "Activate Key",
-        "check place": "Check Place",
-        "switch delay": "Switch Delay",
-        "switch chance": "Switch Chance",
-        "place delay": "Place Delay",
-        "place chance": "Place Chance",
-        "work with totem": "Work With Totem",
-        "work with crystal": "Work With Crystal",
-        "work with pickaxe": "Work With Pickaxe",
-        "sword swap": "Sword Swap",
-        "swing hand": "Swing Hand",
-        "render": "Render",
-        "fade time": "Fade Time",
-        "side color": "Side Color",
-        "line color": "Line Color"
-      },
       "auto mend": {
         "_value": "Auto Mend",
         "switch mode": {
@@ -745,40 +727,6 @@
         "trident": "Trident"
       },
       "criticals": "Criticals",
-      "crystal aura": {
-        "_value": "Crystal Aura",
-        "activate key": "Activate Key",
-        "place delay": "Place Delay",
-        "break delay": "Break Delay",
-        "place chance": "Place Chance",
-        "break chance": "Break Chance",
-        "stop on kill": "Stop On Kill",
-        "fake punch": "Fake Punch",
-        "click simulation": "Click Simulation",
-        "damage tick": "Damage Tick",
-        "anti-weakness": "Anti Weakness",
-        "strict air check": "Strict Air Check",
-        "particle chance": "Particle Chance",
-        "swing hand": "Swing Hand"
-      },
-      "crystal blocker": {
-        "_value": "Crystal Blocker",
-        "range": "Range",
-        "rotate": {
-          "_value": "Rotate",
-          "none": "None",
-          "normal": "Normal",
-          "silent": "Silent"
-        },
-        "switch": {
-          "_value": "Switch",
-          "visible": "Visible",
-          "silent": "Silent"
-        },
-        "delay": "Delay",
-        "swap back delay": "Swap Back Delay",
-        "rotation speed": "Rotation Speed"
-      },
       "self trap": {
         "_value": "Self Trap",
         "surround": "Surround",

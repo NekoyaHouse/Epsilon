@@ -653,24 +653,6 @@
         "_value": "自动双击",
         "swapback": "切换回来"
       },
-      "auto hit crystal": {
-        "_value": "自动打水晶",
-        "activate key": "激活按键",
-        "check place": "检测放置",
-        "switch delay": "切换延迟",
-        "switch chance": "切换几率",
-        "place delay": "放置延迟",
-        "place chance": "放置几率",
-        "work with totem": "兼容图腾",
-        "work with crystal": "兼容水晶",
-        "work with pickaxe": "兼容镐子",
-        "sword swap": "切剑",
-        "swing hand": "挥手",
-        "render": "渲染",
-        "fade time": "淡出时间",
-        "side color": "侧面颜色",
-        "line color": "线条颜色"
-      },
       "auto mend": {
         "_value": "自动修补",
         "switch mode": {
@@ -745,40 +727,6 @@
         "trident": "仅在三叉戟上交换"
       },
       "criticals": "刀暴",
-      "crystal aura": {
-        "_value": "水晶光环",
-        "activate key": "激活按键",
-        "place delay": "放置延迟",
-        "break delay": "破坏延迟",
-        "place chance": "放置几率",
-        "break chance": "破坏几率",
-        "stop on kill": "击杀停止",
-        "fake punch": "假打",
-        "click simulation": "模拟点击",
-        "damage tick": "伤害刻数",
-        "anti-weakness": "抗虚弱",
-        "strict air check": "严格空气检查",
-        "particle chance": "粒子几率",
-        "swing hand": "挥手"
-      },
-      "crystal blocker": {
-        "_value": "水晶阻断",
-        "range": "范围",
-        "rotate": {
-          "_value": "转头",
-          "none": "无",
-          "normal": "普通",
-          "silent": "静默"
-        },
-        "switch": {
-          "_value": "切换",
-          "visible": "可见",
-          "silent": "静默"
-        },
-        "delay": "延迟",
-        "swap back delay": "切换回原槽位延迟",
-        "rotation speed": "旋转速度"
-      },
       "self trap": {
         "_value": "自我包围",
         "surround": "脚边包围",
