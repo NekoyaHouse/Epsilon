@@ -12,6 +12,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.player.MoveUtils
+import com.github.epsilon.utils.player.PlayerUtils
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.core.BlockPos
@@ -45,6 +46,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
     private val mode by enumSetting("Mode", Mode.Vanilla)
     private val swapMode by enumSetting("Swap Mode", SwapMode.InvSwitch)
+    private val pauseOnEat by boolSetting("Pause On Eat", true, { mode == Mode.Pearl })
     private val pauseOnPhase by boolSetting("Pause On Phase", false, { mode == Mode.Pearl })
     private val swingHand by boolSetting("Swing Hand", true, { mode == Mode.Pearl })
     private val silent by boolSetting("Silent", false, { mode == Mode.Sunrise })
@@ -158,6 +160,12 @@ object Phase : Module("Phase", Category.MOVEMENT) {
         safeEventHandler<BlockCollisionEvent> { event ->
             val playerPos = BlockPos.containing(player.position())
 
+            fun canNoClip(): Boolean {
+                if (mode == Mode.Vanilla) return true
+                if (!waitBreak) return true
+                return clipTimer != 0
+            }
+
             if ((mode != Mode.CCClip && mode != Mode.Pearl && mode != Mode.ForceMine && canNoClip()) || afterPearlTime > 0) {
                 if (event.pos != playerPos.below() || mc.options.keyShift.isDown) {
                     event.state = Blocks.AIR.defaultBlockState()
@@ -182,9 +190,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (clipTimer > 0) clipTimer--
             if (afterPearlTime > 0) afterPearlTime--
 
-            if (mode == Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) &&
-                !player.isInWater && !player.isInLava && clipTimer <= 0
-            ) {
+            if (mode == Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) && !player.isInWater && !player.isInLava && clipTimer <= 0) {
                 val dir = MoveUtils.forward(0.5)
 
                 var blockToBreak: BlockPos? = null
@@ -235,6 +241,10 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
             if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
+                    if (pauseOnEat && PlayerUtils.isEating()) {
+                        return@safeEventHandler
+                    }
+
                     if (pauseOnPhase && isPlayerInBlock()) {
                         return@safeEventHandler
                     }
@@ -293,12 +303,6 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
         clipTimer = 20
         afterPearlTime = afterPearl
-    }
-
-    private fun canNoClip(): Boolean {
-        if (mode == Mode.Vanilla) return true
-        if (!waitBreak) return true
-        return clipTimer != 0
     }
 
     context(nn: NonNullContext)
