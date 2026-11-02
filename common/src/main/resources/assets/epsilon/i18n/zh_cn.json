@@ -347,17 +347,17 @@
       "feet trap": {
         "_value": "围脚",
         "no_block_found": "未找到可用方块",
-        "toggle on death": "",
+        "toggle on death": "死亡时关闭",
         "toggle on move": "移动时关闭",
         "toggle on jump": "跳跃时关闭",
         "in air": "空中放置",
         "pause on eat": "进食时暂停",
         "switch mode": {
-          "_value": "",
-          "silent": "",
-          "invswitch": ""
+          "_value": "切换模式",
+          "silent": "静默",
+          "invswitch": "背包交换"
         },
-        "use ender chest": "",
+        "use ender chest": "使用末影箱",
         "place delay": "放置延迟",
         "support": "辅助方块上限",
         "blocks per tick": "每刻放置数",
@@ -365,7 +365,7 @@
         "rotation mode": {
           "_value": "转头模式",
           "silent": "静默",
-          "packet": ""
+          "packet": "发包"
         },
         "rotation speed": "转头速度",
         "break crystal": "破坏水晶",
@@ -585,13 +585,6 @@
         "bow range": "弓瞄准距离",
         "bow smooth": "弓瞄平滑"
       },
-      "anchor blast": {
-        "_value": "重生锚爆破",
-        "trigger key": "触发按键",
-        "detonate slot": "引爆槽位",
-        "place cps": "放置CPS",
-        "charge cps": "充能CPS"
-      },
       "anti bot": "反人机",
       "backtrack": {
         "_value": "回溯",
@@ -764,13 +757,6 @@
         "shrink": "缩小",
         "side color": "填充颜色",
         "line color": "边框颜色"
-      },
-      "double anchor": {
-        "_value": "双重重生锚",
-        "trigger key": "触发按键",
-        "detonate slot": "引爆槽位",
-        "place cps": "放置CPS",
-        "charge cps": "充能CPS"
       },
       "elytra combat": {
         "_value": "鞘翅战斗",
@@ -1102,63 +1088,6 @@
         "second line start": "副线条起始颜色",
         "second line end": "副线条结束颜色"
       },
-      "safe anchor": {
-        "_value": "安全重生锚",
-        "shield": "护盾",
-        "trigger key": "触发按键",
-        "mode": {
-          "_value": "模式",
-          "assist": "辅助",
-          "auto": "自动"
-        },
-        "place mode": {
-          "_value": "放置模式",
-          "adaptive": "自适应",
-          "cover": "覆盖"
-        },
-        "order": {
-          "_value": "顺序",
-          "shieldfirst": "护盾优先",
-          "chargefirst": "充能优先"
-        },
-        "rotate": "旋转",
-        "rotation speed min": "旋转速度最小值",
-        "rotation speed max": "旋转速度最大值",
-        "strict": "严格",
-        "break crystal": "破坏水晶",
-        "swapback": "切回原物品",
-        "anchor place min delay": "锚放置最小延迟",
-        "anchor place max delay": "锚放置最大延迟",
-        "shield place min delay": "护盾放置最小延迟",
-        "shield place max delay": "护盾放置最大延迟",
-        "multi shield": "多重护盾",
-        "multi shield chance": "多重护盾概率",
-        "max extra shields": "最大额外护盾",
-        "shield distance min": "护盾最小距离",
-        "shield distance max": "护盾最大距离",
-        "charge min delay": "充能最小延迟",
-        "charge max delay": "充能最大延迟",
-        "detonate min delay": "引爆最小延迟",
-        "detonate max delay": "引爆最大延迟",
-        "detonate slot": "引爆槽位",
-        "min health": "最小生命值",
-        "prediction": "预测",
-        "prediction strength": "预测强度",
-        "multi charge": "多重充能",
-        "multi charge chance": "多重充能概率",
-        "min extra charges": "最小额外充能",
-        "max extra charges": "最大额外充能",
-        "render": "渲染",
-        "line color": "线条颜色",
-        "side color": "侧面颜色",
-        "line width": "线宽"
-      },
-      "safe crystal": {
-        "_value": "安全水晶",
-        "auto break": "自动破坏",
-        "auto place": "自动放置",
-        "anti suicide": "防自杀"
-      },
       "silent aim": {
         "_value": "静默瞄准",
         "weapon only": "仅武器",
@@ -1199,6 +1128,157 @@
         "random delay max": "随机延迟最大值",
         "attack cooldown": "攻击冷却",
         "crit fall distance": "暴击掉落距离"
+      },
+      "zealot crystal+": {
+        "_value": "狂热水晶+",
+        "placement": "放置",
+        "breaking": "破坏",
+        "general": "常规",
+        "damage": "伤害",
+        "targets": "目标",
+        "support": "底座",
+        "rendering": "渲染",
+        "place": "放置水晶",
+        "place delay": "放置延迟",
+        "place range": "放置范围",
+        "place wall range": "隔墙放置范围",
+        "swap": {
+          "_value": "物品切换",
+          "off": "关闭",
+          "normal": "普通",
+          "silent": "静默"
+        },
+        "swap action": {
+          "_value": "切换方式",
+          "hotbarswap": "快捷栏切换",
+          "invswitch": "背包交换"
+        },
+        "placements": {
+          "_value": "放置规则",
+          "native": "原生",
+          "protocol": "旧版协议"
+        },
+        "sequential": {
+          "_value": "连续放置",
+          "none": "无",
+          "normal": "普通",
+          "strict": "严格"
+        },
+        "force place": "强制放置",
+        "min health": "低血量阈值",
+        "force damage": "强制伤害阈值",
+        "place swing": {
+          "_value": "放置挥手",
+          "both": "动画与发包",
+          "packet": "仅发包",
+          "client": "仅客户端",
+          "none": "无"
+        },
+        "instant": "生成即时攻击",
+        "instant delay": "即时攻击延迟",
+        "inhibit": "攻击抑制",
+        "break delay": "破坏延迟",
+        "attack delay": "额外攻击延迟",
+        "attack factor": "攻击延迟系数",
+        "attack limit": "攻击次数限制",
+        "timeout": "延迟超时计算",
+        "break timeout": "破坏超时",
+        "min timeout": "最小超时",
+        "ticks existed": "最小存活刻数",
+        "break range": "破坏范围",
+        "break wall range": "隔墙破坏范围",
+        "break swing": {
+          "_value": "破坏挥手",
+          "both": "动画与发包",
+          "packet": "仅发包",
+          "client": "仅客户端",
+          "none": "无"
+        },
+        "instant calc": "生成即时计算",
+        "instant damage": "即时伤害阈值",
+        "instant max": "沿用最高攻击伤害",
+        "rotate": {
+          "_value": "转头",
+          "none": "无",
+          "place": "放置水晶",
+          "break": "破坏",
+          "normal": "普通",
+          "packet": "发包",
+          "grim": "Grim"
+        },
+        "yaw step": {
+          "_value": "水平旋转步进",
+          "off": "关闭",
+          "full": "完整",
+          "semi": "仅攻击时"
+        },
+        "yaw step limit": "水平步进角度",
+        "while using": "使用物品时执行",
+        "while mining": "挖掘时执行",
+        "swap penalty": "切换惩罚延迟",
+        "shield mode": {
+          "_value": "盾牌处理",
+          "none": "无",
+          "bypass": "避开盾牌"
+        },
+        "surround fucker": "破围追放",
+        "anti surround": "反包围",
+        "pre placement": "预放置",
+        "cev bomber": "头顶水晶",
+        "cev damage": "头顶水晶伤害",
+        "mining progress": "挖掘进度",
+        "reset crystal": "清除阻挡水晶",
+        "asynchronous": "异步计算",
+        "anti weakness": "抗虚弱",
+        "armor breaker": "破甲",
+        "armor scale": "护甲耐久阈值",
+        "min damage": "最小伤害",
+        "max local damage": "最大自身伤害",
+        "damage ratio": "伤害比例",
+        "ignore item": "忽略新掉落物",
+        "assume best armor": "假定最佳附魔",
+        "lethal multiplier": "致死伤害倍率",
+        "lethal totem": "图腾致死判断",
+        "lethal damage tick": "伤害间隔致死判断",
+        "safety": "自身安全检查",
+        "safety override": "覆盖安全限制",
+        "block destruction": "考虑地形破坏",
+        "self extrapolate": "自身位置预测",
+        "extrapolation ticks": "预测刻数",
+        "enemy range": "敌人搜索范围",
+        "ignore nakeds": "忽略无甲目标",
+        "players": "玩家",
+        "monsters": "怪物",
+        "neutrals": "中立生物",
+        "animals": "动物",
+        "shulkers": "潜影盒附近压制",
+        "base rotate": "底座转头",
+        "air place": "空中放置",
+        "base delay": "底座延迟",
+        "max override": "底座替代阈值",
+        "base swap action": {
+          "_value": "底座切换方式",
+          "hotbarswap": "快捷栏切换",
+          "invswitch": "背包交换"
+        },
+        "render": {
+          "_value": "显示模式",
+          "off": "关闭",
+          "box": "方框",
+          "fade": "淡出"
+        },
+        "box mode": {
+          "_value": "方框模式",
+          "both": "填充与轮廓",
+          "fill": "填充",
+          "lines": "轮廓"
+        },
+        "side": "填充颜色",
+        "line": "轮廓颜色",
+        "fade time": "淡出时间",
+        "render damage": "显示伤害",
+        "target damage": "目标伤害",
+        "self damage": "自身伤害"
       },
       "auto armor": {
         "_value": "自动穿甲",
@@ -1305,7 +1385,7 @@
       },
       "disabler": {
         "_value": "反作弊干扰",
-        "multiactionsc": ""
+        "multiactionsc": "容器操作冲刺兼容"
       },
       "elytra swap": {
         "_value": "鞘翅切换",
@@ -2492,159 +2572,6 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
-      },
-      "auto crystal": {
-        "_value": "自动水晶",
-        "placement": "放置",
-        "breaking": "破坏",
-        "general": "常规",
-        "damage": "伤害",
-        "targets": "目标",
-        "support": "底座",
-        "rendering": "渲染",
-        "place": "放置水晶",
-        "place delay": "放置延迟",
-        "place range": "放置范围",
-        "place wall range": "隔墙放置范围",
-        "swap": {
-          "_value": "物品切换",
-          "off": "关闭",
-          "normal": "普通",
-          "silent": "静默"
-        },
-        "swap action": {
-          "_value": "切换方式",
-          "hotbar": "快捷栏",
-          "screen": "容器交换",
-          "pick": "背包选取"
-        },
-        "placements": {
-          "_value": "放置规则",
-          "native": "原生",
-          "protocol": "旧版协议"
-        },
-        "sequential": {
-          "_value": "连续放置",
-          "none": "无",
-          "normal": "普通",
-          "strict": "严格"
-        },
-        "place swing": {
-          "_value": "放置挥手",
-          "both": "两者",
-          "packet": "仅发包",
-          "client": "仅客户端",
-          "none": "无"
-        },
-        "force place": "强制放置",
-        "min health": "低血量阈值",
-        "force damage": "强制伤害阈值",
-        "instant": "生成即时攻击",
-        "instant delay": "即时攻击延迟",
-        "inhibit": "攻击抑制",
-        "break delay": "破坏延迟",
-        "attack delay": "额外攻击延迟",
-        "attack factor": "攻击延迟系数",
-        "attack limit": "攻击次数限制",
-        "timeout": "延迟超时计算",
-        "break timeout": "破坏超时",
-        "min timeout": "最小超时",
-        "ticks existed": "最小存活刻数",
-        "break range": "破坏范围",
-        "break wall range": "隔墙破坏范围",
-        "break swing": {
-          "_value": "破坏挥手",
-          "both": "两者",
-          "packet": "仅发包",
-          "client": "仅客户端",
-          "none": "无"
-        },
-        "instant calc": "生成即时计算",
-        "instant damage": "即时伤害阈值",
-        "instant max": "沿用最高攻击伤害",
-        "rotate": {
-          "_value": "旋转",
-          "none": "无",
-          "place": "放置水晶",
-          "break": "破坏",
-          "normal": "普通",
-          "packet": "仅发包",
-          "grim": "Grim"
-        },
-        "yaw step": {
-          "_value": "水平旋转步进",
-          "off": "关闭",
-          "full": "完整",
-          "semi": "仅攻击时"
-        },
-        "yaw step limit": "水平步进角度",
-        "while using": "使用物品时执行",
-        "while mining": "挖掘时执行",
-        "swap penalty": "切换惩罚延迟",
-        "shield mode": {
-          "_value": "盾牌处理",
-          "none": "无",
-          "bypass": "避开盾牌"
-        },
-        "surround fucker": "破围追放",
-        "anti surround": "反包围",
-        "pre placement": "预放置",
-        "cev bomber": "头顶水晶",
-        "cev damage": "头顶水晶伤害",
-        "mining progress": "挖掘进度",
-        "reset crystal": "清除阻挡水晶",
-        "asynchronous": "异步计算",
-        "anti weakness": "抗虚弱",
-        "armor breaker": "破甲",
-        "armor scale": "护甲耐久阈值",
-        "min damage": "最小伤害",
-        "max local damage": "最大自身伤害",
-        "damage ratio": "伤害比例",
-        "ignore item": "忽略新掉落物",
-        "assume best armor": "假定最佳附魔",
-        "lethal multiplier": "致死伤害倍率",
-        "lethal totem": "图腾致死判断",
-        "lethal damage tick": "伤害间隔致死判断",
-        "safety": "自身安全检查",
-        "safety override": "覆盖安全限制",
-        "block destruction": "考虑地形破坏",
-        "self extrapolate": "自身位置预测",
-        "extrapolation ticks": "预测刻数",
-        "enemy range": "敌人搜索范围",
-        "ignore nakeds": "忽略无甲目标",
-        "players": "玩家",
-        "monsters": "怪物",
-        "neutrals": "中立生物",
-        "animals": "动物",
-        "shulkers": "潜影盒附近压制",
-        "base rotate": "底座旋转",
-        "air place": "空中放置",
-        "base delay": "底座延迟",
-        "max override": "底座替代阈值",
-        "base swap action": {
-          "_value": "底座切换方式",
-          "hotbar": "快捷栏",
-          "screen": "容器交换",
-          "pick": "背包选取"
-        },
-        "render": {
-          "_value": "显示模式",
-          "off": "关闭",
-          "box": "方框",
-          "fade": "淡出"
-        },
-        "box mode": {
-          "_value": "方框模式",
-          "both": "两者",
-          "fill": "填充",
-          "lines": "轮廓"
-        },
-        "side": "填充颜色",
-        "line": "轮廓颜色",
-        "fade time": "淡出时间",
-        "render damage": "显示伤害",
-        "target damage": "目标伤害",
-        "self damage": "自身伤害"
       }
     },
     "elements": {

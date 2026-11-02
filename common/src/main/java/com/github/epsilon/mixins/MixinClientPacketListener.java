@@ -2,8 +2,8 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.impl.GameJoinedEvent;
 import com.github.epsilon.events.impl.GameLeftEvent;
-import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.events.impl.PacketEvent;
+import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.kernel.jvm.NonNullContext;
 import com.github.epsilon.modules.impl.player.NoRotate;
 import com.github.epsilon.modules.impl.render.NoRender;

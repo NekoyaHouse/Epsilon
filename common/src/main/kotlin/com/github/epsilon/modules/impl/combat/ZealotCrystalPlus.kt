@@ -28,7 +28,6 @@ import com.google.common.base.Suppliers
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -73,7 +72,7 @@ import java.util.concurrent.Future
 import kotlin.math.abs
 import kotlin.math.ceil
 
-object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
+object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
 
     private enum class SwapMode {
         Off,
@@ -138,43 +137,43 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val sgRender = settingGroup("Rendering")
 
     private val place by boolSetting("Place", true).group(sgPlace)
-    private val placeDelay by intSetting("Place Delay", 100, 0..1000, 10, { place }).group(sgPlace)
-    private val placeRange by doubleSetting("Place Range", 4.0, 0.1..6.0, 0.1, { place }).group(sgPlace)
-    private val placeWallRange by doubleSetting("Place Wall Range", 4.0, 0.1..6.0, 0.1, { place }).group(sgPlace)
-    private val swap by enumSetting("Swap", SwapMode.Off, { place }, onChanged = { restoreSlot() }).group(sgPlace)
+    private val placeDelay by intSetting("Place Delay", 0, 0..1000, 10, { place }).group(sgPlace)
+    private val placeRange by doubleSetting("Place Range", 5.0, 0.1..6.0, 0.1, { place }).group(sgPlace)
+    private val placeWallRange by doubleSetting("Place Wall Range", 3.0, 0.1..6.0, 0.1, { place }).group(sgPlace)
+    private val swap by enumSetting("Swap", SwapMode.Silent, { place }, onChanged = { restoreSlot() }).group(sgPlace)
     private val swapAction by enumSetting(
         "Swap Action",
         SwapActionMode.HotbarSwap,
         { place && swap != SwapMode.Off },
         onChanged = { restoreSlot() }).group(sgPlace)
     private val placements by enumSetting("Placements", PlacementsMode.Native, { place }).group(sgPlace)
-    private val sequential by enumSetting("Sequential", SequentialMode.None, { place }).group(sgPlace)
-    private val placeSwing by enumSetting("Place Swing", SwingMode.Both, { place }).group(sgPlace)
-    private val forcePlace by boolSetting("Force Place", false).group(sgPlace)
-    private val minHealth by doubleSetting("Min Health", 4.0, 0.1..36.0, 0.1, { forcePlace }).group(sgPlace)
+    private val sequential by enumSetting("Sequential", SequentialMode.Normal, { place }).group(sgPlace)
+    private val forcePlace by boolSetting("Force Place", true).group(sgPlace)
+    private val minHealth by doubleSetting("Min Health", 6.0, 0.1..36.0, 0.1, { forcePlace }).group(sgPlace)
     private val forceDamage by doubleSetting("Force Damage", 2.0, 0.1..36.0, 0.1, { forcePlace }).group(sgPlace)
+    private val placeSwing by enumSetting("Place Swing", SwingMode.Packet, { place }).group(sgPlace)
 
-    private val instant by boolSetting("Instant", false).group(sgBreak)
-    private val instantDelay by intSetting("Instant Delay", 50, 0..1000, 10, { instant }).group(sgBreak)
+    private val instant by boolSetting("Instant", true).group(sgBreak)
+    private val instantDelay by intSetting("Instant Delay", 0, 0..1000, 10, { instant }).group(sgBreak)
     private val inhibit by boolSetting("Inhibit", true).group(sgBreak)
-    private val breakDelay by intSetting("Break Delay", 50, 0..1000, 10).group(sgBreak)
+    private val breakDelay by intSetting("Break Delay", 0, 0..1000, 10).group(sgBreak)
     private val attackDelay by doubleSetting("Attack Delay", 0.0, 0.0..5.0, 0.1).group(sgBreak)
     private val attackFactor by intSetting("Attack Factor", 0, 0..3, 1, { attackDelay > 0.0 }).group(sgBreak)
-    private val attackLimit by doubleSetting("Attack Limit", 1.5, 0.5..20.0, 0.1).group(sgBreak)
+    private val attackLimit by doubleSetting("Attack Limit", 2.0, 0.5..20.0, 0.1).group(sgBreak)
     private val timeout by boolSetting("Timeout", false).group(sgBreak)
     private val breakTimeout by doubleSetting("Break Timeout", 3.0, 0.0..10.0, 0.1, { timeout }).group(sgBreak)
     private val minTimeout by doubleSetting("Min Timeout", 5.0, 0.0..20.0, 0.1, { timeout }).group(sgBreak)
     private val ticksExisted by intSetting("Ticks Existed", 0, 0..10, 1).group(sgBreak)
-    private val breakRange by doubleSetting("Break Range", 4.0, 0.1..6.0, 0.1).group(sgBreak)
-    private val breakWallRange by doubleSetting("Break Wall Range", 4.0, 0.1..6.0, 0.1).group(sgBreak)
-    private val breakSwing by enumSetting("Break Swing", SwingMode.Both).group(sgBreak)
-    private val instantCalc by boolSetting("Instant Calc", false, { instant }).group(sgBreak)
-    private val instantDamage by doubleSetting("Instant Damage", 6.0, 1.0..10.0, 0.1, { instant && instantCalc }).group(
+    private val breakRange by doubleSetting("Break Range", 3.0, 0.1..6.0, 0.1).group(sgBreak)
+    private val breakWallRange by doubleSetting("Break Wall Range", 3.0, 0.1..6.0, 0.1).group(sgBreak)
+    private val breakSwing by enumSetting("Break Swing", SwingMode.Packet).group(sgBreak)
+    private val instantCalc by boolSetting("Instant Calc", true, { instant }).group(sgBreak)
+    private val instantDamage by doubleSetting("Instant Damage", 4.0, 1.0..10.0, 0.1, { instant && instantCalc }).group(
         sgBreak
     )
     private val instantMax by boolSetting("Instant Max", true, { instant && instantCalc }).group(sgBreak)
 
-    private val rotate by enumSetting("Rotate", RotateMode.Normal).group(sgGeneral)
+    private val rotate by enumSetting("Rotate", RotateMode.Grim).group(sgGeneral)
     private val yawStep by enumSetting("Yaw Step", YawStepMode.Off, { rotate != RotateMode.None }).group(sgGeneral)
     private val yawStepLimit by intSetting("Yaw Step Limit", 180, 1..180, 1, { yawStep != YawStepMode.Off }).group(
         sgGeneral
@@ -182,10 +181,10 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val whileUsing by boolSetting("While Using", false).group(sgGeneral)
     private val whileMining by boolSetting("While Mining", true).group(sgGeneral)
     private val swapPenalty by doubleSetting("Swap Penalty", 0.0, 0.0..10.0, 0.1).group(sgGeneral)
-    private val shieldMode by enumSetting("Shield Mode", ShieldMode.None).group(sgGeneral)
-    private val surroundBreaker by boolSetting("Surround Breaker", false).group(sgGeneral)
+    private val shieldMode by enumSetting("Shield Mode", ShieldMode.Bypass).group(sgGeneral)
+    private val surroundFucker by boolSetting("Surround Fucker", true).group(sgGeneral)
     private val antiSurround by boolSetting("Anti Surround", false).group(sgGeneral)
-    private val prePlacement by boolSetting("Pre Placement", false).group(sgGeneral)
+    private val prePlacement by boolSetting("Pre Placement", true).group(sgGeneral)
     private val cevBomber by boolSetting("Cev Bomber", false, { antiSurround }).group(sgGeneral)
     private val cevDamage by doubleSetting("Cev Damage", 8.0, 1.0..10.0, 0.1, { antiSurround && cevBomber }).group(
         sgGeneral
@@ -197,7 +196,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val asynchronous by boolSetting("Asynchronous", true, onChanged = { cancelPlacement() }).group(sgGeneral)
     private val antiWeakness by boolSetting("Anti Weakness", false).group(sgGeneral)
 
-    private val armorBreaker by boolSetting("Armor Breaker", true).group(sgDamage)
+    private val armorBreaker by boolSetting("Armor Breaker", false).group(sgDamage)
     private val armorScale by intSetting("Armor Scale", 5, 1..20, 1, { armorBreaker }).group(sgDamage)
     private val minDamage by doubleSetting("Min Damage", 4.0, 1.0..10.0, 0.1).group(sgDamage)
     private val maxLocalDamage by doubleSetting("Max Local Damage", 12.0, 4.0..20.0, 0.1).group(sgDamage)
@@ -205,13 +204,13 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val ignoreItem by boolSetting("Ignore Item", false).group(sgDamage)
     private val assumeBestArmor by boolSetting("Assume Best Armor", false).group(sgDamage)
     private val lethalMultiplier by doubleSetting("Lethal Multiplier", 1.5, 0.0..4.0, 0.1).group(sgDamage)
-    private val lethalTotem by boolSetting("Lethal Totem", false).group(sgDamage)
+    private val lethalTotem by boolSetting("Lethal Totem", true).group(sgDamage)
     private val lethalDamageTick by boolSetting("Lethal Damage Tick", false).group(sgDamage)
     private val safety by boolSetting("Safety", true).group(sgDamage)
     private val safetyOverride by boolSetting("Safety Override", false).group(sgDamage)
-    private val blockDestruction by boolSetting("Block Destruction", false).group(sgDamage)
-    private val selfExtrapolate by boolSetting("Self Extrapolate", false).group(sgDamage)
-    private val extrapolationTicks by intSetting("Extrapolation Ticks", 0, 0..10, 1).group(sgDamage)
+    private val blockDestruction by boolSetting("Block Destruction", true).group(sgDamage)
+    private val selfExtrapolate by boolSetting("Self Extrapolate", true).group(sgDamage)
+    private val extrapolationTicks by intSetting("Extrapolation Ticks", 5, 0..10, 1).group(sgDamage)
 
     private val enemyRange by doubleSetting("Enemy Range", 10.0, 1.0..13.0, 0.5).group(sgTarget)
     private val ignoreNakeds by boolSetting("Ignore Nakeds", false).group(sgTarget)
@@ -219,18 +218,18 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val monsters by boolSetting("Monsters", false).group(sgTarget)
     private val neutrals by boolSetting("Neutrals", false).group(sgTarget)
     private val animals by boolSetting("Animals", false).group(sgTarget)
-    private val shulkers by boolSetting("Shulkers", false).group(sgTarget)
+    private val shulkers by boolSetting("Shulkers", true).group(sgTarget)
 
-    private val support by boolSetting("Support", false).group(sgSupport)
-    private val baseRotate by boolSetting("Base Rotate", false, { support }).group(sgSupport)
+    private val support by boolSetting("Support", true).group(sgSupport)
+    private val baseRotate by boolSetting("Base Rotate", true, { support }).group(sgSupport)
     private val airPlace by boolSetting("Air Place", false, { support }).group(sgSupport)
     private val baseDelay by intSetting("Base Delay", 4, 1..20, 1, { support }).group(sgSupport)
-    private val maxOverride by doubleSetting("Max Override", 6.0, 0.0..36.0, 0.1, { support }).group(sgSupport)
+    private val maxOverride by doubleSetting("Max Override", 7.0, 0.0..36.0, 0.1, { support }).group(sgSupport)
     private val baseSwapAction by enumSetting("Base Swap Action", SwapActionMode.HotbarSwap, { support }).group(
         sgSupport
     )
 
-    private val renderMode by enumSetting("Render", RenderMode.Fade).group(sgRender)
+    private val renderMode by enumSetting("Render", RenderMode.Box).group(sgRender)
     private val shape by enumSetting("Box Mode", BoxMode.Both, { renderMode != RenderMode.Off }).group(sgRender)
     private val sideColor by colorSetting(
         "Side",
@@ -239,7 +238,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         { renderMode != RenderMode.Off }).group(sgRender)
     private val lineColor by colorSetting(
         "Line",
-        Color(255, 183, 197, 100),
+        Color(255, 183, 197, 211),
         true,
         { renderMode != RenderMode.Off }).group(sgRender)
     private val fadeTime by intSetting("Fade Time", 250, 0..1000, 10, { renderMode == RenderMode.Fade }).group(sgRender)
@@ -269,18 +268,27 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val normalInventorySwaps = ArrayList<InventorySwap>()
 
     init {
-        onEnable { clearState() }
-        onDisable { restoreSlot(); clearState() }
-        handler<LevelUpdateEvent>(alwaysListening = true) { clearState() }
-        handler<GameLeftEvent>(alwaysListening = true) { clearState() }
-        handler<RespawnEvent>(alwaysListening = true) { clearState() }
-        safeEventHandler<ClientTickEvent.Pre> { timing.tick() }
+        onEnable {
+            clearState()
+        }
+
+        onDisable {
+            restoreSlot()
+            clearState()
+        }
+
+        safeEventHandler<ClientTickEvent.Pre> {
+            timing.tick()
+        }
+
         safeEventHandler<ClientEntityEvent.TickPre>(EventPriority.HIGH) { event ->
             if (event.level === level && !player.isSpectator) tickEntities()
         }
+
         safeEventHandler<ClientTickEvent.Post> {
             if (!player.isSpectator && asynchronous) submitPlacement()
         }
+
         safeEventHandler<ClientLoopEvent> {
             if (attackDelay > 0.0 && timing.attackReady(timing.attackInterval(attackDelay, attackFactor))) {
                 val candidate = breakCandidate ?: return@safeEventHandler
@@ -288,22 +296,55 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                 timing.resetAttack()
             }
         }
+
         safeEventHandler<ClientEntityEvent.Added> { event ->
             if (event.level === level && event.entity is EndCrystal) onCrystalSpawn(event.entity)
         }
+
         safeEventHandler<ClientEntityEvent.Removed> { event ->
             if (event.level === level) timing.confirm(event.entityId)
         }
+
         handler<PacketEvent.Send>(EventPriority.LOWEST) { event ->
             if (!event.isCancelled) when (val packet = event.packet) {
                 is ServerboundSetCarriedItemPacket -> timing.resetSwap()
                 is ServerboundMovePlayerPacket -> if (packet.hasRotation()) serverYaw = packet.getYRot(0.0f)
             }
         }
-        safeEventHandler<PacketEvent.Apply> { receivePacket(it.packet) }
-        safeEventHandler<PacketMineEvent.BreakAttempt> {
-            if (surroundBreaker) onMiningAttempt(it.pos)
+
+        safeEventHandler<PacketEvent.Apply> { event ->
+            val packet = event.packet
+            when (packet) {
+                is ClientboundExplodePacket -> confirmExplosion(packet.center())
+                is ClientboundSoundPacket -> if (packet.sound.value() == SoundEvents.GENERIC_EXPLODE.value() && packet.source == SoundSource.BLOCKS) {
+                    confirmExplosion(Vec3(packet.x, packet.y, packet.z))
+                }
+
+                is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach(java.util.function.IntConsumer {
+                    timing.confirm(
+                        it
+                    )
+                })
+
+                is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.PROTECTED_FROM_DEATH) {
+                    packet.getEntity(level)?.let { totems[it.id] = now() }
+                }
+
+                is ClientboundPlayerPositionPacket -> {
+                    releaseRotation()
+                    rotationAim = null
+                    yawComplete = false
+                    serverYaw = null
+                    breakCandidate = null
+                    cancelPlacement()
+                }
+            }
         }
+
+        safeEventHandler<PacketMineEvent.BreakAttempt> {
+            if (surroundFucker) onMiningAttempt(it.pos)
+        }
+
         safeEventHandler<Render3DEvent> {
             val candidate = rendered ?: return@safeEventHandler
             val alpha = renderAlpha()
@@ -619,35 +660,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     }
 
     context(nn: NonNullContext)
-    private fun receivePacket(packet: Packet<*>) {
-        when (packet) {
-            is ClientboundExplodePacket -> confirmExplosion(packet.center())
-            is ClientboundSoundPacket -> if (packet.sound.value() == SoundEvents.GENERIC_EXPLODE.value() && packet.source == SoundSource.BLOCKS) {
-                confirmExplosion(Vec3(packet.x, packet.y, packet.z))
-            }
-
-            is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach(java.util.function.IntConsumer {
-                timing.confirm(
-                    it
-                )
-            })
-
-            is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.PROTECTED_FROM_DEATH) {
-                packet.getEntity(nn.level)?.let { totems[it.id] = now() }
-            }
-
-            is ClientboundPlayerPositionPacket -> {
-                releaseRotation()
-                rotationAim = null
-                yawComplete = false
-                serverYaw = null
-                breakCandidate = null
-                cancelPlacement()
-            }
-        }
-    }
-
-    context(nn: NonNullContext)
     private fun confirmExplosion(center: Vec3) {
         for (entity in nn.level.entitiesForRendering().toList()) {
             if (entity is EndCrystal && entity.position().distanceToSqr(center) < 144.0) {
@@ -671,10 +683,10 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             }
             result.add(
                 CrystalTarget(
-                snapshot,
-                CrystalCombatRules.Target(
-                    snapshot.health, snapshot.minArmor, snapshot.maxArmor,
-                    totems[entity.id]?.let { now() - it <= 500L } == true, nearbyShulker)))
+                    snapshot,
+                    CrystalCombatRules.Target(
+                        snapshot.health, snapshot.minArmor, snapshot.maxArmor,
+                        totems[entity.id]?.let { now() - it <= 500L } == true, nearbyShulker)))
         }
         return result
     }
@@ -1089,10 +1101,12 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     )
 
     private fun crystalCenter(pos: BlockPos): Vec3 = Vec3(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5)
+
     private fun faded(color: Color, alpha: Double) =
         Color(color.red, color.green, color.blue, (color.alpha * alpha).toInt().coerceIn(0, 255))
 
     private fun now(): Long = System.nanoTime() / 1_000_000L
+
     override fun getInfo(): String? = rendered?.takeIf { now() - renderedAt < 1000L }
         ?.let { String.format(Locale.ROOT, "%.1f, %dms", it.damage, timing.averageBreakMillis) }
 }

@@ -54,7 +54,6 @@ object ModuleManager : AlwaysListening {
         addModule(AntiBot)
         addModule(Backtrack)
         addModule(AutoClicker)
-        addModule(AutoCrystal)
         addModule(AutoDtap)
         addModule(AutoMend)
         addModule(AutoMine)
@@ -75,6 +74,7 @@ object ModuleManager : AlwaysListening {
         addModule(SilentAim)
         addModule(SpearKill)
         addModule(TriggerBot)
+        addModule(ZealotCrystalPlus)
 
         // Player
         addModule(AutoArmor)
