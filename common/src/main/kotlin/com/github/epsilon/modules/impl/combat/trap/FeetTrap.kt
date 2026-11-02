@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat
+package com.github.epsilon.modules.impl.combat.trap
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.kernel.jvm.NonNullContext
@@ -6,9 +6,10 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 
-object FeetTrap : BlockTrapModule("Feet Trap", EpsilonTranslations.FeetTrap.NO_BLOCK_FOUND) {
+object FeetTrap : TrapBase("Feet Trap", EpsilonTranslations.FeetTrap.NO_BLOCK_FOUND) {
 
     private val extend by boolSetting("Extend", true)
+
     private val surroundDirections = arrayOf(
         Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST
     )

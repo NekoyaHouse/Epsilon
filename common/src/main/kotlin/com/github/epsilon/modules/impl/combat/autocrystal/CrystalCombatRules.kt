@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat.autocrystal
 
-/** 对应 OpenHachimi 的 sJ..sR；最终最小伤害检查在全局最高伤害候选选出之后进行。 */
 internal data class CrystalCombatRules(
     val minimum: Double, val maximumSelf: Double, val ratio: Double, val safety: Boolean,
     val safetyOverride: Boolean, val force: Boolean, val forceHealth: Double, val forceDamage: Double,

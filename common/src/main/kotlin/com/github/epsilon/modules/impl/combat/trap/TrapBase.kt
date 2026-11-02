@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat
+package com.github.epsilon.modules.impl.combat.trap
 
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.EventPriority
@@ -40,7 +40,7 @@ import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import java.util.concurrent.ConcurrentLinkedQueue
 
-abstract class BlockTrapModule(name: String, private val noBlockFound: TranslateComponent) :
+abstract class TrapBase(name: String, private val noBlockFound: TranslateComponent) :
     Module(name, Category.COMBAT) {
 
     private enum class SwitchMode {
@@ -49,8 +49,8 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
     }
 
     private enum class RotationMode {
-        Silent,
-        Packet
+        Motion,
+        Silent
     }
 
     private val toggleOnDeath by boolSetting("Toggle On Death", true)
@@ -64,13 +64,13 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
     private val support by intSetting("Support", 2, 0..8, 1)
     private val blocksPerTick by intSetting("Blocks Per Tick", 1, 1..8, 1)
     private val rotate by boolSetting("Rotate", true)
-    private val rotationMode by enumSetting("Rotation Mode", RotationMode.Packet, { rotate })
+    private val rotationMode by enumSetting("Rotation Mode", RotationMode.Silent, { rotate })
     private val rotationSpeed by intSetting(
         "Rotation Speed",
         180,
         18..180,
         18,
-        { breakCrystal || rotate && rotationMode == RotationMode.Silent }
+        { breakCrystal || rotate && rotationMode == RotationMode.Motion }
     )
     private val breakCrystal by boolSetting("Break Crystal", false)
     private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
@@ -132,7 +132,7 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
                     RotationUtils.calculate(target.boundingBox.center),
                     rotationSpeed.toDouble()
                 )
-            } else if (rotate && rotationMode == RotationMode.Silent) {
+            } else if (rotate && rotationMode == RotationMode.Motion) {
                 breakingCrystal = null
                 placing?.let { RotationManager.setRotations(it.rotation, rotationSpeed.toDouble()) }
             } else {
@@ -400,7 +400,7 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
                 placing = placements.getOrNull(index + 1)
                 continue
             }
-            if (rotate && rotationMode == RotationMode.Silent && !RaytraceUtils.overBlock(
+            if (rotate && rotationMode == RotationMode.Motion && !RaytraceUtils.overBlock(
                     RotationManager.getRotation(),
                     info.hit.blockPos,
                     info.hit.direction
@@ -455,7 +455,7 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
         if (blockUpdates == null) blockUpdates = ConcurrentLinkedQueue()
 
-        val result = if (rotate && rotationMode == RotationMode.Packet) {
+        val result = if (rotate && rotationMode == RotationMode.Silent) {
             LegacyPlacement.placeBlock(hand, info.hit)
         } else {
             nn.gameMode.useItemOn(nn.player, hand, info.hit)

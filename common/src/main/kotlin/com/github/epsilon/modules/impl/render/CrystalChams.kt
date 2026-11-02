@@ -8,7 +8,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.WireframeEntityRenderer
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import java.awt.Color
-import java.util.PriorityQueue
+import java.util.*
 
 object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
@@ -29,7 +29,8 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
             for (entity in level.entitiesForRendering()) {
                 if (entity !is EndCrystal) continue
-                val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(!level.tickRateManager().isEntityFrozen(entity))
+                val partialTick =
+                    mc.deltaTracker.getGameTimeDeltaPartialTick(!level.tickRateManager().isEntityFrozen(entity))
                 if (!mc.entityRenderDispatcher.shouldRender(
                         entity, cameraState.cullFrustum, cameraPos.x, cameraPos.y, cameraPos.z, partialTick
                     )
@@ -68,6 +69,7 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
     private const val MAX_RENDERED_CRYSTALS = 256
 
     // 密集实体场景下限制每帧的模型重建与描边顶点数量，优先保留镜头附近的水晶。
-    private val FARTHEST_FIRST = compareByDescending<CrystalCandidate> { it.distanceSquared }.thenByDescending { it.entity.id }
+    private val FARTHEST_FIRST =
+        compareByDescending<CrystalCandidate> { it.distanceSquared }.thenByDescending { it.entity.id }
 
 }

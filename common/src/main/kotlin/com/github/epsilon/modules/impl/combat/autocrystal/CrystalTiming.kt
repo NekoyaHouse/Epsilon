@@ -7,8 +7,7 @@ internal class CrystalTiming(
     private var attackStart = nanoTime()
     private var placeStart = nanoTime()
     private var swapStart = nanoTime()
-    var baseTicks = 0
-        private set
+    var baseTicks = 0; private set
     private val attacked = HashMap<Int, Long>()
     private val attempts = HashMap<Int, Int>()
     private val placed = HashMap<Long, Long>()
@@ -19,8 +18,11 @@ internal class CrystalTiming(
     val attackElapsedMillis: Long get() = (nanoTime() - attackStart) / 1_000_000L
 
     fun attackReady(delay: Double): Boolean = attackElapsedMillis > delay.toLong()
+
     fun placeReady(delay: Int): Boolean = (nanoTime() - placeStart) / 1_000_000L > delay
+
     fun swapReady(penalty: Double): Boolean = (nanoTime() - swapStart) / 1_000_000L > (penalty * 25.0).toLong()
+
     fun tick() {
         baseTicks++
     }
@@ -42,6 +44,7 @@ internal class CrystalTiming(
     }
 
     fun attackInterval(attackDelay: Double, attackFactor: Int): Double = attackDelay * (50.0 / maxOf(1, attackFactor))
+
     fun tickInterval(breakDelay: Int, timeout: Boolean, minimum: Double, extra: Double): Double =
         if (timeout) maxOf(minimum * 50.0, averageBreakMillis + extra * 50.0) else breakDelay.toDouble()
 
@@ -55,6 +58,7 @@ internal class CrystalTiming(
     }
 
     fun onSpawn(pos: Long): Boolean = placed.remove(pos) != null
+
     fun blocksPlacement(id: Int, limit: Double): Boolean = (attempts[id] ?: 0) > limit * 10.0
 
     fun inhibited(id: Int): Boolean = attacked[id]?.let { it < averageBreakMillis } == true

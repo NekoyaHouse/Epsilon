@@ -30,6 +30,7 @@ minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft"
 # buildSrc 预编译脚本插件在 apply Kotlin 插件时需要 KGP 位于其类路径，版本与 kotlin 保持一致。
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "project-fabric-loader" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "project-fabric-api" }

@@ -8,7 +8,7 @@ import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.combat.FeetTrap
+import com.github.epsilon.modules.impl.combat.trap.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.player.PlayerUtils
 import net.minecraft.client.player.LocalPlayer
