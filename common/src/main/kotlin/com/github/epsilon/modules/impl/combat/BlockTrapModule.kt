@@ -72,9 +72,9 @@ abstract class BlockTrapModule(name: String, private val noBlockFound: Translate
         18,
         { breakCrystal || rotate && rotationMode == RotationMode.Silent }
     )
-    private val swingHand by boolSetting("Swing Hand", true)
     private val breakCrystal by boolSetting("Break Crystal", false)
     private val breakDelay by intSetting("Break Delay", 100, 1..1000, 1, { breakCrystal })
+    private val swingHand by boolSetting("Swing Hand", true)
     private val render by boolSetting("Render", true)
     private val fade by boolSetting("Fade", true, { render })
     private val fadeTime by intSetting("Fade Time", 500, 0..3000, 50, { render && fade })

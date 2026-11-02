@@ -224,6 +224,13 @@
         },
         "open_folder_failed": "Unable to open the asset folder"
       },
+      "via_only": {
+        "title": "Via Version Required",
+        "requirement": "Required: %s",
+        "current": "Current Via target: %s",
+        "hint": "Load Via and select a matching target version.",
+        "unavailable": "Unavailable"
+      },
       "platform": {
         "badge": "Unsupported",
         "title": "Unsupported",
@@ -232,13 +239,6 @@
         "current": "Current platform: %s",
         "hint": "This feature is unavailable on the current platform.",
         "confirm": "Got it"
-      },
-      "via_only": {
-        "title": "Via Version Required",
-        "requirement": "Required: %s",
-        "current": "Current Via target: %s",
-        "hint": "Load Via and select a matching target version.",
-        "unavailable": "Unavailable"
       }
     },
     "modules": {
@@ -347,6 +347,7 @@
       "feet trap": {
         "_value": "Feet Trap",
         "no_block_found": "No block found",
+        "toggle on death": "",
         "toggle on move": "Toggle On Move",
         "toggle on jump": "Toggle On Jump",
         "in air": "In Air",
@@ -358,7 +359,6 @@
         },
         "use ender chest": "",
         "place delay": "Place Delay",
-        "extend": "Extend",
         "support": "Support Blocks",
         "blocks per tick": "Blocks Per Tick",
         "rotate": "Rotate",
@@ -368,15 +368,16 @@
           "packet": ""
         },
         "rotation speed": "Rotation Speed",
-        "swing hand": "Swing Hand",
         "break crystal": "Break Crystal",
         "break delay": "Break Delay",
+        "swing hand": "Swing Hand",
         "render": "Render",
         "fade": "Fade",
         "fade time": "Fade Time",
         "shrink": "Shrink",
         "side color": "Side Color",
-        "line color": "Line Color"
+        "line color": "Line Color",
+        "extend": "Extend"
       },
       "auto mine": {
         "_value": "Auto Mine",
@@ -777,6 +778,44 @@
         "delay": "Delay",
         "swap back delay": "Swap Back Delay",
         "rotation speed": "Rotation Speed"
+      },
+      "self trap": {
+        "_value": "Self Trap",
+        "surround": "Surround",
+        "trap": "Trap",
+        "stand head": "Stand Head",
+        "crawl head": "Crawl Head",
+        "floor": "Floor",
+        "toggle on death": "Toggle On Death",
+        "toggle on move": "Toggle On Move",
+        "toggle on jump": "Toggle On Jump",
+        "in air": "In Air",
+        "pause on eat": "Pause On Eat",
+        "switch mode": {
+          "_value": "Switch Mode",
+          "silent": "Silent",
+          "invswitch": "Inventory Switch"
+        },
+        "use ender chest": "Use Ender Chest",
+        "place delay": "Place Delay",
+        "support": "Support Blocks",
+        "blocks per tick": "Blocks Per Tick",
+        "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "silent": "Silent",
+          "packet": "Packet"
+        },
+        "rotation speed": "Rotation Speed",
+        "break crystal": "Break Crystal",
+        "break delay": "Break Delay",
+        "swing hand": "Swing Hand",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color"
       },
       "double anchor": {
         "_value": "Double Anchor",
@@ -1318,25 +1357,7 @@
       },
       "disabler": {
         "_value": "Disabler",
-        "aca duplicateslot": "ACA DuplicateSlot",
-        "aca fastswitch": "ACA FastSwitch",
-        "grim multiactionsc": "Grim MultiActionsC",
-        "position": {
-          "_value": "Position",
-          "disabled": "Disabled",
-          "grim": "Grim",
-          "grimv3": "Grim V3"
-        },
-        "only phased": "Only Phased",
-        "limited": "Limited",
-        "yaw overflow": "Yaw Overflow",
-        "grim trident": "Grim Trident",
-        "ping": {
-          "_value": "Ping",
-          "none": "None",
-          "drop": "Drop",
-          "spam": "Spam"
-        }
+        "multiactionsc": ""
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -1355,7 +1376,6 @@
         "playback": "Playback"
       },
       "ghost hand": "Ghost Hand",
-      "input disabler": "Input Disabler",
       "inv manager": {
         "_value": "Inv Manager",
         "mode": {
@@ -1598,6 +1618,7 @@
           "silent": "Silent",
           "invswitch": "Inv Switch"
         },
+        "pause on eat": "",
         "pause on phase": "Pause On Phase",
         "swing hand": "Swing Hand",
         "silent": "Silent",
@@ -2523,45 +2544,6 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
-      },
-      "self trap": {
-        "_value": "Self Trap",
-        "no_block_found": "No block found",
-        "toggle on move": "Toggle On Move",
-        "toggle on jump": "Toggle On Jump",
-        "in air": "In Air",
-        "pause on eat": "Pause On Eat",
-        "switch mode": {
-          "_value": "Switch Mode",
-          "silent": "Silent",
-          "invswitch": "Inventory Switch"
-        },
-        "use ender chest": "Use Ender Chest",
-        "place delay": "Place Delay",
-        "support": "Support Blocks",
-        "blocks per tick": "Blocks Per Tick",
-        "rotate": "Rotate",
-        "rotation mode": {
-          "_value": "Rotation Mode",
-          "silent": "Silent",
-          "packet": "Packet"
-        },
-        "rotation speed": "Rotation Speed",
-        "swing hand": "Swing Hand",
-        "break crystal": "Break Crystal",
-        "break delay": "Break Delay",
-        "render": "Render",
-        "fade": "Fade",
-        "fade time": "Fade Time",
-        "shrink": "Shrink",
-        "side color": "Side Color",
-        "line color": "Line Color",
-        "surround": "Surround",
-        "trap": "Trap",
-        "stand head": "Stand Head",
-        "crawl head": "Crawl Head",
-        "floor": "Floor",
-        "toggle on death": "Toggle On Death"
       }
     },
     "elements": {

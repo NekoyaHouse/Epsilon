@@ -16,24 +16,26 @@ object Disabler : Module("Disabler", Category.PLAYER) {
     )
 
     fun handleClickSlot(oPlayer: Player, action: Runnable) {
-        runSafe {
+        val handled = runSafe {
             if (!isEnabled || !multiActionsC || oPlayer != player || !player.isSprinting) {
                 action.run()
-                return
+                return@runSafe true
             }
 
             NetworkUtils.sendPacketNoEvent(
-                ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
             )
 
             try {
                 action.run()
             } finally {
                 NetworkUtils.sendPacketNoEvent(
-                    ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
+                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
                 )
             }
-        }
+            true
+        } ?: false
+        if (!handled) action.run()
     }
 
 }
