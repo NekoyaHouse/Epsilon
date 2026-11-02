@@ -1618,7 +1618,7 @@
           "silent": "静默",
           "invswitch": "背包切换"
         },
-        "pause on eat": "",
+        "pause on eat": "进食时暂停",
         "pause on phase": "穿墙时暂停",
         "swing hand": "挥手",
         "silent": "静默",
