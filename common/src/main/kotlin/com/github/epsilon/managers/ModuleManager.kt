@@ -54,6 +54,7 @@ object ModuleManager : AlwaysListening {
         addModule(AntiBot)
         addModule(Backtrack)
         addModule(AutoClicker)
+        addModule(AutoCrystal)
         addModule(AutoDtap)
         addModule(AutoMend)
         addModule(AutoMine)

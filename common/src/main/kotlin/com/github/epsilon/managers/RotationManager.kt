@@ -47,9 +47,11 @@ object RotationManager : AlwaysListening {
     private var useItemRotation: Rotation? = null
 
     private var priority = 0
+    private var rotationRequest: Rotation? = null
 
     init {
         handler<RespawnEvent>(alwaysListening = true) {
+            rotationRequest = null
             offset.set(0f, 0f)
             rotations = Rotation(0f, 0f)
             lastRotations = Rotation(0f, 0f)
@@ -246,12 +248,43 @@ object RotationManager : AlwaysListening {
         }
 
         this.targetRotations = rotations
+        this.rotationRequest = rotations
         this.rotationSpeed = rotationSpeed
         this.raytrace = raytrace
         this.priority = priority.priority
         this.active = true
 
         smooth()
+    }
+
+    /** 采用调用方已经完成步进的角度，不再叠加随机平滑；仍参与统一优先级和移动修正。 */
+    fun setRotationsExact(request: Rotation, priority: Priority): Boolean {
+        if (active && priority.priority < this.priority) return false
+        rotationRequest = request
+        targetRotations = request
+        rotations = request
+        rotationSpeed = 180.0
+        this.priority = priority.priority
+        active = true
+        smoothed = true
+        raytrace = null
+        updateHitResult()
+        return true
+    }
+
+    fun ownsRotation(request: Rotation): Boolean = active && rotationRequest === request
+
+    fun clearRotations(expectedRequest: Rotation) {
+        if (rotationRequest !== expectedRequest) return
+        rotationRequest = null
+        active = false
+        priority = 0
+        targetRotations = null
+        raytrace = null
+        smoothed = false
+        rotationHitResult = null
+        calculatingHitResult = false
+        useItemRotation = null
     }
 
     private fun smooth() {

@@ -72,6 +72,11 @@ public abstract class MixinMinecraft {
         new ClientTickEvent.Pre().post();
     }
 
+    @Inject(method = "runTick", at = @At("HEAD"))
+    private void onClientLoop(boolean advanceGameTime, CallbackInfo ci) {
+        new ClientLoopEvent().post();
+    }
+
     @Inject(method = "tick", at = @At("TAIL"))
     private void onPostTick(CallbackInfo info) {
         new ClientTickEvent.Post().post();

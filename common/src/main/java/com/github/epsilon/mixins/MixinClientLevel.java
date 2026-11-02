@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.events.impl.ClientEntityEvent;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -20,6 +21,24 @@ import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 @Mixin(ClientLevel.class)
 public abstract class MixinClientLevel {
+
+    @Inject(method = "tickEntities", at = @At("HEAD"))
+    private void onTickEntities(CallbackInfo ci) {
+        new ClientEntityEvent.TickPre((ClientLevel) (Object) this).post();
+    }
+
+    @Inject(method = "addEntity", at = @At("TAIL"))
+    private void onEntityAdded(Entity entity, CallbackInfo ci) {
+        ClientLevel level = (ClientLevel) (Object) this;
+        if (level.getEntity(entity.getId()) == entity) {
+            new ClientEntityEvent.Added(level, entity).post();
+        }
+    }
+
+    @Inject(method = "removeEntity", at = @At("TAIL"))
+    private void onEntityRemoved(int id, Entity.RemovalReason reason, CallbackInfo ci) {
+        new ClientEntityEvent.Removed((ClientLevel) (Object) this, id).post();
+    }
 
     @Inject(method = "levelEvent", at = @At("HEAD"))
     private void onLevelEvent(Entity source, int type, BlockPos pos, int data, CallbackInfo ci) {
