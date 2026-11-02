@@ -7,6 +7,7 @@ import com.github.epsilon.settings.ViaVersionComparison
 import com.github.epsilon.settings.viaOnly
 import com.github.epsilon.utils.network.NetworkUtils
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.entity.player.Player
 
 object Disabler : Module("Disabler", Category.PLAYER) {
 
@@ -14,20 +15,22 @@ object Disabler : Module("Disabler", Category.PLAYER) {
         ViaVersionComparison.LESS_OR_EQUAL, "1.20.6"
     )
 
-    fun withSprintStopped(action: Runnable) {
-        if (!isEnabled || !multiActionsC) return
+    fun handleClickSlot(oPlayer: Player, action: Runnable) {
         runSafe {
-            if (player.isSprinting) {
-                NetworkUtils.sendPacketNoEvent(
-                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
-                )
-
+            if (!isEnabled || !multiActionsC || oPlayer != player || !player.isSprinting) {
                 action.run()
+                return
+            }
 
-                NetworkUtils.sendPacketNoEvent(
-                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
-                )
-            } else action.run()
+            NetworkUtils.sendPacketNoEvent(
+                ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
+            )
+
+            action.run()
+
+            NetworkUtils.sendPacketNoEvent(
+                ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
+            )
         }
     }
 

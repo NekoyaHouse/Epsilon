@@ -22,8 +22,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.epsilon.kernel.MinecraftWrapper.mc;
-
 @Mixin(MultiPlayerGameMode.class)
 public class MixinMultiPlayerGameMode {
 
@@ -38,9 +36,7 @@ public class MixinMultiPlayerGameMode {
 
     @WrapMethod(method = "handleContainerInput")
     private void wrapInventoryClick(int containerId, int slotNum, int buttonNum, ContainerInput containerInput, Player player, Operation<Void> original) {
-        if (player == mc.player) {
-            Disabler.INSTANCE.withSprintStopped(() -> original.call(containerId, slotNum, buttonNum, containerInput, player));
-        }
+        Disabler.INSTANCE.handleClickSlot(player, () -> original.call(containerId, slotNum, buttonNum, containerInput, player));
     }
 
     @Inject(method = "useItem", at = @At("HEAD"))
