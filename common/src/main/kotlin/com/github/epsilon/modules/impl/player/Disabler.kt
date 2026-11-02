@@ -26,11 +26,13 @@ object Disabler : Module("Disabler", Category.PLAYER) {
                 ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
             )
 
-            action.run()
-
-            NetworkUtils.sendPacketNoEvent(
-                ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
-            )
+            try {
+                action.run()
+            } finally {
+                NetworkUtils.sendPacketNoEvent(
+                    ServerboundPlayerCommandPacket(oPlayer, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
+                )
+            }
         }
     }
 
