@@ -151,6 +151,11 @@ object EpsilonTranslations {
         Resources.CLEAR_SUCCESS_TITLE,
         Resources.CLEAR_SUCCESS_MESSAGE,
         Resources.OPEN_FOLDER_FAILED,
+        ViaOnly.TITLE,
+        ViaOnly.REQUIREMENT,
+        ViaOnly.CURRENT,
+        ViaOnly.HINT,
+        ViaOnly.UNAVAILABLE,
         PlatformOnly.BADGE,
         PlatformOnly.TITLE,
         PlatformOnly.FEATURE,
@@ -187,6 +192,7 @@ object EpsilonTranslations {
         Notifications.CLIENTBOUND_PACKET_FLUSH_FAILED,
         Notifications.KEY_FRIEND_ADDED,
         Notifications.KEY_FRIEND_REMOVED,
+        FeetTrap.NO_BLOCK_FOUND,
         AutoMine.PACKET_MINE_REQUIRED,
         AutoMine.PACKET_MINE_ENABLED,
         AutoMine.PACKET_MINE_DISABLED,
@@ -362,6 +368,14 @@ object EpsilonTranslations {
         val OPEN_FOLDER_FAILED: TranslateComponent = create("gui", "resource.open_folder_failed")
     }
 
+    object ViaOnly {
+        val TITLE: TranslateComponent = create("gui", "via_only.title")
+        val REQUIREMENT: TranslateComponent = create("gui", "via_only.requirement")
+        val CURRENT: TranslateComponent = create("gui", "via_only.current")
+        val HINT: TranslateComponent = create("gui", "via_only.hint")
+        val UNAVAILABLE: TranslateComponent = create("gui", "via_only.unavailable")
+    }
+
     object PlatformOnly {
         val BADGE: TranslateComponent = create("gui", "platform.badge")
         val TITLE: TranslateComponent = create("gui", "platform.title")
@@ -416,6 +430,14 @@ object EpsilonTranslations {
             create("notification", "clientbound_packet_flush_failed")
         val KEY_FRIEND_ADDED: TranslateComponent = create("notification", "key_friend_added")
         val KEY_FRIEND_REMOVED: TranslateComponent = create("notification", "key_friend_removed")
+    }
+
+    object FeetTrap {
+        val NO_BLOCK_FOUND: TranslateComponent = create("modules.feet trap", "no_block_found")
+    }
+
+    object SelfTrap {
+        val NO_BLOCK_FOUND: TranslateComponent = create("modules.self trap", "no_block_found")
     }
 
     object AutoMine {

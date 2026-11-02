@@ -25,16 +25,20 @@ object BlockUtils {
      * 判断本地玩家是否可在指定位置放置方块。
      *
      * @param pos 目标位置
+     * @param ignoreCrystals 仅用于规划需要先破坏水晶的位置，实际放置前仍须确认水晶已消失
      * @return 判断结果
      */
+    @JvmOverloads
     context(nn: NonNullContext)
-    fun canPlaceAt(pos: BlockPos): Boolean {
+    fun canPlaceAt(pos: BlockPos, ignoreCrystals: Boolean = false): Boolean {
         if (!nn.level.getBlockState(pos).canBeReplaced()) return false
         val except: Entity? = null
         return nn.level.getEntities(
             except,
             AABB(pos)
-        ) { entity -> !(entity is ItemEntity || entity is ExperienceOrb || entity is ThrownExperienceBottle || entity is Arrow) }
+        ) { entity ->
+            !(entity is ItemEntity || entity is ExperienceOrb || entity is ThrownExperienceBottle || entity is Arrow || ignoreCrystals && entity is EndCrystal)
+        }
             .isEmpty()
     }
 

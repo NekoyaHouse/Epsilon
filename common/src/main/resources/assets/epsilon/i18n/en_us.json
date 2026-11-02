@@ -224,6 +224,13 @@
         },
         "open_folder_failed": "Unable to open the asset folder"
       },
+      "via_only": {
+        "title": "Via Version Required",
+        "requirement": "Required: %s",
+        "current": "Current Via target: %s",
+        "hint": "Load Via and select a matching target version.",
+        "unavailable": "Unavailable"
+      },
       "platform": {
         "badge": "Unsupported",
         "title": "Unsupported",
@@ -336,6 +343,41 @@
         "gamemode pitch": "Pitch",
         "gamemode sound": "Sound",
         "gamemode chat message": "Alert"
+      },
+      "feet trap": {
+        "_value": "Feet Trap",
+        "no_block_found": "No block found",
+        "toggle on death": "Toggle On Death",
+        "toggle on move": "Toggle On Move",
+        "toggle on jump": "Toggle On Jump",
+        "in air": "In Air",
+        "pause on eat": "Pause On Eat",
+        "switch mode": {
+          "_value": "Switch Mode",
+          "silent": "Silent",
+          "invswitch": "Inventory Swap"
+        },
+        "use ender chest": "Use Ender Chest",
+        "place delay": "Place Delay",
+        "support": "Support Blocks",
+        "blocks per tick": "Blocks Per Tick",
+        "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "silent": "Silent",
+          "packet": "Packet"
+        },
+        "rotation speed": "Rotation Speed",
+        "break crystal": "Break Crystal",
+        "break delay": "Break Delay",
+        "swing hand": "Swing Hand",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color",
+        "extend": "Extend"
       },
       "auto mine": {
         "_value": "Auto Mine",
@@ -543,13 +585,6 @@
         "bow range": "Bow Range",
         "bow smooth": "Bow Smooth"
       },
-      "anchor blast": {
-        "_value": "Anchor Blast",
-        "trigger key": "Trigger Key",
-        "detonate slot": "Detonate Slot",
-        "place cps": "Place CPS",
-        "charge cps": "Charge CPS"
-      },
       "anti bot": "Anti Bot",
       "backtrack": {
         "_value": "Backtrack",
@@ -610,24 +645,6 @@
       "auto dtap": {
         "_value": "Auto DTap",
         "swapback": "Swap Back"
-      },
-      "auto hit crystal": {
-        "_value": "Auto Hit Crystal",
-        "activate key": "Activate Key",
-        "check place": "Check Place",
-        "switch delay": "Switch Delay",
-        "switch chance": "Switch Chance",
-        "place delay": "Place Delay",
-        "place chance": "Place Chance",
-        "work with totem": "Work With Totem",
-        "work with crystal": "Work With Crystal",
-        "work with pickaxe": "Work With Pickaxe",
-        "sword swap": "Sword Swap",
-        "swing hand": "Swing Hand",
-        "render": "Render",
-        "fade time": "Fade Time",
-        "side color": "Side Color",
-        "line color": "Line Color"
       },
       "auto mend": {
         "_value": "Auto Mend",
@@ -703,60 +720,43 @@
         "trident": "Trident"
       },
       "criticals": "Criticals",
-      "crystal aura": {
-        "_value": "Crystal Aura",
-        "activate key": "Activate Key",
-        "place delay": "Place Delay",
-        "break delay": "Break Delay",
-        "place chance": "Place Chance",
-        "break chance": "Break Chance",
-        "stop on kill": "Stop On Kill",
-        "fake punch": "Fake Punch",
-        "click simulation": "Click Simulation",
-        "damage tick": "Damage Tick",
-        "anti-weakness": "Anti Weakness",
-        "strict air check": "Strict Air Check",
-        "particle chance": "Particle Chance",
-        "swing hand": "Swing Hand"
-      },
-      "crystal blocker": {
-        "_value": "Crystal Blocker",
-        "range": "Range",
-        "rotate": {
-          "_value": "Rotate",
-          "none": "None",
-          "normal": "Normal",
-          "silent": "Silent"
-        },
-        "switch": {
-          "_value": "Switch",
-          "visible": "Visible",
-          "silent": "Silent"
-        },
-        "delay": "Delay",
-        "swap back delay": "Swap Back Delay",
-        "rotation speed": "Rotation Speed"
-      },
-      "feet trap": {
-        "_value": "Feet Trap",
+      "self trap": {
+        "_value": "Self Trap",
+        "surround": "Surround",
+        "trap": "Trap",
+        "stand head": "Stand Head",
+        "crawl head": "Crawl Head",
+        "floor": "Floor",
+        "toggle on death": "Toggle On Death",
         "toggle on move": "Toggle On Move",
         "toggle on jump": "Toggle On Jump",
         "in air": "In Air",
         "pause on eat": "Pause On Eat",
+        "switch mode": {
+          "_value": "Switch Mode",
+          "silent": "Silent",
+          "invswitch": "Inventory Switch"
+        },
+        "use ender chest": "Use Ender Chest",
         "place delay": "Place Delay",
-        "extend": "Extend",
+        "support": "Support Blocks",
         "blocks per tick": "Blocks Per Tick",
         "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "Rotation Mode",
+          "silent": "Silent",
+          "packet": "Packet"
+        },
         "rotation speed": "Rotation Speed",
-        "ender chest": "Ender Chest",
-        "inventory swap": "Inventory Swap"
-      },
-      "double anchor": {
-        "_value": "Double Anchor",
-        "trigger key": "Trigger Key",
-        "detonate slot": "Detonate Slot",
-        "place cps": "Place CPS",
-        "charge cps": "Charge CPS"
+        "break crystal": "Break Crystal",
+        "break delay": "Break Delay",
+        "swing hand": "Swing Hand",
+        "render": "Render",
+        "fade": "Fade",
+        "fade time": "Fade Time",
+        "shrink": "Shrink",
+        "side color": "Side Color",
+        "line color": "Line Color"
       },
       "elytra combat": {
         "_value": "Elytra Combat",
@@ -1088,63 +1088,6 @@
         "second line start": "Second Line Start",
         "second line end": "Second Line End"
       },
-      "safe anchor": {
-        "_value": "Safe Anchor",
-        "shield": "Shield",
-        "trigger key": "Trigger Key",
-        "mode": {
-          "_value": "Mode",
-          "assist": "Assist",
-          "auto": "Auto"
-        },
-        "place mode": {
-          "_value": "Place Mode",
-          "adaptive": "Adaptive",
-          "cover": "Cover"
-        },
-        "order": {
-          "_value": "Order",
-          "shieldfirst": "Shield First",
-          "chargefirst": "Charge First"
-        },
-        "rotate": "Rotate",
-        "rotation speed min": "Rotation Speed Min",
-        "rotation speed max": "Rotation Speed Max",
-        "strict": "Strict",
-        "break crystal": "Break Crystal",
-        "swapback": "Swap Back",
-        "anchor place min delay": "Anchor Place Min Delay",
-        "anchor place max delay": "Anchor Place Max Delay",
-        "shield place min delay": "Shield Place Min Delay",
-        "shield place max delay": "Shield Place Max Delay",
-        "multi shield": "Multi Shield",
-        "multi shield chance": "Multi Shield Chance",
-        "max extra shields": "Max Extra Shields",
-        "shield distance min": "Shield Distance Min",
-        "shield distance max": "Shield Distance Max",
-        "charge min delay": "Charge Min Delay",
-        "charge max delay": "Charge Max Delay",
-        "detonate min delay": "Detonate Min Delay",
-        "detonate max delay": "Detonate Max Delay",
-        "detonate slot": "Detonate Slot",
-        "min health": "Min Health",
-        "prediction": "Prediction",
-        "prediction strength": "Prediction Strength",
-        "multi charge": "Multi Charge",
-        "multi charge chance": "Multi Charge Chance",
-        "min extra charges": "Min Extra Charges",
-        "max extra charges": "Max Extra Charges",
-        "render": "Render",
-        "line color": "Line Color",
-        "side color": "Side Color",
-        "line width": "Line Width"
-      },
-      "safe crystal": {
-        "_value": "Safe Crystal",
-        "auto break": "Auto Break",
-        "auto place": "Auto Place",
-        "anti suicide": "Anti Suicide"
-      },
       "silent aim": {
         "_value": "Silent Aim",
         "weapon only": "Weapon Only",
@@ -1188,159 +1131,154 @@
       },
       "zealot crystal+": {
         "_value": "Zealot Crystal+",
+        "placement": "Placement",
+        "breaking": "Breaking",
         "general": "General",
-        "force place": "Force Place",
-        "calculation": "Calculation",
+        "damage": "Damage",
+        "targets": "Targets",
+        "support": "Support",
+        "rendering": "Rendering",
         "place": "Place",
-        "break": "Break",
-        "render": "Render",
-        "players": "Players",
-        "mobs": "Mobs",
-        "animals": "Animals",
-        "max targets": "Max Targets",
-        "target range": "Target Range",
-        "yaw speed": "Yaw Speed",
-        "pre rotation": "Pre Rotation",
-        "place rotation range": "Place Rotation Range",
-        "break rotation range": "Break Rotation Range",
-        "eating pause": "Eating Pause",
-        "update delay": "Update Delay",
-        "global delay": "Global Delay",
-        "force place health": "Force Place Health",
-        "force place armor rate": "Force Place Armor Rate",
-        "force place min damage": "Force Place Min Damage",
-        "force place motion": "Force Place Motion",
-        "force place balance": "Force Place Balance",
-        "force place while swording": "Force Place While Swording",
-        "assume instant mine": "Assume Instant Mine",
-        "no suicide": "No Suicide",
-        "wall range": "Wall Range",
-        "motion predict": "Motion Predict",
-        "predict ticks": "Predict Ticks",
-        "damage priority": {
-          "_value": "Damage Priority",
-          "efficient": "Efficient",
-          "aggressive": "Aggressive"
-        },
-        "armor mode": {
-          "_value": "Armor Mode",
-          "none": "None",
-          "pppp": "PPPP",
-          "ppbp": "PPBP"
-        },
-        "lethal override": "Lethal Override",
-        "lethal threshold addition": "Lethal Threshold Addition",
-        "lethal max self damage": "Lethal Max Self Damage",
-        "safe max target damage reduction": "Safe Max Target Damage Reduction",
-        "safe min self damage reduction": "Safe Min Self Damage Reduction",
-        "colliding crystal extra self damage threshold": "Colliding Crystal Extra Self Damage Threshold",
-        "place mode": {
-          "_value": "Place Mode",
-          "off": "Off",
-          "single": "Single",
-          "multi": "Multi"
-        },
-        "packet place": {
-          "_value": "Packet Place",
-          "off": "Off",
-          "weak": "Weak",
-          "strong": "Strong"
-        },
-        "spam place": "Spam Place",
-        "place switch mode": {
-          "_value": "Place Switch Mode",
-          "off": "Off",
-          "legit": "Legit",
-          "ghost": "Ghost"
-        },
-        "place swing": "Place Swing",
-        "place side bypass": {
-          "_value": "Place Side Bypass",
-          "up": "Up",
-          "down": "Down",
-          "closest": "Closest"
-        },
-        "place min damage": "Place Min Damage",
-        "place max self damage": "Place Max Self Damage",
-        "place balance": "Place Balance",
         "place delay": "Place Delay",
         "place range": "Place Range",
-        "place range mode": {
-          "_value": "Place Range Mode",
-          "feet": "Feet",
-          "eyes": "Eyes"
-        },
-        "break mode": {
-          "_value": "Break Mode",
+        "place wall range": "Place Wall Range",
+        "swap": {
+          "_value": "Swap",
           "off": "Off",
-          "target": "Target",
-          "own": "Own",
-          "smart": "Smart",
-          "all": "All"
+          "normal": "Normal",
+          "silent": "Silent"
         },
-        "2b2t": "2B2T",
-        "2b2t factor": "2B2T Factor",
-        "packet break": {
-          "_value": "Packet Break",
-          "off": "Off",
-          "target": "Target",
-          "own": "Own",
-          "smart": "Smart",
-          "all": "All"
+        "swap action": {
+          "_value": "Swap Action",
+          "hotbarswap": "Hotbar Swap",
+          "invswitch": "Inventory Swap"
         },
-        "own timeout": "Own Timeout",
-        "anti weakness": {
-          "_value": "Anti Weakness",
-          "off": "Off",
-          "legit": "Legit",
-          "ghost": "Ghost"
+        "placements": {
+          "_value": "Placements",
+          "native": "Native",
+          "protocol": "Protocol"
         },
-        "swap delay": "Swap Delay",
-        "break min damage": "Break Min Damage",
-        "break max self damage": "Break Max Self Damage",
-        "break balance": "Break Balance",
-        "break delay": "Break Delay",
-        "break range": "Break Range",
-        "break range mode": {
-          "_value": "Break Range Mode",
-          "feet": "Feet",
-          "eyes": "Eyes"
+        "sequential": {
+          "_value": "Sequential",
+          "none": "None",
+          "normal": "Normal",
+          "strict": "Strict"
         },
-        "swing mode": {
-          "_value": "Swing Mode",
+        "force place": "Force Place",
+        "min health": "Min Health",
+        "force damage": "Force Damage",
+        "place swing": {
+          "_value": "Place Swing",
           "both": "Both",
           "packet": "Packet",
           "client": "Client",
           "none": "None"
         },
-        "swing hand": {
-          "_value": "Swing Hand",
-          "auto": "Auto",
-          "offhand": "Off Hand",
-          "mainhand": "Main Hand"
+        "instant": "Instant",
+        "instant delay": "Instant Delay",
+        "inhibit": "Inhibit",
+        "break delay": "Break Delay",
+        "attack delay": "Attack Delay",
+        "attack factor": "Attack Factor",
+        "attack limit": "Attack Limit",
+        "timeout": "Timeout",
+        "break timeout": "Break Timeout",
+        "min timeout": "Min Timeout",
+        "ticks existed": "Ticks Existed",
+        "break range": "Break Range",
+        "break wall range": "Break Wall Range",
+        "break swing": {
+          "_value": "Break Swing",
+          "both": "Both",
+          "packet": "Packet",
+          "client": "Client",
+          "none": "None"
         },
-        "render predict": {
-          "_value": "Render Predict",
+        "instant calc": "Instant Calc",
+        "instant damage": "Instant Damage",
+        "instant max": "Instant Max",
+        "rotate": {
+          "_value": "Rotate",
+          "none": "None",
+          "place": "Place",
+          "break": "Break",
+          "normal": "Normal",
+          "packet": "Packet",
+          "grim": "Grim"
+        },
+        "yaw step": {
+          "_value": "Yaw Step",
           "off": "Off",
-          "single": "Single",
-          "multi": "Multi"
+          "full": "Full",
+          "semi": "Semi"
         },
-        "hud info": {
-          "_value": "HUD Info",
+        "yaw step limit": "Yaw Step Limit",
+        "while using": "While Using",
+        "while mining": "While Mining",
+        "swap penalty": "Swap Penalty",
+        "shield mode": {
+          "_value": "Shield Mode",
+          "none": "None",
+          "bypass": "Bypass"
+        },
+        "surround fucker": "Surround Fucker",
+        "anti surround": "Anti Surround",
+        "pre placement": "Pre Placement",
+        "cev bomber": "Cev Bomber",
+        "cev damage": "Cev Damage",
+        "mining progress": "Mining Progress",
+        "reset crystal": "Reset Crystal",
+        "asynchronous": "Asynchronous",
+        "anti weakness": "Anti Weakness",
+        "armor breaker": "Armor Breaker",
+        "armor scale": "Armor Scale",
+        "min damage": "Min Damage",
+        "max local damage": "Max Local Damage",
+        "damage ratio": "Damage Ratio",
+        "ignore item": "Ignore Item",
+        "assume best armor": "Assume Best Armor",
+        "lethal multiplier": "Lethal Multiplier",
+        "lethal totem": "Lethal Totem",
+        "lethal damage tick": "Lethal Damage Tick",
+        "safety": "Safety",
+        "safety override": "Safety Override",
+        "block destruction": "Block Destruction",
+        "self extrapolate": "Self Extrapolate",
+        "extrapolation ticks": "Extrapolation Ticks",
+        "enemy range": "Enemy Range",
+        "ignore nakeds": "Ignore Nakeds",
+        "players": "Players",
+        "monsters": "Monsters",
+        "neutrals": "Neutrals",
+        "animals": "Animals",
+        "shulkers": "Shulkers",
+        "base rotate": "Base Rotate",
+        "air place": "Air Place",
+        "base delay": "Base Delay",
+        "max override": "Max Override",
+        "base swap action": {
+          "_value": "Base Swap Action",
+          "hotbarswap": "Hotbar Swap",
+          "invswitch": "Inventory Swap"
+        },
+        "render": {
+          "_value": "Render",
           "off": "Off",
-          "speed": "Speed",
-          "target": "Target",
-          "damage": "Damage",
-          "calculationtime": "Calculation Time"
+          "box": "Box",
+          "fade": "Fade"
         },
-        "filled alpha": "Filled Alpha",
-        "outline alpha": "Outline Alpha",
+        "box mode": {
+          "_value": "Box Mode",
+          "both": "Both",
+          "fill": "Fill",
+          "lines": "Lines"
+        },
+        "side": "Side",
+        "line": "Line",
+        "fade time": "Fade Time",
+        "render damage": "Render Damage",
         "target damage": "Target Damage",
-        "self damage": "Self Damage",
-        "render color": "Render Color",
-        "outline width": "Outline Width",
-        "moving length": "Moving Length",
-        "fade length": "Fade Length"
+        "self damage": "Self Damage"
       },
       "auto armor": {
         "_value": "Auto Armor",
@@ -1447,8 +1385,7 @@
       },
       "disabler": {
         "_value": "Disabler",
-        "aca duplicate slot": "ACA Duplicate Slot",
-        "aca fast switch": "ACA Fast Switch"
+        "multiactionsc": "Container Sprint Compatibility"
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -1467,7 +1404,6 @@
         "playback": "Playback"
       },
       "ghost hand": "Ghost Hand",
-      "input disabler": "Input Disabler",
       "inv manager": {
         "_value": "Inv Manager",
         "mode": {
@@ -1710,6 +1646,7 @@
           "silent": "Silent",
           "invswitch": "Inv Switch"
         },
+        "pause on eat": "Pause On Eat",
         "pause on phase": "Pause On Phase",
         "swing hand": "Swing Hand",
         "silent": "Silent",
@@ -1761,7 +1698,8 @@
           "_value": "Rotation Mode",
           "static": "Static",
           "hypixel": "Hypixel",
-          "heypixel": "Heypixel"
+          "heypixel": "Heypixel",
+          "packet": "Packet"
         },
         "raytrace mode": {
           "_value": "Raytrace Mode",
@@ -2268,11 +2206,6 @@
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color"
-      },
-      "no ghost blocks": {
-        "_value": "No Ghost Blocks",
-        "breaking": "Breaking",
-        "placing": "Placing"
       },
       "no render": {
         "_value": "No Render",

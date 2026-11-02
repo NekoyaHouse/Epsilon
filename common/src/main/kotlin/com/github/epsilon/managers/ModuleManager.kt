@@ -26,8 +26,23 @@ object ModuleManager : AlwaysListening {
     private val modules = ArrayList<Module>()
 
     init {
-        handler<KeyPressEvent>(alwaysListening = true) { event -> onKeyPress(event) }
-        handler<MousePressEvent>(alwaysListening = true) { event -> onMousePress(event) }
+        handler<KeyPressEvent>(alwaysListening = true) { event ->
+            if (mc.level == null || mc.gui.screen() != null || event.getKey() == InputConstants.UNKNOWN.value) return@handler
+
+            val keyCode = event.getKey()
+            val action = event.action
+
+            if (keyCode == ClientSetting.guiKeybind && action == InputConstants.PRESS) {
+                mc.gui.setScreen(ClientSetting.getGuiScreen())
+            }
+
+            dispatchKeyBind(keyCode, action)
+        }
+        handler<MousePressEvent>(alwaysListening = true) { event ->
+            if (mc.level != null && mc.gui.screen() == null) {
+                dispatchKeyBind(KeybindUtils.encodeMouseButton(event.button), event.action)
+            }
+        }
     }
 
     fun initModules() {
@@ -36,22 +51,18 @@ object ModuleManager : AlwaysListening {
 
         // Combat
         addModule(AimBot)
-        addModule(AnchorBlast)
         addModule(AntiBot)
         addModule(Backtrack)
         addModule(AutoClicker)
         addModule(AutoDtap)
-        addModule(AutoHitCrystal)
         addModule(AutoMend)
         addModule(AutoMine)
         addModule(AutoThrow)
         addModule(AutoTotem)
         addModule(AutoWeapon)
         addModule(Criticals)
-        addModule(CrystalAura)
-        addModule(CrystalBlocker)
         addModule(FeetTrap)
-        addModule(DoubleAnchor)
+        addModule(SelfTrap)
         addModule(ElytraCombat)
         addModule(HoverTotem)
         addModule(KillAura)
@@ -60,8 +71,6 @@ object ModuleManager : AlwaysListening {
         addModule(MaceAura)
         addModule(MultiAura)
         addModule(PacketMine)
-        addModule(SafeAnchor)
-        addModule(SafeCrystal)
         addModule(SilentAim)
         addModule(SpearKill)
         addModule(TriggerBot)
@@ -81,7 +90,6 @@ object ModuleManager : AlwaysListening {
         addModule(ElytraSwap)
         addModule(FakePlayer)
         addModule(GhostHand)
-        addModule(InputDisabler)
         addModule(InvManager)
         addModule(JumpCooldown)
         addModule(KeyFriend)
@@ -151,7 +159,6 @@ object ModuleManager : AlwaysListening {
         addModule(MasEffects)
         addModule(MotionBlur)
         addModule(NameTags)
-        addModule(NoGhostBlocks)
         addModule(NoRender)
         addModule(Particles)
         addModule(PopChams)
@@ -173,27 +180,6 @@ object ModuleManager : AlwaysListening {
 
     fun getModules(): List<Module> {
         return modules
-    }
-
-    private fun onKeyPress(event: KeyPressEvent) {
-        if (mc.level == null || mc.gui.screen() != null ||
-            event.getKey() == InputConstants.UNKNOWN.value
-        ) return
-
-        val keyCode = event.getKey()
-        val action = event.action
-
-        if (keyCode == ClientSetting.guiKeybind && action == InputConstants.PRESS) {
-            mc.gui.setScreen(ClientSetting.getGuiScreen())
-        }
-
-        dispatchKeyBind(keyCode, action)
-    }
-
-    private fun onMousePress(event: MousePressEvent) {
-        if (mc.level != null && mc.gui.screen() == null) {
-            dispatchKeyBind(KeybindUtils.encodeMouseButton(event.button), event.action)
-        }
     }
 
     private fun dispatchKeyBind(keyCode: Int, action: Int) {

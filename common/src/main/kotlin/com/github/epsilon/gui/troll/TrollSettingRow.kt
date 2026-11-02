@@ -88,6 +88,7 @@ class TrollSettingRow {
     }
 
     private fun displayValueText(): String {
+        if (setting?.isSupported() == false) return setting.unsupportedLabel
         return valueText(true)
     }
 
@@ -164,7 +165,7 @@ class TrollSettingRow {
             minOf(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width * 0.48f)
         }
         val scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - clicked * 0.1f)
-        val text = if (setting != null && !setting.isPlatformSupported()) TrollTheme.alpha(
+        val text = if (setting != null && !setting.isSupported()) TrollTheme.alpha(
             TrollTheme.text(),
             110
         ) else TrollTheme.text()
@@ -224,7 +225,7 @@ class TrollSettingRow {
         if (!bounds.contains(event.x(), event.y())) return false
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) pressed = true
         val setting = this.setting
-        if (setting != null && !setting.isPlatformSupported()) {
+        if (setting != null && !setting.isSupported()) {
             PlatformNoticeScreen.show(setting)
             return true
         }
@@ -383,6 +384,7 @@ class TrollSettingRow {
         val text = activeInput.text
         activeInput.blur()
         val setting = this.setting
+        if (setting?.isViaSupported() == false) return
         if (setting is StringSetting) {
             val next = if (commit) text else (originalText ?: text)
             if (setting.value != next) setting.value = next
@@ -397,6 +399,7 @@ class TrollSettingRow {
     }
 
     private fun setBind(bind: Int) {
+        if (setting?.isViaSupported() == false) return
         val module = this.module
         if (module != null) {
             module.keyBind = bind
@@ -407,6 +410,7 @@ class TrollSettingRow {
     }
 
     private fun setMode(mode: EnumSetting<*>, index: Int) {
+        if (!mode.isViaSupported()) return
         val next = modesOf(mode)[index]
         if (!mode.isModeSupportedUnchecked(next)) {
             PlatformNoticeScreen.showOption(mode, next)
@@ -461,6 +465,7 @@ class TrollSettingRow {
     }
 
     private fun applyNumber(value: Double) {
+        if (setting?.isViaSupported() == false) return
         val setting = this.setting
         if (setting is IntSetting && setting.value != (value).roundToInt()) {
             setting.value = (value).roundToInt()

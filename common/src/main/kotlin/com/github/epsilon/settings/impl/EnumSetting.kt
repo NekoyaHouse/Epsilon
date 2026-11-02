@@ -92,8 +92,6 @@ class EnumSetting<E : Enum<E>>(
      */
     fun isCurrentValueSupported(): Boolean = value == null || isModeSupported(value)
 
-    fun `is`(string: String?): Boolean = matchesMode(value, string)
-
     fun setMode(mode: String?) {
         for (candidate in modes) {
             if (matchesMode(candidate, mode)) {

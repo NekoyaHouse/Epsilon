@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
+import com.github.epsilon.events.impl.PacketMineEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
@@ -397,6 +398,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
                                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, direction,
                             )
                         )
+                        if (mc.level === level) PacketMineEvent.BreakAttempt(pos).post()
                     }
                     scheduledTimer.cancel()
                 }
@@ -454,6 +456,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         if (clientRemove && !isAir(target)) {
             this.mc.gameMode?.destroyBlock(target)
         }
+        PacketMineEvent.BreakAttempt(target).post()
     }
 
     context(nn: NonNullContext)

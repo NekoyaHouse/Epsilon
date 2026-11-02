@@ -1,41 +1,45 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.settings.ViaVersionComparison
+import com.github.epsilon.settings.viaOnly
 import com.github.epsilon.utils.network.NetworkUtils
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.entity.player.Player
 
 object Disabler : Module("Disabler", Category.PLAYER) {
 
-    private val duplicateSlot by boolSetting("ACA Duplicate Slot", true)
-    private val fastSwitch by boolSetting("ACA Fast Switch", true)
+    private val multiActionsC by boolSetting("MultiActionsC", true).viaOnly(
+        ViaVersionComparison.LESS_OR_EQUAL, "1.20.6"
+    )
 
-    private var lastSlot = -1
-
-    init {
-        safeEventHandler<PacketEvent.Send> { event ->
-            val packet = event.packet
-            if (!duplicateSlot || packet !is ServerboundSetCarriedItemPacket) return@safeEventHandler
-
-            val nextSlot = packet.slot
-            if (nextSlot < 0 || nextSlot > 8 || nextSlot == lastSlot && !fastSwitch) {
-                event.cancel()
-                return@safeEventHandler
+    fun handleClickSlot(oPlayer: Player, action: Runnable) {
+        val handled = runSafe {
+            if (!isEnabled || !multiActionsC || oPlayer !== player || !player.wasSprinting) {
+                action.run()
+                return@runSafe true
             }
-            if (fastSwitch && lastSlot >= 0 && nextSlot != lastSlot && !((lastSlot == 0 && nextSlot == 8) || (lastSlot == 8 && nextSlot == 0))) {
-                event.cancel()
-                val step = if (lastSlot < nextSlot) 1 else -1
-                var slot = lastSlot + step
-                while (slot != nextSlot) {
-                    NetworkUtils.sendPacketNoEvent(ServerboundSetCarriedItemPacket(slot))
-                    slot += step
+
+            NetworkUtils.sendPacketNoEvent(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING)
+            )
+            player.wasSprinting = false
+
+            try {
+                action.run()
+            } finally {
+                if (player.isSprinting && !player.wasSprinting) {
+                    NetworkUtils.sendPacketNoEvent(
+                        ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)
+                    )
+                    player.wasSprinting = true
                 }
-                NetworkUtils.sendPacketNoEvent(packet)
             }
-            lastSlot = nextSlot
-        }
+            true
+        } ?: false
+        if (!handled) action.run()
     }
 
 }

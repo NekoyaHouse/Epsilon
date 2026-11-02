@@ -23,6 +23,7 @@ accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyPro
 accessible field net/minecraft/client/player/LocalPlayer lastSentInput Lnet/minecraft/world/entity/player/Input;
 accessible field net/minecraft/client/player/LocalPlayer positionReminder I
 accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
+accessible method net/minecraft/client/player/LocalPlayer canStartSprinting ()Z
 accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
 accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/renderpearl/api/pipeline/RenderPipeline$Snippet;
 accessible field net/minecraft/client/renderer/RenderPipelines ENTITY_SNIPPET Lcom/mojang/renderpearl/api/pipeline/RenderPipeline$Snippet;

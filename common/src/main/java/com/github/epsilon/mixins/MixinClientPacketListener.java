@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.impl.GameJoinedEvent;
 import com.github.epsilon.events.impl.GameLeftEvent;
+import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.kernel.jvm.NonNullContext;
 import com.github.epsilon.modules.impl.player.NoRotate;
@@ -40,6 +41,31 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     protected MixinClientPacketListener(Minecraft minecraft, Connection connection, CommonListenerCookie commonListenerCookie) {
         super(minecraft, connection, commonListenerCookie);
+    }
+
+    @Inject(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onApplyExplosion(ClientboundExplodePacket packet, CallbackInfo ci) {
+        new PacketEvent.Apply(packet).post();
+    }
+
+    @Inject(method = "handleSoundEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onApplySound(ClientboundSoundPacket packet, CallbackInfo ci) {
+        new PacketEvent.Apply(packet).post();
+    }
+
+    @Inject(method = "handleRemoveEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onApplyRemoveEntities(ClientboundRemoveEntitiesPacket packet, CallbackInfo ci) {
+        new PacketEvent.Apply(packet).post();
+    }
+
+    @Inject(method = "handleEntityEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onApplyEntityEvent(ClientboundEntityEventPacket packet, CallbackInfo ci) {
+        new PacketEvent.Apply(packet).post();
+    }
+
+    @Inject(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onApplyPlayerPosition(ClientboundPlayerPositionPacket packet, CallbackInfo ci) {
+        new PacketEvent.Apply(packet).post();
     }
 
     @Inject(method = {"handleLogin", "handleRespawn"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
