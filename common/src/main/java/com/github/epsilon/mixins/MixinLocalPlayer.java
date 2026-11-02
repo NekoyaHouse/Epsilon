@@ -3,7 +3,6 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.player.InvManager;
-import com.github.epsilon.modules.impl.player.Disabler;
 import com.github.epsilon.modules.impl.render.TotemAnimation;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -57,7 +56,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @WrapMethod(method = "canStartSprinting")
     private boolean preventSprintDuringInventorySorting(Operation<Boolean> original) {
         InvManager invManager = InvManager.INSTANCE;
-        if ((invManager.isEnabled() && invManager.isSprintTransitionPending()) || Disabler.INSTANCE.isInventorySprintPaused()) {
+        if (invManager.isEnabled() && invManager.isSprintTransitionPending()) {
             this.sprintTriggerTime = 0;
             return false;
         }
