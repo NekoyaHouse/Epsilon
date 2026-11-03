@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://qm.qq.com/q/WPvwQZvYci"><img alt="QQ 一群" src="https://img.shields.io/badge/QQ%20%E4%B8%80%E7%BE%A4-join-12B7F5?style=flat-square&logo=tencentqq&logoColor=white"></a>
+  <a href="https://qun.qq.com/universal-share/share?ac=1&authKey=iRA8XvRnt0XxfYdZZVuLbBfRx%2BulcLVEHbj4yfUJ14RK6apLxsMQO4juClGoznIo&busi_data=eyJncm91cENvZGUiOiIxMTI4MTcxNTcxIiwidG9rZW4iOiJLSmtnVXBhNWJsWUpoeTc1VjJHRE54ZFg2cnY4MlJlaTdzVTlOVElKNjdlVEU1VDlWVGlVTmpzdjNvN3VOd3JoIiwidWluIjoiMzE5NjU5NDMwMCJ9&data=lNsvbgpmSqL4brANGeMmvZPzZVouEkrmglv7k_2wytUMN0Qvg8wyQ4Lw_6gDEQhW93z9WRbrydA3rkAO1SisCg&svctype=4&tempid=h5_group_info"><img alt="QQ 一群" src="https://img.shields.io/badge/QQ%20%E4%B8%80%E7%BE%A4-join-12B7F5?style=flat-square&logo=tencentqq&logoColor=white"></a>
   <a href="https://qm.qq.com/q/3hhg8ww9ag"><img alt="QQ 二群" src="https://img.shields.io/badge/QQ%20%E4%BA%8C%E7%BE%A4-join-12B7F5?style=flat-square&logo=tencentqq&logoColor=white"></a>
 </p>
 
