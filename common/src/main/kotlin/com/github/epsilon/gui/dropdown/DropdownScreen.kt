@@ -614,7 +614,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private fun beginPanelFrames() {
         val frameId = ++renderFrameId
         for (panel in panels) {
-            panel.beginRenderFrame(frameId)
+            panelViews.getOrPut(panel) { com.github.epsilon.gui.lib.state.LuminView() }.prepare {
+                panel.beginRenderFrame(frameId)
+            }
         }
     }
 

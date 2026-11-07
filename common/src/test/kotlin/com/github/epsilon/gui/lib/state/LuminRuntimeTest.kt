@@ -462,4 +462,73 @@ class LuminRuntimeTest {
         assertEquals(settled, builds)
     }
 
+    @Test fun dropdownExpansionMovesFollowingRowsWithoutScrolling() {
+        com.github.epsilon.modules.impl.ClientSetting.moduleSort.value
+        val modules = (0..7).map { com.github.epsilon.modules.Module("module-$it", null) }
+        modules.first().boolSetting("detail", false)
+        val panel = com.github.epsilon.gui.dropdown.component.CategoryPanel("test", "test", "", 0, modules)
+        panel.isOpened = true
+        panel.startIntro()
+        panel.updateMaxPanelHeight(90f)
+        panel.setPosition(10f, 20f)
+        val host = LuminView()
+        var frameId = 0
+        var builds = 0
+        fun tick(): List<UiTree.UiNode> {
+            root.beginFrame()
+            return try {
+                host.render(-1, -1) {
+                    panel.beginRenderFrame(++frameId)
+                    view.render(-1, -1) {
+                        val rect = UiRect(panel.x, panel.contentClipY, panel.width, panel.contentClipHeight)
+                        val entry = root.nextEntry(rect, "root")
+                        entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, rect), {
+                            builds++
+                            Clip(0f, 0f, width, height) { with(panel) { drawContent(-1, -1) } }
+                        })
+                        entry.resolve()
+                    }
+                }
+            } finally { root.endFrame() }
+        }
+        fun texts(nodes: List<UiTree.UiNode>): List<UiTree.TextNode> = nodes.flatMap { node ->
+            when (node) {
+                is UiTree.TextNode -> listOf(node)
+                is UiTree.LayerNode -> texts(node.children)
+                is UiTree.ScissorNode -> texts(node.children)
+                else -> emptyList()
+            }
+        }
+        try {
+            val initialY = texts(tick()).single { it.text == modules[1].name }.y
+            val buttonsField = panel.javaClass.getDeclaredField("moduleButtons").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST")
+            val buttons = buttonsField.get(panel) as List<com.github.epsilon.gui.dropdown.component.ModuleButton>
+            // 直接驱动控件状态，避免输入反馈初始化游戏 Screen 与资源系统。
+            val expandedField = buttons.first().javaClass.getDeclaredField("expanded\$delegate").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST")
+            val expanded = expandedField.get(buttons.first()) as com.github.epsilon.kernel.state.MutableState<Boolean>
+            expanded.value = true
+            tick()
+            for (timestamp in listOf(110_000_000L, 165_000_000L, 220_000_000L)) {
+                time = timestamp
+                val rendered = texts(tick())
+                val extra = buttons.first().getHeightForFrame(frameId) - com.github.epsilon.gui.dropdown.DropdownTheme.MODULE_HEIGHT
+                assertTrue(extra > 0f)
+                assertEquals(initialY + extra, rendered.single { it.text == modules[1].name }.y, 0.0001f)
+                assertEquals(buttons.first().y + buttons.first().getHeightForFrame(frameId), buttons[1].y, 0.0001f)
+                assertEquals(0f, panel.scrollOffset)
+            }
+            expanded.value = false
+            tick()
+            time += 220_000_000L
+            assertEquals(initialY, texts(tick()).single { it.text == modules[1].name }.y, 0.0001f)
+            tick()
+            val settled = builds
+            repeat(3) { time += 16_000_000L; tick() }
+            assertEquals(settled, builds)
+            assertEquals(0, clock.taskCount)
+        } finally { host.close() }
+    }
+
 }

@@ -35,7 +35,8 @@ class ModuleButton(val module: Module) : Component() {
     private var expanded by mutableStateOf(false)
     private var listeningKeybind by mutableStateOf(false)
     private var cachedHeightFrameId = Int.MIN_VALUE
-    private var cachedHeight = 0.0f
+    // 帧内缓存也必须可观察，否则列表重放时无法感知测量结果变化。
+    private var cachedHeight by mutableStateOf(0.0f)
 
     init {
         val ownerKey = "module:" + module.name.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "_")

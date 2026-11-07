@@ -89,7 +89,7 @@ scene.LuminUIScene(bounds, key = "settings-root") {
 
 子组合引用保留在 Layer、Clip、Viewport 的实际嵌套位置，递归解析后才交给 renderer，不将子组合追加到根输出。
 
-`LuminView.render(mouseX, mouseY) { ... }` 包住宿主布局准备阶段，观察可见性、行高、展开进度与布局资源等输入。准备代码仍每帧运行；静止时组合内容不再重建，Minecraft 的绘制提交正常继续。需要先完成布局再路由命中的窗口使用同一 `LuminView.prepare { ... }` 观察布局，确保列表或可见性变化在尺寸不变时也能失效对应窗口。
+`LuminView.render(mouseX, mouseY) { ... }` 包住宿主布局准备阶段，观察可见性、行高、展开进度与布局资源等输入。准备代码仍每帧运行；静止时组合内容不再重建，Minecraft 的绘制提交正常继续。需要先完成布局再路由命中的窗口使用同一 `LuminView.prepare { ... }` 观察布局，确保列表或可见性变化在尺寸不变时也能失效对应窗口。Dropdown 的帧前测量归属各 Panel 的布局观察；模块的帧内高度缓存以可观察状态发布，缓存命中也保留布局依赖，展开/折叠时后续行随高度更新，无需滚动触发重建。
 
 命中探针由框架维护。宿主更新当前输入，只有局部 hovered 布尔值改变时通知读取者；鼠标在同一区域移动不会使每行订阅原始鼠标坐标。布局变化重新建立命中区域，支持鼠标静止时控件移动。被遮挡窗口使用宿主传入的禁用坐标。
 
@@ -130,7 +130,7 @@ Troll 的惯性滚动是独立物理帧任务，沿用衰减、越界回弹和�
 
 ## 验证
 
-`common/src/test` 使用假时钟、重建计数和无 GPU 文本度量桩覆盖：状态判等与条件订阅、派生状态、跨线程与构建期间写入、静默/重置/BoolSetting、资源通知、稳定身份与记忆清理、失败重试、Layer/Clip/Viewport 坐标、动态输入、配置 Dropdown 首次展开的输入框同步与失败回滚、动画反向/结束/销毁和周期任务。
+`common/src/test` 使用假时钟、重建计数和无 GPU 文本度量桩覆盖：状态判等与条件订阅、派生状态、跨线程与构建期间写入、静默/重置/BoolSetting、资源通知、稳定身份与记忆清理、失败重试、Layer/Clip/Viewport 坐标、动态输入、配置 Dropdown 首次展开的输入框同步与失败回滚、模块展开/折叠时静止鼠标下的后续行位置、动画反向/结束/销毁和周期任务。
 
 ```powershell
 .\gradlew.bat :common:test :common:compileJava :common:compileKotlin :fabric:compileJava :fabric:compileKotlin :neoforge:compileJava :neoforge:compileKotlin
