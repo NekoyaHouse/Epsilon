@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat.autocrystal
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 internal class CrystalTiming(
     private val nanoTime: () -> Long = System::nanoTime,

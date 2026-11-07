@@ -34,7 +34,7 @@ required by that license.
 
 - Repository: [Luna5ama/TrollHack](https://github.com/Luna5ama/TrollHack)
 - License: GNU General Public License v3.0
-- Used in Epsilon: ZealotCrystalPlus module.
+- Used in Epsilon: CrystalAura module.
 
 The original code has been modified and adapted for Epsilon's module,
 setting, rotation, and event systems.

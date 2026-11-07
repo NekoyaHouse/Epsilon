@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat.autocrystal
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 internal data class CrystalCombatRules(
     val minimum: Double, val maximumSelf: Double, val ratio: Double, val safety: Boolean,

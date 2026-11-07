@@ -78,7 +78,7 @@ object ModuleManager : AlwaysListening {
         addModule(SilentAim)
         addModule(SpearKill)
         addModule(TriggerBot)
-        addModule(ZealotCrystalPlus)
+        addModule(CrystalAura)
 
         // Player
         addModule(AutoArmor)

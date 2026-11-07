@@ -1129,8 +1129,8 @@
         "attack cooldown": "Attack Cooldown",
         "crit fall distance": "Crit Fall Distance"
       },
-      "zealot crystal+": {
-        "_value": "Zealot Crystal+",
+      "crystal aura": {
+        "_value": "Crystal Aura",
         "placement": "Placement",
         "breaking": "Breaking",
         "general": "General",

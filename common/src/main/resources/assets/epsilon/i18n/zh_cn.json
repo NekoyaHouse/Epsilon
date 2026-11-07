@@ -1129,8 +1129,8 @@
         "attack cooldown": "攻击冷却",
         "crit fall distance": "暴击掉落距离"
       },
-      "zealot crystal+": {
-        "_value": "狂热水晶+",
+      "crystal aura": {
+        "_value": "水晶光环",
         "placement": "放置",
         "breaking": "破坏",
         "general": "常规",

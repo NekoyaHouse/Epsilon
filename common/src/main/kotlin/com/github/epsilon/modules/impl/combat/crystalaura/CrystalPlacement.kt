@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat.autocrystal
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 import com.github.epsilon.utils.combat.CrystalDamageUtils
 import net.minecraft.core.BlockPos

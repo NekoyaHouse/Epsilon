@@ -14,7 +14,7 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.combat.autocrystal.*
+import com.github.epsilon.modules.impl.combat.crystalaura.*
 import com.github.epsilon.modules.impl.movement.Blink
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.combat.CrystalDamageUtils
@@ -72,7 +72,7 @@ import java.util.concurrent.Future
 import kotlin.math.abs
 import kotlin.math.ceil
 
-object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
+object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     private enum class SwapMode {
         Off,
@@ -467,7 +467,7 @@ object ZealotCrystalPlus : Module("Zealot Crystal+", Category.COMBAT) {
             placementResult.replace(); return
         }
         val service = executor ?: Executors.newSingleThreadExecutor { runnable ->
-            Thread(runnable, "Epsilon-AutoCrystal").apply { isDaemon = true }
+            Thread(runnable, "Epsilon-CrystalAura").apply { isDaemon = true }
         }.also { executor = it }
         val token = placementResult.token()
         placementTask = service.submit {

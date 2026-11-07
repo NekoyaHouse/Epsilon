@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat.autocrystal
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 import java.util.concurrent.atomic.AtomicReference
 
