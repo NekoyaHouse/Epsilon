@@ -6,7 +6,6 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.*
@@ -253,11 +252,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> { event ->
+        onUpdate { event ->
             if (!event.isCancelled) emergencyPlacementActive = false
 
             blockResult = findBlockResult()
-            if (!blockResult.found()) return@safeEventHandler
+            if (!blockResult.found()) return@onUpdate
 
             if (player.onGround()) {
                 airTicks = 0
@@ -289,8 +288,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     event.cancel()
 
                     rotateCount++
-                    val pos = blockPos ?: return@safeEventHandler
-                    val face = direction ?: return@safeEventHandler
+                    val pos = blockPos ?: return@onUpdate
+                    val face = direction ?: return@onUpdate
                     if (rotationMode != RotationMode.Packet) {
                         val rotation = getRotation(pos, face)
                         RotationManager.rotations = rotation
@@ -307,7 +306,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                         )
                     }
                     placeBlock(pos, face)
-                    return@safeEventHandler
+                    return@onUpdate
                 } else {
                     rotateCount = 0
                 }

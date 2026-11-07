@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.*
@@ -48,10 +47,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             trackedBedFace = null
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (shouldPauseBreaking()) {
                 clearBreakingState()
-                return@safeEventHandler
+                return@onUpdate
             }
 
             val maxRange = range
@@ -64,7 +63,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
                 val nextTarget = findTarget()
                 if (nextTarget == null) {
                     resetBreaking()
-                    return@safeEventHandler
+                    return@onUpdate
                 }
                 resetBreaking()
                 currentTarget = nextTarget.pos

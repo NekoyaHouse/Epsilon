@@ -5,7 +5,6 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.elements.impl.notification.NotificationMode
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
@@ -126,7 +125,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             resetRingState(gamemodeRing)
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             // Handle all rings
             handleRing(joinRing) { playSound(joinVolume, joinPitch, joinSound.value) }
             handleRing(leaveRing) { playSound(leaveVolume, leavePitch, leaveSound.value) }

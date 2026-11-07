@@ -1,9 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -52,7 +50,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (step != 0) {
                 while (mc.options.keyUse.consumeClick()) {
                 }
@@ -61,7 +59,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
             // 处理延迟
             if (stepDelay > 0) {
                 stepDelay--
-                return@safeEventHandler
+                return@onUpdate
             }
 
             // 状态机处理

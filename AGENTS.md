@@ -82,7 +82,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - 事件总线位于 `events.api`：每个具体事件实现 `IEvent<具体事件自身类型>, IPosting by Companion`，并声明 `companion object : EventBus()`；无参 `post()` 发布一次后返回同一个具体事件实例，Java 使用 `XxxEvent event = new XxxEvent(...).post();`，再读取修改值或取消状态。不得把返回类型设计为由调用者任意推断的独立方法泛型。
 - 每个具体事件独立派发，不向父类型冒泡；监听 `ClientTickEvent.Pre` / `.Post` 等实际发布的类型，不得监听仅用于分组的基类。
 - EventBus 只接受显式 `Handler`；不得新增注解扫描、反射方法绑定或隐式全局监听。查找事件 Companion / object 总线的反射不用于发现监听方法。
-- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `IListening.safeEventHandler` / `IListening.handler` 扩展，在 owner 的 `init` 中直接注册，不得添加模块级转发包装。`safeEventHandler` 的 lambda receiver 是 `NonNullContext`，访问 owner 的显式 `this` 时须写 `this@模块名`，避免接收者变化引起状态或通知 hash 错误。
+- Kotlin 监听统一走 `common/src/main/kotlin/com/github/epsilon/events/api/Handlers.kt` 的 `IListening.safeEventHandler` / `IListening.handler` 扩展，在 owner 的 `init` 中注册。Module 可使用 `onUpdate {}` 等效注册 `safeEventHandler<PlayerTickEvent.Pre> {}`，支持 `priority` 与 `alwaysListening`，除此之外不得添加模块级转发包装。`safeEventHandler` 的 lambda receiver 是 `NonNullContext`，访问 owner 的显式 `this` 时须写 `this@模块名`，避免接收者变化引起状态或通知 hash 错误。
 - Module 继承 `ListenerOwner`；默认监听器绑定到 owner，生效与否由 owner 的 `subscribe()` / `unsubscribe()` 决定（Module 即 `isEnabled` 切换），不得在处理器内重复过滤 `isEnabled`。
 - 确需在模块禁用期间继续监听时显式传 `alwaysListening = true`。Manager 等常驻监听器实现 `AlwaysListening`，不能使用未订阅的普通 `ListenerOwner`。
 - 优先级数值越大越先执行，同优先级保持订阅顺序；`EventPriority` 保持 `HIGHEST=200`、`HIGH=100`、`MEDIUM=0`、`LOW=-100`、`LOWEST=-200`。

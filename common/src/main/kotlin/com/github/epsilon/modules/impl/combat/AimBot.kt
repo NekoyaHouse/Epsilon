@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
@@ -70,7 +69,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             when (mode) {
                 Mode.AimAssist -> updateAimAssist()
                 Mode.BowAim -> updateBowAim()

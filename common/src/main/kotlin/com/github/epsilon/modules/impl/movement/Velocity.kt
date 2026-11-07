@@ -5,7 +5,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -128,10 +127,10 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
+        onUpdate(EventPriority.LOW) {
             var pending: List<Packet<*>> = emptyList()
             synchronized(packetLock) {
-                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@safeEventHandler
+                if (mode != Mode.Delay || delayTicksRemaining <= 0) return@onUpdate
                 if (--delayTicksRemaining == 0) {
                     pending = drain(delayPackets)
                 }
@@ -139,8 +138,8 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             handlePackets(pending)
         }
 
-        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOW) {
-            if (mode != Mode.Reduce) return@safeEventHandler
+        onUpdate(EventPriority.LOW) {
+            if (mode != Mode.Reduce) return@onUpdate
 
             if (attackQueue >= 1) {
                 val hitResult = RotationManager.getHitResult()

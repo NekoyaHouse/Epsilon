@@ -1,9 +1,7 @@
 package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
@@ -42,10 +40,10 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> { event ->
+        onUpdate { event ->
             if (player.onGround()) {
                 isEnabled = false
-                return@safeEventHandler
+                return@onUpdate
             }
             when (stage) {
                 0 -> {

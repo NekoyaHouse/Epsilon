@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -40,19 +38,19 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             delay = 0
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@safeEventHandler
+        onUpdate {
+            if (mc.gui.screen() != null) return@onUpdate
 
             if (player.isUsingItem || player.isBlocking) {
-                return@safeEventHandler
+                return@onUpdate
             }
 
-            val target = getCrosshairTarget() ?: return@safeEventHandler
+            val target = getCrosshairTarget() ?: return@onUpdate
 
             if (!shouldAttack()) {
                 if (delay > 0) {
                     delay--
-                    return@safeEventHandler
+                    return@onUpdate
                 }
             }
 

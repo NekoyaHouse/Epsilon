@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -164,7 +163,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         }
 
         safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
-        safeEventHandler<PlayerTickEvent.Pre> { onTick() }
+        onUpdate { onTick() }
     }
 
     private fun NonNullContext.onAttackEntity(event: AttackEntityEvent) {

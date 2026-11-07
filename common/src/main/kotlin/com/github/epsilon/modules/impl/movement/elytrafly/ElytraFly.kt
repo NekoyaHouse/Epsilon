@@ -138,7 +138,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         modes[ElytraFlightModes.Pitch40] = Pitch40ElytraFlightMode(this)
         modes[ElytraFlightModes.NCP] = NCPElytraFlightMode(this)
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (sprintSuppressTicks > 0) {
                 sprintSuppressTicks--
             }

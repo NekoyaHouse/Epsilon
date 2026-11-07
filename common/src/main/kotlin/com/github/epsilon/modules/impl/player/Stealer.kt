@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -39,7 +37,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
     private val timer = TimerUtils()
 
     init {
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             val currentScreen = mc.gui.screen()
             if (currentScreen is AbstractContainerScreen<*>) {
                 val menu = currentScreen.menu

@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
@@ -35,12 +33,12 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
             attacks = 0.0
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
-            if (pauseOnContainers && mc.gui.screen() != null) return@safeEventHandler
-            if (player.isUsingItem || player.isBlocking) return@safeEventHandler
+        onUpdate {
+            if (pauseOnContainers && mc.gui.screen() != null) return@onUpdate
+            if (player.isUsingItem || player.isBlocking) return@onUpdate
 
             attacks += MathUtils.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
-            if (attacks < 1.0) return@safeEventHandler
+            if (attacks < 1.0) return@onUpdate
 
             val targets = TargetManager.acquireTargets(
                 TargetRequest.of(
@@ -58,7 +56,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
                 )
             )
 
-            if (targets.isEmpty()) return@safeEventHandler
+            if (targets.isEmpty()) return@onUpdate
 
             while (attacks >= 1.0) {
                 for (target in targets) {

@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -41,8 +39,8 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
             isKeyDown = false
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
-            if (mc.gui.screen() != null) return@safeEventHandler
+        onUpdate {
+            if (mc.gui.screen() != null) return@onUpdate
 
             val pressed = KeybindUtils.isPressed(activateKey)
             if (!pressed) {
@@ -50,7 +48,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
             }
 
             if (pressed) {
-                if (isKeyDown && originalSlot == -1) return@safeEventHandler
+                if (isKeyDown && originalSlot == -1) return@onUpdate
                 isKeyDown = true
 
                 if (originalSlot == -1) {
@@ -59,7 +57,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                 if (swapCounter < swapDelay) {
                     ++swapCounter
-                    return@safeEventHandler
+                    return@onUpdate
                 }
 
                 val wearingElytra = player.getItemBySlot(EquipmentSlot.CHEST).`is`(Items.ELYTRA)
@@ -81,7 +79,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
                             resetState()
-                            return@safeEventHandler
+                            return@onUpdate
                         }
 
                         val invSlot = find(predicate).slot
@@ -93,10 +91,10 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
                             swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
-                            return@safeEventHandler
+                            return@onUpdate
                         } else {
                             resetState()
-                            return@safeEventHandler
+                            return@onUpdate
                         }
                     }
 

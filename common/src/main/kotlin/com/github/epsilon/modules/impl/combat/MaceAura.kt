@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -71,9 +69,9 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             target = null
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (ElytraCombat.isControllingCombat()) {
-                return@safeEventHandler
+                return@onUpdate
             }
 
             target = TargetManager.acquirePrimary(
@@ -94,14 +92,14 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
 
             val currentTarget = target
             if (currentTarget == null) {
-                return@safeEventHandler
+                return@onUpdate
             }
 
             RotationManager.setRotations(
                 getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
-            if (!isReadyToAttack()) return@safeEventHandler
+            if (!isReadyToAttack()) return@onUpdate
 
             doAura(currentTarget)
         }

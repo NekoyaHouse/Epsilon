@@ -4,7 +4,6 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -191,7 +190,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> { event ->
+        onUpdate { event ->
             if (clipTimer > 0) clipTimer--
             if (afterPearlTime > 0) afterPearlTime--
 
@@ -208,9 +207,9 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     blockToBreak = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
                 }
 
-                if (blockToBreak == null) return@safeEventHandler
+                if (blockToBreak == null) return@onUpdate
                 val bestTool = getBestTool(blockToBreak)
-                if (bestTool == -1) return@safeEventHandler
+                if (bestTool == -1) return@onUpdate
 
                 swap(bestTool, true)
                 gameMode.continueDestroyBlock(blockToBreak, player.direction)
@@ -247,18 +246,18 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
                     if (pauseOnEat && isEating()) {
-                        return@safeEventHandler
+                        return@onUpdate
                     }
 
                     if (pauseOnPhase && isPlayerInBlock()) {
-                        return@safeEventHandler
+                        return@onUpdate
                     }
 
                     val dir = forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
-                        return@safeEventHandler
+                        return@onUpdate
                     }
 
                     val angle = calculate(Vec3.atCenterOf(block))

@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -39,9 +37,9 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
             shouldSwapBack = false
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             val result = findInHotbar(Items.EXPERIENCE_BOTTLE)
-            if (!result.found()) return@safeEventHandler
+            if (!result.found()) return@onUpdate
 
             RotationManager.setRotations(Rotation(player.yRot, 90f), 180.0, Priority.High)
 

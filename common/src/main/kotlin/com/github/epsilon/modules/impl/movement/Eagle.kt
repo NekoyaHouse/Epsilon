@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -35,7 +34,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
             sneakDelay = 0
         }
 
-        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.LOWEST) {
+        onUpdate(EventPriority.LOWEST) {
             if (sneakDelay > 0) {
                 sneakDelay--
             }

@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -62,9 +60,9 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
         }
 
         // 每个具体事件独立派发，蓄力与目标更新必须监听实际发布的 Pre。
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (ElytraCombat.isControllingCombat()) {
-                return@safeEventHandler
+                return@onUpdate
             }
             updateTarget()
 

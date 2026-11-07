@@ -215,7 +215,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         }
 
         // tick 顺序：刷新目标 → 更新预测快照 → 消费命中 → 行为状态机 → 限速 → 转控制输入。
-        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGH) { onPlayerTick() }
+        onUpdate(EventPriority.HIGH) { onPlayerTick() }
 
         // 行为规划出的输入覆盖真实键盘，DirectVelocity 模式仍保留同一套 WASD 反馈。
         handler<KeyboardInputEvent>(EventPriority.HIGH) { onKeyboardInput(it) }

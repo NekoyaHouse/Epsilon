@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -65,13 +63,13 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             deathTime = 0
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (record) {
                 positions.add(PlayerState(player.x, player.y, player.z, player.yRot, player.xRot))
-                return@safeEventHandler
+                return@onUpdate
             }
 
-            val fake = fakePlayer ?: return@safeEventHandler
+            val fake = fakePlayer ?: return@onUpdate
             if (playback && positions.isNotEmpty()) {
                 if (movementTick >= positions.size) {
                     movementTick = 0

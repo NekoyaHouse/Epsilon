@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.player
 
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -48,8 +46,8 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
             sentSentences.clear()
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
-            if (!canSend()) return@safeEventHandler
+        onUpdate {
+            if (!canSend()) return@onUpdate
 
             if (mode == Mode.TXT) {
                 sendTxtMode()

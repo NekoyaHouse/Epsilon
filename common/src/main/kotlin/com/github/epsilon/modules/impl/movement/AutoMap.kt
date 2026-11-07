@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -62,7 +61,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             restoreFlightControl()
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (!initializedInWorld) {
                 initializeInWorld()
             }

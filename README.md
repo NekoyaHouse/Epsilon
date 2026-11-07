@@ -42,10 +42,6 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 ./gradlew runClient
 ```
 
-## Development
-
-Module and utility functions that need a single non-null game context use `fun NonNullContext.xxx(...)` and access `player`, `level`, `gameMode`, and `connection` directly. Import object member extensions and call them inside `safeEventHandler`, `runSafe`, or `with(nn) { }`. Reserve `context(...)` parameters for multiple contexts or functions that already need another extension receiver. See [AGENTS.md](AGENTS.md) for development constraints.
-
 ## 🙏 Credits
 
 Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.

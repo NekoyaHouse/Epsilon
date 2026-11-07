@@ -138,10 +138,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (mode == Mode.Grim) {
                 if (!player.isMoving) {
-                    return@safeEventHandler
+                    return@onUpdate
                 }
 
                 var collisions = 0
@@ -153,7 +153,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                         val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
                         val boatBoost = boatSpeed
                         player.deltaMovement = Vec3(-sin(yaw) * boatBoost, boatJump, cos(yaw) * boatBoost)
-                        return@safeEventHandler
+                        return@onUpdate
                     } else if (entity != player && entity is LivingEntity && entity !is ArmorStand && box.intersects(
                             entityBox
                         )

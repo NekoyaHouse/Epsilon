@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -132,7 +131,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             }
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        onUpdate {
             if (shouldThrow && canWork()) {
                 var used = false
                 val off = player.offhandItem
