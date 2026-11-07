@@ -3,8 +3,11 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
@@ -43,11 +46,11 @@ abstract class AbstractSetSettingWidget<S : Setting<*>>(setting: S) : SettingWid
         return DropdownTheme.SETTING_HEIGHT - 1.0f + FIELD_HEIGHT
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         val hovered = isFieldHovered(mouseX.toDouble(), mouseY.toDouble())
         hoverAnim.run(if (hovered) 1.0f else 0.0f)
 
-        scope.text(
+        Text(
             setting.displayName, DropdownTheme.SETTING_PADDING_X, 1.0f,
             DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel()
         )
@@ -62,13 +65,13 @@ abstract class AbstractSetSettingWidget<S : Setting<*>>(setting: S) : SettingWid
         val label = elementCount().toString() + labelText()
         val labelScale = 0.50f
         val iconScale = 0.54f
-        val labelY = centeredTextY(textMetrics, fieldY, FIELD_HEIGHT, labelScale)
-        val iconY = centeredTextY(textMetrics, fieldY, FIELD_HEIGHT, iconScale)
+        val labelY = centeredTextY(metrics, fieldY, FIELD_HEIGHT, labelScale)
+        val iconY = centeredTextY(metrics, fieldY, FIELD_HEIGHT, iconScale)
 
-        scope.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background)
-        scope.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline)
-        scope.text(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER)
-        scope.text("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER)
+        RoundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background)
+        Outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline)
+        Text(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER)
+        Text("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

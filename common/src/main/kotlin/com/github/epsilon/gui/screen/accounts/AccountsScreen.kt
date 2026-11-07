@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.screen.accounts
 
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.MicrosoftLogin
@@ -129,14 +131,14 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
         val tree = UiTree.build { scope ->
             scope.rect(0.0f, 0.0f, w.toFloat(), h.toFloat(), SCRIM)
-            scope.layer(0) { panel ->
+            scope.layer(DialogZ.Card) { panel ->
                 panel.shadow(
                     panelX, panelY, panelW, panelH,
                     MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR, MD3Theme.SHADOW,
                 )
                 panel.roundRect(panelX, panelY, panelW, panelH, MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.SURFACE)
             }
-            scope.layer(10) { content ->
+            scope.layer(DialogZ.Content) { content ->
                 drawHeader(content, ex, ey)
                 if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) {
                     drawAddForm(content, ex, ey)
@@ -288,7 +290,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val searchBounds = this.searchBounds ?: return
         val sortBounds = this.sortBounds ?: return
         searchField.buildUi(
-            scope, searchBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer,
+            scope.asUiScope(textRenderer), searchBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer,
             EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 1.0f,
         )
         sortButton.draw(scope, sortBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, sortMode)
@@ -435,7 +437,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
         val fieldBounds = formFieldBounds
         if (fieldBounds != null) {
-            field.buildUi(scope, fieldBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, placeholder, 0.7f)
+            field.buildUi(scope.asUiScope(textRenderer), fieldBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, placeholder, 0.7f)
         }
 
         drawFormButtons(scope, true)

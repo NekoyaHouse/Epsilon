@@ -3,8 +3,9 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.Setting
 import com.mojang.blaze3d.platform.InputConstants
 import java.util.function.Predicate
@@ -24,13 +25,13 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         return DropdownTheme.SETTING_HEIGHT + 15.0f
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         syncSessionState()
 
         val ratio = getRatio()
         val sliderRatio = ratio.coerceIn(0.0f, 1.0f)
 
-        scope.text(
+        Text(
             setting.displayName,
             DropdownTheme.SETTING_PADDING_X,
             1.0f,
@@ -46,15 +47,15 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         val editing = inputField.isFocused
         if (editing) {
             inputField.draw(
-                scope, textMetrics, getLocalEditorX(), getLocalEditorY(), getEditorWidth(), getEditorHeight(),
+                this, getLocalEditorX(), getLocalEditorY(), getEditorWidth(), getEditorHeight(),
                 mouseX, mouseY, formatPlainValue(), DropdownTheme.SETTING_TEXT_SCALE
             )
         } else {
-            scope.roundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack())
+            RoundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack())
 
             val activeW = trackW * sliderRatio
             if (activeW > 0.5f) {
-                scope.roundRect(
+                RoundRect(
                     trackX,
                     trackY,
                     activeW,
@@ -67,7 +68,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
             val knobX = trackX + trackW * sliderRatio
             val knobY = trackY + trackH * 0.5f
             val kr = DropdownTheme.SLIDER_KNOB_RADIUS
-            scope.roundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob())
+            RoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob())
 
             if (dragging && mouseX >= 0) {
                 DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
@@ -77,7 +78,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         }
 
         if (!editing) {
-            drawValueLabels(scope, textMetrics, trackX, trackY, trackW)
+            drawValueLabels(trackX, trackY, trackW)
         }
     }
 
@@ -233,22 +234,16 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         inputField.blur()
     }
 
-    protected fun drawValueLabels(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
-        trackX: Float,
-        trackY: Float,
-        trackW: Float
-    ) {
+    protected fun UiScope.drawValueLabels(trackX: Float, trackY: Float, trackW: Float) {
         val minValue = formatValue(getMin())
         val currentValue = formatValue(getVisibleValue())
         val maxValue = formatValue(getMax())
         val textY = trackY + DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET
 
-        scope.text(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())
+        Text(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())
 
-        val currentWidth = textMetrics.textWidth(currentValue, VALUE_TEXT_SCALE)
-        scope.text(
+        val currentWidth = metrics.textWidth(currentValue, VALUE_TEXT_SCALE)
+        Text(
             currentValue,
             trackX + (trackW - currentWidth) * 0.5f,
             textY,
@@ -256,8 +251,8 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
             DropdownTheme.settingLabel()
         )
 
-        val maxWidth = textMetrics.textWidth(maxValue, VALUE_TEXT_SCALE)
-        scope.text(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())
+        val maxWidth = metrics.textWidth(maxValue, VALUE_TEXT_SCALE)
+        Text(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted())
     }
 
     protected abstract fun getMin(): T

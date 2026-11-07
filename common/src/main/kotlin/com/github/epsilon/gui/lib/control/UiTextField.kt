@@ -3,7 +3,10 @@ package com.github.epsilon.gui.lib.control
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -40,7 +43,7 @@ class UiTextField(maxLength: Int) {
     }
 
     fun buildUi(
-        scope: UiTree.Scope, bounds: UiRect, mouseX: Double, mouseY: Double,
+        scope: UiScope, bounds: UiRect, mouseX: Double, mouseY: Double,
         textRenderer: TextRenderer, placeholder: String, textScale: Float
     ) {
         val hovered = bounds.contains(mouseX, mouseY)
@@ -63,7 +66,7 @@ class UiTextField(maxLength: Int) {
         val display = if (showPlaceholder) placeholder else text
         val textColor = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
 
-        scope.input(
+        scope.Input(
             bounds, focused, hoverProgress,
             focusProgress, MD3Theme.PRIMARY, 1.0f,
             textInset, display, textScale, textColor,
@@ -75,7 +78,7 @@ class UiTextField(maxLength: Int) {
         if (leadingIcon != null) {
             val glyphHeight = textRenderer.getHeight(leadingIconScale, StaticFontLoader.ICONS)
             val iconColor: Color = if (focused) MD3Theme.PRIMARY else MD3Theme.TEXT_MUTED
-            scope.text(
+            scope.Text(
                 leadingIcon, bounds.x + DEFAULT_TEXT_INSET,
                 bounds.y + (bounds.height - glyphHeight) / 2.0f, leadingIconScale, iconColor, StaticFontLoader.ICONS
             )

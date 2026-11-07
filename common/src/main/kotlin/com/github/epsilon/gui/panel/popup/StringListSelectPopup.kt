@@ -1,9 +1,15 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
@@ -19,6 +25,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import java.awt.Color
 import kotlin.math.abs
 
 class StringListSelectPopup(
@@ -29,7 +36,6 @@ class StringListSelectPopup(
 ) : PanelPopupHost.Popup {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val textRenderer: TextRenderer = TextRenderer.create()
     private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
     private val scrollBarDrag = ScrollBarDragState()
 
@@ -62,60 +68,63 @@ class StringListSelectPopup(
         scroll = scroll.coerceIn(0.0f, maxScroll)
         updateSmoothScroll(partialTick)
 
-        val tree = UiTree.build { scope ->
-            val progress = scope.animate(openAnimation, 1.0f)
-            val popupY = bounds.y - (1.0f - progress) * 6.0f
-            val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            val inputBounds = getInputBounds(popupY)
-            val animatedViewport = getViewport(popupY)
-            lastViewport = animatedViewport
-            scope.pushAbsolute(animatedBounds) { popup ->
-                popup.popupCard(
-                    animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
-                )
+        openAnimation.run(1.0f)
+        val progress = openAnimation.value
+        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        val inputBounds = getInputBounds(popupY)
+        val animatedViewport = getViewport(popupY)
+        lastViewport = animatedViewport
+        renderBatch.Content(animatedBounds) {
+            PopupCard(
+                size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+            )
 
-                val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
-                val summaryScale = 0.52f
-                val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
-                popup.text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
-                popup.text(
-                    summary, animatedBounds.width - PADDING - textRenderer.getWidth(summary, summaryScale),
-                    centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
-                )
+            val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
+            val summaryScale = 0.52f
+            val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
+            Text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
+            Text(
+                summary, animatedBounds.width - PADDING - metrics.textWidth(summary, summaryScale),
+                centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
+            )
 
-                val placeholder =
-                    if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
-                popup.input(
-                    inputBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f,
-                    placeholder, 0.54f,
+            val placeholder =
+                if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
+            val localInputBounds = inputBounds.relativeTo(animatedBounds)
+            Positioned(localInputBounds.x, localInputBounds.y, localInputBounds.width, localInputBounds.height) {
+                Input(
+                    UiRect(0.0f, 0.0f, localInputBounds.width, localInputBounds.height), true, 1.0f,
+                    0.0f, Color(0, 0, 0, 0), 0.0f,
+                    8.0f, placeholder, 0.54f,
                     if (input.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
+                    null, null,
                     input.length, MD3Theme.PRIMARY, null, 0.0f, null
                 )
-                IMEFocusHelper.updateCursorPos(inputBounds.x + 8.0f, inputBounds.y + 4.0f)
+            }
+            IMEFocusHelper.updateCursorPos(inputBounds.x + 8.0f, inputBounds.y + 4.0f)
 
-                hoveredRemove = null
-                hoveredMoveUp = null
-                hoveredMoveDown = null
-                val localViewport = animatedViewport.relativeTo(animatedBounds)
-                popup.viewport(
-                    contentBuffer,
-                    localViewport,
-                    scroll,
-                    maxScroll,
-                    contentHeight,
-                    mouseX,
-                    mouseY
-                ) { content ->
-                    buildEntryList(
-                        content, entries, animatedViewport.x, animatedViewport.y - scroll,
-                        localViewport, mouseX, mouseY, animatedViewport
-                    )
-                }
+            hoveredRemove = null
+            hoveredMoveUp = null
+            hoveredMoveDown = null
+            val localViewport = animatedViewport.relativeTo(animatedBounds)
+            Viewport(
+                contentBuffer,
+                localViewport,
+                scroll,
+                maxScroll,
+                contentHeight,
+                mouseX,
+                mouseY
+            ) {
+                buildEntryList(
+                    entries, animatedViewport.x, animatedViewport.y - scroll,
+                    localViewport, mouseX, mouseY, animatedViewport
+                )
             }
         }
-        renderBatch.render(tree)
     }
 
     override fun flush(renderBatch: UiRenderBatch) {
@@ -195,11 +204,10 @@ class StringListSelectPopup(
         return ArrayList(setting.value)
     }
 
-    private fun buildEntryList(
-        scope: UiTree.Scope, entries: List<String>, startX: Float, startY: Float,
+    private fun UiScope.buildEntryList(
+        entries: List<String>, startX: Float, startY: Float,
         localViewport: UiRect, mouseX: Int, mouseY: Int, viewport: UiRect,
     ) {
-        val origin = scope.bound()
         val width = localViewport.width - (if (maxScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f)
         for (i in entries.indices) {
             val entry = entries[i]
@@ -225,18 +233,18 @@ class StringListSelectPopup(
             val actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f
             val display = trim(entry, 0.50f, rowBounds.width - actionAreaWidth - 14.0f)
             val localRowBounds = rowBounds.relativeTo(origin)
-            scope.pushRelative(localRowBounds) { row ->
-                row.roundRect(
+            Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
+                RoundRect(
                     0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
                     MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
                 )
-                row.text(
+                Text(
                     display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
                     MD3Theme.ON_SECONDARY_CONTAINER
                 )
-                drawAction(row, upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
-                drawAction(row, downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
-                drawAction(row, removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
+                drawAction(upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
+                drawAction(downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
+                drawAction(removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
             }
         }
     }
@@ -246,17 +254,17 @@ class StringListSelectPopup(
         return UiRect(x, rowBounds.y + 2.0f, ACTION_WIDTH, rowBounds.height - 4.0f)
     }
 
-    private fun drawAction(scope: UiTree.Scope, bounds: UiRect, label: String, enabled: Boolean, hovered: Boolean) {
+    private fun UiScope.drawAction(bounds: UiRect, label: String, enabled: Boolean, hovered: Boolean) {
         val textScale = 0.50f
         if (enabled && hovered) {
-            scope.roundRect(
+            RoundRect(
                 bounds.x, bounds.y, bounds.width, bounds.height, 4.0f,
                 MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 34)
             )
         }
-        scope.text(
+        Text(
             label,
-            bounds.x + (bounds.width - textRenderer.getWidth(label, textScale)) / 2.0f,
+            bounds.x + (bounds.width - metrics.textWidth(label, textScale)) / 2.0f,
             centeredTextY(bounds.y, bounds.height, textScale),
             textScale,
             if (enabled) MD3Theme.ON_SECONDARY_CONTAINER else MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 80)
@@ -323,8 +331,8 @@ class StringListSelectPopup(
         return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
 
-    private fun centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
-        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f
+    private fun UiScope.centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
+        return boxY + (boxHeight - metrics.textHeight(scale)) * 0.5f
     }
 
     override fun close() {

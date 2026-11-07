@@ -3,9 +3,12 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.lib.Chip
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
@@ -32,7 +35,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         return DropdownTheme.SETTING_HEIGHT
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         val supported = setting.isSupported()
         val target = if (setting.value) 1.0f else 0.0f
         toggleAnim.run(target)
@@ -50,22 +53,22 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         hoverAnim.run(if (supported && hovered) 1.0f else 0.0f)
         val hoverProgress = hoverAnim.value
 
-        scope.text(
+        Text(
             setting.displayName, DropdownTheme.SETTING_PADDING_X,
-            (getHeight() - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+            (getHeight() - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
             DropdownTheme.SETTING_TEXT_SCALE,
             if (supported) DropdownTheme.settingLabel() else MD3Theme.TEXT_MUTED
         )
 
         if (!supported) {
-            drawPlatformBadge(scope, textMetrics, sx - 6.0f)
+            drawPlatformBadge(sx - 6.0f)
         }
 
-        scope.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t))
+        RoundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t))
 
         val outlineW = MD3Theme.switchTrackOutlineWidth(t)
         if (outlineW > 0.01f) {
-            scope.outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress))
+            Outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress))
         }
 
         val knobSize = Mth.lerp(t.coerceIn(0.0f, 1.0f), KNOB_SIZE_OFF, KNOB_SIZE_ON)
@@ -80,7 +83,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         if (hoverProgress > 0.02f) {
             val haloX = knobCx - STATE_LAYER_SIZE * 0.5f
             val haloY = knobCy - STATE_LAYER_SIZE * 0.5f
-            scope.roundRect(
+            RoundRect(
                 haloX,
                 haloY,
                 STATE_LAYER_SIZE,
@@ -91,7 +94,7 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         }
 
         val knobRadius = knobSize * 0.5f
-        scope.roundRect(
+        RoundRect(
             knobCx - knobW * 0.5f,
             knobCy - knobSize * 0.5f,
             knobW,
@@ -124,15 +127,15 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
         return false
     }
 
-    private fun drawPlatformBadge(scope: UiTree.Scope, textMetrics: UiTextMetrics, trailingX: Float) {
+    private fun UiScope.drawPlatformBadge(trailingX: Float) {
         val label = setting.unsupportedLabel
         val scale = 0.5f
         // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
-        val width = textMetrics.textWidth(label, scale) + 16.0f
+        val width = metrics.textWidth(label, scale) + 16.0f
         val height = 12.0f
         val x = maxOf(DropdownTheme.SETTING_PADDING_X, trailingX - width)
         val y = (getHeight() - SWITCH_HEIGHT) * 0.5f + (SWITCH_HEIGHT - height) * 0.5f
-        scope.chip(
+        Chip(
             UiRect(x, y, width, height), label, scale,
             MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
         )

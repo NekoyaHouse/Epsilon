@@ -4,7 +4,9 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
@@ -45,7 +47,10 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun render(deltaTracker: DeltaTracker) {
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var layoutEntries: List<Entry> = emptyList()
+
+    override fun measure(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
         val modules: List<Module> = ModuleManager.getModules()
         val liveModules: MutableSet<Module> = HashSet(modules)
@@ -96,62 +101,65 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
         if (!entries.isEmpty()) {
             contentHeight -= ROW_GAP * entries.last().animation
         }
+        layoutEntries = entries
         setBounds(maxOf(ICON_SIZE, maxRowWidth), maxOf(ROW_HEIGHT, contentHeight))
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        val entries = layoutEntries
         if (entries.isEmpty()) return
 
-        var rowY = this.y
+        val textRenderer = textRendererSupplier.get()
+
+        // 先提交背景模糊：BlurShader 直接绘制到屏幕，需要 origin + 相对坐标还原绝对坐标
+        var rowY = 0.0f
         for (entry in entries) {
             val animation = entry.animation
             val rowWidth = ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f
-            val rowX = this.x - rowWidth * (1.0f - animation)
+            val rowX = -rowWidth * (1.0f - animation)
             val animatedHeight = ROW_HEIGHT * animation
             val animatedRadius = minOf(CORNER_RADIUS, animatedHeight * 0.5f)
-            val textX = rowX + ICON_SIZE + ICON_TEXT_GAP + TEXT_PADDING
-            val textBackgroundX = textX - TEXT_PADDING
+            val textBackgroundX = rowX + ICON_SIZE + ICON_TEXT_GAP
             val textBackgroundWidth = entry.textWidth + TEXT_PADDING * 2.0f
 
-            BlurShader.render(rowX, rowY, ICON_SIZE, animatedHeight, animatedRadius, BLUR_STRENGTH)
-            BlurShader.render(textBackgroundX, rowY, textBackgroundWidth, animatedHeight, animatedRadius, BLUR_STRENGTH)
+            BlurShader.render(
+                origin.x + rowX, origin.y + rowY, ICON_SIZE, animatedHeight, animatedRadius, BLUR_STRENGTH
+            )
+            BlurShader.render(
+                origin.x + textBackgroundX, origin.y + rowY, textBackgroundWidth, animatedHeight,
+                animatedRadius, BLUR_STRENGTH
+            )
             rowY += (ROW_HEIGHT + ROW_GAP) * animation
         }
 
-        val scope: UiTree.Scope = renderScope()
-        rowY = this.y
+        rowY = 0.0f
         var colorIndex = 0
         for (entry in entries) {
             val animation = entry.animation
             val rowWidth = ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f
-            val rowX = this.x - rowWidth * (1.0f - animation)
+            val rowX = -rowWidth * (1.0f - animation)
             val animatedHeight = ROW_HEIGHT * animation
             val animatedRadius = minOf(CORNER_RADIUS, animatedHeight * 0.5f)
             val textBackgroundX = rowX + ICON_SIZE + ICON_TEXT_GAP
             val textBackgroundWidth = entry.textWidth + TEXT_PADDING * 2.0f
             val rowColor = resolveTextColor(colorIndex++)
             val shadowColor = resolveShadowColor(rowColor, animation)
-            scope.shadow(rowX, rowY, ICON_SIZE, animatedHeight, animatedRadius, SHADOW_BLUR, shadowColor)
-            scope.shadow(
-                textBackgroundX,
-                rowY,
-                textBackgroundWidth,
-                animatedHeight,
-                animatedRadius,
-                SHADOW_BLUR,
-                shadowColor
-            )
+            Shadow(rowX, rowY, ICON_SIZE, animatedHeight, animatedRadius, SHADOW_BLUR, shadowColor)
+            Shadow(textBackgroundX, rowY, textBackgroundWidth, animatedHeight, animatedRadius, SHADOW_BLUR, shadowColor)
 
             val iconHeight = textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)
             val iconWidth = textRenderer.getWidth(entry.icon, ICON_SCALE, StaticFontLoader.ICONS)
             val textColor = withAlpha(rowColor, animation)
-            scope.text(
+            Text(
                 entry.icon, rowX + (ICON_SIZE - iconWidth) * 0.5f, rowY + (animatedHeight - iconHeight) * 0.5f,
                 ICON_SCALE, textColor, StaticFontLoader.ICONS
             )
-            scope.text(
+            Text(
                 entry.name, textBackgroundX + TEXT_PADDING,
                 rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f, TEXT_SCALE, textColor
             )
             if (entry.info.isNotEmpty()) {
-                scope.text(
+                Text(
                     " " + entry.info, textBackgroundX + TEXT_PADDING + entry.nameWidth,
                     rowY + (animatedHeight - textRenderer.getHeight(TEXT_SCALE)) * 0.5f, TEXT_SCALE,
                     withAlpha(SUFFIX_COLOR, animation)

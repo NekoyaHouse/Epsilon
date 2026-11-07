@@ -2,13 +2,14 @@ package com.github.epsilon.gui.dropdown
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
@@ -40,8 +41,6 @@ import java.util.function.Consumer
 class DropdownScreen private constructor() : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
 
     private val panels: MutableList<DropdownPanel> = ArrayList()
-    private val textMetrics: TextRenderer = TextRenderer.create()
-    private val uiTextMetrics: UiTextMetrics = DropdownTextMetrics()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
     private val popupHost: PanelPopupHost = PanelPopupHost()
     private val scrimAnim: Animation = Animation(Easing.EASE_OUT_SINE, 200L)
@@ -55,7 +54,6 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private var currentSessionId = 0
     private var renderFrameId = 0
     private var dropdownBatch: UiRenderBatch? = null
-    private var dropdownScope: UiTree.Scope? = null
     private var dropdownLayer = 0
 
     override fun init() {
@@ -114,21 +112,23 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         scrimAnim.run(1.0f)
         dropdownBatch = scene.batch(UiLayer.CONTENT)
         dropdownLayer = -10
-        popupHost.setOverlayBounds(
-            UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight())
+        val screenBounds = UiRect(
+            0.0f, 0.0f,
+            LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()
         )
+        popupHost.setOverlayBounds(screenBounds)
         updatePanelHeightLimits()
         updateVisiblePanelIds()
         beginPanelFrames()
 
-        beginDropdownLayer()
-        val scrim = DropdownTheme.scrim()
-        val scrimAlpha = scrimAnim.value
-        currentScope.rect(
-            0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(),
-            Color(scrim.red, scrim.green, scrim.blue, (scrim.alpha * scrimAlpha).toInt())
-        )
-        flushDropdownLayer()
+        dropdownContent(screenBounds) {
+            val scrim = DropdownTheme.scrim()
+            val scrimAlpha = scrimAnim.value
+            Rect(
+                0.0f, 0.0f, width, height,
+                Color(scrim.red, scrim.green, scrim.blue, (scrim.alpha * scrimAlpha).toInt())
+            )
+        }
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
         val popupHovered = popupHost.activePopup != null &&
@@ -151,16 +151,16 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
-            beginDropdownLayer()
-            reisaCompanion.draw(
-                currentScope,
-                LuminRenderSystem.getScaledWidth(),
-                LuminRenderSystem.getScaledHeight(),
-                mouseX,
-                mouseY,
-                popupHovered || topmostHovered != null
-            )
-            flushDropdownLayer()
+            dropdownContent(screenBounds) {
+                reisaCompanion.draw(
+                    this,
+                    screenBounds.width,
+                    screenBounds.height,
+                    mouseX,
+                    mouseY,
+                    popupHovered || topmostHovered != null
+                )
+            }
         }
 
         for (panel in panels) {
@@ -175,123 +175,87 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             val panelH = panel.panelHeight
             val revealedH = panelH * intro
 
-            beginDropdownLayer()
-            withDropdownScissor(
-                intro < 1.0f,
-                panel.x - shadowPad,
-                panel.y - shadowPad,
-                panel.width + shadowPad * 2,
-                revealedH + shadowPad * 2
-            ) { scope -> panel.drawBackground(scope, uiTextMetrics) }
-            flushDropdownLayer()
+            dropdownContent(UiRect(panel.x, panel.y, panel.width, panelH)) {
+                ClipIf(
+                    intro < 1.0f,
+                    -shadowPad,
+                    -shadowPad,
+                    panel.width + shadowPad * 2.0f,
+                    revealedH + shadowPad * 2.0f
+                ) {
+                    panel.drawBackground()
+                }
+            }
 
             val clipY = panel.contentClipY
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
             val actualClipH = minOf(clipH, revealedBottom - clipY)
             if (actualClipH > 0.5f) {
-                beginDropdownLayer()
                 val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
                 val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
                 val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
-                withDropdownScissor(requiresContentScissor, panel.x, clipY, panel.width, actualClipH) { scope ->
-                    panel.drawContent(scope, uiTextMetrics, hoverMouseX, hoverMouseY)
+                dropdownContent(UiRect(panel.x, clipY, panel.width, actualClipH)) {
+                    ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
+                        panel.drawContent(hoverMouseX, hoverMouseY)
+                    }
                 }
-                flushDropdownLayer()
             }
 
             panel.setPosition(panel.x, origY)
         }
 
-        drawSearch(backgroundMouseX, backgroundMouseY)
+        dropdownContent(screenBounds) {
+            searchField.draw(
+                this, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
+                EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
+            )
+            drawHints()
+        }
+
         popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick)
         scene.flush()
         popupHost.flush()
     }
 
-    private fun drawSearch(mouseX: Int, mouseY: Int) {
-        beginDropdownLayer()
-        val searchX = searchX
-        val searchY = searchY
-        searchField.draw(
-            currentScope, uiTextMetrics, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
-            EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
-        )
-        drawHints()
-        flushDropdownLayer()
-    }
-
-    private fun drawHints() {
-        if (ClientSetting.dropdownHints) {
-            val scale = 0.62f
-            val lineGap = 5.0f
-            val lineHeight = uiTextMetrics.textHeight(scale)
-            val hints = arrayOf(
-                EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
-                EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
-                EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
-            )
-            val screenWidth = LuminRenderSystem.getScaledWidth()
-            var xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X
-            if (isReisaCompanionEnabled()) {
-                val companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight())
-                xRight = minOf(xRight, companionLeft - 8.0f)
-            }
-            xRight = maxOf(searchX + searchWidth, xRight)
-            var y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y -
-                    hints.size * lineHeight - (hints.size - 1) * lineGap
-            val alpha = (255 * scrimAnim.value).toInt()
-            if (alpha <= 0) {
-                return
-            }
-            val color = MD3Theme.withAlpha(Color.WHITE, alpha)
-            for (hint in hints) {
-                val x = xRight - uiTextMetrics.textWidth(hint, scale)
-                currentScope.text(hint, x, y, scale, color)
-                y += lineHeight + lineGap
-            }
-        }
-    }
-
-    private val currentScope: UiTree.Scope
-        get() = dropdownScope!!
-
-    private fun beginDropdownLayer() {
+    /**
+     * 在当前批次上追加一层内容。
+     *
+     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析。
+     */
+    private fun dropdownContent(bounds: UiRect, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownScope = UiTree.Scope()
+        dropdownBatch!!.Content(bounds, dropdownLayer, content)
     }
 
-    private fun flushDropdownLayer() {
-        dropdownBatch!!.render(UiTree.from(currentScope), dropdownLayer)
-    }
-
-    private fun withDropdownScissor(
-        required: Boolean,
-        guiX: Float,
-        guiY: Float,
-        guiW: Float,
-        guiH: Float,
-        content: Consumer<UiTree.Scope>,
-    ) {
-        currentScope.scissorIf(required, UiRect(guiX, guiY, guiW, guiH)) { scope -> content.accept(scope) }
-    }
-
-    private inner class DropdownTextMetrics : UiTextMetrics {
-
-        override fun textWidth(text: String, scale: Float): Float {
-            return textMetrics.getWidth(text, scale)
+    private fun UiScope.drawHints() {
+        if (!ClientSetting.dropdownHints) return
+        val scale = 0.62f
+        val lineGap = 5.0f
+        val lineHeight = metrics.textHeight(scale)
+        val hints = arrayOf(
+            EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
+            EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
+            EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
+        )
+        val screenWidth = LuminRenderSystem.getScaledWidth()
+        var xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X
+        if (isReisaCompanionEnabled()) {
+            val companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight())
+            xRight = minOf(xRight, companionLeft - 8.0f)
         }
-
-        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getWidth(text, scale, fontLoader)
+        xRight = maxOf(searchX + searchWidth, xRight)
+        var y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y -
+                hints.size * lineHeight - (hints.size - 1) * lineGap
+        val alpha = (255 * scrimAnim.value).toInt()
+        if (alpha <= 0) {
+            return
         }
-
-        override fun textHeight(scale: Float): Float {
-            return textMetrics.getHeight(scale)
-        }
-
-        override fun textHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getHeight(scale, fontLoader)
+        val color = MD3Theme.withAlpha(Color.WHITE, alpha)
+        for (hint in hints) {
+            val x = xRight - metrics.textWidth(hint, scale)
+            Text(hint, x, y, scale, color)
+            y += lineHeight + lineGap
         }
     }
 

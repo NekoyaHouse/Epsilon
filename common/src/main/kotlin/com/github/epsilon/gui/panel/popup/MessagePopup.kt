@@ -1,7 +1,10 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.gui.lib.Button
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Animation
@@ -48,39 +51,36 @@ class MessagePopup(
         val popupY = bounds.y - (1.0f - progress) * 6.0f
         updateLayout(popupY)
         buttonHoverAnimation.run(if (buttonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
-        val tree = UiTree.build { scope ->
-            val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            scope.pushAbsolute(popupBounds) { popup ->
-                popup.popupCard(
-                    popupBounds.atOrigin(),
-                    MD3Theme.CARD_RADIUS.toFloat(),
-                    MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
-                )
+        val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        renderBatch.Content(popupBounds) {
+            PopupCard(
+                size,
+                MD3Theme.CARD_RADIUS.toFloat(),
+                MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+            )
 
-                val titleScale = 0.66f
-                val messageScale = 0.56f
-                val detailScale = 0.52f
-                val title = titleSupplier.get()
-                val message = messageSupplier.get()
-                val buttonLabel = buttonLabelSupplier.get()
-                popup.text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
-                popup.text(message, 12.0f, 25.0f, messageScale, MD3Theme.TEXT_SECONDARY)
-                if (detail != null && !detail.isBlank()) {
-                    popup.text(detail, 12.0f, 38.0f, detailScale, MD3Theme.TEXT_MUTED)
-                }
-
-                val hover = buttonHoverAnimation.value
-                val localButtonBounds = buttonBounds.relativeTo(popupBounds)
-                popup.button(
-                    localButtonBounds, localButtonBounds.height / 2.0f,
-                    MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
-                    buttonLabel, 0.56f, MD3Theme.ON_PRIMARY_CONTAINER
-                )
+            val titleScale = 0.66f
+            val messageScale = 0.56f
+            val detailScale = 0.52f
+            val title = titleSupplier.get()
+            val message = messageSupplier.get()
+            val buttonLabel = buttonLabelSupplier.get()
+            Text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
+            Text(message, 12.0f, 25.0f, messageScale, MD3Theme.TEXT_SECONDARY)
+            if (detail != null && !detail.isBlank()) {
+                Text(detail, 12.0f, 38.0f, detailScale, MD3Theme.TEXT_MUTED)
             }
+
+            val hover = buttonHoverAnimation.value
+            val localButtonBounds = buttonBounds.relativeTo(popupBounds)
+            Button(
+                localButtonBounds, localButtonBounds.height / 2.0f,
+                MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
+                buttonLabel, 0.56f, MD3Theme.ON_PRIMARY_CONTAINER
+            )
         }
-        renderBatch.render(tree)
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {

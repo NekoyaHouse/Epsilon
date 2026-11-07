@@ -4,8 +4,13 @@ import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Circle
+import com.github.epsilon.gui.lib.GradientArc
+import com.github.epsilon.gui.lib.Texture
+import com.github.epsilon.gui.lib.RoundedTexture
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.utils.render.animation.Animation
@@ -77,18 +82,18 @@ class ScaffoldBlocksInstance(
         }
     }
 
-    override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
+    override fun draw(scope: UiScope, width: Float, height: Float) {
         drawBlockTexture(scope, height)
 
         val ringRadius = (RING_SIZE - RING_STROKE) / 2f
         val centerX = width - PADDING - RING_SIZE / 2f
         val centerY = height / 2f
 
-        scope.circle(centerX, centerY, ringRadius, RING_STROKE, fade(Color(255, 255, 255, 60)))
+        scope.Circle(centerX, centerY, ringRadius, RING_STROKE, fade(Color(255, 255, 255, 60)))
 
         val progressValue = progress.value.coerceIn(0f, 1f)
         if (progressValue > 0f) {
-            scope.gradientArc(
+            scope.GradientArc(
                 centerX, centerY, ringRadius, RING_STROKE,
                 -90f, progressValue * 359f, true, spinAngleDeg,
                 fade(IslandPalette.ACCENT),
@@ -116,11 +121,11 @@ class ScaffoldBlocksInstance(
         }
     }
 
-    private fun drawBlockTexture(scope: UiTree.Scope, height: Float) {
+    private fun drawBlockTexture(scope: UiScope, height: Float) {
         val sprite = iconSprite ?: return
 
         val iconY = (height - ICON_SIZE) / 2f
-        scope.roundedTexture(
+        scope.RoundedTexture(
             sprite.atlasLocation(),
             PADDING, iconY, ICON_SIZE, ICON_SIZE, ICON_RADIUS,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
@@ -128,7 +133,7 @@ class ScaffoldBlocksInstance(
         )
     }
 
-    private fun drawRollingCount(scope: UiTree.Scope, centerX: Float, centerY: Float) {
+    private fun drawRollingCount(scope: UiScope, centerX: Float, centerY: Float) {
         val textRenderer = textRendererSupplier.get()
         val textHeight = textRenderer.getHeight(TEXT_SCALE)
         val baseY = centerY - textHeight / 2f
@@ -158,7 +163,7 @@ class ScaffoldBlocksInstance(
     }
 
     private fun drawDigitRoll(
-        scope: UiTree.Scope,
+        scope: UiScope,
         textRenderer: TextRenderer,
         centerX: Float,
         baseY: Float,
@@ -184,10 +189,10 @@ class ScaffoldBlocksInstance(
 
         val textHeight = textRenderer.getHeight(TEXT_SCALE)
         val eased = Easing.EASE_IN_OUT_CUBIC.function.apply(localProgress)
-        val clip = UiRect(centerX - totalWidth / 2f - 2f, baseY - textHeight * 0.6f, totalWidth + 4f, textHeight * 2.2f)
-
         val finalTotalWidth = totalWidth
-        scope.scissor(clip) { inner ->
+        scope.Clip(
+            centerX - totalWidth / 2f - 2f, baseY - textHeight * 0.6f, totalWidth + 4f, textHeight * 2.2f
+        ) {
             var cellX = centerX - finalTotalWidth / 2f
             for (i in 0 until length) {
                 val cell = cellWidths[i]
@@ -198,7 +203,7 @@ class ScaffoldBlocksInstance(
 
                 if (currentChar == nextChar) {
                     if (currentChar != ' ') {
-                        drawCentered(inner, currentChar.toString(), cellCenterX, baseY, fade(Color.WHITE))
+                        drawCentered(this, currentChar.toString(), cellCenterX, baseY, fade(Color.WHITE))
                     }
                 } else {
                     val currentY = baseY + (if (direction > 0) -eased else eased) * DIGIT_ROLL_STEP
@@ -206,13 +211,13 @@ class ScaffoldBlocksInstance(
 
                     if (currentChar != ' ') {
                         drawCentered(
-                            inner, currentChar.toString(), cellCenterX, currentY,
+                            this, currentChar.toString(), cellCenterX, currentY,
                             fade(withAlpha(Color.WHITE, 1f - eased))
                         )
                     }
                     if (nextChar != ' ') {
                         drawCentered(
-                            inner, nextChar.toString(), cellCenterX, nextY,
+                            this, nextChar.toString(), cellCenterX, nextY,
                             fade(withAlpha(Color.WHITE, eased))
                         )
                     }
@@ -223,9 +228,9 @@ class ScaffoldBlocksInstance(
         }
     }
 
-    private fun drawCentered(scope: UiTree.Scope, text: String, centerX: Float, y: Float, color: Color) {
+    private fun drawCentered(scope: UiScope, text: String, centerX: Float, y: Float, color: Color) {
         val width = textRendererSupplier.get().getWidth(text, TEXT_SCALE)
-        scope.text(text, centerX - width / 2f, y, TEXT_SCALE, color)
+        scope.Text(text, centerX - width / 2f, y, TEXT_SCALE, color)
     }
 
     private fun charWidth(textRenderer: TextRenderer, c: Char): Float {

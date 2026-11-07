@@ -1,9 +1,14 @@
 package com.github.epsilon.gui.panel.view
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
@@ -35,7 +40,7 @@ import kotlin.math.abs
  * 负责渲染分类下的模块列表、搜索框、滚动视口与模块行缓存，
  * 并维护与列表内容相关的输入状态、滚动状态和重建签名。
  */
-class ModuleListPanel(protected val state: PanelState, private val textRenderer: TextRenderer) : AutoCloseable {
+class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
     private val contentState = UiInvalidationState()
@@ -104,23 +109,22 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
             contentState.beginRebuild()
         }
 
-        val tree = UiTree.build { scope ->
-            scope.pushAbsolute(bounds) { panel ->
-                panel.text(
-                    state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
-                    MD3Theme.TEXT_PRIMARY
-                )
-                panel.text(
-                    EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f,
-                    MD3Theme.TEXT_SECONDARY
-                )
-            }
-            buildSearchField(scope, mouseX, mouseY)
-            scope.viewport(
-                contentBuffer, viewport, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY
-            ) { content ->
+        renderBatch.Content(bounds) {
+            Text(
+                state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
+                MD3Theme.TEXT_PRIMARY
+            )
+            Text(
+                EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f,
+                MD3Theme.TEXT_SECONDARY
+            )
+            buildSearchField(mouseX, mouseY)
+            val localViewport = viewport.relativeTo(bounds)
+            Viewport(
+                contentBuffer, localViewport, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY
+            ) {
                 if (!rebuildContent) {
-                    return@viewport
+                    return@Viewport
                 }
                 var y = viewport.y - state.getModuleScroll()
                 for (module in modules) {
@@ -141,7 +145,7 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
                     toggleHoverAnimation.run(
                         if (row.getToggleBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
                     )
-                    val marqueeActive = row.hasOverflowingKeybind(textRenderer)
+                    val marqueeActive = row.hasOverflowingKeybind(metrics)
                     contentState.noteAnimation(
                         !hoverAnimation.isFinished ||
                                 !selectionAnimation.isFinished ||
@@ -149,9 +153,10 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
                                 !toggleHoverAnimation.isFinished ||
                                 marqueeActive
                     )
-                    content.pushAbsolute(row.getBounds()) { rowScope ->
-                        row.buildUi(
-                            rowScope, textRenderer, hoverAnimation.value, selectionAnimation.value,
+                    val localRow = row.getBounds().relativeTo(origin)
+                    Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                        ModuleRow(
+                            row, hoverAnimation.value, selectionAnimation.value,
                             toggleAnimation.value, toggleHoverAnimation.value
                         )
                     }
@@ -159,7 +164,6 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
                 }
             }
         }
-        renderBatch.render(tree)
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, modules, guiGraphics.guiHeight(), contentSignature)
@@ -441,11 +445,12 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         )
     }
 
-    private fun buildSearchField(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildSearchField(mouseX: Int, mouseY: Int) {
         val searchBounds = getSearchBounds()
+        val localBounds = searchBounds.relativeTo(origin)
         val hoverProgress =
-            scope.animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        val focusProgress = scope.animate(searchFocusAnimation, searchFocused)
+            animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val focusProgress = animate(searchFocusAnimation, searchFocused)
         val fieldHover = maxOf(hoverProgress, focusProgress * 0.85f)
 
         val query = state.getSearchQuery()
@@ -457,10 +462,12 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         } else {
             MD3Theme.filledFieldContent(searchFocused)
         }
-        scope.pushAbsolute(searchBounds) { search ->
-            search.input(
-                searchBounds.atOrigin(), searchFocused, fieldHover,
+        Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
+            Input(
+                UiRect(0.0f, 0.0f, localBounds.width, localBounds.height), searchFocused, fieldHover,
+                0.0f, Color(0, 0, 0, 0), 0.0f,
                 8.0f, display, scale, textColor,
+                null, null,
                 if (searchFocused) searchCursorIndex else null,
                 if (searchFocused) MD3Theme.filledFieldCaret(true) else null,
                 null, 0.0f, null
@@ -468,9 +475,10 @@ class ModuleListPanel(protected val state: PanelState, private val textRenderer:
         }
 
         if (searchFocused) {
-            val textY = searchBounds.y + (searchBounds.height - textRenderer.getHeight(scale)) / 2.0f
+            // IME 光标位置需要绝对坐标
+            val textY = searchBounds.y + (searchBounds.height - metrics.textHeight(scale)) / 2.0f
             val textX = searchBounds.x + 8.0f
-            val caretX = textX + textRenderer.getWidth(
+            val caretX = textX + metrics.textWidth(
                 query.substring(0, minOf(searchCursorIndex, query.length)), scale
             )
             IMEFocusHelper.updateCursorPos(caretX, textY)

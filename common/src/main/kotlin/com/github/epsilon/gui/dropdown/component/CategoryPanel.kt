@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.component
 
 import com.github.epsilon.gui.dropdown.DropdownTheme
+import com.github.epsilon.gui.lib.Stack
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.managers.TranslationManager
@@ -49,28 +49,21 @@ class CategoryPanel : AbstractDropdownPanel {
         refreshSortedModuleButtons()
     }
 
-    override fun drawPanelContent(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, visibleHeight: Float,
-    ) {
+    override fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float) {
         val buttons = visibleButtons()
         val expand = openAnim.value
         val frameId = getRenderFrameId()
         val buttonWidth = if (maxScroll > 0.0f) width - UiScrollBar.HOVER_WIDTH + 1f else width
-        val stack = scope.stack(
-            UiRect(
-                x,
-                y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
-                buttonWidth,
-                computeContentHeight()
-            )
-        )
+        // 内容栈的局部原点：横向从面板左边开始，纵向是滚动偏移。
+        val stack = Stack(0.0f, -scroll, buttonWidth, computeContentHeight())
+        val visibleBottom = visibleHeight * expand
         for (button in buttons) {
             val btnH = button.getHeightForFrame(frameId)
-            stack.item(btnH) { bounds, itemScope ->
-                val visibleTop = y + DropdownTheme.PANEL_HEADER_HEIGHT
-                val visibleBottom = visibleTop + visibleHeight * expand
-                if (bounds.bottom() > visibleTop && bounds.y < visibleBottom) {
-                    button.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds)
+            val itemY = stack.cursor()
+            val visible = itemY + btnH > 0.0f && itemY < visibleBottom
+            stack.Item(btnH) {
+                if (visible) {
+                    button.drawInScope(this, mouseX, mouseY, UiRect(0.0f, 0.0f, width, btnH))
                 }
             }
         }

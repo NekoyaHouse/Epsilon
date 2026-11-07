@@ -3,8 +3,15 @@ package com.github.epsilon.gui.panel.popup
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
@@ -34,6 +41,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
+import java.awt.Color
 import java.util.*
 import java.util.function.Predicate
 import kotlin.math.abs
@@ -134,121 +142,125 @@ class RegistryListSelectPopup<T : Any> private constructor(
         val availableContentHeight = available.size * (ROW_HEIGHT + ROW_GAP)
         val selectedContentHeight = selected.size * (ROW_HEIGHT + ROW_GAP)
 
-        val tree = UiTree.build { scope ->
-            val progress = scope.animate(openAnimation, 1.0f)
-            val popupY = bounds.y - (1.0f - progress) * 6.0f
-            val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            val searchBounds = getSearchBounds(popupY)
-            val animatedViewport = getViewport(popupY)
-            scope.pushAbsolute(animatedBounds) { popup ->
-                popup.popupCard(
-                    animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
-                )
+        openAnimation.run(1.0f)
+        val progress = openAnimation.value
+        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        val searchBounds = getSearchBounds(popupY)
+        val animatedViewport = getViewport(popupY)
+        renderBatch.Content(animatedBounds) {
+            PopupCard(
+                size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+            )
 
-                val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
-                val summaryScale = 0.52f
-                val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName()
-                popup.text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
-                popup.text(
-                    summary, animatedBounds.width - PADDING - textRenderer.getWidth(summary, summaryScale),
-                    centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
-                )
-                popup.input(
-                    searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f,
+            val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
+            val summaryScale = 0.52f
+            val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName()
+            Text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
+            Text(
+                summary, animatedBounds.width - PADDING - metrics.textWidth(summary, summaryScale),
+                centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
+            )
+            val localSearchBounds = searchBounds.relativeTo(animatedBounds)
+            Positioned(localSearchBounds.x, localSearchBounds.y, localSearchBounds.width, localSearchBounds.height) {
+                Input(
+                    UiRect(0.0f, 0.0f, localSearchBounds.width, localSearchBounds.height), true, 1.0f,
+                    0.0f, Color(0, 0, 0, 0), 0.0f,
+                    8.0f,
                     if (query.isEmpty()) EpsilonTranslations.Gui.LIST_SEARCH.getTranslatedName() else query, 0.54f,
                     if (query.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
+                    null, null,
                     query.length, MD3Theme.PRIMARY, null, 0.0f, null
                 )
-                IMEFocusHelper.updateCursorPos(searchBounds.x + 8.0f, searchBounds.y + 4.0f)
+            }
+            IMEFocusHelper.updateCursorPos(searchBounds.x + 8.0f, searchBounds.y + 4.0f)
 
-                // Category tabs
-                val columnViewportWidth = (animatedViewport.width - COLUMN_GAP) / 2.0f
-                val leftX = animatedViewport.x
-                val rightX = leftX + columnViewportWidth + COLUMN_GAP
-                var viewportY = animatedViewport.y
-                if (categories.isNotEmpty()) {
-                    val catY = searchBounds.bottom() + 4.0f
-                    var catTabX = leftX
-                    for (ci in -1 until categories.size) {
-                        val catName =
-                            if (ci < 0) EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() else categories[ci].name
-                        val catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f
-                        val catSelected = selectedCategory == ci
-                        val catBounds = UiRect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT)
-                        popup.roundRect(
-                            catBounds.x - animatedBounds.x, catBounds.y - animatedBounds.y,
-                            catBounds.width, catBounds.height, CATEGORY_TAB_HEIGHT / 2.0f,
-                            if (catSelected) MD3Theme.PRIMARY else MD3Theme.SURFACE_CONTAINER_HIGH
-                        )
-                        popup.text(
-                            catName,
-                            catBounds.x - animatedBounds.x + 5.0f,
-                            catBounds.y - animatedBounds.y + (catBounds.height - textRenderer.getHeight(0.44f)) * 0.5f,
-                            0.44f, if (catSelected) MD3Theme.ON_PRIMARY else MD3Theme.TEXT_SECONDARY
-                        )
-                        catTabX += catTextW + CATEGORY_TAB_GAP
-                    }
-                    viewportY = catY + CATEGORY_TAB_HEIGHT + HEADER_HEIGHT + 4.0f
-                }
-                val effectiveViewportY = viewportY
-
-                val headerY = effectiveViewportY - HEADER_HEIGHT
-                val headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f)
-                popup.text(
-                    EpsilonTranslations.Gui.LIST_AVAILABLE.getTranslatedName(),
-                    leftX - animatedBounds.x + 4.0f, headerTextY - animatedBounds.y, 0.50f, MD3Theme.TEXT_SECONDARY
-                )
-                popup.text(
-                    EpsilonTranslations.Gui.LIST_SELECTED_HEADER.getTranslatedName(),
-                    rightX - animatedBounds.x + 4.0f, headerTextY - animatedBounds.y, 0.50f, MD3Theme.TEXT_SECONDARY
-                )
-
-                hoveredAdd = null
-                hoveredRemove = null
-                val viewportHeight = animatedViewport.bottom() - effectiveViewportY
-                val availableViewport = UiRect(leftX, effectiveViewportY, columnViewportWidth, viewportHeight)
-                val selectedViewport = UiRect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight)
-                lastAvailableViewport = availableViewport
-                lastSelectedViewport = selectedViewport
-                lastOverlayViewport = UiRect(
-                    availableViewport.x, availableViewport.y,
-                    selectedViewport.right() - availableViewport.x, availableViewport.height
-                )
-
-                maxAvailableScroll = maxOf(0.0f, availableContentHeight - availableViewport.height)
-                maxSelectedScroll = maxOf(0.0f, selectedContentHeight - selectedViewport.height)
-                availableScroll = availableScroll.coerceIn(0.0f, maxAvailableScroll)
-                selectedScroll = selectedScroll.coerceIn(0.0f, maxSelectedScroll)
-                updateAvailableSmoothScroll(partialTick)
-                updateSelectedSmoothScroll(partialTick)
-
-                val localAvailableViewport = availableViewport.relativeTo(animatedBounds)
-                popup.viewport(
-                    availableBuffer, localAvailableViewport, availableScroll,
-                    maxAvailableScroll, availableContentHeight, mouseX, mouseY
-                ) { content ->
-                    buildColumn(
-                        content, available, availableViewport.x, availableViewport.y - availableScroll,
-                        availableViewport.width - (if (maxAvailableScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f),
-                        mouseX, mouseY, true, availableViewport
+            // Category tabs
+            val columnViewportWidth = (animatedViewport.width - COLUMN_GAP) / 2.0f
+            val leftX = animatedViewport.x
+            val rightX = leftX + columnViewportWidth + COLUMN_GAP
+            var viewportY = animatedViewport.y
+            if (categories.isNotEmpty()) {
+                val catY = searchBounds.bottom() + 4.0f
+                var catTabX = leftX
+                for (ci in -1 until categories.size) {
+                    val catName =
+                        if (ci < 0) EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() else categories[ci].name
+                    val catTextW = metrics.textWidth(catName, 0.44f) + 10.0f
+                    val catSelected = selectedCategory == ci
+                    val catBounds = UiRect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT)
+                    RoundRect(
+                        catBounds.x - animatedBounds.x, catBounds.y - animatedBounds.y,
+                        catBounds.width, catBounds.height, CATEGORY_TAB_HEIGHT / 2.0f,
+                        if (catSelected) MD3Theme.PRIMARY else MD3Theme.SURFACE_CONTAINER_HIGH
                     )
-                }
-                val localSelectedViewport = selectedViewport.relativeTo(animatedBounds)
-                popup.viewport(
-                    selectedBuffer, localSelectedViewport, selectedScroll,
-                    maxSelectedScroll, selectedContentHeight, mouseX, mouseY
-                ) { content ->
-                    buildColumn(
-                        content, selected, selectedViewport.x, selectedViewport.y - selectedScroll,
-                        selectedViewport.width - (if (maxSelectedScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f),
-                        mouseX, mouseY, false, selectedViewport
+                    Text(
+                        catName,
+                        catBounds.x - animatedBounds.x + 5.0f,
+                        catBounds.y - animatedBounds.y + (catBounds.height - metrics.textHeight(0.44f)) * 0.5f,
+                        0.44f, if (catSelected) MD3Theme.ON_PRIMARY else MD3Theme.TEXT_SECONDARY
                     )
+                    catTabX += catTextW + CATEGORY_TAB_GAP
                 }
+                viewportY = catY + CATEGORY_TAB_HEIGHT + HEADER_HEIGHT + 4.0f
+            }
+            val effectiveViewportY = viewportY
+
+            val headerY = effectiveViewportY - HEADER_HEIGHT
+            val headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f)
+            Text(
+                EpsilonTranslations.Gui.LIST_AVAILABLE.getTranslatedName(),
+                leftX - animatedBounds.x + 4.0f, headerTextY - animatedBounds.y, 0.50f, MD3Theme.TEXT_SECONDARY
+            )
+            Text(
+                EpsilonTranslations.Gui.LIST_SELECTED_HEADER.getTranslatedName(),
+                rightX - animatedBounds.x + 4.0f, headerTextY - animatedBounds.y, 0.50f, MD3Theme.TEXT_SECONDARY
+            )
+
+            hoveredAdd = null
+            hoveredRemove = null
+            val viewportHeight = animatedViewport.bottom() - effectiveViewportY
+            val availableViewport = UiRect(leftX, effectiveViewportY, columnViewportWidth, viewportHeight)
+            val selectedViewport = UiRect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight)
+            lastAvailableViewport = availableViewport
+            lastSelectedViewport = selectedViewport
+            lastOverlayViewport = UiRect(
+                availableViewport.x, availableViewport.y,
+                selectedViewport.right() - availableViewport.x, availableViewport.height
+            )
+
+            maxAvailableScroll = maxOf(0.0f, availableContentHeight - availableViewport.height)
+            maxSelectedScroll = maxOf(0.0f, selectedContentHeight - selectedViewport.height)
+            availableScroll = availableScroll.coerceIn(0.0f, maxAvailableScroll)
+            selectedScroll = selectedScroll.coerceIn(0.0f, maxSelectedScroll)
+            updateAvailableSmoothScroll(partialTick)
+            updateSelectedSmoothScroll(partialTick)
+
+            val localAvailableViewport = availableViewport.relativeTo(animatedBounds)
+            Viewport(
+                availableBuffer, localAvailableViewport, availableScroll,
+                maxAvailableScroll, availableContentHeight, mouseX, mouseY
+            ) {
+                buildColumn(
+                    available, availableViewport.x, availableViewport.y - availableScroll,
+                    availableViewport.width - (if (maxAvailableScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f),
+                    mouseX, mouseY, true, availableViewport
+                )
+            }
+            val localSelectedViewport = selectedViewport.relativeTo(animatedBounds)
+            Viewport(
+                selectedBuffer, localSelectedViewport, selectedScroll,
+                maxSelectedScroll, selectedContentHeight, mouseX, mouseY
+            ) {
+                buildColumn(
+                    selected, selectedViewport.x, selectedViewport.y - selectedScroll,
+                    selectedViewport.width - (if (maxSelectedScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f),
+                    mouseX, mouseY, false, selectedViewport
+                )
             }
         }
-        renderBatch.render(tree)
     }
 
     override fun flush(renderBatch: UiRenderBatch) {
@@ -415,12 +427,11 @@ class RegistryListSelectPopup<T : Any> private constructor(
         return result
     }
 
-    private fun buildColumn(
-        scope: UiTree.Scope, entries: List<T>, columnX: Float, startY: Float,
+    private fun UiScope.buildColumn(
+        entries: List<T>, columnX: Float, startY: Float,
         columnWidth: Float, mouseX: Int, mouseY: Int, addColumn: Boolean, viewport: UiRect,
     ) {
-        val origin = scope.bound()
-        val iconProvider = this.iconProvider
+        val iconProvider = this@RegistryListSelectPopup.iconProvider
         val hasIcons = iconProvider != null
         for (i in entries.indices) {
             val entry = entries[i]
@@ -452,27 +463,27 @@ class RegistryListSelectPopup<T : Any> private constructor(
             val textY = centeredTextY(0.0f, rowBounds.height, 0.50f)
 
             val localRowBounds = rowBounds.relativeTo(origin)
-            scope.pushRelative(localRowBounds) { row ->
+            Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
                 if (addColumn) {
-                    row.roundRect(
+                    RoundRect(
                         0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
                         MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, bgHover)
                     )
-                    row.text(
+                    Text(
                         display, 6.0f, textY, 0.50f,
                         if (hovered) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_SECONDARY
                     )
-                    row.text(
+                    Text(
                         "+", rowBounds.width - 12.0f, textY, 0.54f,
                         if (hovered) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_SECONDARY
                     )
                 } else {
-                    row.roundRect(
+                    RoundRect(
                         0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
                         MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
                     )
-                    row.text(display, 6.0f, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER)
-                    row.text("-", rowBounds.width - 12.0f, textY, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER)
+                    Text(display, 6.0f, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER)
+                    Text("-", rowBounds.width - 12.0f, textY, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER)
                 }
             }
         }
@@ -577,8 +588,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
         return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
 
-    private fun centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
-        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f
+    private fun UiScope.centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
+        return boxY + (boxHeight - metrics.textHeight(scale)) * 0.5f
     }
 
     private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {

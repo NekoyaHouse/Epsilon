@@ -7,6 +7,7 @@ import com.github.epsilon.elements.impl.notification.style.NVIDIANotification
 import com.github.epsilon.elements.impl.notification.style.QuantumNotification
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.managers.NotificationManager
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
@@ -31,7 +32,14 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun render(deltaTracker: DeltaTracker) {
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var frameVisible: Boolean = false
+    private var frameStyle: Style = Style.Quantum
+    private var framePreview: Notification? = null
+    private var frameNotifications: List<Notification> = emptyList()
+
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameVisible = false
         NotificationManager.update()
 
         var preview: Notification? = null
@@ -42,44 +50,59 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
                 if (isStyle(Style.Quantum)) NotificationMode.Info else NotificationMode.Success
             )
         }
-        val previewNotification = preview
+        framePreview = preview
 
-        if (NotificationManager.isEmpty() && previewNotification == null) return
+        if (NotificationManager.isEmpty() && preview == null) return
 
         val metrics = textRendererSupplier.get()
-        val scope = renderScope()
-        if (isStyle(Style.Quantum)) {
-            val scale = getScale()
-            val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
-            entries.removeAll { notification -> !quantum.isVisible(notification) }
-            entries.reverse()
-            if (entries.isEmpty() && previewNotification != null) entries.add(previewNotification)
-            if (entries.isEmpty()) return
-            setNotificationBounds(quantum.width(scale), quantum.totalHeight(entries.size, scale))
-            quantum.render(scope, metrics, entries, x, y, scale, getFontScale(), horizontalAnchor, verticalAnchor)
-        } else if (isStyle(Style.Akarin)) {
-            val scale = getScale()
-            val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
-            entries.removeAll { notification -> !akarin.isVisible(notification) }
-            entries.reverse()
-            if (entries.isEmpty() && previewNotification != null) entries.add(previewNotification)
-            if (entries.isEmpty()) return
-            val boundsWidth = akarin.width(metrics, entries, scale, getFontScale())
-            setNotificationBounds(boundsWidth, akarin.totalHeight(entries.size, scale))
-            akarin.render(
-                scope,
-                metrics,
-                entries,
-                x,
-                y,
-                boundsWidth,
-                scale,
-                getFontScale(),
-                horizontalAnchor,
-                verticalAnchor
+        val scaleFactor = getScale()
+        frameStyle = style
+        when (style) {
+            Style.Quantum -> {
+                val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
+                entries.removeAll { notification -> !quantum.isVisible(notification) }
+                entries.reverse()
+                if (entries.isEmpty() && preview != null) entries.add(preview)
+                if (entries.isEmpty()) return
+                setNotificationBounds(
+                    quantum.width(scaleFactor),
+                    quantum.totalHeight(entries.size, scaleFactor)
+                )
+                frameNotifications = entries
+            }
+
+            Style.Akarin -> {
+                val entries: MutableList<Notification> = ArrayList(NotificationManager.getNotifications())
+                entries.removeAll { notification -> !akarin.isVisible(notification) }
+                entries.reverse()
+                if (entries.isEmpty() && preview != null) entries.add(preview)
+                if (entries.isEmpty()) return
+                val boundsWidth = akarin.width(metrics, entries, scaleFactor, getFontScale())
+                setNotificationBounds(boundsWidth, akarin.totalHeight(entries.size, scaleFactor))
+                frameNotifications = entries
+            }
+
+            Style.NVIDIA -> {
+                if (!nvidia.measure(preview)) return
+                frameNotifications = emptyList()
+            }
+        }
+        frameVisible = true
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (!frameVisible) return
+        val metrics = textRendererSupplier.get()
+        when (frameStyle) {
+            Style.Quantum -> quantum.draw(
+                this, metrics, frameNotifications, getScale(), getFontScale(), horizontalAnchor, verticalAnchor
             )
-        } else {
-            nvidia.render(scope, metrics, previewNotification)
+
+            Style.Akarin -> akarin.draw(
+                this, metrics, frameNotifications, getScale(), getFontScale(), horizontalAnchor, verticalAnchor
+            )
+
+            Style.NVIDIA -> nvidia.draw(this, metrics, framePreview)
         }
     }
 

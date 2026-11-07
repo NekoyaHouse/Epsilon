@@ -1,6 +1,9 @@
 package com.github.epsilon.gui.dropdown
 
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Layer
+import com.github.epsilon.gui.lib.Texture
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
@@ -68,7 +71,7 @@ class ReisaDropdownCompanion {
     }
 
     fun draw(
-        scope: UiTree.Scope, screenWidth: Float, screenHeight: Float,
+        scope: UiScope, screenWidth: Float, screenHeight: Float,
         mouseX: Int, mouseY: Int, mouseBlockedByGui: Boolean,
     ) {
         val now = Util.getMillis()
@@ -99,17 +102,19 @@ class ReisaDropdownCompanion {
         val drawY = layout.y - (drawHeight - layout.height) + bob + motionY
         val alpha = entrance * 0.94f
 
-        scope.layer(-2) { layer ->
-            layer.texture(
-                texture, drawX + 2.0f, drawY + 3.0f, drawWidth, drawHeight,
-                0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.BLACK, alpha * 0.15f), true
-            )
-        }
-        scope.layer(-1) { layer ->
-            layer.texture(
-                texture, drawX, drawY, drawWidth, drawHeight,
-                0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), true
-            )
+        with(scope) {
+            Layer(ReisaDropdownZ.Shadow) {
+                Texture(
+                    texture, drawX + 2.0f, drawY + 3.0f, drawWidth, drawHeight,
+                    0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.BLACK, alpha * 0.15f), true
+                )
+            }
+            Layer(ReisaDropdownZ.Body) {
+                Texture(
+                    texture, drawX, drawY, drawWidth, drawHeight,
+                    0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), true
+                )
+            }
         }
     }
 
@@ -142,15 +147,17 @@ class ReisaDropdownCompanion {
         shownAction = desiredAction
     }
 
-    private fun prewarmTextures(scope: UiTree.Scope) {
+    private fun prewarmTextures(scope: UiScope) {
         val transparent = withAlpha(Color.WHITE, 0.0f)
-        scope.layer(-3) { layer ->
-            for (action in Action.values()) {
-                val texture = action.texture() ?: continue
-                layer.texture(
-                    texture, -1.0f, -1.0f, 1.0f, 1.0f,
-                    0.0f, 0.0f, 1.0f, 1.0f, transparent, true
-                )
+        with(scope) {
+            Layer(ReisaDropdownZ.Prewarm) {
+                for (action in Action.values()) {
+                    val texture = action.texture() ?: continue
+                    Texture(
+                        texture, -1.0f, -1.0f, 1.0f, 1.0f,
+                        0.0f, 0.0f, 1.0f, 1.0f, transparent, true
+                    )
+                }
             }
         }
     }
@@ -277,5 +284,22 @@ class ReisaDropdownCompanion {
     companion object {
         private const val IMAGE_ASPECT_RATIO = 710.0f / 1280.0f
     }
+
+}
+/**
+ * Reisa 侧边立绘的层叠语义。
+ *
+ * 负值表示位于 dropdown 内容之下。
+ */
+object ReisaDropdownZ {
+
+    /** 透明贴图预热。 */
+    val Prewarm: LayerOffset = LayerOffset(-3)
+
+    /** 投影贴图。 */
+    val Shadow: LayerOffset = LayerOffset(-2)
+
+    /** 立绘本体。 */
+    val Body: LayerOffset = LayerOffset(-1)
 
 }

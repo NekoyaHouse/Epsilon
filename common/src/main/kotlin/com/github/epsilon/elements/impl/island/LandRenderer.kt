@@ -9,8 +9,14 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.GlitchText
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
@@ -90,40 +96,45 @@ class LandRenderer(
         this.current = current
     }
 
-    fun draw(island: Island, scope: UiTree.Scope) {
-        val w = widthAnim.value
-        val h = heightAnim.value
+    /**
+     * 绘制容器与当前实例。
+     *
+     * 作用域原点就是岛屿元素左上角：容器本身占满该作用域，实例内容再通过
+     * [Positioned] 建立「容器原点」子作用域，因此实例内部坐标相对容器。
+     */
+    fun draw(island: Island, scope: UiScope) {
+        val w = scope.width
+        val h = scope.height
 
         if (w < 1f || h < 1f) return
 
         val radius = minOf(w, h) * 0.4f * radiusAnim.value.coerceIn(0f, 1f)
 
         if (island.backgroundBlur) {
-            BlurShader.render(x, y, w, h, radius, island.blurStrength.toFloat())
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
+            BlurShader.render(scope.origin.x, scope.origin.y, w, h, radius, island.blurStrength.toFloat())
         }
         if (island.drawShadow) {
-            scope.shadow(x, y, w, h, radius, island.shadowBlur.toFloat(), island.shadowColor)
+            scope.Shadow(0f, 0f, w, h, radius, island.shadowBlur.toFloat(), island.shadowColor)
         }
-        scope.roundRect(x, y, w, h, radius, island.backgroundColor)
+        scope.RoundRect(0f, 0f, w, h, radius, island.backgroundColor)
         if (island.outline) {
-            scope.outline(x, y, w, h, radius, island.outlineWidth.toFloat(), island.outlineColor)
+            scope.Outline(0f, 0f, w, h, radius, island.outlineWidth.toFloat(), island.outlineColor)
         }
-
-        val clip = UiRect(x, y, w, h)
 
         val watermarkAlpha = this.watermarkAlpha.value
         if (watermarkAlpha > 0.001f) {
-            scope.scissor(clip) { inner -> drawWatermark(island, inner, watermarkAlpha) }
+            scope.Clip(0f, 0f, w, h) { drawWatermark(island, this, watermarkAlpha) }
         }
 
         val current = this.current
         val contentAlpha = this.contentAlpha.value
         if (current != null && contentAlpha > 0.001f) {
             current.setContentAlpha(contentAlpha)
-            scope.scissor(clip) { inner ->
-                inner.stackPush(clip)
-                current.draw(inner, x, y, w, h)
-                inner.stackPop()
+            scope.Clip(0f, 0f, w, h) {
+                Positioned(0f, 0f, w, h) {
+                    current.draw(this, w, h)
+                }
             }
         }
     }
@@ -229,16 +240,16 @@ class LandRenderer(
         return IslandPalette.DANGER
     }
 
-    private fun drawWatermark(island: Island, scope: UiTree.Scope, alpha: Float) {
-        val centerY = y + WATERMARK_HEIGHT * 0.5f
-        var contentX = x + HORIZONTAL_PADDING
+    private fun drawWatermark(island: Island, scope: UiScope, alpha: Float) {
+        val centerY = WATERMARK_HEIGHT * 0.5f
+        var contentX = HORIZONTAL_PADDING
 
         for (i in watermarkSegments.indices) {
             val segment = watermarkSegments[i]
             val font: TtfFontLoader = StaticFontLoader.defaultFont()
             val iconWidth = textRenderer.getWidth(segment.icon, ICON_SCALE, StaticFontLoader.ICONS)
             val iconY = centerY - textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS) * 0.5f
-            scope.text(
+            scope.Text(
                 segment.icon, contentX, iconY, ICON_SCALE,
                 IslandPalette.withAlphaMul(segment.iconColor, alpha), StaticFontLoader.ICONS
             )
@@ -247,7 +258,7 @@ class LandRenderer(
             val textY = centerY - textRenderer.getHeight(TEXT_SCALE, font) * 0.5f
             val textColor = IslandPalette.withAlphaMul(segment.textColor, alpha)
             if (segment.glitch && island.textGlitch) {
-                scope.glitchText(
+                scope.GlitchText(
                     segment.text, contentX, textY, TEXT_SCALE, textColor, TextGlitchEffect(
                         island.chromaticX.toFloat(),
                         island.chromaticY.toFloat(),
@@ -262,7 +273,7 @@ class LandRenderer(
                     ), font
                 )
             } else {
-                scope.text(segment.text, contentX, textY, TEXT_SCALE, textColor, font)
+                scope.Text(segment.text, contentX, textY, TEXT_SCALE, textColor, font)
             }
 
             contentX += textRenderer.getWidth(segment.text, TEXT_SCALE, font)

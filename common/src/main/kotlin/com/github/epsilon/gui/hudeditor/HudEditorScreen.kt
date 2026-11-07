@@ -4,14 +4,20 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
 import com.github.epsilon.gui.dropdown.component.CategoryPanel
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RectOutline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
@@ -45,6 +51,42 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private const val LABEL_HEIGHT = 13.0f
     private const val GUIDE_ALPHA = 95.0f
 
+    /**
+     * HUD 编辑器自身的绘制层级。
+     *
+     * `UiLayer.CONTENT` 的基数是 200，因此这里的相对偏移最终落在 200 + offset：
+     * - [Backdrop] = 110、[Guides] = 120 会进入 `UiLayer.CHROME` 的数值区间，但
+     *   HudEditorScreen 不使用 CHROME 语义层，scene 里只有编辑器自己的 CONTENT 层，
+     *   所以不会与其它子系统串层。
+     * - 旧实现用 `editorLayer` 手写累加得到 -110 / -100 / -40 / 0 / 10 / 20 / 30；
+     *   `LayerOffset` 强制落在 (-100, 100) 内，因此把越界的 -110 / -100 按「相对顺序不变」
+     *   压缩到 -90 / -80（两者之间及其与 -40 之间原本没有其它内容），视觉结果一致。
+     */
+    private object HudEditorZ {
+
+        /** 背景暗化。旧值 -110 越界，压缩为 -90。 */
+        val Backdrop: LayerOffset = LayerOffset(-90)
+
+        /** 中心参考线与吸附线。旧值 -100 越界，压缩为 -80。 */
+        val Guides: LayerOffset = LayerOffset(-80)
+
+        /** HUD 元素预览（元素自身的绘制批次也使用该相对层）。 */
+        val Elements: LayerOffset = LayerOffset(-40)
+
+        /** 选中 / 悬停元素的边框。 */
+        val Frames: LayerOffset = LayerOffset.Same
+
+        /** 画布标题等 chrome。 */
+        val Chrome: LayerOffset = LayerOffset(10)
+
+        /** 面板背景与阴影。 */
+        val PanelSurface: LayerOffset = LayerOffset(20)
+
+        /** 面板内容区与滚动条。 */
+        val PanelContent: LayerOffset = LayerOffset(30)
+
+    }
+
     private var hudPanel: CategoryPanel? = null
     private var renderTarget: LuminRenderSystem.LuminRenderTarget? = null
     private var preeditOverlay: IMEPreeditOverlay? = null
@@ -57,12 +99,8 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private var currentSnap: SnapInfo = SnapInfo.none()
 
     private val textMetrics: TextRenderer = TextRenderer.create()
-    private val uiTextMetrics: UiTextMetrics = EditorTextMetrics(textMetrics)
     private val scene: UiScene = UiScene(EpsilonUiTheme)
     private val popupHost: PanelPopupHost = PanelPopupHost()
-    private var editorBatch: UiRenderBatch? = null
-    private var editorScope: UiTree.Scope? = null
-    private var editorLayer = 0
     private var shouldRenderElements = false
 
     override fun init() {
@@ -125,42 +163,39 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
         validateSelection()
 
-        editorBatch = scene.batch(UiLayer.CONTENT)
-        editorLayer = -120
-
         val screenW = LuminRenderSystem.getScaledWidth()
         val screenH = LuminRenderSystem.getScaledHeight()
-        popupHost.setOverlayBounds(UiRect(0.0f, 0.0f, screenW, screenH))
+        // 编辑画布覆盖整屏：作用域原点就是屏幕原点，画布坐标因此保持屏幕坐标
+        val screenBounds = UiRect(0.0f, 0.0f, screenW, screenH)
+        popupHost.setOverlayBounds(screenBounds)
 
-        beginEditorLayer(10)
-        editorScope!!.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72))
-        flushEditorLayer()
+        scene.Content(screenBounds, UiLayer.CONTENT, HudEditorZ.Backdrop) {
+            Rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72))
+        }
 
-        val centerX = screenW / 2.0f
-        val centerY = screenH / 2.0f
-        val centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52)
-
-        beginEditorLayer(10)
-        editorScope!!.rect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide)
-        editorScope!!.rect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide)
-        drawSnapGuides(editorScope!!, screenW, screenH)
-        flushEditorLayer()
+        scene.Content(screenBounds, UiLayer.CONTENT, HudEditorZ.Guides) {
+            val centerX = screenW / 2.0f
+            val centerY = screenH / 2.0f
+            val centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52)
+            Rect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide)
+            Rect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide)
+            drawSnapGuides(screenW, screenH)
+        }
 
         val popupActive = popupHost.activePopup != null
         val backgroundMouseX = if (popupActive) Int.MIN_VALUE else mouseX
         val backgroundMouseY = if (popupActive) Int.MIN_VALUE else mouseY
 
-        beginEditorLayer(100)
-        val elements = HudElementManager.getElements()
         val hovered = findElementAt(backgroundMouseX.toDouble(), backgroundMouseY.toDouble(), true)
-        for (element in elements) {
-            if (!element.isEnabled) continue
-            val selected = element === selectedElement
-            val hover = element === hovered
-            if (!selected && !hover) continue
-            drawElementFrame(editorScope!!, uiTextMetrics, element, selected, hover)
+        scene.Content(screenBounds, UiLayer.CONTENT, HudEditorZ.Frames) {
+            for (element in HudElementManager.getElements()) {
+                if (!element.isEnabled) continue
+                val selected = element === selectedElement
+                val hover = element === hovered
+                if (!selected && !hover) continue
+                drawElementFrame(element, selected, hover)
+            }
         }
-        flushEditorLayer()
 
         drawCanvasChrome()
 
@@ -182,7 +217,10 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
         for (element in HudElementManager.getElements()) {
             if (element.isEnabled) {
-                element.renderWithBatch(minecraft.deltaTracker, scene.batch(UiLayer.CONTENT, -40))
+                element.renderWithBatch(
+                    minecraft.deltaTracker,
+                    scene.batch(UiLayer.CONTENT, HudEditorZ.Elements.value)
+                )
             }
         }
         scene.flush()
@@ -214,44 +252,50 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         graphics.pose().popMatrix()
     }
 
+    /**
+     * 绘制 HUD 元素列表面板。
+     *
+     * 面板的作用域原点就是面板矩形：面板内部用 `x - scope.origin.x` 换算自身局部坐标，
+     * 因此这里只需要把面板矩形交给 [Content]，不要再写绝对定位入口。
+     */
     private fun drawPanel(mouseX: Int, mouseY: Int) {
         val panel = ensureHudPanel()
         panel.updateMaxPanelHeight(resolveMaxPanelHeight())
         panel.beginRenderFrame(++renderFrameId)
 
-        val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
         val intro = panel.introValue
-        if (intro > 0.001f) {
-            val slideOffset = (1.0f - intro) * 10.0f
-            val origY = panel.y
-            panel.setPosition(panel.x, origY - slideOffset)
+        if (intro <= 0.001f) return
 
+        val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
+        val slideOffset = (1.0f - intro) * 10.0f
+        val origY = panel.y
+        panel.setPosition(panel.x, origY - slideOffset)
+        try {
             val panelH = panel.panelHeight
             val revealedH = panelH * intro
 
-            beginEditorLayer(10)
-            withEditorScissor(
-                intro < 1.0f,
-                panel.x - shadowPad,
-                panel.y - shadowPad,
-                panel.width + shadowPad * 2.0f,
-                revealedH + shadowPad * 2.0f
-            ) { scope -> panel.drawBackground(scope, uiTextMetrics) }
-            flushEditorLayer()
+            val surfaceBounds = UiRect(panel.x, panel.y, panel.width, panelH)
+            scene.Content(surfaceBounds, UiLayer.CONTENT, HudEditorZ.PanelSurface) {
+                // 入场动画期间裁掉尚未展开的部分；scissor 矩形可以超出作用域矩形
+                ClipIf(intro < 1.0f, -shadowPad, -shadowPad, panel.width + shadowPad * 2.0f, revealedH + shadowPad * 2.0f) {
+                    panel.drawBackground()
+                }
+            }
 
             val clipY = panel.contentClipY
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
             val actualClipH = minOf(clipH, revealedBottom - clipY)
             if (actualClipH > 0.5f) {
-                beginEditorLayer(10)
+                val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
                 val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
-                withEditorScissor(requiresContentScissor, panel.x, clipY, panel.width, actualClipH) { scope ->
-                    panel.drawContent(scope, uiTextMetrics, mouseX, mouseY)
+                scene.Content(contentBounds, UiLayer.CONTENT, HudEditorZ.PanelContent) {
+                    ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
+                        panel.drawContent(mouseX, mouseY)
+                    }
                 }
-                flushEditorLayer()
             }
-
+        } finally {
             panel.setPosition(panel.x, origY)
         }
     }
@@ -274,35 +318,33 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val titleY = labelY + (boxH - titleH - middlePadding - subtitleH) * 0.5f
         val subtitleY = titleY + titleH + middlePadding
 
-        beginEditorLayer(10)
-        editorScope!!.shadow(
-            labelX, labelY, boxW, boxH, radius, MD3Theme.FLOATING_LABEL_SHADOW_BLUR,
-            MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.FLOATING_LABEL_SHADOW_ALPHA)
-        )
-        editorScope!!.roundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238))
-        editorScope!!.text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY)
-        editorScope!!.text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED)
-        flushEditorLayer()
+        val screenBounds = UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight())
+        scene.Content(screenBounds, UiLayer.CONTENT, HudEditorZ.Chrome) {
+            Shadow(
+                labelX, labelY, boxW, boxH, radius, MD3Theme.FLOATING_LABEL_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.FLOATING_LABEL_SHADOW_ALPHA)
+            )
+            RoundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238))
+            Text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY)
+            Text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED)
+        }
     }
 
-    private fun drawSnapGuides(scope: UiTree.Scope, screenW: Float, screenH: Float) {
+    private fun UiScope.drawSnapGuides(screenW: Float, screenH: Float) {
         if (currentSnap.hasAny()) {
             val guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, GUIDE_ALPHA.toInt())
             val verticalLineX = currentSnap.verticalLineX
             if (!verticalLineX.isNaN()) {
-                scope.rect(verticalLineX - 0.5f, 0.0f, 1.0f, screenH, guideColor)
+                Rect(verticalLineX - 0.5f, 0.0f, 1.0f, screenH, guideColor)
             }
             val horizontalLineY = currentSnap.horizontalLineY
             if (!horizontalLineY.isNaN()) {
-                scope.rect(0.0f, horizontalLineY - 0.5f, screenW, 1.0f, guideColor)
+                Rect(0.0f, horizontalLineY - 0.5f, screenW, 1.0f, guideColor)
             }
         }
     }
 
-    private fun drawElementFrame(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics,
-        element: HudModule, selected: Boolean, hover: Boolean
-    ) {
+    private fun UiScope.drawElementFrame(element: HudModule, selected: Boolean, hover: Boolean) {
         val x = element.x - ELEMENT_PADDING
         val y = element.y - ELEMENT_PADDING
         val w = element.width + ELEMENT_PADDING * 2.0f
@@ -314,69 +356,30 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, if (hover) 48 else 24)
         }
 
-        scope.rect(x, y, w, h, fillColor)
-        scope.rectOutline(x, y, w, h, if (selected) 1.2f else 0.8f, frameColor)
+        Rect(x, y, w, h, fillColor)
+        RectOutline(x, y, w, h, if (selected) 1.2f else 0.8f, frameColor)
 
         if (selected) {
-            drawAnchorMarker(scope, element, frameColor)
-            drawElementLabel(scope, textMetrics, element, x, y)
+            drawAnchorMarker(element, frameColor)
+            drawElementLabel(element, x, y)
         }
     }
 
-    private fun drawAnchorMarker(scope: UiTree.Scope, element: HudModule, color: Color) {
+    private fun UiScope.drawAnchorMarker(element: HudModule, color: Color) {
         val anchorX = HudLayoutHelper.getAnchorPointX(element.horizontalAnchor, element.x, element.width)
         val anchorY = HudLayoutHelper.getAnchorPointY(element.verticalAnchor, element.y, element.height)
-        scope.rect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color)
+        Rect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color)
     }
 
-    private fun drawElementLabel(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics,
-        element: HudModule, frameX: Float, frameY: Float
-    ) {
+    private fun UiScope.drawElementLabel(element: HudModule, frameX: Float, frameY: Float) {
         val label = element.translatedName
         val scale = 0.48f
-        val textW = textMetrics.textWidth(label, scale)
+        val textW = metrics.textWidth(label, scale)
         val labelW = textW + 10.0f
         val labelY = frameY - LABEL_HEIGHT - 3.0f
-        val textY = labelY + (LABEL_HEIGHT - textMetrics.textHeight(scale)) * 0.5f
-        scope.roundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER)
-        scope.text(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER)
-    }
-
-    private fun beginEditorLayer(step: Int) {
-        editorLayer += step
-        editorScope = UiTree.Scope()
-    }
-
-    private fun flushEditorLayer() {
-        editorBatch!!.render(UiTree.from(editorScope!!), editorLayer)
-    }
-
-    private fun withEditorScissor(
-        required: Boolean, guiX: Float, guiY: Float, guiW: Float, guiH: Float,
-        content: (UiTree.Scope) -> Unit
-    ) {
-        editorScope!!.scissorIf(required, UiRect(guiX, guiY, guiW, guiH), content)
-    }
-
-    private class EditorTextMetrics(private val textMetrics: TextRenderer) : UiTextMetrics {
-
-        override fun textWidth(text: String, scale: Float): Float {
-            return textMetrics.getWidth(text, scale)
-        }
-
-        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getWidth(text, scale, fontLoader)
-        }
-
-        override fun textHeight(scale: Float): Float {
-            return textMetrics.getHeight(scale)
-        }
-
-        override fun textHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getHeight(scale, fontLoader)
-        }
-
+        val textY = labelY + (LABEL_HEIGHT - metrics.textHeight(scale)) * 0.5f
+        RoundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER)
+        Text(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER)
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {

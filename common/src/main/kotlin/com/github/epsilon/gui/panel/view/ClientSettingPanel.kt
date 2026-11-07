@@ -2,9 +2,14 @@ package com.github.epsilon.gui.panel.view
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
@@ -24,7 +29,6 @@ import java.util.*
 
 class ClientSettingPanel(
     protected val state: PanelState,
-    private val textRenderer: TextRenderer,
     popupHost: PanelPopupHost,
 ) : AutoCloseable {
 
@@ -37,9 +41,9 @@ class ClientSettingPanel(
     private var bounds: UiRect? = null
 
     init {
-        tabViews[PanelState.ClientSettingTab.GENERAL] = GeneralClientSettingTab(state, textRenderer, popupHost)
-        tabViews[PanelState.ClientSettingTab.FRIEND] = FriendClientSettingTab(state, textRenderer)
-        tabViews[PanelState.ClientSettingTab.CONFIG] = ConfigClientSettingTab(state, textRenderer, popupHost)
+        tabViews[PanelState.ClientSettingTab.GENERAL] = GeneralClientSettingTab(state, popupHost)
+        tabViews[PanelState.ClientSettingTab.FRIEND] = FriendClientSettingTab(state)
+        tabViews[PanelState.ClientSettingTab.CONFIG] = ConfigClientSettingTab(state, popupHost)
 
         for (tab in PanelState.ClientSettingTab.entries) {
             val animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
@@ -60,16 +64,13 @@ class ClientSettingPanel(
         val effectiveMouseX = if (popupConsumesHover) Int.MIN_VALUE else mouseX
         val effectiveMouseY = if (popupConsumesHover) Int.MIN_VALUE else mouseY
 
-        val tree = UiTree.build { scope ->
-            scope.pushAbsolute(bounds) { panel ->
-                panel.text(
-                    EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET,
-                    10.0f, 0.78f, MD3Theme.TEXT_PRIMARY
-                )
-            }
-            buildTabs(scope, effectiveMouseX, effectiveMouseY)
+        renderBatch.Content(bounds) {
+            Text(
+                EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET,
+                10.0f, 0.78f, MD3Theme.TEXT_PRIMARY
+            )
+            buildTabs(effectiveMouseX, effectiveMouseY)
         }
-        renderBatch.render(tree)
 
         activeTab.render(
             guiGraphics, renderBatch.view(10), getContentBounds(), effectiveMouseX, effectiveMouseY, partialTick
@@ -137,15 +138,16 @@ class ClientSettingPanel(
         return getCurrentTabView().charTyped(event)
     }
 
-    private fun buildTabs(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildTabs(mouseX: Int, mouseY: Int) {
         val tabBar = getTabBarRect()
+        val localTabBar = tabBar.relativeTo(origin)
         val segmentWidth = tabBar.width / TABS.size
         val labelScale = 0.62f
-        val textHeight = textRenderer.getHeight(labelScale)
+        val textHeight = metrics.textHeight(labelScale)
         val activeIndex = getTabIndex(state.getClientSettingTab()).toFloat()
-        val indicatorProgress = scope.animate(tabIndicatorAnimation, activeIndex)
+        val indicatorProgress = animate(tabIndicatorAnimation, activeIndex)
 
-        scope.pushAbsolute(tabBar) { tabs ->
+        Positioned(localTabBar.x, localTabBar.y, localTabBar.width, localTabBar.height) {
             for (index in TABS.indices) {
                 val tab = TABS[index]
                 val tabBounds = UiRect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height)
@@ -153,28 +155,27 @@ class ClientSettingPanel(
                 val active = tab.tab == state.getClientSettingTab()
 
                 val hoverAnimation = tabHoverAnimations[tab.tab]!!
-                val hover =
-                    tabs.animate(hoverAnimation, absoluteTabBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+                val hover = animate(hoverAnimation, absoluteTabBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
                 if (hover > 0.01f) {
-                    tabs.roundRect(
+                    RoundRect(
                         tabBounds.x, tabBounds.y, tabBounds.width, tabBounds.height, 6.0f,
                         MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hover, 8)
                     )
                 }
 
                 val label = tab.component.getTranslatedName()
-                val textWidth = textRenderer.getWidth(label, labelScale)
+                val textWidth = metrics.textWidth(label, labelScale)
                 val textX = tabBounds.x + (tabBounds.width - textWidth) / 2.0f
                 val textY = (tabBounds.height - TAB_INDICATOR_HEIGHT - textHeight) / 2.0f
-                tabs.text(label, textX, textY, labelScale, if (active) MD3Theme.PRIMARY else MD3Theme.TEXT_MUTED)
+                Text(label, textX, textY, labelScale, if (active) MD3Theme.PRIMARY else MD3Theme.TEXT_MUTED)
             }
 
-            tabs.rect(0.0f, tabBar.height - 1.0f, tabBar.width, 1.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 40))
+            Rect(0.0f, tabBar.height - 1.0f, tabBar.width, 1.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 40))
 
             val indicatorWidth = minOf(56.0f, segmentWidth - 24.0f)
             val indicatorX = indicatorProgress * segmentWidth + (segmentWidth - indicatorWidth) / 2.0f
             val indicatorY = tabBar.height - TAB_INDICATOR_HEIGHT
-            tabs.roundRect(
+            RoundRect(
                 indicatorX, indicatorY, indicatorWidth, TAB_INDICATOR_HEIGHT,
                 TAB_INDICATOR_HEIGHT / 2.0f, MD3Theme.PRIMARY
             )

@@ -3,8 +3,12 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RectGradient
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.RoundRectHorizontalGradient
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Animation
@@ -38,20 +42,20 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         return DropdownTheme.SETTING_HEIGHT + expandedHeight * openAnim.value
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         syncAlphaAvailability()
         openAnim.run(if (opened) 1.0f else 0.0f)
         val t = openAnim.value
 
-        scope.text(
+        Text(
             setting.displayName, DropdownTheme.SETTING_PADDING_X,
-            (DropdownTheme.SETTING_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+            (DropdownTheme.SETTING_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
             DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel()
         )
 
         val previewX = width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE
         val previewY = (DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f
-        scope.roundRect(
+        RoundRect(
             previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f,
             visibleColor
         )
@@ -68,15 +72,15 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         val gradH = PICKER_HEIGHT * t
 
         val hueColor = Color.getHSBColor(hsb[0], 1.0f, 1.0f)
-        drawSaturationBrightnessPalette(scope, gradX, gradY, gradW, gradH, hueColor)
+        drawSaturationBrightnessPalette(gradX, gradY, gradW, gradH, hueColor)
 
         val hueY = gradY + gradH + PICKER_TO_HUE_GAP
         val hueH = HUE_HEIGHT * t
         for (i in 0 until gradW.toInt()) {
             val c = Color.getHSBColor(i / gradW, 1.0f, 1.0f)
-            scope.rect(gradX + i, hueY, 1.0f, hueH, c)
+            Rect(gradX + i, hueY, 1.0f, hueH, c)
         }
-        drawSliderPicker(scope, gradX + gradW * hsb[0], hueY, hueH)
+        drawSliderPicker(gradX + gradW * hsb[0], hueY, hueH)
 
         if (pickingSB) {
             DropdownScreen.react(ReisaDropdownCompanion.Action.COLOR_PICK)
@@ -106,37 +110,34 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
         val pickerCx = gradX + gradW * hsb[1]
         val pickerCy = gradY + gradH * (1.0f - hsb[2])
-        scope.rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, Color(0, 0, 0, 135))
-        scope.rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE)
+        Rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, Color(0, 0, 0, 135))
+        Rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE)
 
-        drawChannelRows(scope, textMetrics, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t)
+        drawChannelRows(mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t)
     }
 
-    private fun drawSaturationBrightnessPalette(
-        scope: UiTree.Scope,
+    private fun UiScope.drawSaturationBrightnessPalette(
         localX: Float,
         localY: Float,
         width: Float,
         height: Float,
         hueColor: Color,
     ) {
-        scope.rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, Color(255, 255, 255, 45))
-        scope.rectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor)
-        scope.rectGradient(
+        Rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, Color(255, 255, 255, 45))
+        RectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor)
+        RectGradient(
             localX, localY, width, height,
             Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, Color(0, 0, 0, 0)
         )
     }
 
-    private fun drawSliderPicker(scope: UiTree.Scope, centerX: Float, localY: Float, height: Float) {
+    private fun UiScope.drawSliderPicker(centerX: Float, localY: Float, height: Float) {
         val pickerW = 3.0f
-        scope.rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, Color(0, 0, 0, 145))
-        scope.rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE)
+        Rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, Color(0, 0, 0, 145))
+        Rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE)
     }
 
-    private fun drawChannelRows(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
+    private fun UiScope.drawChannelRows(
         mouseX: Int,
         mouseY: Int,
         startY: Float,
@@ -147,13 +148,11 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         for (i in channels.indices) {
             val channel = channels[i]
             val rowY = startY + i * (CHANNEL_ROW_HEIGHT + CHANNEL_GAP) * alphaProgress
-            drawChannelRow(scope, textMetrics, mouseX, mouseY, channel, rowY, alphaProgress)
+            drawChannelRow(mouseX, mouseY, channel, rowY, alphaProgress)
         }
     }
 
-    private fun drawChannelRow(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
+    private fun UiScope.drawChannelRow(
         mouseX: Int,
         mouseY: Int,
         channel: Channel,
@@ -161,36 +160,35 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         alphaProgress: Float,
     ) {
         val value = getChannelValue(channel)
-        val textY = rowY + (CHANNEL_ROW_HEIGHT - textMetrics.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f
+        val textY = rowY + (CHANNEL_ROW_HEIGHT - metrics.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f
         val textColor = MD3Theme.withAlpha(
             DropdownTheme.settingLabel(),
             (DropdownTheme.settingLabel().alpha * alphaProgress).toInt()
         )
-        scope.text(channel.label, DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor)
+        Text(channel.label, DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor)
 
         val boxX = localFieldX
         val boxY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_BOX_HEIGHT) * 0.5f
         val trackX = localTrackX
         val trackY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_TRACK_HEIGHT) * 0.5f
         val trackW = localTrackWidth
-        drawChannelTrack(scope, channel, trackX, trackY, trackW, CHANNEL_TRACK_HEIGHT, alphaProgress)
+        drawChannelTrack(channel, trackX, trackY, trackW, CHANNEL_TRACK_HEIGHT, alphaProgress)
 
         val knobX = trackX + trackW * (value / 255.0f)
         val knobR = 2.75f
-        scope.roundRect(
+        RoundRect(
             knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR,
             DropdownTheme.sliderKnob()
         )
 
         val field = getField(channel)
         field.drawCentered(
-            scope, textMetrics, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY,
+            this, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY,
             value.toString(), CHANNEL_TEXT_SCALE
         )
     }
 
-    private fun drawChannelTrack(
-        scope: UiTree.Scope,
+    private fun UiScope.drawChannelTrack(
         channel: Channel,
         trackX: Float,
         trackY: Float,
@@ -211,7 +209,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
             Channel.BLUE -> Color(current.red, current.green, 255)
             Channel.ALPHA -> Color(current.red, current.green, current.blue, 255)
         }
-        scope.roundRectHorizontalGradient(
+        RoundRectHorizontalGradient(
             trackX, trackY, trackW, trackH, trackH * 0.5f,
             MD3Theme.withAlpha(start, (start.alpha * alphaProgress).toInt()),
             MD3Theme.withAlpha(end, (end.alpha * alphaProgress).toInt())

@@ -2,7 +2,8 @@ package com.github.epsilon.gui.lib.control
 
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import java.util.*
@@ -24,7 +25,7 @@ class UiScrollBar(theme: UiTheme) {
     }
 
     fun draw(
-        scope: UiTree.Scope, viewport: UiRect, scroll: Float, maxScroll: Float,
+        scope: UiScope, viewport: UiRect, scroll: Float, maxScroll: Float,
         contentHeight: Float, mouseX: Double, mouseY: Double
     ) {
         val geometry = computeGeometry(viewport, scroll, maxScroll, contentHeight)
@@ -104,7 +105,7 @@ class UiScrollBar(theme: UiTheme) {
         const val TOTAL_WIDTH = HIT_WIDTH
 
         fun draw(
-            scope: UiTree.Scope, theme: UiTheme, viewport: UiRect, scroll: Float,
+            scope: UiScope, theme: UiTheme, viewport: UiRect, scroll: Float,
             maxScroll: Float, contentHeight: Float
         ) {
             val geometry = computeGeometry(viewport, scroll, maxScroll, contentHeight)
@@ -140,10 +141,10 @@ class UiScrollBar(theme: UiTheme) {
             return (ratio).coerceIn(0.0f, 1.0f) * maxScroll
         }
 
-        private fun draw(scope: UiTree.Scope, geometry: Geometry, hoverProgress: Float, theme: UiTheme) {
+        private fun draw(scope: UiScope, geometry: Geometry, hoverProgress: Float, theme: UiTheme) {
             val thumbWidth = geometry.thumbWidth + (HOVER_WIDTH - geometry.thumbWidth) * hoverProgress
             val thumbX = geometry.thumbX - (thumbWidth - geometry.thumbWidth) * 0.5f
-            scope.roundRect(
+            scope.RoundRect(
                 thumbX,
                 geometry.thumbY,
                 thumbWidth,

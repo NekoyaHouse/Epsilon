@@ -5,8 +5,9 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.FriendManager
 import com.mojang.blaze3d.platform.InputConstants
@@ -21,34 +22,33 @@ class FriendDropdownPanel(panelIndex: Int) :
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + maxOf(ROW_HEIGHT, friendCount * (ROW_HEIGHT + GAP))
     }
 
-    override fun drawPanelContent(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
+    override fun UiScope.drawPanelContent(
         mouseX: Int,
         mouseY: Int,
         visibleHeight: Float,
     ) {
-        val fieldX = x + PADDING
-        val fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
+        val top = contentLocalTop(origin)
+        val fieldX = PADDING
+        val fieldY = top + PADDING - scroll
         val fieldW = width - PADDING * 2.0f - 24.0f
         inputField.draw(
-            scope, textMetrics, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY,
+            this, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY,
             EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), DropdownTheme.SETTING_TEXT_SCALE
         )
 
         val addX = fieldX + fieldW + GAP
-        scope.roundRect(
+        RoundRect(
             addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
-            if (isHovered(mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) {
+            if (isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) {
                 MD3Theme.SURFACE_CONTAINER_HIGH
             } else {
                 MD3Theme.SURFACE_CONTAINER_LOW
             }
         )
         val plusScale = 1.0f
-        val addTextX = addX + (ADD_BUTTON_WIDTH - textMetrics.textWidth("+", plusScale)) / 2.0f
-        val addTextY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(plusScale)) / 2.0f
-        scope.text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
+        val addTextX = addX + (ADD_BUTTON_WIDTH - metrics.textWidth("+", plusScale)) / 2.0f
+        val addTextY = fieldY + (FIELD_HEIGHT - metrics.textHeight(plusScale)) / 2.0f
+        Text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
 
         val friends = FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
         var rowY = fieldY + FIELD_HEIGHT + GAP
@@ -56,38 +56,39 @@ class FriendDropdownPanel(panelIndex: Int) :
             val emptyText = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
             val emptyScale = 0.7f
             val emptyTextX =
-                x + PADDING + (width - PADDING * 2.0f - textMetrics.textWidth(emptyText, emptyScale)) / 2.0f
-            val emptyTextY = rowY + (ROW_HEIGHT - textMetrics.textHeight(emptyScale)) / 2.0f
-            scope.text(emptyText, emptyTextX, emptyTextY, emptyScale, MD3Theme.TEXT_MUTED)
+                PADDING + (width - PADDING * 2.0f - metrics.textWidth(emptyText, emptyScale)) / 2.0f
+            val emptyTextY = rowY + (ROW_HEIGHT - metrics.textHeight(emptyScale)) / 2.0f
+            Text(emptyText, emptyTextX, emptyTextY, emptyScale, MD3Theme.TEXT_MUTED)
             return
         }
         for (name in friends) {
-            val rowX = x + PADDING
+            val rowX = PADDING
             val rowWidth = width - PADDING * 2.0f
-            val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), rowX, rowY, rowWidth, ROW_HEIGHT)
-            scope.roundRect(
+            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, rowY, rowWidth, ROW_HEIGHT)
+            RoundRect(
                 rowX, rowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                 if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
             )
-            val removeX = x + width - PADDING - 18.0f
+            val removeX = width - PADDING - 18.0f
             val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
-            val displayName = trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, textMetrics)
-            scope.text(
-                displayName, x + PADDING + 6.0f,
-                rowY + (ROW_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
+            val displayName = trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, metrics)
+            Text(
+                displayName, PADDING + 6.0f,
+                rowY + (ROW_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
                 DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY
             )
             val iconScale = 0.8f
-            val removeTextX = removeX + (REMOVE_BUTTON_SIZE - textMetrics.textWidth(
+            val removeTextX = removeX + (REMOVE_BUTTON_SIZE - metrics.textWidth(
                 IconChars.CLOSE,
                 iconScale,
                 StaticFontLoader.ICONS
             )) / 2.0f
             val removeTextY =
-                removeY + (REMOVE_BUTTON_SIZE - textMetrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
-            scope.text(
+                removeY + (REMOVE_BUTTON_SIZE - metrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
+            Text(
                 IconChars.CLOSE, removeTextX, removeTextY, iconScale,
-                if (isHovered(
+                if (isHoveredAt(
+                        this,
                         mouseX.toDouble(),
                         mouseY.toDouble(),
                         removeX,

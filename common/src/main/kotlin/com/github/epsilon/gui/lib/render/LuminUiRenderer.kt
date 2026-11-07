@@ -31,10 +31,6 @@ object LuminUiRenderer {
                     renderNodesIntoLayeredBatch(node.children, batch, layer + node.layer, activeScissor)
                     continue
                 }
-                if (node is UiTree.LayeredNode) {
-                    renderNodesIntoLayeredBatch(listOf(node.child), batch, layer + node.layer, activeScissor)
-                    continue
-                }
                 if (node is UiTree.ScissorNode) {
                     renderNodesIntoLayeredBatch(
                         node.children,
@@ -60,10 +56,6 @@ object LuminUiRenderer {
             for (node in nodes) {
                 if (node is UiTree.LayerNode) {
                     renderNodesIntoTarget(node.children, target, activeScissor)
-                    continue
-                }
-                if (node is UiTree.LayeredNode) {
-                    renderNodesIntoTarget(listOf(node.child), target, activeScissor)
                     continue
                 }
                 if (node is UiTree.ScissorNode) {

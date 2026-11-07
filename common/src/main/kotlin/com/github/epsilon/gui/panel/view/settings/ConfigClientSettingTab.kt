@@ -3,8 +3,16 @@ package com.github.epsilon.gui.panel.view.settings
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.Viewport
+import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
@@ -33,9 +41,11 @@ import kotlin.math.abs
 
 class ConfigClientSettingTab(
     private val state: PanelState,
-    private val textRenderer: TextRenderer,
     private val popupHost: PanelPopupHost,
 ) : ClientSettingTabView {
+
+    /** 非绘制路径（弹窗文案裁剪）使用的文本度量。 */
+    private val measureTextRenderer: TextRenderer = TextRenderer.create()
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
     private val contentState = UiInvalidationState()
@@ -90,19 +100,23 @@ class ConfigClientSettingTab(
             deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
         }
 
-        val tree = UiTree.build { scope ->
-            inputField.buildUi(
-                scope, getInputFieldBounds(inputSection), mouseX, mouseY, textRenderer,
-                EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
-            )
-            for (button in getActionButtons(inputSection)) {
-                buildActionButton(scope, button, mouseX, mouseY)
+        renderBatch.Content(bounds) {
+            val localInput = getInputFieldBounds(inputSection).relativeTo(bounds)
+            Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
+                ClientSettingTextField(
+                    inputField, mouseX, mouseY,
+                    EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
+                )
             }
-            scope.viewport(
-                contentBuffer, listViewport, state.getConfigScroll(), maxScroll, contentHeight, mouseX, mouseY
-            ) { content ->
+            for (button in getActionButtons(inputSection)) {
+                buildActionButton(button, mouseX, mouseY)
+            }
+            Viewport(
+                contentBuffer, listViewport.relativeTo(bounds), state.getConfigScroll(), maxScroll, contentHeight,
+                mouseX, mouseY
+            ) {
                 if (!rebuildContent) {
-                    return@viewport
+                    return@Viewport
                 }
                 var rowY = listViewport.y - state.getConfigScroll()
                 for (configName in configs) {
@@ -116,11 +130,9 @@ class ConfigClientSettingTab(
                     deleteHover.run(if (deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
                     contentState.noteAnimation(!rowHover.isFinished || !deleteHover.isFinished)
 
-                    content.pushAbsolute(rowBounds) { rowScope ->
-                        buildConfigRow(
-                            rowScope, configName, activeConfig, rowBounds, deleteBounds,
-                            rowHover.value, deleteHover.value
-                        )
+                    val localRow = rowBounds.relativeTo(origin)
+                    Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                        buildConfigRow(configName, activeConfig, rowBounds, deleteBounds, rowHover.value, deleteHover.value)
                     }
                     rowY += ROW_HEIGHT + MD3Theme.ROW_GAP
                 }
@@ -128,15 +140,14 @@ class ConfigClientSettingTab(
                 if (configs.isEmpty()) {
                     val hintScale = 0.58f
                     val hint = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName()
-                    val hintWidth = textRenderer.getWidth(hint, hintScale)
+                    val hintWidth = metrics.textWidth(hint, hintScale)
                     val hintX = (listViewport.width - hintWidth) / 2.0f
                     val hintY = state.getConfigScroll() + listViewport.height / 2.0f -
-                            textRenderer.getHeight(hintScale) / 2.0f
-                    content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
+                            metrics.textHeight(hintScale) / 2.0f
+                    Text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
                 }
             }
         }
-        renderBatch.render(tree)
 
         if (rebuildContent) {
             rememberSnapshot(
@@ -290,10 +301,10 @@ class ConfigClientSettingTab(
         markDirty()
     }
 
-    private fun buildActionButton(scope: UiTree.Scope, button: ActionButton, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildActionButton(button: ActionButton, mouseX: Int, mouseY: Int) {
         val hoverAnimation = buttonHoverAnimations.getOrPut(button.type.name) { createAnimation() }
         val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-        val hover = scope.animate(hoverAnimation, hovered)
+        val hover = animate(hoverAnimation, hovered)
 
         val baseColor: Color = when (button.type) {
             ActionButtonType.SAVE_AS -> MD3Theme.PRIMARY_CONTAINER
@@ -314,16 +325,17 @@ class ConfigClientSettingTab(
             ActionButtonType.OPEN_FOLDER -> MD3Theme.TEXT_PRIMARY
         }
 
-        scope.pushAbsolute(button.bounds) { buttonScope ->
-            buttonScope.roundRect(
+        val localButton = button.bounds.relativeTo(origin)
+        Positioned(localButton.x, localButton.y, localButton.width, localButton.height) {
+            RoundRect(
                 0.0f, 0.0f, button.bounds.width, button.bounds.height,
                 button.bounds.height / 2.0f, MD3Theme.lerp(baseColor, hoverColor, hover * 0.35f)
             )
 
             val labelScale = 0.56f
-            val labelWidth = textRenderer.getWidth(button.label, labelScale)
-            val labelHeight = textRenderer.getHeight(labelScale)
-            buttonScope.text(
+            val labelWidth = metrics.textWidth(button.label, labelScale)
+            val labelHeight = metrics.textHeight(labelScale)
+            Text(
                 button.label,
                 (button.bounds.width - labelWidth) / 2.0f,
                 (button.bounds.height - labelHeight) / 2.0f,
@@ -333,15 +345,15 @@ class ConfigClientSettingTab(
         }
     }
 
-    private fun buildConfigRow(
-        scope: UiTree.Scope, configName: String, activeConfig: String,
+    private fun UiScope.buildConfigRow(
+        configName: String, activeConfig: String,
         rowBounds: UiRect, deleteBounds: UiRect, hover: Float, deleteHover: Float,
     ) {
         val active = configName == activeConfig
 
         val baseColor = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, hover)
         val rowColor = if (active) MD3Theme.lerp(baseColor, MD3Theme.PRIMARY_CONTAINER, 0.28f) else baseColor
-        scope.roundRect(
+        RoundRect(
             0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CARD_RADIUS.toFloat(), rowColor
         )
 
@@ -349,8 +361,8 @@ class ConfigClientSettingTab(
         val subScale = 0.52f
         val textX = MD3Theme.ROW_CONTENT_INSET + 1.0f
         val nameY = 7.0f
-        scope.text(
-            trimToWidth(configName, nameScale, rowBounds.width - 72.0f), textX, nameY, nameScale,
+        Text(
+            trimToWidth(configName, nameScale, rowBounds.width - 72.0f, metrics), textX, nameY, nameScale,
             if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
         )
 
@@ -360,28 +372,28 @@ class ConfigClientSettingTab(
             EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
         }
         val subtitleColor = if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_MUTED
-        scope.text(subtitle, textX, nameY + 12.0f, subScale, subtitleColor)
+        Text(subtitle, textX, nameY + 12.0f, subScale, subtitleColor)
 
         if (active) {
             val chipText = EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
             val chipScale = 0.48f
-            val chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f
+            val chipWidth = metrics.textWidth(chipText, chipScale) + 10.0f
             val chipHeight = 14.0f
             val localDeleteBounds = deleteBounds.relativeTo(rowBounds)
             val chipX = localDeleteBounds.x - chipWidth - 6.0f
             val chipY = (rowBounds.height - chipHeight) / 2.0f
-            scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY)
-            scope.text(
+            RoundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY)
+            Text(
                 chipText,
-                chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
-                chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f,
+                chipX + (chipWidth - metrics.textWidth(chipText, chipScale)) / 2.0f,
+                chipY + (chipHeight - metrics.textHeight(chipScale)) / 2.0f,
                 chipScale,
                 MD3Theme.ON_PRIMARY
             )
         }
 
         val localDeleteBounds = deleteBounds.relativeTo(rowBounds)
-        scope.roundRect(
+        RoundRect(
             localDeleteBounds.x, localDeleteBounds.y, localDeleteBounds.width, localDeleteBounds.height,
             localDeleteBounds.height / 2.0f,
             MD3Theme.lerp(
@@ -390,10 +402,10 @@ class ConfigClientSettingTab(
         )
         val removeScale = 0.50f
         val removeIcon = "✕"
-        scope.text(
+        Text(
             removeIcon,
-            localDeleteBounds.x + (localDeleteBounds.width - textRenderer.getWidth(removeIcon, removeScale)) / 2.0f,
-            localDeleteBounds.y + (localDeleteBounds.height - textRenderer.getHeight(removeScale)) / 2.0f,
+            localDeleteBounds.x + (localDeleteBounds.width - metrics.textWidth(removeIcon, removeScale)) / 2.0f,
+            localDeleteBounds.y + (localDeleteBounds.height - metrics.textHeight(removeScale)) / 2.0f,
             removeScale,
             MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.ERROR, deleteHover)
         )
@@ -527,7 +539,7 @@ class ConfigClientSettingTab(
                 popupBounds,
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE.getTranslatedName(),
-                trimToWidth(configName, 0.60f, popupWidth - 24.0f),
+                trimToWidth(configName, 0.60f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName(),
                 {
@@ -550,7 +562,7 @@ class ConfigClientSettingTab(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
                 supplierOf { EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName() },
                 actionMessageSupplier,
-                trimToWidth(detail, 0.52f, popupWidth - 24.0f),
+                trimToWidth(detail, 0.52f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 supplierOf { EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName() }
             )
         )
@@ -569,7 +581,7 @@ class ConfigClientSettingTab(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
                 EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_TITLE.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_MESSAGE.getTranslatedName(),
-                trimToWidth(detail, 0.52f, popupWidth - 24.0f),
+                trimToWidth(detail, 0.52f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName()
             )
         )
@@ -689,21 +701,21 @@ class ConfigClientSettingTab(
         return animation
     }
 
-    private fun trimToWidth(value: String?, scale: Float, width: Float): String {
+    private fun trimToWidth(value: String?, scale: Float, width: Float, metrics: UiTextMetrics): String {
         if (value == null || value.isEmpty()) {
             return ""
         }
-        if (textRenderer.getWidth(value, scale) <= width) {
+        if (metrics.textWidth(value, scale) <= width) {
             return value
         }
         val ellipsis = "..."
-        val ellipsisWidth = textRenderer.getWidth(ellipsis, scale)
+        val ellipsisWidth = metrics.textWidth(ellipsis, scale)
         if (ellipsisWidth >= width) {
             return ellipsis
         }
         for (length in value.length - 1 downTo 0) {
             val candidate = value.substring(0, length) + ellipsis
-            if (textRenderer.getWidth(candidate, scale) <= width) {
+            if (metrics.textWidth(candidate, scale) <= width) {
                 return candidate
             }
         }
@@ -711,6 +723,7 @@ class ConfigClientSettingTab(
     }
 
     override fun close() {
+        measureTextRenderer.close()
         contentBuffer.close()
         markDirty()
     }

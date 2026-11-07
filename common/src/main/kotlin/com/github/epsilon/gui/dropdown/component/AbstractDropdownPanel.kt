@@ -5,9 +5,13 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Triangle
 import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
@@ -95,56 +99,56 @@ abstract class AbstractDropdownPanel protected constructor(
             return introAnim.value
         }
 
-    override fun drawBackground(scope: UiTree.Scope, textMetrics: UiTextMetrics) {
+    context(scope: UiScope)
+    override fun drawBackground() {
         ensureFrameMetrics()
         val expand = cachedExpand
         val contentHeight = cachedContentHeight
         val visibleHeight = cachedVisibleContentHeight
         updateScroll(contentHeight, visibleHeight, true)
         val panelHeight = cachedPanelHeight
+        // 面板左上角的局部坐标：调用方通常用 Content(面板矩形) 使之为 0。
+        val left = x - scope.origin.x
+        val top = y - scope.origin.y
+        val panelWidth = width
 
-        scope.shadow(
-            x,
-            y,
-            width,
-            panelHeight,
-            DropdownTheme.PANEL_RADIUS,
-            DropdownTheme.PANEL_SHADOW_BLUR,
-            DropdownTheme.panelShadow()
-        )
-        scope.roundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
+        with(scope) {
+            Shadow(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow())
+            RoundRect(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
 
-        val iconX = x + 7.5f
-        val textX = if (icon == null || icon.isBlank()) x + 10.0f else iconX + 16.0f
-        val textY =
-            y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
-        val iconText = icon
-        if (iconText != null && !iconText.isBlank()) {
-            val iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(
-                DropdownTheme.HEADER_ICON_SCALE,
-                StaticFontLoader.ICONS
-            )) * 0.5f
-            scope.text(
-                iconText,
-                iconX,
-                iconY,
-                DropdownTheme.HEADER_ICON_SCALE,
-                MD3Theme.PRIMARY,
-                StaticFontLoader.ICONS
+            val iconX = left + 7.5f
+            val textX = if (icon == null || icon.isBlank()) left + 10.0f else iconX + 16.0f
+            val textY =
+                top + (DropdownTheme.PANEL_HEADER_HEIGHT - metrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
+            val iconText = icon
+            if (iconText != null && !iconText.isBlank()) {
+                val iconY = top + (DropdownTheme.PANEL_HEADER_HEIGHT - metrics.textHeight(
+                    DropdownTheme.HEADER_ICON_SCALE,
+                    StaticFontLoader.ICONS
+                )) * 0.5f
+                Text(
+                    iconText,
+                    iconX,
+                    iconY,
+                    DropdownTheme.HEADER_ICON_SCALE,
+                    MD3Theme.PRIMARY,
+                    StaticFontLoader.ICONS
+                )
+            }
+            val headerTitle = getTitle()
+            Text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY)
+            Triangle(
+                left + panelWidth - 10.0f,
+                top + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f,
+                3.0f,
+                expand,
+                DropdownTheme.groupChevron(0.0f)
             )
         }
-        val headerTitle = getTitle()
-        scope.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY)
-        scope.triangle(
-            x + width - 10.0f,
-            y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f,
-            3.0f,
-            expand,
-            DropdownTheme.groupChevron(0.0f)
-        )
     }
 
-    override fun drawContent(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    context(scope: UiScope)
+    override fun drawContent(mouseX: Int, mouseY: Int) {
         ensureFrameMetrics()
         if (cachedExpand < 0.01f) return
 
@@ -162,8 +166,17 @@ abstract class AbstractDropdownPanel protected constructor(
         )
         val contentMouseX = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseX
         val contentMouseY = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseY
-        drawPanelContent(scope, textMetrics, contentMouseX, contentMouseY, visibleHeight)
-        scrollBar.draw(scope, scrollbarViewport, scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble())
+        scope.drawPanelContent(contentMouseX, contentMouseY, visibleHeight)
+        // 滚动条与内容共用同一作用域：把视口和鼠标都平移到该作用域的坐标系。
+        scrollBar.draw(
+            scope,
+            scrollbarViewport.relativeTo(scope.origin),
+            scroll,
+            maxScroll,
+            contentHeight,
+            (mouseX - scope.origin.x).toDouble(),
+            (mouseY - scope.origin.y).toDouble()
+        )
     }
 
     override val contentClipY: Float
@@ -289,13 +302,10 @@ abstract class AbstractDropdownPanel protected constructor(
 
     protected abstract fun computeContentHeight(): Float
 
-    protected abstract fun drawPanelContent(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
-        mouseX: Int,
-        mouseY: Int,
-        visibleHeight: Float
-    )
+    /**
+     * 绘制内容区；坐标相对当前作用域，命中测试仍用绝对坐标。
+     */
+    protected abstract fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float)
 
     protected open fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
         return false
@@ -353,6 +363,20 @@ abstract class AbstractDropdownPanel protected constructor(
 
     protected fun isHovered(mouseX: Double, mouseY: Double, x: Float, y: Float, w: Float, h: Float): Boolean {
         return mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h
+    }
+
+    /**
+     * 内容局部矩形 → 屏幕绝对坐标的命中测试。
+     *
+     * 绘制走局部坐标，命中测试仍使用绝对坐标，因此这里补上作用域原点。
+     */
+    protected fun isHoveredAt(scope: UiScope, mouseX: Double, mouseY: Double, x: Float, y: Float, w: Float, h: Float): Boolean {
+        return isHovered(mouseX, mouseY, scope.origin.x + x, scope.origin.y + y, w, h)
+    }
+
+    /** 内容区顶边（标题栏下方）在当前作用域中的局部 y。 */
+    protected fun contentLocalTop(origin: UiRect): Float {
+        return y + DropdownTheme.PANEL_HEADER_HEIGHT - origin.y
     }
 
     protected fun setScrollImmediate(value: Float) {

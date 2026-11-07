@@ -10,8 +10,12 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Texture
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.QQAvatarManager
@@ -87,6 +91,12 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     @Volatile
     private var currentTitle: String? = null
 
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var frameVisible: Boolean = false
+    private var framePreview: Boolean = false
+    private var frameElapsed: Long = 0L
+    private var frameLayout: Layout? = null
+
     init {
         onEnable {
             clearRuntimeState()
@@ -121,22 +131,78 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
     }
 
-    override fun render(deltaTracker: DeltaTracker) {
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameVisible = false
+
         val preview = mc.gui.screen() is HudEditorScreen
+        val elapsed: Long
         if (preview) {
-            renderBanner(true, 0L)
+            elapsed = 0L
         } else {
             updateKillTrigger()
             if (!active) return
 
-            val elapsed = maxOf(0L, System.currentTimeMillis() - animationStartMs)
+            elapsed = maxOf(0L, System.currentTimeMillis() - animationStartMs)
             if (elapsed >= totalDuration()) {
                 active = false
                 currentTitle = null
                 return
             }
+        }
 
-            renderBanner(false, elapsed)
+        QQAvatarManager.requestLoad()
+        val textRenderer = textRendererSupplier.get()
+        val uiScale = scale.toFloat()
+        val bannerTitle = if (preview) displayTitle(title) else displayTitle(currentTitle)
+        val layout = createLayout(textRenderer, bannerTitle, subtitle, uiScale)
+        setBounds(layout.width, layout.height)
+
+        framePreview = preview
+        frameElapsed = elapsed
+        frameLayout = layout
+        frameVisible = true
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (!frameVisible) return
+        val layout = frameLayout ?: return
+        val preview = framePreview
+        val elapsed = frameElapsed
+        val textRenderer = textRendererSupplier.get()
+        val uiScale = scale.toFloat()
+        val bannerTitle = if (preview) displayTitle(title) else displayTitle(currentTitle)
+        val bannerSubtitle = subtitle
+
+        val frameProgress = if (preview) 1.0f else frameProgress(elapsed)
+        val contentAlpha = if (preview) 1.0f else contentAlpha(elapsed)
+        val visibleWidth = maxOf(1.0f, layout.width * frameProgress)
+        val visibleX = (layout.width - visibleWidth) * 0.5f
+        val frameAlpha = minOf(1.0f, frameProgress * 1.8f)
+        val offset = (1.0f - Easing.EASE_OUT_CUBIC.function.apply(contentAlpha)) * 5.0f * uiScale
+
+        if (backgroundBlur) {
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
+            BlurShader.render(origin.x + visibleX, origin.y, visibleWidth, layout.height, 0.0f, blurStrength.toFloat())
+        }
+
+        Rect(visibleX, 0.0f, visibleWidth, layout.height, withAlpha(backgroundColor, frameAlpha))
+        Rect(visibleX, 0.0f, visibleWidth, 2.0f * uiScale, withAlpha(accentColor, frameAlpha))
+
+        if (contentAlpha <= 0.0f || frameProgress < 0.72f) return
+
+        Clip(visibleX, 0.0f, visibleWidth, layout.height) {
+            drawIdentityModule(layout, contentAlpha, offset, uiScale)
+            drawMessage(
+                textRenderer,
+                layout,
+                bannerTitle,
+                bannerSubtitle,
+                contentAlpha,
+                offset,
+                uiScale,
+                preview
+            )
+            drawStatusModule(textRenderer, layout, contentAlpha, offset, uiScale, preview)
         }
     }
 
@@ -235,49 +301,6 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         active = true
     }
 
-    private fun renderBanner(preview: Boolean, elapsed: Long) {
-        QQAvatarManager.requestLoad()
-        val textRenderer = textRendererSupplier.get()
-        val uiScale = scale.toFloat()
-        val bannerTitle = if (preview) displayTitle(title) else displayTitle(currentTitle)
-        val bannerSubtitle = subtitle
-        val layout = createLayout(textRenderer, bannerTitle, bannerSubtitle, uiScale)
-        setBounds(layout.width, layout.height)
-
-        val frameProgress = if (preview) 1.0f else frameProgress(elapsed)
-        val contentAlpha = if (preview) 1.0f else contentAlpha(elapsed)
-        val visibleWidth = maxOf(1.0f, layout.width * frameProgress)
-        val visibleX = x + (layout.width - visibleWidth) * 0.5f
-        val frameAlpha = minOf(1.0f, frameProgress * 1.8f)
-        val offset = (1.0f - Easing.EASE_OUT_CUBIC.function.apply(contentAlpha)) * 5.0f * uiScale
-
-        if (backgroundBlur) {
-            BlurShader.render(visibleX, y, visibleWidth, layout.height, 0.0f, blurStrength.toFloat())
-        }
-
-        val scope = renderScope()
-        scope.rect(visibleX, y, visibleWidth, layout.height, withAlpha(backgroundColor, frameAlpha))
-        scope.rect(visibleX, y, visibleWidth, 2.0f * uiScale, withAlpha(accentColor, frameAlpha))
-
-        if (contentAlpha <= 0.0f || frameProgress < 0.72f) return
-
-        scope.scissor(UiRect(visibleX, y, visibleWidth, layout.height)) { clipped ->
-            drawIdentityModule(clipped, layout, contentAlpha, offset, uiScale)
-            drawMessage(
-                clipped,
-                textRenderer,
-                layout,
-                bannerTitle,
-                bannerSubtitle,
-                contentAlpha,
-                offset,
-                uiScale,
-                preview
-            )
-            drawStatusModule(clipped, textRenderer, layout, contentAlpha, offset, uiScale, preview)
-        }
-    }
-
     private fun createLayout(
         renderer: TextRenderer,
         bannerTitle: String,
@@ -294,22 +317,21 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         return Layout(width, BASE_HEIGHT * uiScale)
     }
 
-    private fun drawIdentityModule(scope: UiTree.Scope, layout: Layout, alpha: Float, offset: Float, uiScale: Float) {
-        val dividerX = x + 70.0f * uiScale
-        scope.rect(dividerX, y + 10.0f * uiScale, uiScale, layout.height - 20.0f * uiScale, withAlpha(HAIRLINE, alpha))
-        val avatarX = x + 18.0f * uiScale
-        val avatarY = y + 13.0f * uiScale + offset
+    private fun UiScope.drawIdentityModule(layout: Layout, alpha: Float, offset: Float, uiScale: Float) {
+        val dividerX = 70.0f * uiScale
+        Rect(dividerX, 10.0f * uiScale, uiScale, layout.height - 20.0f * uiScale, withAlpha(HAIRLINE, alpha))
+        val avatarX = 18.0f * uiScale
+        val avatarY = 13.0f * uiScale + offset
         val avatarSize = 40.0f * uiScale
         val avatarRadius = 2.0f * uiScale
-        scope.texture(
+        Texture(
             QQAvatarManager.texture(), avatarX, avatarY, avatarSize, avatarSize,
             0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), QQAvatarManager.linearFilter()
         )
-        scope.outline(avatarX, avatarY, avatarSize, avatarSize, avatarRadius, uiScale, withAlpha(HAIRLINE, alpha))
+        Outline(avatarX, avatarY, avatarSize, avatarSize, avatarRadius, uiScale, withAlpha(HAIRLINE, alpha))
     }
 
-    private fun drawMessage(
-        scope: UiTree.Scope,
+    private fun UiScope.drawMessage(
         renderer: TextRenderer,
         layout: Layout,
         bannerTitle: String,
@@ -319,9 +341,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         uiScale: Float,
         preview: Boolean,
     ) {
-        val left = x + 84.0f * uiScale
+        val left = 84.0f * uiScale
         val showStatus = layout.width >= 360.0f * uiScale
-        val right = x + layout.width - (if (showStatus) 88.0f else 18.0f) * uiScale
+        val right = layout.width - (if (showStatus) 88.0f else 18.0f) * uiScale
         val available = maxOf(80.0f * uiScale, right - left)
 
         val eyebrow = if (preview) "SYSTEM // VISUAL PREVIEW" else "COMBAT // ELIMINATION CONFIRMED"
@@ -337,15 +359,15 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val subtitleHeight = if (hasSubtitle) renderer.getHeight(fittedSubtitleScale) else 0.0f
         val blockHeight =
             eyebrowHeight + 3.0f * uiScale + titleHeight + (if (hasSubtitle) 2.0f * uiScale + subtitleHeight else 0.0f)
-        var lineY = y + (layout.height - blockHeight) * 0.5f + offset
+        var lineY = (layout.height - blockHeight) * 0.5f + offset
 
-        scope.text(eyebrow, left, lineY, eyebrowScale, withAlpha(MUTED, alpha))
+        Text(eyebrow, left, lineY, eyebrowScale, withAlpha(MUTED, alpha))
         lineY += eyebrowHeight + 2.0f * uiScale
-        scope.text(bannerTitle, left, lineY, fittedTitleScale, withAlpha(TEXT, alpha))
+        Text(bannerTitle, left, lineY, fittedTitleScale, withAlpha(TEXT, alpha))
 
         if (hasSubtitle) {
             lineY += titleHeight + 1.0f * uiScale
-            scope.text(
+            Text(
                 bannerSubtitle.uppercase(Locale.ROOT),
                 left,
                 lineY,
@@ -355,8 +377,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         }
     }
 
-    private fun drawStatusModule(
-        scope: UiTree.Scope,
+    private fun UiScope.drawStatusModule(
         renderer: TextRenderer,
         layout: Layout,
         alpha: Float,
@@ -366,8 +387,8 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     ) {
         if (layout.width < 360.0f * uiScale) return
 
-        val moduleX = x + layout.width - 76.0f * uiScale
-        scope.rect(moduleX, y + 10.0f * uiScale, uiScale, layout.height - 20.0f * uiScale, withAlpha(HAIRLINE, alpha))
+        val moduleX = layout.width - 76.0f * uiScale
+        Rect(moduleX, 10.0f * uiScale, uiScale, layout.height - 20.0f * uiScale, withAlpha(HAIRLINE, alpha))
 
         val numberScale = 1.0f * uiScale
         val labelScale = 0.8f * uiScale
@@ -377,14 +398,14 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         val statusHeight = renderer.getHeight(statusScale)
         val primaryHeight = maxOf(numberHeight, labelHeight)
         val groupHeight = primaryHeight + 3.0f * uiScale + statusHeight
-        val groupY = y + (layout.height - groupHeight) * 0.5f + offset
+        val groupY = (layout.height - groupHeight) * 0.5f + offset
 
-        scope.text("01", moduleX + 9.0f * uiScale, groupY, numberScale, withAlpha(TEXT, alpha))
-        scope.text(
+        Text("01", moduleX + 9.0f * uiScale, groupY, numberScale, withAlpha(TEXT, alpha))
+        Text(
             if (preview) "TEST" else "KILL", moduleX + 30.0f * uiScale,
             groupY + (primaryHeight - labelHeight) * 0.5f, labelScale, withAlpha(accentColor, alpha)
         )
-        scope.text(
+        Text(
             "STATUS / OK",
             moduleX + 9.0f * uiScale,
             groupY + primaryHeight + 3.0f * uiScale,

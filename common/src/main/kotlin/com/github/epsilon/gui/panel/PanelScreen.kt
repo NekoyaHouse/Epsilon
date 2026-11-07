@@ -1,9 +1,12 @@
 package com.github.epsilon.gui.panel
 
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.panel.input.PanelInputRouter
@@ -37,14 +40,13 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
 
     private val state = PanelState()
     private val dirtyState = PanelDirtyState()
-    private val textRenderer: TextRenderer = TextRenderer.create()
     private val scene = UiScene(EpsilonUiTheme)
     private val popupHost = PanelPopupHost()
     private val inputRouter = PanelInputRouter()
-    private val categoryRailPanel = CategoryRailPanel(state, textRenderer)
-    private val moduleListPanel = ModuleListPanel(state, textRenderer)
-    private val moduleDetailPanel = ModuleDetailPanel(state, textRenderer, popupHost)
-    private val clientSettingPanel = ClientSettingPanel(state, textRenderer, popupHost)
+    private val categoryRailPanel = CategoryRailPanel(state)
+    private val moduleListPanel = ModuleListPanel(state)
+    private val moduleDetailPanel = ModuleDetailPanel(state, popupHost)
+    private val clientSettingPanel = ClientSettingPanel(state, popupHost)
     private var lastWidth = -1
     private var lastHeight = -1
     private var lastSelectedCategory = ""
@@ -184,20 +186,19 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     }
 
     private fun drawChrome(layout: PanelLayout.Layout) {
-        val tree = UiTree.build { scope ->
-            scope.pushAbsolute(layout.panel) { panel ->
-                panel.shadow(
-                    0.0f, 0.0f, layout.panel.width, layout.panel.height,
-                    MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA)
-                )
-                panel.roundRect(
-                    0.0f, 0.0f, layout.panel.width, layout.panel.height,
-                    MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.SURFACE
-                )
-            }
-            scope.pushAbsolute(layout.rail) { rail ->
-                rail.roundRect(
+        scene.Content(layout.panel, UiLayer.CHROME, LayerOffset(-20)) {
+            Shadow(
+                0.0f, 0.0f, layout.panel.width, layout.panel.height,
+                MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA)
+            )
+            RoundRect(
+                0.0f, 0.0f, layout.panel.width, layout.panel.height,
+                MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.SURFACE
+            )
+            val localRail = layout.rail.relativeTo(layout.panel)
+            Positioned(localRail.x, localRail.y, localRail.width, localRail.height) {
+                RoundRect(
                     0.0f, 0.0f, layout.rail.width, layout.rail.height,
                     MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
                 )
@@ -205,27 +206,28 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             if (state.isClientSettingMode()) {
                 val csW = layout.detail.right() - layout.modules.x
                 val csH = layout.modules.height
-                scope.pushAbsolute(layout.modules.x, layout.modules.y) { clientSettings ->
-                    clientSettings.roundRect(
-                        0.0f, 0.0f, csW, csH, MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
-                    )
+                Positioned(
+                    layout.modules.x - layout.panel.x, layout.modules.y - layout.panel.y, csW, csH
+                ) {
+                    RoundRect(0.0f, 0.0f, csW, csH, MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM)
                 }
             } else {
-                scope.pushAbsolute(layout.modules) { modules ->
-                    modules.roundRect(
+                val localModules = layout.modules.relativeTo(layout.panel)
+                Positioned(localModules.x, localModules.y, localModules.width, localModules.height) {
+                    RoundRect(
                         0.0f, 0.0f, layout.modules.width, layout.modules.height,
                         MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
                     )
                 }
-                scope.pushAbsolute(layout.detail) { detail ->
-                    detail.roundRect(
+                val localDetail = layout.detail.relativeTo(layout.panel)
+                Positioned(localDetail.x, localDetail.y, localDetail.width, localDetail.height) {
+                    RoundRect(
                         0.0f, 0.0f, layout.detail.width, layout.detail.height,
                         MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
                     )
                 }
             }
         }
-        scene.submit(UiLayer.CHROME, -20, tree)
     }
 
     private fun flushQueuedContentBuffers() {

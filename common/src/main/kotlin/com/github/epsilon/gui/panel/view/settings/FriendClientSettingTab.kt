@@ -1,14 +1,19 @@
 package com.github.epsilon.gui.panel.view.settings
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.IconButton
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
-import com.github.epsilon.gui.panel.component.PanelElements
+import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
@@ -26,7 +31,6 @@ import kotlin.math.abs
 
 class FriendClientSettingTab(
     private val state: PanelState,
-    private val textRenderer: TextRenderer,
 ) : ClientSettingTabView {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
@@ -78,22 +82,25 @@ class FriendClientSettingTab(
             removeHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
         }
 
-        val tree = UiTree.build { scope ->
-            inputField.buildUi(
-                scope, inputBounds, mouseX, mouseY, textRenderer,
-                EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵"
-            )
-            scope.viewport(
+        renderBatch.Content(bounds) {
+            val localInput = inputBounds.relativeTo(bounds)
+            Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
+                ClientSettingTextField(
+                    inputField, mouseX, mouseY,
+                    EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵"
+                )
+            }
+            Viewport(
                 contentBuffer,
-                listViewport,
+                listViewport.relativeTo(bounds),
                 state.getFriendScroll(),
                 maxScroll,
                 contentHeight,
                 mouseX,
                 mouseY
-            ) { content ->
+            ) {
                 if (!rebuildContent) {
-                    return@viewport
+                    return@Viewport
                 }
                 var rowY = listViewport.y - state.getFriendScroll()
                 for (friendName in friends) {
@@ -107,11 +114,9 @@ class FriendClientSettingTab(
                     removeAnimation.run(if (removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
                     contentState.noteAnimation(!hoverAnimation.isFinished || !removeAnimation.isFinished)
 
-                    content.pushAbsolute(rowBounds) { rowScope ->
-                        buildFriendRow(
-                            rowScope, friendName, rowBounds, removeBounds,
-                            hoverAnimation.value, removeAnimation.value
-                        )
+                    val localRow = rowBounds.relativeTo(origin)
+                    Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                        buildFriendRow(friendName, rowBounds, removeBounds, hoverAnimation.value, removeAnimation.value)
                     }
                     rowY += FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP
                 }
@@ -119,15 +124,14 @@ class FriendClientSettingTab(
                 if (friends.isEmpty()) {
                     val hintScale = 0.58f
                     val hint = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
-                    val hintWidth = textRenderer.getWidth(hint, hintScale)
+                    val hintWidth = metrics.textWidth(hint, hintScale)
                     val hintX = (listViewport.width - hintWidth) / 2.0f
                     val hintY = state.getFriendScroll() + listViewport.height / 2.0f -
-                            textRenderer.getHeight(hintScale) / 2.0f
-                    content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
+                            metrics.textHeight(hintScale) / 2.0f
+                    Text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
                 }
             }
         }
-        renderBatch.render(tree)
 
         if (rebuildContent) {
             rememberSnapshot(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature)
@@ -266,21 +270,21 @@ class FriendClientSettingTab(
         markDirty()
     }
 
-    private fun buildFriendRow(
-        scope: UiTree.Scope, name: String, bounds: UiRect, removeBounds: UiRect,
+    private fun UiScope.buildFriendRow(
+        name: String, bounds: UiRect, removeBounds: UiRect,
         hoverProgress: Float, removeHoverProgress: Float,
     ) {
-        PanelElements.buildRowSurface(scope, bounds, hoverProgress)
+        RowSurface(hoverProgress)
 
         val avatarSize = 20.0f
         val avatarX = MD3Theme.ROW_CONTENT_INSET + 2.0f
         val avatarY = (bounds.height - avatarSize) / 2.0f
-        scope.roundRect(avatarX, avatarY, avatarSize, avatarSize, avatarSize / 2.0f, MD3Theme.SECONDARY_CONTAINER)
+        RoundRect(avatarX, avatarY, avatarSize, avatarSize, avatarSize / 2.0f, MD3Theme.SECONDARY_CONTAINER)
         val initial = if (name.isEmpty()) "?" else name.substring(0, 1).uppercase()
         val initialScale = 0.54f
-        val initialWidth = textRenderer.getWidth(initial, initialScale)
-        val initialHeight = textRenderer.getHeight(initialScale)
-        scope.text(
+        val initialWidth = metrics.textWidth(initial, initialScale)
+        val initialHeight = metrics.textHeight(initialScale)
+        Text(
             initial,
             avatarX + (avatarSize - initialWidth) / 2.0f,
             avatarY + (avatarSize - initialHeight) / 2.0f,
@@ -290,12 +294,10 @@ class FriendClientSettingTab(
 
         val nameScale = 0.66f
         val nameX = avatarX + avatarSize + 8.0f
-        val nameY = (bounds.height - textRenderer.getHeight(nameScale)) / 2.0f
-        scope.text(name, nameX, nameY, nameScale, MD3Theme.TEXT_PRIMARY)
+        val nameY = (bounds.height - metrics.textHeight(nameScale)) / 2.0f
+        Text(name, nameX, nameY, nameScale, MD3Theme.TEXT_PRIMARY)
 
-        PanelElements.buildIconButton(
-            scope, textRenderer, removeBounds.relativeTo(bounds), "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress
-        )
+        IconButton(removeBounds.relativeTo(bounds), "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress)
     }
 
     private fun getListViewport(bounds: UiRect): UiRect {

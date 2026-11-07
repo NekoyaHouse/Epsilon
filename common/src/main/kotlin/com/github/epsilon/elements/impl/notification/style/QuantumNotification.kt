@@ -8,7 +8,13 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Arc
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.GradientArc
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import java.util.*
@@ -62,12 +68,15 @@ class QuantumNotification(private val owner: Notifications) {
         return animationProgress(notification) > 0.001f
     }
 
-    fun render(
-        scope: UiTree.Scope,
+    /**
+     * 绘制通知栈。
+     *
+     * 坐标相对元素作用域原点：栈从元素左上角开始往下（或从底部往上）排列。
+     */
+    fun draw(
+        scope: UiScope,
         metrics: TextRenderer,
         entries: List<Notification>,
-        boundsX: Float,
-        boundsY: Float,
         scale: Float,
         fontScale: Float,
         horizontalAnchor: HudModule.HorizontalAnchor,
@@ -80,7 +89,7 @@ class QuantumNotification(private val owner: Notifications) {
         val gap = TOAST_GAP * scale
         val totalHeight = totalHeight(entries.size, scale)
         val stackUp = verticalAnchor == HudModule.VerticalAnchor.Bottom
-        var targetY = if (stackUp) boundsY + totalHeight - toastHeight else boundsY
+        var targetY = if (stackUp) totalHeight - toastHeight else 0.0f
 
         for (notification in entries) {
             val progress = animationProgress(notification)
@@ -89,7 +98,7 @@ class QuantumNotification(private val owner: Notifications) {
             val state = states[notification] ?: SpringState().also { states[notification] = it }
             val renderY = state.update(targetY)
             renderToast(
-                scope, metrics, notification, boundsX, renderY, toastWidth, toastHeight,
+                scope, metrics, notification, 0.0f, renderY, toastWidth, toastHeight,
                 scale, fontScale, horizontalAnchor, progress
             )
             targetY += if (stackUp) -(toastHeight + gap) else toastHeight + gap
@@ -97,7 +106,7 @@ class QuantumNotification(private val owner: Notifications) {
     }
 
     private fun renderToast(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         x: Float,
@@ -115,12 +124,16 @@ class QuantumNotification(private val owner: Notifications) {
         val alpha = ((255.0f * eased).roundToInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
 
         if (backgroundBlur) {
-            BlurShader.render(actualX, y, width, height, BORDER_RADIUS * scale, blurStrength.toFloat())
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
+            BlurShader.render(
+                scope.origin.x + actualX, scope.origin.y + y, width, height,
+                BORDER_RADIUS * scale, blurStrength.toFloat()
+            )
         }
         if (drawShadow) {
-            scope.shadow(actualX, y, width, height, BORDER_RADIUS * scale, shadowBlur.toFloat() * scale, shadowColor)
+            scope.Shadow(actualX, y, width, height, BORDER_RADIUS * scale, shadowBlur.toFloat() * scale, shadowColor)
         }
-        scope.roundRect(
+        scope.RoundRect(
             actualX, y, width, height, BORDER_RADIUS * scale,
             withAlpha(backgroundColor, (backgroundColor.alpha * eased).roundToInt())
         )
@@ -131,15 +144,13 @@ class QuantumNotification(private val owner: Notifications) {
 
         val contentX = iconX + ICON_SIZE * scale + CONTENT_GAP * scale
         val contentRight = actualX + width - PADDING_H * scale
-        scope.scissor(
-            actualX, y, width, height
-        ) { textScope ->
-            drawContent(textScope, metrics, notification, contentX, contentRight, y, height, scale, fontScale, alpha)
+        scope.Clip(actualX, y, width, height) {
+            drawContent(this, metrics, notification, contentX, contentRight, y, height, scale, fontScale, alpha)
         }
     }
 
     private fun drawContent(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         x: Float,
@@ -159,9 +170,9 @@ class QuantumNotification(private val owner: Notifications) {
         val contentHeight = titleHeight + lineGap + messageHeight
         val titleY = y + (height - contentHeight) * 0.5f
 
-        scope.text(notification.title, x, titleY, titleScale, Color(255, 255, 255, alpha))
+        scope.Text(notification.title, x, titleY, titleScale, Color(255, 255, 255, alpha))
         if (hasMessage) {
-            scope.text(
+            scope.Text(
                 notification.subTitle, x, titleY + titleHeight + lineGap, messageScale,
                 Color(255, 255, 255, (alpha * 0.7f).roundToInt())
             )
@@ -169,7 +180,7 @@ class QuantumNotification(private val owner: Notifications) {
     }
 
     private fun drawIcon(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         mode: NotificationMode,
         x: Float,
@@ -192,7 +203,7 @@ class QuantumNotification(private val owner: Notifications) {
     }
 
     private fun drawSuccess(
-        scope: UiTree.Scope,
+        scope: UiScope,
         cx: Float,
         cy: Float,
         s: Float,
@@ -217,7 +228,7 @@ class QuantumNotification(private val owner: Notifications) {
             val local = if (phase < 0.15f) phase / 0.15f else (phase - 0.15f) / 0.25f
             val ringScale = if (phase < 0.15f) 0.8f + 0.3f * local else 1.1f + 0.2f * local
             val ringAlpha = if (phase < 0.15f) 0.4f * local else 0.4f * (1.0f - local)
-            scope.arc(
+            scope.Arc(
                 cx,
                 cy,
                 18.0f * s * ringScale,
@@ -239,12 +250,12 @@ class QuantumNotification(private val owner: Notifications) {
         drawProgressLine(scope, x2, y2, x3, y3, 1.4f * s, (checkProgress - 0.46f) * 1.85f, color)
     }
 
-    private fun drawInfo(scope: UiTree.Scope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
-        scope.arc(cx, cy, 20.0f * s, 0.5f * s, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.2f).roundToInt()))
-        scope.arc(cx, cy, 12.0f * s, 0.5f * s, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.1f).roundToInt()))
+    private fun drawInfo(scope: UiScope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
+        scope.Arc(cx, cy, 20.0f * s, 0.5f * s, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.2f).roundToInt()))
+        scope.Arc(cx, cy, 12.0f * s, 0.5f * s, 0.0f, 360.0f, false, withAlpha(color, (alpha * 0.1f).roundToInt()))
 
         val angle = positiveModulo(time, 4.0f) / 4.0f * 360.0f
-        scope.gradientArc(
+        scope.GradientArc(
             cx,
             cy,
             15.5f * s,
@@ -275,7 +286,7 @@ class QuantumNotification(private val owner: Notifications) {
     }
 
     private fun drawWarning(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         cx: Float,
         cy: Float,
@@ -285,7 +296,7 @@ class QuantumNotification(private val owner: Notifications) {
         alpha: Int,
     ) {
         val renderScale = s * 48.0f / ICON_SIZE
-        scope.arc(
+        scope.Arc(
             cx,
             cy,
             10.2f * renderScale,
@@ -295,7 +306,7 @@ class QuantumNotification(private val owner: Notifications) {
             false,
             withAlpha(color, (alpha * 0.16f).roundToInt())
         )
-        scope.arc(
+        scope.Arc(
             cx,
             cy,
             8.0f * renderScale,
@@ -308,7 +319,7 @@ class QuantumNotification(private val owner: Notifications) {
 
         val sweep = 58.0f + 10.0f * (0.5f + 0.5f * sin((time * 1.4f).toDouble()).toFloat())
         val angle = positiveModulo(time * 38.0f, 360.0f)
-        scope.gradientArc(
+        scope.GradientArc(
             cx,
             cy,
             11.0f * renderScale,
@@ -324,14 +335,14 @@ class QuantumNotification(private val owner: Notifications) {
 
         val pulse = positiveModulo(time, 2.8f) / 2.8f
         val pulseWave = if (pulse < 0.5f) pulse * 2.0f else (1.0f - pulse) * 2.0f
-        scope.arc(
+        scope.Arc(
             cx, cy, (11.4f + pulseWave * 1.1f) * renderScale, 0.3f * renderScale, 0.0f, 360.0f, false,
             withAlpha(color, (alpha * (0.04f + pulseWave * 0.05f)).roundToInt())
         )
 
         val iconWidth = metrics.getWidth(IconChars.WARNING_AMBER, renderScale, StaticFontLoader.ICONS)
         val iconHeight = metrics.getHeight(renderScale, StaticFontLoader.ICONS)
-        scope.text(
+        scope.Text(
             IconChars.WARNING_AMBER,
             cx - iconWidth * 0.5f,
             cy - iconHeight * 0.5f,
@@ -341,7 +352,7 @@ class QuantumNotification(private val owner: Notifications) {
         )
     }
 
-    private fun drawError(scope: UiTree.Scope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
+    private fun drawError(scope: UiScope, cx: Float, cy: Float, s: Float, time: Float, color: Color, alpha: Int) {
         val phase = positiveModulo(time, 2.0f) / 2.0f
         if (phase < 0.6f) {
             val local = if (phase < 0.3f) phase / 0.3f else (phase - 0.3f) / 0.3f
@@ -368,7 +379,7 @@ class QuantumNotification(private val owner: Notifications) {
     }
 
     private fun drawDashedCircle(
-        scope: UiTree.Scope,
+        scope: UiScope,
         cx: Float,
         cy: Float,
         radius: Float,
@@ -381,13 +392,13 @@ class QuantumNotification(private val owner: Notifications) {
         val step = dashDegrees + gapDegrees
         var angle = 0.0f
         while (angle < 360.0f) {
-            scope.arc(cx, cy, radius, stroke, rotation + angle, minOf(dashDegrees, 360.0f - angle), true, color)
+            scope.Arc(cx, cy, radius, stroke, rotation + angle, minOf(dashDegrees, 360.0f - angle), true, color)
             angle += step
         }
     }
 
     private fun drawProgressLine(
-        scope: UiTree.Scope,
+        scope: UiScope,
         x1: Float,
         y1: Float,
         x2: Float,
@@ -409,8 +420,8 @@ class QuantumNotification(private val owner: Notifications) {
         }
     }
 
-    private fun dot(scope: UiTree.Scope, centerX: Float, centerY: Float, radius: Float, color: Color) {
-        scope.roundRect(centerX - radius, centerY - radius, radius * 2.0f, radius * 2.0f, radius, color)
+    private fun dot(scope: UiScope, centerX: Float, centerY: Float, radius: Float, color: Color) {
+        scope.RoundRect(centerX - radius, centerY - radius, radius * 2.0f, radius * 2.0f, radius, color)
     }
 
     private fun animationProgress(notification: Notification): Float {
@@ -421,6 +432,12 @@ class QuantumNotification(private val owner: Notifications) {
         return 1.0f - (exitTime / TRANSITION_DURATION.toFloat()).coerceIn(0.0f, 1.0f)
     }
 
+    /**
+     * 通知栈的弹簧位置。
+     *
+     * 坐标存的是相对元素作用域的局部 Y（不是屏幕绝对 Y）：拖动元素时弹簧起点随元素移动，
+     * 稳态下与原实现的绝对坐标结果一致。
+     */
     private class SpringState {
 
         private var currentY: Float = Float.NaN

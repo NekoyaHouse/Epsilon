@@ -3,8 +3,7 @@ package com.github.epsilon.gui.dropdown.component
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.SettingWidget
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.Setting
 
 class SettingsListPanel : AbstractDropdownPanel {
@@ -31,11 +30,9 @@ class SettingsListPanel : AbstractDropdownPanel {
         return settingsContent.computeContentHeight(getRenderFrameId())
     }
 
-    override fun drawPanelContent(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, visibleHeight: Float,
-    ) {
+    override fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float) {
         settingsContent.draw(
-            scope, textMetrics, mouseX, mouseY, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
+            this, mouseX, mouseY, contentLocalTop(origin) - scroll,
             width, getRenderFrameId()
         )
     }
@@ -79,6 +76,7 @@ class SettingsListPanel : AbstractDropdownPanel {
         fun createWidget(setting: Setting<*>): SettingWidget<*>? {
             return SettingsContent.createWidget(setting)
         }
+
     }
 
 }

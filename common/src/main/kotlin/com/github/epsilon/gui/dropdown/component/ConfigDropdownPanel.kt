@@ -3,8 +3,10 @@ package com.github.epsilon.gui.dropdown.component
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
@@ -25,15 +27,14 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 (if (status.isEmpty()) 0.0f else ROW_HEIGHT)
     }
 
-    override fun drawPanelContent(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
+    override fun UiScope.drawPanelContent(
         mouseX: Int,
         mouseY: Int,
         visibleHeight: Float,
     ) {
-        var currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
-        val contentX = x + PADDING
+        val top = contentLocalTop(origin)
+        var currentY = top + PADDING - scroll
+        val contentX = PADDING
         val contentW = width - PADDING * 2.0f
 
         val placeholder = ConfigManager.activeConfigName
@@ -41,7 +42,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
             inputField.text = placeholder
         }
         inputField.draw(
-            scope, textMetrics, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY,
+            this, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY,
             placeholder, DropdownTheme.SETTING_TEXT_SCALE
         )
         currentY += FIELD_HEIGHT + GAP
@@ -60,16 +61,16 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 val btnW = (contentW - GAP) * 0.5f
                 val btnX = contentX + col * (btnW + GAP)
                 val btnY = currentY + row * (BUTTON_HEIGHT + GAP)
-                val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), btnX, btnY, btnW, BUTTON_HEIGHT)
-                scope.roundRect(
+                val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), btnX, btnY, btnW, BUTTON_HEIGHT)
+                RoundRect(
                     btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
                 )
                 val labelScale = 0.48f
-                val labelW = textMetrics.textWidth(actions[index], labelScale)
-                scope.text(
+                val labelW = metrics.textWidth(actions[index], labelScale)
+                Text(
                     actions[index], btnX + (btnW - labelW) * 0.5f,
-                    getCenteredTextY(textMetrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY
+                    getCenteredTextY(metrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY
                 )
             }
         }
@@ -77,9 +78,9 @@ class ConfigDropdownPanel(panelIndex: Int) :
 
         if (status.isNotEmpty()) {
             val statusScale = 0.50f
-            scope.text(
-                trimToWidth(status, statusScale, contentW, textMetrics), contentX,
-                getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED
+            Text(
+                trimToWidth(status, statusScale, contentW, metrics), contentX,
+                getCenteredTextY(metrics, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED
             )
             currentY += ROW_HEIGHT
         }
@@ -88,16 +89,16 @@ class ConfigDropdownPanel(panelIndex: Int) :
         val configs = configsForFrame()
         if (configs.isEmpty()) {
             val emptyScale = 0.55f
-            scope.text(
+            Text(
                 EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX,
-                getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED
+                getCenteredTextY(metrics, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED
             )
             return
         }
         for (name in configs) {
             val activeRow = name == active
-            val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), contentX, currentY, contentW, ROW_HEIGHT)
-            scope.roundRect(
+            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), contentX, currentY, contentW, ROW_HEIGHT)
+            RoundRect(
                 contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                 if (activeRow) {
                     MD3Theme.PRIMARY_CONTAINER
@@ -108,16 +109,16 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 }
             )
             val nameScale = 0.56f
-            scope.text(
-                trimToWidth(name, nameScale, contentW - 28.0f, textMetrics), contentX + 6.0f,
-                getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, nameScale), nameScale,
+            Text(
+                trimToWidth(name, nameScale, contentW - 28.0f, metrics), contentX + 6.0f,
+                getCenteredTextY(metrics, currentY, ROW_HEIGHT, nameScale), nameScale,
                 if (activeRow) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
             )
             val deleteX = contentX + contentW - 18.0f
             val deleteScale = 0.52f
-            scope.text(
-                "x", deleteX + 5.0f, getCenteredTextY(textMetrics, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
-                if (isHovered(mouseX.toDouble(), mouseY.toDouble(), deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
+            Text(
+                "x", deleteX + 5.0f, getCenteredTextY(metrics, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
+                if (isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
                     MD3Theme.ERROR
                 } else {
                     MD3Theme.TEXT_MUTED

@@ -381,19 +381,23 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         } else {
             Color(0, 0, 0, backgroundAlpha)
         }
-        scope.roundRect(2, bounds.x, bounds.y, bounds.width, bounds.height, radius, background)
+        scope.layer(TrollZ.Highlight) { z ->
+            z.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, radius, background)
+        }
         val metrics = textMetrics.get()
         val iconScale = 0.92f
         val iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS)
         val iconHeight = metrics.getHeight(iconScale, StaticFontLoader.ICONS)
-        scope.textWithShadow(
-            4, icon,
-            bounds.centerX() - iconWidth * 0.5f,
-            bounds.centerY() - iconHeight * 0.5f,
-            iconScale,
-            if (active) TrollTheme.text() else TrollTheme.alpha(TrollTheme.text(), 220),
-            StaticFontLoader.ICONS
-        )
+        scope.layer(TrollZ.Content) { z ->
+            z.textWithShadow(
+                icon,
+                bounds.centerX() - iconWidth * 0.5f,
+                bounds.centerY() - iconHeight * 0.5f,
+                iconScale,
+                if (active) TrollTheme.text() else TrollTheme.alpha(TrollTheme.text(), 220),
+                StaticFontLoader.ICONS
+            )
+        }
     }
 
     fun renderPendingFrame(): Boolean {

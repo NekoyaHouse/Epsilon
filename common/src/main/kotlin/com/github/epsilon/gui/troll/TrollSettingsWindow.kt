@@ -127,22 +127,28 @@ class TrollSettingsWindow(
                     entry.row.draw(content, metrics, mouseX, mouseY)
                 } else {
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    content.rect(
-                        1, entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,
-                        Color(255, 255, 255, if (hovered) 32 else 12)
-                    )
+                    content.layer(TrollZ.Base) { z ->
+                        z.rect(
+                            entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,
+                            Color(255, 255, 255, if (hovered) 32 else 12)
+                        )
+                    }
                     val label = (if (entry.section!!.isCollapsed()) "+ " else "- ") + entry.section.title()
-                    content.textWithShadow(
-                        3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
-                        entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
-                    )
+                    content.layer(TrollZ.Text) { z ->
+                        z.textWithShadow(
+                            TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
+                            entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
+                        )
+                    }
                 }
             }
             for (entry in entries) {
                 val section = entry.section ?: continue
                 val card = entry.groupBounds.inset(0.6f)
                 val outline = TrollTheme.alpha(TrollTheme.primary(), 255)
-                content.rectOutline(5, card.x, card.y, card.width, card.height, 0.5f, outline)
+                content.layer(TrollZ.Overlay) { z ->
+                    z.rectOutline(card.x, card.y, card.width, card.height, 0.5f, outline)
+                }
             }
         }
     }

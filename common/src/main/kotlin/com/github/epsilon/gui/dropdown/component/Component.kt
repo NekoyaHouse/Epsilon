@@ -1,9 +1,15 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 
+/**
+ * Dropdown 控件基类。
+ *
+ * 命中测试始终使用屏幕绝对坐标（[x] / [y] / [width]）；绘制入口是 [UiScope] 扩展
+ * [draw]，坐标相对 [drawInScope] 推入的组件矩形，因此子类只写局部坐标。
+ */
 abstract class Component {
 
     var x: Float = 0.0f
@@ -12,16 +18,19 @@ abstract class Component {
 
     abstract fun getHeight(): Float
 
-    abstract fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int)
+    /** 在已定位到组件矩形的作用域内绘制；坐标相对组件左上角。 */
+    abstract fun UiScope.draw(mouseX: Int, mouseY: Int)
 
-    fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, bounds: UiRect) {
-        // 组件只缓存本帧命中区域，位置由 UiTree/stack 在调用侧统一计算。
-        scope.pushAbsolute(bounds) { child -> drawInScope(child, textMetrics, mouseX, mouseY, bounds) }
-    }
-
-    fun drawInScope(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int, bounds: UiRect) {
-        setPosition(bounds.x, bounds.y, bounds.width)
-        draw(scope, textMetrics, mouseX, mouseY)
+    /**
+     * 把组件摆到相对当前作用域的 [localBounds] 上并绘制。
+     *
+     * 同时缓存绝对位置供鼠标命中测试：局部坐标 + 作用域原点 = 屏幕绝对坐标。
+     */
+    fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int, localBounds: UiRect) {
+        setPosition(scope.origin.x + localBounds.x, scope.origin.y + localBounds.y, localBounds.width)
+        scope.Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
+            draw(mouseX, mouseY)
+        }
     }
 
     open fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.screen
 
+import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
@@ -97,7 +98,7 @@ abstract class EpsilonDialogScreen protected constructor(
         scene.beginFrame()
         val tree = UiTree.build { scope ->
             scope.rect(0.0f, 0.0f, width.toFloat(), height.toFloat(), SCRIM)
-            scope.layer(0) { card ->
+            scope.layer(DialogZ.Card) { card ->
                 card.shadow(
                     cardArea.x, cardArea.y, cardArea.width, cardArea.height,
                     MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
@@ -112,7 +113,7 @@ abstract class EpsilonDialogScreen protected constructor(
                 content.text(titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
                 buildBody(content, CARD_PADDING + 22.0f, epsilonMouseX, epsilonMouseY)
             }
-            scope.layer(10) { content ->
+            scope.layer(DialogZ.Content) { content ->
                 for (hit in hits) {
                     val hovered = hit.bounds.contains(epsilonMouseX.toDouble(), epsilonMouseY.toDouble())
                     val background = if (hit.button.primary) {

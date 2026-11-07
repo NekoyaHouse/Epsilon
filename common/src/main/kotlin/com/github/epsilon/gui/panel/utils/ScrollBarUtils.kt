@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.utils
 
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.theme.EpsilonUiTheme
@@ -12,7 +13,7 @@ object ScrollBarUtils {
     const val TOTAL_WIDTH = UiScrollBar.TOTAL_WIDTH
 
     fun draw(
-        scope: com.github.epsilon.gui.lib.UiTree.Scope,
+        scope: UiScope,
         viewport: UiRect,
         scroll: Float,
         maxScroll: Float,

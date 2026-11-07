@@ -1,8 +1,9 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -15,51 +16,20 @@ import java.awt.Color
 
 class ClientSettingTextField(private val maxLength: Int) {
 
-    private val hoverAnimation = Animation(Easing.EASE_OUT_CUBIC, HOVER_DURATION)
-    private val focusAnimation = Animation(Easing.EASE_OUT_CUBIC, HOVER_DURATION)
+    // 绘制入口是与本类同文件的 [UiScope.ClientSettingTextField]，状态需要对该扩展函数可见。
+    internal val hoverAnimation = Animation(Easing.EASE_OUT_CUBIC, HOVER_DURATION)
 
-    private var focused = false
-    private var text = ""
-    private var cursor = 0
+    internal val focusAnimation = Animation(Easing.EASE_OUT_CUBIC, HOVER_DURATION)
+
+    internal var focused = false
+
+    internal var text = ""
+
+    internal var cursor = 0
 
     init {
         hoverAnimation.startValue = 0.0f
         focusAnimation.startValue = 0.0f
-    }
-
-    fun buildUi(
-        scope: UiTree.Scope, bounds: UiRect, mouseX: Int, mouseY: Int,
-        textRenderer: TextRenderer, placeholder: String, textScale: Float, trailingHint: String?,
-    ) {
-        val hovered = bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-        val hoverProgress = scope.animate(hoverAnimation, hovered)
-        val focusProgress = scope.animate(focusAnimation, focused)
-        val textInset = 10.0f
-        val textHeight = textRenderer.getHeight(textScale)
-        val textX = bounds.x + textInset
-        val textY = bounds.y + (bounds.height - textHeight) / 2.0f
-
-        val showPlaceholder = text.isEmpty() && !focused
-        val display = if (showPlaceholder) placeholder else text
-        val textColor: Color = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
-        val showTrailing = focused && trailingHint != null && !trailingHint.isBlank() && !text.isEmpty()
-        scope.input(
-            bounds, focused, if (hovered) 0.6f else 0.0f,
-            focusProgress, MD3Theme.PRIMARY, 1.0f,
-            textInset, display, textScale, textColor,
-            null, null,
-            if (focused) minOf(cursor, text.length) else null,
-            if (focused) MD3Theme.TEXT_PRIMARY else null,
-            if (showTrailing) trailingHint else null,
-            0.56f,
-            if (showTrailing) MD3Theme.TEXT_MUTED else null
-        )
-
-        if (focused) {
-            val safeCursor = minOf(cursor, text.length)
-            val caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor), textScale)
-            IMEFocusHelper.updateCursorPos(caretX, textY)
-        }
     }
 
     fun focusIfContains(bounds: UiRect, mouseX: Double, mouseY: Double): Boolean {
@@ -222,4 +192,45 @@ class ClientSettingTextField(private val maxLength: Int) {
 
     }
 
+}
+
+/**
+ * 绘制一个客户端设置输入框；作用域原点即输入框左上角，所有坐标都是局部坐标。
+ *
+ * 命中测试仍由调用方用绝对矩形完成，[UiScope.origin] 只用于换算 IME 光标等需要绝对坐标的位置。
+ */
+fun UiScope.ClientSettingTextField(
+    field: ClientSettingTextField, mouseX: Int, mouseY: Int,
+    placeholder: String, textScale: Float, trailingHint: String?,
+) {
+    val hovered = origin.contains(mouseX.toDouble(), mouseY.toDouble())
+    animate(field.hoverAnimation, hovered)
+    val focusProgress = animate(field.focusAnimation, field.focused)
+    val textInset = 10.0f
+    val textHeight = metrics.textHeight(textScale)
+    val textX = textInset
+    val textY = (height - textHeight) / 2.0f
+
+    val showPlaceholder = field.text.isEmpty() && !field.focused
+    val display = if (showPlaceholder) placeholder else field.text
+    val textColor: Color = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
+    val showTrailing = field.focused && trailingHint != null && !trailingHint.isBlank() && !field.text.isEmpty()
+    Input(
+        UiRect(0.0f, 0.0f, width, height), field.focused, if (hovered) 0.6f else 0.0f,
+        focusProgress, MD3Theme.PRIMARY, 1.0f,
+        textInset, display, textScale, textColor,
+        null, null,
+        if (field.focused) minOf(field.cursor, field.text.length) else null,
+        if (field.focused) MD3Theme.TEXT_PRIMARY else null,
+        if (showTrailing) trailingHint else null,
+        0.56f,
+        if (showTrailing) MD3Theme.TEXT_MUTED else null
+    )
+
+    if (field.focused) {
+        val safeCursor = minOf(field.cursor, field.text.length)
+        // IME 光标位置需要绝对坐标：行局部坐标加回作用域原点
+        val caretX = origin.x + textX + metrics.textWidth(field.text.substring(0, safeCursor), textScale)
+        IMEFocusHelper.updateCursorPos(caretX, origin.y + textY)
+    }
 }

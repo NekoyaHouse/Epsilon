@@ -6,7 +6,11 @@ import com.github.epsilon.elements.impl.notification.Notification
 import com.github.epsilon.elements.impl.notification.Notifications
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.RoundRectVerticalGradient
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import kotlin.math.roundToInt
@@ -67,13 +71,15 @@ class AkarinNotification(private val owner: Notifications) {
         return animationProgress(notification) > 0.001f
     }
 
-    fun render(
-        scope: UiTree.Scope,
+    /**
+     * 绘制通知卡片栈。
+     *
+     * 坐标相对元素作用域原点：卡片按锚点水平对齐，垂直方向从元素顶部往下（或底部往上）排列。
+     */
+    fun draw(
+        scope: UiScope,
         metrics: TextRenderer,
         entries: List<Notification>,
-        boundsX: Float,
-        boundsY: Float,
-        boundsWidth: Float,
         scale: Float,
         fontScale: Float,
         horizontalAnchor: HudModule.HorizontalAnchor,
@@ -83,8 +89,9 @@ class AkarinNotification(private val owner: Notifications) {
         val gap = ENTRY_GAP * scale
         val totalHeight = totalHeight(entries.size, scale)
         val stackUp = verticalAnchor == HudModule.VerticalAnchor.Bottom
-        var targetY = if (stackUp) boundsY + totalHeight - cardHeight else boundsY
+        var targetY = if (stackUp) totalHeight - cardHeight else 0.0f
         val cardRadius = radius.toFloat() * scale
+        val boundsWidth = scope.width
 
         for (notification in entries) {
             val progress = animationProgress(notification)
@@ -92,9 +99,9 @@ class AkarinNotification(private val owner: Notifications) {
 
             val cardWidth = width(metrics, listOf(notification), scale, fontScale)
             val baseX = when (horizontalAnchor) {
-                HudModule.HorizontalAnchor.Right -> boundsX + boundsWidth - cardWidth
-                HudModule.HorizontalAnchor.Center -> boundsX + (boundsWidth - cardWidth) * 0.5f
-                HudModule.HorizontalAnchor.Left -> boundsX
+                HudModule.HorizontalAnchor.Right -> boundsWidth - cardWidth
+                HudModule.HorizontalAnchor.Center -> (boundsWidth - cardWidth) * 0.5f
+                HudModule.HorizontalAnchor.Left -> 0.0f
             }
             renderToast(
                 scope, metrics, notification, baseX, targetY, cardWidth, cardHeight,
@@ -105,7 +112,7 @@ class AkarinNotification(private val owner: Notifications) {
     }
 
     private fun renderToast(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         x: Float,
@@ -124,10 +131,14 @@ class AkarinNotification(private val owner: Notifications) {
         val alpha = ((255.0f * eased).roundToInt().toLong()).coerceIn((0).toLong(), (255).toLong()).toInt()
 
         if (backgroundBlur) {
-            BlurShader.render(actualX, y, width, height, cardRadius, blurStrength.toFloat() * scale)
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
+            BlurShader.render(
+                scope.origin.x + actualX, scope.origin.y + y, width, height,
+                cardRadius, blurStrength.toFloat() * scale
+            )
         }
 
-        scope.roundRect(
+        scope.RoundRect(
             actualX, y, width, height, cardRadius,
             Color(8, 12, 22, (backgroundAlpha * eased).roundToInt())
         )
@@ -139,22 +150,22 @@ class AkarinNotification(private val owner: Notifications) {
         val stripeY = y + 5.0f * scale
         val stripeHeight = maxOf(4.0f * scale, titleHeight * 0.68f)
         val stripeGlow = withAlpha(topColor, (alpha * 0.13f).roundToInt())
-        scope.roundRect(
+        scope.RoundRect(
             actualX - 0.2f * scale, stripeY - 1.5f * scale,
             (STRIPE_WIDTH + 1.5f) * scale, stripeHeight + 3.0f * scale, 2.0f * scale, stripeGlow
         )
-        scope.roundRectVerticalGradient(
+        scope.RoundRectVerticalGradient(
             actualX, stripeY, STRIPE_WIDTH * scale, stripeHeight,
             STRIPE_WIDTH * 0.5f * scale, withAlpha(topColor, alpha), withAlpha(bottomColor, alpha)
         )
 
         val textX = actualX + TEXT_X * scale
-        scope.text("Module", textX, y + 4.5f * scale, titleScale, Color(244, 246, 250, alpha))
+        scope.Text("Module", textX, y + 4.5f * scale, titleScale, Color(244, 246, 250, alpha))
         val statusScale = statusScale(scale, fontScale)
-        scope.scissor(
+        scope.Clip(
             actualX, y, width, height
-        ) { textScope ->
-            textScope.text(
+        ) {
+            Text(
                 statusText(notification), textX, y + 15.5f * scale, statusScale,
                 Color(244, 246, 250, (alpha * (160.0f / 255.0f)).roundToInt())
             )

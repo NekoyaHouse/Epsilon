@@ -123,7 +123,15 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - Panel、Dropdown、popup 和 HUD chrome 优先通过 `UiTree`/`UiScene`/`UiRenderBatch` 提交，不得为每个面板各建一套 renderer。
 - 一个 Screen 或 HUD 帧共享一个 `UiScene`；`beginFrame()` 与 `endFrame()` 必须配对。
-- 存在遮挡关系的 pass 必须使用不同的 `UiLayer` 或相对 layer 表达，相对 layer 必须在 `-99..99` 内。
+- 存在遮挡关系的 pass 必须使用不同的 `UiLayer` 或相对 layer 表达；相对 layer 用 `com.github.epsilon.gui.lib.scene.LayerOffset`，构造函数强制落在 `(-100, 100)` 内。
+- 图层只能通过扩展函数表达：`UiTree.Scope.layer(LayerOffset) { }` 或 `UiScope` 上的 `Layer(offset) { }` / `Above { }` / `Below { }`。不得再给图元加 `layer: Int` 参数，也不得直接写 `LayerNode`。
+- 同一 GUI 子系统的偏移必须收敛到命名空间对象（例如 `TrollZ`、`MenuZ`、`DialogZ`），不得在调用点写裸数字。
+- 新绘制的 GUI 组件优先写成 `UiScope` 扩展函数（Compose 风格：接收者携带度量、layer 与坐标原点），由 `UiRenderBatch.Content(bounds) { }` / `UiScene.Content(bounds, layer) { }` 提交；旧式 `buildUi(scope, textRenderer, ...)` 形参不再新增。
+- 绘制坐标必须相对作用域原点（`UiScope.origin`）；`Positioned` / `Box` / `ColumnScope.Item` / `Stack` 是唯一的位置入口，禁止再引入绝对定位入口（`pushAbsolute` 已删除）。命中测试、anchor 计算与持久化坐标仍用绝对坐标，两者互不混用。
+- 跨包的组件绘制接口（如 `DropdownPanel`）使用 `context(scope: UiScope) fun drawXxx()`，调用点必须存在隐式 `UiScope`（`Content { }` 的 receiver 即可满足）；度量从 `scope.metrics`（`UiTextMetrics`）取，不再传 `TextRenderer`。
+- 元素布局与绘制必须分离：HUD 等自测量组件先 `measure()` 得到最新 bounds，再用该 bounds 开 `Content`，不得用上一帧 bounds 近似。
+- 发射 UI 的扩展函数使用 PascalCase（`Fill` / `Text` / `Box` / `Column` / `Layer`）；返回值或推进动画的工具函数保持 camelCase（`animate`）。
+- `UiScope` 的 `origin` 必须与底层 `UiTree.Scope` 的 bound 一致；派生作用域只能经 `Positioned` / `Box` / `ColumnScope.Item`，不得自行 `pushAbsolute` 后手改 origin。
 - HUD 尺寸变化调用 `setBounds()`；位置通过 anchor/move API 修改，不得绕过 anchor 状态直接写持久化坐标。
 - `Render2DScheduler` 按 layer 规划批次并复用 renderer；需要严格遮挡顺序时必须显式分层，不能依赖同 layer 内不同 pipeline 的提交顺序。
 - `Render3DScheduler` 在 priority `-999` flush；模块必须在更高 priority 的监听器中提交命令。

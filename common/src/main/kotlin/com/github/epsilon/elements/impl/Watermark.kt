@@ -6,7 +6,10 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.BlurredText
+import com.github.epsilon.gui.lib.GlitchText
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.render.ColorUtils
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
@@ -92,28 +95,30 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun render(deltaTracker: DeltaTracker) {
+    override fun measure(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
         val scaledScale = scale.toFloat() * 2f
-        when (mode) {
-            Mode.Tradition -> renderTradition(textRenderer, scaledScale)
-            Mode.Glitch -> renderGlitch(textRenderer, scaledScale)
-            Mode.Sakura -> renderSakura(textRenderer, scaledScale)
-        }
-    }
-
-    private fun renderTradition(textRenderer: TextRenderer, scale: Float) {
-        val text = this.text
         val font = font()
-        renderScope().text(text, x, y, scale, textColor, font)
-        val totalWidth = textRenderer.getWidth(text, scale, font)
-        val totalHeight = textRenderer.getHeight(scale, font)
+        val text = this.text
+        val totalWidth = textRenderer.getWidth(text, scaledScale, font)
+        val totalHeight = textRenderer.getHeight(scaledScale, font)
         setBounds(totalWidth, totalHeight)
     }
 
-    private fun renderGlitch(textRenderer: TextRenderer, scale: Float) {
-        val text = this.text
-        val font = font()
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        val scaledScale = scale.toFloat() * 2f
+        when (mode) {
+            Mode.Tradition -> drawTradition(scaledScale)
+            Mode.Glitch -> drawGlitch(scaledScale)
+            Mode.Sakura -> drawSakura(scaledScale)
+        }
+    }
+
+    private fun UiScope.drawTradition(scale: Float) {
+        Text(this@Watermark.text, 0.0f, 0.0f, scale, textColor, font())
+    }
+
+    private fun UiScope.drawGlitch(scale: Float) {
         val effect = TextGlitchEffect(
             chromaticX.toFloat(),
             chromaticY.toFloat(),
@@ -126,22 +131,18 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
             glitchColor,
             noiseStrength.toFloat()
         )
-
-        renderScope().glitchText(text, x, y, scale, Color.WHITE, effect, font)
-        setBounds(textRenderer.getWidth(text, scale, font), textRenderer.getHeight(scale, font))
+        GlitchText(this@Watermark.text, 0.0f, 0.0f, scale, Color.WHITE, effect, font())
     }
 
-    private fun renderSakura(textRenderer: TextRenderer, scale: Float) {
-        val text = this.text
+    private fun UiScope.drawSakura(scale: Float) {
+        val text = this@Watermark.text
         val font = font()
-        val totalWidth = textRenderer.getWidth(text, scale, font)
-        val totalHeight = textRenderer.getHeight(scale, font)
-        var textX = this.x
-        val scope: UiTree.Scope = renderScope()
+        val totalWidth = this@Watermark.width
+        var textX = 0.0f
 
         for (index in text.indices) {
             val character = text[index].toString()
-            val characterWidth = textRenderer.getWidth(character, scale, font)
+            val characterWidth = metrics.textWidth(character, scale, font)
 
             val color = if (colorMode == ColorMode.Single) {
                 singleColor
@@ -149,7 +150,7 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
                 animateColor(
                     doubleColor1,
                     doubleColor2,
-                    if (width <= 0.0f) index * 100L else ((textX - this.x) / totalWidth * 1600.0f).toLong()
+                    if (totalWidth <= 0.0f) index * 100L else (textX / totalWidth * 1600.0f).toLong()
                 )
             }
 
@@ -160,16 +161,15 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
                 160
             )
 
-            scope.text(character, textX + 1.0f, this.y + 1.0f, scale, shadowColor, font) // shadow
+            Text(character, textX + 1.0f, 1.0f, scale, shadowColor, font) // shadow
             if (glow) {
-                scope.blurredText(character, textX, this.y, scale, glowRadius.toFloat() * scale, glowIntensity, color)
+                // 注意 UiScope.BlurredText 的参数顺序是 (text, x, y, scale, color, blurRadius, intensity)
+                BlurredText(character, textX, 0.0f, scale, color, glowRadius.toFloat() * scale, glowIntensity)
             }
-            scope.text(character, textX, this.y, scale, color, font)
+            Text(character, textX, 0.0f, scale, color, font)
 
             textX += characterWidth
         }
-
-        setBounds(totalWidth, totalHeight)
     }
 
     private fun animateColor(start: Color, end: Color, offset: Long): Color {

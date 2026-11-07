@@ -4,7 +4,11 @@ import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.RoundRectHorizontalGradient
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Circle
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import java.util.function.Supplier
@@ -36,7 +40,7 @@ class BalanceInstance(
         progressAnim.run((balance.toFloat() / maxBalance).coerceIn(0.0f, 1.0f))
     }
 
-    override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
+    override fun draw(scope: UiScope, width: Float, height: Float) {
         if (width < 20f || height < 10f) return
 
         val textRenderer = textRendererSupplier.get()
@@ -52,19 +56,19 @@ class BalanceInstance(
         val textX = ((width - (titleWidth + GAP + valueWidth)) / 2f).roundToInt().toFloat()
         val textY = maxOf(PADDING, (barY - PADDING - textHeight) / 2f + PADDING * 0.5f)
 
-        scope.text(TITLE, textX, textY, TEXT_SCALE, fade(IslandPalette.TEXT_PRIMARY))
-        scope.text(valueText, textX + titleWidth + GAP, textY, TEXT_SCALE, fade(IslandPalette.ACCENT))
+        scope.Text(TITLE, textX, textY, TEXT_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        scope.Text(valueText, textX + titleWidth + GAP, textY, TEXT_SCALE, fade(IslandPalette.ACCENT))
 
         val barRadius = BAR_HEIGHT * 0.5f
-        scope.roundRect(PADDING, barY, barWidth, BAR_HEIGHT, barRadius, fade(IslandPalette.TRACK))
+        scope.RoundRect(PADDING, barY, barWidth, BAR_HEIGHT, barRadius, fade(IslandPalette.TRACK))
 
         val progress = progressAnim.value.coerceIn(0f, 1f)
         if (progress > 0f) {
-            scope.roundRectHorizontalGradient(
+            scope.RoundRectHorizontalGradient(
                 PADDING, barY, barWidth * progress, BAR_HEIGHT, barRadius,
                 fade(IslandPalette.ACCENT), fade(IslandPalette.ACCENT_ALT)
             )
-            scope.circle(PADDING + barWidth * progress, barY + barRadius, 1.4f, 1.2f, fade(IslandPalette.ACCENT))
+            scope.Circle(PADDING + barWidth * progress, barY + barRadius, 1.4f, 1.2f, fade(IslandPalette.ACCENT))
         }
     }
 

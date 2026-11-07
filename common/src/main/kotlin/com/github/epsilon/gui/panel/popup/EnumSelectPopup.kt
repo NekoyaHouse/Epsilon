@@ -3,8 +3,13 @@ package com.github.epsilon.gui.panel.popup
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
+import com.github.epsilon.gui.lib.Chip
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
@@ -60,99 +65,97 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
         contentBuffer.clear()
-        val popupTree = UiTree.build { scope ->
-            val progress = scope.animate(openAnimation, 1.0f)
-            val popupY = bounds.y - (1.0f - progress) * 6.0f
-            val viewportHeight = bounds.height - CONTENT_PADDING * 2
-            val fullContentHeight = setting.modes.size * ITEM_HEIGHT
-            val itemAreaWidth = bounds.width - CONTENT_PADDING * 2 - (if (scrollable) 6.0f else 0.0f)
-            val viewportBounds = UiRect(
-                bounds.x + CONTENT_PADDING, popupY + CONTENT_PADDING,
-                bounds.width - CONTENT_PADDING * 2, viewportHeight
+        openAnimation.run(1.0f)
+        val progress = openAnimation.value
+        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        val viewportHeight = bounds.height - CONTENT_PADDING * 2
+        val fullContentHeight = setting.modes.size * ITEM_HEIGHT
+        val itemAreaWidth = bounds.width - CONTENT_PADDING * 2 - (if (scrollable) 6.0f else 0.0f)
+        val viewportBounds = UiRect(
+            bounds.x + CONTENT_PADDING, popupY + CONTENT_PADDING,
+            bounds.width - CONTENT_PADDING * 2, viewportHeight
+        )
+
+        val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        renderBatch.Content(popupBounds) {
+            PopupCard(
+                size,
+                MD3Theme.CARD_RADIUS.toFloat(),
+                MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
             )
 
-            val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            scope.pushAbsolute(popupBounds) { popup ->
-                popup.popupCard(
-                    popupBounds.atOrigin(),
-                    MD3Theme.CARD_RADIUS.toFloat(),
-                    MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
-                )
-
-                hoveredIndex = -1
-                val localViewportBounds = viewportBounds.relativeTo(popupBounds)
-                popup.viewport(contentBuffer, localViewportBounds, scroll, maxScroll, fullContentHeight) { content ->
-                    val modes = setting.modes
-                    val itemStartY = popupY + CONTENT_PADDING - scroll
-                    for (i in modes.indices) {
-                        val itemY = itemStartY + i * ITEM_HEIGHT
-                        val itemBounds = UiRect(bounds.x + CONTENT_PADDING, itemY, itemAreaWidth, ITEM_INNER_HEIGHT)
-                        val visible = itemY + ITEM_INNER_HEIGHT > viewportBounds.y && itemY < viewportBounds.bottom()
-                        val hovered = visible && itemBounds.contains(mouseX.toDouble(), mouseY.toDouble()) &&
-                                mouseY >= viewportBounds.y && mouseY <= viewportBounds.bottom()
-                        if (hovered) {
-                            hoveredIndex = i
-                        }
-                        val selected = i == setting.modeIndex
-                        val supported = setting.isModeSupportedUnchecked(modes[i])
-                        val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
-                        val hoverBackground =
-                            MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f)
-                        val selectedBackground = MD3Theme.SECONDARY_CONTAINER
-                        val background: Color =
-                            if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
-                        val textColor: Color = if (!supported) {
-                            MD3Theme.TEXT_MUTED
-                        } else if (selected) {
-                            MD3Theme.ON_SECONDARY_CONTAINER
-                        } else if (hovered) {
-                            MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255)
-                        } else {
-                            MD3Theme.TEXT_SECONDARY
-                        }
-                        val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
-                        content.roundRect(
-                            localItemBounds.x, localItemBounds.y, localItemBounds.width, localItemBounds.height,
-                            8.0f, background
+            hoveredIndex = -1
+            val localViewportBounds = viewportBounds.relativeTo(popupBounds)
+            Viewport(contentBuffer, localViewportBounds, scroll, maxScroll, fullContentHeight) {
+                val modes = setting.modes
+                val itemStartY = popupY + CONTENT_PADDING - scroll
+                for (i in modes.indices) {
+                    val itemY = itemStartY + i * ITEM_HEIGHT
+                    val itemBounds = UiRect(bounds.x + CONTENT_PADDING, itemY, itemAreaWidth, ITEM_INNER_HEIGHT)
+                    val visible = itemY + ITEM_INNER_HEIGHT > viewportBounds.y && itemY < viewportBounds.bottom()
+                    val hovered = visible && itemBounds.contains(mouseX.toDouble(), mouseY.toDouble()) &&
+                            mouseY >= viewportBounds.y && mouseY <= viewportBounds.bottom()
+                    if (hovered) {
+                        hoveredIndex = i
+                    }
+                    val selected = i == setting.modeIndex
+                    val supported = setting.isModeSupportedUnchecked(modes[i])
+                    val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
+                    val hoverBackground =
+                        MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f)
+                    val selectedBackground = MD3Theme.SECONDARY_CONTAINER
+                    val background: Color =
+                        if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
+                    val textColor: Color = if (!supported) {
+                        MD3Theme.TEXT_MUTED
+                    } else if (selected) {
+                        MD3Theme.ON_SECONDARY_CONTAINER
+                    } else if (hovered) {
+                        MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255)
+                    } else {
+                        MD3Theme.TEXT_SECONDARY
+                    }
+                    val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
+                    RoundRect(
+                        localItemBounds.x, localItemBounds.y, localItemBounds.width, localItemBounds.height,
+                        8.0f, background
+                    )
+                    val textScale = 0.62f
+                    val textHeight = metrics.textHeight(textScale)
+                    val textY = localItemBounds.y + (localItemBounds.height - textHeight) / 2.0f
+                    if (selected) {
+                        val iconScale = 0.72f
+                        val iconHeight = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
+                        val iconY = localItemBounds.y + (localItemBounds.height - iconHeight) / 2.0f
+                        // TODO: 换个更合适的 icon
+                        Text(
+                            IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x + 8.0f, iconY, iconScale,
+                            MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
                         )
-                        val textScale = 0.62f
-                        val textHeight = contentBuffer.textMetrics().getHeight(textScale)
-                        val textY = localItemBounds.y + (localItemBounds.height - textHeight) / 2.0f
-                        if (selected) {
-                            val iconScale = 0.72f
-                            val iconHeight = contentBuffer.textMetrics().getHeight(iconScale, StaticFontLoader.ICONS)
-                            val iconY = localItemBounds.y + (localItemBounds.height - iconHeight) / 2.0f
-                            // TODO: 换个更合适的 icon
-                            content.text(
-                                IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x + 8.0f, iconY, iconScale,
-                                MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
-                            )
-                        }
-                        content.text(
-                            setting.getTranslatedValueByIndex(i),
-                            localItemBounds.x + (if (selected) 22.0f else 10.0f), textY, textScale, textColor
+                    }
+                    Text(
+                        setting.getTranslatedValueByIndex(i),
+                        localItemBounds.x + (if (selected) 22.0f else 10.0f), textY, textScale, textColor
+                    )
+                    if (!supported) {
+                        val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
+                        val badgeScale = 0.52f
+                        // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+                        val badgeWidth = metrics.textWidth(badge, badgeScale) + 16.0f
+                        val badgeHeight = 12.0f
+                        val badgeX = localItemBounds.right() - badgeWidth - 8.0f
+                        val badgeY = localItemBounds.y + (localItemBounds.height - badgeHeight) * 0.5f
+                        Chip(
+                            UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
+                            MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255),
+                            MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
                         )
-                        if (!supported) {
-                            val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
-                            val badgeScale = 0.52f
-                            // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
-                            val badgeWidth = contentBuffer.textMetrics().getWidth(badge, badgeScale) + 16.0f
-                            val badgeHeight = 12.0f
-                            val badgeX = localItemBounds.right() - badgeWidth - 8.0f
-                            val badgeY = localItemBounds.y + (localItemBounds.height - badgeHeight) * 0.5f
-                            content.chip(
-                                UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
-                                MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255),
-                                MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
-                            )
-                        }
                     }
                 }
             }
         }
-        renderBatch.render(popupTree)
     }
 
     override fun flush(renderBatch: UiRenderBatch) {

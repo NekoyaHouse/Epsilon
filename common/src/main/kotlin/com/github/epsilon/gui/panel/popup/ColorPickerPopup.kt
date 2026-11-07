@@ -1,8 +1,16 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Slider
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.ColorSetting
@@ -59,114 +67,113 @@ class ColorPickerPopup(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        val tree = UiTree.build { scope ->
-            val progress = scope.animate(openAnimation, 1.0f)
-            val popupY = bounds.y - (1.0f - progress) * 6.0f
-            val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            scope.pushAbsolute(popupBounds) { popup ->
-                popup.popupCard(
-                    popupBounds.atOrigin(),
-                    MD3Theme.CARD_RADIUS.toFloat(),
-                    MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+        openAnimation.run(1.0f)
+        val progress = openAnimation.value
+        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        renderBatch.Content(popupBounds) {
+            PopupCard(
+                size,
+                MD3Theme.CARD_RADIUS.toFloat(),
+                MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+            )
+            val localAnchorBounds = anchorBounds.relativeTo(popupBounds)
+            Positioned(localAnchorBounds.x, localAnchorBounds.y, localAnchorBounds.width, localAnchorBounds.height) {
+                RoundRect(
+                    0.0f, 0.0f, anchorBounds.width, anchorBounds.height,
+                    MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255)
                 )
-                popup.pushAbsolute(anchorBounds) { anchor ->
-                    anchor.roundRect(
-                        0.0f, 0.0f, anchorBounds.width, anchorBounds.height,
-                        MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255)
-                    )
+            }
+
+            val previewBounds = getPreviewBounds(popupY)
+            val swatchBounds = getPreviewSwatchBounds(popupY)
+            val localPreviewBounds = previewBounds.relativeTo(popupBounds)
+            val localSwatchBounds = swatchBounds.relativeTo(popupBounds)
+            val previewSurface =
+                if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER
+            val swatchSurface =
+                if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGHEST
+            RoundRect(
+                localPreviewBounds.x, localPreviewBounds.y, localPreviewBounds.width, localPreviewBounds.height,
+                10.0f, MD3Theme.withAlpha(previewSurface, 255)
+            )
+            RoundRect(
+                localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
+                8.0f, MD3Theme.withAlpha(swatchSurface, 255)
+            )
+            if (setting.isAllowAlpha()) {
+                buildCheckerboard(localSwatchBounds, 255)
+            }
+            RoundRect(
+                localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
+                8.0f, getVisibleColor()
+            )
+            RoundRect(
+                localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
+                8.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (72 * progress).toInt())
+            )
+            Text(
+                formatHex(getVisibleColor()), localPreviewBounds.x + 40.0f, localPreviewBounds.y + 8.0f,
+                0.64f, MD3Theme.TEXT_PRIMARY
+            )
+            Text(
+                if (setting.isAllowAlpha()) "RGBA" else "RGB",
+                localPreviewBounds.x + 40.0f, localPreviewBounds.y + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY
+            )
+
+            val channels = getChannels()
+            for (i in channels.indices) {
+                val channel = channels[i]
+                val rowBounds = getChannelRowBounds(popupY, i)
+                val localRowBounds = rowBounds.relativeTo(popupBounds)
+                val trackBounds = getTrackBounds(rowBounds)
+                val localTrackBounds = trackBounds.relativeTo(popupBounds)
+                val valueBounds = getValueBounds(rowBounds)
+                val localValueBounds = valueBounds.relativeTo(popupBounds)
+                val hovered = rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                val channelProgress = getChannelValue(channel) / 255.0f
+                val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
+                val indicatorProgress = animate(
+                    indicatorAnimations[i], hovered || draggingChannel === channel
+                )
+                val rowSurface: Color = if (hovered) {
+                    if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
+                } else {
+                    MD3Theme.SURFACE_CONTAINER
                 }
 
-                val previewBounds = getPreviewBounds(popupY)
-                val swatchBounds = getPreviewSwatchBounds(popupY)
-                val localPreviewBounds = previewBounds.relativeTo(popupBounds)
-                val localSwatchBounds = swatchBounds.relativeTo(popupBounds)
-                val previewSurface =
-                    if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER
-                val swatchSurface =
-                    if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGHEST
-                popup.roundRect(
-                    localPreviewBounds.x, localPreviewBounds.y, localPreviewBounds.width, localPreviewBounds.height,
-                    10.0f, MD3Theme.withAlpha(previewSurface, 255)
+                Text(
+                    channel.shortLabel, localRowBounds.x + 8.0f, localRowBounds.y + 6.5f, 0.58f,
+                    if (MD3Theme.isLightTheme()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
                 )
-                popup.roundRect(
-                    localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
-                    8.0f, MD3Theme.withAlpha(swatchSurface, 255)
+                RoundRect(
+                    localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height,
+                    8.0f, MD3Theme.withAlpha(rowSurface, 255)
                 )
-                if (setting.isAllowAlpha()) {
-                    buildCheckerboard(popup, localSwatchBounds, 255)
-                }
-                popup.roundRect(
-                    localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
-                    8.0f, getVisibleColor()
-                )
-                popup.roundRect(
-                    localSwatchBounds.x, localSwatchBounds.y, localSwatchBounds.width, localSwatchBounds.height,
-                    8.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (72 * progress).toInt())
-                )
-                popup.text(
-                    formatHex(getVisibleColor()), localPreviewBounds.x + 40.0f, localPreviewBounds.y + 8.0f,
-                    0.64f, MD3Theme.TEXT_PRIMARY
-                )
-                popup.text(
-                    if (setting.isAllowAlpha()) "RGBA" else "RGB",
-                    localPreviewBounds.x + 40.0f, localPreviewBounds.y + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY
+                Slider(
+                    localTrackBounds, channelProgress, 2.5f,
+                    MD3Theme.withAlpha(
+                        if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH
+                        else MD3Theme.SURFACE_CONTAINER_HIGHEST,
+                        255
+                    ),
+                    0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
+                    4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255)
                 )
 
-                val channels = getChannels()
-                for (i in channels.indices) {
-                    val channel = channels[i]
-                    val rowBounds = getChannelRowBounds(popupY, i)
-                    val localRowBounds = rowBounds.relativeTo(popupBounds)
-                    val trackBounds = getTrackBounds(rowBounds)
-                    val localTrackBounds = trackBounds.relativeTo(popupBounds)
-                    val valueBounds = getValueBounds(rowBounds)
-                    val localValueBounds = valueBounds.relativeTo(popupBounds)
-                    val hovered = rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    val channelProgress = getChannelValue(channel) / 255.0f
-                    val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
-                    val indicatorProgress = scope.animate(
-                        indicatorAnimations[i], hovered || draggingChannel === channel
+                val valueText =
+                    if (focusedChannel === channel) getDisplayBuffer() else getChannelValue(channel).toString()
+                buildValueBox(localValueBounds, valueText, focusedChannel === channel, 255)
+                if (indicatorProgress > 0.01f) {
+                    buildValueIndicator(
+                        handleX + 2.0f, localRowBounds.y - 4.0f,
+                        getChannelValue(channel).toString(), indicatorProgress
                     )
-                    val rowSurface: Color = if (hovered) {
-                        if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
-                    } else {
-                        MD3Theme.SURFACE_CONTAINER
-                    }
-
-                    popup.text(
-                        channel.shortLabel, localRowBounds.x + 8.0f, localRowBounds.y + 6.5f, 0.58f,
-                        if (MD3Theme.isLightTheme()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
-                    )
-                    popup.roundRect(
-                        localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height,
-                        8.0f, MD3Theme.withAlpha(rowSurface, 255)
-                    )
-                    popup.slider(
-                        localTrackBounds, channelProgress, 2.5f,
-                        MD3Theme.withAlpha(
-                            if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH
-                            else MD3Theme.SURFACE_CONTAINER_HIGHEST,
-                            255
-                        ),
-                        0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
-                        4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255)
-                    )
-
-                    val valueText =
-                        if (focusedChannel === channel) getDisplayBuffer() else getChannelValue(channel).toString()
-                    buildValueBox(popup, localValueBounds, valueText, focusedChannel === channel, 255)
-                    if (indicatorProgress > 0.01f) {
-                        buildValueIndicator(
-                            popup, handleX + 2.0f, localRowBounds.y - 4.0f,
-                            getChannelValue(channel).toString(), indicatorProgress
-                        )
-                    }
                 }
             }
         }
-        renderBatch.render(tree)
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -356,27 +363,27 @@ class ColorPickerPopup(
         return String.format("#%02X%02X%02X", color.red, color.green, color.blue)
     }
 
-    private fun buildValueIndicator(
-        scope: UiTree.Scope, anchorX: Float, rowTop: Float, valueText: String, progress: Float,
+    private fun UiScope.buildValueIndicator(
+        anchorX: Float, rowTop: Float, valueText: String, progress: Float,
     ) {
         val textScale = 0.54f
-        val bubbleWidth = textRenderer.getWidth(valueText, textScale) + 12.0f
+        val bubbleWidth = metrics.textWidth(valueText, textScale) + 12.0f
         val bubbleHeight = 16.0f
         val bubbleX = anchorX - bubbleWidth / 2.0f
         val bubbleY = rowTop - 14.0f - (1.0f - progress) * 4.0f
         val bubbleAlpha = (255 * progress).toInt()
-        scope.roundRect(
+        RoundRect(
             bubbleX, bubbleY, bubbleWidth, bubbleHeight, 8.0f,
             MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha)
         )
-        val textY = bubbleY + (bubbleHeight - textRenderer.getHeight(textScale)) / 2.0f
-        scope.text(
-            valueText, bubbleX + (bubbleWidth - textRenderer.getWidth(valueText, textScale)) / 2.0f, textY,
+        val textY = bubbleY + (bubbleHeight - metrics.textHeight(textScale)) / 2.0f
+        Text(
+            valueText, bubbleX + (bubbleWidth - metrics.textWidth(valueText, textScale)) / 2.0f, textY,
             textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha)
         )
     }
 
-    private fun buildValueBox(scope: UiTree.Scope, bounds: UiRect, valueText: String, focused: Boolean, alpha: Int) {
+    private fun UiScope.buildValueBox(bounds: UiRect, valueText: String, focused: Boolean, alpha: Int) {
         val boxBase = if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
         val boxHover = MD3Theme.SURFACE_CONTAINER_HIGHEST
         val boxColor: Color =
@@ -386,24 +393,22 @@ class ColorPickerPopup(
             )
         val textColor: Color =
             if (focused) MD3Theme.INVERSE_ON_SURFACE else MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, alpha)
-        scope.pushRelative(bounds) { box ->
-            box.roundRect(0.0f, 0.0f, bounds.width, bounds.height, 6.0f, boxColor)
-            val textScale = 0.52f
-            val textWidth = textRenderer.getWidth(valueText, textScale)
-            val textHeight = textRenderer.getHeight(textScale)
-            val textX = (bounds.width - textWidth) / 2.0f
-            val textY = (bounds.height - textHeight) / 2.0f
-            box.text(valueText, textX, textY, textScale, textColor)
-            if (focused) {
-                val caretX = textX + textRenderer.getWidth(
-                    valueText.substring(0, minOf(cursorIndex, valueText.length)), textScale
-                )
-                box.rect(caretX, 3.0f, 1.0f, bounds.height - 6.0f, MD3Theme.INVERSE_ON_SURFACE)
-            }
+        RoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6.0f, boxColor)
+        val textScale = 0.52f
+        val textWidth = metrics.textWidth(valueText, textScale)
+        val textHeight = metrics.textHeight(textScale)
+        val textX = bounds.x + (bounds.width - textWidth) / 2.0f
+        val textY = bounds.y + (bounds.height - textHeight) / 2.0f
+        Text(valueText, textX, textY, textScale, textColor)
+        if (focused) {
+            val caretX = textX + metrics.textWidth(
+                valueText.substring(0, minOf(cursorIndex, valueText.length)), textScale
+            )
+            Rect(caretX, bounds.y + 3.0f, 1.0f, bounds.height - 6.0f, MD3Theme.INVERSE_ON_SURFACE)
         }
     }
 
-    private fun buildCheckerboard(scope: UiTree.Scope, bounds: UiRect, alpha: Int) {
+    private fun UiScope.buildCheckerboard(bounds: UiRect, alpha: Int) {
         val inset = 2.0f
         val cell = 4.0f
         val dark = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, alpha)
@@ -417,7 +422,7 @@ class ColorPickerPopup(
                 val color = if ((ix + iy) and 1 == 0) light else dark
                 val width = minOf(cell, bounds.right() - inset - x)
                 val height = minOf(cell, bounds.bottom() - inset - y)
-                scope.roundRect(x, y, width, height, 0.0f, color)
+                RoundRect(x, y, width, height, 0.0f, color)
                 x += cell
             }
             y += cell

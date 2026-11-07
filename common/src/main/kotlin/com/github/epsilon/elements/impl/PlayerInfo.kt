@@ -9,7 +9,14 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.BlurredText
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.PlayerHead
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
@@ -58,6 +65,11 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private var cachedRows: List<PlayerRow> = emptyList()
     private var rowsInitialized: Boolean = false
 
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var frameVisible: Boolean = false
+    private var frameRows: List<PlayerRow> = emptyList()
+    private var frameLayout: Layout? = null
+
     init {
         onEnable {
             popCounts.clear()
@@ -83,29 +95,37 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         }
     }
 
-    override fun render(deltaTracker: DeltaTracker) {
-        runSafe { renderPlayers() }
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameVisible = false
+        runSafe { measurePlayers() }
     }
 
     context(nn: NonNullContext)
-    private fun renderPlayers() {
+    private fun measurePlayers() {
         val textRenderer = textRendererSupplier.get()
         if (!rowsInitialized) {
             refreshRows()
         }
         val rows = cachedRows
         val layout = createLayout(textRenderer, rows)
+        frameRows = rows
+        frameLayout = layout
         setBounds(layout.panelWidth, layout.panelHeight)
+        frameVisible = true
+    }
 
-        val panelX = x
-        val panelY = y
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (!frameVisible) return
+        val layout = frameLayout ?: return
+        val rows = frameRows
+        val textRenderer = textRendererSupplier.get()
         val panelRadius = cornerRadius.toFloat() * layout.scale
-        val scope = renderScope()
 
         if (backgroundBlur) {
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
             BlurShader.render(
-                panelX,
-                panelY,
+                origin.x,
+                origin.y,
                 layout.panelWidth,
                 layout.panelHeight,
                 panelRadius,
@@ -113,32 +133,32 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             )
         }
         if (drawShadow) {
-            scope.shadow(
-                panelX, panelY, layout.panelWidth, layout.panelHeight, panelRadius,
+            Shadow(
+                0.0f, 0.0f, layout.panelWidth, layout.panelHeight, panelRadius,
                 shadowBlur.toFloat() * layout.scale, shadowColor
             )
         }
-        scope.roundRect(panelX, panelY, layout.panelWidth, layout.panelHeight, panelRadius, backgroundColor)
+        RoundRect(0.0f, 0.0f, layout.panelWidth, layout.panelHeight, panelRadius, backgroundColor)
 
-        drawHeaders(scope, textRenderer, layout, panelX, panelY)
+        drawHeaders(layout)
 
-        val dividerY = panelY + layout.paddingY + layout.headerHeight + layout.headerBodyGap * 0.5f
-        scope.rect(
-            panelX + layout.paddingX, dividerY, layout.tableWidth, maxOf(0.5f, layout.scale * 0.75f),
+        val dividerY = layout.paddingY + layout.headerHeight + layout.headerBodyGap * 0.5f
+        Rect(
+            layout.paddingX, dividerY, layout.tableWidth, maxOf(0.5f, layout.scale * 0.75f),
             withAlpha(headerColor, 0.14f)
         )
 
-        var rowY = panelY + layout.paddingY + layout.headerHeight + layout.headerBodyGap
+        var rowY = layout.paddingY + layout.headerHeight + layout.headerBodyGap
         if (rows.isEmpty()) {
             val emptyText = EpsilonTranslations.PlayerInfo.EMPTY.getTranslatedName()
-            val emptyX = panelX + (layout.panelWidth - textRenderer.getWidth(emptyText, layout.textScale)) * 0.5f
+            val emptyX = (layout.panelWidth - textRenderer.getWidth(emptyText, layout.textScale)) * 0.5f
             val emptyY = rowY + (layout.rowHeight - textRenderer.getHeight(layout.textScale)) * 0.5f
-            text(scope, emptyText, emptyX, emptyY, layout.textScale, withAlpha(textColor, 0.72f))
+            Text(emptyText, emptyX, emptyY, layout.textScale, withAlpha(textColor, 0.72f))
             return
         }
 
         for (row in rows) {
-            drawRow(scope, textRenderer, layout, row, panelX, rowY)
+            drawRow(textRenderer, layout, row, rowY)
             rowY += layout.rowHeight
         }
     }
@@ -253,43 +273,35 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         )
     }
 
-    private fun drawHeaders(
-        scope: UiTree.Scope,
-        textRenderer: TextRenderer,
-        layout: Layout,
-        panelX: Float,
-        panelY: Float
-    ) {
-        var x = panelX + layout.paddingX
-        val y = panelY + layout.paddingY
+    private fun UiScope.drawHeaders(layout: Layout) {
+        var x = layout.paddingX
+        val y = layout.paddingY
         val color = headerColor
 
         val playersText = EpsilonTranslations.PlayerInfo.PLAYERS.getTranslatedName()
-        text(scope, playersText, x, y, layout.headerScale, color)
+        text(playersText, x, y, layout.headerScale, color)
         x += layout.nameWidth + layout.columnGap
-        text(scope, EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), x, y, layout.headerScale, color)
+        text(EpsilonTranslations.PlayerInfo.DISTANCE.getTranslatedName(), x, y, layout.headerScale, color)
         x += layout.distanceWidth + layout.columnGap
-        text(scope, EpsilonTranslations.PlayerInfo.HEALTH.getTranslatedName(), x, y, layout.headerScale, color)
+        text(EpsilonTranslations.PlayerInfo.HEALTH.getTranslatedName(), x, y, layout.headerScale, color)
         x += layout.healthWidth + layout.columnGap
-        text(scope, EpsilonTranslations.PlayerInfo.POPS.getTranslatedName(), x, y, layout.headerScale, color)
+        text(EpsilonTranslations.PlayerInfo.POPS.getTranslatedName(), x, y, layout.headerScale, color)
         x += layout.popsWidth + layout.columnGap
-        text(scope, EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), x, y, layout.headerScale, color)
+        text(EpsilonTranslations.PlayerInfo.DIRECTION.getTranslatedName(), x, y, layout.headerScale, color)
     }
 
-    private fun drawRow(
-        scope: UiTree.Scope,
+    private fun UiScope.drawRow(
         textRenderer: TextRenderer,
         layout: Layout,
         row: PlayerRow,
-        panelX: Float,
         rowY: Float,
     ) {
-        var x = panelX + layout.paddingX
+        var x = layout.paddingX
         val textY = rowY + (layout.rowHeight - textRenderer.getHeight(layout.textScale)) * 0.5f
 
         if (showHeads) {
             val headY = rowY + (layout.rowHeight - layout.headSize) * 0.5f
-            scope.playerHead(row.skinTexture, x, headY, layout.headSize, layout.headSize * 0.12f, Color.WHITE)
+            PlayerHead(row.skinTexture, x, headY, layout.headSize, layout.headSize * 0.12f, Color.WHITE)
             x += layout.headSize + layout.headTextGap
         }
 
@@ -300,25 +312,23 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             val overflow = fullNameWidth - nameTextWidth
             val scrollOffset = getNameScrollOffset(playerId, overflow, layout.scale)
             val nameX = x
-            scope.scissor(
-                nameX, rowY, nameTextWidth, layout.rowHeight
-            ) { clipped ->
-                text(clipped, row.name, nameX - scrollOffset, textY, layout.textScale, row.nameColor)
+            Clip(nameX, rowY, nameTextWidth, layout.rowHeight) {
+                text(row.name, nameX - scrollOffset, textY, layout.textScale, row.nameColor)
             }
         } else {
             nameScrollStartTimes.remove(playerId)
             if (nameTextWidth > 0.0f) {
-                text(scope, row.name, x, textY, layout.textScale, row.nameColor)
+                text(row.name, x, textY, layout.textScale, row.nameColor)
             }
         }
-        x = panelX + layout.paddingX + layout.nameWidth + layout.columnGap
-        text(scope, row.distance, x, textY, layout.textScale, textColor)
+        x = layout.paddingX + layout.nameWidth + layout.columnGap
+        text(row.distance, x, textY, layout.textScale, textColor)
         x += layout.distanceWidth + layout.columnGap
-        text(scope, row.health, x, textY, layout.textScale, row.healthColor)
+        text(row.health, x, textY, layout.textScale, row.healthColor)
         x += layout.healthWidth + layout.columnGap
-        text(scope, row.pops, x, textY, layout.textScale, textColor)
+        text(row.pops, x, textY, layout.textScale, textColor)
         x += layout.popsWidth + layout.columnGap
-        text(scope, row.direction, x, textY, layout.textScale, textColor)
+        text(row.direction, x, textY, layout.textScale, textColor)
     }
 
     private fun resolveNameColor(player: AbstractClientPlayer): Color {
@@ -353,11 +363,12 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         return overflow - (overflow * phase / travelDurationMs).toFloat()
     }
 
-    private fun text(scope: UiTree.Scope, text: String, x: Float, y: Float, scale: Float, color: Color) {
+    private fun UiScope.text(text: String, x: Float, y: Float, scale: Float, color: Color) {
         if (textGlow) {
-            scope.blurredText(text, x, y, scale, glowRadius.toFloat() * scale, glowIntensity, color)
+            // 注意 UiScope.BlurredText 的参数顺序是 (text, x, y, scale, color, blurRadius, intensity)
+            BlurredText(text, x, y, scale, color, glowRadius.toFloat() * scale, glowIntensity)
         }
-        scope.text(text, x, y, scale, color)
+        Text(text, x, y, scale, color)
     }
 
     private data class PlayerRow(

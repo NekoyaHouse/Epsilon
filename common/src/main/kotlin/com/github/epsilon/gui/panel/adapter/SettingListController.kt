@@ -1,8 +1,15 @@
 package com.github.epsilon.gui.panel.adapter
 
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Triangle
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.gui.panel.popup.*
@@ -84,15 +91,15 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
     fun layoutRows(
         settings: List<Setting<*>>, viewport: UiRect, scroll: Float, rowWidth: Float,
-        scope: UiTree.Scope, textRenderer: TextRenderer, mouseX: Int, mouseY: Int,
+        scope: UiScope, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
     ) {
-        layoutRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback)
+        layoutRows(null, settings, viewport, scroll, rowWidth, scope, mouseX, mouseY, callback)
     }
 
     fun layoutRows(
         ownerKey: String?, settings: List<Setting<*>>, viewport: UiRect, scroll: Float, rowWidth: Float,
-        scope: UiTree.Scope, textRenderer: TextRenderer, mouseX: Int, mouseY: Int,
+        scope: UiScope, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
     ) {
         prepareLayout(ownerKey, settings)
@@ -103,28 +110,27 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             activeEnumRow = null
         }
 
-        appendRows(ownerKey, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback)
+        appendRows(ownerKey, settings, viewport, scroll, rowWidth, scope, mouseX, mouseY, callback)
     }
 
     fun appendRows(
         settings: List<Setting<*>>, viewport: UiRect, scroll: Float, rowWidth: Float,
-        scope: UiTree.Scope, textRenderer: TextRenderer, mouseX: Int, mouseY: Int,
+        scope: UiScope, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
     ) {
-        appendRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback)
+        appendRows(null, settings, viewport, scroll, rowWidth, scope, mouseX, mouseY, callback)
     }
 
     fun appendRows(
         ownerKey: String?, settings: List<Setting<*>>, viewport: UiRect, scroll: Float, rowWidth: Float,
-        scope: UiTree.Scope, textRenderer: TextRenderer, mouseX: Int, mouseY: Int,
+        scope: UiScope, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
     ) {
         var rowY = viewport.y - scroll
         for (section in buildSections(ownerKey, settings)) {
             if (section.hasHeader()) {
-                rowY += appendGroupSection(
-                    scope, textRenderer, section, viewport.x, rowY, rowWidth, 0,
-                    mouseX, mouseY, callback
+                rowY += scope.appendGroupSection(
+                    section, viewport.x, rowY, rowWidth, 0, mouseX, mouseY, callback
                 ) + MD3Theme.ROW_GAP
                 continue
             }
@@ -134,15 +140,23 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 val rowBounds = UiRect(viewport.x, rowY, rowWidth, row.getHeight())
                 settingEntries.add(SettingEntry(row, rowBounds))
                 if (setting !is BoolSetting && !setting.isViaSupported()) {
-                    scope.pushAbsolute(rowBounds) { disabled ->
-                        disabled.text(
-                            setting.displayName + " · " + setting.viaRequirement!!.displayName(),
-                            MD3Theme.ROW_CONTENT_INSET, 5.0f, 0.68f, MD3Theme.TEXT_MUTED
-                        )
-                    }
+                    scope.drawDisabledSettingRow(setting, rowBounds)
                 } else callback.render(setting, row, rowBounds)
                 rowY += row.getHeight() + MD3Theme.ROW_GAP
             }
+        }
+    }
+
+    /**
+     * 在行作用域中绘制“当前平台不可用”的提示文案。
+     */
+    private fun UiScope.drawDisabledSettingRow(setting: Setting<*>, absoluteBounds: UiRect) {
+        val local = absoluteBounds.relativeTo(origin)
+        Positioned(local.x, local.y, local.width, local.height) {
+            Text(
+                setting.displayName + " · " + setting.viaRequirement!!.displayName(),
+                MD3Theme.ROW_CONTENT_INSET, 5.0f, 0.68f, MD3Theme.TEXT_MUTED
+            )
         }
     }
 
@@ -151,8 +165,8 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
      *
      * @return 该分组卡片的高度
      */
-    private fun appendGroupSection(
-        scope: UiTree.Scope, textRenderer: TextRenderer, section: SettingLayoutPlanner.Section,
+    private fun UiScope.appendGroupSection(
+        section: SettingLayoutPlanner.Section,
         x: Float, y: Float, width: Float, depth: Int, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
     ): Float {
@@ -162,7 +176,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         val sectionBounds = UiRect(cardX, y, cardWidth, getSectionHeight(section))
         val headerBounds = UiRect(cardX, y, cardWidth, GROUP_HEADER_HEIGHT)
         sectionEntries.add(SectionEntry(section, headerBounds))
-        buildSectionCard(scope, textRenderer, section, sectionBounds, headerBounds, depth, mouseX, mouseY)
+        buildSectionCard(section, sectionBounds, headerBounds, depth, mouseX, mouseY)
 
         if (section.isCollapsed()) {
             return sectionBounds.height
@@ -179,19 +193,14 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                     val rowBounds = UiRect(innerX, cursor, innerWidth, row.getHeight())
                     settingEntries.add(SettingEntry(row, rowBounds))
                     if (setting !is BoolSetting && !setting.isViaSupported()) {
-                        scope.pushAbsolute(rowBounds) { disabled ->
-                            disabled.text(
-                                setting.displayName + " · " + setting.viaRequirement!!.displayName(),
-                                MD3Theme.ROW_CONTENT_INSET, 5.0f, 0.68f, MD3Theme.TEXT_MUTED
-                            )
-                        }
+                        drawDisabledSettingRow(setting, rowBounds)
                     } else callback.render(setting, row, rowBounds)
                     cursor += row.getHeight() + MD3Theme.ROW_GAP
                 }
 
                 is SettingLayoutPlanner.Section.GroupElement -> {
                     cursor += appendGroupSection(
-                        scope, textRenderer, element.section(), innerX, cursor, innerWidth, depth + 1,
+                        element.section(), innerX, cursor, innerWidth, depth + 1,
                         mouseX, mouseY, callback
                     ) + MD3Theme.ROW_GAP
                 }
@@ -382,23 +391,24 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 sectionExpandAnimations.values.any { animation -> !animation.isFinished }
     }
 
-    private fun buildSectionCard(
-        scope: UiTree.Scope, textRenderer: TextRenderer, section: SettingLayoutPlanner.Section,
+    private fun UiScope.buildSectionCard(
+        section: SettingLayoutPlanner.Section,
         groupBounds: UiRect, headerBounds: UiRect, depth: Int, mouseX: Int, mouseY: Int,
     ) {
         val hoverAnimation = sectionHoverAnimations.getOrPut(section.key()) { createAnimation(120L, 0.0f) }
         val expandAnimation = sectionExpandAnimations.getOrPut(section.key()) {
             createAnimation(180L, if (section.isCollapsed()) 0.0f else 1.0f)
         }
-        val hoverProgress = scope.animate(hoverAnimation, headerBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        val expandProgress = scope.animate(expandAnimation, !section.isCollapsed())
+        val hoverProgress = animate(hoverAnimation, headerBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val expandProgress = animate(expandAnimation, !section.isCollapsed())
 
-        scope.pushAbsolute(groupBounds) { group ->
+        val localGroup = groupBounds.relativeTo(origin)
+        Positioned(localGroup.x, localGroup.y, localGroup.width, localGroup.height) {
             val localHeader = headerBounds.relativeTo(groupBounds)
-            group.roundRect(
+            RoundRect(
                 0.0f, 0.0f, groupBounds.width, groupBounds.height, MD3Theme.CARD_RADIUS.toFloat(), groupOutline(depth)
             )
-            group.roundRect(
+            RoundRect(
                 GROUP_OUTLINE_INSET,
                 GROUP_OUTLINE_INSET,
                 groupBounds.width - GROUP_OUTLINE_INSET * 2.0f,
@@ -407,7 +417,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 MD3Theme.lerp(groupSurface(depth), MD3Theme.SURFACE_CONTAINER, expandProgress)
             )
             if (hoverProgress > 0.01f) {
-                group.roundRect(
+                RoundRect(
                     localHeader.x, localHeader.y, localHeader.width, localHeader.height,
                     MD3Theme.CARD_RADIUS.toFloat(),
                     MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, if (MD3Theme.isLightTheme()) 10 else 14)
@@ -415,25 +425,25 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             }
 
             val labelScale = 0.66f
-            val label = trimToWidth(section.title(), labelScale, headerBounds.width - 74.0f, textRenderer)
-            val labelY = localHeader.y + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f
-            group.text(
+            val label = trimToWidth(section.title(), labelScale, headerBounds.width - 74.0f, metrics)
+            val labelY = localHeader.y + (GROUP_HEADER_HEIGHT - metrics.textHeight(labelScale)) / 2.0f
+            Text(
                 label, localHeader.x + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY
             )
 
             val countLabel = section.totalSettingCount().toString()
             val countScale = 0.46f
-            val countWidth = textRenderer.getWidth(countLabel, countScale) + 10.0f
+            val countWidth = metrics.textWidth(countLabel, countScale) + 10.0f
             val countX = localHeader.x + localHeader.width - MD3Theme.ROW_TRAILING_INSET - 20.0f - countWidth
             val countY = localHeader.y + (GROUP_HEADER_HEIGHT - GROUP_COUNT_CHIP_HEIGHT) / 2.0f
-            group.roundRect(
+            RoundRect(
                 countX, countY, countWidth, GROUP_COUNT_CHIP_HEIGHT, GROUP_COUNT_CHIP_HEIGHT / 2.0f,
                 MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210)
             )
-            group.text(
+            Text(
                 countLabel,
-                countX + (countWidth - textRenderer.getWidth(countLabel, countScale)) / 2.0f,
-                countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f,
+                countX + (countWidth - metrics.textWidth(countLabel, countScale)) / 2.0f,
+                countY + (GROUP_COUNT_CHIP_HEIGHT - metrics.textHeight(countScale)) / 2.0f,
                 countScale,
                 MD3Theme.ON_SECONDARY_CONTAINER
             )
@@ -441,7 +451,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             val chevronSize = 3.0f
             val chevronCenterX = localHeader.x + localHeader.width - MD3Theme.ROW_TRAILING_INSET - chevronSize - 3.0f
             val chevronCenterY = localHeader.y + GROUP_HEADER_HEIGHT / 2.0f
-            group.triangle(
+            Triangle(
                 chevronCenterX, chevronCenterY, chevronSize, expandProgress,
                 MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress)
             )
@@ -564,21 +574,21 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         }
     }
 
-    private fun trimToWidth(value: String?, scale: Float, width: Float, textRenderer: TextRenderer): String {
+    private fun trimToWidth(value: String?, scale: Float, width: Float, metrics: UiTextMetrics): String {
         if (value == null || value.isEmpty() || width <= 0.0f) {
             return ""
         }
-        if (textRenderer.getWidth(value, scale) <= width) {
+        if (metrics.textWidth(value, scale) <= width) {
             return value
         }
         val ellipsis = "..."
-        val ellipsisWidth = textRenderer.getWidth(ellipsis, scale)
+        val ellipsisWidth = metrics.textWidth(ellipsis, scale)
         if (ellipsisWidth >= width) {
             return ellipsis
         }
         for (length in value.length - 1 downTo 0) {
             val candidate = value.substring(0, length) + ellipsis
-            if (textRenderer.getWidth(candidate, scale) <= width) {
+            if (metrics.textWidth(candidate, scale) <= width) {
                 return candidate
             }
         }
@@ -586,7 +596,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     }
 
     private fun createEnumPopup(enumRow: EnumSettingRow, rowBounds: UiRect, popupBounds: UiRect): EnumSelectPopup {
-        val chipBounds = enumRow.getChipBounds(measureTextRenderer, rowBounds)
+        val chipBounds = enumRow.getChipBounds(measureTextRenderer.asUiTextMetrics(), rowBounds)
         val optionCount = enumRow.getSetting().modes.size
         val visibleCount = minOf(optionCount, EnumSelectPopup.MAX_VISIBLE_ITEMS)
         val popupHeight = visibleCount * 24.0f + 12.0f

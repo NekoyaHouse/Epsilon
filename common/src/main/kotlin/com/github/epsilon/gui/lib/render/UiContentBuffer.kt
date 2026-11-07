@@ -7,6 +7,7 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import java.awt.Color
 import java.util.*
@@ -79,7 +80,10 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
         scrollBarBatch.clear()
         scrollBarBatch.render(
             UiTree.build { scope ->
-                scrollBar.draw(scope, viewport, scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble())
+                scrollBar.draw(
+                    scope.asUiScope(batch.scheduler().textMetrics()),
+                    viewport, scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble()
+                )
             }
         )
         pendingViewport = viewport

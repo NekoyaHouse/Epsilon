@@ -1,13 +1,15 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Content
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
+import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
@@ -28,7 +30,6 @@ import kotlin.math.abs
 
 class GeneralClientSettingTab(
     private val state: PanelState,
-    private val textRenderer: TextRenderer,
     popupHost: PanelPopupHost,
 ) : ClientSettingTabView {
 
@@ -79,17 +80,17 @@ class GeneralClientSettingTab(
             contentState.beginRebuild()
         }
 
-        val tree = UiTree.build { scope ->
-            scope.viewport(
-                contentBuffer, bounds, state.getClientSettingScroll(), maxScroll, contentHeight,
+        renderBatch.Content(bounds) {
+            Viewport(
+                contentBuffer, size, state.getClientSettingScroll(), maxScroll, contentHeight,
                 effectiveMouseX, effectiveMouseY
-            ) { content ->
+            ) {
                 if (!rebuildContent) {
-                    return@viewport
+                    return@Viewport
                 }
                 settingListController.layoutRows(
                     SETTING_OWNER_KEY, settings, bounds, state.getClientSettingScroll(), rowWidth,
-                    content, textRenderer, effectiveMouseX, effectiveMouseY
+                    this, effectiveMouseX, effectiveMouseY
                 ) { setting, row, rowBounds ->
                     if (row is KeybindSettingRow) {
                         row.setListening(state.getListeningKeybindSetting() === row.getSetting())
@@ -102,18 +103,12 @@ class GeneralClientSettingTab(
                     hoverAnimation.run(
                         if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
                     )
-                    content.pushAbsolute(rowBounds) { rowScope ->
-                        row.buildUi(
-                            rowScope, guiGraphics, textRenderer, rowBounds,
-                            hoverAnimation.value, effectiveMouseX, effectiveMouseY, partialTick
-                        )
-                    }
+                    SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
                     contentState.noteAnimation(!hoverAnimation.isFinished || row.hasActiveAnimation())
                 }
                 contentState.noteAnimation(settingListController.hasActiveAnimations())
             }
         }
-        renderBatch.render(tree)
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, settings, guiGraphics.guiHeight(), contentSignature)

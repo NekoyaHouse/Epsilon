@@ -1,8 +1,13 @@
 package com.github.epsilon.gui.dropdown.widget
 
 import com.github.epsilon.gui.dropdown.DropdownTheme
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.TextWithShadow
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -33,85 +38,90 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         get() = cursor.coerceIn(0, text.length)
 
     fun draw(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
+        scope: UiScope, x: Float, y: Float, width: Float, height: Float,
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float,
     ) {
-        draw(scope, textMetrics, x, y, width, height, mouseX, mouseY, placeholder, textScale, false)
+        draw(scope, x, y, width, height, mouseX, mouseY, placeholder, textScale, false)
     }
 
     fun draw(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
+        scope: UiScope, x: Float, y: Float, width: Float, height: Float,
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float, textShadow: Boolean,
     ) {
-        scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
-        scope.outline(
-            x,
-            y,
-            width,
-            height,
-            DropdownTheme.INPUT_RADIUS,
-            0.7f,
-            if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
-        )
+        with(scope) {
+            RoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
+            Outline(
+                x,
+                y,
+                width,
+                height,
+                DropdownTheme.INPUT_RADIUS,
+                0.7f,
+                if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
+            )
 
-        val showPlaceholder = text.isEmpty() && !isFocused
-        val display = if (showPlaceholder) placeholder else text
-        val textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f
-        val textX = x + 4.0f
-        updateCursorLayout(textMetrics, textX, textScale)
-        val visibleText = trimToWidth(display, textScale, width - 8.0f, textMetrics)
-        val textColor = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
-        if (textShadow) {
-            scope.textWithShadow(visibleText, textX, textY, textScale, textColor)
-        } else {
-            scope.text(visibleText, textX, textY, textScale, textColor)
-        }
+            val showPlaceholder = text.isEmpty() && !isFocused
+            val display = if (showPlaceholder) placeholder else text
+            val textY = y + (height - metrics.textHeight(textScale)) / 2.0f
+            val textX = x + 4.0f
+            // 光标布局用于鼠标点击定位与 IME 候选框，两者都要求屏幕绝对坐标。
+            updateCursorLayout(metrics, origin.x + textX, textScale)
+            val visibleText = trimToWidth(display, textScale, width - 8.0f, metrics)
+            val textColor = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
+            if (textShadow) {
+                TextWithShadow(visibleText, textX, textY, textScale, textColor)
+            } else {
+                Text(visibleText, textX, textY, textScale, textColor)
+            }
 
-        if (isFocused) {
-            val safeCursor = cursor.coerceIn(0, text.length)
-            val caretX = textX + textMetrics.textWidth(text.substring(0, safeCursor), textScale)
-            drawCaret(scope, textMetrics, caretX, textY, textScale)
-            IMEFocusHelper.updateCursorPos(caretX, textY)
+            if (isFocused) {
+                val safeCursor = cursor.coerceIn(0, text.length)
+                val caretX = textX + metrics.textWidth(text.substring(0, safeCursor), textScale)
+                drawCaret(metrics, caretX, textY, textScale)
+                IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + textY)
+            }
         }
     }
 
     fun drawCentered(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, width: Float, height: Float,
+        scope: UiScope, x: Float, y: Float, width: Float, height: Float,
         mouseX: Int, mouseY: Int, placeholder: String, textScale: Float,
     ) {
-        scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
-        scope.outline(
-            x,
-            y,
-            width,
-            height,
-            DropdownTheme.INPUT_RADIUS,
-            0.7f,
-            if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
-        )
+        with(scope) {
+            RoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(isFocused))
+            Outline(
+                x,
+                y,
+                width,
+                height,
+                DropdownTheme.INPUT_RADIUS,
+                0.7f,
+                if (isFocused) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.OUTLINE, 90)
+            )
 
-        val showPlaceholder = text.isEmpty() && !isFocused
-        val display = if (showPlaceholder) placeholder else text
+            val showPlaceholder = text.isEmpty() && !isFocused
+            val display = if (showPlaceholder) placeholder else text
 
-        val textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f
-        val visibleText = trimToWidth(display, textScale, width - 8.0f, textMetrics)
-        val textX = x + (width - textMetrics.textWidth(visibleText, textScale)) * 0.5f
-        val caretBaseX = x + (width - textMetrics.textWidth(text, textScale)) * 0.5f
-        updateCursorLayout(textMetrics, caretBaseX, textScale)
-        scope.text(
-            visibleText,
-            textX,
-            textY,
-            textScale,
-            if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
-        )
+            val textY = y + (height - metrics.textHeight(textScale)) / 2.0f
+            val visibleText = trimToWidth(display, textScale, width - 8.0f, metrics)
+            val textX = x + (width - metrics.textWidth(visibleText, textScale)) * 0.5f
+            val caretBaseX = x + (width - metrics.textWidth(text, textScale)) * 0.5f
+            updateCursorLayout(metrics, origin.x + caretBaseX, textScale)
+            Text(
+                visibleText,
+                textX,
+                textY,
+                textScale,
+                if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
+            )
 
-        if (isFocused) {
-            val safeCursor = cursor.coerceIn(0, text.length)
-            val beforeCursor = text.substring(0, safeCursor)
-            val caretX = caretBaseX + textMetrics.textWidth(beforeCursor, textScale)
-            drawCaret(scope, textMetrics, caretX, textY, textScale)
-            IMEFocusHelper.updateCursorPos(caretX, textY)
+            if (isFocused) {
+                val safeCursor = cursor.coerceIn(0, text.length)
+                val beforeCursor = text.substring(0, safeCursor)
+                val caretX = caretBaseX + metrics.textWidth(beforeCursor, textScale)
+                drawCaret(metrics, caretX, textY, textScale)
+                IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + textY)
+            }
         }
     }
 
@@ -290,9 +300,9 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         return text.length
     }
 
-    private fun drawCaret(scope: UiTree.Scope, textMetrics: UiTextMetrics, x: Float, y: Float, textScale: Float) {
+    private fun UiScope.drawCaret(textMetrics: UiTextMetrics, x: Float, y: Float, textScale: Float) {
         if (System.currentTimeMillis() % 1000 > 500) {
-            scope.rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY)
+            Rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY)
         }
     }
 

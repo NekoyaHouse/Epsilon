@@ -4,9 +4,15 @@ import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.dropdown.widget.*
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Triangle
 import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
@@ -24,7 +30,7 @@ import com.github.epsilon.utils.render.animation.Easing
  * 高度、卡片背景、缩进、展开动画、命中与输入分发；`SettingsContent` 与
  * `ModuleButton` 只提供控件工厂和坐标原点。
  *
- * 绘制坐标使用调用方 scope 的局部坐标，命中测试使用「局部坐标 + hitOffset」得到的绝对坐标，
+ * 绘制坐标使用调用方 scope 的局部坐标，命中测试使用「局部坐标 + scope.origin」得到的绝对坐标，
  * 因此控件缓存的绝对位置可以直接参与命中。
  */
 class SettingSectionRenderer private constructor(nodes: List<Node>) {
@@ -49,27 +55,17 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     fun draw(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
-        x: Float, y: Float, width: Float, hitOffsetX: Float, hitOffsetY: Float,
+        scope: UiScope, mouseX: Int, mouseY: Int,
+        x: Float, y: Float, width: Float,
     ) {
         val sectionX = x + DropdownTheme.SETTING_INDENT
         val sectionWidth = sectionWidth(width)
         var cursor = y
-        for (node in nodes) {
-            drawNode(
-                scope,
-                textMetrics,
-                mouseX,
-                mouseY,
-                node,
-                0,
-                sectionX,
-                cursor,
-                sectionWidth,
-                hitOffsetX,
-                hitOffsetY
-            )
-            cursor += nodeHeight(node)
+        with(scope) {
+            for (node in nodes) {
+                drawNode(mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth)
+                cursor += nodeHeight(node)
+            }
         }
     }
 
@@ -148,13 +144,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
     // --- 绘制 ---
 
-    private fun drawNode(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
+    private fun UiScope.drawNode(
+        mouseX: Int, mouseY: Int,
         node: Node, depth: Int, x: Float, y: Float, width: Float,
-        hitOffsetX: Float, hitOffsetY: Float,
     ) {
         if (!node.hasHeader()) {
-            drawElements(scope, textMetrics, mouseX, mouseY, node, depth, x, y, width, hitOffsetX, hitOffsetY)
+            drawElements(mouseX, mouseY, node, depth, x, y, width)
             return
         }
 
@@ -164,8 +159,8 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val cardHeight = DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
         val radius = DropdownTheme.groupCardRadius(progress)
 
-        scope.roundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
-        scope.outline(
+        RoundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
+        Outline(
             cardBounds.x,
             y,
             cardBounds.width,
@@ -177,13 +172,13 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val hoverAnimation = hoverAnimations.getOrPut(node.key()) { createAnimation(DropdownTheme.ANIM_HOVER, 0.0f) }
         val hovered = isHovered(
-            mouseX.toDouble(), mouseY.toDouble(), cardBounds.x + hitOffsetX, y + hitOffsetY,
+            mouseX.toDouble(), mouseY.toDouble(), origin.x + cardBounds.x, origin.y + y,
             cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT
         )
         hoverAnimation.run(if (hovered) 1.0f else 0.0f)
         val hoverProgress = hoverAnimation.value
         if (hoverProgress > 0.01f) {
-            scope.roundRect(
+            RoundRect(
                 cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT, radius,
                 DropdownTheme.groupHeaderHover(hoverProgress)
             )
@@ -191,32 +186,32 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val label = trimToWidth(
             node.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE,
-            cardBounds.width - 74.0f, textMetrics
+            cardBounds.width - 74.0f, metrics
         )
         val labelY =
-            y + (DropdownTheme.GROUP_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
-        scope.text(
+            y + (DropdownTheme.GROUP_HEADER_HEIGHT - metrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
+        Text(
             label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
             DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
         )
 
         val countLabel = node.totalSettingCount().toString()
-        val countWidth = textMetrics.textWidth(
+        val countWidth = metrics.textWidth(
             countLabel,
             DropdownTheme.GROUP_COUNT_TEXT_SCALE
         ) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f
         val countX = cardBounds.x + cardBounds.width - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f
         val chipHeight = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT
         val countY = y + (DropdownTheme.GROUP_HEADER_HEIGHT - chipHeight) * 0.5f
-        scope.roundRect(countX, countY, countWidth, chipHeight, chipHeight / 2.0f, DropdownTheme.groupCountChip())
-        val countTextY = countY + (chipHeight - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f
-        scope.text(
+        RoundRect(countX, countY, countWidth, chipHeight, chipHeight / 2.0f, DropdownTheme.groupCountChip())
+        val countTextY = countY + (chipHeight - metrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f
+        Text(
             countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY,
             DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText()
         )
 
         val chevronSize = 2.5f
-        scope.triangle(
+        Triangle(
             cardBounds.x + cardBounds.width - DropdownTheme.SETTING_PADDING_X - chevronSize,
             y + DropdownTheme.GROUP_HEADER_HEIGHT * 0.5f, chevronSize, progress,
             DropdownTheme.groupChevron(hoverProgress)
@@ -224,24 +219,23 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         if (progress > 0.001f) {
             val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-            scope.scissorIf(
+            ClipIf(
                 progress < 1.0f, cardBounds.x, contentY, cardBounds.width,
                 contentHeight * progress + DropdownTheme.SETTING_GAP
-            ) { clippedScope ->
+            ) {
                 val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
                 val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
                 drawElements(
-                    clippedScope, textMetrics, mouseX, mouseY, node, depth + 1, innerX,
-                    contentY + DropdownTheme.GROUP_INSET, innerWidth, hitOffsetX, hitOffsetY
+                    mouseX, mouseY, node, depth + 1, innerX,
+                    contentY + DropdownTheme.GROUP_INSET, innerWidth
                 )
             }
         }
     }
 
-    private fun drawElements(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
+    private fun UiScope.drawElements(
+        mouseX: Int, mouseY: Int,
         node: Node, depth: Int, x: Float, y: Float, width: Float,
-        hitOffsetX: Float, hitOffsetY: Float,
     ) {
         var cursor = y
         for (element in node.elements) {
@@ -251,25 +245,25 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     if (!widget.isVisible()) {
                         continue
                     }
-                    // 控件位置必须使用绝对坐标：UiTree.pushAbsolute 不会叠加当前 bound。
-                    val bounds = UiRect(x + hitOffsetX, cursor + hitOffsetY, width, widget.getHeight())
-                    scope.pushAbsolute(bounds) { itemScope ->
-                        if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
-                            itemScope.text(
+                    if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
+                        Positioned(x, cursor, width, widget.getHeight()) {
+                            Text(
                                 widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
                                 DropdownTheme.SETTING_PADDING_X,
                                 3.0f,
                                 DropdownTheme.SETTING_TEXT_SCALE,
                                 MD3Theme.TEXT_MUTED
                             )
-                        } else widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds)
+                        }
+                    } else {
+                        widget.drawInScope(this, mouseX, mouseY, UiRect(x, cursor, width, widget.getHeight()))
                     }
                     cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
                 }
 
                 is ChildElement -> {
                     val child = element.node
-                    drawNode(scope, textMetrics, mouseX, mouseY, child, depth, x, cursor, width, hitOffsetX, hitOffsetY)
+                    drawNode(mouseX, mouseY, child, depth, x, cursor, width)
                     cursor += nodeHeight(child)
                 }
             }

@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.render.LuminUiRenderer
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.utils.render.animation.Animation
 import net.minecraft.resources.Identifier
@@ -37,19 +38,6 @@ class UiTree private constructor(
             boundStack.add(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
         }
 
-        /**
-         * 向当前作用域追加单个节点，并在需要时绑定到相对 layer。
-         *
-         * 高频绘制上下文会大量调用单节点重载；这里直接包装 [LayeredNode]，
-         * 避免为了一个图元额外创建临时 [Scope] 和子列表。
-         */
-        private fun addNode(layer: Int, node: UiNode) {
-            if (layer == 0) {
-                nodes.add(node)
-            } else {
-                nodes.add(LayeredNode(layer, node))
-            }
-        }
 
         /**
          * 生成当前作用域内容的不可变树快照。
@@ -207,10 +195,10 @@ class UiTree private constructor(
          *
          * 层级只影响支持 layer 的批次输出；旧的直接编译入口会把它当作普通分组处理。
          */
-        fun layer(layer: Int, content: (Scope) -> Unit) {
+        fun layer(offset: LayerOffset, content: (Scope) -> Unit) {
             val capture = capture(content)
             activeAnimations = activeAnimations || capture.hasActiveAnimations
-            nodes.add(LayerNode(layer, capture.nodes))
+            nodes.add(LayerNode(offset.value, capture.nodes))
         }
 
         fun scissor(clip: UiRect, content: (Scope) -> Unit) {
@@ -283,22 +271,6 @@ class UiTree private constructor(
         }
 
         fun shadow(
-            layer: Int,
-            x: Float,
-            y: Float,
-            width: Float,
-            height: Float,
-            radius: Float,
-            blurRadius: Float,
-            color: Color
-        ) {
-            addNode(
-                layer,
-                ShadowNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, blurRadius, color)
-            )
-        }
-
-        fun shadow(
             x: Float, y: Float, width: Float, height: Float,
             radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
             blurRadius: Float, color: Color
@@ -338,29 +310,8 @@ class UiTree private constructor(
             )
         }
 
-        fun shadow(
-            layer: Int, x: Float, y: Float, width: Float, height: Float,
-            radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
-            blurRadius: Float, color: Color
-        ) {
-            addNode(
-                layer,
-                ShadowNode(
-                    resolveX(x), resolveY(y), width, height,
-                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color
-                )
-            )
-        }
-
         fun roundRect(x: Float, y: Float, width: Float, height: Float, radius: Float, color: Color) {
             nodes.add(RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color))
-        }
-
-        fun roundRect(layer: Int, x: Float, y: Float, width: Float, height: Float, radius: Float, color: Color) {
-            addNode(
-                layer,
-                RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color)
-            )
         }
 
         fun roundRect(
@@ -369,20 +320,6 @@ class UiTree private constructor(
             color: Color
         ) {
             nodes.add(
-                RoundRectNode(
-                    resolveX(x), resolveY(y), width, height,
-                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color
-                )
-            )
-        }
-
-        fun roundRect(
-            layer: Int, x: Float, y: Float, width: Float, height: Float,
-            radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
-            color: Color
-        ) {
-            addNode(
-                layer,
                 RoundRectNode(
                     resolveX(x), resolveY(y), width, height,
                     radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color
@@ -413,21 +350,6 @@ class UiTree private constructor(
             )
         }
 
-        fun roundRectGradient(
-            layer: Int, x: Float, y: Float, width: Float, height: Float,
-            radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
-            topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color
-        ) {
-            addNode(
-                layer,
-                RoundRectGradientNode(
-                    resolveX(x), resolveY(y), width, height,
-                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
-                    topLeft, bottomLeft, bottomRight, topRight
-                )
-            )
-        }
-
         fun roundRectVerticalGradient(
             x: Float, y: Float, width: Float, height: Float, radius: Float, top: Color, bottom: Color
         ) {
@@ -440,34 +362,12 @@ class UiTree private constructor(
             roundRectGradient(x, y, width, height, radius, left, left, right, right)
         }
 
-        fun roundRectHorizontalGradient(
-            layer: Int, x: Float, y: Float, width: Float, height: Float, radius: Float, left: Color, right: Color
-        ) {
-            roundRectGradient(layer, x, y, width, height, radius, radius, radius, radius, left, left, right, right)
-        }
-
         fun rect(x: Float, y: Float, width: Float, height: Float, color: Color) {
             nodes.add(RectNode(resolveX(x), resolveY(y), width, height, color))
         }
 
-        fun rect(layer: Int, x: Float, y: Float, width: Float, height: Float, color: Color) {
-            addNode(layer, RectNode(resolveX(x), resolveY(y), width, height, color))
-        }
-
         fun rectOutline(x: Float, y: Float, width: Float, height: Float, outlineWidth: Float, color: Color) {
             nodes.add(RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color))
-        }
-
-        fun rectOutline(
-            layer: Int,
-            x: Float,
-            y: Float,
-            width: Float,
-            height: Float,
-            outlineWidth: Float,
-            color: Color
-        ) {
-            addNode(layer, RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color))
         }
 
         fun rectGradient(
@@ -485,16 +385,6 @@ class UiTree private constructor(
                     bottomRight,
                     topRight
                 )
-            )
-        }
-
-        fun rectGradient(
-            layer: Int, x: Float, y: Float, width: Float, height: Float,
-            topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color
-        ) {
-            addNode(
-                layer,
-                RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight)
             )
         }
 
@@ -524,57 +414,24 @@ class UiTree private constructor(
             )
         }
 
-        fun outline(
-            layer: Int, x: Float, y: Float, width: Float, height: Float,
-            radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
-            outlineWidth: Float, color: Color
-        ) {
-            addNode(
-                layer,
-                OutlineNode(
-                    resolveX(x), resolveY(y), width, height,
-                    radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
-                    outlineWidth, color
-                )
-            )
-        }
-
         fun text(text: String, x: Float, y: Float, scale: Float, color: Color) {
             nodes.add(TextNode(text, resolveX(x), resolveY(y), scale, color, null))
-        }
-
-        fun text(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color) {
-            addNode(layer, TextNode(text, resolveX(x), resolveY(y), scale, color, null))
         }
 
         fun text(text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?) {
             nodes.add(TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader))
         }
 
-        fun text(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?) {
-            addNode(layer, TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader))
-        }
-
         fun textWithShadow(text: String, x: Float, y: Float, scale: Float, color: Color) {
-            textWithShadow(0, text, x, y, scale, color, null)
-        }
-
-        fun textWithShadow(layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color) {
-            textWithShadow(layer, text, x, y, scale, color, null)
+            textWithShadow(text, x, y, scale, color, null)
         }
 
         fun textWithShadow(text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?) {
-            textWithShadow(0, text, x, y, scale, color, fontLoader)
-        }
-
-        fun textWithShadow(
-            layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?,
-        ) {
             if (text.isEmpty() || color.alpha == 0) return
             val offset = TEXT_SHADOW_OFFSET * scale
             val shadow = Color(ARGB.scaleRGB(color.rgb, TEXT_SHADOW_RGB_SCALE), true)
-            text(layer, text, x + offset, y + offset, scale, shadow, fontLoader)
-            text(layer, text, x, y, scale, color, fontLoader)
+            text(text, x + offset, y + offset, scale, shadow, fontLoader)
+            text(text, x, y, scale, color, fontLoader)
         }
 
         fun gradientText(text: String, x: Float, y: Float, scale: Float, startColor: Color, endColor: Color) {
@@ -607,29 +464,6 @@ class UiTree private constructor(
             nodes.add(BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader))
         }
 
-        fun blurredText(
-            layer: Int,
-            text: String,
-            x: Float,
-            y: Float,
-            scale: Float,
-            color: Color,
-            blurRadius: Float,
-            intensity: Int
-        ) {
-            blurredText(layer, text, x, y, scale, color, blurRadius, intensity, null)
-        }
-
-        fun blurredText(
-            layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, blurRadius: Float, intensity: Int,
-            fontLoader: TtfFontLoader?
-        ) {
-            addNode(
-                layer,
-                BlurTextNode(text, resolveX(x), resolveY(y), scale, color, blurRadius, intensity, fontLoader)
-            )
-        }
-
         fun glitchText(text: String, x: Float, y: Float, scale: Float, color: Color, effect: TextGlitchEffect?) {
             nodes.add(GlitchTextNode(text, resolveX(x), resolveY(y), scale, color, effect, null))
         }
@@ -654,36 +488,10 @@ class UiTree private constructor(
         }
 
         fun rotatedText(
-            layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color,
-            originX: Float, originY: Float, rotationDegrees: Float
-        ) {
-            addNode(
-                layer,
-                RotatedTextNode(
-                    text, resolveX(x), resolveY(y), scale, color, null,
-                    resolveX(originX), resolveY(originY), rotationDegrees
-                )
-            )
-        }
-
-        fun rotatedText(
             text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?,
             originX: Float, originY: Float, rotationDegrees: Float
         ) {
             nodes.add(
-                RotatedTextNode(
-                    text, resolveX(x), resolveY(y), scale, color, fontLoader,
-                    resolveX(originX), resolveY(originY), rotationDegrees
-                )
-            )
-        }
-
-        fun rotatedText(
-            layer: Int, text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?,
-            originX: Float, originY: Float, rotationDegrees: Float
-        ) {
-            addNode(
-                layer,
                 RotatedTextNode(
                     text, resolveX(x), resolveY(y), scale, color, fontLoader,
                     resolveX(originX), resolveY(originY), rotationDegrees
@@ -1100,10 +908,6 @@ class UiTree private constructor(
             nodes.add(TriangleNode(resolveX(centerX), resolveY(centerY), size, progress, color))
         }
 
-        fun triangle(layer: Int, centerX: Float, centerY: Float, size: Float, progress: Float, color: Color) {
-            addNode(layer, TriangleNode(resolveX(centerX), resolveY(centerY), size, progress, color))
-        }
-
         /**
          * 添加一个描边圆环节点。
          */
@@ -1126,19 +930,6 @@ class UiTree private constructor(
             )
         }
 
-        fun arc(
-            layer: Int, centerX: Float, centerY: Float, radius: Float, strokeWidth: Float,
-            startDegrees: Float, sweepDegrees: Float, roundCap: Boolean, color: Color
-        ) {
-            addNode(
-                layer,
-                ArcNode(
-                    resolveX(centerX), resolveY(centerY), radius, strokeWidth,
-                    startDegrees, sweepDegrees, roundCap, 0.0f, color, color, color
-                )
-            )
-        }
-
         /**
          * 添加一条带三色循环扫描渐变的描边圆弧。
          */
@@ -1148,21 +939,6 @@ class UiTree private constructor(
             gradientRotationDegrees: Float, startColor: Color, middleColor: Color, endColor: Color
         ) {
             nodes.add(
-                ArcNode(
-                    resolveX(centerX), resolveY(centerY), radius, strokeWidth,
-                    startDegrees, sweepDegrees, roundCap, gradientRotationDegrees,
-                    startColor, middleColor, endColor
-                )
-            )
-        }
-
-        fun gradientArc(
-            layer: Int, centerX: Float, centerY: Float, radius: Float, strokeWidth: Float,
-            startDegrees: Float, sweepDegrees: Float, roundCap: Boolean,
-            gradientRotationDegrees: Float, startColor: Color, middleColor: Color, endColor: Color
-        ) {
-            addNode(
-                layer,
                 ArcNode(
                     resolveX(centerX), resolveY(centerY), radius, strokeWidth,
                     startDegrees, sweepDegrees, roundCap, gradientRotationDegrees,
@@ -1298,106 +1074,6 @@ class UiTree private constructor(
         }
     }
 
-    /**
-     * 自动布局作用域。
-     *
-     * 该作用域负责在 row/column 中计算子元素位置，GUI 代码只需要声明间距、尺寸和内容。
-     */
-    class LayoutScope internal constructor(
-        private val draw: Scope,
-        private val bounds: UiRect,
-    ) {
-
-        fun bounds(): UiRect {
-            return bounds
-        }
-
-        fun draw(): Scope {
-            return draw
-        }
-
-        fun layer(layer: Int, content: (LayoutScope) -> Unit) {
-            draw.layer(layer) { scope -> content(LayoutScope(scope, bounds)) }
-        }
-
-        fun box(insets: Insets, content: (LayoutScope) -> Unit) {
-            content(LayoutScope(draw, insets.apply(bounds)))
-        }
-
-        fun column(gap: Float, content: (LinearScope) -> Unit) {
-            val linear = LinearScope(draw, bounds, Axis.VERTICAL, gap)
-            content(linear)
-        }
-
-        fun row(gap: Float, content: (LinearScope) -> Unit) {
-            val linear = LinearScope(draw, bounds, Axis.HORIZONTAL, gap)
-            content(linear)
-        }
-
-        fun roundRect(radius: Float, color: Color) {
-            draw.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, radius, color)
-        }
-
-        fun text(text: String, scale: Float, color: Color) {
-            val y = bounds.y + (bounds.height - drawTextHeight(scale)) / 2.0f
-            draw.text(text, bounds.x, y, scale, color)
-        }
-
-        fun text(text: String, scale: Float, color: Color, fontLoader: TtfFontLoader) {
-            val y = bounds.y + (bounds.height - drawTextHeight(scale, fontLoader)) / 2.0f
-            draw.text(text, bounds.x, y, scale, color, fontLoader)
-        }
-
-        private fun drawTextHeight(scale: Float): Float {
-            return 9.0f * 0.27f * scale
-        }
-
-        private fun drawTextHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-            return fontLoader.fontFile.fontHeight * 0.27f * scale
-        }
-    }
-
-    /**
-     * row/column 的线性布局作用域。
-     *
-     * 固定尺寸和 fill 尺寸可以混用；fill 会使用当前容器尚未消费的剩余空间。
-     */
-    class LinearScope internal constructor(
-        private val draw: Scope,
-        private val bounds: UiRect,
-        private val axis: Axis,
-        private val gap: Float,
-    ) {
-        private var cursor = if (axis == Axis.VERTICAL) bounds.y else bounds.x
-
-        fun item(size: Float, content: (LayoutScope) -> Unit) {
-            val rect = nextRect(maxOf(0.0f, size))
-            content(LayoutScope(draw, rect))
-            cursor += size + gap
-        }
-
-        fun fill(content: (LayoutScope) -> Unit) {
-            val end = if (axis == Axis.VERTICAL) bounds.bottom() else bounds.right()
-            item(maxOf(0.0f, end - cursor), content)
-        }
-
-        fun spacer(size: Float) {
-            cursor += maxOf(0.0f, size) + gap
-        }
-
-        private fun nextRect(size: Float): UiRect {
-            if (axis == Axis.VERTICAL) {
-                return UiRect(bounds.x, cursor, bounds.width, size)
-            }
-            return UiRect(cursor, bounds.y, size, bounds.height)
-        }
-    }
-
-    enum class Axis {
-        HORIZONTAL,
-        VERTICAL
-    }
-
     data class Insets(val left: Float, val top: Float, val right: Float, val bottom: Float) {
 
         fun apply(rect: UiRect): UiRect {
@@ -1466,11 +1142,6 @@ class UiTree private constructor(
      * 子树级 layer 偏移；适合一组节点整体提升或下沉。
      */
     data class LayerNode(val layer: Int, val children: List<UiNode>) : UiNode
-
-    /**
-     * 单节点 layer 包装；供高频图元入口使用，减少小列表分配。
-     */
-    data class LayeredNode(val layer: Int, val child: UiNode) : UiNode
 
     data class ScissorNode(val clip: UiRect, val children: List<UiNode>) : UiNode
 
@@ -1639,14 +1310,6 @@ class UiTree private constructor(
             return scope.snapshot()
         }
 
-        /**
-         * 构建带自动布局的 UI 树。
-         */
-        fun layout(bounds: UiRect, content: (LayoutScope) -> Unit): UiTree {
-            val scope = Scope()
-            content(LayoutScope(scope, bounds))
-            return scope.snapshot()
-        }
 
     }
 

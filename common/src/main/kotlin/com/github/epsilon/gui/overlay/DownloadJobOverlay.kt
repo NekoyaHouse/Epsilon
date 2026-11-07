@@ -2,8 +2,13 @@ package com.github.epsilon.gui.overlay
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.screen.EpsilonDialogScreen
@@ -79,6 +84,11 @@ object DownloadJobOverlay : AutoCloseable {
         renderedJob = job
     }
 
+    /**
+     * 绘制下载卡片。
+     *
+     * 作用域原点就是 [cardBounds] 左上角，所以卡片内部的坐标全部相对卡片本身。
+     */
     private fun drawCard(job: AssetManager.DownloadJob, hovered: Boolean) {
         val cardBounds = bounds ?: return
         val current = job.currentAsset()
@@ -100,56 +110,54 @@ object DownloadJobOverlay : AutoCloseable {
         val count = index.toString() + " / " + job.assets().size
         val details = EpsilonTranslations.Resources.JOB_DETAILS.getTranslatedName()
         val contentWidth = cardBounds.width - PADDING * 2.0f
-        val textMetrics = scene!!.scheduler().textMetrics()
-        val percentWidth = textMetrics.getWidth(percent, 0.68f)
-        val currentPercentWidth = textMetrics.getWidth(currentPercent, 0.58f)
-        val countWidth = textMetrics.getWidth(count, 0.54f)
-        val detailsScale = fitScale(details, 0.54f, contentWidth - countWidth - 12.0f)
-        val detailsWidth = textMetrics.getWidth(details, detailsScale)
 
-        val tree = UiTree.build { scope ->
-            scope.shadow(
-                cardBounds.x, cardBounds.y, cardBounds.width, cardBounds.height, MD3Theme.CARD_RADIUS.toFloat(),
+        scene!!.Content(cardBounds, UiLayer.CONTENT) {
+            val radius = MD3Theme.CARD_RADIUS.toFloat()
+            val percentWidth = metrics.textWidth(percent, 0.68f)
+            val currentPercentWidth = metrics.textWidth(currentPercent, 0.58f)
+            val countWidth = metrics.textWidth(count, 0.54f)
+            val detailsScale = fitScale(details, 0.54f, contentWidth - countWidth - 12.0f)
+            val detailsWidth = metrics.textWidth(details, detailsScale)
+
+            Shadow(
+                0.0f, 0.0f, cardBounds.width, cardBounds.height, radius,
                 MD3Theme.POPUP_SHADOW_BLUR, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.POPUP_SHADOW_ALPHA)
             )
-            scope.roundRect(
-                cardBounds.x, cardBounds.y, cardBounds.width, cardBounds.height, MD3Theme.CARD_RADIUS.toFloat(),
+            RoundRect(
+                0.0f, 0.0f, cardBounds.width, cardBounds.height, radius,
                 if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER
             )
-            scope.outline(
-                cardBounds.x, cardBounds.y, cardBounds.width, cardBounds.height, MD3Theme.CARD_RADIUS.toFloat(),
+            Outline(
+                0.0f, 0.0f, cardBounds.width, cardBounds.height, radius,
                 0.8f, if (hovered) MD3Theme.PRIMARY else MD3Theme.OUTLINE_SOFT
             )
-            scope.pushAbsolute(cardBounds) { card ->
-                card.text(
-                    title,
-                    PADDING,
-                    10.0f,
-                    fitScale(title, 0.68f, contentWidth - percentWidth - 10.0f),
-                    MD3Theme.TEXT_PRIMARY
-                )
-                card.text(percent, cardBounds.width - PADDING - percentWidth, 10.0f, 0.68f, MD3Theme.PRIMARY)
-                card.roundRect(PADDING, 31.0f, contentWidth, 4.0f, 2.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
-                if (progress > 0.0f) {
-                    card.roundRect(PADDING, 31.0f, contentWidth * progress, 4.0f, 2.0f, MD3Theme.PRIMARY)
-                }
-                card.text(
-                    resource, PADDING, 43.0f, fitScale(resource, 0.58f, contentWidth - currentPercentWidth - 10.0f),
-                    MD3Theme.TEXT_SECONDARY
-                )
-                card.text(
-                    currentPercent, cardBounds.width - PADDING - currentPercentWidth, 43.0f, 0.58f,
-                    MD3Theme.TEXT_SECONDARY
-                )
-                card.text(count, PADDING, 63.0f, 0.54f, MD3Theme.TEXT_MUTED)
-                card.text(details, cardBounds.width - PADDING - detailsWidth, 63.0f, detailsScale, MD3Theme.PRIMARY)
+            Text(
+                title,
+                PADDING,
+                10.0f,
+                fitScale(title, 0.68f, contentWidth - percentWidth - 10.0f),
+                MD3Theme.TEXT_PRIMARY
+            )
+            Text(percent, cardBounds.width - PADDING - percentWidth, 10.0f, 0.68f, MD3Theme.PRIMARY)
+            RoundRect(PADDING, 31.0f, contentWidth, 4.0f, 2.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
+            if (progress > 0.0f) {
+                RoundRect(PADDING, 31.0f, contentWidth * progress, 4.0f, 2.0f, MD3Theme.PRIMARY)
             }
+            Text(
+                resource, PADDING, 43.0f, fitScale(resource, 0.58f, contentWidth - currentPercentWidth - 10.0f),
+                MD3Theme.TEXT_SECONDARY
+            )
+            Text(
+                currentPercent, cardBounds.width - PADDING - currentPercentWidth, 43.0f, 0.58f,
+                MD3Theme.TEXT_SECONDARY
+            )
+            Text(count, PADDING, 63.0f, 0.54f, MD3Theme.TEXT_MUTED)
+            Text(details, cardBounds.width - PADDING - detailsWidth, 63.0f, detailsScale, MD3Theme.PRIMARY)
         }
-        scene!!.submit(UiLayer.CONTENT, tree)
     }
 
-    private fun fitScale(text: String, preferredScale: Float, maxWidth: Float): Float {
-        val textWidth = scene!!.scheduler().textMetrics().getWidth(text, preferredScale)
+    private fun UiScope.fitScale(text: String, preferredScale: Float, maxWidth: Float): Float {
+        val textWidth = metrics.textWidth(text, preferredScale)
         return if (textWidth > maxWidth && textWidth > 0.0f) {
             preferredScale * maxOf(1.0f, maxWidth) / textWidth
         } else {
