@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
@@ -16,7 +18,6 @@ import com.github.epsilon.gui.panel.popup.MessagePopup
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -110,6 +111,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        ui.InputRegion(inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
+            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         inputField.draw(
             scope.asUiScope(TrollTheme.metrics(metrics)), inputBounds.x, inputBounds.y,
@@ -118,6 +123,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         )
 
         for (button in actionButtons) {
+            ui.Interaction(button.type, button.bounds) { onClick { handleAction(button.type); true } }
             val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
             scope.layer(TrollZ.Base) { z ->
                 z.rect(
@@ -164,6 +170,8 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
             }
             for (row in rows) {
                 content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                    Interaction("switch", row.bounds) { onClick { trySwitchConfig(row.name); true } }
+                    Interaction("delete", row.deleteBounds) { onClick { openDeleteConfirmation(row.name); true } }
                     val active = row.name == ConfigManager.activeConfigName
                     val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
                     tree.layer(TrollZ.Base) { z ->
@@ -235,38 +243,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return bounds.contains(event.x(), event.y())
-
-        if (inputField.focusIfContains(
-                event.x(), event.y(), inputBounds.x, inputBounds.y,
-                inputBounds.width, inputBounds.height
-            )
-        ) {
-            return true
-        }
-        inputField.blur()
-
-        for (button in actionButtons) {
-            if (button.bounds.contains(event.x(), event.y())) {
-                handleAction(button.type)
-                return true
-            }
-        }
-        if (!listViewport.contains(event.x(), event.y())) {
-            return bounds.contains(event.x(), event.y())
-        }
-        for (row in rows) {
-            if (row.deleteBounds.contains(event.x(), event.y())) {
-                openDeleteConfirmation(row.name)
-                return true
-            }
-            if (row.bounds.contains(event.x(), event.y())) {
-                trySwitchConfig(row.name)
-                return true
-            }
-        }
-        return true
+        return super.mouseClicked(event)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {

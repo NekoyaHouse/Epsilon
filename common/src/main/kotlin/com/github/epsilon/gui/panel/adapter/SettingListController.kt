@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.adapter
 
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
@@ -22,11 +24,6 @@ import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.client.input.CharacterEvent
-import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
-import net.minecraft.client.input.PreeditEvent
 import java.awt.Color
 
 class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseable {
@@ -35,10 +32,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     private val rowCache = HashMap<Setting<*>, SettingRow<*>>()
     private val sectionHoverAnimations = HashMap<String, Animation>()
     private val sectionExpandAnimations = HashMap<String, Animation>()
-    private val settingEntries = ArrayList<SettingEntry>()
-    private val sectionEntries = ArrayList<SectionEntry>()
 
-    private var draggingSliderEntry: SettingEntry? = null
     private var activeEnumRow: EnumSettingRow? = null
 
     fun getPopupHost(): PanelPopupHost {
@@ -60,8 +54,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         collectSectionKeys(buildSections(ownerKey, settings), visibleSections)
         sectionHoverAnimations.keys.removeIf { key -> !visibleSections.contains(key) }
         sectionExpandAnimations.keys.removeIf { key -> !visibleSections.contains(key) }
-        settingEntries.clear()
-        sectionEntries.clear()
     }
 
     fun getContentHeight(settings: List<Setting<*>>): Float {
@@ -138,7 +130,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             for (setting in section.settings()) {
                 val row = rowFor(setting) ?: continue
                 val rowBounds = UiRect(viewport.x, rowY, rowWidth, row.getHeight())
-                settingEntries.add(SettingEntry(row, rowBounds))
+                scope.bindRowInput(row, rowBounds, viewport)
                 if (setting !is BoolSetting && !setting.isViaSupported()) {
                     scope.drawDisabledSettingRow(setting, rowBounds)
                 } else callback.render(setting, row, rowBounds)
@@ -175,7 +167,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         val cardWidth = maxOf(1.0f, width - nest * 2.0f)
         val sectionBounds = UiRect(cardX, y, cardWidth, getSectionHeight(section))
         val headerBounds = UiRect(cardX, y, cardWidth, GROUP_HEADER_HEIGHT)
-        sectionEntries.add(SectionEntry(section, headerBounds))
         buildSectionCard(section, sectionBounds, headerBounds, depth, mouseX, mouseY)
 
         if (section.isCollapsed()) {
@@ -191,7 +182,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                     val setting = element.setting()
                     val row = rowFor(setting) ?: continue
                     val rowBounds = UiRect(innerX, cursor, innerWidth, row.getHeight())
-                    settingEntries.add(SettingEntry(row, rowBounds))
+                    bindRowInput(row, rowBounds, sectionBounds)
                     if (setting !is BoolSetting && !setting.isViaSupported()) {
                         drawDisabledSettingRow(setting, rowBounds)
                     } else callback.render(setting, row, rowBounds)
@@ -209,148 +200,41 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         return sectionBounds.height
     }
 
-    fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean, popupBounds: UiRect): Boolean {
-        return mouseClicked(event, isDoubleClick, popupBounds, null)
-    }
-
-    fun mouseClicked(
-        event: MouseButtonEvent, isDoubleClick: Boolean, popupBounds: UiRect, interceptor: RowClickInterceptor?,
-    ): Boolean {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-
-        clearFocus()
-        for (entry in sectionEntries) {
-            if (entry.bounds.contains(event.x(), event.y())) {
-                entry.section.toggleCollapsed()
-                draggingSliderEntry = null
-                SoundManager.playInUi(
-                    if (entry.section.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN
-                )
-                return true
-            }
-        }
-
-        for (entry in settingEntries) {
-            if (!entry.row.getSetting().isViaSupported() && entry.bounds.contains(event.x(), event.y())) {
-                PlatformNoticeScreen.show(entry.row.getSetting())
-                return true
-            }
-            if (interceptor != null && interceptor.handle(entry.row, entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = null
-                return true
-            }
-            val intRow = entry.row as? IntSettingRow
-            if (intRow != null && intRow.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = if (intRow.isDragging()) entry else null
-                return true
-            }
-            val doubleRow = entry.row as? DoubleSettingRow
-            if (doubleRow != null && doubleRow.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = if (doubleRow.isDragging()) entry else null
-                return true
-            }
-            val enumRow = entry.row as? EnumSettingRow
-            if (enumRow != null && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createEnumPopup(enumRow, entry.bounds, popupBounds))
-                enumRow.setDropdownOpen(true)
-                val previous = activeEnumRow
-                if (previous != null && previous !== enumRow) {
-                    previous.setDropdownOpen(false)
+    private fun UiScope.bindRowInput(row: SettingRow<*>, bounds: UiRect, popupBounds: UiRect) {
+        InputRegion(key = row, bounds = bounds.relativeTo(origin),
+            onPreviewPress = { event, _ -> row is KeybindSettingRow && row.bindMouse(event) },
+            onPress = { event, double ->
+                if (!row.getSetting().isViaSupported()) {
+                    PlatformNoticeScreen.show(row.getSetting())
+                    true
+                } else if (!row.mouseClicked(bounds, event, double)) false
+                else {
+                    when (row) {
+                        is EnumSettingRow -> {
+                            popupHost.open(createEnumPopup(row, bounds, popupBounds))
+                            row.setDropdownOpen(true)
+                            activeEnumRow = row
+                        }
+                        is ColorSettingRow -> popupHost.open(createColorPopup(row, bounds, popupBounds))
+                        is StringListSettingRow -> popupHost.open(createStringListSettingPopup(row, popupBounds))
+                        is RegistryListSettingRow -> popupHost.open(createRegistryListSettingPopup(row, popupBounds))
+                    }
+                    true
                 }
-                activeEnumRow = enumRow
-                draggingSliderEntry = null
-                return true
-            }
-            val colorRow = entry.row as? ColorSettingRow
-            if (colorRow != null && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createColorPopup(colorRow, entry.bounds, popupBounds))
-                draggingSliderEntry = null
-                return true
-            }
-            val stringListRow = entry.row as? StringListSettingRow
-            if (stringListRow != null && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                val popup = createStringListSettingPopup(stringListRow, popupBounds)
-                if (popup != null) popupHost.open(popup)
-                draggingSliderEntry = null
-                return true
-            }
-            val registryRow = entry.row as? RegistryListSettingRow
-            if (registryRow != null && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createRegistryListSettingPopup(registryRow, popupBounds))
-                draggingSliderEntry = null
-                return true
-            }
-            if (entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = null
-                return true
-            }
-        }
-
-        draggingSliderEntry = null
-        return false
+            },
+            onDrag = { event, _, _ ->
+                when (row) {
+                    is IntSettingRow -> if (row.isDragging()) row.updateFromMouse(bounds, event.x())
+                    is DoubleSettingRow -> if (row.isDragging()) row.updateFromMouse(bounds, event.x())
+                }
+                true
+            }, onRelease = { row.mouseReleased(bounds, it) }, onCancel = row::cancelInput,
+            onKey = row::keyPressed, onText = row::charTyped,
+            onPreedit = { it != null && row.preeditUpdated(it) }, onBlur = { row.setFocused(false) })
     }
 
-    fun mouseReleased(event: MouseButtonEvent): Boolean {
-        val dragging = draggingSliderEntry ?: return false
-
-        dragging.row.mouseReleased(dragging.bounds, event)
-        draggingSliderEntry = null
-        return true
-    }
-
-    fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        val dragging = draggingSliderEntry
-        if (dragging == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-        if (!dragging.row.getSetting().isViaSupported()) {
-            draggingSliderEntry = null
-            return false
-        }
-        val intRow = dragging.row as? IntSettingRow
-        if (intRow != null) {
-            intRow.updateFromMouse(dragging.bounds, event.x())
-            return true
-        }
-        val doubleRow = dragging.row as? DoubleSettingRow
-        if (doubleRow != null) {
-            doubleRow.updateFromMouse(dragging.bounds, event.x())
-            return true
-        }
-        return false
-    }
-
-    fun keyPressed(event: KeyEvent): Boolean {
-        for (entry in settingEntries) {
-            if (entry.row.getSetting().isViaSupported() && entry.row.keyPressed(event)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    fun charTyped(event: CharacterEvent): Boolean {
-        for (entry in settingEntries) {
-            if (entry.row.getSetting().isViaSupported() && entry.row.charTyped(event)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    fun preeditUpdated(event: PreeditEvent): Boolean {
-        for (entry in settingEntries) {
-            if (entry.row.getSetting().isViaSupported() && entry.row.preeditUpdated(event)) {
-                return true
-            }
-        }
-        return false
-    }
 
     fun clearFocus() {
-        draggingSliderEntry = null
         for (row in rowCache.values) {
             row.setFocused(false)
         }
@@ -361,7 +245,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         for (row in rowCache.values) {
             row.close()
         }
-        settingEntries.clear()
         rowCache.clear()
         sectionHoverAnimations.clear()
         sectionExpandAnimations.clear()
@@ -390,6 +273,13 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         section: SettingLayoutPlanner.Section,
         groupBounds: UiRect, headerBounds: UiRect, depth: Int, mouseX: Int, mouseY: Int,
     ) {
+        Interaction(key = section.key() to "header", bounds = headerBounds.relativeTo(origin)) {
+            onClick {
+                section.toggleCollapsed()
+                SoundManager.playInUi(if (section.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN)
+                true
+            }
+        }
         val hoverAnimation = sectionHoverAnimations.getOrPut(section.key()) { createAnimation(120L, 0.0f) }
         val expandAnimation = sectionExpandAnimations.getOrPut(section.key()) {
             createAnimation(180L, if (section.isCollapsed()) 0.0f else 1.0f)
@@ -641,14 +531,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     fun interface RowRenderCallback {
         fun render(setting: Setting<*>, row: SettingRow<*>, rowBounds: UiRect)
     }
-
-    fun interface RowClickInterceptor {
-        fun handle(row: SettingRow<*>, rowBounds: UiRect, event: MouseButtonEvent, isDoubleClick: Boolean): Boolean
-    }
-
-    private class SettingEntry(val row: SettingRow<*>, val bounds: UiRect)
-
-    private class SectionEntry(val section: SettingLayoutPlanner.Section, val bounds: UiRect)
 
     private companion object {
 

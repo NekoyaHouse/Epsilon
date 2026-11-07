@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
@@ -7,8 +9,6 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.impl.ColorSetting
-import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -66,6 +66,26 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        val origin = ui.origin
+        for (part in 0 until channelCount() + 2) {
+            val region = when (part) { 0 -> field; 1 -> hueBar; else -> sliders[part - 2] }
+            ui.Interaction("picker" to part, region) {
+                onDrag(onStart = { draggingPart = part; update(it.x - origin.x, it.y - origin.y); true },
+                    onEnd = { draggingPart = -1 }, onCancel = { draggingPart = -1 }) {
+                    update(it.x - origin.x, it.y - origin.y)
+                }
+            }
+        }
+        for (index in buttons.indices) {
+            ui.Interaction("button" to index, buttons[index]) {
+                onClick {
+                    when (index) { 0 -> confirm(); 1 -> cancel(); else -> setting.value = color() }
+                    true
+                }
+            }
+        }
+
         TrollTheme.window(
             scope,
             bounds,
@@ -175,42 +195,8 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         }
     }
 
-    override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return true
-        if (field.contains(event.x(), event.y())) {
-            draggingPart = 0
-        } else if (hueBar.contains(event.x(), event.y())) {
-            draggingPart = 1
-        } else {
-            for (i in 0 until channelCount()) {
-                if (sliders[i].contains(event.x(), event.y())) draggingPart = i + 2
-            }
-            for (i in buttons.indices) {
-                if (buttons[i].contains(event.x(), event.y())) {
-                    if (i == 1) cancel()
-                    else {
-                        setting.value = color()
-                        if (i == 0) closed = true
-                    }
-                    return true
-                }
-            }
-        }
-        update(event.x(), event.y())
-        return true
-    }
 
-    override fun mouseDragged(event: MouseButtonEvent): Boolean {
-        if (super.mouseDragged(event)) return true
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) update(event.x(), event.y())
-        return true
-    }
-
-    override fun mouseReleased(event: MouseButtonEvent) {
-        super.mouseReleased(event)
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) draggingPart = -1
-    }
+    override fun resetInput() { draggingPart = -1; super.resetInput() }
 
     fun confirm() {
         setting.value = color()

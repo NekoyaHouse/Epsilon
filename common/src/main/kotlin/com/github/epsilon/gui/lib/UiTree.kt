@@ -1216,6 +1216,12 @@ class UiTree private constructor(
 
     data class ScissorNode(val clip: UiRect, val children: List<UiNode>) : UiNode
 
+    internal data class InteractionNode(
+        val subscription: com.github.epsilon.gui.lib.input.UiInputSubscription,
+        val bounds: UiRect,
+        val handlers: UiInteraction,
+    ) : UiNode
+
     data class ShadowNode(
         val x: Float, val y: Float, val width: Float, val height: Float,
         val radiusTopLeft: Float, val radiusTopRight: Float, val radiusBottomRight: Float, val radiusBottomLeft: Float,

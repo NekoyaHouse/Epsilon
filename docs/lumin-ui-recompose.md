@@ -101,6 +101,59 @@ scene.LuminUIScene(bounds, key = "settings-root") {
 
 旧式滑条/取色控件通过 `luminPointerInput(key)` 在宿主输入阶段更新拖动预览，离开组合时自动解除。IME 位置通过组合的逐帧提交回调维持，Viewport 滚动条读取当前宿主鼠标，不使用缓存帧的旧坐标。
 
+### UiScope 输入订阅
+
+`Interaction(key, bounds, enabled) { ... }` 把点击、拖动、滚轮与焦点键盘/文字订阅声明为组合树节点。Panel、Dropdown、Troll、HudEditor、所有 popup，以及主菜单、账号页、对话框和下载卡片都使用此入口。Screen 只转换坐标、处理全局快捷键并转发到 `scene.input`；容器不再遍历子控件分发输入。
+
+同一个 Scene 的所有 LuminView 共享一个焦点和指针捕获。显式 View 继续负责布局与悬停观察；没有显式 View 的 Scene 入口使用 Scene 自己的 View。独立 View 仍可使用自己的路由。普通 `Content` 没有跨帧身份；需要输入的立即内容使用带稳定 key 的 `LuminUIScene(..., immediate = true)`。
+
+```kotlin
+view.render(mouseX, mouseY) {
+    scene.LuminUIScene(bounds, key = "editor") {
+        Positioned(8f, 8f, 120f, 24f) {
+            Interaction(key = "text") {
+                onClick { true }
+                onFocusChanged { focused -> editor.setFocused(focused) }
+                onKeyPressed { event -> editor.keyPressed(event) }
+                onTextInput { event -> editor.charTyped(event) }
+            }
+            // 读取编辑模型的可观察状态，绘制文本。
+        }
+        Positioned(8f, 40f, 120f, 16f) {
+            Interaction(key = "slider") {
+                onDrag(
+                    onStart = { event -> slider.begin(event.localX); true },
+                    onEnd = { slider.commit() },
+                    onCancel = { slider.cancel() },
+                ) { event -> slider.preview(event.localX) }
+            }
+        }
+    }
+}
+
+// 先把原版坐标和拖动增量转换为 Epsilon 坐标，再转发一次。
+scene.input.mouseClicked(epsilonEvent, doubleClick)
+scene.input.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY)
+scene.input.mouseReleased(epsilonEvent)
+scene.input.mouseScrolled(epsilonX, epsilonY, scrollX, scrollY)
+scene.input.keyPressed(keyEvent)
+scene.input.charTyped(characterEvent)
+scene.input.preeditUpdated(preeditEvent)
+```
+
+- `key` 在当前组合内唯一，只表示身份；`bounds` 默认为当前 `size`，显式矩形相对当前作用域。Positioned、Clip 和 Viewport 沿用绘制树的坐标与滚动偏移，事件提供屏幕坐标和区域局部坐标。
+- 高 layer 先命中，同 layer 后声明的节点先命中；Clip/Viewport 的交集限制初始命中。Viewport 内部与内容缓冲一致，忽略内部 Layer 偏移，按声明顺序命中，并沿用外层的 layer。返回 false 继续向下查找。纯绘制图元不阻挡输入，窗口表面和模态背景显式声明消费事件的节点。
+- `onClick` 在鼠标按下时触发，默认键为 Minecraft 26.3 的 `InputConstants.MOUSE_BUTTON_LEFT`。一个节点可分别订阅多个按钮的点击与拖动；`onDrag` 成功开始后优先于同一按钮的点击。
+- 接受拖动后捕获指针，区域与裁剪外仍收到移动，只由相同按钮的释放结束。其他按钮不结束捕获，重复释放不重复提交。禁用、移除、关闭 View 或 `cancelPointer()` 触发取消；取消先于失焦执行，预览不能因清理而提交。按下回调打开模态时，原控件不会在回调返回后重新获取捕获或焦点。
+- 键盘、字符、preedit 和 `onPreviewClick` 订阅使节点可聚焦。点击被接受后切换焦点；点击空白、非焦点控件、禁用或移除时失焦。`requestFocus(key)` 用稳定身份请求焦点；`autoFocus = true` 在节点首次出现或从 false 切换为 true 时请求，不会逐帧抢焦点。尚无 Tab 导航。
+- 快捷键录制通过聚焦节点的 `onPreviewClick` 优先读取区域外的鼠标按下，避免扫描所有模块或设置行。返回 false 后继续普通命中。
+- `InputRegion` 是编辑模型的便利适配：用具名回调声明按下、预览按下、拖动、释放、取消、键盘、文本、preedit、失焦和滚动。传入释放/拖动处理器时，接受按下即捕获对应按钮；其余组件可直接使用 `Interaction`。
+- `PanelPopupHost { scene.input }` 打开时清除旧焦点与捕获，派发时用 `within(popup.inputView)` 限定所属 View。未消费的模态事件不会进入下层；外部点击依据已提交的输入区域关闭弹窗，随入场动画和裁剪一起更新。
+- 构建只声明回调，业务修改在事件阶段执行。缓存重放保留订阅，局部重建更新回调和几何，稳定 key 保留焦点与捕获；组合更换所属 View 时重建订阅并释放旧焦点与捕获。Scene 完整 `endFrame()` 后统一发布本帧快照；构建或提交失败通过 `abortFrame()` 保留上一轮输入快照。
+- Screen 移除时 `resetComposition()`，弹窗关闭时关闭自己的 View。销毁只解除该 View 的订阅，不会关闭同 Scene 的其他 View。系统 IME 引用由编辑模型/模态宿主管理，重复聚焦不会重复获取引用；候选框位置继续通过 `IMEFocusHelper.updateCursorPos` 逐帧提交。
+
+旧 `PanelInputRouter`、Dropdown 的容器递归输入协议、设置行命中缓存和 `luminPointerInput` 鼠标轮询入口已删除。拖动由宿主真实事件推进，滑条和颜色预览在释放时提交，取消时丢弃。
+
 ## 帧时钟与动画
 
 每个 Scene 宿主持有一个单调纳秒时钟与活动任务集合。batch 和内容缓冲共享宿主时钟，同一任务每帧只推进一次。
@@ -140,6 +193,8 @@ Troll 的惯性滚动是独立物理帧任务，沿用衰减、越界回弹和�
 折叠测量回归分别使用 100 个设置：连续 10 帧完全折叠时可见性计算次数为零，展开动画中恢复测量，动态可见性更新高度，关闭后再次归零。状态内核还验证同一次观察中发生跨线程写入并重复读取时，保留第一次读取版本而不漏失效。可选类缓存通过并发重复查询验证存在与缺失类均只解析一次，LinkageError 继续向外传播，不被误缓存为类缺失；Via 后端实例仍每次获取，避免未初始化实例被永久缓存。
 
 悬停回归覆盖缓存父级下子组合独立重建及再次绑定孙级、局部坐标偏移、移出/重新进入/禁用鼠标输入，以及真实 Dropdown 分组标题从下向上移动后的高亮和动画结束。根级保持缓存，同一区域内继续移动不会增加重建次数。
+
+`UiScopeInputTest` 覆盖缓存重放与局部坐标、layer/声明顺序/交叠裁剪、Viewport 滚动与区域外捕获、多根层级与辅助鼠标键、跨 View 唯一焦点与 Unicode 字符、模态隔离、自动/显式聚焦、焦点预览录制、滚轮回落、局部重建与失败回滚、禁用/移除/关闭时取消及清理顺序、无显式 View 的立即宿主和按下时打开模态。OS IME 与游戏内实机验收仍单独执行。
 
 ```powershell
 .\gradlew.bat :common:test :common:compileJava :common:compileKotlin :fabric:compileJava :fabric:compileKotlin :neoforge:compileJava :neoforge:compileKotlin

@@ -38,6 +38,8 @@ Dropdown skips measurement inside fully folded modules and groups, and consumes 
 
 Nested compositions preserve the pointer origin of captured parent parameters. Hover probes use current host input to keep highlights in sync while parent content stays cached.
 
+UiScope also supports composition-owned `Interaction` subscriptions for clicks, captured dragging and focused keyboard/text input. Hit testing follows layers and clipping; disposal releases focus and cancels dragging. Panel, Dropdown, Troll, HudEditor, popups, the main menu, account management, dialogs and download cards use this API. Each Scene shares one focus and pointer capture across Views; modal dispatch is restricted to its own View. See the [input API and host integration](docs/lumin-ui-recompose.md#uiscope-输入订阅).
+
 ## ⚙️ Build & Run
 
 ```bash

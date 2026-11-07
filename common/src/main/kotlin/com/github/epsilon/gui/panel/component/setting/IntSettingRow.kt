@@ -151,6 +151,8 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
         return true
     }
 
+    override fun cancelInput() { dragging = false; pendingValue = null }
+
     override fun setFocused(focused: Boolean) {
         if (!focused && this.focusedState) {
             commitInput()

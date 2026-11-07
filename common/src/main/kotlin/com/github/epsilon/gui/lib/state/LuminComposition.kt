@@ -64,8 +64,9 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
 
     internal fun bind(scope: UiScope, block: UiScope.() -> Unit, parentRebuilt: Boolean = false) {
         if (lastBounds != scope.origin || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty = true
-        val nextView = LuminRuntime.currentView
+        val nextView = LuminRuntime.currentView ?: LuminRuntime.activeRoot?.defaultView
         if (view !== nextView) {
+            dirty = true
             view?.detach(this)
             view = nextView
             nextView?.attach(this)
@@ -79,8 +80,10 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
         content = block
     }
 
-    internal fun emit(into: UiTree.Scope): Boolean {
-        into.appendNodes(resolve())
+    internal fun emit(into: UiTree.Scope, inputLayer: Int = 0): Boolean {
+        val resolved = resolve()
+        view?.collectInput(resolved, inputLayer)
+        into.appendNodes(resolved)
         return false
     }
 
@@ -192,6 +195,10 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
 
 /** 根身份由稳定 key 决定；帧结束清理消失的入口。 */
 class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFrameClock()) : AutoCloseable {
+    internal val defaultView = LuminView()
+    val input = com.github.epsilon.gui.lib.input.UiInputRouter()
+    private val inputFrame = ArrayList<com.github.epsilon.gui.lib.input.UiInputRouter.Entry>()
+    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) { input.collect(nodes, layer, inputFrame) }
     private val entries = LinkedHashMap<Any, LuminComposition>()
     private val visited = LinkedHashSet<Any>()
     internal var inFrame = false
@@ -201,6 +208,7 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
         check(!inFrame) { "beginFrame/endFrame 必须配对" }
         inFrame = true
         visited.clear()
+        inputFrame.clear()
         LuminRuntime.activeRoot = this
         clock.advance()
     }
@@ -214,12 +222,14 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
     internal fun endFrame() {
         if (!inFrame) return
         entries.keys.filter { it !in visited }.forEach { entries.remove(it)?.close() }
+        input.publish(inputFrame)
         inFrame = false
         if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
 
     internal fun abortFrame() {
         inFrame = false
+        inputFrame.clear()
         visited.clear()
         if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
@@ -227,8 +237,11 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
     fun invalidateAll() { entries.values.forEach { it.markDirtyDeep() } }
 
     override fun close() {
+        input.close()
+        inputFrame.clear()
         entries.values.forEach { it.close() }
         entries.clear()
+        defaultView.close()
         visited.clear()
         clock.clear()
         inFrame = false

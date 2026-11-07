@@ -1,8 +1,9 @@
 package com.github.epsilon.gui.overlay
 
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.gui.lib.Content
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Shadow
@@ -111,7 +112,8 @@ object DownloadJobOverlay : AutoCloseable {
         val details = EpsilonTranslations.Resources.JOB_DETAILS.getTranslatedName()
         val contentWidth = cardBounds.width - PADDING * 2.0f
 
-        scene!!.Content(cardBounds, UiLayer.CONTENT) {
+        scene!!.LuminUIScene(cardBounds, UiLayer.CONTENT, key = "download", immediate = true) {
+            Interaction(job) { onClick { AssetManager.openDownloadScreen(job.assets()); true } }
             val radius = MD3Theme.CARD_RADIUS.toFloat()
             val percentWidth = metrics.textWidth(percent, 0.68f)
             val currentPercentWidth = metrics.textWidth(currentPercent, 0.58f)
@@ -174,9 +176,7 @@ object DownloadJobOverlay : AutoCloseable {
         val job = AssetManager.activeJob()
         if (job == null || job !== renderedJob || !job.isRunning()) return false
         val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        if (!cardBounds.contains(epsilonEvent.x(), epsilonEvent.y())) return false
-        AssetManager.openDownloadScreen(job.assets())
-        return true
+        return scene?.input?.mouseClicked(epsilonEvent, false) ?: false
     }
 
     override fun close() {

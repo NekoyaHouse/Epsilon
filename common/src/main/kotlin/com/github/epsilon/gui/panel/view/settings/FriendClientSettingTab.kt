@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.view.settings
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.IconButton
@@ -36,7 +38,6 @@ class FriendClientSettingTab(
     private val rowHoverAnimations = HashMap<String, Animation>()
     private val removeHoverAnimations = HashMap<String, Animation>()
     private val scrollBarDrag = ScrollBarDragState()
-    private val rowEntries = ArrayList<FriendRowEntry>()
     private val inputField = ClientSettingTextField(MAX_FRIEND_NAME_LENGTH)
 
     private var bounds: UiRect? = null
@@ -81,9 +82,13 @@ class FriendClientSettingTab(
             removeHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            rowEntries.clear()
+            InputRegion(key = this@FriendClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onCancel = { scrollBarDrag.reset() })
+
             val localInput = inputBounds.relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
+                InputRegion(inputField, onPress = { _, _ -> inputField.focus(); true },
+                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
                 ClientSettingTextField(
                     inputField, mouseX, mouseY,
                     EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵"
@@ -102,7 +107,9 @@ class FriendClientSettingTab(
                 for (friendName in friends) {
                     val rowBounds = UiRect(listViewport.x, rowY, rowWidth, FRIEND_ROW_HEIGHT)
                     val removeBounds = getRemoveButtonBounds(rowBounds)
-                    rowEntries.add(FriendRowEntry(friendName, rowBounds, removeBounds))
+                    Interaction(friendName, removeBounds.relativeTo(origin)) {
+                        onClick { FriendManager.removeFriend(friendName); true }
+                    }
 
                     val hoverAnimation = rowHoverAnimations.getOrPut(friendName) { createAnimation() }
                     val removeAnimation = removeHoverAnimations.getOrPut(friendName) { createAnimation() }
@@ -134,7 +141,7 @@ class FriendClientSettingTab(
         contentBuffer.flush()
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+    private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         val currentBounds = bounds
         if (currentBounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
@@ -153,25 +160,10 @@ class FriendClientSettingTab(
             return true
         }
 
-        val inputBounds = getInputBounds(currentBounds)
-        if (inputField.focusIfContains(inputBounds, event.x(), event.y())) {
-
-            return true
-        }
-        inputField.blur()
-
-        for (entry in rowEntries) {
-            if (entry.removeBounds.contains(event.x(), event.y())) {
-                FriendManager.removeFriend(entry.name)
-
-                return true
-            }
-        }
-
         return false
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    private fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
 
             return true
@@ -179,7 +171,7 @@ class FriendClientSettingTab(
         return false
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         val currentBounds = bounds
         if (!scrollBarDrag.isDragging() || currentBounds == null) {
             return false
@@ -193,7 +185,7 @@ class FriendClientSettingTab(
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         val currentBounds = bounds ?: return false
         val listViewport = getListViewport(currentBounds)
         if (listViewport.contains(mouseX, mouseY)) {
@@ -204,7 +196,7 @@ class FriendClientSettingTab(
         return false
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun keyPressed(event: KeyEvent): Boolean {
         return inputField.isFocused() && when (event.key()) {
             InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 addFriendFromInput()
@@ -228,7 +220,7 @@ class FriendClientSettingTab(
         }
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun charTyped(event: CharacterEvent): Boolean {
         if (inputField.charTyped(event)) {
 
             return true
@@ -317,11 +309,12 @@ class FriendClientSettingTab(
     }
 
     override fun close() {
+        luminView.close()
+
         contentBuffer.close()
 
     }
 
-    private data class FriendRowEntry(val name: String, val rowBounds: UiRect, val removeBounds: UiRect)
 
     private companion object {
 

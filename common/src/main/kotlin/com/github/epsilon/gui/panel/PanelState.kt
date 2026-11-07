@@ -5,7 +5,6 @@ import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.settings.impl.KeybindSetting
 
 class PanelState {
 
@@ -35,7 +34,6 @@ class PanelState {
 
     private var clientSettingModeStore by mutableStateOf(false)
     private var clientSettingTabStore: ClientSettingTab by mutableStateOf(ClientSettingTab.GENERAL)
-    private var listeningKeybindSettingStore: KeybindSetting? by mutableStateOf(null)
     private var clientSettingScrollStore by mutableStateOf(0.0f)
     private var maxClientSettingScrollStore by mutableStateOf(0.0f)
     private var friendScrollStore by mutableStateOf(0.0f)
@@ -201,7 +199,6 @@ class PanelState {
             if (clientSettingMode) {
                 listeningKeyBindModuleStore = null
             } else {
-                listeningKeybindSettingStore = null
                 clientSettingScrollStore = 0.0f
                 friendScrollStore = 0.0f
                 configScrollStore = 0.0f
@@ -210,13 +207,6 @@ class PanelState {
         }
     }
 
-    fun getListeningKeybindSetting(): KeybindSetting? {
-        return listeningKeybindSettingStore
-    }
-
-    fun setListeningKeybindSetting(listeningKeybindSetting: KeybindSetting?) {
-        this.listeningKeybindSettingStore = listeningKeybindSetting
-    }
 
     fun getClientSettingScroll(): Float {
         return clientSettingScrollStore

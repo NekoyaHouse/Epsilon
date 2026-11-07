@@ -1,13 +1,18 @@
 package com.github.epsilon.gui.lib.state
 
 import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.input.UiInputRouter
 import com.github.epsilon.kernel.state.StateObservation
 import com.github.epsilon.kernel.state.StateTracking
 
 /** 观察宿主布局准备阶段，绘制块仍由各 composition 独立观察。 */
 class LuminView : AutoCloseable {
+    private val inputDelegate = lazy { UiInputRouter() }
+    private var sharedInput: UiInputRouter? = null
+    val input: UiInputRouter get() = sharedInput ?: inputDelegate.value
+    private var inputFrame: MutableList<UiInputRouter.Entry>? = null
     private val compositions = LinkedHashSet<LuminComposition>()
-    private val inputs = LinkedHashSet<PointerInput>()
     private val probes = LinkedHashSet<HoverProbe>()
     private val observation = StateObservation { invalidate() }
     private val preparation = StateObservation { invalidate() }
@@ -22,21 +27,36 @@ class LuminView : AutoCloseable {
         private set
 
     fun <T> render(mouseX: Int, mouseY: Int, block: () -> T): T {
+        check(inputFrame == null) { "同一个 LuminView 不能嵌套 render" }
+        sharedInput = LuminRuntime.activeRoot?.input
         this.mouseX = mouseX
         this.mouseY = mouseY
         StateTracking.untracked {
-            inputs.toList().forEach { it.callback(mouseX, mouseY) }
             probes.toList().forEach { it.update() }
         }
         val previous = LuminRuntime.currentView
         LuminRuntime.currentView = this
-        return try { observation.observeReads(block) } finally {
+        val nextInputs = ArrayList<UiInputRouter.Entry>()
+        inputFrame = nextInputs
+        return try {
+            val result = observation.observeReads(block)
+            if (LuminRuntime.activeRoot == null && inputDelegate.isInitialized()) input.publish(nextInputs)
+            result
+        } finally {
+            inputFrame = null
             LuminRuntime.currentView = previous
             if (compositions.isEmpty()) observation.close()
         }
     }
 
+    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) {
+        val root = LuminRuntime.activeRoot
+        if (root != null) { sharedInput = root.input; root.collectInput(nodes, layer) }
+        else if (inputDelegate.isInitialized()) inputFrame?.let { input.collect(nodes, layer, it) }
+    }
+
     internal fun attach(composition: LuminComposition) {
+        sharedInput = LuminRuntime.activeRoot?.input
         compositions.add(composition)
         preparation.activate()
     }
@@ -58,21 +78,6 @@ class LuminView : AutoCloseable {
         return probe.hovered.value
     }
 
-    internal fun input(composition: LuminComposition, key: Any, callback: (Int, Int) -> Unit) {
-        val input = composition.retain(InputKey(key)) { PointerInput(callback) }
-        composition.afterCommit {
-            input.callback = callback
-            inputs.add(input)
-            callback(mouseX, mouseY)
-        }
-    }
-
-    private inner class PointerInput(var callback: (Int, Int) -> Unit) : AutoCloseable {
-        override fun close() { inputs.remove(this) }
-    }
-
-    private data class InputKey(val key: Any)
-
     private inner class HoverProbe(val rect: UiRect, val offsetX: Double, val offsetY: Double) : AutoCloseable {
         val hovered = mutableStateOf(hit())
         private fun hit(): Boolean {
@@ -86,21 +91,15 @@ class LuminView : AutoCloseable {
     }
 
     override fun close() {
+        if (inputDelegate.isInitialized()) inputDelegate.value.close()
         observation.close()
         preparation.close()
         compositions.toList().forEach { it.close() }
         compositions.clear()
         probes.clear()
-        inputs.clear()
     }
 
     private data class HoverKey(val rect: UiRect, val offsetX: Double, val offsetY: Double)
-}
-
-/** 在宿主输入阶段运行，组件消失时自动解除。 */
-fun luminPointerInput(key: Any, callback: (Int, Int) -> Unit) {
-    val composition = LuminRuntime.currentComposition ?: return
-    checkNotNull(composition.view).input(composition, key, callback)
 }
 
 fun afterLuminCommit(effect: () -> Unit) {

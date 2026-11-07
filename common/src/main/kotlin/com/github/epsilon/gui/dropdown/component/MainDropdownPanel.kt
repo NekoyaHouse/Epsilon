@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
@@ -15,7 +17,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import kotlin.math.ceil
@@ -150,6 +151,9 @@ class MainDropdownPanel(
             entry.hoverAnim.run(if (hovered) 1.0f else 0.0f)
             val hover = entry.hoverAnim.value
             LuminUIItem(entry) {
+                Interaction(key = entry, bounds = UiRect(iconX, iconY, ICON_SIZE, ICON_SIZE)) {
+                    onClick { entry.action.accept(entry.panelId); true }
+                }
                 RoundRect(
                     iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS,
                     MD3Theme.lerp(
@@ -183,40 +187,6 @@ class MainDropdownPanel(
         settingsContent.draw(this, mouseX, mouseY, currentY, width, getRenderFrameId())
     }
 
-    override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        val currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            for (index in entries.indices) {
-                val entry = entries[index]
-                val iconX = x + getIconX(index)
-                val iconY = currentY + (index / ICON_COLUMNS) * (ICON_SIZE + ICON_GAP)
-                if (isHovered(mouseX, mouseY, iconX, iconY, ICON_SIZE, ICON_SIZE)) {
-                    entry.action.accept(entry.panelId)
-                    return true
-                }
-            }
-        }
-        val rows = iconRows
-        val settingsY = currentY + rows * ICON_SIZE + maxOf(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING
-        return settingsContent.mouseClicked(mouseX, mouseY, button, x, settingsY, width)
-    }
-
-    override fun mouseReleasedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        val settingsY = getSettingsY()
-        return settingsContent.mouseReleased(mouseX, mouseY, button, x, settingsY, width)
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return settingsContent.keyPressed(keyCode, scanCode, modifiers)
-    }
-
-    override fun charTyped(typedText: String): Boolean {
-        return settingsContent.charTyped(typedText)
-    }
-
-    override fun hasActiveInput(): Boolean {
-        return settingsContent.hasActiveInput()
-    }
 
     private fun getSettingsY(): Float {
         val rows = iconRows

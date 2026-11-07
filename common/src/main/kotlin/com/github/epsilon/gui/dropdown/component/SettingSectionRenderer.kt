@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
@@ -28,7 +29,7 @@ import com.github.epsilon.utils.render.animation.Easing
  * Dropdown 侧 Setting section 树的共用渲染器。
  *
  * 负责把 [SettingLayoutPlanner.Section] 树包装成控件树，并统一处理嵌套分组的
- * 高度、卡片背景、缩进、展开动画、命中与输入分发；`SettingsContent` 与
+ * 高度、卡片背景、缩进、展开动画与作用域内输入订阅；`SettingsContent` 与
  * `ModuleButton` 只提供控件工厂和坐标原点。
  *
  * 绘制坐标使用调用方 scope 的局部坐标，命中测试使用「局部坐标 + scope.origin」得到的绝对坐标，
@@ -70,51 +71,6 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         }
     }
 
-    fun mouseClicked(
-        mouseX: Double, mouseY: Double, button: Int,
-        x: Float, y: Float, width: Float, hitOffsetX: Float, hitOffsetY: Float,
-    ): Boolean {
-        val sectionX = x + DropdownTheme.SETTING_INDENT + hitOffsetX
-        val sectionWidth = sectionWidth(width)
-        var cursor = y + hitOffsetY
-        for (node in nodes) {
-            if (clickNode(node, 0, sectionX, cursor, sectionWidth, mouseX, mouseY, button)) {
-                return true
-            }
-            cursor += nodeHeight(node)
-        }
-        return false
-    }
-
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return anyWidget { widget -> widget.mouseReleased(mouseX, mouseY, button) }
-    }
-
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return anyWidget { widget -> widget.keyPressed(keyCode, scanCode, modifiers) }
-    }
-
-    fun charTyped(typedText: String): Boolean {
-        return anyWidget { widget -> widget.charTyped(typedText) }
-    }
-
-    fun hasActiveInput(): Boolean {
-        return hasListeningKeybind() || hasFocusedInput()
-    }
-
-    fun hasListeningKeybind(): Boolean {
-        return anyWidget({ widget -> widget is KeybindWidget && widget.isListening() }, false)
-    }
-
-    fun hasFocusedInput(): Boolean {
-        return anyWidget({ widget -> isFocusedInput(widget) }, false)
-    }
-
-    fun blurAllInputs() {
-        for (node in nodes) {
-            forEachWidget(node) { widget -> blurInput(widget) }
-        }
-    }
 
     // --- 高度 ---
 
@@ -159,6 +115,9 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val cardBounds = card(node, depth, x, width)
         val progress = expandProgress(node)
         val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET + elementsHeight(node)
+        Interaction(key = node, bounds = UiRect(cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
+            onClick { toggleCollapsed(node); true }
+        }
         val cardHeight = DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
         val radius = DropdownTheme.groupCardRadius(progress)
 
@@ -253,6 +212,9 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
                         LuminUIItem(widget) {
                             Positioned(widgetBounds.x, widgetBounds.y, widgetBounds.width, widgetBounds.height) {
+                                Interaction(key = widget to "unsupported") {
+                                    onClick { PlatformNoticeScreen.show(widget.setting); true }
+                                }
                                 Text(
                                     widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
                                     DropdownTheme.SETTING_PADDING_X,
@@ -282,136 +244,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
     // --- 命中 ---
 
-    private fun clickNode(
-        node: Node, depth: Int, x: Float, y: Float, width: Float,
-        mouseX: Double, mouseY: Double, button: Int,
-    ): Boolean {
-        if (!node.hasHeader()) {
-            return clickElements(node, depth, x, y, width, mouseX, mouseY, button)
-        }
-
-        val cardBounds = card(node, depth, x, width)
-        if (isHovered(mouseX, mouseY, cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
-            toggleCollapsed(node)
-            return true
-        }
-        if (expandProgress(node) < 0.999f) {
-            return false
-        }
-
-        val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-        val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
-        val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
-        return clickElements(
-            node,
-            depth + 1,
-            innerX,
-            contentY + DropdownTheme.GROUP_INSET,
-            innerWidth,
-            mouseX,
-            mouseY,
-            button
-        )
-    }
-
-    private fun clickElements(
-        node: Node, depth: Int, x: Float, y: Float, width: Float,
-        mouseX: Double, mouseY: Double, button: Int,
-    ): Boolean {
-        var cursor = y
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> {
-                    val widget = element.widget
-                    if (!widget.isVisible()) {
-                        continue
-                    }
-                    if (!widget.setting.isViaSupported()) {
-                        if (isHovered(mouseX, mouseY, x, cursor, width, widget.getHeight())) {
-                            PlatformNoticeScreen.show(widget.setting)
-                            return true
-                        }
-                        cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
-                        continue
-                    }
-                    if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        return true
-                    }
-                    cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
-                }
-
-                is ChildElement -> {
-                    val child = element.node
-                    if (clickNode(child, depth, x, cursor, width, mouseX, mouseY, button)) {
-                        return true
-                    }
-                    cursor += nodeHeight(child)
-                }
-            }
-        }
-        return false
-    }
 
     private fun toggleCollapsed(node: Node) {
         node.toggleCollapsed()
-        if (node.isCollapsed()) {
-            forEachWidget(node) { widget -> blurInput(widget) }
-        }
         SoundManager.playInUi(if (node.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN)
         DropdownScreen.react(
             if (node.isCollapsed()) ReisaDropdownCompanion.Action.PANEL_CLOSE else ReisaDropdownCompanion.Action.PANEL_OPEN
         )
     }
 
-    // --- 控件分发 ---
-
-    private fun anyWidget(action: (SettingWidget<*>) -> Boolean): Boolean {
-        return anyWidget(action, true)
-    }
-
-    /**
-     * @param skipCollapsed 是否跳过折叠分组内的控件；焦点检查需要覆盖所有分组
-     */
-    private fun anyWidget(action: (SettingWidget<*>) -> Boolean, skipCollapsed: Boolean): Boolean {
-        for (node in nodes) {
-            if (visitWidget(node, action, skipCollapsed)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun visitWidget(node: Node, action: (SettingWidget<*>) -> Boolean, skipCollapsed: Boolean): Boolean {
-        if (skipCollapsed && node.hasHeader() && node.isCollapsed()) {
-            return false
-        }
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> {
-                    val widget = element.widget
-                    if (widget.isVisible() && widget.setting.isViaSupported() && action(widget)) {
-                        return true
-                    }
-                }
-
-                is ChildElement -> {
-                    if (visitWidget(element.node, action, skipCollapsed)) {
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
-    private fun forEachWidget(node: Node, action: (SettingWidget<*>) -> Unit) {
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> action(element.widget)
-                is ChildElement -> forEachWidget(element.node, action)
-            }
-        }
-    }
 
     // --- 布局工具 ---
 
@@ -553,24 +394,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             return animation
         }
 
-        private fun isFocusedInput(widget: SettingWidget<*>): Boolean {
-            if (widget is StringWidget && widget.isFocused()) return true
-            if (widget is IntSliderWidget && widget.isFocused()) return true
-            if (widget is DoubleSliderWidget && widget.isFocused()) return true
-            return widget is ColorWidget && widget.hasFocusedInput()
-        }
 
-        private fun blurInput(widget: SettingWidget<*>) {
-            if (widget is StringWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is IntSliderWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is DoubleSliderWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is ColorWidget && widget.hasFocusedInput()) {
-                widget.blurAllInputs()
-            }
-        }
     }
 
 }

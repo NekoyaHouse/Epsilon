@@ -1,5 +1,9 @@
 package com.github.epsilon.gui.screen
 
+import com.github.epsilon.gui.lib.LuminUITree
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -19,7 +23,6 @@ import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
@@ -537,7 +540,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val rowHeight = minOf(58.9f * scale, rowStride * 0.78f)
 
         scene.beginFrame()
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
             scope.pushAbsolute(layoutX, layoutY) { content ->
                 if (AssetManager.isReisaReady()) {
                     if (!reisaShutdownTexturesPrewarmed) {
@@ -617,6 +620,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         entry.setBounds(
                             rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale
                         )
+                    }
+                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
                     }
                     val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
                     entry.hoverProgress =
@@ -765,7 +771,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 buttonTextHeight + buttonTextToLineGap + buttonLineHeight
         val buttonsY = layoutHeight - 74.4f * scale - buttonListHeight
 
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
             scope.pushAbsolute(layoutX, layoutY) { content ->
                 if (!reisaShutdownTexturesPrewarmed) {
                     prewarmReisaShutdownTextures(content)
@@ -813,6 +819,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         buttonStride
                     )
 
+                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                    }
                     val lineBase = applyAlpha(Color(147, 143, 153), 0.70f * appear)
                     val lineHover = applyAlpha(Color(208, 188, 255), 0.98f * appear)
                     val labelColor = MD3Theme.lerp(
@@ -1376,27 +1385,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         if (reisaShutdownStartMs >= 0L) return true
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-            val width = LuminRenderSystem.getScaledWidthInt()
-            val height = LuminRenderSystem.getScaledHeightInt()
-            val scale = resolutionScale(width, height)
-            val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
-            val layoutHeight = (MENU_REFERENCE_HEIGHT * scale).roundToInt()
-            val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
-            val layoutX = if (columbinaStyle) (width - layoutWidth).toFloat() else (width - layoutWidth) * 0.5f
-            val layoutY = if (columbinaStyle) (height - layoutHeight).toFloat() else (height - layoutHeight) * 0.5f
-            for (entry in entries) {
-                if (entry.isHovered(epsilonEvent.x() - layoutX, epsilonEvent.y() - layoutY)) {
-                    entry.action.run()
-                    return true
-                }
-            }
-        }
-        return super.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
+        return scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
     }
 
     override fun removed() {
+        scene.resetComposition()
+
         super.removed()
         val minecraft = this.minecraft
         if (!VideoPlayer.isStopped()) {
@@ -1472,6 +1466,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         private var height: Float = 0f
 
         var hoverProgress: Float = 0f
+
+        fun bounds() = UiRect(x, y, width, height)
 
         fun setBounds(x: Float, y: Float, width: Float, height: Float) {
             this.x = x

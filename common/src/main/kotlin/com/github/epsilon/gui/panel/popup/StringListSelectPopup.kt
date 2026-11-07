@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.Input
@@ -41,26 +43,24 @@ class StringListSelectPopup(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val scrollBarDrag = ScrollBarDragState()
 
+    private var inputFocused by mutableStateOf(false)
     private var input by mutableStateOf("")
     private var scroll by mutableStateOf(0.0f)
     private var scrollVelocity = 0.0f
     private var maxScroll = 0.0f
-    private var hoveredRemove: String? = null
-    private var hoveredMoveUp: String? = null
-    private var hoveredMoveDown: String? = null
     private var lastViewport: UiRect? = null
 
     override fun getBounds(): UiRect {
         return bounds
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
     }
 
     private fun renderContent(
@@ -84,6 +84,9 @@ class StringListSelectPopup(
         lastViewport = animatedViewport
 
         renderBatch.LuminUIScene(animatedBounds, key = this) {
+            InputRegion(key = this@StringListSelectPopup to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onBlur = {}, onCancel = { scrollBarDrag.reset() })
+
             val progress = openAnimation.value
             PopupCard(
                 size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
@@ -104,20 +107,24 @@ class StringListSelectPopup(
                 if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
             val localInputBounds = inputBounds.relativeTo(animatedBounds)
             Positioned(localInputBounds.x, localInputBounds.y, localInputBounds.width, localInputBounds.height) {
+                Interaction("editor") {
+                    autoFocus = true
+                    onClick { true }
+                    onKeyPressed(::keyPressed)
+                    onTextInput(::charTyped)
+                    onFocusChanged { inputFocused = it }
+                }
                 Input(
-                    UiRect(0.0f, 0.0f, localInputBounds.width, localInputBounds.height), true, 1.0f,
+                    UiRect(0.0f, 0.0f, localInputBounds.width, localInputBounds.height), inputFocused, 1.0f,
                     0.0f, Color(0, 0, 0, 0), 0.0f,
                     8.0f, placeholder, 0.54f,
                     if (input.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
                     null, null,
-                    input.length, MD3Theme.PRIMARY, null, 0.0f, null
+                    if (inputFocused) input.length else null, MD3Theme.PRIMARY, null, 0.0f, null
                 )
             }
             IMEFocusHelper.updateCursorPos(inputBounds.x + 8.0f, inputBounds.y + 4.0f)
 
-            hoveredRemove = null
-            hoveredMoveUp = null
-            hoveredMoveDown = null
             val localViewport = animatedViewport.relativeTo(animatedBounds)
             Viewport(
                 contentBuffer,
@@ -140,42 +147,28 @@ class StringListSelectPopup(
         contentBuffer.flushAndClear()
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+    private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !bounds.contains(event.x(), event.y())) return false
         val viewport = lastViewport ?: getViewport()
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
             applyDraggedScroll(event.y(), viewport)
             return true
         }
-        val moveUp = hoveredMoveUp
-        if (moveUp != null) {
-            moveEntry(moveUp, -1)
-            return true
-        }
-        val moveDown = hoveredMoveDown
-        if (moveDown != null) {
-            moveEntry(moveDown, 1)
-            return true
-        }
-        val remove = hoveredRemove
-        if (remove != null) {
-            removeFn(remove)
-            return true
-        }
+
         return true
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    private fun mouseReleased(event: MouseButtonEvent): Boolean {
         return scrollBarDrag.mouseReleased()
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         if (!scrollBarDrag.isDragging()) return false
         applyDraggedScroll(event.y(), lastViewport ?: getViewport())
         return true
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun keyPressed(event: KeyEvent): Boolean {
         if (event.key() == InputConstants.KEY_RETURN && !input.isBlank()) {
             addFn(input.trim())
             input = ""
@@ -197,13 +190,13 @@ class StringListSelectPopup(
         }
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun charTyped(event: CharacterEvent): Boolean {
         if (input.length >= MAX_QUERY_LENGTH) return false
         input += event.codepointAsString()
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (!getViewport(bounds.y).contains(mouseX, mouseY) || maxScroll <= 0.0f) return false
         scrollVelocity -= scrollY.toFloat() * SCROLL_STEP
         return true
@@ -234,9 +227,6 @@ class StringListSelectPopup(
             val removeHovered = hovered && removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
             val downHovered = hovered && canMoveDown && downBounds.contains(mouseX.toDouble(), mouseY.toDouble())
             val upHovered = hovered && canMoveUp && upBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-            if (removeHovered) hoveredRemove = entry
-            if (downHovered) hoveredMoveDown = entry
-            if (upHovered) hoveredMoveUp = entry
 
             val bgHover = if (hovered) 0.45f else 0.0f
             val actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f
@@ -254,6 +244,15 @@ class StringListSelectPopup(
                         display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
                         MD3Theme.ON_SECONDARY_CONTAINER
                     )
+                    Interaction("up", upBounds.relativeTo(rowBounds), enabled = canMoveUp) {
+                        onClick { moveEntry(entry, -1); true }
+                    }
+                    Interaction("down", downBounds.relativeTo(rowBounds), enabled = canMoveDown) {
+                        onClick { moveEntry(entry, 1); true }
+                    }
+                    Interaction("remove", removeBounds.relativeTo(rowBounds)) {
+                        onClick { removeFn(entry); true }
+                    }
                     drawAction(upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
                     drawAction(downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
                     drawAction(removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
@@ -349,6 +348,8 @@ class StringListSelectPopup(
     }
 
     override fun close() {
+        inputView.close()
+
         contentBuffer.close()
     }
 

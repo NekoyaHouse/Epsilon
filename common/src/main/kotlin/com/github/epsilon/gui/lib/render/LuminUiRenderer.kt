@@ -75,6 +75,7 @@ object LuminUiRenderer {
         val theme = target.theme
 
         when (node) {
+            is UiTree.InteractionNode -> Unit
             is UiTree.CompositionNode -> error("组合引用必须在提交前解析")
             is UiTree.ShadowNode -> {
                 layer.addShadow(

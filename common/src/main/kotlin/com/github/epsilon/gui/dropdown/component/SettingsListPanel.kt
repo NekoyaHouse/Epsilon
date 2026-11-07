@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.dropdown.component
 
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.SettingWidget
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.Setting
@@ -37,39 +36,6 @@ class SettingsListPanel : AbstractDropdownPanel {
         )
     }
 
-    override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return settingsContent.mouseClicked(
-            mouseX,
-            mouseY,
-            button,
-            x,
-            y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
-            width
-        )
-    }
-
-    override fun mouseReleasedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return settingsContent.mouseReleased(
-            mouseX,
-            mouseY,
-            button,
-            x,
-            y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
-            width
-        )
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return settingsContent.keyPressed(keyCode, scanCode, modifiers)
-    }
-
-    override fun charTyped(typedText: String): Boolean {
-        return settingsContent.charTyped(typedText)
-    }
-
-    override fun hasActiveInput(): Boolean {
-        return settingsContent.hasActiveInput()
-    }
 
     companion object {
 

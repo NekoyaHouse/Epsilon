@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown
 
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -44,7 +45,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     private val panels: MutableList<DropdownPanel> = ArrayList()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
-    private val popupHost: PanelPopupHost = PanelPopupHost()
+    private val popupHost: PanelPopupHost = PanelPopupHost { scene.input }
     private val scrimAnim: LuminAnimatable = LuminAnimatable(0.0f, Easing.EASE_OUT_SINE, 200L)
     private val searchField: DropdownTextField = DropdownTextField(64)
     private val reisaCompanion: ReisaDropdownCompanion = ReisaDropdownCompanion()
@@ -57,7 +58,6 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private var renderFrameId = 0
     private var dropdownBatch: UiRenderBatch? = null
     private var dropdownLayer = 0
-
 
 
     override fun init() {
@@ -237,6 +237,12 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
 
         dropdownContent(screenBounds, "search") {
+            InputRegion(key = searchField, bounds = UiRect(searchX, searchY, searchWidth, searchHeight),
+                onPress = { event, _ -> searchField.focusIfContains(event.x(), event.y(), searchX, searchY, searchWidth, searchHeight) },
+                onKey = { event ->
+                    if (event.isEscape) { searchField.blur(); scene.input.clearFocus(); true }
+                    else searchField.keyPressed(event).also { if (it) syncSearchQuery() }
+                }, onText = { event -> searchField.charTyped(event).also { if (it) syncSearchQuery() } }, onBlur = searchField::blur)
             searchField.draw(
                 this, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
                 EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
@@ -298,199 +304,56 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mx = epsilonEvent.x()
-        val my = epsilonEvent.y()
-        val button = epsilonEvent.button()
-
-        if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
-            react(ReisaDropdownCompanion.Action.CONFIRM)
-            return true
+        val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
+        if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
+        val handled = scene.input.mouseClicked(mouse, isDoubleClick)
+        if (handled) {
+            val panel = panels.lastOrNull { it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(mouse.x(), mouse.y()) }
+            if (panel != null) { panels.remove(panel); panels.add(panel) }
+            DropdownLayoutState.save(panels)
+            reactMouseButton(mouse.button())
         }
-
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            for (panel in panels) {
-                if (panel.isVisible) {
-                    panel.onGlobalMouseClicked(mx, my, button)
-                }
-            }
-        }
-
-        if (button == InputConstants.MOUSE_BUTTON_LEFT &&
-            searchField.focusIfContains(mx, my, searchX, searchY, searchWidth, searchHeight)
-        ) {
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        } else if (button == InputConstants.MOUSE_BUTTON_LEFT && searchField.isFocused) {
-            searchField.blur()
-        }
-
-        for (i in panels.indices.reversed()) {
-            val panel = panels[i]
-            if (!panel.isVisible) continue
-            val reactionRevision = reisaCompanion.getReactionRevision()
-            if (panel.mouseClicked(mx, my, button)) {
-                if (i < panels.size - 1) {
-                    panels.removeAt(i)
-                    panels.add(panel)
-                }
-                DropdownLayoutState.save(panels)
-                if (reactionRevision == reisaCompanion.getReactionRevision()) {
-                    reactMouseButton(button)
-                }
-                return true
-            }
-        }
-        return super.mouseClicked(epsilonEvent, isDoubleClick)
+        return handled || super.mouseClicked(mouse, isDoubleClick)
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
+        if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
 
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mx = epsilonEvent.x()
-        val my = epsilonEvent.y()
-        val button = epsilonEvent.button()
-
-        if (popupHost.mouseReleased(epsilonEvent)) {
-            react(ReisaDropdownCompanion.Action.CONFIRM)
-            return true
-        }
-
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.mouseReleased(mx, my, button)) {
-                DropdownLayoutState.save(panels)
-                react(ReisaDropdownCompanion.Action.CONFIRM)
-                return true
-            }
-        }
-        return super.mouseReleased(epsilonEvent)
+        val handled = scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
+        if (handled) { DropdownLayoutState.save(panels); react(ReisaDropdownCompanion.Action.CONFIRM) }
+        return handled
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
 
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
-            react(ReisaDropdownCompanion.Action.DRAG)
-            return true
-        }
-        var handled = false
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.mouseDragged(
-                    LuminRenderSystem.toEpsilonMouseX(event.x()),
-                    LuminRenderSystem.toEpsilonMouseY(event.y())
-                )
-            ) {
-                handled = true
-            }
-        }
-        if (handled) {
-            DropdownLayoutState.save(panels)
-            react(ReisaDropdownCompanion.Action.DRAG)
-            return true
-        }
-        return super.mouseDragged(
-            epsilonEvent,
-            LuminRenderSystem.toEpsilonMouseX(event.x()),
-            LuminRenderSystem.toEpsilonMouseY(event.y())
-        )
+        val handled = scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        if (handled) DropdownLayoutState.save(panels)
+        return handled
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-            reactScroll(scrollY)
-            return true
-        }
-        for (i in panels.indices.reversed()) {
-            val panel = panels[i]
-            if (!panel.isVisible) continue
-            if (panel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
-                reactScroll(scrollY)
-                return true
-            }
-        }
-        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)
+        val mx = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val my = LuminRenderSystem.toEpsilonMouseY(mouseY)
+        if (popupHost.activePopup != null) return popupHost.mouseScrolled(mx, my, scrollX, scrollY)
+        return scene.input.mouseScrolled(mx, my, scrollX, scrollY).also { if (it) reactScroll(scrollY) }
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-
-        if (popupHost.keyPressed(event)) {
-            react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-            return true
-        }
+        if (popupHost.activePopup != null) return popupHost.keyPressed(event)
         if (event.key() == InputConstants.KEY_F && InputConstants.isKeyDown(InputConstants.KEY_LCONTROL)) {
-            searchField.focus()
-            react(ReisaDropdownCompanion.Action.TYPING)
+            if (scene.input.requestFocus(searchField)) searchField.focus()
             return true
         }
-        if (searchField.isFocused) {
-            if (event.isEscape) {
-                searchField.blur()
-                react(ReisaDropdownCompanion.Action.CANCEL)
-                return true
-            }
-            if (searchField.keyPressed(event)) {
-                syncSearchQuery()
-                react(ReisaDropdownCompanion.Action.TYPING)
-                return true
-            }
-        }
-
-        val hasActiveInput =
-            panels.stream().filter { panel -> panel.isVisible }.anyMatch { panel -> panel.hasActiveInput() }
-
-        if (hasActiveInput) {
-            for (panel in panels) {
-                if (!panel.isVisible) continue
-                if (panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
-                    react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-                    return true
-                }
-            }
-        }
-
-        if (event.isEscape) {
-            onClose()
-            return true
-        }
-
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
-                react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-                return true
-            }
-        }
+        if (scene.input.keyPressed(event)) return true
+        if (event.isEscape) { onClose(); return true }
         return super.keyPressed(event)
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-
-        if (popupHost.charTyped(event)) {
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        }
-        if (searchField.charTyped(event)) {
-            syncSearchQuery()
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        }
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            val typed = event.codepointAsString()
-            if (typed.isNotEmpty() && panel.charTyped(typed)) {
-                react(ReisaDropdownCompanion.Action.TYPING)
-                return true
-            }
-        }
-        return super.charTyped(event)
+        if (popupHost.activePopup != null) return popupHost.charTyped(event)
+        return scene.input.charTyped(event) || super.charTyped(event)
     }
 
     override fun onClose() {
@@ -500,6 +363,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        if (popupHost.activePopup != null) popupHost.preeditUpdated(event) else scene.input.preeditUpdated(event)
+
         this.preeditOverlay = if (event != null) IMEPreeditOverlay(event, this.font, 10) else null
         return true
     }

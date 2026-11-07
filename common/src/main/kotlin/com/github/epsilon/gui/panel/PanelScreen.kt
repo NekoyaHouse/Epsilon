@@ -9,7 +9,6 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
-import com.github.epsilon.gui.panel.input.PanelInputRouter
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.panel.view.CategoryRailPanel
@@ -19,7 +18,6 @@ import com.github.epsilon.gui.panel.view.ModuleListPanel
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.impl.ClientSetting
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
 import net.minecraft.client.gui.screens.Screen
@@ -39,8 +37,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
 
     private val state = PanelState()
     private val scene = UiScene(EpsilonUiTheme)
-    private val popupHost = PanelPopupHost()
-    private val inputRouter = PanelInputRouter()
+    private val popupHost = PanelPopupHost { scene.input }
     private val categoryRailPanel = CategoryRailPanel(state)
     private val moduleListPanel = ModuleListPanel(state)
     private val moduleDetailPanel = ModuleDetailPanel(state, popupHost)
@@ -206,140 +203,51 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mouseX = epsilonEvent.x()
-        val mouseY = epsilonEvent.y()
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            if (state.getListeningKeyBindModule() != null &&
-                moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)
-            ) {
-
-                return true
-            }
-            if (state.getListeningKeybindSetting() != null) {
-                val handledListening = if (state.isClientSettingMode()) {
-                    clientSettingPanel.mouseClicked(epsilonEvent, isDoubleClick)
-                } else {
-                    moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)
-                }
-                if (handledListening) {
-
-                    return true
-                }
-            }
-            return super.mouseClicked(epsilonEvent, isDoubleClick)
-        }
-
-        if (popupHost.activePopup != null) {
-            return inputRouter.routeMouseClicked(
-                epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
-                categoryRailPanel, clientSettingPanel, state.isClientSettingMode()
-            ) || super.mouseClicked(epsilonEvent, isDoubleClick)
-        }
-
-        val layout = PanelLayout.compute(
-            LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(),
-            categoryRailPanel.getAnimatedWidth()
-        )
-        if (!layout.panel.contains(mouseX, mouseY)) {
+        val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
+        if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
+        val layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), categoryRailPanel.getAnimatedWidth())
+        if (!layout.panel.contains(mouse.x(), mouse.y())) {
+            scene.input.clearFocus()
             if (ClientSetting.closeOnOutside) minecraft.gui.setScreen(null)
             return true
         }
-        if (!state.isClientSettingMode()) {
-            moduleListPanel.handleGlobalClick(mouseX, mouseY)
-        }
-        val handled = inputRouter.routeMouseClicked(
-            epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel,
-            categoryRailPanel, clientSettingPanel, state.isClientSettingMode()
-        )
-        if (handled) {
-
-        }
-        return handled || super.mouseClicked(epsilonEvent, isDoubleClick)
+        return scene.input.mouseClicked(mouse, isDoubleClick) || super.mouseClicked(mouse, isDoubleClick)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-
-            return true
-        }
-        if (state.isClientSettingMode()) {
-            if (clientSettingPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-
-                return true
-            }
-        } else {
-            if (moduleListPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-
-                return true
-            }
-            if (moduleDetailPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-
-                return true
-            }
-        }
-        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)
+        if (popupHost.activePopup != null) return popupHost.mouseScrolled(
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
+        return scene.input.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        if (inputRouter.routeMouseReleased(
-                epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
-                state.isClientSettingMode()
-            )
-        ) {
+        if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
 
-            return true
-        }
-        return super.mouseReleased(epsilonEvent)
+        return scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (inputRouter.routeMouseDragged(
-                epsilonEvent, epsilonMouseX, epsilonMouseY, popupHost, moduleDetailPanel, moduleListPanel,
-                clientSettingPanel, state.isClientSettingMode()
-            )
-        ) {
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
 
-            return true
-        }
-        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)
+        return scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (inputRouter.routeKeyPressed(
-                event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
-                state.isClientSettingMode()
-            )
-        ) {
-
-            return true
-        }
-        if (event.key() == InputConstants.KEY_ESCAPE) {
-            onClose()
-            return true
-        }
+        if (popupHost.activePopup != null) return popupHost.keyPressed(event)
+        if (scene.input.keyPressed(event)) return true
+        if (event.isEscape) { onClose(); return true }
         return super.keyPressed(event)
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        if (inputRouter.routeCharTyped(
-                event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel,
-                state.isClientSettingMode()
-            )
-        ) {
-
-            return true
-        }
-        return super.charTyped(event)
+        if (popupHost.activePopup != null) return popupHost.charTyped(event)
+        return scene.input.charTyped(event) || super.charTyped(event)
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        if (popupHost.activePopup != null) popupHost.preeditUpdated(event) else scene.input.preeditUpdated(event)
+
         this.preeditOverlay = if (event != null) IMEPreeditOverlay(event, this.font, 10) else null
         return true
     }
@@ -358,7 +266,6 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         moduleDetailPanel.resetTransientState()
         clientSettingPanel.resetTransientState()
         state.setListeningKeyBindModule(null)
-        state.setListeningKeybindSetting(null)
         IMEFocusHelper.forceDeactivate()
         preeditOverlay = null
     }

@@ -100,6 +100,7 @@ class UiTextField(maxLength: Int) {
     }
 
     fun focus() {
+        if (focused) return
         focused = true
         cursor = textStore.length
         IMEFocusHelper.activate()

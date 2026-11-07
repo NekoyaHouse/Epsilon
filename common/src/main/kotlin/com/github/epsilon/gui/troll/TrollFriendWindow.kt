@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
@@ -68,6 +70,10 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        ui.InputRegion(inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
+            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         inputField.draw(
             scope.asUiScope(TrollTheme.metrics(metrics)), inputBounds.x, inputBounds.y,
@@ -75,6 +81,7 @@ class TrollFriendWindow : TrollWindow() {
             EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true
         )
 
+        ui.Interaction("add", addBounds) { onClick { addFriend(); true } }
         val addHovered = addBounds.contains(mouseX.toDouble(), mouseY.toDouble())
         scope.layer(TrollZ.Base) { z ->
             z.rect(
@@ -105,6 +112,7 @@ class TrollFriendWindow : TrollWindow() {
             }
             for (row in rows) {
                 content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                    Interaction("remove", row.removeBounds) { onClick { FriendManager.removeFriend(row.name); true } }
                     val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
                     tree.layer(TrollZ.Base) { z ->
                         z.rect(
@@ -157,31 +165,7 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return bounds.contains(event.x(), event.y())
-
-        if (inputField.focusIfContains(
-                event.x(), event.y(), inputBounds.x, inputBounds.y,
-                inputBounds.width, inputBounds.height
-            )
-        ) {
-            return true
-        }
-        inputField.blur()
-
-        if (addBounds.contains(event.x(), event.y())) {
-            addFriend()
-            return true
-        }
-        if (listViewport.contains(event.x(), event.y())) {
-            for (row in rows) {
-                if (row.removeBounds.contains(event.x(), event.y())) {
-                    FriendManager.removeFriend(row.name)
-                    return true
-                }
-            }
-        }
-        return bounds.contains(event.x(), event.y())
+        return super.mouseClicked(event)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {

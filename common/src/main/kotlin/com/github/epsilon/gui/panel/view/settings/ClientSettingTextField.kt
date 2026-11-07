@@ -37,10 +37,15 @@ class ClientSettingTextField(private val maxLength: Int) {
         if (!bounds.contains(mouseX, mouseY)) {
             return false
         }
+        focus()
+        return true
+    }
+
+    fun focus() {
+        if (focused) return
         focused = true
         cursor = text.length
         IMEFocusHelper.activate()
-        return true
     }
 
     fun blur() {

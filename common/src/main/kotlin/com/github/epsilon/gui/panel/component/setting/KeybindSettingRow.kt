@@ -15,6 +15,7 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.client.input.KeyEvent
 
 private const val CHIP_WIDTH = 56.0f
 private const val CHIP_HEIGHT = 18.0f
@@ -41,6 +42,25 @@ class KeybindSettingRow(private val keybindSetting: KeybindSetting) : SettingRow
         this.listeningState = listening
     }
 
+    override fun setFocused(focused: Boolean) { if (!focused) listeningState = false }
+
+    fun bindMouse(event: MouseButtonEvent): Boolean {
+        if (!listeningState) return false
+        keybindSetting.value = KeybindUtils.encodeMouseButton(event.button())
+        listeningState = false
+        return true
+    }
+
+    override fun keyPressed(event: KeyEvent): Boolean {
+        if (!listeningState) return false
+        if (!event.isEscape) keybindSetting.value = when (event.key()) {
+            InputConstants.KEY_BACKSPACE, InputConstants.KEY_DELETE -> KeybindUtils.NONE
+            else -> event.key()
+        }
+        listeningState = false
+        return true
+    }
+
     /**
      * chip 的绝对矩形，供命中测试与监听状态切换使用。
      */
@@ -62,7 +82,9 @@ class KeybindSettingRow(private val keybindSetting: KeybindSetting) : SettingRow
             return false
         }
         val chipBounds = getChipBounds(bounds)
-        return chipBounds.contains(event.x, event.y)
+        if (!chipBounds.contains(event.x, event.y)) return false
+        listeningState = true
+        return true
     }
 
     internal fun formatKeybind(keyCode: Int): String {

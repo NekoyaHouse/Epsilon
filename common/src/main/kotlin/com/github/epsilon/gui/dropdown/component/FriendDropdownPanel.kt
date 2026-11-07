@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -32,6 +35,10 @@ class FriendDropdownPanel(panelIndex: Int) :
         val fieldX = PADDING
         val fieldY = top + PADDING - scroll
         val fieldW = width - PADDING * 2.0f - 24.0f
+        InputRegion(inputField, UiRect(fieldX, fieldY, fieldW, FIELD_HEIGHT),
+            onPress = { _, _ -> inputField.focus(); true },
+            onKey = { keyPressed(it.key(), it.keycode(), it.modifiers()) },
+            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur)
         inputField.draw(
             this, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY,
             EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), DropdownTheme.SETTING_TEXT_SCALE
@@ -40,6 +47,7 @@ class FriendDropdownPanel(panelIndex: Int) :
         val addX = fieldX + fieldW + GAP
         val addHovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
         LuminUIItem(ADD_BUTTON_KEY) {
+            Interaction("add", UiRect(addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) { onClick { addFriend(); true } }
             RoundRect(
                 addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                 if (addHovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
@@ -62,24 +70,28 @@ class FriendDropdownPanel(panelIndex: Int) :
             return
         }
         for (name in friends) {
+            val currentRowY = rowY
             val rowX = PADDING
             val rowWidth = width - PADDING * 2.0f
-            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, rowY, rowWidth, ROW_HEIGHT)
+            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, currentRowY, rowWidth, ROW_HEIGHT)
             val removeX = width - PADDING - 18.0f
-            val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
+            val removeY = currentRowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
             val removeHovered = isHoveredAt(
                 this, mouseX.toDouble(), mouseY.toDouble(), removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE
             )
             // 逐项缓存：好友行位置、悬停状态或翻译变化时才重新捕获节点。
             LuminUIItem("friend-row:$name") {
+                Interaction("remove", UiRect(removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE)) {
+                    onClick { FriendManager.removeFriend(name); true }
+                }
                 RoundRect(
-                    rowX, rowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                    rowX, currentRowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
                 )
                 val displayName = trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, metrics)
                 Text(
                     displayName, PADDING + 6.0f,
-                    rowY + (ROW_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
+                    currentRowY + (ROW_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
                     DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY
                 )
                 val iconScale = 0.8f
@@ -100,44 +112,8 @@ class FriendDropdownPanel(panelIndex: Int) :
         }
     }
 
-    override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (button != InputConstants.MOUSE_BUTTON_LEFT) return false
-        val fieldX = x + PADDING
-        val fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
-        val fieldW = width - PADDING * 2.0f - 24.0f
-        if (inputField.focusIfContains(mouseX, mouseY, fieldX, fieldY, fieldW, FIELD_HEIGHT)) {
-            return true
-        }
-        if (isHovered(mouseX, mouseY, fieldX + fieldW + GAP, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) {
-            addFriend()
-            return true
-        }
-        inputField.blur()
 
-        var rowY = fieldY + FIELD_HEIGHT + GAP
-        for (name in FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
-            val removeX = x + width - PADDING - 18.0f
-            val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
-            if (isHovered(mouseX, mouseY, removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE)) {
-                FriendManager.removeFriend(name)
-                return true
-            }
-            rowY += ROW_HEIGHT + GAP
-        }
-        return false
-    }
-
-    override fun onGlobalMouseClicked(mouseX: Double, mouseY: Double, button: Int) {
-        if (button != InputConstants.MOUSE_BUTTON_LEFT) return
-        val fieldX = x + PADDING
-        val fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
-        val fieldW = width - PADDING * 2.0f - 24.0f
-        if (!isHovered(mouseX, mouseY, fieldX, fieldY, fieldW, FIELD_HEIGHT)) {
-            inputField.blur()
-        }
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+    private fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (!inputField.isFocused) return false
         if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
             addFriend()
@@ -150,13 +126,10 @@ class FriendDropdownPanel(panelIndex: Int) :
         return inputField.keyPressed(keyCode)
     }
 
-    override fun charTyped(typedText: String): Boolean {
+    private fun charTyped(typedText: String): Boolean {
         return inputField.charTyped(typedText)
     }
 
-    override fun hasActiveInput(): Boolean {
-        return inputField.isFocused
-    }
 
     private fun addFriend() {
         val name = inputField.text.trim()

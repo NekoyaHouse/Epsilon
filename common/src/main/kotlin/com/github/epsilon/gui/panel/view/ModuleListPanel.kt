@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.LuminUIScene
@@ -38,7 +40,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
     private var bounds: UiRect? = null
     private var guiHeight = 0
-    private val rows = ArrayList<ModuleRow>()
     private val hoverAnimations = HashMap<Module, Animation>()
     private val selectionAnimations = HashMap<Module, Animation>()
     private val toggleAnimations = HashMap<Module, Animation>()
@@ -97,7 +98,9 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         contentBuffer.clear()
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            rows.clear()
+            InputRegion(key = this@ModuleListPanel to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onCancel = { scrollBarDrag.reset() })
+
             Text(
                 state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
                 MD3Theme.TEXT_PRIMARY
@@ -114,7 +117,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                 var y = viewport.y - state.getModuleScroll()
                 for (module in modules) {
                     val row = ModuleRow(module, UiRect(viewport.x, y, rowWidth, ModuleRow.HEIGHT))
-                    rows.add(row)
                     val localRow = row.getBounds().relativeTo(origin)
                     LuminUIItem(module) {
                         val hoverAnimation = hoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
@@ -133,6 +135,16 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                             if (row.getToggleBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
                         )
                         Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                            Interaction(key = module) {
+                                onClick {
+                                    scrollVelocity = 0f
+                                    if (row.getToggleBounds().contains(it.x, it.y)) {
+                                        module.toggle()
+                                        SoundManager.playInUi(if (module.isEnabled) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+                                    } else state.setSelectedModule(module)
+                                    true
+                                }
+                            }
                             ModuleRow(
                                 row, hoverAnimation.value, selectionAnimation.value,
                                 toggleAnimation.value, toggleHoverAnimation.value
@@ -152,7 +164,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
     fun flushContent() {
         contentBuffer.flush()
     }
-
 
 
     fun resetTransientState() {
@@ -181,29 +192,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             val newScroll = scrollBarDrag.mouseDragged(event.y(), viewport, maxScroll)
             if (newScroll >= 0) {
                 state.setModuleScroll(newScroll)
-            }
-
-            return true
-        }
-        val searchBounds = getSearchBounds()
-        if (searchBounds.contains(event.x(), event.y())) {
-            searchFocused = true
-            searchCursorIndex = state.getSearchQuery().length
-            IMEFocusHelper.activate()
-
-            return true
-        }
-        for (row in rows) {
-            if (!row.getBounds().contains(event.x(), event.y())) {
-                continue
-            }
-            if (row.getToggleBounds().contains(event.x(), event.y())) {
-                row.getModule().module.toggle()
-                SoundManager.playInUi(
-                    if (row.getModule().module.isEnabled) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE
-                )
-            } else {
-                state.setSelectedModule(row.getModule().module)
             }
 
             return true
@@ -319,16 +307,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
      *
      * 若点击位置不在搜索框内，则会取消搜索框焦点。
      */
-    fun handleGlobalClick(mouseX: Double, mouseY: Double) {
-        if (bounds == null) {
-            return
-        }
-        if (!getSearchBounds().contains(mouseX, mouseY)) {
-            searchFocused = false
-            IMEFocusHelper.deactivate()
 
-        }
-    }
 
     private fun getViewport(): UiRect {
         val currentBounds = bounds!!
@@ -347,6 +326,12 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private fun UiScope.buildSearchField(mouseX: Int, mouseY: Int) {
         val searchBounds = getSearchBounds()
+        InputRegion("search", searchBounds.relativeTo(origin),
+            onPress = { _, _ ->
+                if (!searchFocused) { searchFocused = true; searchCursorIndex = state.getSearchQuery().length; IMEFocusHelper.activate() }
+                true
+            }, onKey = ::keyPressed, onText = ::charTyped,
+            onBlur = { if (searchFocused) { searchFocused = false; IMEFocusHelper.deactivate() } })
         val localBounds = searchBounds.relativeTo(origin)
         val hoverProgress =
             animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
@@ -386,6 +371,8 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
     }
 
     override fun close() {
+        luminView.close()
+
         contentBuffer.close()
 
     }

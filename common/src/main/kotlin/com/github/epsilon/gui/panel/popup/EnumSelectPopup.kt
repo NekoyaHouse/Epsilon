@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
@@ -21,9 +23,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 
 class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : PanelPopupHost.Popup {
@@ -35,7 +35,6 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 140L)
-    private var hoveredIndex = -1
 
     init {
         val optionCount = setting.modes.size
@@ -60,13 +59,13 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         return bounds
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
     }
 
     private fun renderContent(
@@ -88,6 +87,9 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
 
         renderBatch.LuminUIScene(popupBounds, key = this) {
+            InputRegion(key = this@EnumSelectPopup to "input", onScroll = ::mouseScrolled,
+                onBlur = {}, onCancel = {})
+
             val progress = openAnimation.value
             PopupCard(
                 size,
@@ -97,7 +99,6 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                 MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
             )
 
-            hoveredIndex = -1
             val localViewportBounds = viewportBounds.relativeTo(popupBounds)
             Viewport(contentBuffer, localViewportBounds, scroll, maxScroll, fullContentHeight) {
                 val modes = setting.modes
@@ -108,15 +109,20 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                     val visible = itemY + ITEM_INNER_HEIGHT > viewportBounds.y && itemY < viewportBounds.bottom()
                     val hovered = visible && itemBounds.contains(mouseX.toDouble(), mouseY.toDouble()) &&
                             mouseY >= viewportBounds.y && mouseY <= viewportBounds.bottom()
-                    if (hovered) {
-                        hoveredIndex = i
-                    }
                     val selected = i == setting.modeIndex
                     val supported = setting.isModeSupportedUnchecked(modes[i])
                     // 逐项缓存：行节点按位置与状态复用，只有悬停/选中/滚动变化的行重新捕获。
 
-                    LuminUIItem(setting to i) {
+                    LuminUIItem(modes[i]) {
                         val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
+                        Interaction(modes[i], localItemBounds) {
+                            onClick {
+                                val mode = modes[i]
+                                if (!setting.isModeSupportedUnchecked(mode)) PlatformNoticeScreen.showOption(setting, mode)
+                                else setModeUnchecked(setting, mode)
+                                true
+                            }
+                        }
                         val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
                         val hoverBackground = MD3Theme.lerp(
                             MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f
@@ -178,24 +184,8 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         contentBuffer.flushAndClear()
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        if (!bounds.contains(event.x(), event.y()) || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-        val modes = setting.modes
-        if (hoveredIndex < 0 || hoveredIndex >= modes.size) {
-            return false
-        }
-        val mode = modes[hoveredIndex]
-        if (!setting.isModeSupportedUnchecked(mode)) {
-            PlatformNoticeScreen.showOption(setting, mode)
-            return true
-        }
-        setModeUnchecked(setting, mode)
-        return true
-    }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (!scrollable || maxScroll <= 0.0f) {
             return false
         }
@@ -209,9 +199,10 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
     }
 
     override fun close() {
+        inputView.close()
+
         contentBuffer.close()
     }
-
 
 
     companion object {

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
@@ -130,6 +131,10 @@ class TrollSettingsWindow(
                         entry.row.draw(tree, metrics, mouseX, mouseY)
                     }
                 } else {
+                    content.asUiScope(TrollTheme.metrics(metrics)).Interaction(key = entry.section!!, bounds = entry.bounds) {
+                        onClick { entry.section.toggleCollapsed(); true }
+                        onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
+                    }
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
                     content.layer(TrollZ.Base) { z ->
                         z.rect(
@@ -158,32 +163,15 @@ class TrollSettingsWindow(
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (captureMouseBind(event)) return true
-        for (row in allRows()) row.resetInput()
-        if (super.mouseClicked(event)) return true
-        if (!viewport.contains(event.x(), event.y())) return false
-        for (entry in entries.toList()) {
-            if (!entry.bounds.contains(event.x(), event.y())) continue
-            entry.row?.let { return it.mouseClicked(event) }
-            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT || event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
-                entry.section!!.toggleCollapsed()
-            }
-            return true
-        }
-        return true
+        return super.mouseClicked(event)
     }
 
     override fun mouseDragged(event: MouseButtonEvent): Boolean {
-        if (super.mouseDragged(event)) return true
-        for (row in allRows()) {
-            if (row.mouseDragged(event)) return true
-        }
-        return false
+        return super.mouseDragged(event)
     }
 
     override fun mouseReleased(event: MouseButtonEvent) {
         super.mouseReleased(event)
-        for (row in allRows()) row.mouseReleased(event)
     }
 
     fun startSettingAnimations() {
@@ -191,25 +179,13 @@ class TrollSettingsWindow(
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        for (row in allRows()) {
-            if (row.keyPressed(event)) return true
-        }
         return false
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        for (row in allRows()) {
-            if (row.charTyped(event)) return true
-        }
         return false
     }
 
-    fun captureMouseBind(event: MouseButtonEvent): Boolean {
-        for (row in allRows()) {
-            if (row.captureMouseBind(event)) return true
-        }
-        return false
-    }
 
     fun listenForBind() {
         bindRow.listenForBind()

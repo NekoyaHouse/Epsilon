@@ -7,12 +7,13 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.lib.state.LuminRuntime
 
 /** 供需要先排队树快照、再执行后处理的宿主使用，生命周期仍属于 scene。 */
-internal fun UiScene.LuminUITree(bounds: UiRect, key: Any, block: (UiTree.Scope) -> Unit): UiTree {
+internal fun UiScene.LuminUITree(bounds: UiRect, key: Any, inputLayer: Int = UiLayer.CONTENT.baseLayer(), immediate: Boolean = false, block: (UiTree.Scope) -> Unit): UiTree {
     val entry = lumin.nextEntry(bounds, key)
+    entry.alwaysDirty = immediate
     val metrics = scheduler().textMetrics().asUiTextMetrics()
     entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), { block(tree) })
     val output = UiTree.Scope()
-    entry.emit(output)
+    entry.emit(output, inputLayer)
     return UiTree.from(output)
 }
 
@@ -37,13 +38,15 @@ fun UiScene.LuminUIScene(
     layer: UiLayer = UiLayer.CONTENT,
     relative: LayerOffset = LayerOffset.Same,
     key: Any,
+    immediate: Boolean = false,
     block: UiScope.() -> Unit,
 ) {
     val entry = lumin.nextEntry(bounds, key)
+    entry.alwaysDirty = immediate
     val metrics = scheduler().textMetrics().asUiTextMetrics()
     entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
     val output = UiTree.Scope()
-    entry.emit(output)
+    entry.emit(output, layer.baseLayer() + relative.value)
     batch(layer, relative.value).render(UiTree.from(output))
 }
 
@@ -119,6 +122,6 @@ fun UiRenderBatch.LuminUIScene(
     }
     entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
     val output = UiTree.Scope()
-    entry.emit(output)
+    entry.emit(output, baseLayer() + baseLayer)
     render(UiTree.from(output), baseLayer)
 }

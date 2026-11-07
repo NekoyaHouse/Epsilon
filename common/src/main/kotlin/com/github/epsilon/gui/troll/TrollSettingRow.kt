@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
@@ -137,6 +138,17 @@ class TrollSettingRow {
     }
 
     fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        val origin = ui.origin
+        fun eventInModel(event: MouseButtonEvent) = MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
+        ui.InputRegion(key = this, bounds = bounds,
+            onPreviewPress = { event, _ -> captureMouseBind(eventInModel(event)) },
+            onPress = { event, _ -> captureMouseBind(eventInModel(event)) || mouseClicked(eventInModel(event)) },
+            onDrag = { event, _, _ -> mouseDragged(eventInModel(event)) },
+            onRelease = { event -> mouseReleased(eventInModel(event)); true },
+            onCancel = ::cancelInput, onKey = ::keyPressed, onText = ::charTyped,
+            onBlur = { finishEditing(true); listening = false }, autoFocus = listening)
+
         val h = scope.animate(hover, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
         val clicked = scope.animate(click, pressed)
         val p = scope.animate(progress, target())
@@ -369,16 +381,19 @@ class TrollSettingRow {
         listening = true
     }
 
+    fun cancelInput() {
+        dragging = false
+        pressed = false
+        pendingEnumIndex = -1
+        pendingNumber = null
+    }
+
     fun resetInput() {
         listening = false
         dragging = false
         pressed = false
         pendingEnumIndex = -1
-        val pending = pendingNumber
-        if (pending != null) {
-            pendingNumber = null
-            applyNumber(pending)
-        }
+        pendingNumber = null
         finishEditing(true)
     }
 

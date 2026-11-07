@@ -83,12 +83,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (!viewport.contains(event.x(), event.y())) return false
-        for (module in visibleModules) {
-            if (rows.getValue(module).mouseClicked(event)) return true
-        }
-        return true
+        return super.mouseClicked(event)
     }
 
     private fun matchesSearch(module: Module): Boolean {

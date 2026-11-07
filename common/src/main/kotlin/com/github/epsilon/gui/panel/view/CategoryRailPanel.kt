@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
@@ -22,9 +23,7 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.abs
 
@@ -81,6 +80,7 @@ class CategoryRailPanel(protected val state: PanelState) {
         val requiresScissor = abs(bounds.width - targetWidth) > 0.001f ||
                 abs(contentAnimation.value - targetContent) > 0.001f
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
+
             ClipIf(requiresScissor, 0.0f, 0.0f, width, height) {
                 val contentProgress = animate(contentAnimation, state.isSidebarExpanded())
                 val titleProgress = animate(headerTitleAnimation, contentProgress)
@@ -94,6 +94,11 @@ class CategoryRailPanel(protected val state: PanelState) {
 
                 val menuButton = getMenuButtonBounds()
                 val menuHover = animate(menuHoverAnimation, mouseOver(menuButton, mouseX, mouseY))
+                Interaction("menu", menuButton.relativeTo(origin)) { onClick {
+                    state.toggleSidebarExpanded()
+                    SoundManager.playInUi(if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+                    true
+                } }
                 val localMenu = menuButton.relativeTo(origin)
                 Positioned(localMenu.x, localMenu.y, localMenu.width, localMenu.height) {
                     menuGlyph(menuButton.width, menuButton.height, menuHover)
@@ -196,6 +201,9 @@ class CategoryRailPanel(protected val state: PanelState) {
                     val hovered = itemRect.contains(mouseX.toDouble(), mouseY.toDouble())
                     val selected = !state.isClientSettingMode() && state.getSelectedCategory() === category
                     val count = getCategoryCount(category)
+                    Interaction(category, itemRect.relativeTo(origin)) { onClick {
+                        state.setClientSettingMode(false); state.setSelectedCategory(category); true
+                    } }
                     buildCategoryItem(
                         menuButton, itemRect, category, count, hovered, selected, contentProgress,
                         itemIconScale, itemLabelScale, itemCountScale
@@ -208,6 +216,7 @@ class CategoryRailPanel(protected val state: PanelState) {
                 val settingsHovered = settingsRect.contains(mouseX.toDouble(), mouseY.toDouble())
                 val settingsSelected = state.isClientSettingMode()
                 val settingsHover = animate(settingsHoverAnimation, settingsHovered)
+                Interaction("settings", settingsRect.relativeTo(origin)) { onClick { state.setClientSettingMode(true); true } }
                 buildSettingsItem(
                     menuButton, settingsRect, settingsHovered, settingsSelected, contentProgress,
                     settingsHover, itemIconScale, itemLabelScale
@@ -216,40 +225,6 @@ class CategoryRailPanel(protected val state: PanelState) {
         }
     }
 
-    fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val currentBounds = bounds
-        if (currentBounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-        if (getMenuButtonBounds().contains(event.x(), event.y())) {
-            state.toggleSidebarExpanded()
-            SoundManager.playInUi(
-                if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE
-            )
-            return true
-        }
-
-        var itemY = getCategoryStartY(currentBounds)
-        for (category in Category.entries) {
-            val itemRect = UiRect(currentBounds.x + 5.0f, itemY, currentBounds.width - 10.0f, CATEGORY_ITEM_HEIGHT)
-            if (itemRect.contains(event.x(), event.y())) {
-                state.setClientSettingMode(false)
-                state.setSelectedCategory(category)
-                return true
-            }
-            itemY += CATEGORY_ITEM_SPACING
-        }
-
-        val settingsRect = UiRect(
-            currentBounds.x + 5.0f, getSettingsButtonY(), currentBounds.width - 10.0f, CATEGORY_ITEM_HEIGHT
-        )
-        if (settingsRect.contains(event.x(), event.y())) {
-            state.setClientSettingMode(true)
-            return true
-        }
-
-        return false
-    }
 
     private fun getMenuButtonBounds(): UiRect {
         val currentBounds = bounds!!

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.hudeditor
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -101,7 +102,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     private val textMetrics: TextRenderer = TextRenderer.create()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
-    private val popupHost: PanelPopupHost = PanelPopupHost()
+    private val popupHost: PanelPopupHost = PanelPopupHost { scene.input }
     private var shouldRenderElements = false
 
 
@@ -191,6 +192,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
         // 背景、参考线与边框都是纯静态输入驱动：只有屏幕尺寸、吸附线或元素几何变化时才重建。
         scene.LuminUIScene(screenBounds, UiLayer.CONTENT, HudEditorZ.Backdrop, key = HudEditorZ.Backdrop) {
+            Interaction(key = "canvas") {
+                onClick { selectedElement = null; currentSnap = SnapInfo.none(); true }
+            }
             Rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72))
         }
 
@@ -213,6 +217,20 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         ) {
             for (element in HudElementManager.getElements()) {
                 if (!element.isEnabled) continue
+                Interaction(key = element, bounds = UiRect(element.x, element.y, element.width, element.height)) {
+                    onDrag(
+                        onStart = {
+                            selectedElement = element
+                            draggingElement = element
+                            dragOffsetX = it.x.toFloat() - element.x
+                            dragOffsetY = it.y.toFloat() - element.y
+                            currentSnap = SnapInfo.none()
+                            true
+                        }, onEnd = { draggingElement = null; currentSnap = SnapInfo.none() },
+                        onCancel = { draggingElement = null; currentSnap = SnapInfo.none() },
+                    ) { moveElementTo(element, it.x.toFloat() - dragOffsetX, it.y.toFloat() - dragOffsetY, true) }
+                    onKeyPressed(::handleEditorKey)
+                }
                 val selected = element === selectedElement
                 val hover = element === hoveredElement
                 if (!selected && !hover) continue
@@ -427,121 +445,48 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (popupHost.keyPressed(event)) {
-            return true
-        }
-        val panel = hudPanel
-        if (panel != null && panel.hasActiveInput() && panel.keyPressed(
-                event.key(),
-                event.keycode(),
-                event.modifiers()
-            )
-        ) {
-            return true
-        }
-        if (event.isEscape) {
-            onClose()
-            return true
-        }
-        if (handleEditorKey(event)) {
-            return true
-        }
-        if (panel != null && panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
-            return true
-        }
-        return super.keyPressed(event)
+        if (popupHost.activePopup != null) return popupHost.keyPressed(event)
+        if (scene.input.keyPressed(event)) return true
+        if (event.isEscape) { onClose(); return true }
+        return handleEditorKey(event) || super.keyPressed(event)
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        if (popupHost.charTyped(event)) {
-            return true
-        }
-        val typed = event.codepointAsString()
-        val panel = hudPanel
-        return panel != null && !typed.isEmpty() && panel.charTyped(typed) || super.charTyped(event)
+        if (popupHost.activePopup != null) return popupHost.charTyped(event)
+        return scene.input.charTyped(event) || super.charTyped(event)
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        if (popupHost.activePopup != null) popupHost.preeditUpdated(event) else scene.input.preeditUpdated(event)
+
         preeditOverlay = if (event == null) null else IMEPreeditOverlay(event, font, 10)
         return true
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
-            return true
-        }
-        val panel = hudPanel
-        if (panel != null && panel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
-            validateSelection()
-            return true
-        }
-        if (epsilonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            val element = findElementAt(epsilonEvent.x(), epsilonEvent.y(), false)
-            if (element != null) {
-                selectedElement = element
-                draggingElement = element
-                dragOffsetX = epsilonEvent.x().toFloat() - element.x
-                dragOffsetY = epsilonEvent.y().toFloat() - element.y
-                currentSnap = SnapInfo.none()
-                return true
-            }
-            selectedElement = null
-            currentSnap = SnapInfo.none()
-            return true
-        }
-        return super.mouseClicked(epsilonEvent, isDoubleClick)
+        val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
+        if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
+        return scene.input.mouseClicked(mouse, isDoubleClick)
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        if (popupHost.mouseReleased(epsilonEvent)) {
-            return true
-        }
-        if (draggingElement != null && epsilonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            draggingElement = null
-            currentSnap = SnapInfo.none()
-            return true
-        }
-        val panel = hudPanel
-        return panel != null && panel.mouseReleased(
-            epsilonEvent.x(),
-            epsilonEvent.y(),
-            epsilonEvent.button()
-        ) || super.mouseReleased(epsilonEvent)
+        if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
+
+        return scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
-            return true
-        }
-        val dragging = draggingElement
-        if (dragging != null) {
-            val epsilonEventX = LuminRenderSystem.toEpsilonMouseX(event.x())
-            val epsilonEventY = LuminRenderSystem.toEpsilonMouseY(event.y())
-            moveElementTo(dragging, epsilonEventX.toFloat() - dragOffsetX, epsilonEventY.toFloat() - dragOffsetY, true)
-            return true
-        }
-        hudPanel?.mouseDragged(
-            LuminRenderSystem.toEpsilonMouseX(event.x()),
-            LuminRenderSystem.toEpsilonMouseY(event.y())
-        )
-        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+
+        return scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-            return true
-        }
-        if (hudPanel?.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY) == true) {
-            return true
-        }
-        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)
+        val mx = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val my = LuminRenderSystem.toEpsilonMouseY(mouseY)
+        if (popupHost.activePopup != null) return popupHost.mouseScrolled(mx, my, scrollX, scrollY)
+        return scene.input.mouseScrolled(mx, my, scrollX, scrollY)
     }
 
     private fun handleEditorKey(event: KeyEvent): Boolean {

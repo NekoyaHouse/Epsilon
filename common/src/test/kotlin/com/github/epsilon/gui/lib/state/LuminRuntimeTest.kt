@@ -312,22 +312,6 @@ class LuminRuntimeTest {
         assertEquals(8, builds)
     }
 
-    @Test fun pointerInputRunsOutsideBuildAndIsRemovedWithItsOwner() {
-        val value = mutableStateOf(0)
-        var callbacks = 0
-        val draw: UiScope.() -> Unit = {
-            luminPointerInput("drag") { x, _ -> callbacks++; value.value = x }
-            value.value
-        }
-        frame(x = 1, block = draw)
-        frame(x = 2, block = draw)
-        assertEquals(2, value.value)
-        root.close()
-        val stopped = callbacks
-        view.render(3, 0) {}
-        assertEquals(stopped, callbacks)
-    }
-
     @Test fun snapStopsActiveTaskAndTwoGroupsShareOneClockAdvance() {
         val animation = LuminAnimatable(0f, Easing.LINEAR, 100)
         val draw: UiScope.() -> Unit = {

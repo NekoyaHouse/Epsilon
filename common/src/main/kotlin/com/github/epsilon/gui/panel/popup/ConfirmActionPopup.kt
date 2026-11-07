@@ -2,6 +2,7 @@ package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Button
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.Text
@@ -11,9 +12,7 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.util.function.Supplier
 
@@ -52,13 +51,13 @@ class ConfirmActionPopup(
         return bounds
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
     }
 
     private fun renderContent(
@@ -82,6 +81,9 @@ class ConfirmActionPopup(
         // 弹窗矩形随开启动画逐帧变化，bounds 变化会触发整层重建；供应商文本与主题并入 key。
 
         renderBatch.LuminUIScene(popupBounds, key = this) {
+            Interaction(key = "surface") {
+                onClick { closeAfterClick = false; true }
+            }
             val progress = openAnimation.value
             PopupCard(
                 size,
@@ -105,22 +107,6 @@ class ConfirmActionPopup(
         }
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !bounds.contains(event.x(), event.y())) {
-            return false
-        }
-        closeAfterClick = false
-        if (confirmButtonBounds.contains(event.x(), event.y())) {
-            onConfirm.run()
-            closeAfterClick = true
-            return true
-        }
-        if (cancelButtonBounds.contains(event.x(), event.y())) {
-            closeAfterClick = true
-            return true
-        }
-        return true
-    }
 
     override fun shouldCloseAfterClick(): Boolean {
         return closeAfterClick
@@ -132,6 +118,13 @@ class ConfirmActionPopup(
         destructive: Boolean,
         hover: Float
     ) {
+        Interaction(key = destructive, bounds = buttonBounds) {
+            onClick {
+                if (destructive) onConfirm.run()
+                closeAfterClick = true
+                true
+            }
+        }
         val baseColor: Color = if (destructive) MD3Theme.ERROR else MD3Theme.SURFACE_CONTAINER_HIGH
         val hoverColor: Color = if (destructive) {
             MD3Theme.withAlpha(MD3Theme.ERROR, 220)
@@ -156,5 +149,7 @@ class ConfirmActionPopup(
         cancelButtonBounds = UiRect(cancelX, buttonY, buttonWidth, buttonHeight)
         confirmButtonBounds = UiRect(confirmX, buttonY, buttonWidth, buttonHeight)
     }
+
+    override fun close() { inputView.close() }
 
     }

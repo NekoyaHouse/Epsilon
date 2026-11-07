@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.gui.lib.LuminUIScene
@@ -19,11 +20,7 @@ import com.github.epsilon.gui.panel.view.settings.FriendClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.GeneralClientSettingTab
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.CharacterEvent
-import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
 import java.util.*
 
 class ClientSettingPanel(
@@ -84,6 +81,7 @@ class ClientSettingPanel(
         // 标题与 tab 条只随当前 tab / 语言 / 主题变化重建；切换 tab 会同时切换下面的内容视图。
 
         renderBatch.LuminUIScene(bounds, key = this) {
+
             Text(
                 EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET,
                 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY
@@ -106,44 +104,6 @@ class ClientSettingPanel(
         }
     }
 
-    fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        if (bounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-
-        if (state.getListeningKeybindSetting() != null) {
-            state.setListeningKeybindSetting(null)
-
-        }
-
-        val tabBar = getTabBarRect()
-        if (tabBar.contains(event.x(), event.y())) {
-            switchToTab(resolveClickedTab(event.x(), tabBar))
-            return true
-        }
-
-        return getCurrentTabView().mouseClicked(event, isDoubleClick)
-    }
-
-    fun mouseReleased(event: MouseButtonEvent): Boolean {
-        return getCurrentTabView().mouseReleased(event)
-    }
-
-    fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        return getCurrentTabView().mouseDragged(event, mouseX, mouseY)
-    }
-
-    fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        return bounds != null && getCurrentTabView().mouseScrolled(mouseX, mouseY, scrollX, scrollY)
-    }
-
-    fun keyPressed(event: KeyEvent): Boolean {
-        return getCurrentTabView().keyPressed(event)
-    }
-
-    fun charTyped(event: CharacterEvent): Boolean {
-        return getCurrentTabView().charTyped(event)
-    }
 
     private fun UiScope.buildTabs() {
         val tabBar = getTabBarRect()
@@ -157,6 +117,7 @@ class ClientSettingPanel(
             for (index in TABS.indices) {
                 val tab = TABS[index]
                 val tabBounds = UiRect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height)
+                Interaction(tab.tab, tabBounds) { onClick { switchToTab(tab.tab); true } }
                 val active = tab.tab == state.getClientSettingTab()
 
                 val hover = tabHoverAnimations[tab.tab]!!.value
@@ -196,11 +157,6 @@ class ClientSettingPanel(
 
     }
 
-    private fun resolveClickedTab(mouseX: Double, tabBar: UiRect): PanelState.ClientSettingTab {
-        val segmentWidth = tabBar.width / TABS.size
-        val index = ((mouseX - tabBar.x) / segmentWidth).toInt().coerceIn(0, TABS.size - 1)
-        return TABS[index].tab
-    }
 
     private fun getCurrentTabView(): ClientSettingTabView {
         return tabViews[state.getClientSettingTab()]!!
@@ -238,8 +194,9 @@ class ClientSettingPanel(
     private data class TabDefinition(val tab: PanelState.ClientSettingTab, val component: TranslateComponent)
 
 
-
     override fun close() {
+        luminView.close()
+
         for (view in tabViews.values) {
             view.close()
         }

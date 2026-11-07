@@ -38,23 +38,6 @@ interface DropdownPanel {
 
     val panelHeight: Float
 
-    fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean
-
-    fun onGlobalMouseClicked(mouseX: Double, mouseY: Double, button: Int) {
-    }
-
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean
-
-    fun mouseDragged(mouseX: Double, mouseY: Double): Boolean
-
-    fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean
-
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean
-
-    fun charTyped(typedText: String): Boolean
-
-    fun hasActiveInput(): Boolean
-
     fun setPosition(x: Float, y: Float)
 
     fun updateMaxPanelHeight(maxPanelHeight: Float)

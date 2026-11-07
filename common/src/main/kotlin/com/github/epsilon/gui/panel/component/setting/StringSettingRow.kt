@@ -38,7 +38,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         }
         val wasFocused = focusedState
         focusedState = true
-        IMEFocusHelper.activate()
+        if (!wasFocused) IMEFocusHelper.activate()
         if (!wasFocused || inputBuffer == null) {
             inputBuffer = normalize(stringSetting.value)
         }

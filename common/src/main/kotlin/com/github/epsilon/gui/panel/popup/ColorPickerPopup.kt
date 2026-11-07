@@ -3,6 +3,7 @@ package com.github.epsilon.gui.panel.popup
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.PopupCard
@@ -21,7 +22,6 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -42,7 +42,7 @@ class ColorPickerPopup(
     private val textRenderer: TextRenderer = TextRenderer.create()
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val indicatorAnimations = Array(4) { LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L) }
-    private var draggingChannel: Channel? = null
+    private var draggingChannel: Channel? by mutableStateOf(null)
     private var focusedChannel: Channel? by mutableStateOf<Channel?>(null)
     private var inputBuffer: String? by mutableStateOf<String?>(null)
     private var cursorIndex by mutableStateOf(0)
@@ -52,13 +52,13 @@ class ColorPickerPopup(
         return bounds
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
     }
 
     private fun renderContent(
@@ -80,6 +80,13 @@ class ColorPickerPopup(
         // 颜色、输入框焦点/缓冲、鼠标与主题决定绘制结果，任一变化都重建整层。
 
         renderBatch.LuminUIScene(popupBounds, key = this) {
+            Interaction(key = "surface") {
+                onClick {
+                    focusedChannel = null
+                    inputBuffer = null
+                    true
+                }
+            }
             val progress = openAnimation.value
             PopupCard(
                 size,
@@ -146,6 +153,46 @@ class ColorPickerPopup(
                 // 逐项缓存：颜色、焦点、输入缓冲、悬停与指示器动画决定该行节点是否重建。
 
                 LuminUIItem(setting to channel) {
+                    Interaction(key = "value", bounds = localValueBounds) {
+                        onClick {
+                            focusedChannel = channel
+                            inputBuffer = getChannelValue(channel).toString()
+                            cursorIndex = getCursorIndex(it.x, valueBounds, inputBuffer!!)
+                            true
+                        }
+                        onFocusChanged { focused ->
+                            if (!focused && focusedChannel === channel) {
+                                focusedChannel = null
+                                inputBuffer = null
+                            }
+                        }
+                        onKeyPressed(::handleKeyPressed)
+                        onTextInput(::handleTextInput)
+                    }
+                    Interaction(
+                        key = "track",
+                        bounds = UiRect(localTrackBounds.x, localTrackBounds.y - 5f,
+                            localTrackBounds.width, localTrackBounds.height + 10f),
+                    ) {
+                        onDrag(
+                            onStart = {
+                                draggingChannel = channel
+                                focusedChannel = null
+                                inputBuffer = null
+                                updateChannelFromMouse(channel, it.x, trackBounds)
+                                true
+                            },
+                            onEnd = {
+                                updateChannelFromMouse(channel, it.x, trackBounds)
+                                commitPendingColor()
+                                draggingChannel = null
+                            },
+                            onCancel = {
+                                pendingValue = null
+                                draggingChannel = null
+                            },
+                        ) { updateChannelFromMouse(channel, it.x, trackBounds) }
+                    }
                     val channelProgress = getChannelValue(channel) / 255.0f
                     val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
                     val rowSurface: Color = if (hovered) {
@@ -188,70 +235,22 @@ class ColorPickerPopup(
         }
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !bounds.contains(event.x(), event.y())) {
-            return false
-        }
-        val channels = getChannels()
-        for (i in channels.indices) {
-            val rowBounds = getChannelRowBounds(bounds.y, i)
-            val trackBounds = getTrackBounds(rowBounds)
-            val valueBounds = getValueBounds(rowBounds)
-            if (valueBounds.contains(event.x(), event.y())) {
-                draggingChannel = null
-                focusedChannel = channels[i]
-                inputBuffer = getChannelValue(focusedChannel!!).toString()
-                cursorIndex = getCursorIndex(event.x(), valueBounds, inputBuffer!!)
-                return true
-            }
-            val interactiveBounds = UiRect(
-                trackBounds.x, trackBounds.y - 5.0f, trackBounds.width, trackBounds.height + 10.0f
-            )
-            if (interactiveBounds.contains(event.x(), event.y())) {
-                draggingChannel = channels[i]
-                focusedChannel = null
-                inputBuffer = null
-                updateChannelFromMouse(draggingChannel!!, event.x(), trackBounds)
-                return true
-            }
-        }
-        focusedChannel = null
-        inputBuffer = null
-        return true
-    }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && draggingChannel != null) {
-            commitPendingColor()
-        }
-        draggingChannel = null
-        return true
-    }
-
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        val dragging = draggingChannel
-        if (dragging == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-        val index = getChannelIndex(dragging)
-        val trackBounds = getTrackBounds(getChannelRowBounds(bounds.y, index))
-        updateChannelFromMouse(dragging, event.x(), trackBounds)
-        return true
-    }
-
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun handleKeyPressed(event: KeyEvent): Boolean {
         val focused = focusedChannel ?: return false
         return when (event.key()) {
             InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 commitInput()
                 focusedChannel = null
                 inputBuffer = null
+                inputView.input.clearFocus()
                 true
             }
 
             InputConstants.KEY_ESCAPE -> {
                 focusedChannel = null
                 inputBuffer = null
+                inputView.input.clearFocus()
                 true
             }
 
@@ -286,7 +285,7 @@ class ColorPickerPopup(
         }
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun handleTextInput(event: CharacterEvent): Boolean {
         if (focusedChannel == null) {
             return false
         }
@@ -330,16 +329,6 @@ class ColorPickerPopup(
         } else {
             arrayOf(Channel.RED, Channel.GREEN, Channel.BLUE)
         }
-    }
-
-    private fun getChannelIndex(channel: Channel): Int {
-        val channels = getChannels()
-        for (i in channels.indices) {
-            if (channels[i] === channel) {
-                return i
-            }
-        }
-        return 0
     }
 
     private fun getChannelValue(channel: Channel): Int {
@@ -417,6 +406,7 @@ class ColorPickerPopup(
                 valueText.substring(0, minOf(cursorIndex, valueText.length)), textScale
             )
             Rect(caretX, bounds.y + 3.0f, 1.0f, bounds.height - 6.0f, MD3Theme.INVERSE_ON_SURFACE)
+            com.github.epsilon.gui.panel.utils.IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + textY)
         }
     }
 
@@ -502,6 +492,7 @@ class ColorPickerPopup(
     }
 
     override fun close() {
+        inputView.close()
         textRenderer.close()
     }
 

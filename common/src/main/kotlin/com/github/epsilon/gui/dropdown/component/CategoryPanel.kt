@@ -78,41 +78,6 @@ class CategoryPanel : AbstractDropdownPanel {
         return total
     }
 
-    override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        for (mb in visibleButtons()) {
-            if (mb.mouseClicked(mouseX, mouseY, button)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    override fun mouseReleasedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        for (mb in visibleButtons()) {
-            if (mb.mouseReleased(mouseX, mouseY, button)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        for (mb in visibleButtons()) {
-            if (mb.keyPressed(keyCode, scanCode, modifiers)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    override fun charTyped(typedText: String): Boolean {
-        for (mb in visibleButtons()) {
-            if (mb.charTyped(typedText)) {
-                return true
-            }
-        }
-        return false
-    }
 
     fun setSearchQuery(queryStore: String?) {
         val normalized = queryStore?.trim()?.lowercase(Locale.ROOT) ?: ""
@@ -123,12 +88,6 @@ class CategoryPanel : AbstractDropdownPanel {
         setScrollImmediate(0.0f)
     }
 
-    override fun hasActiveInput(): Boolean {
-        for (mb in visibleButtons()) {
-            if (mb.hasListeningKeybind() || mb.hasFocusedInput()) return true
-        }
-        return false
-    }
 
     private val visibleState = derivedStateOf {
         moduleButtons.sortedWith(getComparator(ClientSetting.moduleSort.value)).filter { button ->

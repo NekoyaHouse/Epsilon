@@ -27,13 +27,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
-        com.github.epsilon.gui.lib.state.luminPointerInput(this) { pointerX, _ ->
-            syncSessionState()
-            if (dragging && pointerX >= 0 && !inputField.isFocused) {
-                DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
-                updateValueFromRatio(((pointerX - getTrackX()) / getTrackWidth()).coerceIn(0.0f, 1.0f))
-            }
-        }
+        com.github.epsilon.gui.lib.state.afterLuminCommit { syncSessionState() }
 
         val ratio = getRatio()
         val sliderRatio = ratio.coerceIn(0.0f, 1.0f)
@@ -216,11 +210,19 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         return false
     }
 
+    override fun mouseDragged(mouseX: Double, mouseY: Double): Boolean {
+        if (!dragging) return false
+        updateValueFromRatio(((mouseX - getTrackX()) / getTrackWidth()).toFloat().coerceIn(0f, 1f))
+        return true
+    }
+
+    override fun cancelInput() { dragging = false; clearPendingValue() }
+
     fun isFocused(): Boolean {
         return inputField.isFocused
     }
 
-    fun blurInput() {
+    override fun blurInput() {
         commitInput()
         inputField.blur()
     }

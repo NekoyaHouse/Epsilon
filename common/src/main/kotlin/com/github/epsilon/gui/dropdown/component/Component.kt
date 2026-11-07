@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
@@ -23,9 +24,23 @@ abstract class Component {
     fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int, localBounds: UiRect) {
         setPosition(scope.origin.x + localBounds.x, scope.origin.y + localBounds.y, localBounds.width)
         scope.Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
+            InputRegion(key = this@Component, bounds = UiRect(0f, 0f, width, inputHeight()),
+                onPress = { event, _ -> mouseClicked(event.x(), event.y(), event.button()) },
+                onPreviewPress = { event, _ -> previewMouseClicked(event.button()) },
+                onDrag = { event, _, _ -> mouseDragged(event.x(), event.y()) },
+                onRelease = { event -> mouseReleased(event.x(), event.y(), event.button()) },
+                onCancel = ::cancelInput,
+                onKey = { keyPressed(it.key(), it.keycode(), it.modifiers()) },
+                onText = { charTyped(it.codepointAsString()) }, onBlur = ::blurInput)
             draw(mouseX, mouseY)
         }
     }
+
+    open fun inputHeight(): Float = getHeight()
+    open fun previewMouseClicked(button: Int): Boolean = false
+    open fun mouseDragged(mouseX: Double, mouseY: Double): Boolean = false
+    open fun cancelInput() {}
+    open fun blurInput() {}
 
     open fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         return false

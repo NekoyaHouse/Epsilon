@@ -132,9 +132,9 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
             return false
         }
+        if (!isFocused) IMEFocusHelper.activate()
         isFocused = true
         cursor = resolveCursor(mouseX).coerceIn(0, text.length)
-        IMEFocusHelper.activate()
         return true
     }
 
@@ -149,13 +149,14 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
         if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
             return false
         }
+        if (!isFocused) IMEFocusHelper.activate()
         isFocused = true
         cursor = resolveCursor(mouseX).coerceIn(0, text.length)
-        IMEFocusHelper.activate()
         return true
     }
 
     fun focus() {
+        if (isFocused) return
         isFocused = true
         cursor = text.length
         IMEFocusHelper.activate()

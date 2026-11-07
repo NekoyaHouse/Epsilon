@@ -152,6 +152,8 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
         return true
     }
 
+    override fun cancelInput() { dragging = false; pendingValue = null }
+
     override fun setFocused(focused: Boolean) {
         if (!focused && this.focusedState) {
             commitInput()

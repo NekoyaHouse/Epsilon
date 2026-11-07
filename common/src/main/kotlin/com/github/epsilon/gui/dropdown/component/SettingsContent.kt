@@ -65,47 +65,6 @@ class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
         )
     }
 
-    fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        panelX: Float,
-        contentY: Float,
-        panelWidth: Float
-    ): Boolean {
-        if (renderer.mouseClicked(
-                mouseX, mouseY, button, panelX, contentY + DropdownTheme.SETTING_GAP,
-                panelWidth, 0.0f, 0.0f
-            )
-        ) {
-            return true
-        }
-        renderer.blurAllInputs()
-        return false
-    }
-
-    fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        panelX: Float,
-        contentY: Float,
-        panelWidth: Float
-    ): Boolean {
-        return renderer.mouseReleased(mouseX, mouseY, button)
-    }
-
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return renderer.keyPressed(keyCode, scanCode, modifiers)
-    }
-
-    fun charTyped(typedText: String): Boolean {
-        return renderer.charTyped(typedText)
-    }
-
-    fun hasActiveInput(): Boolean {
-        return renderer.hasActiveInput()
-    }
 
     companion object {
 

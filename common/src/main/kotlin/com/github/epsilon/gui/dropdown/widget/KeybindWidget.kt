@@ -86,6 +86,16 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
         )
     }
 
+    override fun blurInput() { listening = false }
+
+    override fun previewMouseClicked(button: Int): Boolean {
+        if (!listening) return false
+        setting.value = KeybindUtils.encodeMouseButton(button)
+        listening = false
+        DropdownScreen.react(ReisaDropdownCompanion.Action.CONFIRM)
+        return true
+    }
+
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == InputConstants.MOUSE_BUTTON_LEFT && isHovered(
                 mouseX,

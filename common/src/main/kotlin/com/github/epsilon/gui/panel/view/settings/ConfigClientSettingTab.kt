@@ -1,5 +1,7 @@
 package com.github.epsilon.gui.panel.view.settings
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -52,7 +54,6 @@ class ConfigClientSettingTab(
     private val rowHoverAnimations = HashMap<String, Animation>()
     private val deleteHoverAnimations = HashMap<String, Animation>()
     private val buttonHoverAnimations = HashMap<String, Animation>()
-    private val rowEntries = ArrayList<ConfigRowEntry>()
 
     private var bounds: UiRect? = null
     private var lastActiveConfig = ""
@@ -98,9 +99,13 @@ class ConfigClientSettingTab(
         deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            rowEntries.clear()
+            InputRegion(key = this@ConfigClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onCancel = { scrollBarDrag.reset() })
+
             val localInput = getInputFieldBounds(inputSection).relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
+                InputRegion(inputField, onPress = { _, _ -> inputField.focus(); true },
+                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
                 ClientSettingTextField(
                     inputField, mouseX, mouseY,
                     EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
@@ -117,7 +122,6 @@ class ConfigClientSettingTab(
                 for (configName in configs) {
                     val rowBounds = UiRect(listViewport.x, rowY, rowWidth, ROW_HEIGHT)
                     val deleteBounds = getDeleteButtonBounds(rowBounds)
-                    rowEntries.add(ConfigRowEntry(configName, rowBounds, deleteBounds))
 
                     val rowHover = rowHoverAnimations.getOrPut(configName) { createAnimation() }
                     val deleteHover = deleteHoverAnimations.getOrPut(configName) { createAnimation() }
@@ -126,6 +130,10 @@ class ConfigClientSettingTab(
 
                     val localRow = rowBounds.relativeTo(origin)
                     Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                        Interaction(configName) { onClick { trySwitchConfig(configName); true } }
+                        Interaction(configName to "delete", deleteBounds.relativeTo(rowBounds)) {
+                            onClick { openDeleteConfirmation(configName); true }
+                        }
                         buildConfigRow(configName, activeConfig, rowBounds, deleteBounds, rowHover.value, deleteHover.value)
                     }
                     rowY += ROW_HEIGHT + MD3Theme.ROW_GAP
@@ -154,7 +162,7 @@ class ConfigClientSettingTab(
         return popup.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+    private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         val currentBounds = bounds
         if (currentBounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
@@ -173,41 +181,10 @@ class ConfigClientSettingTab(
             return true
         }
 
-        val inputSection = getInputSectionBounds(currentBounds)
-        val inputBounds = getInputFieldBounds(inputSection)
-        if (inputBounds.contains(event.x(), event.y())) {
-            inputField.focusIfContains(inputBounds, event.x(), event.y())
-
-            return true
-        }
-
-        inputField.blur()
-
-        for (button in getActionButtons(inputSection)) {
-            if (button.bounds.contains(event.x(), event.y())) {
-                handleAction(button.type)
-
-                return true
-            }
-        }
-
-        for (entry in rowEntries) {
-            if (entry.deleteBounds.contains(event.x(), event.y())) {
-                openDeleteConfirmation(entry.name)
-
-                return true
-            }
-            if (entry.rowBounds.contains(event.x(), event.y())) {
-                trySwitchConfig(entry.name)
-
-                return true
-            }
-        }
-
         return false
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    private fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
 
             return true
@@ -215,7 +192,7 @@ class ConfigClientSettingTab(
         return false
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         val currentBounds = bounds
         if (!scrollBarDrag.isDragging() || currentBounds == null) {
             return false
@@ -229,7 +206,7 @@ class ConfigClientSettingTab(
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         val currentBounds = bounds ?: return false
         val listViewport = getListViewport(currentBounds)
         if (listViewport.contains(mouseX, mouseY)) {
@@ -240,7 +217,7 @@ class ConfigClientSettingTab(
         return false
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun keyPressed(event: KeyEvent): Boolean {
         if (event.key() == InputConstants.KEY_ESCAPE && inputField.isFocused()) {
             inputField.blur()
 
@@ -253,7 +230,7 @@ class ConfigClientSettingTab(
         return false
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun charTyped(event: CharacterEvent): Boolean {
         if (inputField.charTyped(event)) {
 
             return true
@@ -277,6 +254,7 @@ class ConfigClientSettingTab(
     }
 
     private fun UiScope.buildActionButton(button: ActionButton, mouseX: Int, mouseY: Int) {
+        Interaction(button.type, button.bounds.relativeTo(origin)) { onClick { handleAction(button.type); true } }
         val hoverAnimation = buttonHoverAnimations.getOrPut(button.type.name) { createAnimation() }
         val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
         val hover = animate(hoverAnimation, hovered)
@@ -657,12 +635,13 @@ class ConfigClientSettingTab(
     }
 
     override fun close() {
+        luminView.close()
+
         measureTextRenderer.close()
         contentBuffer.close()
 
     }
 
-    private data class ConfigRowEntry(val name: String, val rowBounds: UiRect, val deleteBounds: UiRect)
 
     private data class ActionButton(val type: ActionButtonType, val label: String, val bounds: UiRect)
 

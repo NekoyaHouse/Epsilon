@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Button
 import com.github.epsilon.gui.lib.LuminUIScene
@@ -10,9 +11,7 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.MouseButtonEvent
 import java.util.function.Supplier
 
 class MessagePopup(
@@ -41,13 +40,13 @@ class MessagePopup(
         return bounds
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
     }
 
     private fun renderContent(
@@ -67,6 +66,7 @@ class MessagePopup(
         // 弹窗矩形随开启动画逐帧变化，bounds 变化会触发整层重建；供应商文本与主题并入 key。
 
         renderBatch.LuminUIScene(popupBounds, key = this) {
+
             val progress = openAnimation.value
             val hover = buttonHoverAnimation.value
             PopupCard(
@@ -87,6 +87,7 @@ class MessagePopup(
             }
 
             val localButtonBounds = buttonBounds.relativeTo(popupBounds)
+            Interaction("close", localButtonBounds) { onClick { closeAfterClick = true; true } }
             Button(
                 localButtonBounds, localButtonBounds.height / 2.0f,
                 MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
@@ -95,13 +96,6 @@ class MessagePopup(
         }
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !bounds.contains(event.x(), event.y())) {
-            return false
-        }
-        closeAfterClick = buttonBounds.contains(event.x(), event.y())
-        return true
-    }
 
     override fun shouldCloseAfterClick(): Boolean {
         return closeAfterClick
@@ -118,4 +112,5 @@ class MessagePopup(
         )
     }
 
-    }
+        override fun close() { inputView.close() }
+}

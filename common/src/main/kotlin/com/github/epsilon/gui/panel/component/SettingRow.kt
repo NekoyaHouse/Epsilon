@@ -38,7 +38,6 @@ abstract class SettingRow<T : Setting<*>>(private val settingValue: T) : AutoClo
     open fun getHeight(): Float = 28.0f
 
 
-
     open fun mouseClicked(bounds: UiRect, event: MouseButtonEvent, isDoubleClick: Boolean): Boolean = false
 
     open fun mouseReleased(bounds: UiRect, event: MouseButtonEvent): Boolean = false
@@ -52,6 +51,8 @@ abstract class SettingRow<T : Setting<*>>(private val settingValue: T) : AutoClo
     open fun charTyped(event: CharacterEvent): Boolean = false
 
     open fun preeditUpdated(event: PreeditEvent): Boolean = false
+
+    open fun cancelInput() {}
 
     open fun setFocused(focused: Boolean) {
     }

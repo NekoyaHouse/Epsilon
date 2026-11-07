@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -118,6 +119,31 @@ abstract class AbstractDropdownPanel protected constructor(
         val panelWidth = width
 
         with(scope) {
+            InputRegion(key = this@AbstractDropdownPanel to "header",
+                bounds = UiRect(left, top, panelWidth, DropdownTheme.PANEL_HEADER_HEIGHT),
+                onPress = { event, _ ->
+                    when (event.button()) {
+                        InputConstants.MOUSE_BUTTON_LEFT -> {
+                            dragging = true; dragOffsetX = (x - event.x()).toFloat(); dragOffsetY = (y - event.y()).toFloat()
+                            DropdownScreen.react(ReisaDropdownCompanion.Action.DRAG); true
+                        }
+                        InputConstants.MOUSE_BUTTON_RIGHT -> {
+                            isOpened = !isOpened
+                            DropdownScreen.react(if (isOpened) ReisaDropdownCompanion.Action.PANEL_OPEN else ReisaDropdownCompanion.Action.PANEL_CLOSE); true
+                        }
+                        else -> false
+                    }
+                },
+                onDrag = { event, _, _ -> mouseDragged(event.x(), event.y()) },
+                onRelease = { event -> mouseReleased(event.x(), event.y(), event.button()) },
+                onCancel = { dragging = false; scrollBar.reset() })
+            InputRegion(key = this@AbstractDropdownPanel to "scroll", bounds = UiRect(left, top, panelWidth, panelHeight),
+                onScroll = { _, _, _, amount ->
+                    if (openedState) {
+                        targetScroll = (targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED).coerceIn(0f, maxScroll)
+                        true
+                    } else false
+                })
             Shadow(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow())
             RoundRect(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
 
@@ -171,6 +197,17 @@ abstract class AbstractDropdownPanel protected constructor(
         val contentMouseX = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseX
         val contentMouseY = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseY
         scope.drawPanelContent(contentMouseX, contentMouseY, visibleHeight)
+        scope.InputRegion(key = this to "scrollbar", bounds = UiRect(
+            scrollbarViewport.right() - UiScrollBar.HOVER_WIDTH - scope.origin.x,
+            scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height),
+            onPress = { event, _ ->
+                val handled = scrollBar.mouseClicked(event.x(), event.y(), scrollbarViewport, scroll, maxScroll, contentHeight)
+                if (handled) scrollBar.mouseDragged(event.y(), scrollbarViewport, maxScroll, contentHeight).takeIf { it >= 0f }?.let(::setScrollImmediate)
+                handled
+            }, onDrag = { event, _, _ ->
+                scrollBar.mouseDragged(event.y(), getScrollbarViewport(), maxScroll, cachedContentHeight).takeIf { it >= 0f }?.let(::setScrollImmediate)
+                true
+            }, onRelease = { scrollBar.mouseReleased() }, onCancel = { scrollBar.reset() })
         // 滚动条与内容共用同一作用域：把视口和鼠标都平移到该作用域的坐标系。
         scrollBar.draw(
             scope,
@@ -203,62 +240,13 @@ abstract class AbstractDropdownPanel protected constructor(
             return cachedPanelHeight
         }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        ensureFrameMetrics()
-        updateScroll(cachedContentHeight, cachedVisibleContentHeight, false)
 
-        if (isHeaderHovered(mouseX, mouseY)) {
-            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-                dragging = true
-                dragOffsetX = (x - mouseX).toFloat()
-                dragOffsetY = (y - mouseY).toFloat()
-                DropdownScreen.react(ReisaDropdownCompanion.Action.DRAG)
-                return true
-            }
-            if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
-                openedState = !openedState
-                DropdownScreen.react(
-                    if (openedState) ReisaDropdownCompanion.Action.PANEL_OPEN else ReisaDropdownCompanion.Action.PANEL_CLOSE
-                )
-                return true
-            }
-        }
-
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && scrollBar.mouseClicked(
-                mouseX,
-                mouseY,
-                getScrollbarViewport(),
-                scroll,
-                maxScroll,
-                cachedContentHeight
-            )
-        ) {
-            val newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight)
-            if (newScroll >= 0.0f) {
-                setScrollImmediate(newScroll)
-            }
-            DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
-            return true
-        }
-
-        if (openedState && cachedExpand > 0.5f && isContentHovered(mouseX, mouseY)) {
-            return mouseClickedContent(mouseX, mouseY, button)
-        }
+    private fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && dragging) { dragging = false; return true }
         return false
     }
 
-    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && scrollBar.mouseReleased()) {
-            return true
-        }
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && dragging) {
-            dragging = false
-            return true
-        }
-        return mouseReleasedContent(mouseX, mouseY, button)
-    }
-
-    override fun mouseDragged(mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(mouseX: Double, mouseY: Double): Boolean {
         if (scrollBar.isDragging()) {
             val newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight)
             if (newScroll >= 0.0f) {
@@ -274,26 +262,6 @@ abstract class AbstractDropdownPanel protected constructor(
         return false
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
-        if (!openedState) return false
-        if (isPanelHovered(mouseX, mouseY)) {
-            targetScroll = (targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED).coerceIn(0.0f, maxScroll)
-            return true
-        }
-        return false
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return false
-    }
-
-    override fun charTyped(typedText: String): Boolean {
-        return false
-    }
-
-    override fun hasActiveInput(): Boolean {
-        return false
-    }
 
     override fun setPosition(x: Float, y: Float) {
         this.x = x
@@ -323,13 +291,6 @@ abstract class AbstractDropdownPanel protected constructor(
      */
     protected abstract fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float)
 
-    protected open fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return false
-    }
-
-    protected open fun mouseReleasedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return false
-    }
 
     protected fun getTitle(): String {
         if (titleSupplier != null) return titleSupplier.get()

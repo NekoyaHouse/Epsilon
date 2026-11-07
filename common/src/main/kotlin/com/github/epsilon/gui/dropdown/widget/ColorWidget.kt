@@ -44,10 +44,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
-        com.github.epsilon.gui.lib.state.luminPointerInput(this) { px, py ->
-            syncAlphaAvailability()
-            updatePointer(px, py)
-        }
+        com.github.epsilon.gui.lib.state.afterLuminCommit { syncAlphaAvailability() }
         openAnim.run(if (opened) 1.0f else 0.0f)
         val t = openAnim.value
 
@@ -344,6 +341,21 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         }
         return false
     }
+
+    override fun mouseDragged(mouseX: Double, mouseY: Double): Boolean {
+        if (!pickingSB && !pickingHue && pickingChannel == null) return false
+        updatePointer(mouseX.toInt(), mouseY.toInt())
+        return true
+    }
+
+    override fun cancelInput() {
+        pickingSB = false
+        pickingHue = false
+        pickingChannel = null
+        clearPendingColor()
+    }
+
+    override fun blurInput() { commitFocusedInput(); blurFields() }
 
     fun hasFocusedInput(): Boolean {
         return focusedField != null

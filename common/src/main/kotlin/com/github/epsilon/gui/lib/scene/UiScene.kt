@@ -21,6 +21,7 @@ class UiScene(theme: UiTheme) : AutoCloseable {
 
     /** LuminUI recompose 注册表：跨帧保存各层的缓存节点。 */
     internal val lumin: LuminSceneRoot = LuminSceneRoot()
+    val input get() = lumin.input
 
     fun beginFrame() {
         // 每个 Screen/HUD editor 帧从一个干净的命令流开始，具体 renderer 由 scheduler 池化复用。
@@ -58,9 +59,14 @@ class UiScene(theme: UiTheme) : AutoCloseable {
     }
 
     fun endFrame() {
-        try { flush() } finally {
-            scheduler.clear()
+        try {
+            flush()
             lumin.endFrame()
+        } catch (failure: Throwable) {
+            lumin.abortFrame()
+            throw failure
+        } finally {
+            scheduler.clear()
         }
     }
 

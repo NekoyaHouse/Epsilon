@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownTheme
@@ -44,6 +47,10 @@ class ConfigDropdownPanel(panelIndex: Int) :
         if (!inputField.isFocused && inputField.text.isEmpty()) {
             afterLuminCommit { inputField.text = placeholder }
         }
+        InputRegion(inputField, UiRect(contentX, currentY, contentW, FIELD_HEIGHT),
+            onPress = { _, _ -> inputField.focus(); true },
+            onKey = { keyPressed(it.key(), it.keycode(), it.modifiers()) },
+            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur)
         inputField.draw(
             this, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY,
             placeholder, DropdownTheme.SETTING_TEXT_SCALE
@@ -68,6 +75,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 val label = actions[index]
                 // 逐项缓存：按钮位置/悬停/翻译变化时才重新捕获节点。
                 LuminUIItem("config-action:$index") {
+                    Interaction("action", UiRect(btnX, btnY, btnW, BUTTON_HEIGHT)) { onClick { runAction(index); true } }
                     RoundRect(
                         btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
@@ -110,6 +118,26 @@ class ConfigDropdownPanel(panelIndex: Int) :
             val deleteHovered =
                 isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, rowY + 3.0f, 16.0f, 16.0f)
             LuminUIItem("config-row:$name") {
+                Interaction("switch", UiRect(contentX, rowY, contentW, ROW_HEIGHT)) { onClick {
+                try {
+                    ConfigManager.switchConfig(name)
+                    inputField.text = name
+                    inputField.setCursorToEnd()
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name
+                } catch (e: Exception) {
+                    status = errorText(e)
+                }
+                    true
+                } }
+                Interaction("delete", UiRect(deleteX, rowY + 3f, 16f, 16f)) { onClick {
+                try {
+                    ConfigManager.deleteConfig(name)
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name
+                } catch (e: Exception) {
+                    status = errorText(e)
+                }
+                    true
+                } }
                 RoundRect(
                     contentX, rowY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (activeRow) {
@@ -136,68 +164,6 @@ class ConfigDropdownPanel(panelIndex: Int) :
         }
     }
 
-    override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (button != InputConstants.MOUSE_BUTTON_LEFT) return false
-        var currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
-        val contentX = x + PADDING
-        val contentW = width - PADDING * 2.0f
-        if (inputField.focusIfContains(mouseX, mouseY, contentX, currentY, contentW, FIELD_HEIGHT)) {
-            return true
-        }
-        inputField.blur()
-        currentY += FIELD_HEIGHT + GAP
-
-        for (row in 0 until 3) {
-            for (col in 0 until 2) {
-                val index = row * 2 + col
-                val btnW = (contentW - GAP) * 0.5f
-                val btnX = contentX + col * (btnW + GAP)
-                val btnY = currentY + row * (BUTTON_HEIGHT + GAP)
-                if (isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT)) {
-                    runAction(index)
-                    return true
-                }
-            }
-        }
-        currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f
-        if (status.isNotEmpty()) currentY += ROW_HEIGHT
-
-        for (name in configsForFrame()) {
-            val deleteX = contentX + contentW - 18.0f
-            if (isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
-                try {
-                    ConfigManager.deleteConfig(name)
-                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name
-                } catch (e: Exception) {
-                    status = errorText(e)
-                }
-                return true
-            }
-            if (isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT)) {
-                try {
-                    ConfigManager.switchConfig(name)
-                    inputField.text = name
-                    inputField.setCursorToEnd()
-                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name
-                } catch (e: Exception) {
-                    status = errorText(e)
-                }
-                return true
-            }
-            currentY += ROW_HEIGHT + GAP
-        }
-        return false
-    }
-
-    override fun onGlobalMouseClicked(mouseX: Double, mouseY: Double, button: Int) {
-        if (button != InputConstants.MOUSE_BUTTON_LEFT) return
-        val fieldX = x + PADDING
-        val fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll
-        val fieldW = width - PADDING * 2.0f
-        if (!isHovered(mouseX, mouseY, fieldX, fieldY, fieldW, FIELD_HEIGHT)) {
-            inputField.blur()
-        }
-    }
 
     private fun runAction(index: Int) {
         val value = inputField.text.trim()
@@ -251,7 +217,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
         }
     }
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+    private fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (!inputField.isFocused) return false
         if (keyCode == InputConstants.KEY_ESCAPE) {
             inputField.blur()
@@ -260,13 +226,10 @@ class ConfigDropdownPanel(panelIndex: Int) :
         return inputField.keyPressed(keyCode)
     }
 
-    override fun charTyped(typedText: String): Boolean {
+    private fun charTyped(typedText: String): Boolean {
         return inputField.charTyped(typedText)
     }
 
-    override fun hasActiveInput(): Boolean {
-        return inputField.isFocused
-    }
 
     private fun errorText(e: Exception): String {
         val message = e.message

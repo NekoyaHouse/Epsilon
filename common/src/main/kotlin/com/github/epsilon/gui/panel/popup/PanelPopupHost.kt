@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.panel.popup
 
+import net.minecraft.client.input.PreeditEvent
+import com.github.epsilon.gui.lib.input.UiInputRouter
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.render.UiRenderBatch
@@ -13,10 +16,10 @@ import net.minecraft.client.input.MouseButtonEvent
 /**
  * 面板弹窗宿主。
  *
- * 它负责管理当前活动弹窗、提供相对面板的居中布局能力，并把弹窗的 extract/flush
+ * 它负责管理当前活动弹窗、提供相对面板的居中布局能力，并在共享 Scene 中限定模态输入的 View，把弹窗的 extract/flush
  * 生命周期接入主屏幕统一的渲染批次提交流程。
  */
-class PanelPopupHost {
+class PanelPopupHost(private val input: () -> UiInputRouter) {
 
     var activePopup: Popup? by mutableStateOf<Popup?>(null)
         private set
@@ -31,6 +34,8 @@ class PanelPopupHost {
      */
     fun open(popup: Popup) {
         close()
+        input().cancelPointer()
+        input().clearFocus()
         this.activePopup = popup
         IMEFocusHelper.activate()
     }
@@ -42,10 +47,10 @@ class PanelPopupHost {
         val popup = activePopup
         if (popup != null) {
             popup.close()
+            IMEFocusHelper.deactivate()
         }
         activePopup = null
         pendingBatch = null
-        IMEFocusHelper.deactivate()
     }
 
     fun setOverlayBounds(overlayBounds: UiRect) {
@@ -109,15 +114,15 @@ class PanelPopupHost {
      */
     fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         val popup = activePopup ?: return false
-        if (!popup.getBounds().contains(event.x(), event.y())) {
+        if (!input().within(popup.inputView) { hitTest(event.x(), event.y()) }) {
             close()
             return true
         }
-        val handled = popup.mouseClicked(event, isDoubleClick)
+        val handled = input().within(popup.inputView) { mouseClicked(event, isDoubleClick) }
         if (handled && popup.shouldCloseAfterClick()) {
             close()
         }
-        return handled
+        return true
     }
 
     fun keyPressed(event: KeyEvent): Boolean {
@@ -126,7 +131,7 @@ class PanelPopupHost {
             close()
             return true
         }
-        val handled = popup.keyPressed(event)
+        val handled = input().within(popup.inputView) { keyPressed(event) }
         if (handled && popup.shouldCloseAfterClick()) {
             close()
         }
@@ -134,18 +139,24 @@ class PanelPopupHost {
     }
 
     fun charTyped(event: CharacterEvent): Boolean {
-        return activePopup?.charTyped(event) ?: false
+        val popup = activePopup ?: return false
+        return input().within(popup.inputView) { charTyped(event) }
+    }
+
+    fun preeditUpdated(event: PreeditEvent?): Boolean {
+        val popup = activePopup ?: return false
+        return input().within(popup.inputView) { preeditUpdated(event) }
     }
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
         val popup = activePopup ?: return false
-        popup.mouseReleased(event)
+        input().within(popup.inputView) { mouseReleased(event) }
         return true
     }
 
     fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         val popup = activePopup ?: return false
-        popup.mouseDragged(event, mouseX, mouseY)
+        input().within(popup.inputView) { mouseDragged(event, mouseX, mouseY) }
         return true
     }
 
@@ -154,17 +165,14 @@ class PanelPopupHost {
      */
     fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         val popup = activePopup ?: return false
-        if (popup.getBounds().contains(mouseX, mouseY)) {
-            popup.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
-            return true
-        }
-        return false
+        input().within(popup.inputView) { mouseScrolled(mouseX, mouseY, scrollX, scrollY) }
+        return true
     }
 
     /**
      * 面板弹窗协议。
      *
-     * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene，
+     * 弹窗提供组合宿主、几何区域与 UI 提取；输入订阅在绘制作用域内声明，普通图元进入主 scene，
      * 私有视口缓冲或原版物品预览等额外输出可以在 [flush] 中补充。
      */
     interface Popup : AutoCloseable {
@@ -191,39 +199,9 @@ class PanelPopupHost {
         fun extractOverlay(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         }
 
-        /**
-         * 处理鼠标点击事件。
-         *
-         * @return 是否已消费该事件
-         */
-        fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean
+        val inputView: LuminView
 
-        /**
-         * 指示宿主在本次点击处理后是否需要关闭弹窗。
-         */
-        fun shouldCloseAfterClick(): Boolean {
-            return false
-        }
-
-        fun keyPressed(event: KeyEvent): Boolean {
-            return false
-        }
-
-        fun charTyped(event: CharacterEvent): Boolean {
-            return false
-        }
-
-        fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-            return false
-        }
-
-        fun mouseReleased(event: MouseButtonEvent): Boolean {
-            return false
-        }
-
-        fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-            return false
-        }
+        fun shouldCloseAfterClick(): Boolean = false
 
         override fun close() {
         }

@@ -43,6 +43,9 @@ class ModuleButton(val module: Module) : Component() {
         sectionRenderer = SettingSectionRenderer.create(ownerKey, module.settings) { setting -> createWidget(setting) }
     }
 
+    override fun inputHeight(): Float = DropdownTheme.MODULE_HEIGHT
+    override fun blurInput() { listeningKeybind = false }
+
     override fun getHeight(): Float {
         return computeHeight()
     }
@@ -273,20 +276,19 @@ class ModuleButton(val module: Module) : Component() {
             }
         }
 
-        if (expanded && expandAnim.value > 0.5f) {
-            if (sectionRenderer.mouseClicked(
-                    mouseX, mouseY, button,
-                    0.0f, DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP, width, x, y
-                )
-            ) {
-                return true
-            }
-        }
         return false
     }
 
+    override fun previewMouseClicked(button: Int): Boolean {
+        if (!listeningKeybind) return false
+        module.keyBind = KeybindUtils.encodeMouseButton(button)
+        listeningKeybind = false
+        DropdownScreen.react(ReisaDropdownCompanion.Action.CONFIRM)
+        return true
+    }
+
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return expanded && sectionRenderer.mouseReleased(mouseX, mouseY, button)
+        return false
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
@@ -303,26 +305,16 @@ class ModuleButton(val module: Module) : Component() {
             return true
         }
 
-        if (expanded) {
-            return sectionRenderer.keyPressed(keyCode, scanCode, modifiers)
-        }
         return false
     }
 
     override fun charTyped(typedText: String): Boolean {
-        return expanded && sectionRenderer.charTyped(typedText)
+        return false
     }
 
     val isExpanded: Boolean
         get() = expanded
 
-    fun hasListeningKeybind(): Boolean {
-        return listeningKeybind || sectionRenderer.hasListeningKeybind()
-    }
-
-    fun hasFocusedInput(): Boolean {
-        return sectionRenderer.hasFocusedInput()
-    }
 
     private companion object {
 
