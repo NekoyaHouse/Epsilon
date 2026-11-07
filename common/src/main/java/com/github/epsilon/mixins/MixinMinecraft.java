@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.ffi.smtc.SmtcService;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.video.VideoPlayer;
 import com.github.epsilon.gui.screen.MainMenuScreen;
@@ -13,7 +14,6 @@ import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandView;
-import com.github.epsilon.smtc.SmtcService;
 import com.github.epsilon.utils.player.SwingMode;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

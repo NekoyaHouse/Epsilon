@@ -42,6 +42,10 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 ./gradlew runClient
 ```
 
+> Windows 的 SMTC 媒体会话读取使用 Panama FFM（`java.lang.foreign`）直接调用 WinRT。
+> 通过外部启动器运行开发版或发布版时，建议在 JVM 参数中追加 `--enable-native-access=ALL-UNNAMED`，
+> 用于消除 Java 22+ 每个模块打印一次的受限方法告警；不加也只是告警，不影响运行。
+
 ## 🙏 鸣谢
 
 感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。
