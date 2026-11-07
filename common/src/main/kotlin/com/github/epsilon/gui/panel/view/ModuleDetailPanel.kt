@@ -2,6 +2,7 @@ package com.github.epsilon.gui.panel.view
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Segmented
@@ -11,7 +12,6 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiContentBuffer
-import com.github.epsilon.gui.lib.state.LuminRowCache
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
@@ -46,9 +46,6 @@ class ModuleDetailPanel(
 
     private val settingListController = SettingListController(popupHost)
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-
-    /** 设置行的逐行节点缓存：只有值/动画变化的行才重建。 */
-    private val rowCache = LuminRowCache()
     private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
@@ -169,7 +166,7 @@ class ModuleDetailPanel(
                     val animating = !hoverAnimation.isFinished || row.hasActiveAnimation()
                     // 逐行缓存：只有值或动画变化的行才重新捕获节点，其余行直接重放。
                     val revision = row.cacheRevision() * 31L + (if (animating) System.nanoTime() else 0L)
-                    rowCache.draw(setting, revision, tree, metrics) {
+                    LuminUIItem(setting to rowBounds, revision) {
                         SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
                     }
                     contentState.noteAnimation(animating)

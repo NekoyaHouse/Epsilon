@@ -27,7 +27,7 @@ fun UiRenderBatch.Content(
     val tree = UiTree.build { scope ->
         // 作用域的 origin 必须等于底层 bound，图元坐标才能与布局计算共用同一套坐标系。
         scope.pushAbsolute(bounds) {
-            block(UiScope(it, metrics, LayerOffset.Same, bounds))
+            block(UiScope(it, metrics, LayerOffset.Same, bounds, sceneCache()))
         }
     }
     render(tree, baseLayer)

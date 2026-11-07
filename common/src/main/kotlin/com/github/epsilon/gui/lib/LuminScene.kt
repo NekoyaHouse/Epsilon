@@ -34,7 +34,7 @@ fun UiScene.LuminUIScene(
     val tree = UiTree.build { scope ->
         // 重建时块内图元按 bounds 解析成绝对坐标，因此 bound 必须与 origin 一致。
         scope.pushAbsolute(bounds) { inner ->
-            entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds), block)
+            entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds, luminCache), block)
             if (entry.emit(inner)) {
                 inner.markActiveAnimations(true)
             }
@@ -88,4 +88,45 @@ fun UiScope.LuminUIGroupImmediate(block: UiScope.() -> Unit) {
         return
     }
     composition.group(this, null, block, alwaysDirty = true)
+}
+/**
+ * 由场景自动分割缓存的列表项。
+ *
+ * 每一项独立缓存：`revision` 不变时只重放节点；列表增删或某项状态变化时只重建该项。
+ * `key` 必须对列表项稳定（例如 setting 实例），布局变化时把矩形一起并入 key。
+ *
+ * ```kotlin
+ * LuminUIItem(setting to rowBounds, row.cacheRevision()) { SettingRow(row, ...) }
+ * ```
+ */
+fun UiScope.LuminUIItem(key: Any, revision: Long = 0L, block: UiScope.() -> Unit) {
+    val cache = sceneCache
+    if (cache == null) {
+        block()
+        return
+    }
+    cache.draw(key, revision, tree, block, metrics)
+}
+
+/**
+ * 自动分割缓存的列表。
+ *
+ * 每项以 `key` 作为缓存键；`revision` 未变化时不重新绘制该行。
+ */
+fun <T> UiScope.LuminUIItems(
+    items: List<T>,
+    key: (T) -> Any,
+    revision: (T) -> Long = { 0L },
+    content: UiScope.(T) -> Unit,
+) {
+    val cache = sceneCache
+    if (cache == null) {
+        for (item in items) {
+            content(item)
+        }
+        return
+    }
+    for (item in items) {
+        cache.draw(key(item), revision(item), tree, { content(item) }, metrics)
+    }
 }

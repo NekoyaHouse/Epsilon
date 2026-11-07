@@ -3,6 +3,7 @@ package com.github.epsilon.gui.lib.render
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.state.LuminSceneCache
 import java.util.*
 
 /**
@@ -15,13 +16,15 @@ class UiRenderBatch private constructor(
     private val ownsScheduler: Boolean,
     private val baseLayer: Int,
     private val theme: UiTheme,
+    private val sceneCache: LuminSceneCache? = null,
 ) : AutoCloseable {
 
     private val touchedLayers: MutableSet<Int> = HashSet()
 
-    constructor(theme: UiTheme) : this(Render2DScheduler(), true, 0, theme)
+    constructor(theme: UiTheme) : this(Render2DScheduler(), true, 0, theme, null)
 
-    constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme) : this(scheduler, false, baseLayer, theme)
+    constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme, sceneCache: LuminSceneCache? = null) :
+        this(scheduler, false, baseLayer, theme, sceneCache)
 
     init {
         Objects.requireNonNull(scheduler, "scheduler")
@@ -29,7 +32,7 @@ class UiRenderBatch private constructor(
     }
 
     fun view(relativeBaseLayer: Int): UiRenderBatch {
-        return UiRenderBatch(scheduler, false, baseLayer + relativeBaseLayer, theme)
+        return UiRenderBatch(scheduler, false, baseLayer + relativeBaseLayer, theme, sceneCache)
     }
 
     fun scheduler(): Render2DScheduler {
@@ -38,6 +41,11 @@ class UiRenderBatch private constructor(
 
     fun baseLayer(): Int {
         return baseLayer
+    }
+
+    /** 场景级逐项缓存；由 UiScene 注入，供 LuminUIItem 自动分割。 */
+    fun sceneCache(): LuminSceneCache? {
+        return sceneCache
     }
 
     fun theme(): UiTheme {

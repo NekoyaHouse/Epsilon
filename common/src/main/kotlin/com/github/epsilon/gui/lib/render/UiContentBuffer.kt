@@ -6,7 +6,12 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.asUiTextMetrics
+import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.lib.state.LuminSceneCache
+import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import java.awt.Color
@@ -29,6 +34,11 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     private var pending = false
     private var pendingViewport: UiRect? = null
+
+    /** 内容层的 recompose 注册表与逐项缓存（跨帧保存）。 */
+    private val luminRoot = LuminSceneRoot()
+    private val luminCache = LuminSceneCache()
+    private var luminEntryIndex = 0
 
     fun theme(): UiTheme {
         return theme
@@ -150,4 +160,33 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
         val clip: UiRect,
     )
 
+    /** 每帧开始时调用，重置 recompose 入口编号。 */
+    fun beginLuminFrame() {
+        luminEntryIndex = 0
+    }
+
+    /** 强制内容层全部重建（配置加载/语言切换）。 */
+    fun invalidateAllUi() {
+        luminRoot.invalidateAll()
+        luminCache.clear()
+    }
+
+    /**
+     * 以 recompose 模式把内容写进本缓冲。
+     *
+     * 作用域携带场景级逐项缓存，块内的 `LuminUIItem` 会自动按项缓存。
+     */
+    fun LuminUI(bounds: UiRect, key: Any? = null, block: UiScope.() -> Unit) {
+        val entry = luminRoot.nextEntryAt(luminEntryIndex++, bounds, key)
+        val metrics = batch.scheduler().textMetrics().asUiTextMetrics()
+        val tree = UiTree.build { scope ->
+            scope.pushAbsolute(bounds) { inner ->
+                entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds, luminCache), block)
+                if (entry.emit(inner)) {
+                    inner.markActiveAnimations(true)
+                }
+            }
+        }
+        batch.render(tree)
+    }
 }

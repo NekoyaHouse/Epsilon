@@ -256,7 +256,11 @@ class LuminSceneRoot internal constructor() {
     }
 
     internal fun nextEntry(bounds: UiRect, key: Any?): LuminComposition {
-        val index = nextIndex++
+        return nextEntryAt(nextIndex++, bounds, key)
+    }
+
+    /** 指定入口编号取缓存单元（内容缓冲按自己的计数重置节奏调用）。 */
+    internal fun nextEntryAt(index: Int, bounds: UiRect, key: Any?): LuminComposition {
         while (entries.size <= index) {
             entries.add(LuminComposition(null))
         }

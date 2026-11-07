@@ -9,8 +9,8 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.render.UiContentBuffer
-import com.github.epsilon.gui.lib.state.LuminRowCache
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
@@ -44,11 +44,6 @@ import kotlin.math.abs
 class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-
-
-    /** 模块行的逐行节点缓存。 */
-
-    private val rowCache = LuminRowCache()
     private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
@@ -164,7 +159,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                     val animating = !hoverAnimation.isFinished || !selectionAnimation.isFinished ||
                             !toggleAnimation.isFinished || !toggleHoverAnimation.isFinished || marqueeActive
                     val revision = moduleRevision(module) * 31L + (if (animating) System.nanoTime() else 0L)
-                    rowCache.draw(module, revision, tree, metrics) {
+                    LuminUIItem(module to row.getBounds(), revision) {
                         Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
                             ModuleRow(
                                 row, hoverAnimation.value, selectionAnimation.value,
