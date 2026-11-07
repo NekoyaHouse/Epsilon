@@ -1,4 +1,4 @@
-package com.github.epsilon.native.smtc
+package com.github.epsilon.ffi.smtc
 
 enum class SmtcPlaybackStatus {
 

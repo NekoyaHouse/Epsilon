@@ -1,4 +1,4 @@
-package com.github.epsilon.native.winrt
+package com.github.epsilon.ffi.winrt
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment

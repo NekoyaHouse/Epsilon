@@ -1,8 +1,8 @@
-package com.github.epsilon.native.smtc
+package com.github.epsilon.ffi.smtc
 
-import com.github.epsilon.native.winrt.SmtcSession
-import com.github.epsilon.native.winrt.WinRtException
-import com.github.epsilon.native.winrt.WinRtNative
+import com.github.epsilon.ffi.winrt.SmtcSession
+import com.github.epsilon.ffi.winrt.WinRtException
+import com.github.epsilon.ffi.winrt.WinRtNative
 import com.github.epsilon.utils.client.ClientPlatform
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment

@@ -1,4 +1,4 @@
-package com.github.epsilon.native.smtc
+package com.github.epsilon.ffi.smtc
 
 /**
  * 某一时刻的 Windows SMTC 媒体会话快照。

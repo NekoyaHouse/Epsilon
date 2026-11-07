@@ -11,8 +11,8 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.native.smtc.SmtcService
-import com.github.epsilon.native.smtc.SmtcSnapshot
+import com.github.epsilon.ffi.smtc.SmtcService
+import com.github.epsilon.ffi.smtc.SmtcSnapshot
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
