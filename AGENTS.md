@@ -152,7 +152,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - Minecraft 实例统一来自 `MinecraftWrapper.mc`，该单例声明为 `@JvmField`；Java 使用 `import static com.github.epsilon.kernel.MinecraftWrapper.mc;` 后直接访问 `mc`；仅 wrapper 内允许调用 `Minecraft.getInstance()`。Module/HudModule 内优先使用继承的 `mc`，它同样委托给 wrapper。
 - 不得吞异常。边界层隔离单个资源或子系统失败时，记录包含上下文的日志。
 - 不做与任务无关的重构、批量格式化或生成文件改写。
-- Windows SMTC 读取由 `common/src/main/kotlin/com/github/epsilon/ffi/smtc/` 的 Kotlin 类与 `common/src/main/kotlin/com/github/epsilon/ffi/winrt/` 的 `java.lang.foreign`（Panama FFM，JDK 22 起定稿）WinRT/COM 封装实现，直接调用 WinRT；C++ `native/` 目录、原生 DLL 与 JNI 签名均已移除；缺省未启用 native access 时 JVM 只对每个模块打印一次受限方法告警、调用照常执行，运行环境建议带 `--enable-native-access=ALL-UNNAMED` 消除告警。
 
 ## 提交前检查
 

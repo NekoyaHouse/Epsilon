@@ -131,7 +131,8 @@ internal object SmtcSession {
     }
 
     private fun acquireAsyncInterface(owner: MemorySegment, slot: Int, arena: Arena, what: String): MemorySegment {
-        val operation = WinRtNative.callOutPtr(owner, slot, arena) ?: throw WinRtException(0, "$what returned no operation")
+        val operation =
+            WinRtNative.callOutPtr(owner, slot, arena) ?: throw WinRtException(0, "$what returned no operation")
         try {
             return WinRtNative.asyncInterface(operation, arena) ?: throw WinRtException(0, "$what returned no result")
         } finally {

@@ -4,6 +4,8 @@ import com.github.epsilon.Constants
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
+import com.github.epsilon.ffi.smtc.SmtcService
+import com.github.epsilon.ffi.smtc.SmtcSnapshot
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
@@ -11,8 +13,6 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.ffi.smtc.SmtcService
-import com.github.epsilon.ffi.smtc.SmtcSnapshot
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier

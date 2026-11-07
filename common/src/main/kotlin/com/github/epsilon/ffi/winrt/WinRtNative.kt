@@ -1,11 +1,6 @@
 package com.github.epsilon.ffi.winrt
 
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.Linker
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.SymbolLookup
-import java.lang.foreign.ValueLayout
+import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 
 /**
@@ -143,7 +138,8 @@ internal object WinRtNative {
         if (reference == null || reference.address() == 0L) return
         runCatching {
             val function = vtableSlot(reference, 2)
-            val method = linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
+            val method =
+                linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
             invokeMethod(method, arrayOf(reference))
         }
     }
@@ -262,7 +258,8 @@ internal object WinRtNative {
     /** 调用只返回 HRESULT 的无参方法，例如 IClosable.Close。 */
     fun callHr(owner: MemorySegment, slot: Int): Int {
         val function = vtableSlot(owner, slot)
-        val method = linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
+        val method =
+            linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
         return (invokeMethod(method, arrayOf<Any?>(owner)) as Number).toInt()
     }
 
@@ -297,6 +294,7 @@ internal object WinRtNative {
                         checkHr(errorCode, "IAsyncInfo.get_ErrorCode")
                         throw WinRtException(errorOut.get(INT, 0), "IAsyncOperation failed")
                     }
+
                     else -> Unit
                 }
                 if (System.nanoTime() > deadline) {
@@ -392,7 +390,8 @@ internal object WinRtNative {
 
     private fun callHrAt(owner: MemorySegment, slot: Int): Int {
         val function = vtableSlot(owner, slot)
-        val method = linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
+        val method =
+            linker.downcallHandle(MemorySegment.ofAddress(function.address()), FunctionDescriptor.of(INT, ADDR))
         return (invokeMethod(method, arrayOf<Any?>(owner)) as Number).toInt()
     }
 

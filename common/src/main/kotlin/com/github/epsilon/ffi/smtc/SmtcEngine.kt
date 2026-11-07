@@ -1,5 +1,6 @@
 package com.github.epsilon.ffi.smtc
 
+import com.github.epsilon.ffi.smtc.SmtcEngine.lock
 import com.github.epsilon.ffi.winrt.SmtcSession
 import com.github.epsilon.ffi.winrt.WinRtException
 import com.github.epsilon.ffi.winrt.WinRtNative

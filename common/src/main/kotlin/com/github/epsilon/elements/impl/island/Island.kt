@@ -6,6 +6,7 @@ import com.github.epsilon.elements.impl.island.instance.impl.*
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
+import com.github.epsilon.ffi.smtc.SmtcService
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
@@ -17,7 +18,6 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
 import com.github.epsilon.settings.platformOnly
-import com.github.epsilon.ffi.smtc.SmtcService
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
 import com.github.epsilon.utils.player.InvHelper
