@@ -3,6 +3,7 @@ package com.github.epsilon.gui.lib
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.utils.render.animation.Animation
 import kotlin.math.max
 
@@ -188,10 +189,16 @@ fun UiScope.Stack(x: Float, y: Float, width: Float, height: Float): StackScope =
     StackScope(this, UiRect(x, y, width, height))
 
 /** 推进动画并返回当前进度（返回值的工具函数按 Compose 规范保持小写）。 */
-fun UiScope.animate(animation: Animation, target: Boolean): Float = tree.animate(animation, target)
+fun UiScope.animate(animation: Animation, target: Boolean): Float {
+    LuminRuntime.requireImmediateAnimation("animate")
+    return tree.animate(animation, target)
+}
 
 /** 推进动画并返回当前进度。 */
-fun UiScope.animate(animation: Animation, target: Float): Float = tree.animate(animation, target)
+fun UiScope.animate(animation: Animation, target: Float): Float {
+    LuminRuntime.requireImmediateAnimation("animate")
+    return tree.animate(animation, target)
+}
 
 /**
  * 从既有的 [UiTree.Scope] 派生 Compose 风格作用域。

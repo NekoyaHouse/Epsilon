@@ -50,6 +50,60 @@ class UiTree private constructor(
         }
 
         /**
+         * 把已经构建好的节点原样写回当前作用域。
+         *
+         * 供 recompose 缓存重放使用：节点都是不可变 data class，可以跨帧复用。
+         */
+        internal fun appendNodes(cached: List<UiNode>) {
+            nodes.addAll(cached)
+        }
+
+        /** 合并缓存的动画标记，保持 [UiTree.hasActiveAnimations] 的语义。 */
+        internal fun markActiveAnimations(active: Boolean) {
+            if (active) {
+                activeAnimations = true
+            }
+        }
+
+        /**
+         * 打开一个节点捕获会话。
+         *
+         * 会话期间产生的节点进入独立缓冲，可以分段取出（recompose 的 segment 模型），
+         * 关闭时恢复父缓冲与 bound 栈深度。
+         */
+        internal fun openCapture(): CaptureSession = CaptureSession(this)
+
+        internal class CaptureSession internal constructor(private val owner: Scope) {
+
+            private val savedNodes: MutableList<UiNode> = owner.nodes
+            private val savedActiveAnimations: Boolean = owner.activeAnimations
+            private val savedBoundDepth: Int = owner.boundStack.size
+
+            init {
+                owner.nodes = ArrayList()
+                owner.activeAnimations = false
+            }
+
+            /** 取出自上次 flush 以来产生的节点并开始新缓冲。 */
+            fun flush(): CaptureChunk {
+                val chunk = CaptureChunk(owner.nodes, owner.activeAnimations)
+                owner.nodes = ArrayList()
+                owner.activeAnimations = false
+                return chunk
+            }
+
+            fun close() {
+                owner.nodes = savedNodes
+                owner.activeAnimations = savedActiveAnimations
+                while (owner.boundStack.size > savedBoundDepth) {
+                    owner.boundStack.removeAt(owner.boundStack.size - 1)
+                }
+            }
+        }
+
+        internal class CaptureChunk(val nodes: List<UiNode>, val activeAnimations: Boolean)
+
+        /**
          * 清空当前作用域，便于长生命周期的渲染门面复用。
          */
         fun clear() {

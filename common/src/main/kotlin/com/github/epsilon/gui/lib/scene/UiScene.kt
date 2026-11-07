@@ -4,6 +4,8 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import java.util.*
 
 /**
@@ -18,9 +20,14 @@ class UiScene(theme: UiTheme) : AutoCloseable {
     private val layers = UiLayerStack()
     private val theme: UiTheme = Objects.requireNonNull(theme, "theme")
 
+    /** LuminUI recompose 注册表：跨帧保存各层的缓存节点。 */
+    internal val lumin: LuminSceneRoot = LuminSceneRoot()
+
     fun beginFrame() {
         // 每个 Screen/HUD editor 帧从一个干净的命令流开始，具体 renderer 由 scheduler 池化复用。
         scheduler.clear()
+        lumin.beginFrame()
+        LuminRuntime.advanceAnimations()
     }
 
     fun batch(layer: UiLayer): UiRenderBatch {

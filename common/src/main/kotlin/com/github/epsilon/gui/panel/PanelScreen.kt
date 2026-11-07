@@ -2,6 +2,7 @@ package com.github.epsilon.gui.panel
 
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Shadow
@@ -186,7 +187,8 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     }
 
     private fun drawChrome(layout: PanelLayout.Layout) {
-        scene.Content(layout.panel, UiLayer.CHROME, LayerOffset(-20)) {
+        // 布局签名作为失效键：窗口/侧栏动画改变布局时才重建这一层。
+        scene.LuminUIScene(layout.panel, UiLayer.CHROME, LayerOffset(-20), key = layout) {
             Shadow(
                 0.0f, 0.0f, layout.panel.width, layout.panel.height,
                 MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR,
