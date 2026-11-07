@@ -1,12 +1,16 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.managers.FriendManager
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -66,105 +70,102 @@ class TrollFriendWindow : TrollWindow() {
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        ui.InputRegion(inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
+            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         inputField.draw(
-            scope, TrollTheme.metrics(metrics), inputBounds.x, inputBounds.y,
+            scope.asUiScope(TrollTheme.metrics(metrics)), inputBounds.x, inputBounds.y,
             inputBounds.width, inputBounds.height, mouseX, mouseY,
             EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true
         )
 
+        ui.Interaction("add", addBounds) { onClick { addFriend(); true } }
         val addHovered = addBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-        scope.rect(
-            1, addBounds.x, addBounds.y, addBounds.width, addBounds.height,
-            TrollTheme.alpha(TrollTheme.primary(), if (addHovered) 190 else 70)
-        )
-        scope.textWithShadow(
-            3, "+", addBounds.centerX() - metrics.getWidth("+", TrollTheme.TEXT_SCALE) / 2.0f,
-            addBounds.y + (addBounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
-            TrollTheme.TEXT_SCALE, TrollTheme.text()
-        )
+        scope.layer(TrollZ.Base) { z ->
+            z.rect(
+                addBounds.x, addBounds.y, addBounds.width, addBounds.height,
+                TrollTheme.alpha(TrollTheme.primary(), if (addHovered) 190 else 70)
+            )
+        }
+        scope.layer(TrollZ.Text) { z ->
+            z.textWithShadow(
+                "+", addBounds.centerX() - metrics.getWidth("+", TrollTheme.TEXT_SCALE) / 2.0f,
+                addBounds.y + (addBounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
+                TrollTheme.TEXT_SCALE, TrollTheme.text()
+            )
+        }
 
         scope.scissor(listViewport) { content ->
             if (rows.isEmpty()) {
                 val empty = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName()
-                content.textWithShadow(
-                    2, empty,
-                    listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
-                    listViewport.y + (listViewport.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
-                    TrollTheme.VALUE_SCALE, TrollTheme.text()
-                )
+                content.layer(TrollZ.Highlight) { z ->
+                    z.textWithShadow(
+                        empty,
+                        listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
+                        listViewport.y + (listViewport.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
+                        TrollTheme.VALUE_SCALE, TrollTheme.text()
+                    )
+                }
                 return@scissor
             }
             for (row in rows) {
-                val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.rect(
-                    1, row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
-                    Color(255, 255, 255, if (hovered) 30 else 16)
-                )
-                content.textWithShadow(
-                    2,
-                    TrollTheme.trim(
-                        row.name,
-                        metrics,
-                        TrollTheme.TEXT_SCALE,
-                        row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f
-                    ),
-                    row.bounds.x + 5.0f,
-                    row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
-                    TrollTheme.TEXT_SCALE,
-                    TrollTheme.text()
-                )
+                content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                    Interaction("remove", row.removeBounds) { onClick { FriendManager.removeFriend(row.name); true } }
+                    val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Base) { z ->
+                        z.rect(
+                            row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
+                            Color(255, 255, 255, if (hovered) 30 else 16)
+                        )
+                    }
+                    tree.layer(TrollZ.Highlight) { z ->
+                        z.textWithShadow(
+                            TrollTheme.trim(
+                                row.name,
+                                metrics,
+                                TrollTheme.TEXT_SCALE,
+                                row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f
+                            ),
+                            row.bounds.x + 5.0f,
+                            row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
+                            TrollTheme.TEXT_SCALE,
+                            TrollTheme.text()
+                        )
+                    }
 
-                val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.rect(
-                    3, row.removeBounds.x, row.removeBounds.y,
-                    row.removeBounds.width, row.removeBounds.height,
-                    TrollTheme.alpha(TrollTheme.primary(), if (removeHovered) 180 else 40)
-                )
-                val iconScale = TrollTheme.VALUE_SCALE
-                content.textWithShadow(
-                    4, IconChars.CLOSE,
-                    row.removeBounds.centerX() - metrics.getWidth(
-                        IconChars.CLOSE,
-                        iconScale,
-                        StaticFontLoader.ICONS
-                    ) / 2.0f,
-                    row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(
-                        iconScale,
-                        StaticFontLoader.ICONS
-                    )) / 2.0f,
-                    iconScale, TrollTheme.text(), StaticFontLoader.ICONS
-                )
+                    val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Text) { z ->
+                        z.rect(
+                            row.removeBounds.x, row.removeBounds.y,
+                            row.removeBounds.width, row.removeBounds.height,
+                            TrollTheme.alpha(TrollTheme.primary(), if (removeHovered) 180 else 40)
+                        )
+                    }
+                    val iconScale = TrollTheme.VALUE_SCALE
+                    tree.layer(TrollZ.Content) { z ->
+                        z.textWithShadow(
+                            IconChars.CLOSE,
+                            row.removeBounds.centerX() - metrics.getWidth(
+                                IconChars.CLOSE,
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            ) / 2.0f,
+                            row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            )) / 2.0f,
+                            iconScale, TrollTheme.text(), StaticFontLoader.ICONS
+                        )
+                    }
+                }
             }
         }
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return bounds.contains(event.x(), event.y())
-
-        if (inputField.focusIfContains(
-                event.x(), event.y(), inputBounds.x, inputBounds.y,
-                inputBounds.width, inputBounds.height
-            )
-        ) {
-            return true
-        }
-        inputField.blur()
-
-        if (addBounds.contains(event.x(), event.y())) {
-            addFriend()
-            return true
-        }
-        if (listViewport.contains(event.x(), event.y())) {
-            for (row in rows) {
-                if (row.removeBounds.contains(event.x(), event.y())) {
-                    FriendManager.removeFriend(row.name)
-                    return true
-                }
-            }
-        }
-        return bounds.contains(event.x(), event.y())
+        return super.mouseClicked(event)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {

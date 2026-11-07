@@ -1,13 +1,22 @@
 package com.github.epsilon.gui.panel.view.settings
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.Viewport
+import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup
 import com.github.epsilon.gui.panel.popup.MessagePopup
@@ -17,9 +26,8 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -33,27 +41,34 @@ import kotlin.math.abs
 
 class ConfigClientSettingTab(
     private val state: PanelState,
-    private val textRenderer: TextRenderer,
     private val popupHost: PanelPopupHost,
 ) : ClientSettingTabView {
 
+    /** 非绘制路径（弹窗文案裁剪）使用的文本度量。 */
+    private val measureTextRenderer: TextRenderer = TextRenderer.create()
+
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val contentState = UiInvalidationState()
+
     private val scrollBarDrag = ScrollBarDragState()
     private val inputField = ClientSettingTextField(MAX_INPUT_LENGTH)
     private val rowHoverAnimations = HashMap<String, Animation>()
     private val deleteHoverAnimations = HashMap<String, Animation>()
     private val buttonHoverAnimations = HashMap<String, Animation>()
-    private val rowEntries = ArrayList<ConfigRowEntry>()
 
     private var bounds: UiRect? = null
-    private var lastScroll = Float.NaN
-    private var lastConfigList: List<String> = emptyList()
     private var lastActiveConfig = ""
-    private var lastContentSignature = Long.MIN_VALUE
     private var scrollVelocity = 0.0f
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -65,7 +80,7 @@ class ConfigClientSettingTab(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val configs = ConfigManager.listConfigs()
@@ -77,50 +92,49 @@ class ConfigClientSettingTab(
         val maxScroll = maxOf(0.0f, contentHeight - listViewport.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
-        val contentSignature = buildContentSignature(configs, activeConfig)
-        val rebuildContent = shouldRebuild(
-            listViewport, mouseX, mouseY, configs, activeConfig, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
-            rowEntries.clear()
-            rowHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
-            deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
-        }
+        contentBuffer.clear()
 
-        val tree = UiTree.build { scope ->
-            inputField.buildUi(
-                scope, getInputFieldBounds(inputSection), mouseX, mouseY, textRenderer,
-                EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
-            )
-            for (button in getActionButtons(inputSection)) {
-                buildActionButton(scope, button, mouseX, mouseY)
+        rowHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
+        deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
+
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
+            InputRegion(key = this@ConfigClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onCancel = { scrollBarDrag.reset() })
+
+            val localInput = getInputFieldBounds(inputSection).relativeTo(bounds)
+            Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
+                InputRegion(inputField, onPress = { _, _ -> inputField.focus(); true },
+                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+                ClientSettingTextField(
+                    inputField, mouseX, mouseY,
+                    EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
+                )
             }
-            scope.viewport(
-                contentBuffer, listViewport, state.getConfigScroll(), maxScroll, contentHeight, mouseX, mouseY
-            ) { content ->
-                if (!rebuildContent) {
-                    return@viewport
-                }
+            for (button in getActionButtons(inputSection)) {
+                buildActionButton(button, mouseX, mouseY)
+            }
+            Viewport(
+                contentBuffer, listViewport.relativeTo(bounds), state.getConfigScroll(), maxScroll, contentHeight,
+                mouseX, mouseY
+            ) {
                 var rowY = listViewport.y - state.getConfigScroll()
                 for (configName in configs) {
                     val rowBounds = UiRect(listViewport.x, rowY, rowWidth, ROW_HEIGHT)
                     val deleteBounds = getDeleteButtonBounds(rowBounds)
-                    rowEntries.add(ConfigRowEntry(configName, rowBounds, deleteBounds))
 
                     val rowHover = rowHoverAnimations.getOrPut(configName) { createAnimation() }
                     val deleteHover = deleteHoverAnimations.getOrPut(configName) { createAnimation() }
                     rowHover.run(if (rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
                     deleteHover.run(if (deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
-                    contentState.noteAnimation(!rowHover.isFinished || !deleteHover.isFinished)
 
-                    content.pushAbsolute(rowBounds) { rowScope ->
-                        buildConfigRow(
-                            rowScope, configName, activeConfig, rowBounds, deleteBounds,
-                            rowHover.value, deleteHover.value
-                        )
+                    val localRow = rowBounds.relativeTo(origin)
+                    Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                        Interaction(configName) { onClick { trySwitchConfig(configName); true } }
+                        Interaction(configName to "delete", deleteBounds.relativeTo(rowBounds)) {
+                            onClick { openDeleteConfirmation(configName); true }
+                        }
+                        buildConfigRow(configName, activeConfig, rowBounds, deleteBounds, rowHover.value, deleteHover.value)
                     }
                     rowY += ROW_HEIGHT + MD3Theme.ROW_GAP
                 }
@@ -128,39 +142,19 @@ class ConfigClientSettingTab(
                 if (configs.isEmpty()) {
                     val hintScale = 0.58f
                     val hint = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName()
-                    val hintWidth = textRenderer.getWidth(hint, hintScale)
+                    val hintWidth = metrics.textWidth(hint, hintScale)
                     val hintX = (listViewport.width - hintWidth) / 2.0f
                     val hintY = state.getConfigScroll() + listViewport.height / 2.0f -
-                            textRenderer.getHeight(hintScale) / 2.0f
-                    content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
+                            metrics.textHeight(hintScale) / 2.0f
+                    Text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED)
                 }
             }
         }
-        renderBatch.render(tree)
 
-        if (rebuildContent) {
-            rememberSnapshot(
-                listViewport, mouseX, mouseY, configs, activeConfig, guiGraphics.guiHeight(), contentSignature
-            )
-        }
     }
 
     override fun flushContent() {
         contentBuffer.flush()
-    }
-
-    override fun markDirty() {
-        contentState.markDirty()
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        val rowAnimations = rowHoverAnimations.values.any { animation -> !animation.isFinished } ||
-                deleteHoverAnimations.values.any { animation -> !animation.isFinished }
-        val buttonAnimations = buttonHoverAnimations.values.any { animation -> !animation.isFinished }
-        return contentState.hasActiveAnimations() ||
-                rowAnimations ||
-                buttonAnimations ||
-                inputField.hasActiveAnimations()
     }
 
     override fun consumesHover(mouseX: Int, mouseY: Int): Boolean {
@@ -168,7 +162,7 @@ class ConfigClientSettingTab(
         return popup.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+    private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         val currentBounds = bounds
         if (currentBounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false
@@ -183,53 +177,22 @@ class ConfigClientSettingTab(
             if (newScroll >= 0.0f) {
                 state.setConfigScroll(newScroll)
             }
-            markDirty()
+
             return true
-        }
-
-        val inputSection = getInputSectionBounds(currentBounds)
-        val inputBounds = getInputFieldBounds(inputSection)
-        if (inputBounds.contains(event.x(), event.y())) {
-            inputField.focusIfContains(inputBounds, event.x(), event.y())
-            markDirty()
-            return true
-        }
-
-        inputField.blur()
-
-        for (button in getActionButtons(inputSection)) {
-            if (button.bounds.contains(event.x(), event.y())) {
-                handleAction(button.type)
-                markDirty()
-                return true
-            }
-        }
-
-        for (entry in rowEntries) {
-            if (entry.deleteBounds.contains(event.x(), event.y())) {
-                openDeleteConfirmation(entry.name)
-                markDirty()
-                return true
-            }
-            if (entry.rowBounds.contains(event.x(), event.y())) {
-                trySwitchConfig(entry.name)
-                markDirty()
-                return true
-            }
         }
 
         return false
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    private fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         return false
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         val currentBounds = bounds
         if (!scrollBarDrag.isDragging() || currentBounds == null) {
             return false
@@ -239,37 +202,37 @@ class ConfigClientSettingTab(
         if (newScroll >= 0.0f) {
             state.setConfigScroll(newScroll)
         }
-        markDirty()
+
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         val currentBounds = bounds ?: return false
         val listViewport = getListViewport(currentBounds)
         if (listViewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24.0f
-            markDirty()
+
             return true
         }
         return false
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun keyPressed(event: KeyEvent): Boolean {
         if (event.key() == InputConstants.KEY_ESCAPE && inputField.isFocused()) {
             inputField.blur()
-            markDirty()
+
             return true
         }
         if (inputField.keyPressed(event)) {
-            markDirty()
+
             return true
         }
         return false
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun charTyped(event: CharacterEvent): Boolean {
         if (inputField.charTyped(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -280,20 +243,21 @@ class ConfigClientSettingTab(
             inputField.setText(ConfigManager.activeConfigName)
             inputField.setCursorToEnd()
         }
-        markDirty()
+
     }
 
     override fun onDeactivated() {
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
         inputField.blur()
-        markDirty()
+
     }
 
-    private fun buildActionButton(scope: UiTree.Scope, button: ActionButton, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildActionButton(button: ActionButton, mouseX: Int, mouseY: Int) {
+        Interaction(button.type, button.bounds.relativeTo(origin)) { onClick { handleAction(button.type); true } }
         val hoverAnimation = buttonHoverAnimations.getOrPut(button.type.name) { createAnimation() }
         val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-        val hover = scope.animate(hoverAnimation, hovered)
+        val hover = animate(hoverAnimation, hovered)
 
         val baseColor: Color = when (button.type) {
             ActionButtonType.SAVE_AS -> MD3Theme.PRIMARY_CONTAINER
@@ -314,16 +278,17 @@ class ConfigClientSettingTab(
             ActionButtonType.OPEN_FOLDER -> MD3Theme.TEXT_PRIMARY
         }
 
-        scope.pushAbsolute(button.bounds) { buttonScope ->
-            buttonScope.roundRect(
+        val localButton = button.bounds.relativeTo(origin)
+        Positioned(localButton.x, localButton.y, localButton.width, localButton.height) {
+            RoundRect(
                 0.0f, 0.0f, button.bounds.width, button.bounds.height,
                 button.bounds.height / 2.0f, MD3Theme.lerp(baseColor, hoverColor, hover * 0.35f)
             )
 
             val labelScale = 0.56f
-            val labelWidth = textRenderer.getWidth(button.label, labelScale)
-            val labelHeight = textRenderer.getHeight(labelScale)
-            buttonScope.text(
+            val labelWidth = metrics.textWidth(button.label, labelScale)
+            val labelHeight = metrics.textHeight(labelScale)
+            Text(
                 button.label,
                 (button.bounds.width - labelWidth) / 2.0f,
                 (button.bounds.height - labelHeight) / 2.0f,
@@ -333,15 +298,15 @@ class ConfigClientSettingTab(
         }
     }
 
-    private fun buildConfigRow(
-        scope: UiTree.Scope, configName: String, activeConfig: String,
+    private fun UiScope.buildConfigRow(
+        configName: String, activeConfig: String,
         rowBounds: UiRect, deleteBounds: UiRect, hover: Float, deleteHover: Float,
     ) {
         val active = configName == activeConfig
 
         val baseColor = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, hover)
         val rowColor = if (active) MD3Theme.lerp(baseColor, MD3Theme.PRIMARY_CONTAINER, 0.28f) else baseColor
-        scope.roundRect(
+        RoundRect(
             0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CARD_RADIUS.toFloat(), rowColor
         )
 
@@ -349,8 +314,8 @@ class ConfigClientSettingTab(
         val subScale = 0.52f
         val textX = MD3Theme.ROW_CONTENT_INSET + 1.0f
         val nameY = 7.0f
-        scope.text(
-            trimToWidth(configName, nameScale, rowBounds.width - 72.0f), textX, nameY, nameScale,
+        Text(
+            trimToWidth(configName, nameScale, rowBounds.width - 72.0f, metrics), textX, nameY, nameScale,
             if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
         )
 
@@ -360,28 +325,28 @@ class ConfigClientSettingTab(
             EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
         }
         val subtitleColor = if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_MUTED
-        scope.text(subtitle, textX, nameY + 12.0f, subScale, subtitleColor)
+        Text(subtitle, textX, nameY + 12.0f, subScale, subtitleColor)
 
         if (active) {
             val chipText = EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
             val chipScale = 0.48f
-            val chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f
+            val chipWidth = metrics.textWidth(chipText, chipScale) + 10.0f
             val chipHeight = 14.0f
             val localDeleteBounds = deleteBounds.relativeTo(rowBounds)
             val chipX = localDeleteBounds.x - chipWidth - 6.0f
             val chipY = (rowBounds.height - chipHeight) / 2.0f
-            scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY)
-            scope.text(
+            RoundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY)
+            Text(
                 chipText,
-                chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
-                chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f,
+                chipX + (chipWidth - metrics.textWidth(chipText, chipScale)) / 2.0f,
+                chipY + (chipHeight - metrics.textHeight(chipScale)) / 2.0f,
                 chipScale,
                 MD3Theme.ON_PRIMARY
             )
         }
 
         val localDeleteBounds = deleteBounds.relativeTo(rowBounds)
-        scope.roundRect(
+        RoundRect(
             localDeleteBounds.x, localDeleteBounds.y, localDeleteBounds.width, localDeleteBounds.height,
             localDeleteBounds.height / 2.0f,
             MD3Theme.lerp(
@@ -390,10 +355,10 @@ class ConfigClientSettingTab(
         )
         val removeScale = 0.50f
         val removeIcon = "✕"
-        scope.text(
+        Text(
             removeIcon,
-            localDeleteBounds.x + (localDeleteBounds.width - textRenderer.getWidth(removeIcon, removeScale)) / 2.0f,
-            localDeleteBounds.y + (localDeleteBounds.height - textRenderer.getHeight(removeScale)) / 2.0f,
+            localDeleteBounds.x + (localDeleteBounds.width - metrics.textWidth(removeIcon, removeScale)) / 2.0f,
+            localDeleteBounds.y + (localDeleteBounds.height - metrics.textHeight(removeScale)) / 2.0f,
             removeScale,
             MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.ERROR, deleteHover)
         )
@@ -445,7 +410,7 @@ class ConfigClientSettingTab(
     private fun tryReload() {
         try {
             ConfigManager.reloadOrThrow()
-            markDirty()
+
         } catch (exception: Exception) {
             Constants.LOGGER.error("重载配置失败", exception)
             openErrorPopup({ EpsilonTranslations.Gui.CONFIG_ERROR_RELOAD.getTranslatedName() }, exception)
@@ -527,12 +492,12 @@ class ConfigClientSettingTab(
                 popupBounds,
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE.getTranslatedName(),
-                trimToWidth(configName, 0.60f, popupWidth - 24.0f),
+                trimToWidth(configName, 0.60f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName(),
                 {
                     tryDeleteConfig(configName)
-                    markDirty()
+
                 }
             )
         )
@@ -550,7 +515,7 @@ class ConfigClientSettingTab(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
                 supplierOf { EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName() },
                 actionMessageSupplier,
-                trimToWidth(detail, 0.52f, popupWidth - 24.0f),
+                trimToWidth(detail, 0.52f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 supplierOf { EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName() }
             )
         )
@@ -569,7 +534,7 @@ class ConfigClientSettingTab(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
                 EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_TITLE.getTranslatedName(),
                 EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_MESSAGE.getTranslatedName(),
-                trimToWidth(detail, 0.52f, popupWidth - 24.0f),
+                trimToWidth(detail, 0.52f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 EpsilonTranslations.Gui.CONFIG_ERROR_OK.getTranslatedName()
             )
         )
@@ -580,47 +545,6 @@ class ConfigClientSettingTab(
     private fun buildErrorDetail(exception: Exception): String {
         val message = exception.message
         return if (message == null || message.isBlank()) exception.javaClass.simpleName else message
-    }
-
-    private fun shouldRebuild(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, configs: List<String>,
-        activeConfig: String, currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastScroll.compareTo(state.getConfigScroll()) != 0) {
-            return true
-        }
-        if (lastConfigList != configs) {
-            return true
-        }
-        if (lastActiveConfig != activeConfig) {
-            return true
-        }
-        return lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, configs: List<String>,
-        activeConfig: String, currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastScroll = state.getConfigScroll()
-        lastConfigList = ArrayList(configs)
-        lastActiveConfig = activeConfig
-        lastContentSignature = contentSignature
-    }
-
-    private fun buildContentSignature(configs: List<String>, activeConfig: String): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getConfigScroll())
-        signature = signature * 31L + activeConfig.hashCode()
-        for (config in configs) {
-            signature = signature * 31L + config.hashCode()
-        }
-        return signature
     }
 
     private fun getInputSectionBounds(bounds: UiRect): UiRect {
@@ -689,21 +613,21 @@ class ConfigClientSettingTab(
         return animation
     }
 
-    private fun trimToWidth(value: String?, scale: Float, width: Float): String {
+    private fun trimToWidth(value: String?, scale: Float, width: Float, metrics: UiTextMetrics): String {
         if (value == null || value.isEmpty()) {
             return ""
         }
-        if (textRenderer.getWidth(value, scale) <= width) {
+        if (metrics.textWidth(value, scale) <= width) {
             return value
         }
         val ellipsis = "..."
-        val ellipsisWidth = textRenderer.getWidth(ellipsis, scale)
+        val ellipsisWidth = metrics.textWidth(ellipsis, scale)
         if (ellipsisWidth >= width) {
             return ellipsis
         }
         for (length in value.length - 1 downTo 0) {
             val candidate = value.substring(0, length) + ellipsis
-            if (textRenderer.getWidth(candidate, scale) <= width) {
+            if (metrics.textWidth(candidate, scale) <= width) {
                 return candidate
             }
         }
@@ -711,11 +635,13 @@ class ConfigClientSettingTab(
     }
 
     override fun close() {
+        luminView.close()
+
+        measureTextRenderer.close()
         contentBuffer.close()
-        markDirty()
+
     }
 
-    private data class ConfigRowEntry(val name: String, val rowBounds: UiRect, val deleteBounds: UiRect)
 
     private data class ActionButton(val type: ActionButtonType, val label: String, val bounds: UiRect)
 

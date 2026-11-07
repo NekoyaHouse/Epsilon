@@ -10,8 +10,14 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.RoundRectHorizontalGradient
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Texture
+import com.github.epsilon.gui.lib.RoundedTexture
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -69,7 +75,7 @@ class MusicInstance(
         targetWidth = desiredWidth.coerceIn(MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
     }
 
-    override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
+    override fun draw(scope: UiScope, width: Float, height: Float) {
         if (!snapshot.available) return
 
         drawCover(scope)
@@ -97,16 +103,16 @@ class MusicInstance(
         )
     }
 
-    private fun drawCover(scope: UiTree.Scope) {
-        scope.outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(Color(255, 255, 255, 48)))
+    private fun drawCover(scope: UiScope) {
+        scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(Color(255, 255, 255, 48)))
 
         if (coverAvailable) {
-            scope.roundedTexture(
+            scope.RoundedTexture(
                 COVER_TEXTURE, PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS,
-                0f, 0f, 1f, 1f, fade(Color.WHITE), true
+                0f, 0f, 1f, 1f, fade(Color.WHITE), linearFilter = true
             )
         } else {
-            scope.roundRectHorizontalGradient(
+            scope.RoundRectHorizontalGradient(
                 PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS,
                 fade(Color(75, 88, 116)), fade(Color(67, 125, 122))
             )
@@ -114,7 +120,7 @@ class MusicInstance(
             val textRenderer = textRendererSupplier.get()
             val iconWidth = textRenderer.getWidth(IconChars.ALBUM, iconScale, StaticFontLoader.ICONS)
             val iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS)
-            scope.text(
+            scope.Text(
                 IconChars.ALBUM, PADDING + (COVER_SIZE - iconWidth) * 0.5f, PADDING + (COVER_SIZE - iconHeight) * 0.5f,
                 iconScale, fade(IslandPalette.TEXT_PRIMARY), StaticFontLoader.ICONS
             )
@@ -122,7 +128,7 @@ class MusicInstance(
     }
 
     private fun drawMarqueeTitle(
-        scope: UiTree.Scope,
+        scope: UiScope,
         textRenderer: TextRenderer,
         title: String,
         x: Float,
@@ -131,7 +137,7 @@ class MusicInstance(
     ) {
         val textWidth = textRenderer.getWidth(title, TITLE_SCALE)
         if (textWidth <= viewportWidth) {
-            scope.text(title, x, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            scope.Text(title, x, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
             return
         }
 
@@ -139,15 +145,14 @@ class MusicInstance(
         val scrollSeconds = maxOf(0f, elapsedSeconds - MARQUEE_START_HOLD_SECONDS)
         val cycle = textWidth + MARQUEE_GAP
         val offset = -(scrollSeconds * MARQUEE_SPEED % cycle)
-        val clip = UiRect(x, y - 1f, viewportWidth, textRenderer.getHeight(TITLE_SCALE) + 2f)
-        scope.scissor(clip) { inner ->
-            inner.text(title, x + offset, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
-            inner.text(title, x + offset + cycle, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        scope.Clip(x, y - 1f, viewportWidth, textRenderer.getHeight(TITLE_SCALE) + 2f) {
+            Text(title, x + offset, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            Text(title, x + offset + cycle, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
         }
     }
 
     private fun drawIconText(
-        scope: UiTree.Scope,
+        scope: UiScope,
         icon: String,
         text: String,
         x: Float,
@@ -160,15 +165,16 @@ class MusicInstance(
         val iconWidth = textRenderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
         val iconY =
             y + (textRenderer.getHeight(textScale) - textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
-        scope.text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
+        scope.Text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
 
         val textX = x + iconWidth + 3f
         val textViewport = maxOf(1f, viewportWidth - iconWidth - 3f)
-        val clip = UiRect(textX, y - 1f, textViewport, textRenderer.getHeight(textScale) + 2f)
-        scope.scissor(clip) { inner -> inner.text(text, textX, y, textScale, fade(color)) }
+        scope.Clip(textX, y - 1f, textViewport, textRenderer.getHeight(textScale) + 2f) {
+            Text(text, textX, y, textScale, fade(color))
+        }
     }
 
-    private fun drawPlaybackWave(scope: UiTree.Scope, x: Float, y: Float, width: Float, height: Float) {
+    private fun drawPlaybackWave(scope: UiScope, x: Float, y: Float, width: Float, height: Float) {
         val bars = 4
         val barWidth = 2f
         val gap = (width - bars * barWidth) / (bars - 1)
@@ -180,7 +186,7 @@ class MusicInstance(
             val barX = x + index * (barWidth + gap)
             val barY = y + (height - barHeight) * 0.5f
             val color = if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT
-            scope.roundRect(barX, barY, barWidth, barHeight, barWidth * 0.5f, fade(color))
+            scope.RoundRect(barX, barY, barWidth, barHeight, barWidth * 0.5f, fade(color))
         }
     }
 

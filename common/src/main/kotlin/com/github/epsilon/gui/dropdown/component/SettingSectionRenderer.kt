@@ -1,12 +1,20 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.dropdown.widget.*
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Triangle
 import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
@@ -14,17 +22,17 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 
 /**
  * Dropdown 侧 Setting section 树的共用渲染器。
  *
  * 负责把 [SettingLayoutPlanner.Section] 树包装成控件树，并统一处理嵌套分组的
- * 高度、卡片背景、缩进、展开动画、命中与输入分发；`SettingsContent` 与
+ * 高度、卡片背景、缩进、展开动画与作用域内输入订阅；`SettingsContent` 与
  * `ModuleButton` 只提供控件工厂和坐标原点。
  *
- * 绘制坐标使用调用方 scope 的局部坐标，命中测试使用「局部坐标 + hitOffset」得到的绝对坐标，
+ * 绘制坐标使用调用方 scope 的局部坐标，命中测试使用「局部坐标 + scope.origin」得到的绝对坐标，
  * 因此控件缓存的绝对位置可以直接参与命中。
  */
 class SettingSectionRenderer private constructor(nodes: List<Node>) {
@@ -49,75 +57,20 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     fun draw(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
-        x: Float, y: Float, width: Float, hitOffsetX: Float, hitOffsetY: Float,
+        scope: UiScope, mouseX: Int, mouseY: Int,
+        x: Float, y: Float, width: Float,
     ) {
         val sectionX = x + DropdownTheme.SETTING_INDENT
         val sectionWidth = sectionWidth(width)
         var cursor = y
-        for (node in nodes) {
-            drawNode(
-                scope,
-                textMetrics,
-                mouseX,
-                mouseY,
-                node,
-                0,
-                sectionX,
-                cursor,
-                sectionWidth,
-                hitOffsetX,
-                hitOffsetY
-            )
-            cursor += nodeHeight(node)
-        }
-    }
-
-    fun mouseClicked(
-        mouseX: Double, mouseY: Double, button: Int,
-        x: Float, y: Float, width: Float, hitOffsetX: Float, hitOffsetY: Float,
-    ): Boolean {
-        val sectionX = x + DropdownTheme.SETTING_INDENT + hitOffsetX
-        val sectionWidth = sectionWidth(width)
-        var cursor = y + hitOffsetY
-        for (node in nodes) {
-            if (clickNode(node, 0, sectionX, cursor, sectionWidth, mouseX, mouseY, button)) {
-                return true
+        with(scope) {
+            for (node in nodes) {
+                drawNode(mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth)
+                cursor += nodeHeight(node)
             }
-            cursor += nodeHeight(node)
-        }
-        return false
-    }
-
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return anyWidget { widget -> widget.mouseReleased(mouseX, mouseY, button) }
-    }
-
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        return anyWidget { widget -> widget.keyPressed(keyCode, scanCode, modifiers) }
-    }
-
-    fun charTyped(typedText: String): Boolean {
-        return anyWidget { widget -> widget.charTyped(typedText) }
-    }
-
-    fun hasActiveInput(): Boolean {
-        return hasListeningKeybind() || hasFocusedInput()
-    }
-
-    fun hasListeningKeybind(): Boolean {
-        return anyWidget({ widget -> widget is KeybindWidget && widget.isListening() }, false)
-    }
-
-    fun hasFocusedInput(): Boolean {
-        return anyWidget({ widget -> isFocusedInput(widget) }, false)
-    }
-
-    fun blurAllInputs() {
-        for (node in nodes) {
-            forEachWidget(node) { widget -> blurInput(widget) }
         }
     }
+
 
     // --- 高度 ---
 
@@ -125,8 +78,10 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         if (!node.hasHeader()) {
             return elementsHeight(node)
         }
+        val progress = expandProgress(node)
+        if (progress == 0.0f) return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
         val contentHeight = DropdownTheme.GROUP_INSET + elementsHeight(node)
-        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * expandProgress(node)
+        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * progress
     }
 
     private fun elementsHeight(node: Node): Float {
@@ -148,24 +103,26 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
     // --- 绘制 ---
 
-    private fun drawNode(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
+    private fun UiScope.drawNode(
+        mouseX: Int, mouseY: Int,
         node: Node, depth: Int, x: Float, y: Float, width: Float,
-        hitOffsetX: Float, hitOffsetY: Float,
     ) {
         if (!node.hasHeader()) {
-            drawElements(scope, textMetrics, mouseX, mouseY, node, depth, x, y, width, hitOffsetX, hitOffsetY)
+            drawElements(mouseX, mouseY, node, depth, x, y, width)
             return
         }
 
         val cardBounds = card(node, depth, x, width)
         val progress = expandProgress(node)
-        val contentHeight = DropdownTheme.GROUP_INSET + elementsHeight(node)
+        val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET + elementsHeight(node)
+        Interaction(key = node, bounds = UiRect(cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
+            onClick { toggleCollapsed(node); true }
+        }
         val cardHeight = DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
         val radius = DropdownTheme.groupCardRadius(progress)
 
-        scope.roundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
-        scope.outline(
+        RoundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
+        Outline(
             cardBounds.x,
             y,
             cardBounds.width,
@@ -177,13 +134,13 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val hoverAnimation = hoverAnimations.getOrPut(node.key()) { createAnimation(DropdownTheme.ANIM_HOVER, 0.0f) }
         val hovered = isHovered(
-            mouseX.toDouble(), mouseY.toDouble(), cardBounds.x + hitOffsetX, y + hitOffsetY,
+            mouseX.toDouble(), mouseY.toDouble(), origin.x + cardBounds.x, origin.y + y,
             cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT
         )
         hoverAnimation.run(if (hovered) 1.0f else 0.0f)
         val hoverProgress = hoverAnimation.value
         if (hoverProgress > 0.01f) {
-            scope.roundRect(
+            RoundRect(
                 cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT, radius,
                 DropdownTheme.groupHeaderHover(hoverProgress)
             )
@@ -191,32 +148,32 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val label = trimToWidth(
             node.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE,
-            cardBounds.width - 74.0f, textMetrics
+            cardBounds.width - 74.0f, metrics
         )
         val labelY =
-            y + (DropdownTheme.GROUP_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
-        scope.text(
+            y + (DropdownTheme.GROUP_HEADER_HEIGHT - metrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
+        Text(
             label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
             DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
         )
 
         val countLabel = node.totalSettingCount().toString()
-        val countWidth = textMetrics.textWidth(
+        val countWidth = metrics.textWidth(
             countLabel,
             DropdownTheme.GROUP_COUNT_TEXT_SCALE
         ) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f
         val countX = cardBounds.x + cardBounds.width - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f
         val chipHeight = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT
         val countY = y + (DropdownTheme.GROUP_HEADER_HEIGHT - chipHeight) * 0.5f
-        scope.roundRect(countX, countY, countWidth, chipHeight, chipHeight / 2.0f, DropdownTheme.groupCountChip())
-        val countTextY = countY + (chipHeight - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f
-        scope.text(
+        RoundRect(countX, countY, countWidth, chipHeight, chipHeight / 2.0f, DropdownTheme.groupCountChip())
+        val countTextY = countY + (chipHeight - metrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f
+        Text(
             countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY,
             DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText()
         )
 
         val chevronSize = 2.5f
-        scope.triangle(
+        Triangle(
             cardBounds.x + cardBounds.width - DropdownTheme.SETTING_PADDING_X - chevronSize,
             y + DropdownTheme.GROUP_HEADER_HEIGHT * 0.5f, chevronSize, progress,
             DropdownTheme.groupChevron(hoverProgress)
@@ -224,24 +181,23 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         if (progress > 0.001f) {
             val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-            scope.scissorIf(
+            ClipIf(
                 progress < 1.0f, cardBounds.x, contentY, cardBounds.width,
                 contentHeight * progress + DropdownTheme.SETTING_GAP
-            ) { clippedScope ->
+            ) {
                 val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
                 val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
                 drawElements(
-                    clippedScope, textMetrics, mouseX, mouseY, node, depth + 1, innerX,
-                    contentY + DropdownTheme.GROUP_INSET, innerWidth, hitOffsetX, hitOffsetY
+                    mouseX, mouseY, node, depth + 1, innerX,
+                    contentY + DropdownTheme.GROUP_INSET, innerWidth
                 )
             }
         }
     }
 
-    private fun drawElements(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
+    private fun UiScope.drawElements(
+        mouseX: Int, mouseY: Int,
         node: Node, depth: Int, x: Float, y: Float, width: Float,
-        hitOffsetX: Float, hitOffsetY: Float,
     ) {
         var cursor = y
         for (element in node.elements) {
@@ -251,25 +207,35 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     if (!widget.isVisible()) {
                         continue
                     }
-                    // 控件位置必须使用绝对坐标：UiTree.pushAbsolute 不会叠加当前 bound。
-                    val bounds = UiRect(x + hitOffsetX, cursor + hitOffsetY, width, widget.getHeight())
-                    scope.pushAbsolute(bounds) { itemScope ->
-                        if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
-                            itemScope.text(
-                                widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
-                                DropdownTheme.SETTING_PADDING_X,
-                                3.0f,
-                                DropdownTheme.SETTING_TEXT_SCALE,
-                                MD3Theme.TEXT_MUTED
-                            )
-                        } else widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds)
+                    val widgetHeight = widget.getHeight()
+                    val widgetBounds = UiRect(x, cursor, width, widgetHeight)
+                    if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
+                        LuminUIItem(widget) {
+                            Positioned(widgetBounds.x, widgetBounds.y, widgetBounds.width, widgetBounds.height) {
+                                Interaction(key = widget to "unsupported") {
+                                    onClick { PlatformNoticeScreen.show(widget.setting); true }
+                                }
+                                Text(
+                                    widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
+                                    DropdownTheme.SETTING_PADDING_X,
+                                    3.0f,
+                                    DropdownTheme.SETTING_TEXT_SCALE,
+                                    MD3Theme.TEXT_MUTED
+                                )
+                            }
+                        }
+                    } else {
+                        // 逐项缓存：设置值、悬停状态或控件动画变化时才重新绘制该控件。
+                        LuminUIItem(widget) {
+                            widget.drawInScope(this, mouseX, mouseY, widgetBounds)
+                        }
                     }
-                    cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
+                    cursor += widgetHeight + DropdownTheme.SETTING_GAP
                 }
 
                 is ChildElement -> {
                     val child = element.node
-                    drawNode(scope, textMetrics, mouseX, mouseY, child, depth, x, cursor, width, hitOffsetX, hitOffsetY)
+                    drawNode(mouseX, mouseY, child, depth, x, cursor, width)
                     cursor += nodeHeight(child)
                 }
             }
@@ -278,136 +244,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
     // --- 命中 ---
 
-    private fun clickNode(
-        node: Node, depth: Int, x: Float, y: Float, width: Float,
-        mouseX: Double, mouseY: Double, button: Int,
-    ): Boolean {
-        if (!node.hasHeader()) {
-            return clickElements(node, depth, x, y, width, mouseX, mouseY, button)
-        }
-
-        val cardBounds = card(node, depth, x, width)
-        if (isHovered(mouseX, mouseY, cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
-            toggleCollapsed(node)
-            return true
-        }
-        if (expandProgress(node) < 0.999f) {
-            return false
-        }
-
-        val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-        val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
-        val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)
-        return clickElements(
-            node,
-            depth + 1,
-            innerX,
-            contentY + DropdownTheme.GROUP_INSET,
-            innerWidth,
-            mouseX,
-            mouseY,
-            button
-        )
-    }
-
-    private fun clickElements(
-        node: Node, depth: Int, x: Float, y: Float, width: Float,
-        mouseX: Double, mouseY: Double, button: Int,
-    ): Boolean {
-        var cursor = y
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> {
-                    val widget = element.widget
-                    if (!widget.isVisible()) {
-                        continue
-                    }
-                    if (!widget.setting.isViaSupported()) {
-                        if (isHovered(mouseX, mouseY, x, cursor, width, widget.getHeight())) {
-                            PlatformNoticeScreen.show(widget.setting)
-                            return true
-                        }
-                        cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
-                        continue
-                    }
-                    if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        return true
-                    }
-                    cursor += widget.getHeight() + DropdownTheme.SETTING_GAP
-                }
-
-                is ChildElement -> {
-                    val child = element.node
-                    if (clickNode(child, depth, x, cursor, width, mouseX, mouseY, button)) {
-                        return true
-                    }
-                    cursor += nodeHeight(child)
-                }
-            }
-        }
-        return false
-    }
 
     private fun toggleCollapsed(node: Node) {
         node.toggleCollapsed()
-        if (node.isCollapsed()) {
-            forEachWidget(node) { widget -> blurInput(widget) }
-        }
         SoundManager.playInUi(if (node.isCollapsed()) SoundKey.SETTINGS_CLOSE else SoundKey.SETTINGS_OPEN)
         DropdownScreen.react(
             if (node.isCollapsed()) ReisaDropdownCompanion.Action.PANEL_CLOSE else ReisaDropdownCompanion.Action.PANEL_OPEN
         )
     }
 
-    // --- 控件分发 ---
-
-    private fun anyWidget(action: (SettingWidget<*>) -> Boolean): Boolean {
-        return anyWidget(action, true)
-    }
-
-    /**
-     * @param skipCollapsed 是否跳过折叠分组内的控件；焦点检查需要覆盖所有分组
-     */
-    private fun anyWidget(action: (SettingWidget<*>) -> Boolean, skipCollapsed: Boolean): Boolean {
-        for (node in nodes) {
-            if (visitWidget(node, action, skipCollapsed)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun visitWidget(node: Node, action: (SettingWidget<*>) -> Boolean, skipCollapsed: Boolean): Boolean {
-        if (skipCollapsed && node.hasHeader() && node.isCollapsed()) {
-            return false
-        }
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> {
-                    val widget = element.widget
-                    if (widget.isVisible() && widget.setting.isViaSupported() && action(widget)) {
-                        return true
-                    }
-                }
-
-                is ChildElement -> {
-                    if (visitWidget(element.node, action, skipCollapsed)) {
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
-    private fun forEachWidget(node: Node, action: (SettingWidget<*>) -> Unit) {
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> action(element.widget)
-                is ChildElement -> forEachWidget(element.node, action)
-            }
-        }
-    }
 
     // --- 布局工具 ---
 
@@ -432,7 +277,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     private fun isHovered(mouseX: Double, mouseY: Double, x: Float, y: Float, width: Float, height: Float): Boolean {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height
+        return UiRect(x, y, width, height).contains(mouseX, mouseY)
     }
 
     private fun trimToWidth(value: String?, scale: Float, maxWidth: Float, textMetrics: UiTextMetrics): String {
@@ -549,24 +394,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             return animation
         }
 
-        private fun isFocusedInput(widget: SettingWidget<*>): Boolean {
-            if (widget is StringWidget && widget.isFocused()) return true
-            if (widget is IntSliderWidget && widget.isFocused()) return true
-            if (widget is DoubleSliderWidget && widget.isFocused()) return true
-            return widget is ColorWidget && widget.hasFocusedInput()
-        }
 
-        private fun blurInput(widget: SettingWidget<*>) {
-            if (widget is StringWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is IntSliderWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is DoubleSliderWidget && widget.isFocused()) {
-                widget.blurInput()
-            } else if (widget is ColorWidget && widget.hasFocusedInput()) {
-                widget.blurAllInputs()
-            }
-        }
     }
 
 }

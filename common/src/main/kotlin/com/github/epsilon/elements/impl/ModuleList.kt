@@ -1,10 +1,16 @@
 package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
+import com.github.epsilon.gui.lib.SegmentedShadow
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.BlurredText
+import com.github.epsilon.gui.lib.GradientText
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RectVerticalGradient
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
@@ -148,7 +154,19 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun render(deltaTracker: DeltaTracker) {
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var frameSimple = false
+    private var frameEntries: List<RenderEntry> = emptyList()
+    private var frameLayout: LayoutState = LayoutState(FloatArray(0), 0.0f)
+    private var frameBoundsWidth = 0.0f
+    private var frameTextScale = 0.1f
+    private var frameRightSide = false
+    private var frameRows: List<NormalRow> = emptyList()
+    private var frameSegmentBatches: List<SegmentBatch> = emptyList()
+    private var frameTextHeight = 0.0f
+    private var frameHorizontalPadding = 0.0f
+
+    override fun measure(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()
 
         val modules: List<Module> = ModuleManager.getModules()
@@ -174,40 +192,30 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             }
         }
 
-        if (mode == DisplayMode.Simple) {
-            renderSimple(textRenderer)
+        frameSimple = mode == DisplayMode.Simple
+        if (frameSimple) {
+            measureSimple(textRenderer)
         } else {
-            renderNormal(textRenderer)
+            measureNormal(textRenderer)
         }
     }
 
-    private fun renderSimple(textRenderer: TextRenderer) {
+    private fun measureSimple(textRenderer: TextRenderer) {
         val textScale = maxOf(0.1f, fontSize.toFloat() / 16.0f)
         val entries = collectRenderEntries(textRenderer, textScale, showSuffix)
         val layout = updateLayout(entries, textRenderer.getHeight(textScale) + lineSpacing.toFloat())
 
         val boundsWidth = maxOf(MIN_BOUNDS, maxDisplayWidth(entries))
         setBounds(boundsWidth, maxOf(MIN_BOUNDS, layout.height))
-        if (entries.isEmpty()) return
 
-        val scope = renderScope()
-        val rightSide = x + width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f
-
-        for (i in entries.indices) {
-            val entry = entries[i]
-            val animation = entry.animation
-            if (animation <= 0.01f) continue
-
-            val slideOffset = entry.displayWidth * (1.0f - animation)
-            val textX = if (rightSide) x + boundsWidth - entry.displayWidth + slideOffset else x - slideOffset
-            val textY = y + layout.renderY[i]
-            val color = withAlpha(resolveColor(i, 100L), animation)
-
-            drawModuleText(scope, entry, textX, textY, textScale, color, animation)
-        }
+        frameEntries = entries
+        frameLayout = layout
+        frameBoundsWidth = boundsWidth
+        frameTextScale = textScale
+        frameRightSide = x + width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f
     }
 
-    private fun renderNormal(textRenderer: TextRenderer) {
+    private fun measureNormal(textRenderer: TextRenderer) {
         val textScale = maxOf(0.1f, fontSize.toFloat() / 16.0f)
         val textHeight = textRenderer.getHeight(textScale)
         val horizontalPadding = this.horizontalPadding.toFloat()
@@ -218,10 +226,10 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         val maxTextWidth = maxDisplayWidth(entries)
         val boundsWidth = maxOf(MIN_BOUNDS, maxTextWidth + horizontalPadding * 2.0f)
         setBounds(boundsWidth, maxOf(MIN_BOUNDS, layout.height))
-        if (entries.isEmpty()) return
 
         val rightSide = x + width * 0.5f > LuminRenderSystem.getScaledWidth() * 0.5f
-        val baseTextX = x + horizontalPadding
+        // 作用域原点就是元素左上角，所以这里的行坐标全部是相对坐标
+        val baseTextX = horizontalPadding
         val gradientStep = doubleGradientLength.toLong()
         val rows: MutableList<NormalRow> = ArrayList()
         var colorIndex = 0
@@ -236,7 +244,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             val textX =
                 if (rightSide) baseTextX + maxTextWidth - entry.displayWidth + slideOffset else baseTextX - slideOffset
             val backgroundX = textX - horizontalPadding
-            val backgroundY = y + layout.renderY[i]
+            val backgroundY = layout.renderY[i]
             val backgroundHeight = lineHeight * animation
             val startColor = if (rows.isEmpty()) resolveColor(colorIndex, gradientStep) else rows.last().endColor
             val endColor = resolveColor(++colorIndex, gradientStep)
@@ -248,16 +256,57 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             )
         }
 
-        val segmentBatches = buildSegmentBatches(rows)
-        if (blur) renderBlur(segmentBatches)
+        frameEntries = entries
+        frameLayout = layout
+        frameBoundsWidth = boundsWidth
+        frameTextScale = textScale
+        frameRightSide = rightSide
+        frameRows = rows
+        frameSegmentBatches = buildSegmentBatches(rows)
+        frameTextHeight = textHeight
+        frameHorizontalPadding = horizontalPadding
+    }
 
-        val scope = renderScope()
-        if (drawShadow) renderShadow(scope, segmentBatches)
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (frameSimple) {
+            drawSimple()
+        } else {
+            drawNormal()
+        }
+    }
+
+    private fun UiScope.drawSimple() {
+        val entries = frameEntries
+        if (entries.isEmpty()) return
+
+        for (i in entries.indices) {
+            val entry = entries[i]
+            val animation = entry.animation
+            if (animation <= 0.01f) continue
+
+            val slideOffset = entry.displayWidth * (1.0f - animation)
+            val textX = if (frameRightSide) frameBoundsWidth - entry.displayWidth + slideOffset else -slideOffset
+            val textY = frameLayout.renderY[i]
+            val color = withAlpha(resolveColor(i, 100L), animation)
+
+            drawModuleText(entry, textX, textY, frameTextScale, color, animation)
+        }
+    }
+
+    private fun UiScope.drawNormal() {
+        val rows = frameRows
+        if (rows.isEmpty()) return
+        val textHeight = frameTextHeight
+        val textScale = frameTextScale
+
+        val segmentBatches = frameSegmentBatches
+        if (blur) renderBlur(segmentBatches)
+        if (drawShadow) renderShadow(segmentBatches)
 
         for (row in rows) {
             val animation = row.entry.animation
             if (background) {
-                scope.rect(
+                Rect(
                     row.backgroundX, row.backgroundY, row.backgroundWidth, row.backgroundHeight,
                     withAlpha(backgroundColor, animation)
                 )
@@ -265,21 +314,21 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 
             val textY = row.backgroundY + (row.backgroundHeight - textHeight) * 0.5f
             drawModuleText(
-                scope, row.entry, row.textX, textY, textScale,
+                row.entry, row.textX, textY, textScale,
                 withAlpha(row.startColor, animation), withAlpha(row.endColor, animation), animation
             )
         }
 
-        val lineWidth = this.lineWidth.toFloat() * textScale
+        val lineWidth = this@ModuleList.lineWidth.toFloat() * textScale
         for (i in rows.indices) {
             val row = rows[i]
-            val lineX = if (rightSide) row.backgroundX + row.backgroundWidth else row.backgroundX - lineWidth
+            val lineX = if (frameRightSide) row.backgroundX + row.backgroundWidth else row.backgroundX - lineWidth
             var lineBottom = row.backgroundY + row.backgroundHeight
             if (i + 1 < rows.size) {
                 lineBottom = maxOf(lineBottom, rows[i + 1].backgroundY)
             }
             val bottomAnimation = if (i + 1 < rows.size) rows[i + 1].entry.animation else row.entry.animation
-            scope.rectVerticalGradient(
+            RectVerticalGradient(
                 lineX, row.backgroundY, lineWidth, maxOf(0.0f, lineBottom - row.backgroundY),
                 withAlpha(row.startColor, row.entry.animation), withAlpha(row.endColor, bottomAnimation)
             )
@@ -329,16 +378,26 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         return batches
     }
 
-    private fun renderBlur(batches: List<SegmentBatch>) {
+    private fun UiScope.renderBlur(batches: List<SegmentBatch>) {
         for (batch in batches) {
+            // 背景模糊直接绘制到屏幕：分段矩形是相对坐标，这里临时换算成绝对坐标
+            val absoluteRects = FloatArray(batch.rects.size)
+            var i = 0
+            while (i + 3 < absoluteRects.size) {
+                absoluteRects[i] = batch.rects[i] + origin.x
+                absoluteRects[i + 1] = batch.rects[i + 1] + origin.y
+                absoluteRects[i + 2] = batch.rects[i + 2]
+                absoluteRects[i + 3] = batch.rects[i + 3]
+                i += 4
+            }
             BlurShader.render(
-                batch.x, batch.y, batch.width, batch.height, 0.0f, blurStrength.toFloat(),
-                batch.rects, batch.radii, batch.count
+                batch.x + origin.x, batch.y + origin.y, batch.width, batch.height, 0.0f, blurStrength.toFloat(),
+                absoluteRects, batch.radii, batch.count
             )
         }
     }
 
-    private fun renderShadow(scope: UiTree.Scope, batches: List<SegmentBatch>) {
+    private fun UiScope.renderShadow(batches: List<SegmentBatch>) {
         val blurRadius = shadowBlur.toFloat()
         var color = shadowColor
         if (shadowColorMode == ColorMode.Rainbow) {
@@ -353,7 +412,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
                 segmentColors[offset + 1] = segmentColor.green / 255.0f
                 segmentColors[offset + 2] = segmentColor.blue / 255.0f
             }
-            scope.shadow(
+            SegmentedShadow(
                 batch.x, batch.y, batch.width, batch.height, 0.0f, blurRadius, color,
                 batch.rects, batch.radii, segmentColors, batch.count
             )
@@ -417,8 +476,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         return module.isEnabled && !module.isHidden && module.name.isNotEmpty()
     }
 
-    private fun drawModuleText(
-        scope: UiTree.Scope,
+    private fun UiScope.drawModuleText(
         entry: RenderEntry,
         x: Float,
         y: Float,
@@ -426,11 +484,10 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         nameColor: Color,
         animation: Float,
     ) {
-        drawModuleText(scope, entry, x, y, textScale, nameColor, nameColor, animation)
+        drawModuleText(entry, x, y, textScale, nameColor, nameColor, animation)
     }
 
-    private fun drawModuleText(
-        scope: UiTree.Scope,
+    private fun UiScope.drawModuleText(
         entry: RenderEntry,
         x: Float,
         y: Float,
@@ -439,28 +496,29 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
         nameEndColor: Color,
         animation: Float,
     ) {
-        val glowRadius = this.glowRadius.toFloat()
-        val glowIntensity = this.glowIntensity
+        val glowRadius = this@ModuleList.glowRadius.toFloat()
+        val glowIntensity = this@ModuleList.glowIntensity
         val glowColor = ColorUtils.interpolateColor(nameStartColor, nameEndColor, 0.5f)
         val shadowOffset = textShadowDepth.toFloat() * maxOf(1.0f, textScale)
         if (textShadow) {
-            scope.text(entry.name, x + shadowOffset, y + shadowOffset, textScale, darken(glowColor, 0.5f))
+            Text(entry.name, x + shadowOffset, y + shadowOffset, textScale, darken(glowColor, 0.5f))
         }
         if (textGlow) {
-            scope.blurredText(entry.name, x, y, textScale, glowRadius * textScale, glowIntensity, glowColor)
+            // 注意 UiScope.BlurredText 的参数顺序是 (text, x, y, scale, color, blurRadius, intensity)
+            BlurredText(entry.name, x, y, textScale, glowColor, glowRadius * textScale, glowIntensity)
         }
-        scope.gradientText(entry.name, x, y, textScale, nameStartColor, nameEndColor)
+        GradientText(entry.name, x, y, textScale, nameStartColor, nameEndColor)
         if (entry.info.isNotEmpty()) {
             val text = " " + entry.info
             val textX = x + entry.nameWidth
             val color = withAlpha(Color(170, 170, 170), animation)
             if (textShadow) {
-                scope.text(text, textX + shadowOffset, y + shadowOffset, textScale, darken(color, 0.5f))
+                Text(text, textX + shadowOffset, y + shadowOffset, textScale, darken(color, 0.5f))
             }
             if (textGlow) {
-                scope.blurredText(text, textX, y, textScale, glowRadius * textScale, glowIntensity, color)
+                BlurredText(text, textX, y, textScale, color, glowRadius * textScale, glowIntensity)
             }
-            scope.text(text, textX, y, textScale, color)
+            Text(text, textX, y, textScale, color)
         }
     }
 

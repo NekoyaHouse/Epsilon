@@ -1,27 +1,32 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Segmented
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
-import com.github.epsilon.gui.panel.component.PanelElements
-import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow
+import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -34,20 +39,15 @@ import kotlin.math.abs
 
 class ModuleDetailPanel(
     protected val state: PanelState,
-    private val textRenderer: TextRenderer,
     popupHost: PanelPopupHost,
 ) : AutoCloseable {
 
     private val settingListController = SettingListController(popupHost)
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
     private var headerBounds: UiRect? = null
     private val hoverAnimations = HashMap<Setting<*>, Animation>()
-    private var lastDetailScroll = Float.NaN
-    private var lastModuleKey = ""
-    private var lastVisibleSettings: List<String> = emptyList()
     private val scrollBarDrag = ScrollBarDragState()
     private var scrollVelocity = 0.0f
     private val bindModeAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
@@ -56,7 +56,6 @@ class ModuleDetailPanel(
     private val keybindFocusAnimation = Animation(Easing.EASE_OUT_CUBIC, 150L)
     private val hiddenAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
     private val hiddenHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
-    private var lastContentSignature = Long.MIN_VALUE
 
     init {
         this.bindModeAnimation.startValue = 0.0f
@@ -67,7 +66,16 @@ class ModuleDetailPanel(
         this.hiddenHoverAnimation.startValue = 0.0f
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -80,7 +88,7 @@ class ModuleDetailPanel(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val popupConsumesHover = settingListController.isPopupHovered(mouseX, mouseY)
@@ -89,15 +97,15 @@ class ModuleDetailPanel(
 
         val module = state.getSelectedModule()
         val detailTitle = module?.translatedName ?: EpsilonTranslations.Gui.NO_MODULE.getTranslatedName()
-        val titleScale = 0.78f
-        val titleHeight = textRenderer.getHeight(titleScale)
-        val titleY = 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f
-        val headerTree = UiTree.build { scope ->
-            scope.pushAbsolute(bounds) { panel ->
-                panel.text(detailTitle, MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY)
-            }
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
+            InputRegion(key = this@ModuleDetailPanel to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onCancel = { scrollBarDrag.reset() })
+
+            val titleScale = 0.78f
+            val titleHeight = metrics.textHeight(titleScale)
+            val titleY = 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f
+            Text(detailTitle, MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY)
         }
-        renderBatch.render(headerTree)
 
         if (module == null) {
             return
@@ -108,18 +116,18 @@ class ModuleDetailPanel(
             bounds.width - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, 36.0f
         )
         val header = headerBounds!!
-        val controlTree = UiTree.build { scope ->
-            scope.pushAbsolute(header) { headerScope ->
-                headerScope.roundRect(
+        renderBatch.LuminUIScene(bounds, key = this to "pass-2") {
+            val localHeader = header.relativeTo(bounds)
+            Positioned(localHeader.x, localHeader.y, localHeader.width, localHeader.height) {
+                RoundRect(
                     0.0f, 0.0f, header.width, header.height, MD3Theme.CARD_RADIUS.toFloat(),
                     MD3Theme.SURFACE_CONTAINER
                 )
             }
-            buildKeybindControl(scope, module, mouseX, mouseY)
-            buildBindModeControl(scope, module, mouseX, mouseY)
-            buildHiddenControl(scope, module, mouseX, mouseY)
+            buildKeybindControl(module, mouseX, mouseY)
+            buildBindModeControl(module, mouseX, mouseY)
+            buildHiddenControl(module, mouseX, mouseY)
         }
-        renderBatch.render(controlTree)
 
         val viewport = getViewport()
         val settings = module.settings.filter { setting -> setting.isVisible }
@@ -129,52 +137,36 @@ class ModuleDetailPanel(
         val maxDetailScroll = maxOf(0.0f, contentHeight - viewport.height)
         val hasScrollBar = maxDetailScroll > 0
         val rowWidth = if (hasScrollBar) viewport.width - ScrollBarUtils.TOTAL_WIDTH else viewport.width
-        val contentSignature = buildContentSignature(module, settings, settingOwnerKey)
-        val rebuildContent = shouldRebuildContent(
-            bounds, mouseX, mouseY, module, settings, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
-        }
+        contentBuffer.clear()
 
-        val contentTree = UiTree.build { scope ->
-            scope.viewport(
-                contentBuffer, viewport, state.getDetailScroll(), maxDetailScroll, contentHeight,
+        renderBatch.LuminUIScene(bounds, key = this to "pass-3") {
+            val localViewport = viewport.relativeTo(bounds)
+            Viewport(
+                contentBuffer, localViewport, state.getDetailScroll(), maxDetailScroll, contentHeight,
                 effectiveMouseX, effectiveMouseY
-            ) { content ->
-                if (!rebuildContent) {
-                    return@viewport
-                }
+            ) {
                 settingListController.layoutRows(
                     settingOwnerKey, settings, viewport, state.getDetailScroll(), rowWidth,
-                    content, textRenderer, effectiveMouseX, effectiveMouseY
+                    this, effectiveMouseX, effectiveMouseY
                 ) { setting, row, rowBounds ->
-                    if (row is KeybindSettingRow) {
-                        row.setListening(state.getListeningKeybindSetting() === row.getSetting())
-                    }
-                    val hoverAnimation =
-                        hoverAnimations.getOrPut(setting) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
-                    hoverAnimation.run(
-                        if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
-                    )
-                    content.pushAbsolute(rowBounds) { rowScope ->
-                        row.buildUi(
-                            rowScope, guiGraphics, textRenderer, rowBounds,
-                            hoverAnimation.value, effectiveMouseX, effectiveMouseY, partialTick
+                    LuminUIItem(setting) {
+                        val hoverAnimation =
+                            hoverAnimations.getOrPut(setting) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
+                        hoverAnimation.run(
+                            if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
                         )
+
+                        // 逐行缓存：只有值或动画变化的行才重新捕获节点，其余行直接重放。
+
+                        SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
                     }
-                    contentState.noteAnimation(!hoverAnimation.isFinished || row.hasActiveAnimation())
+
                 }
-                contentState.noteAnimation(settingListController.hasActiveAnimations())
+
             }
         }
-        renderBatch.render(contentTree)
 
-        if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, module, settings, guiGraphics.guiHeight(), contentSignature)
-        }
     }
 
     fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -185,28 +177,7 @@ class ModuleDetailPanel(
             return false
         }
 
-        if (state.getListeningKeyBindModule() === module) {
-            val keybindBounds = getKeybindBounds()
-            if (keybindBounds.contains(event.x(), event.y())) {
-                module.keyBind = KeybindUtils.encodeMouseButton(event.button())
-                state.setListeningKeyBindModule(null)
-                markDirty()
-                return true
-            }
-        }
-
-        val listeningKeybindSetting = state.getListeningKeybindSetting()
-        if (listeningKeybindSetting != null) {
-            listeningKeybindSetting.value = KeybindUtils.encodeMouseButton(event.button())
-            state.setListeningKeybindSetting(null)
-            markDirty()
-            return true
-        }
-
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false
         // Scrollbar drag
         val viewport = getViewport()
         val maxScroll = state.getMaxDetailScroll()
@@ -215,62 +186,16 @@ class ModuleDetailPanel(
             if (newScroll >= 0) {
                 state.setDetailScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
 
-        val keybindBounds = getKeybindBounds()
-        if (keybindBounds.contains(event.x(), event.y())) {
-            state.setListeningKeyBindModule(module)
-            markDirty()
-            return true
-        } else if (state.getListeningKeyBindModule() === module) {
-            state.setListeningKeyBindModule(null)
-            markDirty()
-        }
-
-        val bindModeBounds = getBindModeBounds()
-        if (bindModeBounds.contains(event.x(), event.y())) {
-            val midpoint = bindModeBounds.centerX()
-            module.bindMode = if (event.x() < midpoint) Module.BindMode.Toggle else Module.BindMode.Hold
-            markDirty()
-            return true
-        }
-
-        val hiddenBounds = getHiddenBounds()
-        if (hiddenBounds.contains(event.x(), event.y())) {
-            val midpoint = hiddenBounds.centerX()
-            module.isHidden = event.x() >= midpoint
-            markDirty()
-            return true
-        }
-
-        val intercepted = settingListController.mouseClicked(
-            event,
-            isDoubleClick,
-            currentBounds
-        ) { row, rowBounds, clickEvent, doubleClick ->
-            if (row is KeybindSettingRow && row.mouseClicked(rowBounds, clickEvent, doubleClick)) {
-                state.setListeningKeybindSetting(row.getSetting())
-                true
-            } else {
-                false
-            }
-        }
-        if (intercepted) {
-            markDirty()
-            return true
-        }
         return false
     }
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
-            return true
-        }
-        if (settingListController.mouseReleased(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -283,11 +208,7 @@ class ModuleDetailPanel(
             if (newScroll >= 0) {
                 state.setDetailScroll(newScroll)
             }
-            markDirty()
-            return true
-        }
-        if (settingListController.mouseDragged(event, mouseX, mouseY)) {
-            markDirty()
+
             return true
         }
         return false
@@ -297,61 +218,35 @@ class ModuleDetailPanel(
         val viewport = getViewport()
         if (bounds != null && viewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24f
-            markDirty()
+
             return true
         }
         return false
     }
 
     fun keyPressed(event: KeyEvent): Boolean {
-        val listeningSetting = state.getListeningKeybindSetting()
-        if (listeningSetting != null) {
-            if (event.key() == InputConstants.KEY_ESCAPE) {
-                state.setListeningKeybindSetting(null)
-                markDirty()
-                return true
-            }
-            if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
-                listeningSetting.value = -1
-                state.setListeningKeybindSetting(null)
-                markDirty()
-                return true
-            }
-            listeningSetting.value = event.key()
-            state.setListeningKeybindSetting(null)
-            markDirty()
-            return true
-        }
         val module = state.getSelectedModule()
         if (module != null && state.getListeningKeyBindModule() === module) {
             if (event.key() == InputConstants.KEY_ESCAPE) {
                 state.setListeningKeyBindModule(null)
-                markDirty()
+
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
                 module.keyBind = -1
                 state.setListeningKeyBindModule(null)
-                markDirty()
+
                 return true
             }
             module.keyBind = event.key()
             state.setListeningKeyBindModule(null)
-            markDirty()
-            return true
-        }
-        if (settingListController.keyPressed(event)) {
-            markDirty()
+
             return true
         }
         return false
     }
 
     fun charTyped(event: CharacterEvent): Boolean {
-        if (settingListController.charTyped(event)) {
-            markDirty()
-            return true
-        }
         return false
     }
 
@@ -445,30 +340,48 @@ class ModuleDetailPanel(
         return headerBounds!!.y + (headerBounds!!.height - getHeaderControlHeight()) / 2.0f
     }
 
-    private fun buildBindModeControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildBindModeControl(module: Module, mouseX: Int, mouseY: Int) {
         val bindModeBounds = getBindModeBounds()
-        val bindProgress = scope.animate(bindModeAnimation, module.bindMode == Module.BindMode.Hold)
+        Interaction(module to "buildBindModeControl", bindModeBounds.relativeTo(origin)) { onClick { module.bindMode = if (it.x < bindModeBounds.centerX()) Module.BindMode.Toggle else Module.BindMode.Hold; true } }
+        val localBounds = bindModeBounds.relativeTo(origin)
+        val bindProgress = animate(bindModeAnimation, module.bindMode == Module.BindMode.Hold)
         val hoverProgress =
-            scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        PanelElements.buildSegmentedControl(
-            scope, textRenderer, bindModeBounds,
-            EpsilonTranslations.Keybind.TOGGLE.getTranslatedName(),
-            EpsilonTranslations.Keybind.HOLD.getTranslatedName(),
-            bindProgress, hoverProgress
-        )
+            animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
+            Segmented(
+                UiRect(0.0f, 0.0f, localBounds.width, localBounds.height),
+                EpsilonTranslations.Keybind.TOGGLE.getTranslatedName(),
+                EpsilonTranslations.Keybind.HOLD.getTranslatedName(),
+                bindProgress, hoverProgress
+            )
+        }
     }
 
-    private fun buildKeybindControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildKeybindControl(module: Module, mouseX: Int, mouseY: Int) {
         val keybindBounds = getKeybindBounds()
+        InputRegion(module to "bind", keybindBounds.relativeTo(origin),
+            onPreviewPress = { event, _ ->
+                if (state.getListeningKeyBindModule() === module) {
+                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(null); true
+                } else false
+            },
+            onPress = { event, _ ->
+                if (state.getListeningKeyBindModule() === module) {
+                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(null); true
+                } else if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+                    state.setListeningKeyBindModule(module); true
+                } else false
+            }, onKey = ::keyPressed, onBlur = { state.setListeningKeyBindModule(null) })
+        val localBounds = keybindBounds.relativeTo(origin)
         val listening = state.getListeningKeyBindModule() === module
         val hoverProgress =
-            scope.animate(keybindHoverAnimation, keybindBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        val focusProgress = scope.animate(keybindFocusAnimation, listening)
+            animate(keybindHoverAnimation, keybindBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val focusProgress = animate(keybindFocusAnimation, listening)
         val radius = getKeybindControlRadius()
-        scope.pushAbsolute(keybindBounds) { keybind ->
+        Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
             val haloInset = 1.5f * focusProgress
             if (haloInset > 0.01f) {
-                keybind.roundRect(
+                RoundRect(
                     -haloInset,
                     -haloInset,
                     keybindBounds.width + haloInset * 2.0f,
@@ -482,9 +395,9 @@ class ModuleDetailPanel(
                 MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, focusProgress)
             val foreground: Color =
                 MD3Theme.lerp(MD3Theme.ON_SECONDARY_CONTAINER, MD3Theme.ON_PRIMARY_CONTAINER, focusProgress)
-            keybind.roundRect(0.0f, 0.0f, keybindBounds.width, keybindBounds.height, radius, background)
+            RoundRect(0.0f, 0.0f, keybindBounds.width, keybindBounds.height, radius, background)
             if (hoverProgress > 0.01f) {
-                keybind.roundRect(
+                RoundRect(
                     0.0f, 0.0f, keybindBounds.width, keybindBounds.height, radius,
                     MD3Theme.stateLayer(foreground, hoverProgress, if (listening) 18 else 12)
                 )
@@ -492,25 +405,29 @@ class ModuleDetailPanel(
 
             val label = if (listening) "..." else formatCompactKeybind(module.keyBind)
             val scale = if (label.length >= 3) 0.42f else 0.5f
-            val textWidth = textRenderer.getWidth(label, scale)
-            val textHeight = textRenderer.getHeight(scale)
+            val textWidth = metrics.textWidth(label, scale)
+            val textHeight = metrics.textHeight(scale)
             val textX = (keybindBounds.width - textWidth) / 2.0f
             val textY = (keybindBounds.height - textHeight) / 2.0f
-            keybind.text(label, textX, textY, scale, foreground)
+            Text(label, textX, textY, scale, foreground)
         }
     }
 
-    private fun buildHiddenControl(scope: UiTree.Scope, module: Module, mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildHiddenControl(module: Module, mouseX: Int, mouseY: Int) {
         val hiddenBounds = getHiddenBounds()
-        val hiddenProgress = scope.animate(hiddenAnimation, module.isHidden)
+        Interaction(module to "buildHiddenControl", hiddenBounds.relativeTo(origin)) { onClick { module.isHidden = it.x >= hiddenBounds.centerX(); true } }
+        val localBounds = hiddenBounds.relativeTo(origin)
+        val hiddenProgress = animate(hiddenAnimation, module.isHidden)
         val hoverProgress =
-            scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        PanelElements.buildSegmentedControl(
-            scope, textRenderer, hiddenBounds,
-            EpsilonTranslations.Module.VISIBLE.getTranslatedName(),
-            EpsilonTranslations.Module.HIDDEN.getTranslatedName(),
-            hiddenProgress, hoverProgress
-        )
+            animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+        Positioned(localBounds.x, localBounds.y, localBounds.width, localBounds.height) {
+            Segmented(
+                UiRect(0.0f, 0.0f, localBounds.width, localBounds.height),
+                EpsilonTranslations.Module.VISIBLE.getTranslatedName(),
+                EpsilonTranslations.Module.HIDDEN.getTranslatedName(),
+                hiddenProgress, hoverProgress
+            )
+        }
     }
 
     private fun formatCompactKeybind(keyCode: Int): String {
@@ -555,21 +472,6 @@ class ModuleDetailPanel(
         contentBuffer.flush()
     }
 
-    fun markDirty() {
-        contentState.markDirty()
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return contentState.hasActiveAnimations() ||
-                settingListController.hasActiveAnimations() ||
-                !keybindHoverAnimation.isFinished ||
-                !keybindFocusAnimation.isFinished ||
-                !bindModeAnimation.isFinished ||
-                !bindModeHoverAnimation.isFinished ||
-                !hiddenAnimation.isFinished ||
-                !hiddenHoverAnimation.isFinished
-    }
-
     fun resetTransientState() {
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
@@ -577,71 +479,19 @@ class ModuleDetailPanel(
         if (state.getListeningKeyBindModule() != null) {
             state.setListeningKeyBindModule(null)
         }
-        if (state.getListeningKeybindSetting() != null) {
-            state.setListeningKeybindSetting(null)
-        }
-        markDirty()
-    }
 
-    private fun shouldRebuildContent(
-        bounds: UiRect, mouseX: Int, mouseY: Int, module: Module,
-        settings: List<Setting<*>>, currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastDetailScroll.compareTo(state.getDetailScroll()) != 0) {
-            return true
-        }
-        if (lastModuleKey !=
-            module.name + ":" + module.bindMode + ":" + module.keyBind + ":" + module.isHidden
-        ) {
-            return true
-        }
-        val visibleSettings = settings.map { setting -> setting.name }
-        return lastVisibleSettings != visibleSettings || lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        bounds: UiRect, mouseX: Int, mouseY: Int, module: Module,
-        settings: List<Setting<*>>, currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastDetailScroll = state.getDetailScroll()
-        lastModuleKey =
-            module.name + ":" + module.bindMode + ":" + module.keyBind + ":" + module.isHidden
-        lastVisibleSettings = settings.map { setting -> setting.name }
-        lastContentSignature = contentSignature
     }
 
     private fun getSettingOwnerKey(module: Module): String {
         return "panel-module:" + module.name.lowercase(Locale.ROOT).replace("[^a-z0-9]+".toRegex(), "_")
     }
 
-    private fun buildContentSignature(
-        module: Module, settings: List<Setting<*>>, settingOwnerKey: String,
-    ): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + module.name.hashCode()
-        signature = signature * 31L + module.bindMode.ordinal
-        signature = signature * 31L + module.keyBind
-        signature = signature * 31L + (if (module.isHidden) 1 else 0)
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getDetailScroll())
-        val listening = state.getListeningKeybindSetting()
-        signature = signature * 31L + listening?.name.hashCode()
-        for (setting in settings) {
-            signature = signature * 31L + setting.name.hashCode()
-            signature = signature * 31L + (if (setting.isVisible) 1 else 0)
-        }
-        signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings)
-        return signature
-    }
-
     override fun close() {
+        luminView.close()
+
         settingListController.close()
         contentBuffer.close()
-        markDirty()
+
     }
 
 }

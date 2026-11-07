@@ -5,7 +5,13 @@ import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRectHorizontalGradient
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.PlayerHead
+import com.github.epsilon.gui.lib.Circle
 import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.utils.timer.TimerUtils
@@ -62,31 +68,31 @@ class TargetInstance(
         }
     }
 
-    override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
+    override fun draw(scope: UiScope, width: Float, height: Float) {
         val textRenderer = textRendererSupplier.get()
 
         val headX = PADDING
         val headY = PADDING
         val headRadius = HEAD_SIZE * 0.22f
 
-        scope.roundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, headRadius, fade(Color(0, 0, 0, 48)))
+        scope.RoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, headRadius, fade(Color(0, 0, 0, 48)))
 
         val target = this.target
         if (target is AbstractClientPlayer) {
             val skin: Identifier = target.skin.body().texturePath()
-            scope.playerHead(skin, headX, headY, HEAD_SIZE, headRadius, fade(Color.WHITE))
+            scope.PlayerHead(skin, headX, headY, HEAD_SIZE, headRadius, fade(Color.WHITE))
         }
 
         val textX = headX + HEAD_SIZE + HEAD_GAP
         val iconX = width - ICON_SIZE - ICON_RIGHT_PADDING
         val name = target.name.string
-        scope.text(name, textX, headY + 2f, NAME_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        scope.Text(name, textX, headY + 2f, NAME_SCALE, fade(IslandPalette.TEXT_PRIMARY))
 
         val distanceText = runSafeOrElse("") {
             String.format(Locale.ROOT, "distance: %.1f", player.distanceTo(target))
         }
         val nameHeight = textRenderer.getHeight(NAME_SCALE)
-        scope.text(distanceText, textX, headY + 2f + nameHeight + 3f, INFO_SCALE, fade(IslandPalette.TEXT_MUTED))
+        scope.Text(distanceText, textX, headY + 2f + nameHeight + 3f, INFO_SCALE, fade(IslandPalette.TEXT_MUTED))
 
         drawTargetIcon(scope, iconX + ICON_SIZE * 0.5f, headY + ICON_TOP_OFFSET + ICON_SIZE * 0.5f)
 
@@ -108,7 +114,7 @@ class TargetInstance(
         val barY = healthRowY + (healthRowHeight - BAR_HEIGHT) * 0.5f
         val barRadius = BAR_HEIGHT * 0.5f
 
-        scope.roundRect(barX, barY, barWidth, BAR_HEIGHT, barRadius, fade(IslandPalette.TRACK))
+        scope.RoundRect(barX, barY, barWidth, BAR_HEIGHT, barRadius, fade(IslandPalette.TRACK))
 
         val palette = arrayOf(
             IslandPalette.ACCENT,
@@ -117,14 +123,14 @@ class TargetInstance(
         )
         val filled = barWidth.coerceIn(0f, healthWidth)
         if (filled > 0f) {
-            scope.roundRectHorizontalGradient(
+            scope.RoundRectHorizontalGradient(
                 barX, barY, filled, BAR_HEIGHT, barRadius,
                 fade(palette[0]), fade(palette[palette.size - 1])
             )
         }
 
-        scope.text(healthText, HEALTH_TEXT_INSET, healthY, HEALTH_SCALE, fade(IslandPalette.TEXT_SECONDARY))
-        scope.text(
+        scope.Text(healthText, HEALTH_TEXT_INSET, healthY, HEALTH_SCALE, fade(IslandPalette.TEXT_SECONDARY))
+        scope.Text(
             maxHealthText,
             width - HEALTH_TEXT_INSET - maxHealthTextWidth,
             healthY,
@@ -133,17 +139,17 @@ class TargetInstance(
         )
     }
 
-    private fun drawTargetIcon(scope: UiTree.Scope, centerX: Float, centerY: Float) {
+    private fun drawTargetIcon(scope: UiScope, centerX: Float, centerY: Float) {
         val radius = ICON_SIZE * 0.34f
         val color = fade(IslandPalette.ACCENT)
-        scope.circle(centerX, centerY, radius, 1.4f, color)
-        scope.roundRect(centerX - 1f, centerY - 1f, 2f, 2f, 1f, color)
+        scope.Circle(centerX, centerY, radius, 1.4f, color)
+        scope.RoundRect(centerX - 1f, centerY - 1f, 2f, 2f, 1f, color)
 
         val tick = radius + 2.4f
-        scope.rect(centerX - 0.6f, centerY - tick, 1.2f, 2.2f, color)
-        scope.rect(centerX - 0.6f, centerY + tick - 2.2f, 1.2f, 2.2f, color)
-        scope.rect(centerX - tick, centerY - 0.6f, 2.2f, 1.2f, color)
-        scope.rect(centerX + tick - 2.2f, centerY - 0.6f, 2.2f, 1.2f, color)
+        scope.Rect(centerX - 0.6f, centerY - tick, 1.2f, 2.2f, color)
+        scope.Rect(centerX - 0.6f, centerY + tick - 2.2f, 1.2f, 2.2f, color)
+        scope.Rect(centerX - tick, centerY - 0.6f, 2.2f, 1.2f, color)
+        scope.Rect(centerX + tick - 2.2f, centerY - 0.6f, 2.2f, 1.2f, color)
     }
 
     override val isClosed: Boolean

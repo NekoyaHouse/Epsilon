@@ -56,7 +56,8 @@ object HudElementManager : AlwaysListening {
         for (element in elements) {
             if (element.isEnabled) {
                 element.updateLayout()
-                // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
+                // 布局（measure）在 renderWithBatch 内部先执行，随后以最终矩形建立 UiScope 作用域绘制；
+                // 原版物品等 overlay 在 flush 后单独绘制。
                 element.renderWithBatch(mc.deltaTracker, scene.batch(UiLayer.CONTENT))
             }
         }

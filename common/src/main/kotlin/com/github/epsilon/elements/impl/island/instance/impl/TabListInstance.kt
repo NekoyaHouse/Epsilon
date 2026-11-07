@@ -6,7 +6,13 @@ import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Clip
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.PlayerHead
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.impl.render.ACSpoof
@@ -175,7 +181,7 @@ class TabListInstance(
         return width + PING_GAP + PING_ICON_WIDTH
     }
 
-    override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
+    override fun draw(scope: UiScope, width: Float, height: Float) {
         val left = (width - listWidth) * 0.5f
         var y = OUTER_PADDING
 
@@ -184,16 +190,16 @@ class TabListInstance(
         drawFooter(scope, left, y)
     }
 
-    private fun drawHeader(scope: UiTree.Scope, left: Float, y: Float): Float {
+    private fun drawHeader(scope: UiScope, left: Float, y: Float): Float {
         if (headerLines.isEmpty()) return y
         val radius = computeBlockRadius(listWidth, headerBoxHeight)
-        scope.roundRect(left, y, listWidth, headerBoxHeight, radius, fade(HEADER_FOOTER))
+        scope.RoundRect(left, y, listWidth, headerBoxHeight, radius, fade(HEADER_FOOTER))
         drawCenteredLines(scope, headerLines, left, y, headerBoxHeight)
         return y + headerBoxHeight + LINE_GAP
     }
 
-    private fun drawEmptyList(scope: UiTree.Scope, left: Float, y: Float): Float {
-        scope.roundRect(left, y, listWidth, listHeight, blockRadius, fade(ROW_EVEN))
+    private fun drawEmptyList(scope: UiScope, left: Float, y: Float): Float {
+        scope.RoundRect(left, y, listWidth, listHeight, blockRadius, fade(ROW_EVEN))
 
         val text = EpsilonTranslations.PlayerInfo.EMPTY.getTranslatedName()
         val renderer = textRendererSupplier.get()
@@ -203,23 +209,23 @@ class TabListInstance(
         return y + listHeight + LINE_GAP
     }
 
-    private fun drawList(scope: UiTree.Scope, left: Float, y: Float): Float {
+    private fun drawList(scope: UiScope, left: Float, y: Float): Float {
         val baseColor = if (rows % 2 == 0) ROW_ODD else ROW_EVEN
-        scope.roundRect(left, y, listWidth, listHeight, blockRadius, fade(baseColor))
+        scope.RoundRect(left, y, listWidth, listHeight, blockRadius, fade(baseColor))
 
-        scope.scissor(
+        scope.Clip(
             left, y, listWidth, listHeight
-        ) { clipped ->
+        ) {
             var columnX = left
             for (column in 0 until columns) {
-                drawColumn(clipped, column, columnX, y + LIST_INNER_PADDING_Y, columnWidths[column])
+                drawColumn(this, column, columnX, y + LIST_INNER_PADDING_Y, columnWidths[column])
                 columnX += columnWidths[column] + COL_GAP
             }
         }
         return y + listHeight + LINE_GAP
     }
 
-    private fun drawColumn(scope: UiTree.Scope, column: Int, columnX: Float, top: Float, columnWidth: Float) {
+    private fun drawColumn(scope: UiScope, column: Int, columnX: Float, top: Float, columnWidth: Float) {
         for (row in 0 until rows) {
             val index = row + column * rows
             if (index >= entries.size) break
@@ -228,14 +234,14 @@ class TabListInstance(
         }
     }
 
-    private fun drawEntry(scope: UiTree.Scope, entry: Entry, cellX: Float, cellY: Float, cellWidth: Float) {
+    private fun drawEntry(scope: UiScope, entry: Entry, cellX: Float, cellY: Float, cellWidth: Float) {
         val renderer = textRendererSupplier.get()
         val centerY = cellY + ROW_HEIGHT * 0.5f
         var x = cellX + INNER_PADDING
         val headY = centerY - HEAD_SIZE * 0.5f
 
-        scope.playerHead(entry.skin, x, headY, HEAD_SIZE, 0f, fade(Color.WHITE))
-        scope.outline(x, headY, HEAD_SIZE, HEAD_SIZE, 0f, HEAD_OUTLINE_WIDTH, fade(Color(255, 255, 255, 0x30)))
+        scope.PlayerHead(entry.skin, x, headY, HEAD_SIZE, 0f, fade(Color.WHITE))
+        scope.Outline(x, headY, HEAD_SIZE, HEAD_SIZE, 0f, HEAD_OUTLINE_WIDTH, fade(Color(255, 255, 255, 0x30)))
         x += HEAD_SIZE + HEAD_GAP
 
         val textY = centerTextY(renderer, ROW_SCALE, cellY, ROW_HEIGHT)
@@ -255,16 +261,16 @@ class TabListInstance(
         }
     }
 
-    private fun drawFooter(scope: UiTree.Scope, left: Float, y: Float) {
+    private fun drawFooter(scope: UiScope, left: Float, y: Float) {
         if (footerLines.isNotEmpty()) {
             val radius = computeBlockRadius(listWidth, footerBoxHeight)
-            scope.roundRect(left, y, listWidth, footerBoxHeight, radius, fade(HEADER_FOOTER))
+            scope.RoundRect(left, y, listWidth, footerBoxHeight, radius, fade(HEADER_FOOTER))
             drawCenteredLines(scope, footerLines, left, y, footerBoxHeight)
         }
     }
 
     private fun drawCenteredLines(
-        scope: UiTree.Scope,
+        scope: UiScope,
         lines: List<List<TextSegment>>,
         left: Float,
         top: Float,
@@ -285,13 +291,13 @@ class TabListInstance(
         }
     }
 
-    private fun drawShadowedText(scope: UiTree.Scope, text: String, x: Float, y: Float, scale: Float, color: Color) {
+    private fun drawShadowedText(scope: UiScope, text: String, x: Float, y: Float, scale: Float, color: Color) {
         if (text.isEmpty()) return
-        scope.text(text, x + TEXT_SHADOW_OFFSET, y + TEXT_SHADOW_OFFSET, scale, fade(TEXT_SHADOW), font)
-        scope.text(text, x, y, scale, fade(color), font)
+        scope.Text(text, x + TEXT_SHADOW_OFFSET, y + TEXT_SHADOW_OFFSET, scale, fade(TEXT_SHADOW), font)
+        scope.Text(text, x, y, scale, fade(color), font)
     }
 
-    private fun drawPing(scope: UiTree.Scope, x: Float, centerY: Float, latency: Int) {
+    private fun drawPing(scope: UiScope, x: Float, centerY: Float, latency: Int) {
         val strength: Int = when {
             latency < 0 -> 0
             latency < 150 -> 5
@@ -306,7 +312,7 @@ class TabListInstance(
         for (i in 1..5) {
             val barHeight = PING_MAX_HEIGHT / 5f * i
             val barX = x + (i - 1) * (PING_BAR_WIDTH + PING_BAR_GAP)
-            scope.rect(
+            scope.Rect(
                 barX, bottom - barHeight, PING_BAR_WIDTH, barHeight,
                 fade(if (i <= strength) active else PING_BACKGROUND)
             )

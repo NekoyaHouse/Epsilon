@@ -1,13 +1,14 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.settings.impl.ColorSetting
-import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -20,10 +21,10 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     private lateinit var hueBar: UiRect
     private lateinit var previousColor: UiRect
     private lateinit var currentColor: UiRect
-    private var hue: Float = 0.0f
-    private var saturation: Float = 0.0f
-    private var brightness: Float = 0.0f
-    private var alpha: Int = 255
+    private var hue: Float by mutableStateOf<Float>(0.0f)
+    private var saturation: Float by mutableStateOf<Float>(0.0f)
+    private var brightness: Float by mutableStateOf<Float>(0.0f)
+    private var alpha: Int by mutableStateOf<Int>(255)
     private var draggingPart: Int = -1
     private var closed: Boolean = false
 
@@ -65,6 +66,26 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     }
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        val origin = ui.origin
+        for (part in 0 until channelCount() + 2) {
+            val region = when (part) { 0 -> field; 1 -> hueBar; else -> sliders[part - 2] }
+            ui.Interaction("picker" to part, region) {
+                onDrag(onStart = { draggingPart = part; update(it.x - origin.x, it.y - origin.y); true },
+                    onEnd = { draggingPart = -1 }, onCancel = { draggingPart = -1 }) {
+                    update(it.x - origin.x, it.y - origin.y)
+                }
+            }
+        }
+        for (index in buttons.indices) {
+            ui.Interaction("button" to index, buttons[index]) {
+                onClick {
+                    when (index) { 0 -> confirm(); 1 -> cancel(); else -> setting.value = color() }
+                    true
+                }
+            }
+        }
+
         TrollTheme.window(
             scope,
             bounds,
@@ -73,24 +94,28 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
             metrics
         )
         val hueColor = Color.getHSBColor(hue, 1.0f, 1.0f)
-        scope.rectGradient(1, field.x, field.y, field.width, field.height, Color.WHITE, Color.WHITE, hueColor, hueColor)
-        scope.rectGradient(
-            1, field.x, field.y, field.width, field.height,
-            Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, Color(0, 0, 0, 0)
-        )
-        for (i in 0 until 6) {
-            val top = Color.getHSBColor(i / 6.0f, 1.0f, 1.0f)
-            val bottom = Color.getHSBColor((i + 1) / 6.0f, 1.0f, 1.0f)
-            scope.rectGradient(
-                1, hueBar.x, hueBar.y + hueBar.height * i / 6.0f, hueBar.width, hueBar.height / 6.0f + 0.3f,
-                top, bottom, bottom, top
+        scope.layer(TrollZ.Base) { z ->
+            z.rectGradient(field.x, field.y, field.width, field.height, Color.WHITE, Color.WHITE, hueColor, hueColor)
+            z.rectGradient(
+                field.x, field.y, field.width, field.height,
+                Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, Color(0, 0, 0, 0)
             )
+            for (i in 0 until 6) {
+                val top = Color.getHSBColor(i / 6.0f, 1.0f, 1.0f)
+                val bottom = Color.getHSBColor((i + 1) / 6.0f, 1.0f, 1.0f)
+                z.rectGradient(
+                    hueBar.x, hueBar.y + hueBar.height * i / 6.0f, hueBar.width, hueBar.height / 6.0f + 0.3f,
+                    top, bottom, bottom, top
+                )
+            }
         }
-        scope.rectOutline(
-            2, field.x + saturation * field.width - 3.0f, field.y + (1.0f - brightness) * field.height - 3.0f,
-            6.0f, 6.0f, 0.8f, Color.WHITE
-        )
-        scope.rect(2, hueBar.x - 3.0f, hueBar.y + hue * hueBar.height - 1.5f, hueBar.width + 6.0f, 3.0f, Color.WHITE)
+        scope.layer(TrollZ.Highlight) { z ->
+            z.rectOutline(
+                field.x + saturation * field.width - 3.0f, field.y + (1.0f - brightness) * field.height - 3.0f,
+                6.0f, 6.0f, 0.8f, Color.WHITE
+            )
+            z.rect(hueBar.x - 3.0f, hueBar.y + hue * hueBar.height - 1.5f, hueBar.width + 6.0f, 3.0f, Color.WHITE)
+        }
         val current = color()
         val values = intArrayOf(current.red, current.green, current.blue, alpha)
         val fills = arrayOf(
@@ -98,32 +123,38 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         )
         for (i in 0 until channelCount()) {
             val slider = sliders[i]
-            scope.rect(1, slider.x, slider.y, slider.width, slider.height, Color(0, 0, 0, 40))
-            scope.rect(
-                1,
-                slider.x,
-                slider.y,
-                slider.width * values[i] / 255.0f,
-                slider.height,
-                TrollTheme.alpha(fills[i], 200)
-            )
-            scope.textWithShadow(
-                3,
-                TrollTheme.trim(CHANNELS[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, slider.width - 33.0f),
-                slider.x + 3.0f,
-                slider.y + 2.25f,
-                TrollTheme.TEXT_SCALE,
-                TrollTheme.text()
-            )
-            val value = values[i].toString()
-            scope.textWithShadow(
-                3,
-                value,
-                slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
-                slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
-                TrollTheme.VALUE_SCALE,
-                TrollTheme.text()
-            )
+            scope.layer(TrollZ.Base) { z ->
+                z.rect(slider.x, slider.y, slider.width, slider.height, Color(0, 0, 0, 40))
+                z.rect(
+                    slider.x,
+                    slider.y,
+                    slider.width * values[i] / 255.0f,
+                    slider.height,
+                    TrollTheme.alpha(fills[i], 200)
+                )
+            }
+            scope.layer(TrollZ.Text) { z ->
+                z.textWithShadow(
+                    TrollTheme.trim(
+                        CHANNELS[i].getTranslatedName(),
+                        metrics,
+                        TrollTheme.TEXT_SCALE,
+                        slider.width - 33.0f
+                    ),
+                    slider.x + 3.0f,
+                    slider.y + 2.25f,
+                    TrollTheme.TEXT_SCALE,
+                    TrollTheme.text()
+                )
+                val value = values[i].toString()
+                z.textWithShadow(
+                    value,
+                    slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
+                    slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
+                    TrollTheme.VALUE_SCALE,
+                    TrollTheme.text()
+                )
+            }
         }
         drawPreview(scope, previousColor, original)
         drawPreview(scope, currentColor, current)
@@ -134,64 +165,38 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         )
         for (i in buttons.indices) {
             val button = buttons[i]
-            scope.rect(
-                1, button.x, button.y, button.width, button.height,
-                TrollTheme.alpha(
-                    TrollTheme.primary(),
-                    if (button.contains(mouseX.toDouble(), mouseY.toDouble())) 180 else 70
+            scope.layer(TrollZ.Base) { z ->
+                z.rect(
+                    button.x, button.y, button.width, button.height,
+                    TrollTheme.alpha(
+                        TrollTheme.primary(),
+                        if (button.contains(mouseX.toDouble(), mouseY.toDouble())) 180 else 70
+                    )
                 )
-            )
+            }
             val label =
                 TrollTheme.trim(labels[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, button.width - 6.0f)
-            scope.textWithShadow(
-                3, label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
-                button.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
-            )
+            scope.layer(TrollZ.Text) { z ->
+                z.textWithShadow(
+                    label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
+                    button.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
+                )
+            }
         }
     }
 
     private fun drawPreview(scope: UiTree.Scope, bounds: UiRect, color: Color) {
-        scope.rect(1, bounds.x, bounds.y, bounds.width, bounds.height, Color.WHITE)
-        scope.rect(1, bounds.x, bounds.centerY(), bounds.width, bounds.height / 2.0f, Color.BLACK)
-        scope.rect(2, bounds.x, bounds.y, bounds.width, bounds.height, color)
-    }
-
-    override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (super.mouseClicked(event)) return true
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return true
-        if (field.contains(event.x(), event.y())) {
-            draggingPart = 0
-        } else if (hueBar.contains(event.x(), event.y())) {
-            draggingPart = 1
-        } else {
-            for (i in 0 until channelCount()) {
-                if (sliders[i].contains(event.x(), event.y())) draggingPart = i + 2
-            }
-            for (i in buttons.indices) {
-                if (buttons[i].contains(event.x(), event.y())) {
-                    if (i == 1) cancel()
-                    else {
-                        setting.value = color()
-                        if (i == 0) closed = true
-                    }
-                    return true
-                }
-            }
+        scope.layer(TrollZ.Base) { z ->
+            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, Color.WHITE)
+            z.rect(bounds.x, bounds.centerY(), bounds.width, bounds.height / 2.0f, Color.BLACK)
         }
-        update(event.x(), event.y())
-        return true
+        scope.layer(TrollZ.Highlight) { z ->
+            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, color)
+        }
     }
 
-    override fun mouseDragged(event: MouseButtonEvent): Boolean {
-        if (super.mouseDragged(event)) return true
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) update(event.x(), event.y())
-        return true
-    }
 
-    override fun mouseReleased(event: MouseButtonEvent) {
-        super.mouseReleased(event)
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) draggingPart = -1
-    }
+    override fun resetInput() { draggingPart = -1; super.resetInput() }
 
     fun confirm() {
         setting.value = color()

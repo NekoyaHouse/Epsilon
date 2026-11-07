@@ -31,10 +31,6 @@ object LuminUiRenderer {
                     renderNodesIntoLayeredBatch(node.children, batch, layer + node.layer, activeScissor)
                     continue
                 }
-                if (node is UiTree.LayeredNode) {
-                    renderNodesIntoLayeredBatch(listOf(node.child), batch, layer + node.layer, activeScissor)
-                    continue
-                }
                 if (node is UiTree.ScissorNode) {
                     renderNodesIntoLayeredBatch(
                         node.children,
@@ -62,10 +58,6 @@ object LuminUiRenderer {
                     renderNodesIntoTarget(node.children, target, activeScissor)
                     continue
                 }
-                if (node is UiTree.LayeredNode) {
-                    renderNodesIntoTarget(listOf(node.child), target, activeScissor)
-                    continue
-                }
                 if (node is UiTree.ScissorNode) {
                     renderNodesIntoTarget(node.children, target, intersect(activeScissor, toScissor(node.clip)))
                     continue
@@ -83,6 +75,8 @@ object LuminUiRenderer {
         val theme = target.theme
 
         when (node) {
+            is UiTree.InteractionNode -> Unit
+            is UiTree.CompositionNode -> error("组合引用必须在提交前解析")
             is UiTree.ShadowNode -> {
                 layer.addShadow(
                     node.x, node.y, node.width, node.height,
@@ -285,8 +279,9 @@ object LuminUiRenderer {
             is UiTree.ViewportNode -> {
                 node.buffer.beginViewport(node.viewport)
                 renderNodesIntoTarget(node.children, RenderTarget.forContentBuffer(node.buffer), null)
+                val pointer = node.pointer?.invoke() ?: (node.mouseX to node.mouseY)
                 node.buffer.queueViewport(
-                    node.viewport, node.scroll, node.maxScroll, node.contentHeight, node.mouseX, node.mouseY
+                    node.viewport, node.scroll, node.maxScroll, node.contentHeight, pointer.first, pointer.second
                 )
             }
 

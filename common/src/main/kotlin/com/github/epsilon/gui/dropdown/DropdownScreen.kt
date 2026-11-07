@@ -1,17 +1,22 @@
 package com.github.epsilon.gui.dropdown
 
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.LuminUISceneImmediate
+import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
@@ -23,7 +28,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -40,14 +44,12 @@ import java.util.function.Consumer
 class DropdownScreen private constructor() : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
 
     private val panels: MutableList<DropdownPanel> = ArrayList()
-    private val textMetrics: TextRenderer = TextRenderer.create()
-    private val uiTextMetrics: UiTextMetrics = DropdownTextMetrics()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
-    private val popupHost: PanelPopupHost = PanelPopupHost()
-    private val scrimAnim: Animation = Animation(Easing.EASE_OUT_SINE, 200L)
+    private val popupHost: PanelPopupHost = PanelPopupHost { scene.input }
+    private val scrimAnim: LuminAnimatable = LuminAnimatable(0.0f, Easing.EASE_OUT_SINE, 200L)
     private val searchField: DropdownTextField = DropdownTextField(64)
     private val reisaCompanion: ReisaDropdownCompanion = ReisaDropdownCompanion()
-    private val visiblePanelIds: MutableSet<String> = HashSet()
+    private var visiblePanelIds: Set<String> by mutableStateOf(emptySet())
 
     private var renderTarget: LuminRenderSystem.LuminRenderTarget? = null
     private var preeditOverlay: IMEPreeditOverlay? = null
@@ -55,8 +57,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private var currentSessionId = 0
     private var renderFrameId = 0
     private var dropdownBatch: UiRenderBatch? = null
-    private var dropdownScope: UiTree.Scope? = null
     private var dropdownLayer = 0
+
 
     override fun init() {
         super.init()
@@ -67,9 +69,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
         }
-        scrimAnim.startValue = 0.0f
-        scrimAnim.run(0.0f)
-        scrimAnim.run(1.0f)
+        scrimAnim.snapTo(0.0f)
+        scrimAnim.target = 1.0f
 
         if (!initialized) {
             buildPanels()
@@ -91,44 +92,59 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         target.resize(window.width, window.height)
         target.clear()
         LuminRenderSystem.setActiveTarget(target)
+        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
         scene.beginFrame()
+        try {
 
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick)
-        scene.clear()
+            val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
+            val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
+            drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick)
+            scene.endFrame()
 
-        LuminRenderSystem.setActiveTarget(null)
-        val overlay = preeditOverlay
-        if (overlay != null) {
-            overlay.updateInputPosition(IMEFocusHelper.activeCursorX.toInt(), IMEFocusHelper.activeCursorY.toInt())
-            graphics.setPreeditOverlay(overlay)
+            LuminRenderSystem.setActiveTarget(null)
+            val overlay = preeditOverlay
+            if (overlay != null) {
+                overlay.updateInputPosition(IMEFocusHelper.activeCursorX.toInt(), IMEFocusHelper.activeCursorY.toInt())
+                graphics.setPreeditOverlay(overlay)
+            }
+            graphics.blit(
+                target.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
+            )
+            popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick)
+        } finally {
+            scene.abortFrame()
+            LuminRenderSystem.setActiveTarget(null)
         }
-        graphics.blit(
-            target.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
-        )
-        popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick)
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val panelViews = java.util.IdentityHashMap<DropdownPanel, com.github.epsilon.gui.lib.state.LuminView>()
+
     private fun drawGui(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        scrimAnim.run(1.0f)
+        luminView.render(mouseX, mouseY) { drawContent(graphics, mouseX, mouseY, partialTick) }
+    }
+
+    private fun drawContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         dropdownBatch = scene.batch(UiLayer.CONTENT)
         dropdownLayer = -10
-        popupHost.setOverlayBounds(
-            UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight())
+        val screenBounds = UiRect(
+            0.0f, 0.0f,
+            LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()
         )
+        popupHost.setOverlayBounds(screenBounds)
         updatePanelHeightLimits()
         updateVisiblePanelIds()
         beginPanelFrames()
 
-        beginDropdownLayer()
-        val scrim = DropdownTheme.scrim()
-        val scrimAlpha = scrimAnim.value
-        currentScope.rect(
-            0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(),
-            Color(scrim.red, scrim.green, scrim.blue, (scrim.alpha * scrimAlpha).toInt())
-        )
-        flushDropdownLayer()
+        // 遮罩层：只有淡入进度变化时才重建。
+        dropdownContent(screenBounds, "scrim") {
+            val scrim = DropdownTheme.scrim()
+            val scrimAlpha = scrimAnim.value
+            Rect(
+                0.0f, 0.0f, width, height,
+                Color(scrim.red, scrim.green, scrim.blue, (scrim.alpha * scrimAlpha).toInt())
+            )
+        }
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
         val popupHovered = popupHost.activePopup != null &&
@@ -151,22 +167,24 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
-            beginDropdownLayer()
-            reisaCompanion.draw(
-                currentScope,
-                LuminRenderSystem.getScaledWidth(),
-                LuminRenderSystem.getScaledHeight(),
-                mouseX,
-                mouseY,
-                popupHovered || topmostHovered != null
-            )
-            flushDropdownLayer()
+            // 立绘由本地时间驱动（眨眼、脉冲、漂浮），几乎每帧都不同，保持立即模式。
+            dropdownContentImmediate(screenBounds) {
+                reisaCompanion.draw(
+                    this,
+                    screenBounds.width,
+                    screenBounds.height,
+                    mouseX,
+                    mouseY,
+                    popupHovered || topmostHovered != null
+                )
+            }
         }
 
         for (panel in panels) {
-            if (!panel.isVisible) continue
+            panelViews.getOrPut(panel) { com.github.epsilon.gui.lib.state.LuminView() }.render(if (panel === topmostHovered) backgroundMouseX else -1, if (panel === topmostHovered) backgroundMouseY else -1) {
+            if (!panel.isVisible) return@render
             val intro = panel.introValue
-            if (intro < 0.001f) continue
+            if (intro < 0.001f) return@render
 
             val slideOffset = (1.0f - intro) * 10.0f
             val origY = panel.y
@@ -175,314 +193,167 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             val panelH = panel.panelHeight
             val revealedH = panelH * intro
 
-            beginDropdownLayer()
-            withDropdownScissor(
-                intro < 1.0f,
-                panel.x - shadowPad,
-                panel.y - shadowPad,
-                panel.width + shadowPad * 2,
-                revealedH + shadowPad * 2
-            ) { scope -> panel.drawBackground(scope, uiTextMetrics) }
-            flushDropdownLayer()
+            val panelBounds = UiRect(panel.x, panel.y, panel.width, panelH)
+            // 背景层：位置、高度、展开/淡入进度、滚动平滑位置任一变化才重建。
+            dropdownContent(
+                panelBounds,
+                panel.id to "background"
+            ) {
+                ClipIf(
+                    intro < 1.0f,
+                    -shadowPad,
+                    -shadowPad,
+                    panel.width + shadowPad * 2.0f,
+                    revealedH + shadowPad * 2.0f
+                ) {
+                    panel.drawBackground()
+                }
+            }
 
             val clipY = panel.contentClipY
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
             val actualClipH = minOf(clipH, revealedBottom - clipY)
             if (actualClipH > 0.5f) {
-                beginDropdownLayer()
                 val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
                 val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
                 val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
-                withDropdownScissor(requiresContentScissor, panel.x, clipY, panel.width, actualClipH) { scope ->
-                    panel.drawContent(scope, uiTextMetrics, hoverMouseX, hoverMouseY)
+                val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
+
+                // 内部重复项再通过 LuminUIItem 逐项缓存。
+                dropdownContent(
+                    contentBounds,
+                    panel.id to "content"
+                ) {
+                    ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
+                        panel.drawContent(hoverMouseX, hoverMouseY)
+                    }
                 }
-                flushDropdownLayer()
             }
 
             panel.setPosition(panel.x, origY)
+
+            }
         }
 
-        drawSearch(backgroundMouseX, backgroundMouseY)
+        dropdownContent(screenBounds, "search") {
+            InputRegion(key = searchField, bounds = UiRect(searchX, searchY, searchWidth, searchHeight),
+                onPress = { event, _ -> searchField.focusIfContains(event.x(), event.y(), searchX, searchY, searchWidth, searchHeight) },
+                onKey = { event ->
+                    if (event.isEscape) { searchField.blur(); scene.input.clearFocus(); true }
+                    else searchField.keyPressed(event).also { if (it) syncSearchQuery() }
+                }, onText = { event -> searchField.charTyped(event).also { if (it) syncSearchQuery() } }, onBlur = searchField::blur)
+            searchField.draw(
+                this, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
+                EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
+            )
+            drawHints()
+        }
+
         popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick)
-        scene.flush()
+        // endFrame 仍会提交剩余命令；这里消费主批次，避免重复绘制并覆盖弹窗附加缓冲。
+        scene.flushAndClear()
         popupHost.flush()
     }
 
-    private fun drawSearch(mouseX: Int, mouseY: Int) {
-        beginDropdownLayer()
-        val searchX = searchX
-        val searchY = searchY
-        searchField.draw(
-            currentScope, uiTextMetrics, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
-            EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
-        )
-        drawHints()
-        flushDropdownLayer()
-    }
-
-    private fun drawHints() {
-        if (ClientSetting.dropdownHints) {
-            val scale = 0.62f
-            val lineGap = 5.0f
-            val lineHeight = uiTextMetrics.textHeight(scale)
-            val hints = arrayOf(
-                EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
-                EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
-                EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
-            )
-            val screenWidth = LuminRenderSystem.getScaledWidth()
-            var xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X
-            if (isReisaCompanionEnabled()) {
-                val companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight())
-                xRight = minOf(xRight, companionLeft - 8.0f)
-            }
-            xRight = maxOf(searchX + searchWidth, xRight)
-            var y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y -
-                    hints.size * lineHeight - (hints.size - 1) * lineGap
-            val alpha = (255 * scrimAnim.value).toInt()
-            if (alpha <= 0) {
-                return
-            }
-            val color = MD3Theme.withAlpha(Color.WHITE, alpha)
-            for (hint in hints) {
-                val x = xRight - uiTextMetrics.textWidth(hint, scale)
-                currentScope.text(hint, x, y, scale, color)
-                y += lineHeight + lineGap
-            }
-        }
-    }
-
-    private val currentScope: UiTree.Scope
-        get() = dropdownScope!!
-
-    private fun beginDropdownLayer() {
+    /**
+     * 以 recompose 模式在当前批次上追加一层内容。
+     *
+     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析，稳定 [key] 维持身份。
+     */
+    private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownScope = UiTree.Scope()
+        dropdownBatch!!.LuminUIScene(bounds, dropdownLayer, key, content)
     }
 
-    private fun flushDropdownLayer() {
-        dropdownBatch!!.render(UiTree.from(currentScope), dropdownLayer)
+    /** 立即模式的绘制 pass（每帧重建）。 */
+    private fun dropdownContentImmediate(bounds: UiRect, content: UiScope.() -> Unit) {
+        dropdownLayer += 10
+        dropdownBatch!!.LuminUISceneImmediate(bounds, dropdownLayer, content)
     }
 
-    private fun withDropdownScissor(
-        required: Boolean,
-        guiX: Float,
-        guiY: Float,
-        guiW: Float,
-        guiH: Float,
-        content: Consumer<UiTree.Scope>,
-    ) {
-        currentScope.scissorIf(required, UiRect(guiX, guiY, guiW, guiH)) { scope -> content.accept(scope) }
-    }
-
-    private inner class DropdownTextMetrics : UiTextMetrics {
-
-        override fun textWidth(text: String, scale: Float): Float {
-            return textMetrics.getWidth(text, scale)
+    private fun UiScope.drawHints() {
+        if (!ClientSetting.dropdownHints) return
+        val scale = 0.62f
+        val lineGap = 5.0f
+        val lineHeight = metrics.textHeight(scale)
+        val hints = arrayOf(
+            EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
+            EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
+            EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
+        )
+        val screenWidth = LuminRenderSystem.getScaledWidth()
+        var xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X
+        if (isReisaCompanionEnabled()) {
+            val companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight())
+            xRight = minOf(xRight, companionLeft - 8.0f)
         }
-
-        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getWidth(text, scale, fontLoader)
+        xRight = maxOf(searchX + searchWidth, xRight)
+        var y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y -
+                hints.size * lineHeight - (hints.size - 1) * lineGap
+        val alpha = (255 * scrimAnim.value).toInt()
+        if (alpha <= 0) {
+            return
         }
-
-        override fun textHeight(scale: Float): Float {
-            return textMetrics.getHeight(scale)
-        }
-
-        override fun textHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-            return textMetrics.getHeight(scale, fontLoader)
+        val color = MD3Theme.withAlpha(Color.WHITE, alpha)
+        for (hint in hints) {
+            val x = xRight - metrics.textWidth(hint, scale)
+            Text(hint, x, y, scale, color)
+            y += lineHeight + lineGap
         }
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mx = epsilonEvent.x()
-        val my = epsilonEvent.y()
-        val button = epsilonEvent.button()
-
-        if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
-            react(ReisaDropdownCompanion.Action.CONFIRM)
-            return true
+        val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
+        if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
+        val handled = scene.input.mouseClicked(mouse, isDoubleClick)
+        if (handled) {
+            val panel = panels.lastOrNull { it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(mouse.x(), mouse.y()) }
+            if (panel != null) { panels.remove(panel); panels.add(panel) }
+            DropdownLayoutState.save(panels)
+            reactMouseButton(mouse.button())
         }
-
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            for (panel in panels) {
-                if (panel.isVisible) {
-                    panel.onGlobalMouseClicked(mx, my, button)
-                }
-            }
-        }
-
-        if (button == InputConstants.MOUSE_BUTTON_LEFT &&
-            searchField.focusIfContains(mx, my, searchX, searchY, searchWidth, searchHeight)
-        ) {
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        } else if (button == InputConstants.MOUSE_BUTTON_LEFT && searchField.isFocused) {
-            searchField.blur()
-        }
-
-        for (i in panels.indices.reversed()) {
-            val panel = panels[i]
-            if (!panel.isVisible) continue
-            val reactionRevision = reisaCompanion.getReactionRevision()
-            if (panel.mouseClicked(mx, my, button)) {
-                if (i < panels.size - 1) {
-                    panels.removeAt(i)
-                    panels.add(panel)
-                }
-                DropdownLayoutState.save(panels)
-                if (reactionRevision == reisaCompanion.getReactionRevision()) {
-                    reactMouseButton(button)
-                }
-                return true
-            }
-        }
-        return super.mouseClicked(epsilonEvent, isDoubleClick)
+        return handled || super.mouseClicked(mouse, isDoubleClick)
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mx = epsilonEvent.x()
-        val my = epsilonEvent.y()
-        val button = epsilonEvent.button()
+        if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
 
-        if (popupHost.mouseReleased(epsilonEvent)) {
-            react(ReisaDropdownCompanion.Action.CONFIRM)
-            return true
-        }
-
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.mouseReleased(mx, my, button)) {
-                DropdownLayoutState.save(panels)
-                react(ReisaDropdownCompanion.Action.CONFIRM)
-                return true
-            }
-        }
-        return super.mouseReleased(epsilonEvent)
+        val handled = scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
+        if (handled) { DropdownLayoutState.save(panels); react(ReisaDropdownCompanion.Action.CONFIRM) }
+        return handled
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
-            react(ReisaDropdownCompanion.Action.DRAG)
-            return true
-        }
-        var handled = false
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.mouseDragged(
-                    LuminRenderSystem.toEpsilonMouseX(event.x()),
-                    LuminRenderSystem.toEpsilonMouseY(event.y())
-                )
-            ) {
-                handled = true
-            }
-        }
-        if (handled) {
-            DropdownLayoutState.save(panels)
-            react(ReisaDropdownCompanion.Action.DRAG)
-            return true
-        }
-        return super.mouseDragged(
-            epsilonEvent,
-            LuminRenderSystem.toEpsilonMouseX(event.x()),
-            LuminRenderSystem.toEpsilonMouseY(event.y())
-        )
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+
+        val handled = scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        if (handled) DropdownLayoutState.save(panels)
+        return handled
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
-            reactScroll(scrollY)
-            return true
-        }
-        for (i in panels.indices.reversed()) {
-            val panel = panels[i]
-            if (!panel.isVisible) continue
-            if (panel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
-                reactScroll(scrollY)
-                return true
-            }
-        }
-        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)
+        val mx = LuminRenderSystem.toEpsilonMouseX(mouseX)
+        val my = LuminRenderSystem.toEpsilonMouseY(mouseY)
+        if (popupHost.activePopup != null) return popupHost.mouseScrolled(mx, my, scrollX, scrollY)
+        return scene.input.mouseScrolled(mx, my, scrollX, scrollY).also { if (it) reactScroll(scrollY) }
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (popupHost.keyPressed(event)) {
-            react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-            return true
-        }
+        if (popupHost.activePopup != null) return popupHost.keyPressed(event)
         if (event.key() == InputConstants.KEY_F && InputConstants.isKeyDown(InputConstants.KEY_LCONTROL)) {
-            searchField.focus()
-            react(ReisaDropdownCompanion.Action.TYPING)
+            if (scene.input.requestFocus(searchField)) searchField.focus()
             return true
         }
-        if (searchField.isFocused) {
-            if (event.isEscape) {
-                searchField.blur()
-                react(ReisaDropdownCompanion.Action.CANCEL)
-                return true
-            }
-            if (searchField.keyPressed(event)) {
-                syncSearchQuery()
-                react(ReisaDropdownCompanion.Action.TYPING)
-                return true
-            }
-        }
-
-        val hasActiveInput =
-            panels.stream().filter { panel -> panel.isVisible }.anyMatch { panel -> panel.hasActiveInput() }
-
-        if (hasActiveInput) {
-            for (panel in panels) {
-                if (!panel.isVisible) continue
-                if (panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
-                    react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-                    return true
-                }
-            }
-        }
-
-        if (event.isEscape) {
-            onClose()
-            return true
-        }
-
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            if (panel.keyPressed(event.key(), event.keycode(), event.modifiers())) {
-                react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
-                return true
-            }
-        }
+        if (scene.input.keyPressed(event)) return true
+        if (event.isEscape) { onClose(); return true }
         return super.keyPressed(event)
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        if (popupHost.charTyped(event)) {
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        }
-        if (searchField.charTyped(event)) {
-            syncSearchQuery()
-            react(ReisaDropdownCompanion.Action.TYPING)
-            return true
-        }
-        for (panel in panels) {
-            if (!panel.isVisible) continue
-            val typed = event.codepointAsString()
-            if (typed.isNotEmpty() && panel.charTyped(typed)) {
-                react(ReisaDropdownCompanion.Action.TYPING)
-                return true
-            }
-        }
-        return super.charTyped(event)
+        if (popupHost.activePopup != null) return popupHost.charTyped(event)
+        return scene.input.charTyped(event) || super.charTyped(event)
     }
 
     override fun onClose() {
@@ -492,12 +363,18 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        if (popupHost.activePopup != null) popupHost.preeditUpdated(event) else scene.input.preeditUpdated(event)
+
         this.preeditOverlay = if (event != null) IMEPreeditOverlay(event, this.font, 10) else null
         return true
     }
 
     override fun removed() {
         super.removed()
+        panelViews.values.forEach { it.close() }
+        panelViews.clear()
+        luminView.close()
+        scene.resetComposition()
         popupHost.close()
         searchField.clear()
         syncSearchQuery()
@@ -578,12 +455,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     private fun updateVisiblePanelIds() {
-        visiblePanelIds.clear()
-        for (panel in panels) {
-            if (panel.isVisible) {
-                visiblePanelIds.add(panel.id)
-            }
-        }
+        visiblePanelIds = panels.filter { it.isVisible }.map { it.id }.toSet()
     }
 
     private fun resolveMaxPanelHeight(panel: DropdownPanel): Float {
@@ -608,7 +480,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private fun beginPanelFrames() {
         val frameId = ++renderFrameId
         for (panel in panels) {
-            panel.beginRenderFrame(frameId)
+            panelViews.getOrPut(panel) { com.github.epsilon.gui.lib.state.LuminView() }.prepare {
+                panel.beginRenderFrame(frameId)
+            }
         }
     }
 
@@ -632,7 +506,6 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
     private val searchHeight: Float
         get() = 20.0f
-
 
     private fun reactInstance(action: ReisaDropdownCompanion.Action?) {
         if (isReisaCompanionEnabled()) {
@@ -682,6 +555,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     companion object {
 
         val INSTANCE: DropdownScreen = DropdownScreen()
+
+        /** 光标闪烁周期（与 [DropdownTextField] 内部实现一致：每 500ms 翻转一次）。 */
+        private const val CARET_BLINK_PERIOD_MS = 500L
 
         /** 供 Kotlin 调用方使用的静态入口（原 Java 的 `DropdownScreen.INSTANCE.react(...)`）。 */
         fun react(action: ReisaDropdownCompanion.Action?) {

@@ -1,5 +1,9 @@
 package com.github.epsilon.gui.screen
 
+import com.github.epsilon.gui.lib.LuminUITree
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
@@ -8,7 +12,6 @@ import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.MouseButtonEvent
@@ -95,9 +98,9 @@ abstract class EpsilonDialogScreen protected constructor(
         val hits = layoutButtons()
 
         scene.beginFrame()
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "dialog", immediate = true) { scope ->
             scope.rect(0.0f, 0.0f, width.toFloat(), height.toFloat(), SCRIM)
-            scope.layer(0) { card ->
+            scope.layer(DialogZ.Card) { card ->
                 card.shadow(
                     cardArea.x, cardArea.y, cardArea.width, cardArea.height,
                     MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
@@ -112,8 +115,11 @@ abstract class EpsilonDialogScreen protected constructor(
                 content.text(titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
                 buildBody(content, CARD_PADDING + 22.0f, epsilonMouseX, epsilonMouseY)
             }
-            scope.layer(10) { content ->
-                for (hit in hits) {
+            scope.layer(DialogZ.Content) { content ->
+                for ((index, hit) in hits.withIndex()) {
+                    content.asUiScope(textMetrics()).Interaction(index, hit.bounds) {
+                        onClick { hit.button.action.run(); true }
+                    }
                     val hovered = hit.bounds.contains(epsilonMouseX.toDouble(), epsilonMouseY.toDouble())
                     val background = if (hit.button.primary) {
                         MD3Theme.PRIMARY_CONTAINER
@@ -133,8 +139,7 @@ abstract class EpsilonDialogScreen protected constructor(
             }
         }
         scene.submit(UiLayer.CONTENT, tree)
-        scene.flush()
-        scene.clear()
+        scene.endFrame()
 
         LuminRenderSystem.setActiveTarget(null)
         graphics.blit(
@@ -143,15 +148,7 @@ abstract class EpsilonDialogScreen protected constructor(
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-        if (epsilonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            for (hit in buttonHits) {
-                if (hit.bounds.contains(epsilonEvent.x(), epsilonEvent.y())) {
-                    hit.button.action.run()
-                    return true
-                }
-            }
-        }
+        scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
         return true
     }
 
@@ -160,6 +157,8 @@ abstract class EpsilonDialogScreen protected constructor(
     }
 
     override fun removed() {
+        scene.resetComposition()
+
         super.removed()
         if (renderTarget != null) {
             renderTarget!!.close()

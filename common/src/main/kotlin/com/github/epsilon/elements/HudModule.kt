@@ -1,8 +1,11 @@
 package com.github.epsilon.elements
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.modules.Module
 import net.minecraft.client.DeltaTracker
@@ -10,6 +13,16 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 
 /**
  * HUD 元素基类：在 [Module] 的启用/配置能力之上提供锚点、屏幕钳制与 [UiRenderBatch] 提交。
+ *
+ * 绘制入口拆成两步，顺序不能颠倒：
+ * 1. [measure] 只负责测量本帧尺寸并调用 [setBounds]，不产生任何绘制命令，也不推进绘制动画；
+ * 2. [drawUi] 在 [UiScope] 上绘制，作用域原点就是元素矩形左上角，因此所有图元坐标都是相对坐标。
+ *
+ * 这样作用域矩形永远等于本帧最终的 [x] / [y] / [width] / [height]，Center/Right/Bottom 锚点
+ * 在尺寸变化的当帧也不会出现「用上一帧矩形绘制」的偏移。
+ *
+ * 例外：`BlurShader` 等非 [UiScope] 的外部绘制需要绝对屏幕坐标，绘制阶段用 `origin.x + local`
+ * 还原；命中测试、anchor 计算与持久化坐标保持绝对语义不变。
  */
 abstract class HudModule : Module {
 
@@ -25,14 +38,14 @@ abstract class HudModule : Module {
         Bottom,
     }
 
-    var x: Float = 0f
-    var y: Float = 0f
-    var width: Float = 0f
-    var height: Float = 0f
+    var x: Float by mutableStateOf(0f)
+    var y: Float by mutableStateOf(0f)
+    var width: Float by mutableStateOf(0f)
+    var height: Float by mutableStateOf(0f)
 
-    var anchorX: Float
+    var anchorX: Float by mutableStateOf(0f)
         private set
-    var anchorY: Float
+    var anchorY: Float by mutableStateOf(0f)
         private set
 
     private val defaultX: Float
@@ -40,11 +53,10 @@ abstract class HudModule : Module {
     private val defaultAnchorX: Float
     private val defaultAnchorY: Float
 
-    var horizontalAnchor: HorizontalAnchor = HorizontalAnchor.Left
+    var horizontalAnchor: HorizontalAnchor by mutableStateOf(HorizontalAnchor.Left)
         private set
-    var verticalAnchor: VerticalAnchor = VerticalAnchor.Top
+    var verticalAnchor: VerticalAnchor by mutableStateOf(VerticalAnchor.Top)
         private set
-    private var currentRenderScope: UiTree.Scope? = null
 
     constructor(name: String, width: Float, height: Float) : this(name, 0f, 0f, width, height)
 
@@ -74,6 +86,11 @@ abstract class HudModule : Module {
         applyRenderPosition(defaultX, defaultY, false)
     }
 
+    /**
+     * 按当前锚点与尺寸刷新渲染坐标。
+     *
+     * 只处理位置，不测量尺寸；尺寸由 [measure] 通过 [setBounds] 更新。
+     */
     fun updateLayout() {
         applyRenderPosition(anchoredRenderX, anchoredRenderY, false)
     }
@@ -150,19 +167,27 @@ abstract class HudModule : Module {
     private val screenHeight: Int
         get() = if (mc.window == null) 0 else LuminRenderSystem.getScaledHeightInt()
 
+    /**
+     * 布局阶段：测量本帧尺寸并调用 [setBounds]，不得绘制。
+     *
+     * 该阶段会在 [renderWithBatch] 建立作用域之前执行，保证作用域原点与本帧最终矩形一致。
+     */
+    protected abstract fun measure(deltaTracker: DeltaTracker)
+
+    /**
+     * 绘制阶段：作用域原点等于元素矩形左上角，坐标一律相对它。
+     *
+     * 非 [UiScope] 的外部绘制（如 `BlurShader`）用 `origin.x + local` 还原绝对坐标。
+     */
+    protected abstract fun UiScope.drawUi(deltaTracker: DeltaTracker)
+
     fun renderWithBatch(deltaTracker: DeltaTracker, renderBatch: UiRenderBatch) {
-        val previous = currentRenderScope
-        val scope = UiTree.Scope()
-        currentRenderScope = scope
-        render(deltaTracker)
-        currentRenderScope = previous
-        renderBatch.render(UiTree.from(scope))
+        // 先布局、后开作用域：作用域矩形必须等于本帧最终的 x/y/width/height。
+        measure(deltaTracker)
+        renderBatch.Content(UiRect(x, y, width, height)) {
+            drawUi(deltaTracker)
+        }
     }
-
-    protected fun renderScope(): UiTree.Scope =
-        currentRenderScope ?: throw IllegalStateException("HUD elements must render through renderWithBatch.")
-
-    abstract fun render(deltaTracker: DeltaTracker)
 
     open fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
     }

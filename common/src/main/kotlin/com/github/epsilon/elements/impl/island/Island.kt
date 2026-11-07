@@ -10,6 +10,7 @@ import com.github.epsilon.ffi.smtc.SmtcService
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
@@ -67,6 +68,9 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     private var target: LivingEntity? = null
 
+    /** 本帧是否完成了布局（上下文缺失时不做绘制）。 */
+    private var frameVisible: Boolean = false
+
     init {
         onEnable {
             if (music && ClientPlatform.isWindowsX64()) SmtcService.start()
@@ -109,22 +113,31 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
         }
     }
 
-    override fun render(deltaTracker: DeltaTracker) {
-        runSafe {
-            landRenderer.setTextRenderer(textRendererSupplier.get())
-            landRenderer.update()
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameVisible = false
+        runSafe { measureIsland() }
+    }
 
-            updateTargetInstance()
-            updateBlockInstance()
-            updateBalanceInstance()
-            updateTabListInstance()
-            updateMusicInstance()
+    context(nn: NonNullContext)
+    private fun measureIsland() {
+        landRenderer.setTextRenderer(textRendererSupplier.get())
+        landRenderer.update()
 
-            setBounds(landRenderer.width, landRenderer.height)
+        updateTargetInstance()
+        updateBlockInstance()
+        updateBalanceInstance()
+        updateTabListInstance()
+        updateMusicInstance()
 
-            landRenderer.syncPosition(x, y)
-            landRenderer.draw(this@Island, renderScope())
-        }
+        setBounds(landRenderer.width, landRenderer.height)
+        // 世界空间 traces 需要岛屿的绝对位置，因此在布局阶段同步
+        landRenderer.syncPosition(x, y)
+        frameVisible = true
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (!frameVisible) return
+        landRenderer.draw(this@Island, this)
     }
 
     private fun updateTargetInstance() {

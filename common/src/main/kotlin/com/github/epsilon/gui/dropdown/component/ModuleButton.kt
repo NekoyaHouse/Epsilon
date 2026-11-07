@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -7,14 +8,17 @@ import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.dropdown.widget.*
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.*
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
@@ -28,15 +32,19 @@ class ModuleButton(val module: Module) : Component() {
     private val toggleAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_TOGGLE)
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
     private val keybindHoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var expanded = false
-    private var listeningKeybind = false
+    private var expanded by mutableStateOf(false)
+    private var listeningKeybind by mutableStateOf(false)
     private var cachedHeightFrameId = Int.MIN_VALUE
-    private var cachedHeight = 0.0f
+    // 帧内缓存也必须可观察，否则列表重放时无法感知测量结果变化。
+    private var cachedHeight by mutableStateOf(0.0f)
 
     init {
         val ownerKey = "module:" + module.name.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "_")
         sectionRenderer = SettingSectionRenderer.create(ownerKey, module.settings) { setting -> createWidget(setting) }
     }
+
+    override fun inputHeight(): Float = DropdownTheme.MODULE_HEIGHT
+    override fun blurInput() { listeningKeybind = false }
 
     override fun getHeight(): Float {
         return computeHeight()
@@ -55,15 +63,18 @@ class ModuleButton(val module: Module) : Component() {
 
     private fun computeHeight(): Float {
         expandAnim.run(if (expanded) 1.0f else 0.0f)
+        val progress = expandAnim.value
+        // 完全折叠时设置不影响高度；仍观察展开状态与进度，动画开始后恢复测量。
+        if (progress == 0.0f) return DropdownTheme.MODULE_HEIGHT
         val settingsHeight = computeSettingsHeight()
-        return DropdownTheme.MODULE_HEIGHT + settingsHeight * expandAnim.value
+        return DropdownTheme.MODULE_HEIGHT + settingsHeight * progress
     }
 
     private fun computeSettingsHeight(): Float {
         return DropdownTheme.SETTING_GAP + sectionRenderer.height()
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         expandAnim.run(if (expanded) 1.0f else 0.0f)
         toggleAnim.run(if (module.isEnabled) 1.0f else 0.0f)
         val headerHovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), x, y, width, DropdownTheme.MODULE_HEIGHT)
@@ -73,31 +84,29 @@ class ModuleButton(val module: Module) : Component() {
         val toggle = toggleAnim.value
 
         val bg = MD3Theme.lerp(DropdownTheme.moduleDisabled(hover), DropdownTheme.moduleEnabled(hover), toggle)
-        scope.rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg)
-        scope.rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
+        Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg)
+        Rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
 
         val textColor =
             MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle)
-        val textY = (DropdownTheme.MODULE_HEIGHT - textMetrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
+        val textY = (DropdownTheme.MODULE_HEIGHT - metrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
         val leftX = DropdownTheme.MODULE_PADDING_X
-        scope.text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor)
+        Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor)
 
-        drawKeybindButton(scope, textMetrics, mouseX, mouseY, toggle)
-        drawHiddenButton(scope, textMetrics, mouseX, mouseY)
+        drawKeybindButton(mouseX, mouseY, toggle)
+        drawHiddenButton(mouseX, mouseY)
 
         val expand = expandAnim.value
 
         if (expand > 0.5f) {
             sectionRenderer.draw(
-                scope, textMetrics, mouseX, mouseY,
-                0.0f, DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP, width, x, y
+                this, mouseX, mouseY,
+                0.0f, DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP, width
             )
         }
     }
 
-    private fun drawKeybindButton(
-        scope: UiTree.Scope,
-        textMetrics: UiTextMetrics,
+    private fun UiScope.drawKeybindButton(
         mouseX: Int,
         mouseY: Int,
         toggle: Float
@@ -113,8 +122,8 @@ class ModuleButton(val module: Module) : Component() {
 
         val keyText = if (listeningKeybind) "..." else formatCompactKeybind(module.keyBind)
         val textScale = if (keyText.length >= 3) 0.46f else 0.52f
-        val textW = textMetrics.textWidth(keyText, textScale)
-        val textH = textMetrics.textHeight(textScale)
+        val textW = metrics.textWidth(keyText, textScale)
+        val textH = metrics.textHeight(textScale)
 
         val surface: Color
         val outline: Color
@@ -136,14 +145,14 @@ class ModuleButton(val module: Module) : Component() {
             outline = outline2
         }
 
-        scope.roundRect(btnX, btnY, btnW, btnH, radius, surface)
-        scope.outline(btnX, btnY, btnW, btnH, radius, 0.8f, outline)
+        RoundRect(btnX, btnY, btnW, btnH, radius, surface)
+        Outline(btnX, btnY, btnW, btnH, radius, 0.8f, outline)
 
         val textX = btnX + (btnW - textW) * 0.5f
         val textY = btnY + (btnH - textH) * 0.5f - 0.5f
-        scope.text(keyText, textX, textY, textScale, text)
+        Text(keyText, textX, textY, textScale, text)
         if (module.bindMode == Module.BindMode.Hold && !listeningKeybind) {
-            scope.rect(textX, textY + textH + 0.5f, textW, 0.75f, text)
+            Rect(textX, textY + textH + 0.5f, textW, 0.75f, text)
         }
     }
 
@@ -177,22 +186,22 @@ class ModuleButton(val module: Module) : Component() {
         )
     }
 
-    private fun drawHiddenButton(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    private fun UiScope.drawHiddenButton(mouseX: Int, mouseY: Int) {
         val btnW = 18.0f
         val btnH = DropdownTheme.KEYBIND_HEIGHT
         val btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW
         val btnY = (DropdownTheme.MODULE_HEIGHT - btnH) / 2.0f
         val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(btnX), absoluteY(btnY), btnW, btnH)
         if (!module.isHidden) {
-            scope.roundRect(
+            RoundRect(
                 btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS,
                 MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, if (hovered) 0.12f else 0.0f)
             )
             val icon = IconChars.VISIBILITY
             val scale = 0.58f
-            val iconW = textMetrics.textWidth(icon, scale, StaticFontLoader.ICONS)
-            val iconH = textMetrics.textHeight(scale, StaticFontLoader.ICONS)
-            scope.text(
+            val iconW = metrics.textWidth(icon, scale, StaticFontLoader.ICONS)
+            val iconH = metrics.textHeight(scale, StaticFontLoader.ICONS)
+            Text(
                 icon, btnX + (btnW - iconW) / 2.0f, btnY + (btnH - iconH) / 2.0f, scale,
                 MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
             )
@@ -204,9 +213,9 @@ class ModuleButton(val module: Module) : Component() {
                 EpsilonTranslations.Module.VISIBLE.getTranslatedName()
             }
             val hintScale = 0.42f
-            val hintW = textMetrics.textWidth(hint, hintScale)
+            val hintW = metrics.textWidth(hint, hintScale)
             val hintX = (btnX + (btnW - hintW) * 0.5f).coerceIn(2.0f, width - hintW - 2.0f)
-            scope.text(hint, hintX, DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED)
+            Text(hint, hintX, DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED)
         }
     }
 
@@ -267,20 +276,19 @@ class ModuleButton(val module: Module) : Component() {
             }
         }
 
-        if (expanded && expandAnim.value > 0.5f) {
-            if (sectionRenderer.mouseClicked(
-                    mouseX, mouseY, button,
-                    0.0f, DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP, width, x, y
-                )
-            ) {
-                return true
-            }
-        }
         return false
     }
 
+    override fun previewMouseClicked(button: Int): Boolean {
+        if (!listeningKeybind) return false
+        module.keyBind = KeybindUtils.encodeMouseButton(button)
+        listeningKeybind = false
+        DropdownScreen.react(ReisaDropdownCompanion.Action.CONFIRM)
+        return true
+    }
+
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return expanded && sectionRenderer.mouseReleased(mouseX, mouseY, button)
+        return false
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
@@ -297,26 +305,16 @@ class ModuleButton(val module: Module) : Component() {
             return true
         }
 
-        if (expanded) {
-            return sectionRenderer.keyPressed(keyCode, scanCode, modifiers)
-        }
         return false
     }
 
     override fun charTyped(typedText: String): Boolean {
-        return expanded && sectionRenderer.charTyped(typedText)
+        return false
     }
 
     val isExpanded: Boolean
         get() = expanded
 
-    fun hasListeningKeybind(): Boolean {
-        return listeningKeybind || sectionRenderer.hasListeningKeybind()
-    }
-
-    fun hasFocusedInput(): Boolean {
-        return sectionRenderer.hasFocusedInput()
-    }
 
     private companion object {
 

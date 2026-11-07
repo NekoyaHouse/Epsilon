@@ -11,7 +11,7 @@ class StringListSetting(
     init {
         val normalized = normalize(defaultValue)
         initializeDefault(normalized)
-        initializeCurrent(ArrayList(normalized))
+        initializeCurrent(normalized)
     }
 
     override var value: List<String>
@@ -66,7 +66,7 @@ class StringListSetting(
                 result.add(entry)
             }
         }
-        return result
+        return java.util.List.copyOf(result)
     }
 
 }

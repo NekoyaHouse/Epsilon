@@ -1,5 +1,6 @@
 package com.github.epsilon.settings
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.utils.client.PlatformRequirement
@@ -41,14 +42,14 @@ abstract class Setting<V>(
 
     var groupRef: SettingGroup? = null
 
-    var platformRequirement: PlatformRequirement = PlatformRequirement.ANY
+    var platformRequirement: PlatformRequirement by mutableStateOf(PlatformRequirement.ANY)
 
-    var viaRequirement: ViaVersionRequirement? = null
+    var viaRequirement: ViaVersionRequirement? by mutableStateOf(null)
 
     var translateComponent: TranslateComponent? = null
 
     // 泛型值用 Any? 存储：Java 版本同样是未初始化的泛型字段，子类构造期写入。
-    private var valueStore: Any? = null
+    private var valueStore: Any? by mutableStateOf(null)
 
     private var defaultValueStore: Any? = null
 
@@ -94,6 +95,7 @@ abstract class Setting<V>(
     protected fun writeValue(newValue: V) {
         valueStore = newValue
         onChanged?.invoke(newValue)
+        notifyChangeListeners(newValue)
     }
 
     /** 直接写入当前值且不触发回调。 */
@@ -116,6 +118,30 @@ abstract class Setting<V>(
     protected fun initializeCurrent(current: V) {
         valueStore = current
     }
+
+    /** recompose 用的变更监听；与 [onChanged] 独立，不改变既有的单回调语义。 */
+    private var changeListeners: MutableList<(V) -> Unit>? = null
+
+    fun addChangeListener(listener: (V) -> Unit) {
+        val list = changeListeners ?: ArrayList<(V) -> Unit>(1).also { changeListeners = it }
+        if (!list.contains(listener)) {
+            list.add(listener)
+        }
+    }
+
+    fun removeChangeListener(listener: (V) -> Unit) {
+        changeListeners?.remove(listener)
+    }
+
+    private fun notifyChangeListeners(newValue: V) {
+        val list = changeListeners ?: return
+        for (index in list.indices.reversed()) {
+            list[index].invoke(newValue)
+        }
+    }
+
+    /** 供状态适配器读取当前值而不触发任何副作用。 */
+    fun readCurrentValue(): V = readValue()
 
     @Suppress("UNCHECKED_CAST")
     private fun readValue(): V = valueStore as V

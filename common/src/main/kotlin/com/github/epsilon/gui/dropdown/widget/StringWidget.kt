@@ -3,8 +3,8 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.impl.StringSetting
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -16,8 +16,8 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         return DropdownTheme.SETTING_HEIGHT + DropdownTheme.INPUT_HEIGHT + 2.0f
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
-        scope.text(
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
+        Text(
             setting.displayName,
             DropdownTheme.SETTING_PADDING_X,
             1.0f,
@@ -31,11 +31,11 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         val fieldH = DropdownTheme.INPUT_HEIGHT
 
         if (!inputField.isFocused && inputField.text != setting.value) {
-            inputField.text = setting.value
+            val currentValue = setting.value
+            com.github.epsilon.gui.lib.state.afterLuminCommit { inputField.text = currentValue }
         }
         inputField.draw(
-            scope,
-            textMetrics,
+            this,
             fieldX,
             fieldY,
             fieldW,
@@ -94,7 +94,7 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         return inputField.isFocused
     }
 
-    fun blurInput() {
+    override fun blurInput() {
         commitSetting()
         inputField.blur()
     }

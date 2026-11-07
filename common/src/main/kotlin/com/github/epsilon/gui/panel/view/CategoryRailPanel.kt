@@ -1,12 +1,19 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.theme.MD3Theme
@@ -14,18 +21,13 @@ import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.abs
 
-class CategoryRailPanel(
-    protected val state: PanelState,
-    private val textRenderer: TextRenderer,
-) {
+class CategoryRailPanel(protected val state: PanelState) {
 
     private val expandAnimation = Animation(Easing.EASE_OUT_CUBIC, 240L)
     private val contentAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
@@ -59,7 +61,16 @@ class CategoryRailPanel(
         return expandAnimation.value
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -68,12 +79,13 @@ class CategoryRailPanel(
         val targetContent = if (state.isSidebarExpanded()) 1.0f else 0.0f
         val requiresScissor = abs(bounds.width - targetWidth) > 0.001f ||
                 abs(contentAnimation.value - targetContent) > 0.001f
-        val tree = UiTree.build { root ->
-            root.scissorIf(requiresScissor, bounds) { scope ->
-                val contentProgress = scope.animate(contentAnimation, state.isSidebarExpanded())
-                val titleProgress = scope.animate(headerTitleAnimation, contentProgress)
-                val subtitleProgress = scope.animate(headerSubtitleAnimation, contentProgress > 0.08f)
-                val dividerProgress = scope.animate(headerDividerAnimation, contentProgress > 0.12f)
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
+
+            ClipIf(requiresScissor, 0.0f, 0.0f, width, height) {
+                val contentProgress = animate(contentAnimation, state.isSidebarExpanded())
+                val titleProgress = animate(headerTitleAnimation, contentProgress)
+                val subtitleProgress = animate(headerSubtitleAnimation, contentProgress > 0.08f)
+                val dividerProgress = animate(headerDividerAnimation, contentProgress > 0.12f)
                 val titleScale = 0.78f
                 val subtitleScale = 0.52f
                 val itemIconScale = 1.02f
@@ -81,52 +93,49 @@ class CategoryRailPanel(
                 val itemCountScale = 0.58f
 
                 val menuButton = getMenuButtonBounds()
-                val menuHover = scope.animate(menuHoverAnimation, mouseOver(menuButton, mouseX, mouseY))
-                scope.pushAbsolute(menuButton) { menu ->
-                    menu.roundRect(
-                        0.0f, 0.0f, menuButton.width, menuButton.height, 12.0f,
-                        MD3Theme.lerp(
-                            MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 0),
-                            MD3Theme.SURFACE_CONTAINER_HIGH, menuHover
-                        )
-                    )
-                    buildMenuGlyph(menu, menuButton)
+                val menuHover = animate(menuHoverAnimation, mouseOver(menuButton, mouseX, mouseY))
+                Interaction("menu", menuButton.relativeTo(origin)) { onClick {
+                    state.toggleSidebarExpanded()
+                    SoundManager.playInUi(if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+                    true
+                } }
+                val localMenu = menuButton.relativeTo(origin)
+                Positioned(localMenu.x, localMenu.y, localMenu.width, localMenu.height) {
+                    menuGlyph(menuButton.width, menuButton.height, menuHover)
                 }
 
                 val categoryStartY = getCategoryStartY(bounds)
                 if (titleProgress > 0.02f) {
                     val titleY = 7.0f
-                    val titleHeight = textRenderer.getHeight(titleScale)
+                    val titleHeight = metrics.textHeight(titleScale)
                     val pad = 3.0f
                     val subtitleY = titleY + titleHeight + pad
                     val titleOffset = (1.0f - titleProgress) * 8.0f
                     val subtitleOffset = (1.0f - subtitleProgress) * 10.0f
-                    scope.pushAbsolute(bounds) { rail ->
-                        rail.text(
-                            Constants.NAME, 38.0f + titleOffset, titleY, titleScale,
-                            MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, (255 * titleProgress).toInt())
+                    Text(
+                        Constants.NAME, 38.0f + titleOffset, titleY, titleScale,
+                        MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, (255 * titleProgress).toInt())
+                    )
+                    if (subtitleProgress > 0.02f) {
+                        Text(
+                            Constants.VERSION, 38.0f + subtitleOffset, subtitleY, subtitleScale,
+                            MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (210 * subtitleProgress).toInt())
                         )
-                        if (subtitleProgress > 0.02f) {
-                            rail.text(
-                                Constants.VERSION, 38.0f + subtitleOffset, subtitleY, subtitleScale,
-                                MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (210 * subtitleProgress).toInt())
-                            )
-                        }
-                        if (dividerProgress > 0.02f) {
-                            val dividerY = subtitleY + textRenderer.getHeight(subtitleScale) + 4.0f
-                            val dividerBaseX = 7.0f
-                            val dividerTargetWidth = bounds.width - 14.0f
-                            val dividerWidth = dividerTargetWidth * dividerProgress
-                            val dividerX = dividerBaseX + (1.0f - dividerProgress) * 6.0f
-                            rail.rect(
-                                dividerX, dividerY, dividerWidth, 1.0f,
-                                MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (120 * dividerProgress).toInt())
-                            )
-                            rail.rect(
-                                dividerX, dividerY, minOf(18.0f, dividerWidth), 1.0f,
-                                MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (52 * dividerProgress).toInt())
-                            )
-                        }
+                    }
+                    if (dividerProgress > 0.02f) {
+                        val dividerY = subtitleY + metrics.textHeight(subtitleScale) + 4.0f
+                        val dividerBaseX = 7.0f
+                        val dividerTargetWidth = width - 14.0f
+                        val dividerWidth = dividerTargetWidth * dividerProgress
+                        val dividerX = dividerBaseX + (1.0f - dividerProgress) * 6.0f
+                        Rect(
+                            dividerX, dividerY, dividerWidth, 1.0f,
+                            MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (120 * dividerProgress).toInt())
+                        )
+                        Rect(
+                            dividerX, dividerY, minOf(18.0f, dividerWidth), 1.0f,
+                            MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (52 * dividerProgress).toInt())
+                        )
                     }
                 }
 
@@ -163,24 +172,24 @@ class CategoryRailPanel(
                     }
                 }
 
-                val hoverAlpha = scope.animate(hoverAlphaAnimation, hoveredY >= 0)
+                val hoverAlpha = animate(hoverAlphaAnimation, hoveredY >= 0)
                 if (hoveredY >= 0) {
-                    scope.animate(hoverYAnimation, hoveredY)
+                    animate(hoverYAnimation, hoveredY)
                 }
                 if (hoverAlpha > 0.01f) {
-                    scope.pushAbsolute(bounds.x + 5.0f, hoverYAnimation.value) { hover ->
-                        hover.roundRect(
-                            0.0f, 0.0f, bounds.width - 10.0f, CATEGORY_ITEM_HEIGHT, MD3Theme.CARD_RADIUS.toFloat(),
+                    Positioned(5.0f, hoverYAnimation.value - origin.y, width - 10.0f, CATEGORY_ITEM_HEIGHT) {
+                        RoundRect(
+                            0.0f, 0.0f, width, height, MD3Theme.CARD_RADIUS.toFloat(),
                             MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, (200 * hoverAlpha).toInt())
                         )
                     }
                 }
 
-                val animatedSelectionY = scope.animate(selectionYAnimation, selectedItemY)
-                val animatedSelectionHeight = scope.animate(selectionHeightAnimation, CATEGORY_ITEM_HEIGHT)
-                scope.pushAbsolute(bounds.x + 5.0f, animatedSelectionY) { selection ->
-                    selection.roundRect(
-                        0.0f, 0.0f, bounds.width - 10.0f, animatedSelectionHeight, MD3Theme.CARD_RADIUS.toFloat(),
+                val animatedSelectionY = animate(selectionYAnimation, selectedItemY)
+                val animatedSelectionHeight = animate(selectionHeightAnimation, CATEGORY_ITEM_HEIGHT)
+                Positioned(5.0f, animatedSelectionY - origin.y, width - 10.0f, animatedSelectionHeight) {
+                    RoundRect(
+                        0.0f, 0.0f, width, height, MD3Theme.CARD_RADIUS.toFloat(),
                         MD3Theme.SECONDARY_CONTAINER
                     )
                 }
@@ -192,8 +201,11 @@ class CategoryRailPanel(
                     val hovered = itemRect.contains(mouseX.toDouble(), mouseY.toDouble())
                     val selected = !state.isClientSettingMode() && state.getSelectedCategory() === category
                     val count = getCategoryCount(category)
+                    Interaction(category, itemRect.relativeTo(origin)) { onClick {
+                        state.setClientSettingMode(false); state.setSelectedCategory(category); true
+                    } }
                     buildCategoryItem(
-                        scope, menuButton, itemRect, category, count, hovered, selected, contentProgress,
+                        menuButton, itemRect, category, count, hovered, selected, contentProgress,
                         itemIconScale, itemLabelScale, itemCountScale
                     )
                     itemY += CATEGORY_ITEM_SPACING
@@ -203,70 +215,22 @@ class CategoryRailPanel(
                 val settingsRect = UiRect(bounds.x + 5.0f, settingsBtnY, bounds.width - 10.0f, CATEGORY_ITEM_HEIGHT)
                 val settingsHovered = settingsRect.contains(mouseX.toDouble(), mouseY.toDouble())
                 val settingsSelected = state.isClientSettingMode()
-                val settingsHover = scope.animate(settingsHoverAnimation, settingsHovered)
+                val settingsHover = animate(settingsHoverAnimation, settingsHovered)
+                Interaction("settings", settingsRect.relativeTo(origin)) { onClick { state.setClientSettingMode(true); true } }
                 buildSettingsItem(
-                    scope, menuButton, settingsRect, settingsHovered, settingsSelected, contentProgress,
+                    menuButton, settingsRect, settingsHovered, settingsSelected, contentProgress,
                     settingsHover, itemIconScale, itemLabelScale
                 )
             }
         }
-        renderBatch.render(tree)
     }
 
-    fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val currentBounds = bounds
-        if (currentBounds == null || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false
-        }
-        if (getMenuButtonBounds().contains(event.x(), event.y())) {
-            state.toggleSidebarExpanded()
-            SoundManager.playInUi(
-                if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE
-            )
-            return true
-        }
-
-        var itemY = getCategoryStartY(currentBounds)
-        for (category in Category.entries) {
-            val itemRect = UiRect(currentBounds.x + 5.0f, itemY, currentBounds.width - 10.0f, CATEGORY_ITEM_HEIGHT)
-            if (itemRect.contains(event.x(), event.y())) {
-                state.setClientSettingMode(false)
-                state.setSelectedCategory(category)
-                return true
-            }
-            itemY += CATEGORY_ITEM_SPACING
-        }
-
-        val settingsRect = UiRect(
-            currentBounds.x + 5.0f, getSettingsButtonY(), currentBounds.width - 10.0f, CATEGORY_ITEM_HEIGHT
-        )
-        if (settingsRect.contains(event.x(), event.y())) {
-            state.setClientSettingMode(true)
-            return true
-        }
-
-        return false
-    }
 
     private fun getMenuButtonBounds(): UiRect {
         val currentBounds = bounds!!
         return UiRect(
             currentBounds.x + 4.0f + RAIL_ICON_CENTER_X_OFFSET, currentBounds.y + 4.0f, 28.0f, 28.0f
         )
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return !expandAnimation.isFinished ||
-                !contentAnimation.isFinished ||
-                !menuHoverAnimation.isFinished ||
-                !headerTitleAnimation.isFinished ||
-                !headerSubtitleAnimation.isFinished ||
-                !headerDividerAnimation.isFinished ||
-                !selectionYAnimation.isFinished ||
-                !selectionHeightAnimation.isFinished ||
-                !hoverYAnimation.isFinished ||
-                !hoverAlphaAnimation.isFinished ||
-                !settingsHoverAnimation.isFinished
     }
 
     private fun mouseOver(rect: UiRect, mouseX: Int, mouseY: Int): Boolean {
@@ -282,18 +246,25 @@ class CategoryRailPanel(
         return bounds!!.bottom() - CATEGORY_ITEM_HEIGHT - 5.0f
     }
 
-    private fun buildMenuGlyph(scope: UiTree.Scope, button: UiRect) {
+    private fun UiScope.menuGlyph(buttonWidth: Float, buttonHeight: Float, menuHover: Float) {
+        RoundRect(
+            0.0f, 0.0f, buttonWidth, buttonHeight, 12.0f,
+            MD3Theme.lerp(
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 0),
+                MD3Theme.SURFACE_CONTAINER_HIGH, menuHover
+            )
+        )
         val lineColor = MD3Theme.TEXT_PRIMARY
         val glyphHeight = 10.0f
-        val x = button.width / 2.0f - 6.0f
-        val y = (button.height - glyphHeight) / 2.0f
-        scope.rect(x, y, 12.0f, 1.6f, lineColor)
-        scope.rect(x, y + 4.0f, 12.0f, 1.6f, lineColor)
-        scope.rect(x, y + 8.0f, 12.0f, 1.6f, lineColor)
+        val x = buttonWidth / 2.0f - 6.0f
+        val y = (buttonHeight - glyphHeight) / 2.0f
+        Rect(x, y, 12.0f, 1.6f, lineColor)
+        Rect(x, y + 4.0f, 12.0f, 1.6f, lineColor)
+        Rect(x, y + 8.0f, 12.0f, 1.6f, lineColor)
     }
 
-    private fun buildCategoryItem(
-        scope: UiTree.Scope, menuButton: UiRect, itemRect: UiRect, category: Category, count: Int,
+    private fun UiScope.buildCategoryItem(
+        menuButton: UiRect, itemRect: UiRect, category: Category, count: Int,
         hovered: Boolean, selected: Boolean, contentProgress: Float,
         itemIconScale: Float, itemLabelScale: Float, itemCountScale: Float,
     ) {
@@ -313,33 +284,34 @@ class CategoryRailPanel(
         }
         val labelColor: Color = if (selected) MD3Theme.ON_SECONDARY_CONTAINER else MD3Theme.TEXT_PRIMARY
         val countColor: Color = if (selected) MD3Theme.ON_SECONDARY_CONTAINER else MD3Theme.TEXT_SECONDARY
-        val iconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS)
-        val labelHeight = textRenderer.getHeight(itemLabelScale)
-        val countHeight = textRenderer.getHeight(itemCountScale)
+        val iconHeight = metrics.textHeight(itemIconScale, StaticFontLoader.ICONS)
+        val labelHeight = metrics.textHeight(itemLabelScale)
+        val countHeight = metrics.textHeight(itemCountScale)
         val iconY = (itemRect.height - iconHeight) / 2.0f
         val labelY = (itemRect.height - labelHeight) / 2.0f
         val countY = (itemRect.height - countHeight) / 2.0f
 
-        scope.pushAbsolute(itemRect) { item ->
-            item.roundRect(0.0f, 0.0f, itemRect.width, itemRect.height, MD3Theme.CARD_RADIUS.toFloat(), background)
-            val iconWidth = textRenderer.getWidth(category.icon, itemIconScale, StaticFontLoader.ICONS)
+        val localItem = itemRect.relativeTo(origin)
+        Positioned(localItem.x, localItem.y, localItem.width, localItem.height) {
+            RoundRect(0.0f, 0.0f, itemRect.width, itemRect.height, MD3Theme.CARD_RADIUS.toFloat(), background)
+            val iconWidth = metrics.textWidth(category.icon, itemIconScale, StaticFontLoader.ICONS)
             val iconX = getRailIconCenterX(menuButton) - itemRect.x - iconWidth / 2.0f
-            item.text(category.icon, iconX, iconY, itemIconScale, iconColor, StaticFontLoader.ICONS)
+            Text(category.icon, iconX, iconY, itemIconScale, iconColor, StaticFontLoader.ICONS)
             if (contentProgress > 0.02f) {
                 val textOffset = (1.0f - contentProgress) * 5.0f
                 val animatedLabel = MD3Theme.withAlpha(labelColor, (255 * contentProgress).toInt())
                 val animatedCount = MD3Theme.withAlpha(countColor, (220 * contentProgress).toInt())
-                item.text(category.name, 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
-                val countWidth = textRenderer.getWidth(count.toString(), itemCountScale)
-                item.text(
+                Text(category.name, 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
+                val countWidth = metrics.textWidth(count.toString(), itemCountScale)
+                Text(
                     count.toString(), itemRect.width - 12.0f - countWidth, countY, itemCountScale, animatedCount
                 )
             }
         }
     }
 
-    private fun buildSettingsItem(
-        scope: UiTree.Scope, menuButton: UiRect, settingsRect: UiRect,
+    private fun UiScope.buildSettingsItem(
+        menuButton: UiRect, settingsRect: UiRect,
         settingsHovered: Boolean, settingsSelected: Boolean, contentProgress: Float, settingsHover: Float,
         itemIconScale: Float, itemLabelScale: Float,
     ) {
@@ -358,23 +330,24 @@ class CategoryRailPanel(
             MD3Theme.TEXT_SECONDARY
         }
         val settingsLabelColor: Color = if (settingsSelected) MD3Theme.ON_SECONDARY_CONTAINER else MD3Theme.TEXT_PRIMARY
-        scope.pushAbsolute(settingsRect) { settings ->
-            settings.roundRect(
+        val localSettings = settingsRect.relativeTo(origin)
+        Positioned(localSettings.x, localSettings.y, localSettings.width, localSettings.height) {
+            RoundRect(
                 0.0f, 0.0f, settingsRect.width, settingsRect.height, MD3Theme.CARD_RADIUS.toFloat(), settingsBg
             )
-            val settingsIconWidth = textRenderer.getWidth(SETTINGS_ICON, itemIconScale, StaticFontLoader.ICONS)
+            val settingsIconWidth = metrics.textWidth(SETTINGS_ICON, itemIconScale, StaticFontLoader.ICONS)
             val settingsIconX = getRailIconCenterX(menuButton) - settingsRect.x - settingsIconWidth / 2.0f
-            val settingsIconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS)
+            val settingsIconHeight = metrics.textHeight(itemIconScale, StaticFontLoader.ICONS)
             val settingsIconY = (settingsRect.height - settingsIconHeight) / 2.0f
-            settings.text(
+            Text(
                 SETTINGS_ICON, settingsIconX, settingsIconY, itemIconScale, settingsIconColor, StaticFontLoader.ICONS
             )
             if (contentProgress > 0.02f) {
                 val textOffset = (1.0f - contentProgress) * 5.0f
                 val animatedLabel = MD3Theme.withAlpha(settingsLabelColor, (255 * contentProgress).toInt())
-                val settingsLabelHeight = textRenderer.getHeight(itemLabelScale)
+                val settingsLabelHeight = metrics.textHeight(itemLabelScale)
                 val settingsLabelY = (settingsRect.height - settingsLabelHeight) / 2.0f
-                settings.text(
+                Text(
                     EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), 30.0f + textOffset, settingsLabelY,
                     itemLabelScale, animatedLabel
                 )

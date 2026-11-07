@@ -1,13 +1,17 @@
 package com.github.epsilon.gui.lib.control
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -20,9 +24,9 @@ class UiTextField(maxLength: Int) {
     private val focusAnimation: Animation = Animation(Easing.EASE_OUT_CUBIC, ANIM_DURATION)
 
     private var maxLength: Int
-    private var focused = false
-    private var text = ""
-    private var cursor = 0
+    private var focused by mutableStateOf(false)
+    private var textStore by mutableStateOf("")
+    private var cursor by mutableStateOf(0)
 
     private var leadingIconGlyph: String? = null
     private var leadingIconScale = 1.0f
@@ -40,7 +44,7 @@ class UiTextField(maxLength: Int) {
     }
 
     fun buildUi(
-        scope: UiTree.Scope, bounds: UiRect, mouseX: Double, mouseY: Double,
+        scope: UiScope, bounds: UiRect, mouseX: Double, mouseY: Double,
         textRenderer: TextRenderer, placeholder: String, textScale: Float
     ) {
         val hovered = bounds.contains(mouseX, mouseY)
@@ -59,11 +63,11 @@ class UiTextField(maxLength: Int) {
         val textX = bounds.x + textInset
         val textY = bounds.y + (bounds.height - textHeight) / 2.0f
 
-        val showPlaceholder = text.isEmpty() && !focused
-        val display = if (showPlaceholder) placeholder else text
+        val showPlaceholder = textStore.isEmpty() && !focused
+        val display = if (showPlaceholder) placeholder else textStore
         val textColor = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
 
-        scope.input(
+        scope.Input(
             bounds, focused, hoverProgress,
             focusProgress, MD3Theme.PRIMARY, 1.0f,
             textInset, display, textScale, textColor,
@@ -75,14 +79,14 @@ class UiTextField(maxLength: Int) {
         if (leadingIcon != null) {
             val glyphHeight = textRenderer.getHeight(leadingIconScale, StaticFontLoader.ICONS)
             val iconColor: Color = if (focused) MD3Theme.PRIMARY else MD3Theme.TEXT_MUTED
-            scope.text(
+            scope.Text(
                 leadingIcon, bounds.x + DEFAULT_TEXT_INSET,
                 bounds.y + (bounds.height - glyphHeight) / 2.0f, leadingIconScale, iconColor, StaticFontLoader.ICONS
             )
         }
 
         if (focused) {
-            val caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor()), textScale)
+            val caretX = textX + textRenderer.getWidth(textStore.substring(0, safeCursor()), textScale)
             IMEFocusHelper.updateCursorPos(caretX, textY)
         }
     }
@@ -96,8 +100,9 @@ class UiTextField(maxLength: Int) {
     }
 
     fun focus() {
+        if (focused) return
         focused = true
-        cursor = text.length
+        cursor = textStore.length
         IMEFocusHelper.activate()
     }
 
@@ -117,16 +122,16 @@ class UiTextField(maxLength: Int) {
         }
         return when (event.key()) {
             InputConstants.KEY_BACKSPACE -> {
-                if (cursor > 0 && !text.isEmpty()) {
-                    text = text.substring(0, cursor - 1) + text.substring(cursor)
+                if (cursor > 0 && !textStore.isEmpty()) {
+                    textStore = textStore.substring(0, cursor - 1) + textStore.substring(cursor)
                     cursor--
                 }
                 true
             }
 
             InputConstants.KEY_DELETE -> {
-                if (cursor < text.length) {
-                    text = text.substring(0, cursor) + text.substring(cursor + 1)
+                if (cursor < textStore.length) {
+                    textStore = textStore.substring(0, cursor) + textStore.substring(cursor + 1)
                 }
                 true
             }
@@ -137,7 +142,7 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_RIGHT -> {
-                cursor = minOf(text.length, cursor + 1)
+                cursor = minOf(textStore.length, cursor + 1)
                 true
             }
 
@@ -147,7 +152,7 @@ class UiTextField(maxLength: Int) {
             }
 
             InputConstants.KEY_END -> {
-                cursor = text.length
+                cursor = textStore.length
                 true
             }
 
@@ -167,43 +172,39 @@ class UiTextField(maxLength: Int) {
         return true
     }
 
-    fun hasActiveAnimations(): Boolean {
-        return !hoverAnimation.isFinished || !focusAnimation.isFinished
-    }
-
     fun isFocused(): Boolean {
         return focused
     }
 
     fun isEmpty(): Boolean {
-        return text.isEmpty()
+        return textStore.isEmpty()
     }
 
     fun getText(): String {
-        return text
+        return textStore
     }
 
     fun setMaxLength(maxLength: Int) {
         this.maxLength = maxLength
-        if (text.length > maxLength) {
-            text = text.substring(0, maxLength)
+        if (textStore.length > maxLength) {
+            textStore = textStore.substring(0, maxLength)
         }
-        cursor = minOf(cursor, text.length)
+        cursor = minOf(cursor, textStore.length)
     }
 
     fun clear() {
-        text = ""
+        textStore = ""
         cursor = 0
     }
 
     private fun safeCursor(): Int {
-        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt().toInt()
+        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((textStore.length).toLong()).toLong()).toInt().toInt()
     }
 
     private fun handleControlShortcut(key: Int): Boolean {
         return when (key) {
             InputConstants.KEY_A -> {
-                cursor = text.length
+                cursor = textStore.length
                 true
             }
 
@@ -233,12 +234,12 @@ class UiTextField(maxLength: Int) {
         if (inserted == null || inserted.isEmpty()) {
             return
         }
-        val available = maxLength - text.length
+        val available = maxLength - textStore.length
         if (available <= 0) {
             return
         }
         val safeInsert = if (inserted.length > available) inserted.substring(0, available) else inserted
-        text = text.substring(0, cursor) + safeInsert + text.substring(cursor)
+        textStore = textStore.substring(0, cursor) + safeInsert + textStore.substring(cursor)
         cursor += safeInsert.length
     }
 

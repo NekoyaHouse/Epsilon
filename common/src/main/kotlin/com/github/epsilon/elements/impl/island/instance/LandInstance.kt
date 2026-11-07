@@ -3,7 +3,7 @@ package com.github.epsilon.elements.impl.island.instance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.elements.impl.island.pattern.impl.DelayPattern
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.timer.TimerUtils
 import java.awt.Color
 
@@ -34,13 +34,11 @@ abstract class LandInstance(
     /**
      * 绘制实例内容。
      *
-     * @param scope      绘制作用域
-     * @param translateX 容器左上角 X
-     * @param translateY 容器左上角 Y
-     * @param width      容器当前宽度
-     * @param height     容器当前高度
+     * @param scope  绘制作用域；原点就是容器左上角，因此坐标一律相对容器
+     * @param width  容器当前宽度
+     * @param height 容器当前高度
      */
-    abstract fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float)
+    abstract fun draw(scope: UiScope, width: Float, height: Float)
 
     /**
      * 实例离开控制器时释放自身持有的临时资源。

@@ -1,8 +1,11 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
@@ -124,56 +127,51 @@ class TrollSettingsWindow(
         scope.scissor(viewport) { content ->
             for (entry in entries) {
                 if (entry.row != null) {
-                    entry.row.draw(content, metrics, mouseX, mouseY)
+                    content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(entry.row) {
+                        entry.row.draw(tree, metrics, mouseX, mouseY)
+                    }
                 } else {
+                    content.asUiScope(TrollTheme.metrics(metrics)).Interaction(key = entry.section!!, bounds = entry.bounds) {
+                        onClick { entry.section.toggleCollapsed(); true }
+                        onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
+                    }
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    content.rect(
-                        1, entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,
-                        Color(255, 255, 255, if (hovered) 32 else 12)
-                    )
+                    content.layer(TrollZ.Base) { z ->
+                        z.rect(
+                            entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,
+                            Color(255, 255, 255, if (hovered) 32 else 12)
+                        )
+                    }
                     val label = (if (entry.section!!.isCollapsed()) "+ " else "- ") + entry.section.title()
-                    content.textWithShadow(
-                        3, TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
-                        entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
-                    )
+                    content.layer(TrollZ.Text) { z ->
+                        z.textWithShadow(
+                            TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
+                            entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
+                        )
+                    }
                 }
             }
             for (entry in entries) {
                 val section = entry.section ?: continue
                 val card = entry.groupBounds.inset(0.6f)
                 val outline = TrollTheme.alpha(TrollTheme.primary(), 255)
-                content.rectOutline(5, card.x, card.y, card.width, card.height, 0.5f, outline)
+                content.layer(TrollZ.Overlay) { z ->
+                    z.rectOutline(card.x, card.y, card.width, card.height, 0.5f, outline)
+                }
             }
         }
     }
 
     override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        if (captureMouseBind(event)) return true
-        for (row in allRows()) row.resetInput()
-        if (super.mouseClicked(event)) return true
-        if (!viewport.contains(event.x(), event.y())) return false
-        for (entry in entries.toList()) {
-            if (!entry.bounds.contains(event.x(), event.y())) continue
-            entry.row?.let { return it.mouseClicked(event) }
-            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT || event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
-                entry.section!!.toggleCollapsed()
-            }
-            return true
-        }
-        return true
+        return super.mouseClicked(event)
     }
 
     override fun mouseDragged(event: MouseButtonEvent): Boolean {
-        if (super.mouseDragged(event)) return true
-        for (row in allRows()) {
-            if (row.mouseDragged(event)) return true
-        }
-        return false
+        return super.mouseDragged(event)
     }
 
     override fun mouseReleased(event: MouseButtonEvent) {
         super.mouseReleased(event)
-        for (row in allRows()) row.mouseReleased(event)
     }
 
     fun startSettingAnimations() {
@@ -181,25 +179,13 @@ class TrollSettingsWindow(
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        for (row in allRows()) {
-            if (row.keyPressed(event)) return true
-        }
         return false
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        for (row in allRows()) {
-            if (row.charTyped(event)) return true
-        }
         return false
     }
 
-    fun captureMouseBind(event: MouseButtonEvent): Boolean {
-        for (row in allRows()) {
-            if (row.captureMouseBind(event)) return true
-        }
-        return false
-    }
 
     fun listenForBind() {
         bindRow.listenForBind()

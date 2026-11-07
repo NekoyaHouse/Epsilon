@@ -28,6 +28,9 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
     }
 
     fun contains(px: Double, py: Double): Boolean {
+        val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+        val view = composition?.view
+        if (composition != null && view != null && !composition.alwaysDirty) return view.contains(composition, this, px, py)
         return px >= x && px <= right() && py >= y && py <= bottom()
     }
 

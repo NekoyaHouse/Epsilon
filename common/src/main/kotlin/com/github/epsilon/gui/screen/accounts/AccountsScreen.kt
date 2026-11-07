@@ -1,5 +1,10 @@
 package com.github.epsilon.gui.screen.accounts
 
+import com.github.epsilon.gui.lib.LuminUITree
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.MicrosoftLogin
@@ -60,11 +65,8 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private var listViewport: UiRect? = null
     private var addBarY: Float = 0.0f
     private var rowWidth: Float = 0.0f
-    private val addButtons: Array<UiRect?> = arrayOfNulls(4)
     private var formTitleY: Float = 0.0f
     private var formFieldBounds: UiRect? = null
-    private var formAddBtn: UiRect? = null
-    private var formCancelBtn: UiRect? = null
     private var formButtonY: Float = 0.0f
 
     private var scroll: Float = 0.0f
@@ -127,16 +129,16 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         scene.beginFrame()
         listBuffer.clear()
 
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, w.toFloat(), h.toFloat()), "accounts", immediate = true) { scope ->
             scope.rect(0.0f, 0.0f, w.toFloat(), h.toFloat(), SCRIM)
-            scope.layer(0) { panel ->
+            scope.layer(DialogZ.Card) { panel ->
                 panel.shadow(
                     panelX, panelY, panelW, panelH,
                     MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR, MD3Theme.SHADOW,
                 )
                 panel.roundRect(panelX, panelY, panelW, panelH, MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.SURFACE)
             }
-            scope.layer(10) { content ->
+            scope.layer(DialogZ.Content) { content ->
                 drawHeader(content, ex, ey)
                 if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) {
                     drawAddForm(content, ex, ey)
@@ -148,9 +150,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
         scene.submit(UiLayer.CONTENT, tree)
 
-        scene.flush()
+        scene.flushAndClear()
         listBuffer.flush()
-        scene.clear()
+        scene.endFrame()
 
         LuminRenderSystem.setActiveTarget(null)
 
@@ -257,6 +259,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
     private fun drawHeader(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
         val backBtn = headerBackBtn ?: return
+        scope.asUiScope(textRenderer).Interaction("back", backBtn) {
+            onClick { if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) exitAddMode() else close(); true }
+        }
         val backHovered = backBtn.contains(mouseX.toDouble(), mouseY.toDouble())
         drawIconGlyph(
             scope,
@@ -287,8 +292,15 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun drawToolbar(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
         val searchBounds = this.searchBounds ?: return
         val sortBounds = this.sortBounds ?: return
+        scope.asUiScope(textRenderer).InputRegion(searchField, searchBounds,
+            onPress = { _, _ -> searchField.focus(); true }, onKey = searchField::keyPressed,
+            onText = { val handled = searchField.charTyped(it); if (handled) { scroll = 0f; scrollVelocity = 0f }; handled },
+            onBlur = searchField::blur)
+        scope.asUiScope(textRenderer).Interaction("sort", sortBounds) {
+            onClick { sortMode = sortMode.next(); this@AccountsScreen.scroll = 0f; scrollVelocity = 0f; true }
+        }
         searchField.buildUi(
-            scope, searchBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer,
+            scope.asUiScope(textRenderer), searchBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer,
             EpsilonTranslations.Gui.ACCOUNTS_SEARCH_PLACEHOLDER.getTranslatedName(), 1.0f,
         )
         sortButton.draw(scope, sortBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, sortMode)
@@ -302,6 +314,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             return
         }
 
+        scope.asUiScope(textRenderer).Interaction("scroll", viewport) {
+            onScroll { _, _, _, amount -> scrollVelocity -= amount.toFloat() * 24f; true }
+        }
         val contentHeight = visible.size * (AccountRow.HEIGHT + AccountRow.GAP)
         scope.viewport(listBuffer, viewport, scroll, maxScroll, contentHeight, mouseX, mouseY) { content ->
             var y = viewport.y - scroll
@@ -317,6 +332,22 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
                     mouseX.toDouble(), mouseY.toDouble(),
                 )
                 row.draw(content, bounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, state)
+                val ui = content.asUiScope(textRenderer)
+                ui.Interaction(row, bounds.relativeTo(ui.origin)) {
+                    onClick { focusedIndex = i; login(account); true }
+                }
+                row.getDeleteBounds()?.let { delete ->
+                    ui.Interaction(row to "delete", delete.relativeTo(ui.origin)) {
+                        onClick {
+                            focusedIndex = i
+                            if (authenticating.get() !== account) {
+                                if (row.isConfirmingDelete()) { row.setConfirmingDelete(false); AccountManager.remove(account) }
+                                else row.setConfirmingDelete(true)
+                            }
+                            true
+                        }
+                    }
+                }
                 y += AccountRow.HEIGHT + AccountRow.GAP
             }
         }
@@ -382,7 +413,13 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         for (i in 0 until 4) {
             val x = panelX + PAD + i * (buttonWidth + gap)
             val rect = UiRect(x, addBarY, buttonWidth, buttonHeight)
-            addButtons[i] = rect
+            scope.asUiScope(textRenderer).Interaction("add" to i, rect) {
+                onClick {
+                    when (i) { 0 -> startAdd(AddMode.CRACKED); 1 -> startAdd(AddMode.ALTENING)
+                        2 -> startAdd(AddMode.SESSION); 3 -> startAddMicrosoft() }
+                    true
+                }
+            }
             val hovered = rect.contains(mouseX.toDouble(), mouseY.toDouble())
             scope.button(
                 x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS.toFloat(),
@@ -435,7 +472,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
         val fieldBounds = formFieldBounds
         if (fieldBounds != null) {
-            field.buildUi(scope, fieldBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, placeholder, 0.7f)
+            scope.asUiScope(textRenderer).InputRegion(field, fieldBounds,
+                onPress = { _, _ -> field.focus(); true }, onKey = field::keyPressed,
+                onText = field::charTyped, onBlur = field::blur, autoFocus = true)
+            field.buildUi(scope.asUiScope(textRenderer), fieldBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, placeholder, 0.7f)
         }
 
         drawFormButtons(scope, true)
@@ -448,7 +488,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val y = formButtonY
 
         val cancelBtn = UiRect(panelX + PAD, y, cancelWidth, buttonHeight)
-        formCancelBtn = cancelBtn
+        scope.asUiScope(textRenderer).Interaction("cancel", cancelBtn) { onClick { exitAddMode(); true } }
         scope.button(
             cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height, MD3Theme.CONTROL_RADIUS.toFloat(),
             Color(0, 0, 0, 0), EpsilonTranslations.Gui.ACCOUNTS_CANCEL.getTranslatedName(), 0.6f, MD3Theme.TEXT_PRIMARY,
@@ -460,7 +500,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
         if (withAdd) {
             val addBtn = UiRect(panelX + panelW - PAD - addWidth, y, addWidth, buttonHeight)
-            formAddBtn = addBtn
+            scope.asUiScope(textRenderer).Interaction("submit", addBtn) { onClick { submitAdd(); true } }
             val canAdd = field.getText().isNotBlank()
             val bg = if (canAdd) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.PRIMARY, 80)
             val fg = if (canAdd) MD3Theme.ON_PRIMARY else MD3Theme.withAlpha(MD3Theme.ON_PRIMARY, 100)
@@ -472,104 +512,13 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        val e = LuminRenderSystem.toEpsilonMouseEvent(event)
-        val mx = e.x()
-        val my = e.y()
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            val backBtn = headerBackBtn
-            if (backBtn != null && backBtn.contains(mx, my)) {
-                if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) exitAddMode() else close()
-                return true
-            }
-
-            if (addMode != AddMode.NONE || microsoftWaiting || microsoftError) {
-                val cancelBtn = formCancelBtn
-                if (cancelBtn != null && cancelBtn.contains(mx, my)) {
-                    exitAddMode()
-                    return true
-                }
-                if (addMode != AddMode.NONE) {
-                    val addBtn = formAddBtn
-                    if (addBtn != null && addBtn.contains(mx, my)) {
-                        submitAdd()
-                        return true
-                    }
-                    val fieldBounds = formFieldBounds
-                    if (fieldBounds != null && field.focusIfContains(fieldBounds, mx, my)) {
-                        return true
-                    }
-                    field.blur()
-                }
-                return true
-            }
-
-            val sortBounds = this.sortBounds
-            if (sortBounds != null && sortBounds.contains(mx, my)) {
-                sortMode = sortMode.next()
-                scroll = 0.0f
-                scrollVelocity = 0.0f
-                return true
-            }
-
-            val searchBounds = this.searchBounds
-            if (searchBounds != null && searchField.focusIfContains(searchBounds, mx, my)) {
-                return true
-            }
-            searchField.blur()
-
-            val viewport = listViewport
-            if (viewport != null && viewport.contains(mx, my)) {
-                for (i in visible.indices) {
-                    val row = visible[i]
-                    val deleteBounds = row.getDeleteBounds()
-                    if (deleteBounds != null && deleteBounds.contains(mx, my)) {
-                        focusedIndex = i
-                        if (authenticating.get() === row.getAccount()) return true
-
-                        if (row.isConfirmingDelete()) {
-                            row.setConfirmingDelete(false)
-                            AccountManager.remove(row.getAccount())
-                        } else {
-                            row.setConfirmingDelete(true)
-                        }
-                        return true
-                    }
-                    val rowBounds = row.getBounds()
-                    if (rowBounds != null && rowBounds.contains(mx, my)) {
-                        focusedIndex = i
-                        login(row.getAccount())
-                        return true
-                    }
-                }
-            }
-
-            for (i in 0 until 4) {
-                val button = addButtons[i]
-                if (button != null && button.contains(mx, my)) {
-                    when (i) {
-                        0 -> startAdd(AddMode.CRACKED)
-                        1 -> startAdd(AddMode.ALTENING)
-                        2 -> startAdd(AddMode.SESSION)
-                        3 -> startAddMicrosoft()
-                    }
-                    return true
-                }
-            }
-
-            clearDeleteConfirmations()
-        }
-        return super.mouseClicked(e, doubleClick)
+        val handled = scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
+        if (!handled) clearDeleteConfirmations()
+        return handled
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        val ex = LuminRenderSystem.toEpsilonMouseX(mouseX)
-        val ey = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        val viewport = listViewport
-        if (addMode == AddMode.NONE && !microsoftWaiting && viewport != null && viewport.contains(ex, ey)) {
-            scrollVelocity -= scrollY.toFloat() * 24.0f
-            return true
-        }
-        return super.mouseScrolled(ex, ey, scrollX, scrollY)
+        return scene.input.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
@@ -582,7 +531,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
                 submitAdd()
                 return true
             }
-            if (addMode != AddMode.NONE && field.keyPressed(event)) {
+            if (addMode != AddMode.NONE && scene.input.keyPressed(event)) {
                 return true
             }
             return true
@@ -619,7 +568,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             }
         }
 
-        if (searchField.keyPressed(event)) {
+        if (scene.input.keyPressed(event)) {
             return true
         }
 
@@ -638,22 +587,15 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
-        if (addMode != AddMode.NONE) {
-            field.charTyped(event)
-            return true
+        if (addMode == AddMode.NONE && !microsoftWaiting && !microsoftError) {
+            if (scene.input.requestFocus(searchField) && !searchField.isFocused()) searchField.focus()
         }
-        if (!searchField.isFocused()) {
-            searchField.focus()
-        }
-        if (searchField.charTyped(event)) {
-            scroll = 0.0f
-            scrollVelocity = 0.0f
-            return true
-        }
-        return super.charTyped(event)
+        return scene.input.charTyped(event)
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
+        scene.input.preeditUpdated(event)
+
         this.preeditOverlay = if (event != null) IMEPreeditOverlay(event, this.font, 10) else null
         return true
     }
@@ -665,6 +607,8 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     override fun removed() {
+        scene.resetComposition()
+
         super.removed()
         exitAddMode()
         searchField.blur()

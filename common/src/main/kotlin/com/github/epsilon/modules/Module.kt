@@ -1,5 +1,6 @@
 package com.github.epsilon.modules
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.ListenerOwner
 import com.github.epsilon.kernel.MinecraftWrapper
@@ -21,19 +22,22 @@ open class Module(
         Hold,
     }
 
-    var keyBind: Int = -1
-    var bindMode: BindMode = BindMode.Toggle
-    var isHidden: Boolean = true
+    var keyBind: Int by mutableStateOf(-1)
+    var bindMode: BindMode by mutableStateOf(BindMode.Toggle)
+    var isHidden: Boolean by mutableStateOf(true)
 
     private val enableCallbacks = ArrayList<() -> Unit>()
     private val disableCallbacks = ArrayList<() -> Unit>()
 
-    var isEnabled: Boolean = false
+    private val enabledState = mutableStateOf(false)
+
+    var isEnabled: Boolean
+        get() = enabledState.value
         set(value) {
-            if (field == value) {
+            if (enabledState.value == value) {
                 return
             }
-            field = value
+            enabledState.value = value
             if (value) subscribe() else unsubscribe()
             runSafe {
                 NotificationManager.moduleState(this@Module.translatedName, notificationHash, value)

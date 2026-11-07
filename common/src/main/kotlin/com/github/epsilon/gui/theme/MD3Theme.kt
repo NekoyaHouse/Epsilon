@@ -1,44 +1,76 @@
 package com.github.epsilon.gui.theme
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.modules.impl.ClientSetting
 import java.awt.Color
 
 object MD3Theme {
 
-    var SHADOW: Color = Color(0, 0, 0, 96)
+    private val colors = mutableStateOf(mapOf(
+        "SHADOW" to Color(0, 0, 0, 96),
+        "SURFACE" to Color(20, 18, 24, 238),
+        "SURFACE_DIM" to Color(15, 13, 19, 232),
+        "SURFACE_CONTAINER_LOW" to Color(29, 27, 32, 240),
+        "SURFACE_CONTAINER" to Color(33, 31, 38, 244),
+        "SURFACE_CONTAINER_HIGH" to Color(43, 41, 48, 248),
+        "SURFACE_CONTAINER_HIGHEST" to Color(54, 52, 59, 252),
+        "OUTLINE" to Color(147, 143, 153, 180),
+        "OUTLINE_SOFT" to Color(147, 143, 153, 96),
+        "PRIMARY" to Color(208, 188, 255),
+        "ON_PRIMARY" to Color(56, 30, 114),
+        "PRIMARY_CONTAINER" to Color(79, 55, 139, 236),
+        "ON_PRIMARY_CONTAINER" to Color(234, 221, 255),
+        "SECONDARY" to Color(204, 194, 220),
+        "ON_SECONDARY" to Color(51, 45, 65),
+        "SECONDARY_CONTAINER" to Color(74, 68, 88, 236),
+        "ON_SECONDARY_CONTAINER" to Color(232, 222, 248),
+        "TERTIARY" to Color(239, 184, 200),
+        "ON_TERTIARY" to Color(73, 37, 50),
+        "TERTIARY_CONTAINER" to Color(99, 59, 72, 236),
+        "ON_TERTIARY_CONTAINER" to Color(255, 216, 228),
+        "INVERSE_SURFACE" to Color(230, 224, 233),
+        "INVERSE_ON_SURFACE" to Color(49, 48, 51),
+        "TEXT_PRIMARY" to Color(230, 224, 233),
+        "TEXT_SECONDARY" to Color(202, 196, 208),
+        "TEXT_MUTED" to Color(147, 143, 153),
+        "SUCCESS" to Color(204, 194, 220),
+        "ERROR" to Color(242, 184, 181),
+    ))
 
-    var SURFACE: Color = Color(20, 18, 24, 238)
-    var SURFACE_DIM: Color = Color(15, 13, 19, 232)
-    var SURFACE_CONTAINER_LOW: Color = Color(29, 27, 32, 240)
-    var SURFACE_CONTAINER: Color = Color(33, 31, 38, 244)
-    var SURFACE_CONTAINER_HIGH: Color = Color(43, 41, 48, 248)
-    var SURFACE_CONTAINER_HIGHEST: Color = Color(54, 52, 59, 252)
+    val SHADOW: Color get() = colors.value.getValue("SHADOW")
 
-    var OUTLINE: Color = Color(147, 143, 153, 180)
-    var OUTLINE_SOFT: Color = Color(147, 143, 153, 96)
+    val SURFACE: Color get() = colors.value.getValue("SURFACE")
+    val SURFACE_DIM: Color get() = colors.value.getValue("SURFACE_DIM")
+    val SURFACE_CONTAINER_LOW: Color get() = colors.value.getValue("SURFACE_CONTAINER_LOW")
+    val SURFACE_CONTAINER: Color get() = colors.value.getValue("SURFACE_CONTAINER")
+    val SURFACE_CONTAINER_HIGH: Color get() = colors.value.getValue("SURFACE_CONTAINER_HIGH")
+    val SURFACE_CONTAINER_HIGHEST: Color get() = colors.value.getValue("SURFACE_CONTAINER_HIGHEST")
 
-    var PRIMARY: Color = Color(208, 188, 255)
-    var ON_PRIMARY: Color = Color(56, 30, 114)
-    var PRIMARY_CONTAINER: Color = Color(79, 55, 139, 236)
-    var ON_PRIMARY_CONTAINER: Color = Color(234, 221, 255)
+    val OUTLINE: Color get() = colors.value.getValue("OUTLINE")
+    val OUTLINE_SOFT: Color get() = colors.value.getValue("OUTLINE_SOFT")
 
-    var SECONDARY: Color = Color(204, 194, 220)
-    var ON_SECONDARY: Color = Color(51, 45, 65)
-    var SECONDARY_CONTAINER: Color = Color(74, 68, 88, 236)
-    var ON_SECONDARY_CONTAINER: Color = Color(232, 222, 248)
+    val PRIMARY: Color get() = colors.value.getValue("PRIMARY")
+    val ON_PRIMARY: Color get() = colors.value.getValue("ON_PRIMARY")
+    val PRIMARY_CONTAINER: Color get() = colors.value.getValue("PRIMARY_CONTAINER")
+    val ON_PRIMARY_CONTAINER: Color get() = colors.value.getValue("ON_PRIMARY_CONTAINER")
 
-    var TERTIARY: Color = Color(239, 184, 200)
-    var ON_TERTIARY: Color = Color(73, 37, 50)
-    var TERTIARY_CONTAINER: Color = Color(99, 59, 72, 236)
-    var ON_TERTIARY_CONTAINER: Color = Color(255, 216, 228)
-    var INVERSE_SURFACE: Color = Color(230, 224, 233)
-    var INVERSE_ON_SURFACE: Color = Color(49, 48, 51)
+    val SECONDARY: Color get() = colors.value.getValue("SECONDARY")
+    val ON_SECONDARY: Color get() = colors.value.getValue("ON_SECONDARY")
+    val SECONDARY_CONTAINER: Color get() = colors.value.getValue("SECONDARY_CONTAINER")
+    val ON_SECONDARY_CONTAINER: Color get() = colors.value.getValue("ON_SECONDARY_CONTAINER")
 
-    var TEXT_PRIMARY: Color = Color(230, 224, 233)
-    var TEXT_SECONDARY: Color = Color(202, 196, 208)
-    var TEXT_MUTED: Color = Color(147, 143, 153)
-    var SUCCESS: Color = Color(204, 194, 220)
-    var ERROR: Color = Color(242, 184, 181)
+    val TERTIARY: Color get() = colors.value.getValue("TERTIARY")
+    val ON_TERTIARY: Color get() = colors.value.getValue("ON_TERTIARY")
+    val TERTIARY_CONTAINER: Color get() = colors.value.getValue("TERTIARY_CONTAINER")
+    val ON_TERTIARY_CONTAINER: Color get() = colors.value.getValue("ON_TERTIARY_CONTAINER")
+    val INVERSE_SURFACE: Color get() = colors.value.getValue("INVERSE_SURFACE")
+    val INVERSE_ON_SURFACE: Color get() = colors.value.getValue("INVERSE_ON_SURFACE")
+
+    val TEXT_PRIMARY: Color get() = colors.value.getValue("TEXT_PRIMARY")
+    val TEXT_SECONDARY: Color get() = colors.value.getValue("TEXT_SECONDARY")
+    val TEXT_MUTED: Color get() = colors.value.getValue("TEXT_MUTED")
+    val SUCCESS: Color get() = colors.value.getValue("SUCCESS")
+    val ERROR: Color get() = colors.value.getValue("ERROR")
 
     private var appliedPreset: ClientSetting.ThemePreset? = null
     private var appliedMode: ClientSetting.ThemeMode? = null
@@ -82,34 +114,36 @@ object MD3Theme {
             return
         }
         val palette = forPreset(preset, mode)
-        SHADOW = palette.shadow
-        SURFACE = palette.surface
-        SURFACE_DIM = palette.surfaceDim
-        SURFACE_CONTAINER_LOW = palette.surfaceContainerLow
-        SURFACE_CONTAINER = palette.surfaceContainer
-        SURFACE_CONTAINER_HIGH = palette.surfaceContainerHigh
-        SURFACE_CONTAINER_HIGHEST = palette.surfaceContainerHighest
-        OUTLINE = palette.outline
-        OUTLINE_SOFT = withAlpha(palette.outline, 96)
-        PRIMARY = palette.primary
-        ON_PRIMARY = palette.onPrimary
-        PRIMARY_CONTAINER = palette.primaryContainer
-        ON_PRIMARY_CONTAINER = palette.onPrimaryContainer
-        SECONDARY = palette.secondary
-        ON_SECONDARY = palette.onSecondary
-        SECONDARY_CONTAINER = palette.secondaryContainer
-        ON_SECONDARY_CONTAINER = palette.onSecondaryContainer
-        TERTIARY = palette.tertiary
-        ON_TERTIARY = palette.onTertiary
-        TERTIARY_CONTAINER = palette.tertiaryContainer
-        ON_TERTIARY_CONTAINER = palette.onTertiaryContainer
-        INVERSE_SURFACE = palette.inverseSurface
-        INVERSE_ON_SURFACE = palette.inverseOnSurface
-        TEXT_PRIMARY = palette.textPrimary
-        TEXT_SECONDARY = palette.textSecondary
-        TEXT_MUTED = palette.textMuted
-        SUCCESS = palette.secondary
-        ERROR = palette.error
+        colors.value = mapOf(
+            "SHADOW" to palette.shadow,
+            "SURFACE" to palette.surface,
+            "SURFACE_DIM" to palette.surfaceDim,
+            "SURFACE_CONTAINER_LOW" to palette.surfaceContainerLow,
+            "SURFACE_CONTAINER" to palette.surfaceContainer,
+            "SURFACE_CONTAINER_HIGH" to palette.surfaceContainerHigh,
+            "SURFACE_CONTAINER_HIGHEST" to palette.surfaceContainerHighest,
+            "OUTLINE" to palette.outline,
+            "OUTLINE_SOFT" to withAlpha(palette.outline, 96),
+            "PRIMARY" to palette.primary,
+            "ON_PRIMARY" to palette.onPrimary,
+            "PRIMARY_CONTAINER" to palette.primaryContainer,
+            "ON_PRIMARY_CONTAINER" to palette.onPrimaryContainer,
+            "SECONDARY" to palette.secondary,
+            "ON_SECONDARY" to palette.onSecondary,
+            "SECONDARY_CONTAINER" to palette.secondaryContainer,
+            "ON_SECONDARY_CONTAINER" to palette.onSecondaryContainer,
+            "TERTIARY" to palette.tertiary,
+            "ON_TERTIARY" to palette.onTertiary,
+            "TERTIARY_CONTAINER" to palette.tertiaryContainer,
+            "ON_TERTIARY_CONTAINER" to palette.onTertiaryContainer,
+            "INVERSE_SURFACE" to palette.inverseSurface,
+            "INVERSE_ON_SURFACE" to palette.inverseOnSurface,
+            "TEXT_PRIMARY" to palette.textPrimary,
+            "TEXT_SECONDARY" to palette.textSecondary,
+            "TEXT_MUTED" to palette.textMuted,
+            "SUCCESS" to palette.secondary,
+            "ERROR" to palette.error,
+        )
         appliedPreset = preset
         appliedMode = mode
     }

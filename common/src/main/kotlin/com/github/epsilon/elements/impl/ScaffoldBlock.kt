@@ -4,8 +4,11 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
@@ -39,6 +42,11 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private var visibilityProgress: Float = 0f
     private var lastVisibilityUpdateMs: Long = 0L
 
+    /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
+    private var frameLayout: Layout? = null
+    private var frameAnimation: AnimationState = AnimationState(0f, 0f, 0f)
+    private var frameVisible: Boolean = false
+
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
@@ -52,7 +60,9 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         }
     }
 
-    override fun render(deltaTracker: DeltaTracker) {
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameVisible = false
+
         val blockCount = getDisplayBlockCount()
         val shouldShow = shouldShowHud(blockCount)
         updateVisibilityAnimation(shouldShow)
@@ -70,12 +80,21 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         }
 
         val textRenderer = textRendererSupplier.get()
-        val scope: UiTree.Scope = renderScope()
-
         val layout = createLayout(textRenderer)
-        drawBackground(scope, layout, animation)
-        drawText(scope, textRenderer, layout, animation)
+        frameLayout = layout
+        frameAnimation = animation
+        frameVisible = true
         setBounds(layout.totalWidth, layout.height)
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (!frameVisible) return
+        val layout = frameLayout ?: return
+        val animation = frameAnimation
+        val textRenderer = textRendererSupplier.get()
+
+        drawBackground(layout, animation)
+        drawText(textRenderer, layout, animation)
     }
 
     private fun shouldShowHud(liveBlockCount: Int): Boolean {
@@ -111,57 +130,62 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         val numberColumnWidth = getNumberColumnWidth(textRenderer, scaled)
         val labelWidth = textRenderer.getWidth(LABEL, labelScale)
         val totalWidth = padX * 2.0f + numberColumnWidth + labelGap + labelWidth
-        return Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, x)
+        return Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth)
     }
 
-    private fun drawBackground(scope: UiTree.Scope, layout: Layout, animation: AnimationState) {
+    private fun UiScope.drawBackground(layout: Layout, animation: AnimationState) {
+        val centerX = layout.totalWidth / 2.0f
         val animatedWidth = layout.totalWidth * animation.panelProgress
-        val animatedX = Mth.lerp(animation.panelProgress, layout.centerX, layout.renderX)
+        val animatedX = Mth.lerp(animation.panelProgress, centerX, 0.0f)
         val animatedRadius = minOf(layout.radius, animatedWidth / 2.0f)
 
         if (backgroundBlur) {
-            BlurShader.render(animatedX, y, animatedWidth, layout.height, animatedRadius, blurStrength.toFloat())
+            // 背景模糊直接绘制到屏幕，需要绝对坐标
+            BlurShader.render(
+                origin.x + animatedX, origin.y, animatedWidth, layout.height, animatedRadius, blurStrength.toFloat()
+            )
         }
         if (drawShadow) {
-            scope.shadow(
-                animatedX, y, animatedWidth, layout.height, animatedRadius,
+            Shadow(
+                animatedX, 0.0f, animatedWidth, layout.height, animatedRadius,
                 shadowBlur.toFloat(), withAlpha(shadowColor, animation.contentAlpha)
             )
         }
 
-        scope.roundRect(
-            animatedX, y, animatedWidth, layout.height, animatedRadius,
+        RoundRect(
+            animatedX, 0.0f, animatedWidth, layout.height, animatedRadius,
             withAlpha(backgroundColor, animation.contentAlpha)
         )
     }
 
-    private fun drawText(scope: UiTree.Scope, textRenderer: TextRenderer, layout: Layout, animation: AnimationState) {
-        val numberColumnX = layout.renderX + layout.padX
-        val numberY = y + (layout.height - textRenderer.getHeight(layout.numberScale)) / 2.0f
+    private fun UiScope.drawText(textRenderer: TextRenderer, layout: Layout, animation: AnimationState) {
+        val centerX = layout.totalWidth / 2.0f
+        val numberColumnX = layout.padX
+        val numberY = (layout.height - textRenderer.getHeight(layout.numberScale)) / 2.0f
         val animatedNumberColumnX = Mth.lerp(
-            animation.contentProgress, layout.centerX - layout.numberColumnWidth / 2.0f, numberColumnX
+            animation.contentProgress, centerX - layout.numberColumnWidth / 2.0f, numberColumnX
         )
         val animatedWidth = layout.totalWidth * animation.panelProgress
-        val animatedX = Mth.lerp(animation.panelProgress, layout.centerX, layout.renderX)
+        val animatedX = Mth.lerp(animation.panelProgress, centerX, 0.0f)
 
         val requiresScissor = animation.panelProgress < 1.0f || smoothNumber && numberAnimProgress < 1.0f
-        scope.scissorIf(requiresScissor, UiRect(animatedX, y, animatedWidth, layout.height)) { clipped ->
+        ClipIf(requiresScissor, animatedX, 0.0f, animatedWidth, layout.height) {
             if (smoothNumber) {
                 drawRollingNumber(
-                    clipped, textRenderer, layout.numberScale, animatedNumberColumnX,
+                    textRenderer, layout.numberScale, animatedNumberColumnX,
                     layout.numberColumnWidth, numberY, animation.contentAlpha
                 )
             } else {
-                clipped.text(
+                Text(
                     targetCountText, animatedNumberColumnX, numberY, layout.numberScale,
                     withAlpha(textColor, animation.contentAlpha)
                 )
             }
 
             val labelX = numberColumnX + layout.numberColumnWidth + layout.labelGap
-            val animatedLabelX = Mth.lerp(animation.contentProgress, layout.centerX - layout.labelWidth / 2.0f, labelX)
-            val labelY = y + (layout.height - textRenderer.getHeight(layout.labelScale)) / 2.0f
-            clipped.text(
+            val animatedLabelX = Mth.lerp(animation.contentProgress, centerX - layout.labelWidth / 2.0f, labelX)
+            val labelY = (layout.height - textRenderer.getHeight(layout.labelScale)) / 2.0f
+            Text(
                 LABEL,
                 animatedLabelX,
                 labelY,
@@ -238,8 +262,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         return width + 4.0f * scale.toFloat()
     }
 
-    private fun drawRollingNumber(
-        scope: UiTree.Scope,
+    private fun UiScope.drawRollingNumber(
         textRenderer: TextRenderer,
         numberScale: Float,
         columnX: Float,
@@ -269,7 +292,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 
             if (previousChar == targetChar) {
                 if (targetChar != '\u0000') {
-                    scope.text(
+                    Text(
                         targetChar.toString(), charX, textY, numberScale,
                         withAlpha(textColor, alphaMul)
                     )
@@ -279,13 +302,13 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
                 val newAlpha = numberAnimProgress
 
                 if (previousChar != '\u0000' && oldAlpha > 0.01f) {
-                    scope.text(
+                    Text(
                         previousChar.toString(), charX, textY - numberAnimProgress * slideOffset, numberScale,
                         withAlpha(textColor, oldAlpha * alphaMul)
                     )
                 }
                 if (targetChar != '\u0000' && newAlpha > 0.01f) {
-                    scope.text(
+                    Text(
                         targetChar.toString(), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale,
                         withAlpha(textColor, newAlpha * alphaMul)
                     )
@@ -323,11 +346,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
         val numberColumnWidth: Float,
         val labelWidth: Float,
         val totalWidth: Float,
-        val renderX: Float,
-    ) {
-        val centerX: Float
-            get() = renderX + totalWidth / 2.0f
-    }
+    )
 
 
     private const val LABEL = "Blocks"

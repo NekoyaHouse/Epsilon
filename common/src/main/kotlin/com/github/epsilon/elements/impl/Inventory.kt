@@ -2,6 +2,9 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.shaders.BlurShader
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import net.minecraft.client.DeltaTracker
@@ -30,45 +33,46 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
     private const val SLOT_GAP = 1.5f
     private const val PADDING = 4.5f
 
-    override fun render(deltaTracker: DeltaTracker) {
-        runSafe { renderInventory() }
+    override fun measure(deltaTracker: DeltaTracker) {
+        val scale = this.scale.toFloat()
+        val slotSize = SLOT_SIZE * scale
+        val gap = SLOT_GAP * scale
+        val padding = PADDING * scale
+        val totalWidth = padding * 2f + 9 * slotSize + (9 - 1) * gap
+        val totalHeight = padding * 2f + 3 * slotSize + (3 - 1) * gap
+        setBounds(totalWidth, totalHeight)
     }
 
-    context(nn: NonNullContext)
-    private fun renderInventory() {
-        val scope = renderScope()
-
-        val scale = this.scale.toFloat()
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        val scale = this@Inventory.scale.toFloat()
         val slotSize = SLOT_SIZE * scale
         val gap = SLOT_GAP * scale
         val padding = PADDING * scale
         val radius = cornerRadius.toFloat() * scale
         val slotRadius = 2.0f * scale
-
-        val totalWidth = padding * 2f + 9 * slotSize + (9 - 1) * gap
-        val totalHeight = padding * 2f + 3 * slotSize + (3 - 1) * gap
+        val totalWidth = width
+        val totalHeight = height
 
         if (backgroundBlur) {
-            BlurShader.render(x, y, totalWidth, totalHeight, radius, blurStrength.toFloat())
+            // 背景模糊是直接绘制到屏幕的，必须用绝对坐标（作用域原点 + 相对坐标）
+            BlurShader.render(origin.x, origin.y, totalWidth, totalHeight, radius, blurStrength.toFloat())
         }
 
         if (drawShadow) {
-            scope.shadow(
-                x, y, totalWidth, totalHeight, radius,
+            Shadow(
+                0.0f, 0.0f, totalWidth, totalHeight, radius,
                 shadowBlur.toFloat() * scale, shadowColor,
             )
         }
-        scope.roundRect(x, y, totalWidth, totalHeight, radius, backgroundColor)
+        RoundRect(0.0f, 0.0f, totalWidth, totalHeight, radius, backgroundColor)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                val slotX = x + padding + col * (slotSize + gap)
-                val slotY = y + padding + row * (slotSize + gap)
-                scope.roundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor)
+                val slotX = padding + col * (slotSize + gap)
+                val slotY = padding + row * (slotSize + gap)
+                RoundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor)
             }
         }
-
-        setBounds(totalWidth, totalHeight)
     }
 
     override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
@@ -87,6 +91,7 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
                 val slotIndex = 9 + row * 9 + col
                 val stack = nn.player.inventory.getItem(slotIndex)
                 if (!stack.isEmpty) {
+                    // 物品 overlay 走 GuiGraphics，绝对坐标（与 HUD 元素持久化位置一致）
                     val slotX = x + padding + col * (slotSize + gap)
                     val slotY = y + padding + row * (slotSize + gap)
                     drawItem(graphics, stack, slotX, slotY, scale)

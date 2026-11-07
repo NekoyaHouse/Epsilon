@@ -5,7 +5,15 @@ import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.PlayerHead
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.RectHorizontalGradient
+import com.github.epsilon.gui.lib.RectOutline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
@@ -74,42 +82,98 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private var visibilityProgress: Float = 0.0f
     private var lastVisibilityUpdateMs: Long = 0L
 
+    /** 本帧布局结果：measure 阶段解析，drawUi 阶段只读。 */
+    private var frameTarget: LivingEntity? = null
+    private var frameAnimationScale: Float = 0.0f
+    private var frameMaxHealth: Float = 1.0f
+
     private val textRendererSupplier: Supplier<TextRenderer> =
         Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
 
-    override fun render(deltaTracker: DeltaTracker) {
+    override fun measure(deltaTracker: DeltaTracker) {
+        frameTarget = null
+        frameAnimationScale = 0.0f
+        frameMaxHealth = 1.0f
+
         if (style == Style.Akrien) {
-            renderAkrien(deltaTracker)
+            measureAkrien(deltaTracker)
             return
         }
 
+        // Modern 面板尺寸只由设置决定，先固定矩形再推进动画状态
         val panelScale = scale.toFloat()
-        val panelWidth = panelWidthSetting.toFloat() * panelScale
-        val panelHeight = panelHeightSetting.toFloat() * panelScale
-        setBounds(panelWidth, panelHeight)
+        setBounds(panelWidthSetting.toFloat() * panelScale, panelHeightSetting.toFloat() * panelScale)
 
         val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
         val target = updateRenderedTarget(resolveTarget())
         val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
         if (target == null || animationScale <= 0.01f) return
 
-        val textRenderer = textRendererSupplier.get()
-        val scope: UiTree.Scope = renderScope()
-
         val liveTarget = resolveTarget()
-        val maxHealth: Float
-        val healthPercent: Float
         if (liveTarget === target) {
             val health = HealthManager.getHealth(target)
-            maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
-            lastKnownMaxHealth = maxHealth
-            healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
+            frameMaxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
+            lastKnownMaxHealth = frameMaxHealth
+            updateAnimatedHealth(target, health, frameMaxHealth, frameTime)
         } else {
-            maxHealth = maxOf(1.0f, lastKnownMaxHealth)
-            displayedHealth = displayedHealth.coerceIn(0.0f, maxHealth)
-            delayedHealth = delayedHealth.coerceIn(0.0f, maxHealth)
-            healthPercent = (displayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
+            frameMaxHealth = maxOf(1.0f, lastKnownMaxHealth)
+            displayedHealth = displayedHealth.coerceIn(0.0f, frameMaxHealth)
+            delayedHealth = delayedHealth.coerceIn(0.0f, frameMaxHealth)
         }
+
+        frameTarget = target
+        frameAnimationScale = animationScale
+    }
+
+    /**
+     * Akrien 面板宽度依赖目标名文本测量，因此这里先解析目标并测量。
+     */
+    private fun measureAkrien(deltaTracker: DeltaTracker) {
+        val panelScale = scale.toFloat()
+        val target = updateRenderedTarget(resolveTarget())
+        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
+        if (target == null || animationScale <= 0.01f) {
+            setBounds(110.0f * panelScale, 39.0f * panelScale)
+            return
+        }
+
+        frameTarget = target
+        frameAnimationScale = animationScale
+
+        val textRenderer = textRendererSupplier.get()
+        val nameScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
+        val bodyScale = maxOf(0.4f, nameScale * 0.78f)
+        val name = target.name.string
+        val healthText = String.format(Locale.ROOT, "Health: %.1f", HealthManager.getHealth(target))
+        val distance = runSafeOrElse(0.0f) { player.distanceTo(target) }
+        val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
+        val textWidth = maxOf(
+            textRenderer.getWidth(name, nameScale),
+            maxOf(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale))
+        )
+        setBounds(maxOf(110.0f * panelScale, textWidth + 40.0f * panelScale), 39.0f * panelScale)
+    }
+
+    override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
+        if (style == Style.Akrien) {
+            drawAkrien(deltaTracker)
+            return
+        }
+        drawModern(deltaTracker)
+    }
+
+    private fun UiScope.drawModern(deltaTracker: DeltaTracker) {
+        val target = frameTarget ?: return
+        val animationScale = frameAnimationScale
+        if (animationScale <= 0.01f) return
+
+        val textRenderer = textRendererSupplier.get()
+        val panelScale = scale.toFloat()
+        val panelWidth = width
+        val panelHeight = height
+
+        val maxHealth = frameMaxHealth
+        val healthPercent = (displayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
         val delayHealthPercent = (delayedHealth / maxHealth).coerceIn(0.0f, 1.0f)
 
         val pad = 5.0f * panelScale
@@ -127,9 +191,9 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val textHeight = textRenderer.getHeight(textScale)
         val contentRowHeight = maxOf(headSize, textHeight)
         val contentBlockHeight = contentRowHeight + pad + barHeight
-        val contentStartY = y + pad + maxOf(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
+        val contentStartY = pad + maxOf(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
         val headY = contentStartY + (contentRowHeight - headSize) / 2.0f
-        val headX = x + pad
+        val headX = pad
         val barY = contentStartY + contentRowHeight + pad
 
         val textStartX = headX + headSize + pad
@@ -139,15 +203,12 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
         val contentY = headY + 2.0f * panelScale
         val healthTextWidth = textRenderer.getWidth(healthText, textScale)
-        val healthTextX = x + panelWidth - pad - healthTextWidth
-        val equipmentY = contentY + textHeight + 2.8f * panelScale
-        val equipmentScale = EQUIPMENT_ITEM_SCALE * panelScale
-        val equipmentGap = 1.5f * panelScale
+        val healthTextX = panelWidth - pad - healthTextWidth
 
-        val centerX = x + panelWidth / 2.0f
-        val centerY = y + panelHeight / 2.0f
-        val scaledPanelX = Mth.lerp(animationScale, centerX, x)
-        val scaledPanelY = Mth.lerp(animationScale, centerY, y)
+        val centerX = panelWidth / 2.0f
+        val centerY = panelHeight / 2.0f
+        val scaledPanelX = Mth.lerp(animationScale, centerX, 0.0f)
+        val scaledPanelY = Mth.lerp(animationScale, centerY, 0.0f)
         val scaledPanelWidth = panelWidth * animationScale
         val scaledPanelHeight = panelHeight * animationScale
         val scaledCornerRadius = cornerRadius * animationScale
@@ -156,7 +217,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scaledBarOutlineWidth = barOutlineWidth.toFloat() * panelScale * animationScale
         val scaledTextScale = textScale * animationScale
         val scaledHeadRadius = headSize * 0.23f * animationScale
-        val scaledPadX = Mth.lerp(animationScale, centerX, x + pad)
+        val scaledPadX = Mth.lerp(animationScale, centerX, pad)
         val scaledBarY = Mth.lerp(animationScale, centerY, barY)
         val scaledBarWidth = barWidth * animationScale
         val scaledDelayedBarWidth = delayedBarWidth * animationScale
@@ -167,10 +228,6 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val scaledTextStartX = Mth.lerp(animationScale, centerX, textStartX)
         val scaledContentY = Mth.lerp(animationScale, centerY, contentY)
         val scaledHealthTextX = Mth.lerp(animationScale, centerX, healthTextX)
-        val scaledEquipmentX = Mth.lerp(animationScale, centerX, textStartX)
-        val scaledEquipmentY = Mth.lerp(animationScale, centerY, equipmentY)
-        val scaledEquipmentScale = equipmentScale * animationScale
-        val scaledEquipmentGap = equipmentGap * animationScale
         val damageProgress = Easing.EASE_OUT_SINE.function.apply((target.hurtTime / 10.0f).coerceIn(0.0f, 1.0f))
         val headDamageScale = 1.0f - damageProgress * HEAD_DAMAGE_SCALE_FACTOR
         val finalHeadSize = scaledHeadSize * headDamageScale
@@ -179,9 +236,10 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val finalHeadRadius = scaledHeadRadius * headDamageScale
         val headTintColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale)
 
+        // 背景模糊直接绘制到屏幕，需要还原绝对坐标
         BlurShader.render(
-            scaledPanelX,
-            scaledPanelY,
+            origin.x + scaledPanelX,
+            origin.y + scaledPanelY,
             scaledPanelWidth,
             scaledPanelHeight,
             scaledCornerRadius,
@@ -189,39 +247,39 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         )
 
         if (drawShadow) {
-            scope.shadow(
+            Shadow(
                 scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius,
                 shadowBlur.toFloat() * animationScale, withAlpha(shadowColor, animationScale)
             )
         }
 
-        scope.roundRect(
+        RoundRect(
             scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius,
             withAlpha(backgroundColor, animationScale)
         )
-        scope.roundRect(
+        RoundRect(
             scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
             withAlpha(barBackgroundColor, animationScale)
         )
         if (delayBar && delayedHealth > displayedHealth) {
-            scope.roundRect(
+            RoundRect(
                 scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius,
                 withAlpha(delayBarColor, animationScale)
             )
         }
-        scope.roundRect(
+        RoundRect(
             scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius,
             withAlpha(barFillColor, animationScale)
         )
         if (target !is AbstractClientPlayer) {
-            scope.roundRect(
+            RoundRect(
                 finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius,
                 withAlpha(tintColor(Color(80, 80, 80, 200), damageProgress), animationScale)
             )
         }
 
         if (barOutline && scaledBarOutlineWidth > 0.0f) {
-            scope.outline(
+            Outline(
                 scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
                 scaledBarOutlineWidth, withAlpha(barOutlineColor, animationScale)
             )
@@ -229,14 +287,128 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
         if (target is AbstractClientPlayer) {
             val abstractTexture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
-            scope.playerHead(
+            PlayerHead(
                 LuminTexture(abstractTexture.texture, abstractTexture.textureView, abstractTexture.sampler),
                 finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             )
         }
 
-        scope.text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
-        scope.text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
+        Text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
+        Text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
+    }
+
+    /**
+     * Akrien's compact HUD: a square-cornered panel, two thin status bars,
+     * and the target's head/name/health/distance arranged like the original.
+     */
+    private fun UiScope.drawAkrien(deltaTracker: DeltaTracker) {
+        val target = frameTarget ?: return
+        val animationScale = frameAnimationScale
+        if (animationScale <= 0.01f) return
+
+        val panelScale = scale.toFloat()
+        val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
+        val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
+        val health = HealthManager.getHealth(target)
+        val healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
+        val armorPercent = (target.armorValue / 20.0f).coerceIn(0.0f, 1.0f)
+        val damageProgress = Easing.EASE_OUT_SINE.function.apply((target.hurtTime / 10.0f).coerceIn(0.0f, 1.0f))
+        val headScale = 1.0f - damageProgress * AKRIEN_HEAD_DAMAGE_SCALE_FACTOR
+
+        val textRenderer = textRendererSupplier.get()
+        val nameScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
+        val bodyScale = maxOf(0.4f, nameScale * 0.78f)
+        val name = target.name.string
+        val healthText = String.format(Locale.ROOT, "Health: %.1f", health)
+        val distance = runSafeOrElse(0.0f) { player.distanceTo(target) }
+        val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
+
+        val panelWidth = width
+        val panelHeight = height
+        val centerX = panelWidth / 2.0f
+        val centerY = panelHeight / 2.0f
+        val panelX = Mth.lerp(animationScale, centerX, 0.0f)
+        val panelY = Mth.lerp(animationScale, centerY, 0.0f)
+        val scaledWidth = panelWidth * animationScale
+        val scaledHeight = panelHeight * animationScale
+        val scaled = panelScale * animationScale
+        val pad = 2.5f * scaled
+        val barWidth = maxOf(1.0f, scaledWidth - 4.5f * scaled)
+        val healthWidth = maxOf(0.0f, barWidth * healthPercent)
+        val armorWidth = maxOf(0.0f, barWidth * armorPercent)
+        val background = withAlpha(Color(8, 8, 8, 225), 0.62f * animationScale)
+        val track = withAlpha(Color(0, 0, 0, 205), animationScale)
+        val border = withAlpha(Color(0, 0, 0, 235), animationScale)
+        val shadow = withAlpha(Color.BLACK, 0.68f * animationScale)
+
+        // 背景模糊直接绘制到屏幕，需要还原绝对坐标
+        BlurShader.render(
+            origin.x + panelX, origin.y + panelY, scaledWidth, scaledHeight, 0.0f, blurStrength.toFloat()
+        )
+        val shadowBlurRadius = maxOf(6.0f, blurStrength.toFloat() * 1.35f) * animationScale
+        Shadow(panelX, panelY, scaledWidth, scaledHeight, 0.0f, shadowBlurRadius, shadow)
+        Rect(panelX, panelY, scaledWidth, scaledHeight, background)
+        Rect(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, track)
+        Rect(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, track)
+        if (healthWidth > 0.0f) {
+            RectHorizontalGradient(
+                panelX + pad, panelY + 31.0f * scaled, healthWidth, 2.5f * scaled,
+                withAlpha(Color(0, 156, 65), animationScale),
+                withAlpha(Color(142, 255, 193), animationScale)
+            )
+        }
+        if (armorWidth > 0.0f) {
+            RectHorizontalGradient(
+                panelX + pad, panelY + 34.5f * scaled, armorWidth, 2.5f * scaled,
+                withAlpha(Color(0, 103, 176), animationScale),
+                withAlpha(Color(57, 213, 255), animationScale)
+            )
+        }
+        RectOutline(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border)
+        RectOutline(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border)
+
+        val headSize = AKRIEN_HEAD_SIZE * scaled * headScale
+        val headX = panelX + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f
+        val headY = panelY + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f
+        val headColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale)
+        if (target is AbstractClientPlayer) {
+            val texture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
+            PlayerHead(
+                LuminTexture(texture.texture, texture.textureView, texture.sampler),
+                headX, headY, headSize, 0.0f, headColor
+            )
+        } else {
+            Rect(
+                panelX + 3.0f * scaled, panelY + 3.0f * scaled, 25.0f * scaled, 25.0f * scaled,
+                withAlpha(Color(35, 35, 35, 220), animationScale)
+            )
+            val questionScale = maxOf(0.72f * panelScale, nameScale * 1.45f) * animationScale
+            val questionWidth = textRenderer.getWidth("?", questionScale)
+            val questionHeight = textRenderer.getHeight(questionScale)
+            val questionX = panelX + 3.0f * scaled + (25.0f * scaled - questionWidth) / 2.0f
+            val questionY = panelY + 3.0f * scaled + (25.0f * scaled - questionHeight) / 2.0f
+            Text("?", questionX, questionY, questionScale, withAlpha(Color(255, 255, 255, 245), animationScale))
+        }
+
+        if (animationScale > 0.01f) {
+            val textX = panelX + 31.0f * scaled
+            val textY = panelY + 2.0f * scaled
+            Text(name, textX, textY, nameScale, withAlpha(Color(255, 255, 255, 250), animationScale))
+            Text(
+                healthText,
+                textX,
+                panelY + 13.0f * scaled,
+                bodyScale,
+                withAlpha(Color(228, 228, 228, 238), animationScale)
+            )
+            Text(
+                distanceText,
+                textX,
+                panelY + 22.0f * scaled,
+                bodyScale,
+                withAlpha(Color(175, 175, 175, 225), animationScale)
+            )
+        }
     }
 
     override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
@@ -316,126 +488,6 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private fun appendEquipmentItem(items: MutableList<ItemStack>, stack: ItemStack) {
         if (!stack.isEmpty) {
             items.add(stack)
-        }
-    }
-
-    /**
-     * Akrien's compact HUD: a square-cornered panel, two thin status bars,
-     * and the target's head/name/health/distance arranged like the original.
-     */
-    private fun renderAkrien(deltaTracker: DeltaTracker) {
-        val panelScale = scale.toFloat()
-        val frameTime = deltaTracker.gameTimeDeltaTicks / 20.0f
-        val target = updateRenderedTarget(resolveTarget())
-        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
-        if (target == null || animationScale <= 0.01f) {
-            setBounds(110.0f * panelScale, 39.0f * panelScale)
-            return
-        }
-
-        val maxHealth = maxOf(1.0f, target.maxHealth + maxOf(0.0f, target.absorptionAmount))
-        val health = HealthManager.getHealth(target)
-        val healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime)
-        val armorPercent = (target.armorValue / 20.0f).coerceIn(0.0f, 1.0f)
-        val damageProgress = Easing.EASE_OUT_SINE.function.apply((target.hurtTime / 10.0f).coerceIn(0.0f, 1.0f))
-        val headScale = 1.0f - damageProgress * AKRIEN_HEAD_DAMAGE_SCALE_FACTOR
-
-        val textRenderer = textRendererSupplier.get()
-        val nameScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
-        val bodyScale = maxOf(0.4f, nameScale * 0.78f)
-        val name = target.name.string
-        val healthText = String.format(Locale.ROOT, "Health: %.1f", health)
-        val distance = runSafeOrElse(0.0f) { player.distanceTo(target) }
-        val distanceText = String.format(Locale.ROOT, "Distance: %.1f m", distance)
-        val textWidth = maxOf(
-            textRenderer.getWidth(name, nameScale),
-            maxOf(textRenderer.getWidth(healthText, bodyScale), textRenderer.getWidth(distanceText, bodyScale))
-        )
-        val panelWidth = maxOf(110.0f * panelScale, textWidth + 40.0f * panelScale)
-        val panelHeight = 39.0f * panelScale
-        setBounds(panelWidth, panelHeight)
-
-        val centerX = x + panelWidth / 2.0f
-        val centerY = y + panelHeight / 2.0f
-        val panelX = Mth.lerp(animationScale, centerX, x)
-        val panelY = Mth.lerp(animationScale, centerY, y)
-        val scaledWidth = panelWidth * animationScale
-        val scaledHeight = panelHeight * animationScale
-        val scaled = panelScale * animationScale
-        val pad = 2.5f * scaled
-        val barWidth = maxOf(1.0f, scaledWidth - 4.5f * scaled)
-        val healthWidth = maxOf(0.0f, barWidth * healthPercent)
-        val armorWidth = maxOf(0.0f, barWidth * armorPercent)
-        val background = withAlpha(Color(8, 8, 8, 225), 0.62f * animationScale)
-        val track = withAlpha(Color(0, 0, 0, 205), animationScale)
-        val border = withAlpha(Color(0, 0, 0, 235), animationScale)
-        val shadow = withAlpha(Color.BLACK, 0.68f * animationScale)
-        val scope: UiTree.Scope = renderScope()
-
-        BlurShader.render(panelX, panelY, scaledWidth, scaledHeight, 0.0f, blurStrength.toFloat())
-        val shadowBlurRadius = maxOf(6.0f, blurStrength.toFloat() * 1.35f) * animationScale
-        scope.shadow(panelX, panelY, scaledWidth, scaledHeight, 0.0f, shadowBlurRadius, shadow)
-        scope.rect(panelX, panelY, scaledWidth, scaledHeight, background)
-        scope.rect(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, track)
-        scope.rect(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, track)
-        if (healthWidth > 0.0f) {
-            scope.rectHorizontalGradient(
-                panelX + pad, panelY + 31.0f * scaled, healthWidth, 2.5f * scaled,
-                withAlpha(Color(0, 156, 65), animationScale),
-                withAlpha(Color(142, 255, 193), animationScale)
-            )
-        }
-        if (armorWidth > 0.0f) {
-            scope.rectHorizontalGradient(
-                panelX + pad, panelY + 34.5f * scaled, armorWidth, 2.5f * scaled,
-                withAlpha(Color(0, 103, 176), animationScale),
-                withAlpha(Color(57, 213, 255), animationScale)
-            )
-        }
-        scope.rectOutline(panelX + pad, panelY + 31.0f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border)
-        scope.rectOutline(panelX + pad, panelY + 34.5f * scaled, barWidth, 2.5f * scaled, 0.74f * scaled, border)
-
-        val headSize = AKRIEN_HEAD_SIZE * scaled * headScale
-        val headX = panelX + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f
-        val headY = panelY + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f
-        val headColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale)
-        if (target is AbstractClientPlayer) {
-            val texture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
-            scope.playerHead(
-                LuminTexture(texture.texture, texture.textureView, texture.sampler),
-                headX, headY, headSize, 0.0f, headColor
-            )
-        } else {
-            scope.rect(
-                panelX + 3.0f * scaled, panelY + 3.0f * scaled, 25.0f * scaled, 25.0f * scaled,
-                withAlpha(Color(35, 35, 35, 220), animationScale)
-            )
-            val questionScale = maxOf(0.72f * panelScale, nameScale * 1.45f) * animationScale
-            val questionWidth = textRenderer.getWidth("?", questionScale)
-            val questionHeight = textRenderer.getHeight(questionScale)
-            val questionX = panelX + 3.0f * scaled + (25.0f * scaled - questionWidth) / 2.0f
-            val questionY = panelY + 3.0f * scaled + (25.0f * scaled - questionHeight) / 2.0f
-            scope.text("?", questionX, questionY, questionScale, withAlpha(Color(255, 255, 255, 245), animationScale))
-        }
-
-        if (animationScale > 0.01f) {
-            val textX = panelX + 31.0f * scaled
-            val textY = panelY + 2.0f * scaled
-            scope.text(name, textX, textY, nameScale, withAlpha(Color(255, 255, 255, 250), animationScale))
-            scope.text(
-                healthText,
-                textX,
-                panelY + 13.0f * scaled,
-                bodyScale,
-                withAlpha(Color(228, 228, 228, 238), animationScale)
-            )
-            scope.text(
-                distanceText,
-                textX,
-                panelY + 22.0f * scaled,
-                bodyScale,
-                withAlpha(Color(175, 175, 175, 225), animationScale)
-            )
         }
     }
 

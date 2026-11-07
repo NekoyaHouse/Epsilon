@@ -1,10 +1,13 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -14,14 +17,14 @@ import net.minecraft.client.input.MouseButtonEvent
 abstract class TrollWindow protected constructor() {
 
     val scroll: TrollScroll = TrollScroll()
-    var bounds: UiRect = UiRect(0.0f, 0.0f, 180.0f, 300.0f)
-    var viewport: UiRect = bounds
-    var headerHeight: Float = 0.0f
-    protected var scrollPosition: Float = 0.0f
+    var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
+    var viewport: UiRect by mutableStateOf<UiRect>(bounds)
+    var headerHeight: Float by mutableStateOf<Float>(0.0f)
+    protected var scrollPosition: Float by mutableStateOf<Float>(0.0f)
     private val openAnimation: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private var manualWidth: Float = -1.0f
     private var manualHeight: Float = -1.0f
-    private var dragging: Boolean = false
+    private var dragging: Boolean by mutableStateOf<Boolean>(false)
     private var resizing: Boolean = false
     private var resizeEdge: ResizeEdge = ResizeEdge.NONE
     private var resizeStartBounds: UiRect = bounds
@@ -37,6 +40,21 @@ abstract class TrollWindow protected constructor() {
     abstract fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float)
 
     abstract fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int)
+
+    fun bindInput(scope: UiTree.Scope, metrics: TextRenderer) {
+        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
+        val origin = ui.origin
+        fun eventInModel(event: MouseButtonEvent) = MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
+        ui.InputRegion(key = this, bounds = bounds,
+            onPress = { event, _ ->
+                val pointer = eventInModel(event)
+                mouseClicked(pointer) || bounds.contains(pointer.x(), pointer.y())
+            },
+            onDrag = { event, _, _ -> mouseDragged(eventInModel(event)) },
+            onRelease = { event -> mouseReleased(eventInModel(event)); true },
+            onCancel = ::resetInput, onKey = ::keyPressed, onText = ::charTyped, onBlur = ::blurInput,
+            onScroll = { x, y, _, amount -> mouseScrolled(x - origin.x, y - origin.y, amount) })
+    }
 
     fun startOpenAnimation() {
         openAnimation.value = 0.0f

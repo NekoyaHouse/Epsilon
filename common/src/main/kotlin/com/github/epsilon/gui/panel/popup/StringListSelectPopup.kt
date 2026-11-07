@@ -1,24 +1,35 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.InputRegion
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.Positioned
+import com.github.epsilon.gui.lib.PopupCard
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import java.awt.Color
 import kotlin.math.abs
 
 class StringListSelectPopup(
@@ -29,28 +40,30 @@ class StringListSelectPopup(
 ) : PanelPopupHost.Popup {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val textRenderer: TextRenderer = TextRenderer.create()
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val scrollBarDrag = ScrollBarDragState()
 
-    private var input = ""
-    private var scroll = 0.0f
+    private var inputFocused by mutableStateOf(false)
+    private var input by mutableStateOf("")
+    private var scroll by mutableStateOf(0.0f)
     private var scrollVelocity = 0.0f
     private var maxScroll = 0.0f
-    private var hoveredRemove: String? = null
-    private var hoveredMoveUp: String? = null
-    private var hoveredMoveDown: String? = null
     private var lastViewport: UiRect? = null
-
-    init {
-        this.openAnimation.startValue = 0.0f
-    }
 
     override fun getBounds(): UiRect {
         return bounds
     }
 
+    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        inputView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -62,102 +75,100 @@ class StringListSelectPopup(
         scroll = scroll.coerceIn(0.0f, maxScroll)
         updateSmoothScroll(partialTick)
 
-        val tree = UiTree.build { scope ->
-            val progress = scope.animate(openAnimation, 1.0f)
-            val popupY = bounds.y - (1.0f - progress) * 6.0f
-            val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-            val inputBounds = getInputBounds(popupY)
-            val animatedViewport = getViewport(popupY)
-            lastViewport = animatedViewport
-            scope.pushAbsolute(animatedBounds) { popup ->
-                popup.popupCard(
-                    animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
-                )
+        // 开启动画是推式动画：目标在命令阶段写入，绘制块内只读取 value。
+        val popupY = bounds.y - (1.0f - openAnimation.value) * 6.0f
+        openAnimation.target = 1.0f
+        val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
+        val inputBounds = getInputBounds(popupY)
+        val animatedViewport = getViewport(popupY)
+        lastViewport = animatedViewport
 
-                val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
-                val summaryScale = 0.52f
-                val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
-                popup.text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
-                popup.text(
-                    summary, animatedBounds.width - PADDING - textRenderer.getWidth(summary, summaryScale),
-                    centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
-                )
+        renderBatch.LuminUIScene(animatedBounds, key = this) {
+            InputRegion(key = this@StringListSelectPopup to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+                onBlur = {}, onCancel = { scrollBarDrag.reset() })
 
-                val placeholder =
-                    if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
-                popup.input(
-                    inputBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f,
-                    placeholder, 0.54f,
-                    if (input.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
-                    input.length, MD3Theme.PRIMARY, null, 0.0f, null
-                )
-                IMEFocusHelper.updateCursorPos(inputBounds.x + 8.0f, inputBounds.y + 4.0f)
+            val progress = openAnimation.value
+            PopupCard(
+                size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
+                MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)
+            )
 
-                hoveredRemove = null
-                hoveredMoveUp = null
-                hoveredMoveDown = null
-                val localViewport = animatedViewport.relativeTo(animatedBounds)
-                popup.viewport(
-                    contentBuffer,
-                    localViewport,
-                    scroll,
-                    maxScroll,
-                    contentHeight,
-                    mouseX,
-                    mouseY
-                ) { content ->
-                    buildEntryList(
-                        content, entries, animatedViewport.x, animatedViewport.y - scroll,
-                        localViewport, mouseX, mouseY, animatedViewport
-                    )
+            val titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f)
+            val summaryScale = 0.52f
+            val summary = setting.value.size.toString() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName()
+            Text(setting.displayName, PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY)
+            Text(
+                summary, animatedBounds.width - PADDING - metrics.textWidth(summary, summaryScale),
+                centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED
+            )
+
+            val placeholder =
+                if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
+            val localInputBounds = inputBounds.relativeTo(animatedBounds)
+            Positioned(localInputBounds.x, localInputBounds.y, localInputBounds.width, localInputBounds.height) {
+                Interaction("editor") {
+                    autoFocus = true
+                    onClick { true }
+                    onKeyPressed(::keyPressed)
+                    onTextInput(::charTyped)
+                    onFocusChanged { inputFocused = it }
                 }
+                Input(
+                    UiRect(0.0f, 0.0f, localInputBounds.width, localInputBounds.height), inputFocused, 1.0f,
+                    0.0f, Color(0, 0, 0, 0), 0.0f,
+                    8.0f, placeholder, 0.54f,
+                    if (input.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
+                    null, null,
+                    if (inputFocused) input.length else null, MD3Theme.PRIMARY, null, 0.0f, null
+                )
+            }
+            IMEFocusHelper.updateCursorPos(inputBounds.x + 8.0f, inputBounds.y + 4.0f)
+
+            val localViewport = animatedViewport.relativeTo(animatedBounds)
+            Viewport(
+                contentBuffer,
+                localViewport,
+                scroll,
+                maxScroll,
+                contentHeight,
+                mouseX,
+                mouseY
+            ) {
+                buildEntryList(
+                    entries, animatedViewport.x, animatedViewport.y - scroll,
+                    localViewport, mouseX, mouseY, animatedViewport
+                )
             }
         }
-        renderBatch.render(tree)
     }
 
     override fun flush(renderBatch: UiRenderBatch) {
         contentBuffer.flushAndClear()
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+    private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !bounds.contains(event.x(), event.y())) return false
         val viewport = lastViewport ?: getViewport()
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
             applyDraggedScroll(event.y(), viewport)
             return true
         }
-        val moveUp = hoveredMoveUp
-        if (moveUp != null) {
-            moveEntry(moveUp, -1)
-            return true
-        }
-        val moveDown = hoveredMoveDown
-        if (moveDown != null) {
-            moveEntry(moveDown, 1)
-            return true
-        }
-        val remove = hoveredRemove
-        if (remove != null) {
-            removeFn(remove)
-            return true
-        }
+
         return true
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    private fun mouseReleased(event: MouseButtonEvent): Boolean {
         return scrollBarDrag.mouseReleased()
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+    private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         if (!scrollBarDrag.isDragging()) return false
         applyDraggedScroll(event.y(), lastViewport ?: getViewport())
         return true
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
+    private fun keyPressed(event: KeyEvent): Boolean {
         if (event.key() == InputConstants.KEY_RETURN && !input.isBlank()) {
             addFn(input.trim())
             input = ""
@@ -179,13 +190,13 @@ class StringListSelectPopup(
         }
     }
 
-    override fun charTyped(event: CharacterEvent): Boolean {
+    private fun charTyped(event: CharacterEvent): Boolean {
         if (input.length >= MAX_QUERY_LENGTH) return false
         input += event.codepointAsString()
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+    private fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (!getViewport(bounds.y).contains(mouseX, mouseY) || maxScroll <= 0.0f) return false
         scrollVelocity -= scrollY.toFloat() * SCROLL_STEP
         return true
@@ -195,11 +206,10 @@ class StringListSelectPopup(
         return ArrayList(setting.value)
     }
 
-    private fun buildEntryList(
-        scope: UiTree.Scope, entries: List<String>, startX: Float, startY: Float,
+    private fun UiScope.buildEntryList(
+        entries: List<String>, startX: Float, startY: Float,
         localViewport: UiRect, mouseX: Int, mouseY: Int, viewport: UiRect,
     ) {
-        val origin = scope.bound()
         val width = localViewport.width - (if (maxScroll > 0.0f) SCROLLBAR_GUTTER else 0.0f)
         for (i in entries.indices) {
             val entry = entries[i]
@@ -217,26 +227,36 @@ class StringListSelectPopup(
             val removeHovered = hovered && removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
             val downHovered = hovered && canMoveDown && downBounds.contains(mouseX.toDouble(), mouseY.toDouble())
             val upHovered = hovered && canMoveUp && upBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-            if (removeHovered) hoveredRemove = entry
-            if (downHovered) hoveredMoveDown = entry
-            if (upHovered) hoveredMoveUp = entry
 
             val bgHover = if (hovered) 0.45f else 0.0f
             val actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f
             val display = trim(entry, 0.50f, rowBounds.width - actionAreaWidth - 14.0f)
             val localRowBounds = rowBounds.relativeTo(origin)
-            scope.pushRelative(localRowBounds) { row ->
-                row.roundRect(
-                    0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
-                    MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
-                )
-                row.text(
-                    display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
-                    MD3Theme.ON_SECONDARY_CONTAINER
-                )
-                drawAction(row, upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
-                drawAction(row, downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
-                drawAction(row, removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
+            // 逐项缓存：只有悬停/排序状态或行位置变化的行才重新捕获节点。
+
+            LuminUIItem(setting to entry) {
+                Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
+                    RoundRect(
+                        0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
+                        MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
+                    )
+                    Text(
+                        display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
+                        MD3Theme.ON_SECONDARY_CONTAINER
+                    )
+                    Interaction("up", upBounds.relativeTo(rowBounds), enabled = canMoveUp) {
+                        onClick { moveEntry(entry, -1); true }
+                    }
+                    Interaction("down", downBounds.relativeTo(rowBounds), enabled = canMoveDown) {
+                        onClick { moveEntry(entry, 1); true }
+                    }
+                    Interaction("remove", removeBounds.relativeTo(rowBounds)) {
+                        onClick { removeFn(entry); true }
+                    }
+                    drawAction(upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
+                    drawAction(downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
+                    drawAction(removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
+                }
             }
         }
     }
@@ -246,17 +266,17 @@ class StringListSelectPopup(
         return UiRect(x, rowBounds.y + 2.0f, ACTION_WIDTH, rowBounds.height - 4.0f)
     }
 
-    private fun drawAction(scope: UiTree.Scope, bounds: UiRect, label: String, enabled: Boolean, hovered: Boolean) {
+    private fun UiScope.drawAction(bounds: UiRect, label: String, enabled: Boolean, hovered: Boolean) {
         val textScale = 0.50f
         if (enabled && hovered) {
-            scope.roundRect(
+            RoundRect(
                 bounds.x, bounds.y, bounds.width, bounds.height, 4.0f,
                 MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 34)
             )
         }
-        scope.text(
+        Text(
             label,
-            bounds.x + (bounds.width - textRenderer.getWidth(label, textScale)) / 2.0f,
+            bounds.x + (bounds.width - metrics.textWidth(label, textScale)) / 2.0f,
             centeredTextY(bounds.y, bounds.height, textScale),
             textScale,
             if (enabled) MD3Theme.ON_SECONDARY_CONTAINER else MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 80)
@@ -323,13 +343,17 @@ class StringListSelectPopup(
         return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
 
-    private fun centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
-        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f
+    private fun UiScope.centeredTextY(boxY: Float, boxHeight: Float, scale: Float): Float {
+        return boxY + (boxHeight - metrics.textHeight(scale)) * 0.5f
     }
 
     override fun close() {
+        inputView.close()
+
         contentBuffer.close()
     }
+
+    /** 条目列表、输入缓冲、滚动位置、鼠标与主题共同决定绘制结果。 */
 
     private companion object {
 

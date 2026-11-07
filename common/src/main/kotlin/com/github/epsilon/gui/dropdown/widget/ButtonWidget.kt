@@ -3,10 +3,11 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -18,7 +19,7 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
         return DropdownTheme.SETTING_HEIGHT + 2.0f
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         val btnX = DropdownTheme.SETTING_PADDING_X
         val btnY = 1.0f
         val btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f
@@ -27,7 +28,7 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
         val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(btnX), absoluteY(btnY), btnW, btnH)
         hoverAnim.run(if (hovered) 1.0f else 0.0f)
 
-        scope.roundRect(
+        RoundRect(
             btnX,
             btnY,
             btnW,
@@ -37,9 +38,9 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
         )
 
         val label = setting.displayName
-        val textW = textMetrics.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE)
-        val textY = btnY + (btnH - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f
-        scope.text(
+        val textW = metrics.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE)
+        val textY = btnY + (btnH - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f
+        Text(
             label,
             btnX + (btnW - textW) * 0.5f,
             textY,

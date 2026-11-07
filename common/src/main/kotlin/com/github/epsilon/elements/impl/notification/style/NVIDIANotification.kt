@@ -4,7 +4,10 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.notification.Notification
 import com.github.epsilon.elements.impl.notification.Notifications
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.ClipIf
+import com.github.epsilon.gui.lib.Rect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
@@ -33,7 +36,31 @@ class NVIDIANotification(private val owner: Notifications) {
         return displayTimeMs
     }
 
-    fun render(scope: UiTree.Scope, metrics: TextRenderer, previewNotification: Notification?) {
+    /**
+     * 布局阶段：统计本帧通知栈并更新元素尺寸。
+     *
+     * @return 是否有可绘制内容
+     */
+    fun measure(previewNotification: Notification?): Boolean {
+        val scale = owner.getScale()
+        val toastHeight = boxHeight * scale
+        val spacing = toastHeight + ENTRY_GAP * scale
+        var count = 0
+        for (notification in NotificationManager.getNotifications()) {
+            val frame = getRenderFrame(notification, spacing)
+            if (frame.stage == RenderStage.HIDDEN) continue
+            count++
+        }
+        if (count == 0 && previewNotification == null) return false
+
+        owner.setNotificationBounds(boxWidth * scale, toastHeight)
+        return true
+    }
+
+    /**
+     * 绘制通知栈；坐标相对元素作用域原点（水平方向贴元素左侧，垂直方向按锚点堆叠）。
+     */
+    fun draw(scope: UiScope, metrics: TextRenderer, previewNotification: Notification?) {
         val scale = owner.getScale()
         val textScale = owner.getFontScale() * scale
         val anchorWidth = boxWidth * scale
@@ -57,27 +84,19 @@ class NVIDIANotification(private val owner: Notifications) {
         if (entries.isEmpty()) return
 
         val resolvedHeight = maxOf(toastHeight, totalHeight)
-        var currentY = getBaseY(resolvedHeight)
+        // 堆叠向上时从元素底边往上排；其余从元素顶边往下排
+        var currentY = if (owner.verticalAnchor == HudModule.VerticalAnchor.Bottom) {
+            scope.height - resolvedHeight
+        } else {
+            0.0f
+        }
         for (entry in entries) {
-            val renderX = getRenderX(anchorWidth, anchorWidth)
             renderNotification(
-                scope, metrics, entry.notification, entry.frame, renderX, currentY,
+                scope, metrics, entry.notification, entry.frame, 0.0f, currentY,
                 anchorWidth, anchorWidth, toastHeight, scale, textScale, bgAlpha
             )
             currentY += entry.frame.occupiedHeight
         }
-        owner.setNotificationBounds(anchorWidth, toastHeight)
-    }
-
-    private fun getRenderX(anchorWidth: Float, boxWidth: Float): Float {
-        return if (owner.horizontalAnchor == HudModule.HorizontalAnchor.Right) owner.x + anchorWidth - boxWidth
-        else if (owner.horizontalAnchor == HudModule.HorizontalAnchor.Center) owner.x + (anchorWidth - boxWidth) / 2.0f
-        else owner.x
-    }
-
-    private fun getBaseY(totalHeight: Float): Float {
-        return if (owner.verticalAnchor == HudModule.VerticalAnchor.Bottom) owner.y + owner.height - totalHeight
-        else owner.y
     }
 
     private fun getRenderFrame(notification: Notification, occupiedHeight: Float): RenderFrame {
@@ -107,7 +126,7 @@ class NVIDIANotification(private val owner: Notifications) {
     }
 
     private fun renderNotification(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         frame: RenderFrame,
@@ -145,7 +164,7 @@ class NVIDIANotification(private val owner: Notifications) {
     }
 
     private fun renderStage1(
-        scope: UiTree.Scope,
+        scope: UiScope,
         notification: Notification,
         x: Float,
         y: Float,
@@ -157,11 +176,11 @@ class NVIDIANotification(private val owner: Notifications) {
         val left = owner.horizontalAnchor == HudModule.HorizontalAnchor.Left
         val width = if (left) boxWidth * progress else boxWidth - anchorWidth * (1.0f - progress)
         val renderX = if (left) x else x + boxWidth - width
-        scope.rect(renderX, y, width, boxHeight, notification.mode.getColor())
+        scope.Rect(renderX, y, width, boxHeight, notification.mode.getColor())
     }
 
     private fun renderStage2(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         x: Float,
@@ -173,13 +192,13 @@ class NVIDIANotification(private val owner: Notifications) {
         bgAlpha: Int,
         progress: Float,
     ) {
-        scope.rect(x, y, boxWidth, boxHeight, Color(0, 0, 0, bgAlpha))
+        scope.Rect(x, y, boxWidth, boxHeight, Color(0, 0, 0, bgAlpha))
         val clip = textExceedsBox(metrics, notification, boxWidth, boxHeight, scale, textScale)
-        scope.scissorIf(
+        scope.ClipIf(
             clip, x, y, boxWidth, boxHeight
-        ) { textScope ->
+        ) {
             renderText(
-                textScope,
+                this,
                 metrics,
                 notification,
                 x,
@@ -193,11 +212,11 @@ class NVIDIANotification(private val owner: Notifications) {
         }
         val accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress)
         val accentX = if (owner.horizontalAnchor == HudModule.HorizontalAnchor.Left) x + boxWidth - accentWidth else x
-        scope.rect(accentX, y, accentWidth, boxHeight, notification.mode.getColor())
+        scope.Rect(accentX, y, accentWidth, boxHeight, notification.mode.getColor())
     }
 
     private fun renderText(
-        scope: UiTree.Scope,
+        scope: UiScope,
         metrics: TextRenderer,
         notification: Notification,
         x: Float,
@@ -219,9 +238,9 @@ class NVIDIANotification(private val owner: Notifications) {
         else (ACCENT_BAR_WIDTH + TEXT_PADDING) * scale
         val titleY = y + (boxHeight - contentHeight) / 2.0f
 
-        scope.text(notification.title, textX, titleY, fittedScale, Color(255, 255, 255, alpha))
+        scope.Text(notification.title, textX, titleY, fittedScale, Color(255, 255, 255, alpha))
         if (hasSubtitle) {
-            scope.text(
+            scope.Text(
                 notification.subTitle, textX, titleY + titleHeight + lineGap, subtitleScale,
                 notification.mode.getColor((alpha * 0.86f).roundToInt())
             )

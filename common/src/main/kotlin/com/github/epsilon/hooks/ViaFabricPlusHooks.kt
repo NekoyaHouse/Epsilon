@@ -1,5 +1,6 @@
 package com.github.epsilon.hooks
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import net.minecraft.SharedConstants
 import net.minecraft.network.protocol.PacketType
@@ -8,7 +9,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object ViaFabricPlusHooks {
-    private val classes = ConcurrentHashMap<String, Class<*>>()
+    private val classes = OptionalClassCache()
     private val warnings = ConcurrentHashMap.newKeySet<String>()
     private val protocolPattern = Regex("[0-9_]+to[0-9_]+")
 
@@ -21,8 +22,17 @@ object ViaFabricPlusHooks {
     /**
      * 严格的版本限制使用此入口；未加载或查询失败时返回 null。
      */
+    private val uiVersion = mutableStateOf<SupportVersion?>(null)
+
+    fun refreshUiVersion() { uiVersion.value = queryVersion() }
+
     val viaVersion: SupportVersion?
-        get() = query {
+        get() {
+            val published = uiVersion.value
+            return if (StateTracking.isBuildingUi) published else queryVersion()
+        }
+
+    private fun queryVersion(): SupportVersion? = query {
             val target = backend?.targetVersion ?: return@query null
             val versions = type("com.viaversion.viaversion.api.protocol.version.ProtocolVersion")
                 .getMethod("getIncludedVersions").invoke(target) as Collection<*>
@@ -153,13 +163,9 @@ object ViaFabricPlusHooks {
                 ?.let { Backend(it, null) }
         }
 
-    private fun type(name: String): Class<*> = classes.computeIfAbsent(name, Class<*>::forName)
+    private fun type(name: String): Class<*> = classes.find(name) ?: throw ClassNotFoundException(name)
 
-    private fun optionalType(name: String): Class<*>? = try {
-        type(name)
-    } catch (_: ClassNotFoundException) {
-        null
-    }
+    private fun optionalType(name: String): Class<*>? = classes.find(name)
 
     private inline fun <T> query(action: () -> T): T? = try {
         action()

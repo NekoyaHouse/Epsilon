@@ -1,5 +1,9 @@
 package com.github.epsilon.gui.screen
 
+import com.github.epsilon.gui.lib.LuminUITree
+import com.github.epsilon.gui.lib.Interaction
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -7,6 +11,7 @@ import com.github.epsilon.graphics.shaders.GlslSandBox
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.video.VideoPlayer
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.screen.accounts.AccountsScreen
@@ -18,7 +23,6 @@ import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Easing
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
@@ -437,7 +441,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val finalV1 = v1
         val lightTrails = AssetManager.videoOverlayTexture()
         val backgroundTree = UiTree.build { scope ->
-            scope.layer(0) { layer ->
+            scope.layer(MenuZ.Video) { layer ->
                 layer.texture(
                     texture, 0.0f, 0.0f, width.toFloat(), height.toFloat(),
                     finalU0, finalV0, finalU1, finalV1, Color.WHITE, true
@@ -458,7 +462,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     )
                 }
             }
-            scope.layer(1) { layer ->
+            scope.layer(MenuZ.Shade) { layer ->
                 layer.rectHorizontalGradient(
                     width * 0.42f, 0.0f, width * 0.58f, height.toFloat(),
                     Color(14, 20, 45, 0), Color(7, 11, 30, 150)
@@ -536,7 +540,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val rowHeight = minOf(58.9f * scale, rowStride * 0.78f)
 
         scene.beginFrame()
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
             scope.pushAbsolute(layoutX, layoutY) { content ->
                 if (AssetManager.isReisaReady()) {
                     if (!reisaShutdownTexturesPrewarmed) {
@@ -569,7 +573,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 val subtitleGlow = applyAlpha(Color(184, 207, 239), subtitleVisibility * 0.52f)
                 val secondary = applyAlpha(Color(178, 197, 224), subtitleVisibility * 0.88f)
 
-                content.layer(-50) { layer ->
+                content.layer(MenuZ.Glow) { layer ->
                     layer.blurredText(
                         clientName, titleX, titleY, titleScale, titleOuterGlow, titleScale * 2.0f, 3,
                         StaticFontLoader.CINZEL_DECORATIVE
@@ -617,6 +621,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                             rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale
                         )
                     }
+                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                    }
                     val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
                     entry.hoverProgress =
                         Mth.lerp(if (hovered) 0.26f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
@@ -659,7 +666,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     val labelText = localizedTitle(entry.title)
                     val labelX = animatedRowX + 46.5f * scale
                     val labelWidth = metrics.getWidth(labelText, labelScale)
-                    content.layer(-50) { layer ->
+                    content.layer(MenuZ.Glow) { layer ->
                         layer.blurredText(
                             numberLabel,
                             animatedRowX,
@@ -694,7 +701,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
                 val footerY = layoutHeight - maxOf(27.9f * scale, layoutHeight * 0.045f)
                 val user = this.minecraft.user.name
-                content.layer(-50) { layer ->
+                content.layer(MenuZ.Glow) { layer ->
                     val userWidth = metrics.getWidth(user, 1.55f * scale)
                     val userX = layoutWidth - rightMargin - userWidth + 50.0f * scale - menuCenterCorrectionX
                     layer.blurredText(
@@ -764,7 +771,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 buttonTextHeight + buttonTextToLineGap + buttonLineHeight
         val buttonsY = layoutHeight - 74.4f * scale - buttonListHeight
 
-        val tree = UiTree.build { scope ->
+        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
             scope.pushAbsolute(layoutX, layoutY) { content ->
                 if (!reisaShutdownTexturesPrewarmed) {
                     prewarmReisaShutdownTextures(content)
@@ -775,7 +782,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 } else {
                     drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                 }
-                content.layer(0) { layer ->
+                content.layer(MenuZ.Surface) { layer ->
                     layer.rect(
                         titleX,
                         titleY + titleHeight + titleAccentGap,
@@ -784,7 +791,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         accentColor
                     )
                 }
-                content.layer(10) { layer ->
+                content.layer(MenuZ.Content) { layer ->
                     layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT)
                     layer.text(subtitle, titleX, subtitleY, subtitleScale, subtitleColor)
                 }
@@ -812,6 +819,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                         buttonStride
                     )
 
+                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                    }
                     val lineBase = applyAlpha(Color(147, 143, 153), 0.70f * appear)
                     val lineHover = applyAlpha(Color(208, 188, 255), 0.98f * appear)
                     val labelColor = MD3Theme.lerp(
@@ -821,7 +831,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     )
 
                     val lineY = buttonY + buttonTextHeight + buttonTextToLineGap
-                    content.layer(0) { layer ->
+                    content.layer(MenuZ.Surface) { layer ->
                         layer.rect(
                             hoveredX + 1.55f * scale, lineY + 1.55f * scale, buttonWidth + scale * 0.775f,
                             buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear)
@@ -842,7 +852,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                     } else {
                         preferredButtonTextScale
                     }
-                    content.layer(10) { layer -> layer.text(label, hoveredX, buttonY, buttonTextScale, labelColor) }
+                    content.layer(MenuZ.Content) { layer -> layer.text(label, hoveredX, buttonY, buttonTextScale, labelColor) }
                 }
             }
         }
@@ -975,7 +985,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val drawY = imageY + (imageHeight - drawHeight) * 0.5f
         val imageAlpha = Easing.EASE_OUT_CUBIC.function.apply(entranceProgress) * (1.0f - exitEase)
 
-        scope.layer(-40) { layer ->
+        scope.layer(ReisaZ.Mask) { layer ->
             layer.rect(
                 maskX,
                 maskY,
@@ -1013,7 +1023,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val maxWidth = maxOf(0.0f, LuminRenderSystem.getScaledWidth() - startX)
         val bright = applyAlpha(Color(235, 211, 255), trailEnvelope * 0.62f)
         val soft = applyAlpha(Color(183, 146, 245), 0.0f)
-        scope.layer(-22) { layer ->
+        scope.layer(ReisaZ.Trail) { layer ->
             layer.rectHorizontalGradient(
                 startX,
                 imageY + imageHeight * 0.24f,
@@ -1093,7 +1103,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val progressBarHeight = maxOf(3.0f, 4.65f * scale)
         val progressBarY = bubbleY + bubbleHeight - 12.4f * scale
 
-        scope.layer(20) { layer ->
+        scope.layer(ReisaZ.BubbleShadow) { layer ->
             layer.shadow(
                 bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, REISA_BUBBLE_SHADOW_BLUR * scale,
                 applyAlpha(Color(0, 0, 0), visibility * REISA_SHUTDOWN_BUBBLE_SHADOW_ALPHA)
@@ -1106,7 +1116,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 progressBarHeight, progressBarHeight * 0.5f, applyAlpha(accentColor, 0.62f)
             )
         }
-        scope.layer(21) { layer ->
+        scope.layer(ReisaZ.BubbleText) { layer ->
             layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT)
             layer.text(farewell, textX, messageY, messageScale, textColor)
         }
@@ -1124,7 +1134,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val transparent = applyAlpha(Color.WHITE, 0.0f)
         val entrance = reisaShutdownEntranceTexture()
         val last = reisaShutdownFinalTexture()
-        scope.layer(-60) { layer ->
+        scope.layer(ReisaZ.PrewarmEntrance) { layer ->
             if (entrance != null) {
                 layer.texture(entrance, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, transparent, true)
             }
@@ -1155,7 +1165,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val glow = applyAlpha(Color(205, 162, 255), alpha * 0.30f)
         val line = applyAlpha(Color(239, 220, 255), alpha * 0.78f)
 
-        scope.layer(-24) { layer ->
+        scope.layer(ReisaZ.Glow) { layer ->
             layer.rectVerticalGradient(
                 centerX - lineWidth * 0.5f,
                 lineY - glowHeight,
@@ -1165,7 +1175,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 glow
             )
         }
-        scope.layer(-23) { layer ->
+        scope.layer(ReisaZ.BaseLine) { layer ->
             layer.roundRect(centerX - lineWidth * 0.5f, lineY, lineWidth, lineHeight, lineHeight * 0.5f, line)
         }
     }
@@ -1188,7 +1198,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val farTrail = applyAlpha(Color(216, 185, 255), trailAlpha * 0.08f)
         val nearTrail = applyAlpha(Color(228, 205, 255), trailAlpha * 0.14f)
         val exit = reisaExitTexture() ?: return
-        scope.layer(-22) { layer ->
+        scope.layer(ReisaZ.Trail) { layer ->
             layer.texture(
                 exit, imageX - 24.8f * scale, imageY + 2.325f * scale, imageWidth, imageHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, farTrail, true
@@ -1209,7 +1219,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         alpha: Float
     ) {
         val exit = reisaExitTexture() ?: return
-        scope.layer(-20) { layer ->
+        scope.layer(ReisaZ.Pose) { layer ->
             layer.texture(
                 exit, imageX, imageY, imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f,
                 applyAlpha(Color.WHITE, alpha), true
@@ -1219,7 +1229,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     private fun prewarmReisaExitTexture(scope: UiTree.Scope) {
         val exit = reisaExitTexture() ?: return
-        scope.layer(-30) { layer ->
+        scope.layer(ReisaZ.PrewarmExit) { layer ->
             layer.texture(exit, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, 0.0f), true)
         }
     }
@@ -1234,7 +1244,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         alpha: Float
     ) {
         if (texture == null) return
-        scope.layer(-21) { layer ->
+        scope.layer(ReisaZ.Body) { layer ->
             layer.texture(
                 texture,
                 imageX,
@@ -1278,7 +1288,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             val shade = 1.0f - (1.0f - unfold) *
                     (0.18f + 0.38f * sin((center * PI).toDouble()).toFloat())
             val sliceColor = applyAlpha(Color.WHITE, alpha * shade)
-            scope.layer(-20) { layer ->
+            scope.layer(ReisaZ.Pose) { layer ->
                 layer.texture(
                     welcome, sliceX, imageY + curl,
                     maxOf(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
@@ -1289,7 +1299,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         val foldEdgeX = hingeX - imageWidth * unfold
         val edgeAlpha = alpha * (1.0f - unfold) * 0.72f
-        scope.layer(-19) { layer ->
+        scope.layer(ReisaZ.Fold) { layer ->
             layer.rect(
                 foldEdgeX, imageY + imageHeight * 0.05f, maxOf(1.0f, 3.875f * scale), imageHeight * 0.90f,
                 applyAlpha(Color(245, 224, 255), edgeAlpha)
@@ -1349,7 +1359,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val nameY = bubbleY + topPadding
         val messageY = nameY + nameHeight + rowGap
 
-        scope.layer(20) { layer ->
+        scope.layer(ReisaZ.BubbleShadow) { layer ->
             layer.shadow(
                 bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, REISA_BUBBLE_SHADOW_BLUR * scale,
                 applyAlpha(Color(0, 0, 0), visibility * REISA_GREETING_BUBBLE_SHADOW_ALPHA)
@@ -1362,7 +1372,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 15.5f * scale, 13.95f * scale, 3.875f * scale, surface
             )
         }
-        scope.layer(21) { layer ->
+        scope.layer(ReisaZ.BubbleText) { layer ->
             layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT)
             layer.text(greeting, textX, messageY, messageScale, textColor)
         }
@@ -1375,27 +1385,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         if (reisaShutdownStartMs >= 0L) return true
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
-            val width = LuminRenderSystem.getScaledWidthInt()
-            val height = LuminRenderSystem.getScaledHeightInt()
-            val scale = resolutionScale(width, height)
-            val layoutWidth = (MENU_REFERENCE_WIDTH * scale).roundToInt()
-            val layoutHeight = (MENU_REFERENCE_HEIGHT * scale).roundToInt()
-            val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
-            val layoutX = if (columbinaStyle) (width - layoutWidth).toFloat() else (width - layoutWidth) * 0.5f
-            val layoutY = if (columbinaStyle) (height - layoutHeight).toFloat() else (height - layoutHeight) * 0.5f
-            for (entry in entries) {
-                if (entry.isHovered(epsilonEvent.x() - layoutX, epsilonEvent.y() - layoutY)) {
-                    entry.action.run()
-                    return true
-                }
-            }
-        }
-        return super.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
+        return scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
     }
 
     override fun removed() {
+        scene.resetComposition()
+
         super.removed()
         val minecraft = this.minecraft
         if (!VideoPlayer.isStopped()) {
@@ -1472,6 +1467,8 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
         var hoverProgress: Float = 0f
 
+        fun bounds() = UiRect(x, y, width, height)
+
         fun setBounds(x: Float, y: Float, width: Float, height: Float) {
             this.x = x
             this.y = y
@@ -1484,5 +1481,71 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
 
     }
+
+}
+
+/**
+ * Columbina 主菜单的层叠语义。
+ *
+ * 数值本身来自历史 z 序；这里给出名字后，遮挡关系的意图不再依赖读者猜测。
+ */
+private object MenuZ {
+
+    /** 背景视频画面。 */
+    val Video = LayerOffset(0)
+
+    /** 压在视频上的渐变遮罩。 */
+    val Shade = LayerOffset(1)
+
+    /** 菜单表面装饰：标题强调条、按钮外壳。 */
+    val Surface = LayerOffset(0)
+
+    /** 标题 / 菜单行 / 页脚的发光文字 pass。 */
+    val Glow = LayerOffset(-50)
+
+    /** 压在装饰之上的正文文字。 */
+    val Content = LayerOffset(10)
+
+}
+
+/**
+ * Reisa 立绘的 z 序栈。
+ *
+ * 负值全部位于菜单内容之下，正值是气泡。
+ */
+private object ReisaZ {
+
+    /** 入场贴图预热，位于所有可见层之下。 */
+    val PrewarmEntrance = LayerOffset(-60)
+
+    /** 离场贴图预热。 */
+    val PrewarmExit = LayerOffset(-30)
+
+    /** 立绘区域遮罩。 */
+    val Mask = LayerOffset(-40)
+
+    /** 底线光晕。 */
+    val Glow = LayerOffset(-24)
+
+    /** 底线本体。 */
+    val BaseLine = LayerOffset(-23)
+
+    /** 拖影（离场残影与横向光带）。 */
+    val Trail = LayerOffset(-22)
+
+    /** 立绘本体。 */
+    val Body = LayerOffset(-21)
+
+    /** 姿态切片与近端拖影。 */
+    val Pose = LayerOffset(-20)
+
+    /** 折边高光。 */
+    val Fold = LayerOffset(-19)
+
+    /** 气泡投影。 */
+    val BubbleShadow = LayerOffset(20)
+
+    /** 气泡文字。 */
+    val BubbleText = LayerOffset(21)
 
 }

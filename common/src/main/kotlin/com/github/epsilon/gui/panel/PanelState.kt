@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.settings.impl.KeybindSetting
 
 class PanelState {
 
@@ -21,153 +21,148 @@ class PanelState {
         CONFIG
     }
 
-    private var selectedCategory: Category = Category.COMBAT
-    private var selectedModule: Module? = null
-    private var searchQuery = ""
-    private var activePopup: ActivePopup = ActivePopup.NONE
-    private var listeningKeyBindModule: Module? = null
-    private var sidebarExpanded = false
-    private var moduleScroll = 0.0f
-    private var detailScroll = 0.0f
-    private var maxModuleScroll = 0.0f
-    private var maxDetailScroll = 0.0f
+    private var selectedCategoryStore: Category by mutableStateOf(Category.COMBAT)
+    private var selectedModuleStore: Module? by mutableStateOf(null)
+    private var searchQueryStore by mutableStateOf("")
+    private var activePopupStore: ActivePopup by mutableStateOf(ActivePopup.NONE)
+    private var listeningKeyBindModuleStore: Module? by mutableStateOf(null)
+    private var sidebarExpandedStore by mutableStateOf(false)
+    private var moduleScrollStore by mutableStateOf(0.0f)
+    private var detailScrollStore by mutableStateOf(0.0f)
+    private var maxModuleScrollStore by mutableStateOf(0.0f)
+    private var maxDetailScrollStore by mutableStateOf(0.0f)
 
-    private var clientSettingMode = false
-    private var clientSettingTab: ClientSettingTab = ClientSettingTab.GENERAL
-    private var listeningKeybindSetting: KeybindSetting? = null
-    private var clientSettingScroll = 0.0f
-    private var maxClientSettingScroll = 0.0f
-    private var friendScroll = 0.0f
-    private var maxFriendScroll = 0.0f
-    private var configScroll = 0.0f
-    private var maxConfigScroll = 0.0f
+    private var clientSettingModeStore by mutableStateOf(false)
+    private var clientSettingTabStore: ClientSettingTab by mutableStateOf(ClientSettingTab.GENERAL)
+    private var clientSettingScrollStore by mutableStateOf(0.0f)
+    private var maxClientSettingScrollStore by mutableStateOf(0.0f)
+    private var friendScrollStore by mutableStateOf(0.0f)
+    private var maxFriendScrollStore by mutableStateOf(0.0f)
+    private var configScrollStore by mutableStateOf(0.0f)
+    private var maxConfigScrollStore by mutableStateOf(0.0f)
 
     init {
         ensureValidSelection()
     }
 
     fun getSelectedCategory(): Category {
-        return selectedCategory
+        return selectedCategoryStore
     }
 
     fun setSelectedCategory(category: Category) {
-        selectedCategory = category
-        moduleScroll = 0.0f
+        selectedCategoryStore = category
+        moduleScrollStore = 0.0f
         ensureValidSelection()
     }
 
     fun getSelectedModule(): Module? {
-        ensureValidSelection()
-        return selectedModule
+        return selectedModuleStore
     }
 
     fun setSelectedModule(module: Module?) {
-        selectedModule = module
+        selectedModuleStore = module
     }
 
     fun getSearchQuery(): String {
-        return searchQuery
+        return searchQueryStore
     }
 
     fun setSearchQuery(searchQuery: String?) {
-        this.searchQuery = searchQuery ?: ""
-        moduleScroll = 0.0f
+        this.searchQueryStore = searchQuery ?: ""
+        moduleScrollStore = 0.0f
         ensureValidSelection()
     }
 
     fun getActivePopup(): ActivePopup {
-        return activePopup
+        return activePopupStore
     }
 
     fun setActivePopup(activePopup: ActivePopup?) {
-        this.activePopup = activePopup ?: ActivePopup.NONE
+        this.activePopupStore = activePopup ?: ActivePopup.NONE
     }
 
     fun getListeningKeyBindModule(): Module? {
-        return listeningKeyBindModule
+        return listeningKeyBindModuleStore
     }
 
     fun setListeningKeyBindModule(listeningKeyBindModule: Module?) {
-        this.listeningKeyBindModule = listeningKeyBindModule
+        this.listeningKeyBindModuleStore = listeningKeyBindModule
     }
 
     fun isSidebarExpanded(): Boolean {
-        return sidebarExpanded
+        return sidebarExpandedStore
     }
 
     fun setSidebarExpanded(sidebarExpanded: Boolean) {
-        this.sidebarExpanded = sidebarExpanded
+        this.sidebarExpandedStore = sidebarExpanded
     }
 
     fun toggleSidebarExpanded() {
-        sidebarExpanded = !sidebarExpanded
+        sidebarExpandedStore = !sidebarExpandedStore
     }
 
     fun getVisibleModules(): List<Module> {
         val visible = filteredModules()
-        if (visible.isNotEmpty() && (selectedModule == null || !visible.contains(selectedModule))) {
-            selectedModule = visible.first()
-        }
         return visible
     }
 
     fun getModuleScroll(): Float {
-        return moduleScroll
+        return moduleScrollStore
     }
 
     fun scrollModules(amount: Double) {
-        moduleScroll = clampScroll(moduleScroll + amount.toFloat(), maxModuleScroll)
+        moduleScrollStore = clampScroll(moduleScrollStore + amount.toFloat(), maxModuleScrollStore)
     }
 
     fun getDetailScroll(): Float {
-        return detailScroll
+        return detailScrollStore
     }
 
     fun scrollDetail(amount: Double) {
-        detailScroll = clampScroll(detailScroll + amount.toFloat(), maxDetailScroll)
+        detailScrollStore = clampScroll(detailScrollStore + amount.toFloat(), maxDetailScrollStore)
     }
 
     fun getMaxModuleScroll(): Float {
-        return maxModuleScroll
+        return maxModuleScrollStore
     }
 
     fun setModuleScroll(scroll: Float) {
-        this.moduleScroll = clampScroll(scroll, maxModuleScroll)
+        this.moduleScrollStore = clampScroll(scroll, maxModuleScrollStore)
     }
 
     fun setMaxModuleScroll(maxModuleScroll: Float) {
-        this.maxModuleScroll = maxOf(0.0f, maxModuleScroll)
-        moduleScroll = clampScroll(moduleScroll, this.maxModuleScroll)
+        this.maxModuleScrollStore = maxOf(0.0f, maxModuleScroll)
+        moduleScrollStore = clampScroll(moduleScrollStore, this.maxModuleScrollStore)
     }
 
     fun getMaxDetailScroll(): Float {
-        return maxDetailScroll
+        return maxDetailScrollStore
     }
 
     fun setDetailScroll(scroll: Float) {
-        this.detailScroll = clampScroll(scroll, maxDetailScroll)
+        this.detailScrollStore = clampScroll(scroll, maxDetailScrollStore)
     }
 
     fun setMaxDetailScroll(maxDetailScroll: Float) {
-        this.maxDetailScroll = maxOf(0.0f, maxDetailScroll)
-        detailScroll = clampScroll(detailScroll, this.maxDetailScroll)
+        this.maxDetailScrollStore = maxOf(0.0f, maxDetailScroll)
+        detailScrollStore = clampScroll(detailScrollStore, this.maxDetailScrollStore)
     }
 
     private fun filteredModules(): List<Module> {
-        val loweredSearch = searchQuery.lowercase()
+        val loweredSearch = searchQueryStore.lowercase()
         return ArrayList(
             ModuleManager.getModules().stream()
-                .filter { module -> module.category == selectedCategory }
+                .filter { module -> module.category == selectedCategoryStore }
                 .filter { module -> loweredSearch.isBlank() || matchesSearch(module, loweredSearch) }
                 .sorted(getComparator())
                 .toList()
         )
     }
 
-    private fun ensureValidSelection() {
+    fun ensureValidSelection() {
         val modules = filteredModules()
-        if (modules.isNotEmpty() && (selectedModule == null || !modules.contains(selectedModule))) {
-            selectedModule = modules.first()
+        if (modules.isNotEmpty() && (selectedModuleStore == null || !modules.contains(selectedModuleStore))) {
+            selectedModuleStore = modules.first()
         }
     }
 
@@ -195,103 +190,95 @@ class PanelState {
     }
 
     fun isClientSettingMode(): Boolean {
-        return clientSettingMode
+        return clientSettingModeStore
     }
 
     fun setClientSettingMode(clientSettingMode: Boolean) {
-        if (this.clientSettingMode != clientSettingMode) {
-            this.clientSettingMode = clientSettingMode
+        if (this.clientSettingModeStore != clientSettingMode) {
+            this.clientSettingModeStore = clientSettingMode
             if (clientSettingMode) {
-                listeningKeyBindModule = null
+                listeningKeyBindModuleStore = null
             } else {
-                listeningKeybindSetting = null
-                clientSettingScroll = 0.0f
-                friendScroll = 0.0f
-                configScroll = 0.0f
-                clientSettingTab = ClientSettingTab.GENERAL
+                clientSettingScrollStore = 0.0f
+                friendScrollStore = 0.0f
+                configScrollStore = 0.0f
+                clientSettingTabStore = ClientSettingTab.GENERAL
             }
         }
     }
 
-    fun getListeningKeybindSetting(): KeybindSetting? {
-        return listeningKeybindSetting
-    }
-
-    fun setListeningKeybindSetting(listeningKeybindSetting: KeybindSetting?) {
-        this.listeningKeybindSetting = listeningKeybindSetting
-    }
 
     fun getClientSettingScroll(): Float {
-        return clientSettingScroll
+        return clientSettingScrollStore
     }
 
     fun scrollClientSetting(amount: Double) {
-        clientSettingScroll = clampScroll(clientSettingScroll + amount.toFloat(), maxClientSettingScroll)
+        clientSettingScrollStore = clampScroll(clientSettingScrollStore + amount.toFloat(), maxClientSettingScrollStore)
     }
 
     fun getMaxClientSettingScroll(): Float {
-        return maxClientSettingScroll
+        return maxClientSettingScrollStore
     }
 
     fun setClientSettingScroll(scroll: Float) {
-        this.clientSettingScroll = clampScroll(scroll, maxClientSettingScroll)
+        this.clientSettingScrollStore = clampScroll(scroll, maxClientSettingScrollStore)
     }
 
     fun setMaxClientSettingScroll(maxClientSettingScroll: Float) {
-        this.maxClientSettingScroll = maxOf(0.0f, maxClientSettingScroll)
-        clientSettingScroll = clampScroll(clientSettingScroll, this.maxClientSettingScroll)
+        this.maxClientSettingScrollStore = maxOf(0.0f, maxClientSettingScroll)
+        clientSettingScrollStore = clampScroll(clientSettingScrollStore, this.maxClientSettingScrollStore)
     }
 
     fun getClientSettingTab(): ClientSettingTab {
-        return clientSettingTab
+        return clientSettingTabStore
     }
 
     fun setClientSettingTab(tab: ClientSettingTab) {
-        if (this.clientSettingTab != tab) {
-            this.clientSettingTab = tab
+        if (this.clientSettingTabStore != tab) {
+            this.clientSettingTabStore = tab
         }
     }
 
     fun getFriendScroll(): Float {
-        return friendScroll
+        return friendScrollStore
     }
 
     fun scrollFriend(amount: Double) {
-        friendScroll = clampScroll(friendScroll + amount.toFloat(), maxFriendScroll)
+        friendScrollStore = clampScroll(friendScrollStore + amount.toFloat(), maxFriendScrollStore)
     }
 
     fun getMaxFriendScroll(): Float {
-        return maxFriendScroll
+        return maxFriendScrollStore
     }
 
     fun setFriendScroll(scroll: Float) {
-        this.friendScroll = clampScroll(scroll, maxFriendScroll)
+        this.friendScrollStore = clampScroll(scroll, maxFriendScrollStore)
     }
 
     fun setMaxFriendScroll(maxFriendScroll: Float) {
-        this.maxFriendScroll = maxOf(0.0f, maxFriendScroll)
-        friendScroll = clampScroll(friendScroll, this.maxFriendScroll)
+        this.maxFriendScrollStore = maxOf(0.0f, maxFriendScroll)
+        friendScrollStore = clampScroll(friendScrollStore, this.maxFriendScrollStore)
     }
 
     fun getConfigScroll(): Float {
-        return configScroll
+        return configScrollStore
     }
 
     fun scrollConfig(amount: Double) {
-        configScroll = clampScroll(configScroll + amount.toFloat(), maxConfigScroll)
+        configScrollStore = clampScroll(configScrollStore + amount.toFloat(), maxConfigScrollStore)
     }
 
     fun getMaxConfigScroll(): Float {
-        return maxConfigScroll
+        return maxConfigScrollStore
     }
 
     fun setConfigScroll(scroll: Float) {
-        this.configScroll = clampScroll(scroll, maxConfigScroll)
+        this.configScrollStore = clampScroll(scroll, maxConfigScrollStore)
     }
 
     fun setMaxConfigScroll(maxConfigScroll: Float) {
-        this.maxConfigScroll = maxOf(0.0f, maxConfigScroll)
-        configScroll = clampScroll(configScroll, this.maxConfigScroll)
+        this.maxConfigScrollStore = maxOf(0.0f, maxConfigScroll)
+        configScrollStore = clampScroll(configScrollStore, this.maxConfigScrollStore)
     }
 
     private fun clampScroll(scroll: Float, maxScroll: Float): Float {

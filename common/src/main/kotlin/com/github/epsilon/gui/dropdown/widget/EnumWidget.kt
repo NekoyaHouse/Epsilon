@@ -1,18 +1,23 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.lib.Chip
+import com.github.epsilon.gui.lib.Outline
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.Triangle
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
@@ -21,21 +26,21 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
 
     private val expandAnim: Animation = Animation(Easing.DECELERATE, DropdownTheme.ANIM_EXPAND)
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var expanded: Boolean = false
+    private var expanded: Boolean by mutableStateOf<Boolean>(false)
 
     override fun getHeight(): Float {
         expandAnim.run(if (shouldExpand()) 1.0f else 0.0f)
         return getCollapsedHeight() + getExpandedTotalHeight() * expandAnim.value
     }
 
-    override fun draw(scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int) {
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         val expand = updateExpandProgress()
         val hover = updateHoverProgress(isFieldHovered(mouseX.toDouble(), mouseY.toDouble()))
         val fieldX = getLocalFieldX()
         val fieldY = getLocalFieldY()
         val fieldW = getFieldWidth()
 
-        scope.text(
+        Text(
             setting.displayName,
             DropdownTheme.SETTING_PADDING_X,
             1.0f,
@@ -44,12 +49,12 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         )
 
         if (!setting.isCurrentValueSupported()) {
-            drawPlatformBadge(scope, textMetrics, fieldX)
+            drawPlatformBadge(fieldX)
         }
-        drawCurrentValueField(scope, textMetrics, fieldX, fieldY, fieldW, hover, expand)
+        drawCurrentValueField(fieldX, fieldY, fieldW, hover, expand)
 
         if (expand > 0.001f && getHiddenModeCount() > 0) {
-            drawExpandedOptions(scope, textMetrics, mouseX, mouseY, fieldX, fieldW, expand)
+            drawExpandedOptions(mouseX, mouseY, fieldX, fieldW, expand)
         }
     }
 
@@ -74,41 +79,39 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         return false
     }
 
-    private fun drawCurrentValueField(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, fieldX: Float, fieldY: Float, fieldW: Float,
-        hover: Float, expand: Float,
+    private fun UiScope.drawCurrentValueField(
+        fieldX: Float, fieldY: Float, fieldW: Float, hover: Float, expand: Float,
     ) {
         val supported = setting.isCurrentValueSupported()
         val background: Color = MD3Theme.filledFieldSurface(expanded, hover)
         val outline: Color = MD3Theme.filledFieldIndicator(expanded, hover)
-        val textY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(FIELD_TEXT_SCALE)) * 0.5f
+        val textY = fieldY + (FIELD_HEIGHT - metrics.textHeight(FIELD_TEXT_SCALE)) * 0.5f
         val arrowCenterX = fieldX + fieldW - 10.0f
         val arrowCenterY = fieldY + FIELD_HEIGHT * 0.5f
 
-        scope.roundRect(
+        RoundRect(
             fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS,
             if (supported) background else MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, 255)
         )
-        scope.outline(
+        Outline(
             fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, 0.7f,
             if (supported) outline else MD3Theme.OUTLINE_SOFT
         )
-        scope.text(
+        Text(
             setting.translatedValue,
             fieldX + FIELD_TEXT_PADDING_X,
             textY,
             FIELD_TEXT_SCALE,
             if (supported) MD3Theme.filledFieldContent(expanded) else MD3Theme.TEXT_MUTED
         )
-        scope.triangle(
+        Triangle(
             arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand,
             if (supported) DropdownTheme.expandArrow(expand) else MD3Theme.TEXT_MUTED
         )
     }
 
-    private fun drawExpandedOptions(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
-        fieldX: Float, fieldW: Float, expand: Float,
+    private fun UiScope.drawExpandedOptions(
+        mouseX: Int, mouseY: Int, fieldX: Float, fieldW: Float, expand: Float,
     ) {
         val listX = fieldX
         val listY = getLocalListY()
@@ -116,21 +119,11 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         val clipH = listH * expand
         val visibleBottom = listY + clipH
 
-        drawExpandedBackground(scope, listX, listY, fieldW, clipH)
+        drawExpandedBackground(listX, listY, fieldW, clipH)
 
         val hiddenModes = getHiddenModes()
         for (optionIndex in hiddenModes.indices) {
-            drawOption(
-                scope,
-                textMetrics,
-                mouseX,
-                mouseY,
-                listX,
-                fieldW,
-                visibleBottom,
-                optionIndex,
-                hiddenModes[optionIndex]
-            )
+            drawOption(mouseX, mouseY, listX, fieldW, visibleBottom, optionIndex, hiddenModes[optionIndex])
         }
     }
 
@@ -186,13 +179,13 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         return hoverAnim.value
     }
 
-    private fun drawExpandedBackground(scope: UiTree.Scope, listX: Float, listY: Float, fieldW: Float, clipH: Float) {
-        scope.roundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface())
-        scope.outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96))
+    private fun UiScope.drawExpandedBackground(listX: Float, listY: Float, fieldW: Float, clipH: Float) {
+        RoundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface())
+        Outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96))
     }
 
-    private fun drawOption(
-        scope: UiTree.Scope, textMetrics: UiTextMetrics, mouseX: Int, mouseY: Int,
+    private fun UiScope.drawOption(
+        mouseX: Int, mouseY: Int,
         listX: Float, fieldW: Float, visibleBottom: Float, optionIndex: Int, mode: Enum<*>,
     ) {
         val optionY = getLocalOptionY(optionIndex)
@@ -207,7 +200,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
 
         val hovered = isOptionHovered(mouseX.toDouble(), mouseY.toDouble(), optionIndex)
         if (hovered) {
-            scope.roundRect(
+            RoundRect(
                 listX + 1.5f,
                 optionY,
                 fieldW - 3.0f,
@@ -217,7 +210,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             )
         }
 
-        val lineHeight = textMetrics.textHeight(OPTION_TEXT_SCALE)
+        val lineHeight = metrics.textHeight(OPTION_TEXT_SCALE)
         val textY = optionY + (OPTION_HEIGHT - lineHeight) * 0.5f
         if (textY + lineHeight > visibleBottom) {
             return
@@ -237,7 +230,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             ((textColor.alpha * alpha).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong())
                 .toInt().toInt()
         )
-        scope.text(
+        Text(
             setting.getTranslatedValueUnchecked(mode),
             listX + FIELD_TEXT_PADDING_X,
             textY,
@@ -248,26 +241,26 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
             val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
             val badgeScale = 0.48f
             // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
-            val badgeWidth = textMetrics.textWidth(badge, badgeScale) + 16.0f
+            val badgeWidth = metrics.textWidth(badge, badgeScale) + 16.0f
             val badgeHeight = 11.0f
             val badgeX = listX + fieldW - badgeWidth - 8.0f
             val badgeY = optionY + (OPTION_HEIGHT - badgeHeight) * 0.5f
-            scope.chip(
+            Chip(
                 UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
                 MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
             )
         }
     }
 
-    private fun drawPlatformBadge(scope: UiTree.Scope, textMetrics: UiTextMetrics, trailingX: Float) {
+    private fun UiScope.drawPlatformBadge(trailingX: Float) {
         val label = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
         val scale = 0.5f
-        val width = textMetrics.textWidth(label, scale) + 16.0f
+        val width = metrics.textWidth(label, scale) + 16.0f
         val height = 12.0f
         val x = maxOf(DropdownTheme.SETTING_PADDING_X, trailingX - width)
-        val labelHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)
+        val labelHeight = metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)
         val y = 1.0f + (labelHeight - height) * 0.5f
-        scope.chip(
+        Chip(
             UiRect(x, y, width, height), label, scale,
             MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255), MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
         )
