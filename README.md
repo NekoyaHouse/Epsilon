@@ -30,6 +30,8 @@ The Lumin rendering system provides custom render pipelines for:
 - Texture rendering
 - Custom vertex formats
 
+Retained UI caches local GPU geometry and updates transform, clip and paint independently. The shared 2D canvas preserves layer/declaration order and consumes records on flush; immediate mode remains available.
+
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run

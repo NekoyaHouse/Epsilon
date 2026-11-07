@@ -500,7 +500,7 @@ class UiScopeInputTest {
         } finally { other.close() }
     }
 
-    @Test fun viewportInputUsesTheBuffersPaintOrderAndOuterLayer() {
+    @Test fun viewportInputHonorsExplicitLayersAndSubmissionOrder() {
         val buffer = UiContentBuffer(EpsilonUiTheme)
         val events = mutableListOf<String>()
         try {
@@ -521,7 +521,7 @@ class UiScopeInputTest {
             }
             assertTrue(root.input.mouseClicked(pointer(), false))
             assertTrue(root.input.mouseClicked(pointer(45.0), false))
-            assertEquals(listOf("late", "overlay"), events)
+            assertEquals(listOf("early", "overlay"), events)
         } finally { buffer.close() }
     }
 

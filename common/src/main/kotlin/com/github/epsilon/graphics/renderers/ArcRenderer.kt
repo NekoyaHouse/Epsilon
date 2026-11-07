@@ -25,7 +25,7 @@ import kotlin.math.abs
  */
 class ArcRenderer private constructor() : IRenderer {
 
-    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
+    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE)
 
     private var scissorEnabled = false
     private var scissorX = 0
@@ -202,7 +202,7 @@ class ArcRenderer private constructor() : IRenderer {
             pass.disableScissor()
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice())
+        pass.setVertexBuffer(0, buffer.getGpuSlice())
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount), LuminRenderSystem.getQuadIndexType())
         pass.drawIndexed(info.indexCount, 1, 0, 0, 0)
     }

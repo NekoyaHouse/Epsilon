@@ -1,178 +1,303 @@
 package com.github.epsilon.graphics.schedulers.render2d
 
+import com.github.epsilon.Constants
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.graphics.buffer.GeometryArena
 import com.github.epsilon.graphics.renderers.*
+import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import com.github.epsilon.managers.RendererManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.math.toRadians
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.awt.Color
 import java.lang.Float as JavaFloat
-import java.util.*
-import java.util.ArrayDeque as JavaArrayDeque
-import java.util.Collections
-import java.util.Deque
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * 2D GUI 渲染调度器。
- *
- * GUI 只提交声明式绘制命令；调度器负责 layer、scissor、空间桶、批次规划和 renderer 复用。
- */
-class Render2DScheduler : AutoCloseable {
+/** 持久 display list 与当帧 canvas 共用执行后端；flush 消费尚未提交的记录。 */
+class Render2DScheduler : IRenderer {
+    val stats = Render2DStats()
+    private val arena = GeometryArena(stats)
+    private val executor = Render2DExecutor(arena, stats)
+    var measureGpu: Boolean
+        get() = executor.measureGpu
+        set(value) { executor.measureGpu = value }
+    private val layerHandles = HashMap<Int, Canvas>()
+    private val measureTextRenderer = TextRenderer.create(256 * 1024L)
+    private val pending = OrderedSubmissionQueue<Queued>({ it.layer }, { it.sequence })
+    private val transient = ArrayList<Render2DCommand>()
+    private val retained = LinkedHashMap<RecordKey, DisplayList>(64, 0.75f, true)
+    private var capture: MutableList<Render2DCommand>? = null
+    private var captureX = 0f
+    private var captureY = 0f
+    private var sequence = 0L
+    private var closed = false
+    private val deferred = ArrayList<DisplayList>()
+    private var frame = Long.MIN_VALUE
 
-    private val commandStore: CommandStore
-    private val layerHandles: Int2ObjectMap<LayerHandle> = Int2ObjectOpenHashMap()
-    private val rendererPool: RendererPool = RendererPool()
-    private val measureTextRenderer: TextRenderer = TextRenderer.create(256 * 1024L)
-    private var sequence: Long = 0
+    constructor() { RendererManager.unregister(measureTextRenderer); RendererManager.register(this) }
+    @Deprecated("空间桶已由有序 display list 替代")
+    constructor(quadtreeThreshold: Int) : this() { require(quadtreeThreshold > 0) }
 
-    constructor() : this(DEFAULT_QUADTREE_THRESHOLD)
-
-    constructor(quadtreeThreshold: Int) {
-        commandStore = CommandStore(maxOf(1, quadtreeThreshold))
-    }
-
-    fun layer(layer: Int): LayerHandle = layerHandles.computeIfAbsent(layer) { LayerHandle(this, layer) }
-
+    fun canvas(layer: Int = 0): Canvas = layerHandles.getOrPut(layer) { Canvas(this, layer) }
     fun textMetrics(): TextRenderer = measureTextRenderer
+    fun isEmpty() = pending.isEmpty() && transient.isEmpty()
+    override fun draw() = flush()
 
-    fun isEmpty(): Boolean = commandStore.isEmpty()
-
-    fun clear() {
-        commandStore.clear()
-        for (handle in layerHandles.values) {
-            handle.clearScissor()
+    fun beginFrame() {
+        check(!closed)
+        val next = LuminRenderSystem.getRenderFrameId()
+        if (frame == next) return
+        frame = next
+        arena.seal()
+        arena.collect()
+        val iterator = retained.values.iterator()
+        while (iterator.hasNext()) {
+            val list = iterator.next()
+            if (list.lastFrame < next - 1) { retireList(list); iterator.remove() }
         }
-        sequence = 0L
+        arena.seal()
     }
 
+    fun endFrame() {
+        val iterator = retained.values.iterator()
+        while (iterator.hasNext()) {
+            val list = iterator.next()
+            if (list.lastFrame != frame) { retireList(list); iterator.remove() }
+        }
+        releaseDeferred()
+        arena.seal()
+        arena.collect()
+    }
+
+    /** 清除当帧记录，不销毁跨帧几何。 */
+    override fun clear() {
+        pending.filter { it.batch.temporary }.forEach { it.batch.renderers.close() }
+        pending.clear()
+        releaseDeferred()
+        transient.clear()
+        layerHandles.values.forEach { it.clearScissor() }
+        sequence = 0
+    }
     fun clearLayer(layer: Int) {
-        commandStore.clearLayer(layer)
-        val handle = layerHandles[layer]
-        if (handle != null) {
-            handle.clearScissor()
+        pending.filter { it.layer == layer && it.batch.temporary }.forEach { it.batch.renderers.close() }
+        pending.removeAll { it.layer == layer }
+        releaseDeferred()
+        transient.removeAll { it.layer == layer }
+        layerHandles[layer]?.clearScissor()
+    }
+    fun resetCache() {
+        retained.values.forEach { retireList(it) }
+        retained.clear()
+        executor.resetCache()
+        arena.seal()
+    }
+
+    /** identity 使用引用身份；几何与外部属性分别缓存。 */
+    fun retain(identity: Any, part: Int, layer: Int, properties: Render2DProperties,
+               clip: Render2DScissor?, originX: Float = 0f, originY: Float = 0f, record: () -> Unit) {
+        beginFrame()
+        drainTransient()
+        val key = RecordKey(identity, part, layer)
+        var list = retained[key]
+        if (list == null || !list.resourcesCurrent()) {
+            val commands = ArrayList<Render2DCommand>()
+            val previous = capture
+            val oldX = captureX; val oldY = captureY
+            captureX = originX; captureY = originY
+            capture = commands
+            val start = System.nanoTime()
+            try { record() } finally { capture = previous; captureX = oldX; captureY = oldY; stats.recordingNanos += System.nanoTime() - start }
+            stats.recordings++
+            val compiled = compile(commands)
+            val replacement = DisplayList(compiled, resources(commands), frame)
+            retained.put(key, replacement)?.let { retireList(it) }
+            list = replacement
+        } else stats.cacheHits++
+        list.lastFrame = frame
+        for (batch in list.batches) {
+            val bounds = batch.bounds
+            if (clip != null) {
+                val transform = properties.transform
+                val xs = floatArrayOf(transform.mapX(bounds.x, bounds.y), transform.mapX(bounds.x + bounds.width, bounds.y),
+                    transform.mapX(bounds.x, bounds.y + bounds.height), transform.mapX(bounds.x + bounds.width, bounds.y + bounds.height))
+                val ys = floatArrayOf(transform.mapY(bounds.x, bounds.y), transform.mapY(bounds.x + bounds.width, bounds.y),
+                    transform.mapY(bounds.x, bounds.y + bounds.height), transform.mapY(bounds.x + bounds.width, bounds.y + bounds.height))
+                val area = LuminRenderSystem.toFramebufferScissor(xs.min(), ys.min(), xs.max() - xs.min(), ys.max() - ys.min())
+                if (area.x + area.width <= clip.x || area.y + area.height <= clip.y ||
+                    area.x >= clip.x + clip.width || area.y >= clip.y + clip.height) continue
+            }
+            pending.add(Queued(layer, nextSequence(), batch, properties, clip))
+        }
+        // 活跃的大页面可超过条目数预算；只淘汰未参与当前提交的缓存。
+        val iterator = retained.values.iterator()
+        while ((retained.size > 2048 || stats.liveBytes > 32L * 1024 * 1024) && iterator.hasNext()) {
+            val candidate = iterator.next()
+            if (candidate.lastFrame != frame) { retireList(candidate); iterator.remove() }
+        }
+        arena.seal()
+    }
+
+    fun recordTransient(layer: Int, properties: Render2DProperties, clip: Render2DScissor?, record: () -> Unit) {
+        beginFrame()
+        drainTransient()
+        val commands = ArrayList<Render2DCommand>()
+        val previous = capture
+        capture = commands
+        try { record() } finally { capture = previous }
+        for (batch in compile(commands, temporary = true)) pending.add(Queued(layer, nextSequence(), batch, properties, clip))
+    }
+
+    fun flush() = flushSelected(null)
+    fun flushLayer(layer: Int) = flushSelected(layer)
+    fun flushAndClear() { flush(); clear() }
+
+    private fun flushSelected(layer: Int?) {
+        beginFrame()
+        drainTransient()
+        val selected = pending.consume(layer)
+        if (selected.isEmpty()) return
+        val start = System.nanoTime()
+        try {
+            executor.execute(selected.map { queued ->
+                val clip = intersect(queued.batch.scissor, queued.clip)
+                Render2DExecutor.Draw(pipelineFor(queued.batch.kind), queued.properties,
+                    { queued.batch.renderers.applyScissor(clip); queued.batch.renderers.prepareSharedDraw() },
+                    { pass -> queued.batch.renderers.applyScissor(clip); queued.batch.renderers.draw(pass) })
+            })
+        } finally {
+            selected.filter { it.batch.temporary }.forEach { it.batch.renderers.close() }
+            releaseDeferred()
+            arena.seal()
+            stats.submissionNanos += System.nanoTime() - start
         }
     }
 
-    fun flush() {
-        if (commandStore.isEmpty()) {
-            return
-        }
-
-        flushBatchGroups(FrameBatchPlanner.plan(commandStore.planBatches()))
+    private fun retireList(list: DisplayList) {
+        if (pending.any { queued -> list.batches.any { it === queued.batch } }) deferred.add(list) else list.close()
     }
-
-    fun flushLayer(layer: Int) {
-        val bucket = commandStore.layer(layer)
-        if (bucket != null) {
-            flushLayer(bucket)
+    private fun releaseDeferred() {
+        val iterator = deferred.iterator()
+        while (iterator.hasNext()) {
+            val list = iterator.next()
+            if (pending.none { queued -> list.batches.any { it === queued.batch } }) { list.close(); iterator.remove() }
         }
-    }
-
-    fun flushAndClear() {
-        flush()
-        clear()
     }
 
     private fun add(command: Render2DCommand) {
-        commandStore.add(command)
+        if (capture == null) transient.add(command)
+        else capture!!.add(command.local(captureX, captureY))
+    }
+    private fun Render2DCommand.local(ox: Float, oy: Float): Render2DCommand = when (this) {
+        is Render2DCommand.Shadow -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
+        is Render2DCommand.SegmentedShadow -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, segmentRects = segmentRects.copyOf().also { values -> for (i in 0 until minOf(segmentCount, values.size / 4)) { values[i * 4] -= ox; values[i * 4 + 1] -= oy } })
+        is Render2DCommand.RoundRect -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
+        is Render2DCommand.RoundRectOutline -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
+        is Render2DCommand.Rect -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
+        is Render2DCommand.Triangle -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, centerX = centerX - ox, centerY = centerY - oy)
+        is Render2DCommand.Arc -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, centerX = centerX - ox, centerY = centerY - oy)
+        is Render2DCommand.Texture -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, originX = originX - ox, originY = originY - oy)
+        is Render2DCommand.Text -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy, originX = originX - ox, originY = originY - oy)
+        is Render2DCommand.GradientText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
+        is Render2DCommand.BlurText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
+        is Render2DCommand.GlitchText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
     }
 
     private fun nextSequence(): Long = sequence++
-
-    private fun flushLayer(bucket: LayerBucket) {
-        if (bucket.count() == 0) {
-            return
-        }
-        flushBatchGroups(FrameBatchPlanner.plan(bucket.planBatches()))
-    }
-
-    private fun flushBatchGroups(groups: List<BatchGroup>) {
-        if (groups.isEmpty()) {
-            return
-        }
-        val prepared = ArrayList<PreparedBatch>(groups.size)
-        for (group in groups) {
-            val batch = prepareBatchGroup(group)
-            if (batch != null) {
-                prepared.add(batch)
-            }
-        }
-        flushPreparedBatches(prepared)
-    }
-
-    private fun prepareBatchGroup(group: BatchGroup): PreparedBatch? {
-        val scissor = group.scissor
-        if (group.commands.isEmpty() || scissor != null && !scissor.visible()) {
-            return null
-        }
-        val renderers = rendererPool.acquire(group.kind, group.scissor)
-        for (command in group.commands) {
-            emit(command, renderers)
-        }
-        return PreparedBatch(pipelineFor(group.kind), renderers)
-    }
-
-    private fun flushPreparedBatches(batches: List<PreparedBatch>) {
-        if (batches.isEmpty()) {
-            return
-        }
-
-        LuminRenderSystem.applyOrthoProjection()
-        val drawable = ArrayList<PreparedBatch>(batches.size)
-        for (batch in batches) {
-            if (batch.renderers.prepareSharedDraw()) {
-                drawable.add(batch)
-            }
-        }
-        if (drawable.isEmpty()) {
-            return
-        }
-
-        var index = 0
-        while (index < drawable.size) {
-            val pipeline = drawable[index].pipeline
-            var end = index + 1
-            while (end < drawable.size && drawable[end].pipeline === pipeline) {
-                end++
-            }
-            flushPipelineRun(pipeline, drawable, index, end)
-            index = end
+    private fun drainTransient() {
+        if (transient.isEmpty()) return
+        val commands = transient.toList()
+        transient.clear()
+        for ((layer, values) in commands.groupBy { it.layer }) {
+            val compiled = compile(values, temporary = true)
+            for (batch in compiled) pending.add(Queued(layer, batch.sequence, batch, Render2DProperties.DEFAULT, null))
         }
     }
 
-    private fun flushPipelineRun(pipeline: RenderPipeline, batches: List<PreparedBatch>, start: Int, end: Int) {
-        val colorView = LuminRenderSystem.resolveColorView() ?: return
-
-        val depthView = if (pipeline === LuminRenderPipelines.TEXTURE) null else LuminRenderSystem.resolveDepthView()
-        RenderSystem.getDevice().createCommandEncoder()
-            .createRenderPass(
-                { "Lumin 2D Pipeline Run" },
-                colorView, Optional.empty(),
-                depthView, OptionalDouble.empty()
-            ).use { pass ->
-                pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
-                RenderSystem.bindDefaultUniforms(pass)
-                for (i in start until end) {
-                    batches[i].renderers.draw(pass)
-                }
+    private fun compile(commands: List<Render2DCommand>, temporary: Boolean = false): List<CompiledBatch> {
+        val start = System.nanoTime()
+        val groups = AdjacentBatchPlanner.plan(commands)
+        stats.planBuilds++
+        stats.planningNanos += System.nanoTime() - start
+        val result = ArrayList<CompiledBatch>()
+        try {
+            for (group in groups) {
+                val first = group.commands.first()
+                val bundle = arena.recording { RendererBundle.create(first.kind()) }
+                try {
+                    val buildStart = System.nanoTime()
+                    arena.recording { group.commands.forEach { emit(it, bundle) } }
+                    stats.geometryBuilds++
+                    stats.geometryNanos += System.nanoTime() - buildStart
+                    val bounds = group.commands.map { it.orderingBounds() }.reduce { a, b -> a.include(b) }
+                    result.add(CompiledBatch(first.kind(), first.scissor, first.sequence, bundle, temporary, bounds))
+                } catch (failure: Throwable) { bundle.close(); throw failure }
             }
+            return result
+        } catch (failure: Throwable) {
+            result.forEach { it.renderers.close() }
+            Constants.LOGGER.error("Lumin 2D 编译失败，保留已提交的 display list", failure)
+            throw failure
+        }
+    }
+
+    private fun resources(commands: List<Render2DCommand>): List<FontStamp> = commands.mapNotNull { command ->
+        val text: String
+        val explicit: TtfFontLoader?
+        when (command) {
+            is Render2DCommand.Text -> { text = command.text; explicit = command.fontLoader }
+            is Render2DCommand.GradientText -> { text = command.text; explicit = command.fontLoader }
+            is Render2DCommand.BlurText -> { text = command.text; explicit = command.fontLoader }
+            is Render2DCommand.GlitchText -> { text = command.text; explicit = command.fontLoader }
+            else -> return@mapNotNull null
+        }
+        val loader = explicit ?: StaticFontLoader.defaultFont()
+        FontStamp(loader, text, explicit == null, loader.getGlyphRevision(), loader.getAtlasRevision(), loader.getRenderScale())
+    }
+
+    private data class FontStamp(val loader: TtfFontLoader, val text: String, val default: Boolean,
+                                 val glyph: Long, val atlas: Long, val scale: Float) {
+        fun current(): Boolean {
+            if (default && loader !== StaticFontLoader.defaultFont()) return false
+            loader.prepareChars(text)
+            return glyph == loader.getGlyphRevision() && atlas == loader.getAtlasRevision() && scale == loader.getRenderScale()
+        }
+    }
+    private class RecordKey(val identity: Any, val part: Int, val layer: Int) {
+        override fun hashCode() = (System.identityHashCode(identity) * 31 + part) * 31 + layer
+        override fun equals(other: Any?) = other is RecordKey && identity === other.identity && part == other.part && layer == other.layer
+    }
+    private class DisplayList(val batches: List<CompiledBatch>, val fonts: List<FontStamp>, var lastFrame: Long) : AutoCloseable {
+        private val resources = Render2DResources.generation
+        fun resourcesCurrent() = resources == Render2DResources.generation && fonts.all { it.current() }
+        override fun close() { batches.forEach { it.renderers.close() } }
+    }
+    private data class CompiledBatch(val kind: Render2DCommandKind, val scissor: Render2DScissor?, val sequence: Long,
+                                     val renderers: RendererBundle, val temporary: Boolean, val bounds: Render2DBounds)
+    private data class Queued(val layer: Int, val sequence: Long, val batch: CompiledBatch,
+                              val properties: Render2DProperties, val clip: Render2DScissor?)
+
+    override fun close() {
+        if (closed) return
+        clear()
+        resetCache()
+        measureTextRenderer.close()
+        executor.close()
+        arena.close()
+        layerHandles.clear()
+        RendererManager.unregister(this)
+        closed = true
     }
 
     private fun pipelineFor(kind: Render2DCommandKind): RenderPipeline = when (kind) {
         Render2DCommandKind.SHADOW -> LuminRenderPipelines.SHADOW
-        Render2DCommandKind.ROUND_RECT -> LuminRenderPipelines.ROUND_RECT
-        Render2DCommandKind.ROUND_RECT_OUTLINE -> LuminRenderPipelines.ROUND_RECT_OUTLINE
-        Render2DCommandKind.RECT -> LuminRenderPipelines.RECTANGLE
+        Render2DCommandKind.ROUND_RECT -> LuminRenderPipelines.UI_SHAPE
+        Render2DCommandKind.ROUND_RECT_OUTLINE -> LuminRenderPipelines.UI_SHAPE
+        Render2DCommandKind.RECT -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.TRIANGLE -> LuminRenderPipelines.TRIANGLE
         Render2DCommandKind.ARC -> LuminRenderPipelines.ARC
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
@@ -200,21 +325,21 @@ class Render2DScheduler : AutoCloseable {
                 command.segmentRects, command.segmentRadii, command.segmentColors, command.segmentCount
             )
 
-            is Render2DCommand.RoundRect -> renderers.roundRectRenderer().addRoundRectGradient(
+            is Render2DCommand.RoundRect -> renderers.shapeRenderer().addOutlineGradient(
                 command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
                 command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
-                command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
+                -1f, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
             )
 
-            is Render2DCommand.RoundRectOutline -> renderers.roundRectOutlineRenderer().addOutline(
+            is Render2DCommand.RoundRectOutline -> renderers.shapeRenderer().addOutline(
                 command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
                 command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
                 command.outlineWidth, command.color
             )
 
-            is Render2DCommand.Rect -> renderers.rectRenderer().addRectGradient(
+            is Render2DCommand.Rect -> renderers.shapeRenderer().addOutlineGradient(
                 command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
+                0f, 0f, 0f, 0f, -1f, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
             )
 
             is Render2DCommand.Triangle -> renderers.triangleRenderer().addChevronTriangle(
@@ -386,14 +511,7 @@ class Render2DScheduler : AutoCloseable {
         }
     }
 
-    override fun close() {
-        clear()
-        rendererPool.close()
-        measureTextRenderer.close()
-        layerHandles.clear()
-    }
-
-    class LayerHandle internal constructor(
+    class Canvas internal constructor(
         private val scheduler: Render2DScheduler,
         private val layerIndex: Int,
     ) {
@@ -822,394 +940,15 @@ class Render2DScheduler : AutoCloseable {
         }
     }
 
-    private class CommandStore(private val quadtreeThreshold: Int) {
-        private val layerBuckets: Int2ObjectMap<LayerBucket> = Int2ObjectOpenHashMap()
-
-        fun add(command: Render2DCommand) {
-            // 先按整数 layer 隔离命令；每个 layer 内部再决定使用线性数组还是四叉树。
-            layerBuckets.computeIfAbsent(command.layer) { LayerBucket(quadtreeThreshold) }.add(command)
-        }
-
-        fun isEmpty(): Boolean = layerBuckets.isEmpty()
-
-        private fun layers(): Set<Int> = layerBuckets.keys
-
-        fun layer(layer: Int): LayerBucket? = layerBuckets[layer]
-
-        fun planBatches(): List<BatchGroup> {
-            val orderedLayers: MutableList<Int> = ArrayList(layerBuckets.keys)
-            Collections.sort(orderedLayers)
-
-            val result = ArrayList<BatchGroup>()
-            for (layer in orderedLayers) {
-                val bucket = layerBuckets[layer]
-                if (bucket == null || bucket.count() == 0) {
-                    continue
-                }
-                for (group in bucket.planBatches()) {
-                    if (group.visible()) {
-                        result.add(group)
-                    }
-                }
-            }
-            return result
-        }
-
-        fun clear() {
-            layerBuckets.clear()
-        }
-
-        fun clearLayer(layer: Int) {
-            layerBuckets.remove(layer)
-        }
-    }
-
-    private class LayerBucket(private val quadtreeThreshold: Int) {
-        private val flatCommands: MutableList<Render2DCommand> = ArrayList()
-        private var quadTree: QuadTreeBucket? = null
-        private var bounds: Render2DBounds? = null
-
-        fun add(command: Render2DCommand) {
-            val currentBounds = bounds
-            bounds = if (currentBounds == null) command.bounds else currentBounds.include(command.bounds)
-            if (quadTree == null && flatCommands.size + 1 < quadtreeThreshold) {
-                // 小批量 GUI 使用紧凑数组，避免四叉树节点分配带来的固定成本。
-                flatCommands.add(command)
-                return
-            }
-            if (quadTree == null) {
-                promoteToQuadTree()
-            }
-            quadTree!!.add(command)
-        }
-
-        fun count(): Int = quadTree?.count() ?: flatCommands.size
-
-        fun planBatches(): List<BatchGroup> {
-            val ordered = ArrayList<Render2DCommand>(count())
-            val tree = quadTree
-            if (tree == null) {
-                ordered.addAll(flatCommands)
-            } else {
-                tree.collect(ordered)
-            }
-            ordered.sortWith(STABLE_SEQUENCE_ORDER)
-            return BatchPlanner.plan(ordered)
-        }
-
-        private fun promoteToQuadTree() {
-            // 命令数量超过阈值后才升级为空间桶，为后续可见性裁剪和脏区重建预留结构。
-            val currentBounds = bounds
-            val rootBounds =
-                if (currentBounds == null) Render2DBounds.of(0.0f, 0.0f, 1.0f, 1.0f) else padded(currentBounds)
-            val tree = QuadTreeBucket(rootBounds, 0, DEFAULT_QUADTREE_MAX_DEPTH)
-            quadTree = tree
-            for (command in flatCommands) {
-                tree.add(command)
-            }
-            flatCommands.clear()
-        }
-
-        private companion object {
-            fun padded(bounds: Render2DBounds): Render2DBounds {
-                val size = maxOf(maxOf(bounds.width, bounds.height), 1.0f)
-                return Render2DBounds.of(bounds.x - 1.0f, bounds.y - 1.0f, size + 2.0f, size + 2.0f)
-            }
-        }
-    }
-
-    private class QuadTreeBucket(
-        private val bounds: Render2DBounds,
-        private val depth: Int,
-        private val maxDepth: Int,
-    ) {
-        private val commands: MutableList<Render2DCommand> = ArrayList()
-        private var children: Array<QuadTreeBucket>? = null
-        private var nodeCount: Int = 0
-
-        fun add(command: Render2DCommand) {
-            nodeCount++
-            val currentChildren = children
-            if (currentChildren != null && insertIntoChild(command)) {
-                return
-            }
-            commands.add(command)
-            if (commands.size > NODE_CAPACITY && depth < maxDepth) {
-                split()
-            }
-        }
-
-        fun count(): Int = nodeCount
-
-        fun collect(out: MutableList<Render2DCommand>) {
-            out.addAll(commands)
-            val currentChildren = children
-            if (currentChildren == null) {
-                return
-            }
-            for (child in currentChildren) {
-                child.collect(out)
-            }
-        }
-
-        private fun insertIntoChild(command: Render2DCommand): Boolean {
-            val currentChildren = children ?: return false
-            for (child in currentChildren) {
-                if (child.bounds.contains(command.bounds)) {
-                    child.add(command)
-                    return true
-                }
-            }
-            return false
-        }
-
-        private fun split() {
-            if (children != null) {
-                return
-            }
-            // 只把完全落入子象限的命令下沉，跨象限的大图元留在父节点以避免重复提交。
-            val halfW = bounds.width * 0.5f
-            val halfH = bounds.height * 0.5f
-            children = arrayOf(
-                QuadTreeBucket(Render2DBounds.of(bounds.x, bounds.y, halfW, halfH), depth + 1, maxDepth),
-                QuadTreeBucket(Render2DBounds.of(bounds.x + halfW, bounds.y, halfW, halfH), depth + 1, maxDepth),
-                QuadTreeBucket(Render2DBounds.of(bounds.x, bounds.y + halfH, halfW, halfH), depth + 1, maxDepth),
-                QuadTreeBucket(Render2DBounds.of(bounds.x + halfW, bounds.y + halfH, halfW, halfH), depth + 1, maxDepth)
-            )
-            val iterator = commands.iterator()
-            while (iterator.hasNext()) {
-                val command = iterator.next()
-                if (insertIntoChild(command)) {
-                    iterator.remove()
-                }
-            }
-        }
-
-        private companion object {
-            const val NODE_CAPACITY = 24
-        }
-    }
-
-    private object BatchPlanner {
-        fun plan(commands: List<Render2DCommand>): List<BatchGroup> {
-            val groups = LinkedHashMap<BatchKey, BatchGroup>()
-            for (command in commands) {
-                val key = BatchKey(command.kind(), command.scissor)
-                groups.computeIfAbsent(key) { BatchGroup(command.kind(), command.scissor) }.add(command)
-            }
-
-            val result = ArrayList<BatchGroup>(groups.values)
-            // 同 layer 内按 renderer 类型合批；需要精确保序的图元应通过更细的 layer 表达遮挡关系。
-            result.sortWith(
-                Comparator
-                    .comparingInt { group: BatchGroup -> KIND_FLUSH_ORDER.indexOf(group.kind) }
-                    .thenComparingLong { group: BatchGroup -> group.firstSequence() }
-            )
-            for (group in result) {
-                group.commands.sortWith(STABLE_SEQUENCE_ORDER)
-            }
-            return result
-        }
-    }
-
-    private object FrameBatchPlanner {
-        fun plan(groups: List<BatchGroup>): List<BatchGroup> {
-            val count = groups.size
-            if (count <= 1) {
-                return groups
-            }
-
-            val outgoing = ArrayList<MutableList<Int>>(count)
-            for (i in 0 until count) {
-                outgoing.add(ArrayList())
-            }
-            val incomingCounts = IntArray(count)
-
-            for (i in 0 until count) {
-                val before = groups[i]
-                for (j in i + 1 until count) {
-                    val after = groups[j]
-                    if (mustKeepOrder(before, after)) {
-                        outgoing[i].add(j)
-                        incomingCounts[j]++
-                    }
-                }
-            }
-
-            val scheduled = BooleanArray(count)
-            val result = ArrayList<BatchGroup>(count)
-            var preferredKind: Render2DCommandKind? = null
-            var scheduledCount = 0
-
-            while (scheduledCount < count) {
-                var next = selectReady(groups, scheduled, incomingCounts, preferredKind)
-                if (next < 0) {
-                    next = selectFirstUnscheduled(scheduled)
-                }
-
-                val merged = groups[next]
-                scheduledCount += schedule(next, outgoing, incomingCounts, scheduled)
-
-                val mergeKey = merged.key()
-                while (true) {
-                    val sameKey = selectReady(groups, scheduled, incomingCounts, mergeKey)
-                    if (sameKey < 0) {
-                        break
-                    }
-                    merged.append(groups[sameKey])
-                    scheduledCount += schedule(sameKey, outgoing, incomingCounts, scheduled)
-                }
-
-                result.add(merged)
-                preferredKind = merged.kind
-            }
-
-            return result
-        }
-
-        private fun mustKeepOrder(before: BatchGroup, after: BatchGroup): Boolean =
-            before.bounds!!.intersects(after.bounds!!)
-
-        private fun selectReady(
-            groups: List<BatchGroup>, scheduled: BooleanArray, incomingCounts: IntArray,
-            preferredKind: Render2DCommandKind?,
-        ): Int {
-            var fallback = -1
-            for (i in groups.indices) {
-                if (scheduled[i] || incomingCounts[i] > 0) {
-                    continue
-                }
-                if (fallback < 0) {
-                    fallback = i
-                }
-                if (preferredKind != null && groups[i].kind == preferredKind) {
-                    return i
-                }
-            }
-            return fallback
-        }
-
-        private fun selectReady(
-            groups: List<BatchGroup>, scheduled: BooleanArray, incomingCounts: IntArray,
-            key: BatchKey,
-        ): Int {
-            for (i in groups.indices) {
-                if (!scheduled[i] && incomingCounts[i] == 0 && groups[i].key().equals(key)) {
-                    return i
-                }
-            }
-            return -1
-        }
-
-        private fun selectFirstUnscheduled(scheduled: BooleanArray): Int {
-            for (i in scheduled.indices) {
-                if (!scheduled[i]) {
-                    return i
-                }
-            }
-            return -1
-        }
-
-        private fun schedule(
-            index: Int, outgoing: List<List<Int>>, incomingCounts: IntArray, scheduled: BooleanArray,
-        ): Int {
-            if (index < 0 || scheduled[index]) {
-                return 0
-            }
-            scheduled[index] = true
-            for (target in outgoing[index]) {
-                incomingCounts[target]--
-            }
-            return 1
-        }
-    }
-
-    private data class BatchKey(val kind: Render2DCommandKind, val scissor: Render2DScissor?)
-
-    private class BatchGroup(val kind: Render2DCommandKind, val scissor: Render2DScissor?) {
-        val commands: MutableList<Render2DCommand> = ArrayList()
-        var bounds: Render2DBounds? = null
-
-        fun add(command: Render2DCommand) {
-            commands.add(command)
-            val orderingBounds = command.orderingBounds()
-            val currentBounds = bounds
-            bounds = if (currentBounds == null) orderingBounds else currentBounds.include(orderingBounds)
-        }
-
-        fun append(other: BatchGroup) {
-            if (other.commands.isEmpty()) {
-                return
-            }
-            commands.addAll(other.commands)
-            val otherBounds = other.bounds
-            val currentBounds = bounds
-            bounds = if (currentBounds == null) otherBounds else currentBounds.include(otherBounds!!)
-        }
-
-        fun visible(): Boolean {
-            val currentScissor = scissor
-            return commands.isNotEmpty() && (currentScissor == null || currentScissor.visible())
-        }
-
-        fun firstSequence(): Long = if (commands.isEmpty()) Long.MAX_VALUE else commands.first().sequence
-
-        fun key(): BatchKey = BatchKey(kind, scissor)
-    }
-
-    private class RendererPool : AutoCloseable {
-        private val available: MutableMap<Render2DCommandKind, Deque<RendererBundle>> =
-            Object2ObjectOpenHashMap()
-        private val used: MutableList<RendererBundle> = ArrayList()
-        private var frameId: Long = Long.MIN_VALUE
-
-        fun acquire(kind: Render2DCommandKind, scissor: Render2DScissor?): RendererBundle {
-            val currentFrameId = LuminRenderSystem.getRenderFrameId()
-            if (frameId != currentFrameId) {
-                clear()
-                frameId = currentFrameId
-            }
-            val bundles = available.computeIfAbsent(kind) { JavaArrayDeque<RendererBundle>() }
-            val bundle = bundles.pollFirst() ?: RendererBundle.create(kind)
-            bundle.applyScissor(scissor)
-            used.add(bundle)
-            return bundle
-        }
-
-        fun clear() {
-            for (bundle in used) {
-                bundle.clear()
-                available.computeIfAbsent(bundle.kind) { JavaArrayDeque<RendererBundle>() }.addLast(bundle)
-            }
-            used.clear()
-        }
-
-        override fun close() {
-            clear()
-            for (bundles in available.values) {
-                for (bundle in bundles) {
-                    bundle.close()
-                }
-            }
-            available.clear()
-        }
-    }
-
-    private data class PreparedBatch(val pipeline: RenderPipeline, val renderers: RendererBundle)
-
     private class RendererBundle(
         val kind: Render2DCommandKind,
         private val renderer: IRenderer,
     ) : AutoCloseable {
         var scissor: Render2DScissor? = null
 
+        fun shapeRenderer(): RoundRectOutlineRenderer = renderer as RoundRectOutlineRenderer
+
         fun shadowRenderer(): ShadowRenderer = renderer as ShadowRenderer
-
-        fun roundRectRenderer(): RoundRectRenderer = renderer as RoundRectRenderer
-
-        fun roundRectOutlineRenderer(): RoundRectOutlineRenderer = renderer as RoundRectOutlineRenderer
-
-        fun rectRenderer(): RectRenderer = renderer as RectRenderer
 
         fun triangleRenderer(): TriangleRenderer = renderer as TriangleRenderer
 
@@ -1254,19 +993,10 @@ class Render2DScheduler : AutoCloseable {
             }
         }
 
-        fun draw() {
-            renderer.draw()
-        }
-
         fun prepareSharedDraw(): Boolean = renderer.prepareSharedDraw()
 
         fun draw(pass: RenderPass) {
             renderer.draw(pass)
-        }
-
-        fun clear() {
-            clearScissor()
-            renderer.clear()
         }
 
         override fun close() {
@@ -1274,39 +1004,29 @@ class Render2DScheduler : AutoCloseable {
         }
 
         companion object {
-            fun create(kind: Render2DCommandKind): RendererBundle = when (kind) {
+            fun create(kind: Render2DCommandKind): RendererBundle = (when (kind) {
                 Render2DCommandKind.SHADOW -> RendererBundle(kind, ShadowRenderer.create())
-                Render2DCommandKind.ROUND_RECT -> RendererBundle(kind, RoundRectRenderer.create())
-                Render2DCommandKind.ROUND_RECT_OUTLINE -> RendererBundle(kind, RoundRectOutlineRenderer.create())
-                Render2DCommandKind.RECT -> RendererBundle(kind, RectRenderer.create())
+                Render2DCommandKind.ROUND_RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
+                Render2DCommandKind.ROUND_RECT_OUTLINE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
+                Render2DCommandKind.RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.TRIANGLE -> RendererBundle(kind, TriangleRenderer.create())
                 Render2DCommandKind.ARC -> RendererBundle(kind, ArcRenderer.create())
                 Render2DCommandKind.TEXTURE -> RendererBundle(kind, TextureRenderer.create())
                 Render2DCommandKind.BLUR_TEXT -> RendererBundle(kind, TextRenderer.createFontBlur())
                 Render2DCommandKind.GLITCH_TEXT -> RendererBundle(kind, TextRenderer.createGlitch())
                 Render2DCommandKind.TEXT -> RendererBundle(kind, TextRenderer.create())
-            }
+            }).also { RendererManager.unregister(it.renderer) }
         }
     }
 
     companion object {
-        const val DEFAULT_QUADTREE_THRESHOLD = 192
         private const val MAX_FONT_BLUR_RADIUS = 20.0f
-        private const val DEFAULT_QUADTREE_MAX_DEPTH = 5
-        private val STABLE_SEQUENCE_ORDER: Comparator<Render2DCommand> =
-            Comparator.comparingLong { command: Render2DCommand -> command.sequence }
-        private val KIND_FLUSH_ORDER: List<Render2DCommandKind> = listOf(
-            Render2DCommandKind.SHADOW,
-            Render2DCommandKind.ROUND_RECT,
-            Render2DCommandKind.ROUND_RECT_OUTLINE,
-            Render2DCommandKind.RECT,
-            Render2DCommandKind.TRIANGLE,
-            Render2DCommandKind.ARC,
-            Render2DCommandKind.TEXTURE,
-            Render2DCommandKind.BLUR_TEXT,
-            Render2DCommandKind.GLITCH_TEXT,
-            Render2DCommandKind.TEXT
-        )
+        private fun intersect(a: Render2DScissor?, b: Render2DScissor?): Render2DScissor? {
+            if (a == null) return b
+            if (b == null) return a
+            val x = maxOf(a.x, b.x); val y = maxOf(a.y, b.y)
+            return Render2DScissor(x, y, maxOf(0, minOf(a.x + a.width, b.x + b.width) - x),
+                maxOf(0, minOf(a.y + a.height, b.y + b.height) - y))
+        }
     }
-
 }

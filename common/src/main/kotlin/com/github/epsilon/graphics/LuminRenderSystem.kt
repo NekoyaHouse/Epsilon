@@ -44,6 +44,13 @@ object LuminRenderSystem {
 
     private var activeTarget: LuminRenderTarget? = null
     private var renderFrameId = 0L
+    private var sharedGuiTransform: GpuBufferSlice? = null
+
+    internal fun <T> withSharedGuiTransform(block: () -> T): T {
+        val previous = sharedGuiTransform
+        if (previous == null) sharedGuiTransform = writeDefaultGuiTransform()
+        return try { block() } finally { sharedGuiTransform = previous }
+    }
 
     fun setActiveTarget(target: LuminRenderTarget?) {
         activeTarget = target
@@ -197,7 +204,7 @@ object LuminRenderSystem {
         val indexCount = vertexCount / 4 * 6
         val ibo = getQuadIndexBuffer(indexCount)
 
-        val dynamicUniforms = writeTransform(
+        val dynamicUniforms = sharedGuiTransform ?: writeTransform(
             RenderSystem.getModelViewMatrixCopy(),
             Vector4f(1f, 1f, 1f, 1f),
             Vector3f(0f, 0f, 0f),
@@ -229,6 +236,7 @@ object LuminRenderSystem {
     }
 
     fun writeDefaultGuiTransform(): GpuBufferSlice {
+        sharedGuiTransform?.let { return it }
         return writeTransform(
             RenderSystem.getModelViewMatrixCopy(),
             Vector4f(1f, 1f, 1f, 1f),

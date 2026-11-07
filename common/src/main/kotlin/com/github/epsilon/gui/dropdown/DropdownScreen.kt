@@ -261,7 +261,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
      */
     private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownBatch!!.LuminUIScene(bounds, dropdownLayer, key, content)
+        dropdownBatch!!.LuminUIScene(bounds, dropdownLayer, key, retainPosition = key is Pair<*, *> && key.second == "background", block = content)
     }
 
     /** 立即模式的绘制 pass（每帧重建）。 */

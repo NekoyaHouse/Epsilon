@@ -78,21 +78,19 @@ class ModuleButton(val module: Module) : Component() {
         val headerHovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), x, y, width, DropdownTheme.MODULE_HEIGHT)
         hoverAnim.run(if (headerHovered) 1.0f else 0.0f)
 
-        val hover = hoverAnim.value
-        val toggle = toggleAnim.value
-
-        val bg = MD3Theme.lerp(DropdownTheme.moduleDisabled(hover), DropdownTheme.moduleEnabled(hover), toggle)
-        Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg)
+        Paint({ MD3Theme.lerp(DropdownTheme.moduleDisabled(hoverAnim.value), DropdownTheme.moduleEnabled(hoverAnim.value), toggleAnim.value) }) {
+            Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, Color.WHITE)
+        }
         Rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
 
-        val textColor =
-            MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle)
         val textY = (DropdownTheme.MODULE_HEIGHT - metrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
         val leftX = DropdownTheme.MODULE_PADDING_X
-        Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor)
+        Paint({ MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hoverAnim.value), DropdownTheme.moduleTextEnabled(), toggleAnim.value) }) {
+            Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, Color.WHITE)
+        }
 
-        drawKeybindButton(mouseX, mouseY, toggle)
-        drawHiddenButton(mouseX, mouseY)
+        LuminUIGroup("keybind") { drawKeybindButton(mouseX, mouseY, toggleAnim.value) }
+        LuminUIGroup("hidden") { drawHiddenButton(mouseX, mouseY) }
 
         val expand = expandAnim.value
 

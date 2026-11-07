@@ -25,8 +25,8 @@ private const val MAX_SEGMENTS = 64
 
 class ShadowRenderer private constructor() : IRenderer {
 
-    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
-    private val segmentedBuffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
+    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE)
+    private val segmentedBuffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, SEGMENTED_STRIDE)
     private val segmentedShadows = ArrayList<SegmentedShadow>()
     private val preparedSegmentedShadows = ArrayList<PreparedSegmentedShadow>()
     private val draws = ArrayList<ShadowDraw>()
@@ -294,12 +294,12 @@ class ShadowRenderer private constructor() : IRenderer {
             if (drawCall.segmented) {
                 val shadow = preparedSegmentedShadows[drawCall.segmentedShadowIndex]
                 pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SEGMENTED_SHADOW))
-                pass.setVertexBuffer(0, segmentedBuffer.getGpuBuffer().slice())
+                pass.setVertexBuffer(0, segmentedBuffer.getGpuSlice())
                 pass.setUniform("SegmentedShadowUniforms", shadow.uniforms)
                 pass.drawIndexed(drawCall.indexCount, 1, drawCall.firstIndex, 0, 0)
             } else {
                 pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SHADOW))
-                pass.setVertexBuffer(0, buffer.getGpuBuffer().slice())
+                pass.setVertexBuffer(0, buffer.getGpuSlice())
                 pass.drawIndexed(drawCall.indexCount, 1, drawCall.firstIndex, 0, 0)
             }
         }

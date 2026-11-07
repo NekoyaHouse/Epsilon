@@ -18,12 +18,13 @@ interface IRenderer {
     }
 
     /**
-     * 一帧内 在 clear() 之后 不能再进行 draw() / drawAndClear()
+     * 清理尚未绘制的内容；独立 renderer 同帧多次重建可能分配额外缓冲。
+     * 2D scheduler 仅丢弃待提交记录，持久缓存通过 resetCache 独立释放。
      */
     fun clear()
 
     /**
-     * 一帧内 在 drawAndClear() 之后 不能再进行 draw() / drawAndClear()
+     * 绘制并清理；2D scheduler 的 draw 本身已消费当前记录，可同帧继续提交。
      */
     fun drawAndClear() {
         draw()

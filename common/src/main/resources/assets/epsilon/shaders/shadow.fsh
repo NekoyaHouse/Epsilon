@@ -39,6 +39,11 @@ float maskAt(vec2 position, vec2 center, vec2 halfSize, float antialias) {
     return 1.0 - smoothstep(0.0, antialias, roundedRectDistance(position, center, halfSize));
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     vec2 positionWidth = fwidth(f_Position);
     float antialias = max(max(positionWidth.x, positionWidth.y) * 2.0, 0.0001);
@@ -72,3 +77,11 @@ void main() {
 
     fragColor = vec4(f_Color.rgb, alpha);
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    fragColor *= epsilonTint;
+}
+#endif

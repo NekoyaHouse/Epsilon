@@ -18,6 +18,11 @@ float sdSegment(vec2 p, vec2 a, vec2 b) {
     return length(pa - ba * h);
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     vec2 center = f_Circle.xy;
     float radius = f_Circle.z;
@@ -65,3 +70,11 @@ void main() {
     fragColor = vec4(gradientColor.rgb, gradientColor.a * alpha);
     if (alpha < 0.001) discard;
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    fragColor *= epsilonTint;
+}
+#endif

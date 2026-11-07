@@ -76,7 +76,7 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
 
         val renderScheduler = scheduler.get()
         renderScheduler.clear()
-        val layer = renderScheduler.layer(0)
+        val layer = renderScheduler.canvas(0)
 
         if (drawShadow) {
             layer.addShadow(x, y, width, height, radius, shadowBlur.toFloat() * coordinateScale, shadowColor)

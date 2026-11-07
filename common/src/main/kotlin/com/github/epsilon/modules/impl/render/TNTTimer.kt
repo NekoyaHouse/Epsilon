@@ -69,7 +69,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         runSafe {
             val render = scheduler.get()
             render.clear()
-            val layer = render.layer(0)
+            val layer = render.canvas(0)
             val partial = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue

@@ -20,7 +20,7 @@ import java.util.*
 
 class TriangleRenderer private constructor() : IRenderer {
 
-    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
+    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE * 3)
 
     private var currentOffset = 0L
     private var vertexCount = 0
@@ -178,7 +178,7 @@ class TriangleRenderer private constructor() : IRenderer {
             pass.disableScissor()
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice())
+        pass.setVertexBuffer(0, buffer.getGpuSlice())
         pass.draw(vertexCount, 1, 0, 0)
     }
 

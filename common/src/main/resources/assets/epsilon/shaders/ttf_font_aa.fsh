@@ -14,6 +14,11 @@ float coverage(vec2 uv, float aa) {
     return smoothstep(EDGE_THRESHOLD - aa, EDGE_THRESHOLD + aa, d);
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     float distance = 1.0 - texture(Sampler0, v_TexCoord).r;
     vec2 dx = dFdx(v_TexCoord);
@@ -38,3 +43,11 @@ void main() {
         discard;
     }
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    f_Color *= epsilonTint;
+}
+#endif

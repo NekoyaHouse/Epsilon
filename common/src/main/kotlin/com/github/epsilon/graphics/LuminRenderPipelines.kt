@@ -71,6 +71,8 @@ object LuminRenderPipelines {
             LuminVertexFormats.ROUND_RECT_OUTLINE
         )
 
+    val UI_SHAPE: RenderPipeline = shapePipeline("pipelines/ui_shape", "ui_shape", LuminVertexFormats.ROUND_RECT_OUTLINE)
+
     val SHADOW: RenderPipeline = shapePipeline("pipelines/shadow", "shadow", LuminVertexFormats.ROUND_RECT)
 
     val ARC: RenderPipeline = shapePipeline("pipelines/arc", "arc", LuminVertexFormats.ARC)

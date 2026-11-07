@@ -8,14 +8,15 @@ import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import java.util.*
 
 /**
- * 单帧 GUI 渲染场景。
+ * 跨帧持有组合、局部绘制记录和 GPU 几何的 GUI 渲染场景。
  *
  * 一个 scene 拥有一个 [Render2DScheduler]。Panel、Dropdown、popup 只向 scene
  * 提交 UI 树，最后由 scene 统一 flush，从而减少 scheduler/buffer 的创建和帧内 draw 次数。
  */
 class UiScene(theme: UiTheme) : AutoCloseable {
 
-    private val scheduler = Render2DScheduler()
+    private var scheduler = Render2DScheduler()
+    private var closed = false
     private val layers = UiLayerStack()
     private val theme: UiTheme = Objects.requireNonNull(theme, "theme")
 
@@ -24,8 +25,11 @@ class UiScene(theme: UiTheme) : AutoCloseable {
     val input get() = lumin.input
 
     fun beginFrame() {
-        // 每个 Screen/HUD editor 帧从一个干净的命令流开始，具体 renderer 由 scheduler 池化复用。
+        // Screen 返回同一个实例时重新建立 GPU 所有权，不能复用已销毁的 arena。
+        if (closed) { scheduler = Render2DScheduler(); closed = false }
+        // 丢弃未提交的上一帧记录，保留仍活跃的持久几何。
         scheduler.clear()
+        scheduler.beginFrame()
         lumin.beginFrame()
     }
 
@@ -62,6 +66,7 @@ class UiScene(theme: UiTheme) : AutoCloseable {
         try {
             flush()
             lumin.endFrame()
+            scheduler.endFrame()
         } catch (failure: Throwable) {
             lumin.abortFrame()
             throw failure
@@ -77,7 +82,7 @@ class UiScene(theme: UiTheme) : AutoCloseable {
         lumin.abortFrame()
     }
 
-    fun resetComposition() { lumin.close() }
+    fun resetComposition() { lumin.close(); scheduler.resetCache() }
 
     fun scheduler(): Render2DScheduler {
         return scheduler
@@ -88,8 +93,10 @@ class UiScene(theme: UiTheme) : AutoCloseable {
     }
 
     override fun close() {
+        if (closed) return
         lumin.close()
         scheduler.close()
+        closed = true
     }
 
 }

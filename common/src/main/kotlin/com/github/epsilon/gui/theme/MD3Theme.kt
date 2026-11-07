@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.theme
 
+import com.github.epsilon.graphics.schedulers.render2d.Render2DResources
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.modules.impl.ClientSetting
 import java.awt.Color
@@ -113,6 +114,7 @@ object MD3Theme {
         if (preset == appliedPreset && mode == appliedMode) {
             return
         }
+        Render2DResources.invalidate()
         val palette = forPreset(preset, mode)
         colors.value = mapOf(
             "SHADOW" to palette.shadow,

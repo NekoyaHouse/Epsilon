@@ -1,9 +1,7 @@
 package com.github.epsilon.gui.lib.render
 
-import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
-import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
@@ -15,58 +13,11 @@ import java.awt.Color
 object LuminUiRenderer {
 
     internal fun renderIntoLayeredBatch(tree: UiTree, batch: UiRenderBatch, baseLayer: Int) {
-        renderNodesIntoLayeredBatch(tree.nodes, batch, baseLayer, null)
+        UiRetainedRenderer.render(tree.nodes, batch, baseLayer, clip = batch.absoluteLayer(baseLayer).scissor())
     }
 
-    private fun renderNodesIntoLayeredBatch(
-        nodes: List<UiTree.UiNode>, batch: UiRenderBatch,
-        layer: Int, activeScissor: Render2DScissor?
-    ) {
-        val handle = batch.absoluteLayer(layer)
-        val previousScissor = applyScissor(handle, activeScissor)
-        val target = RenderTarget.forLayer(handle, batch.scheduler().textMetrics(), null, batch.theme())
-        try {
-            for (node in nodes) {
-                if (node is UiTree.LayerNode) {
-                    renderNodesIntoLayeredBatch(node.children, batch, layer + node.layer, activeScissor)
-                    continue
-                }
-                if (node is UiTree.ScissorNode) {
-                    renderNodesIntoLayeredBatch(
-                        node.children,
-                        batch,
-                        layer,
-                        intersect(activeScissor, toScissor(node.clip))
-                    )
-                    continue
-                }
-                renderNode(node, target)
-            }
-        } finally {
-            restoreScissor(handle, activeScissor, previousScissor)
-        }
-    }
-
-    private fun renderNodesIntoTarget(
-        nodes: List<UiTree.UiNode>, target: RenderTarget,
-        activeScissor: Render2DScissor?
-    ) {
-        val previousScissor = applyScissor(target.layer, activeScissor)
-        try {
-            for (node in nodes) {
-                if (node is UiTree.LayerNode) {
-                    renderNodesIntoTarget(node.children, target, activeScissor)
-                    continue
-                }
-                if (node is UiTree.ScissorNode) {
-                    renderNodesIntoTarget(node.children, target, intersect(activeScissor, toScissor(node.clip)))
-                    continue
-                }
-                renderNode(node, target)
-            }
-        } finally {
-            restoreScissor(target.layer, activeScissor, previousScissor)
-        }
+    internal fun renderPrimitive(node: UiTree.UiNode, batch: UiRenderBatch, layer: Int) {
+        renderNode(node, RenderTarget(batch.absoluteLayer(layer), batch.scheduler().textMetrics(), batch.theme()))
     }
 
     private fun renderNode(node: UiTree.UiNode, target: RenderTarget) {
@@ -76,7 +27,7 @@ object LuminUiRenderer {
 
         when (node) {
             is UiTree.InteractionNode -> Unit
-            is UiTree.CompositionNode -> error("组合引用必须在提交前解析")
+            is UiTree.CompositionNode -> error("组合引用必须由持久遍历器处理")
             is UiTree.ShadowNode -> {
                 layer.addShadow(
                     node.x, node.y, node.width, node.height,
@@ -160,16 +111,8 @@ object LuminUiRenderer {
             }
 
             is UiTree.MarqueeTextNode -> {
-                val buffer = target.buffer
-                if (buffer != null) {
-                    buffer.addMarqueeText(
-                        UiContentBuffer.MarqueeTextDraw(
-                            node.text, node.x, node.y, node.scale, node.color, node.fontLoader, node.clip
-                        )
-                    )
-                } else {
-                    layer.addText(node.text, node.x, node.y, node.scale, node.color, node.fontLoader)
-                }
+                // 自身裁剪由持久遍历器负责，文本不再延迟到独立缓冲末尾。
+                layer.addText(node.text, node.x, node.y, node.scale, node.color, node.fontLoader)
             }
 
             is UiTree.TextureNode -> {
@@ -276,14 +219,7 @@ object LuminUiRenderer {
                 )
             }
 
-            is UiTree.ViewportNode -> {
-                node.buffer.beginViewport(node.viewport)
-                renderNodesIntoTarget(node.children, RenderTarget.forContentBuffer(node.buffer), null)
-                val pointer = node.pointer?.invoke() ?: (node.mouseX to node.mouseY)
-                node.buffer.queueViewport(
-                    node.viewport, node.scroll, node.maxScroll, node.contentHeight, pointer.first, pointer.second
-                )
-            }
+            is UiTree.ViewportNode -> error("视口必须由持久遍历器处理")
 
             else -> {
                 // Layer/Layered/Scissor 节点在遍历阶段处理，到这里说明是不可达的组合节点。
@@ -507,68 +443,9 @@ object LuminUiRenderer {
         }
     }
 
-    private fun applyScissor(layer: Render2DScheduler.LayerHandle, scissor: Render2DScissor?): Render2DScissor? {
-        if (scissor == null) {
-            return null
-        }
-        val previous = layer.scissor()
-        val effective = intersect(previous, scissor)
-        layer.setScissor(effective!!.x, effective.y, effective.width, effective.height)
-        return previous
-    }
-
-    private fun restoreScissor(
-        layer: Render2DScheduler.LayerHandle, activeScissor: Render2DScissor?, previousScissor: Render2DScissor?
-    ) {
-        if (activeScissor == null) {
-            return
-        }
-        if (previousScissor == null) {
-            layer.clearScissor()
-        } else {
-            layer.setScissor(previousScissor.x, previousScissor.y, previousScissor.width, previousScissor.height)
-        }
-    }
-
-    private fun toScissor(rect: UiRect): Render2DScissor {
-        val scissor = LuminRenderSystem.toFramebufferScissor(rect.x, rect.y, rect.width, rect.height)
-        return Render2DScissor(scissor.x, scissor.y, scissor.width, scissor.height)
-    }
-
-    private fun intersect(a: Render2DScissor?, b: Render2DScissor?): Render2DScissor? {
-        if (a == null) {
-            return b
-        }
-        if (b == null) {
-            return a
-        }
-        val x = maxOf(a.x, b.x)
-        val y = maxOf(a.y, b.y)
-        val right = minOf(a.x + a.width, b.x + b.width)
-        val bottom = minOf(a.y + a.height, b.y + b.height)
-        return Render2DScissor(x, y, maxOf(0, right - x), maxOf(0, bottom - y))
-    }
-
     private data class RenderTarget(
-        val layer: Render2DScheduler.LayerHandle,
+        val layer: Render2DScheduler.Canvas,
         val textMetrics: TextRenderer,
-        val buffer: UiContentBuffer?,
         val theme: UiTheme,
-    ) {
-        companion object {
-
-            fun forLayer(
-                layer: Render2DScheduler.LayerHandle, textMetrics: TextRenderer,
-                buffer: UiContentBuffer?, theme: UiTheme
-            ): RenderTarget {
-                return RenderTarget(layer, textMetrics, buffer, theme)
-            }
-
-            fun forContentBuffer(buffer: UiContentBuffer): RenderTarget {
-                return RenderTarget(buffer.contentLayer(), buffer.textMetrics(), buffer, buffer.theme())
-            }
-
-        }
-    }
-
+    )
 }

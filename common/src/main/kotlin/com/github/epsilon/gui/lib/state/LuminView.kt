@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.lib.state
 
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.input.UiInputRouter
@@ -32,7 +33,7 @@ class LuminView : AutoCloseable {
         this.mouseX = mouseX
         this.mouseY = mouseY
         StateTracking.untracked {
-            probes.toList().forEach { it.update() }
+            probes.filter { it.transform == Render2DTransform.IDENTITY }.toList().forEach { it.update() }
         }
         val previous = LuminRuntime.currentView
         LuminRuntime.currentView = this
@@ -73,21 +74,27 @@ class LuminView : AutoCloseable {
         val offsetY = py - composition.inputY
         val key = HoverKey(rect, offsetX, offsetY)
         val probe = composition.retain(key) {
-            HoverProbe(rect, offsetX, offsetY).also { probes.add(it) }
+            HoverProbe(composition, rect, offsetX, offsetY).also { probes.add(it) }
         }
         return probe.hovered.value
     }
 
-    private inner class HoverProbe(val rect: UiRect, val offsetX: Double, val offsetY: Double) : AutoCloseable {
+    private inner class HoverProbe(val composition: LuminComposition, val rect: UiRect, val offsetX: Double, val offsetY: Double) : AutoCloseable {
+        var transform = Render2DTransform.IDENTITY
         val hovered = mutableStateOf(hit())
         private fun hit(): Boolean {
             if (mouseX < 0 || mouseY < 0) return false
-            val px = mouseX + offsetX
-            val py = mouseY + offsetY
+            val inverse = transform.inverse() ?: return false
+            val px = inverse.mapX((mouseX + offsetX).toFloat(), (mouseY + offsetY).toFloat())
+            val py = inverse.mapY((mouseX + offsetX).toFloat(), (mouseY + offsetY).toFloat())
             return px >= rect.x && px <= rect.right() && py >= rect.y && py <= rect.bottom()
         }
         fun update() { hovered.value = hit() }
         override fun close() { probes.remove(this) }
+    }
+
+    internal fun refreshHover(composition: LuminComposition, transform: Render2DTransform) {
+        probes.filter { it.composition === composition }.forEach { it.transform = transform; it.update() }
     }
 
     override fun close() {
