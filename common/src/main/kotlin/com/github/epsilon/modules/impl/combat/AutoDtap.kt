@@ -4,12 +4,14 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
 import com.github.epsilon.utils.player.SwingMode
 import com.mojang.blaze3d.platform.InputConstants
+import java.util.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.tags.ItemTags
@@ -20,7 +22,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import java.util.*
 
 object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
 
@@ -68,14 +69,13 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleState() {
+    private fun NonNullContext.handleState() {
         when (step) {
             0 -> {
                 if (rightClicked) {
                     rightClicked = false
 
-                    val main: ItemStack = nn.player.mainHandItem
+                    val main: ItemStack = player.mainHandItem
                     if (!main.`is`(ItemTags.SWORDS)) return
 
                     val hit = mc.hitResult
@@ -83,20 +83,20 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     if (hit.type != HitResult.Type.BLOCK) return
 
                     val pos: BlockPos = hit.blockPos
-                    val state: BlockState = nn.level.getBlockState(pos)
+                    val state: BlockState = level.getBlockState(pos)
                     if (state.isAir) return
 
                     val isObsidian = state.`is`(Blocks.OBSIDIAN) || state.`is`(Blocks.BEDROCK)
 
                     // 寻找水晶
-                    val endCrystalSlot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot
+                    val endCrystalSlot = findInHotbar(Items.END_CRYSTAL).slot
                     if (endCrystalSlot == -1) return
 
-                    originalSlot = nn.player.inventory.selectedSlot
+                    originalSlot = player.inventory.selectedSlot
 
                     if (isObsidian) {
                         // 如果已经是黑曜石，直接切水晶并放置
-                        InvUtils.swap(endCrystalSlot, false)
+                        swap(endCrystalSlot, false)
 
                         val topHit = BlockHitResult(
                             hit.location,
@@ -104,20 +104,20 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                             pos,
                             false
                         )
-                        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, topHit)
+                        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
                         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                         stepDelay = 1 + random.nextInt(2)
                         step = 2 // 跳到恢复阶段
                     } else {
-                        val obsidianSlot = InvUtils.findInHotbar(Items.OBSIDIAN).slot
+                        val obsidianSlot = findInHotbar(Items.OBSIDIAN).slot
                         if (obsidianSlot == -1) return
 
-                        InvUtils.swap(obsidianSlot, false)
-                        nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, hit)
+                        swap(obsidianSlot, false)
+                        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
                         SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
-                        InvUtils.swap(endCrystalSlot, false)
+                        swap(endCrystalSlot, false)
 
                         stepDelay = 1 + random.nextInt(2)
                         step = 1
@@ -139,7 +139,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
                     base,
                     false
                 )
-                nn.gameMode.useItemOn(nn.player, InteractionHand.MAIN_HAND, topHit)
+                gameMode.useItemOn(player, InteractionHand.MAIN_HAND, topHit)
                 SwingMode.Both.interactSwing(InteractionHand.MAIN_HAND)
 
                 stepDelay = 1 + random.nextInt(2)
@@ -148,7 +148,7 @@ object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
 
             2 -> {
                 if (swapBack && originalSlot != -1) {
-                    InvUtils.swap(originalSlot, false)
+                    swap(originalSlot, false)
                 }
                 resetState()
             }

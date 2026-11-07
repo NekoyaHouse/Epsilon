@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.rotation
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -19,10 +19,9 @@ object RaytraceUtils {
      * @param vec3 射线终点
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun canSeePointFrom(eyes: Vec3, vec3: Vec3): Boolean {
-        return nn.level.clip(
-            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player)
+    fun NonNullContext.canSeePointFrom(eyes: Vec3, vec3: Vec3): Boolean {
+        return level.clip(
+            ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
         ).type == HitResult.Type.MISS
     }
 
@@ -33,8 +32,7 @@ object RaytraceUtils {
      * @param range    射线追踪或自适应选点距离
      * @return 操作结果
      */
-    context(nn: NonNullContext)
-    fun raytrace(rotation: Rotation, range: Double): HitResult? {
+    fun NonNullContext.raytrace(rotation: Rotation, range: Double): HitResult? {
         return raytrace(rotation, range, 0.0f)
     }
 
@@ -46,9 +44,8 @@ object RaytraceUtils {
      * @param expand   实体包围盒扩大量
      * @return 操作结果
      */
-    context(nn: NonNullContext)
-    fun raytrace(rotation: Rotation, range: Double, expand: Float): HitResult? {
-        return raytrace(rotation, range, expand, nn.player)
+    fun NonNullContext.raytrace(rotation: Rotation, range: Double, expand: Float): HitResult? {
+        return raytrace(rotation, range, expand, player)
     }
 
     /**
@@ -60,12 +57,11 @@ object RaytraceUtils {
      * @param entity   实体
      * @return 操作结果
      */
-    context(nn: NonNullContext)
-    fun raytrace(rotation: Rotation, range: Double, expand: Float, entity: Entity?): HitResult? {
+    fun NonNullContext.raytrace(rotation: Rotation, range: Double, expand: Float, entity: Entity?): HitResult? {
         if (entity == null) return null
-        val world = nn.level
+        val world = level
 
-        val partialTicks = nn.mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
 
         val eyePos = entity.getEyePosition(partialTicks)
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
@@ -143,21 +139,20 @@ object RaytraceUtils {
      * @param strict   是否要求命中指定方块面
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun overBlock(rotation: Rotation, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
+    fun NonNullContext.overBlock(rotation: Rotation, dir: Direction, pos: BlockPos, strict: Boolean): Boolean {
         val lookVec = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
 
-        val eyePos = nn.player.getEyePosition(1.0f)
+        val eyePos = player.getEyePosition(1.0f)
         val reach = 4.5
         val endVec = eyePos.add(lookVec.scale(reach))
 
-        val result: BlockHitResult = nn.level.clip(
+        val result: BlockHitResult = level.clip(
             ClipContext(
                 eyePos,
                 endVec,
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                nn.player
+                player
             )
         )
 
@@ -172,8 +167,7 @@ object RaytraceUtils {
      * @param strict   是否要求命中指定方块面
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun overBlock(rotation: Rotation, pos: BlockPos, strict: Boolean): Boolean {
+    fun NonNullContext.overBlock(rotation: Rotation, pos: BlockPos, strict: Boolean): Boolean {
         return overBlock(rotation, Direction.UP, pos, strict)
     }
 
@@ -184,8 +178,7 @@ object RaytraceUtils {
      * @param pos      目标位置
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun overBlock(rotation: Rotation, pos: BlockPos): Boolean {
+    fun NonNullContext.overBlock(rotation: Rotation, pos: BlockPos): Boolean {
         return overBlock(rotation, Direction.UP, pos, false)
     }
 
@@ -197,8 +190,7 @@ object RaytraceUtils {
      * @param enumFacing 预期命中的方块面
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun overBlock(rotation: Rotation, pos: BlockPos, enumFacing: Direction): Boolean {
+    fun NonNullContext.overBlock(rotation: Rotation, pos: BlockPos, enumFacing: Direction): Boolean {
         return overBlock(rotation, enumFacing, pos, true)
     }
 

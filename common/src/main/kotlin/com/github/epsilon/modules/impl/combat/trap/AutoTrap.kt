@@ -4,9 +4,11 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.movement.Blink
+import java.util.*
+import kotlin.math.nextDown
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -14,8 +16,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
-import java.util.*
-import kotlin.math.nextDown
 
 object AutoTrap : TrapBase("Auto Trap", EpsilonTranslations.AutoTrap.NO_BLOCK_FOUND, anchorToPlayer = false) {
 
@@ -67,11 +67,10 @@ object AutoTrap : TrapBase("Auto Trap", EpsilonTranslations.AutoTrap.NO_BLOCK_FO
         }
     }
 
-    context(nn: NonNullContext)
-    private fun findTarget(): Player? = nn.level.players().asSequence()
-        .filter { it !== nn.player && it.isAlive && !it.isSpectator && !FriendManager.isFriend(it) }
-        .filter { nn.player.distanceToSqr(it) <= targetRange * targetRange }
-        .minByOrNull { nn.player.distanceToSqr(it) }
+    private fun NonNullContext.findTarget(): Player? = level.players().asSequence()
+        .filter { it !== player && it.isAlive && !it.isSpectator && !FriendManager.isFriend(it) }
+        .filter { player.distanceToSqr(it) <= targetRange * targetRange }
+        .minByOrNull { player.distanceToSqr(it) }
 
     fun collectShapes(
         box: AABB,
@@ -111,14 +110,11 @@ object AutoTrap : TrapBase("Auto Trap", EpsilonTranslations.AutoTrap.NO_BLOCK_FO
         return positions
     }
 
-    context(nn: NonNullContext)
-    override fun getTargetPositions(): Set<BlockPos> = positions
+    override fun NonNullContext.getTargetPositions(): Set<BlockPos> = positions
 
-    context(nn: NonNullContext)
-    override fun getPlaceRange(): Double = minOf(placeRange, nn.player.blockInteractionRange())
+    override fun NonNullContext.getPlaceRange(): Double = minOf(placeRange, player.blockInteractionRange())
 
-    context(nn: NonNullContext)
-    override fun getBreakRange(): Double = minOf(breakRange, nn.player.entityInteractionRange())
+    override fun NonNullContext.getBreakRange(): Double = minOf(breakRange, player.entityInteractionRange())
 
     override fun getBlockItems(): List<Item> = blocks.map { it.asItem() }
 

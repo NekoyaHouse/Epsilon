@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -10,18 +10,24 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.invSwap
+import com.github.epsilon.utils.player.InvUtils.invSwapBack
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.utils.rotation.RotationUtils.getRotationsToEntity
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.ceil
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.ceil
 
 /**
  * @author Moli
@@ -92,7 +98,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             }
 
             RotationManager.setRotations(
-                RotationUtils.getRotationsToEntity(currentTarget), 180.0, Priority.Medium
+                getRotationsToEntity(currentTarget), 180.0, Priority.Medium
             )
 
             if (!isReadyToAttack()) return@safeEventHandler
@@ -101,21 +107,19 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun isReadyToAttack(): Boolean {
+    private fun NonNullContext.isReadyToAttack(): Boolean {
         val hitResult = RotationManager.getHitResult()
         if (hitResult == null || hitResult.type != HitResult.Type.ENTITY) {
             return false
         }
         if (cooldown) {
-            return nn.player.getAttackStrengthScale(0.5f) >= cooldownBase.toFloat()
+            return player.getAttackStrengthScale(0.5f) >= cooldownBase.toFloat()
         }
         return attackTimer.passedMillise(attackDelay.toLong())
     }
 
-    context(nn: NonNullContext)
-    private fun doAura(currentTarget: LivingEntity) {
-        if (RotationUtils.getEyeDistanceToEntity(currentTarget) > range) return
+    private fun NonNullContext.doAura(currentTarget: LivingEntity) {
+        if (getEyeDistanceToEntity(currentTarget) > range) return
 
         if (mode == AttackMode.Normal) {
             attack(currentTarget)
@@ -129,49 +133,47 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
         attackTimer.reset()
     }
 
-    context(nn: NonNullContext)
-    private fun doMaceAttack(currentTarget: LivingEntity, vclipValue: Double) {
-        val currentSlot = nn.player.inventory.selectedSlot
+    private fun NonNullContext.doMaceAttack(currentTarget: LivingEntity, vclipValue: Double) {
+        val currentSlot = player.inventory.selectedSlot
         var swappedInventory = false
 
-        val hotbar: FindItemResult = InvUtils.findInHotbar(Items.MACE)
+        val hotbar: FindItemResult = findInHotbar(Items.MACE)
         if (hotbar.found()) {
             if (hotbar.slot != currentSlot) {
-                InvUtils.swap(hotbar.slot, true)
+                swap(hotbar.slot, true)
             }
         } else {
-            val inv: FindItemResult = InvUtils.find(Items.MACE)
+            val inv: FindItemResult = find(Items.MACE)
             if (!inv.found()) return
-            InvUtils.invSwap(inv.slot)
+            invSwap(inv.slot)
             swappedInventory = true
-            InvUtils.swap(nn.player.inventory.selectedSlot, true)
+            swap(player.inventory.selectedSlot, true)
         }
 
-        val startPos: Vec3 = nn.player.position()
+        val startPos: Vec3 = player.position()
         val targetPos: Vec3 = startPos.add(0.0, vclipValue, 0.0)
 
         // 何意味，，，
         if (paperServer) {
             for (i in 0 until 4) {
-                nn.connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
+                connection.send(ServerboundMovePlayerPacket.StatusOnly(false, false))
             }
         }
 
         doTp(startPos, targetPos, moveDistance, false, 20)
         sendMovePacket(startPos, false)
         attack(currentTarget)
-        sendMovePacket(nn.player.x, nn.player.y + 1.0E-4, nn.player.z, false)
+        sendMovePacket(player.x, player.y + 1.0E-4, player.z, false)
 
         if (swappedInventory) {
-            InvUtils.invSwapBack()
+            invSwapBack()
         }
         if (hotbar.found() && hotbar.slot != currentSlot) {
-            InvUtils.swapBack()
+            swapBack()
         }
     }
 
-    context(nn: NonNullContext)
-    private fun doTp(from: Vec3, to: Vec3, maxDistance: Double, onGround: Boolean, maxPackets: Int) {
+    private fun NonNullContext.doTp(from: Vec3, to: Vec3, maxDistance: Double, onGround: Boolean, maxPackets: Int) {
         val dist = from.distanceTo(to)
         if (dist <= 0.0 || maxDistance <= 0.0) {
             sendMovePacket(to, onGround)
@@ -187,19 +189,16 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun sendMovePacket(pos: Vec3, onGround: Boolean) {
+    private fun NonNullContext.sendMovePacket(pos: Vec3, onGround: Boolean) {
         sendMovePacket(pos.x(), pos.y(), pos.z(), onGround)
     }
 
-    context(nn: NonNullContext)
-    private fun sendMovePacket(x: Double, y: Double, z: Double, onGround: Boolean) {
-        nn.connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
+    private fun NonNullContext.sendMovePacket(x: Double, y: Double, z: Double, onGround: Boolean) {
+        connection.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false))
     }
 
-    context(nn: NonNullContext)
-    private fun attack(currentTarget: LivingEntity) {
-        nn.gameMode.attack(nn.player, currentTarget)
+    private fun NonNullContext.attack(currentTarget: LivingEntity) {
+        gameMode.attack(player, currentTarget)
         SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
     }
 

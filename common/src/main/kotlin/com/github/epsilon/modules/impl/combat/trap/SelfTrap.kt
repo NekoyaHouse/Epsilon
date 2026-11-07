@@ -1,13 +1,13 @@
 package com.github.epsilon.modules.impl.combat.trap
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
+import java.util.*
+import kotlin.math.nextDown
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
-import java.util.*
-import kotlin.math.nextDown
 
 object SelfTrap : TrapBase("Self Trap", EpsilonTranslations.SelfTrap.NO_BLOCK_FOUND) {
 
@@ -24,9 +24,8 @@ object SelfTrap : TrapBase("Self Trap", EpsilonTranslations.SelfTrap.NO_BLOCK_FO
         Collections.rotate(settings, settings.size - inheritedSettingCount)
     }
 
-    context(nn: NonNullContext)
-    override fun getTargetPositions(): Set<BlockPos> = collectPositions(
-        nn.player.boundingBox, nn.player.isVisuallyCrawling, surround, trap, standHead, crawlHead, floor
+    override fun NonNullContext.getTargetPositions(): Set<BlockPos> = collectPositions(
+        player.boundingBox, player.isVisuallyCrawling, surround, trap, standHead, crawlHead, floor
     )
 
     // 取碰撞箱覆盖的全部格子，跨格站立时也不会把玩家占用的格子当作侧墙。

@@ -1,8 +1,10 @@
 package com.github.epsilon.utils.combat
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.ExtrapolationManager
 import com.github.epsilon.utils.player.EnchantmentUtils
+import kotlin.math.acos
+import kotlin.math.floor
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
@@ -21,8 +23,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import kotlin.math.acos
-import kotlin.math.floor
 
 object CrystalDamageUtils {
     val armorSlots =
@@ -72,8 +72,7 @@ object CrystalDamageUtils {
             }
     }
 
-    context(nn: NonNullContext)
-    fun snapshot(entity: LivingEntity, predictionTicks: Int = 0, assumeBestArmor: Boolean = false): Snapshot {
+    fun NonNullContext.snapshot(entity: LivingEntity, predictionTicks: Int = 0, assumeBestArmor: Boolean = false): Snapshot {
         val box = if (predictionTicks > 0 && entity is AbstractClientPlayer) {
             ExtrapolationManager.extrapolate(entity, predictionTicks, 2) ?: entity.boundingBox
         } else entity.boundingBox
@@ -98,32 +97,30 @@ object CrystalDamageUtils {
             protection,
             entity is Player && (entity.abilities.invulnerable || entity.isSpectator),
             entity is Player && entity.isCreative,
-            if (entity is Player) nn.level.difficulty.id else 2,
+            if (entity is Player) level.difficulty.id else 2,
             durability.minOrNull() ?: Double.NaN,
             durability.maxOrNull() ?: Double.NaN,
             entity.itemBlockingWith?.get(DataComponents.BLOCKS_ATTACKS),
             Vec3.directionFromRotation(0.0f, entity.yHeadRot),
-            nn.level.damageSources().explosion(nn.player, nn.player).typeHolder(),
+            level.damageSources().explosion(player, player).typeHolder(),
         )
     }
 
-    context(nn: NonNullContext)
-    fun captureWorld(bounds: AABB, ignoreTerrain: Boolean): WorldSnapshot {
+    fun NonNullContext.captureWorld(bounds: AABB, ignoreTerrain: Boolean): WorldSnapshot {
         val boxes = HashMap<Long, List<AABB>>()
         for (pos in BlockPos.betweenClosed(
             BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ).offset(-1, -1, -1),
             BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ).offset(1, 1, 1)
         )) {
-            val state = nn.level.getBlockState(pos)
+            val state = level.getBlockState(pos)
             if (state.isAir || ignoreTerrain && state.block.explosionResistance < 600.0f) continue
-            val shape = state.getCollisionShape(nn.level, pos)
+            val shape = state.getCollisionShape(level, pos)
             if (!shape.isEmpty) boxes[pos.asLong()] = shape.toAabbs().toList()
         }
         return WorldSnapshot(boxes)
     }
 
-    context(nn: NonNullContext)
-    fun damage(
+    fun NonNullContext.damage(
         snapshot: Snapshot,
         center: Vec3,
         ignoreTerrain: Boolean = false,
@@ -132,12 +129,12 @@ object CrystalDamageUtils {
     ): Double =
         calculate(snapshot, center, { from, to, support, excluded ->
             trace(from, to) { pos ->
-                val state = nn.level.getBlockState(pos)
+                val state = level.getBlockState(pos)
                 when {
                     pos in excluded -> Shapes.empty()
                     pos == support -> Shapes.block()
                     ignoreTerrain && state.block.explosionResistance < 600.0f -> Shapes.empty()
-                    else -> state.getCollisionShape(nn.level, pos)
+                    else -> state.getCollisionShape(level, pos)
                 }
             }
         }, base, ignored)

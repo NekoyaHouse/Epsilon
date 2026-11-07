@@ -6,7 +6,7 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.getDirection
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -49,7 +49,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                         val result = gameMode.useItemOn(
                             player,
                             hand,
-                            BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true)
+                            BlockHitResult(Vec3.atCenterOf(pos), getDirection(pos), pos, true)
                         )
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
                             SwingMode.Both.interactSwing(hand)

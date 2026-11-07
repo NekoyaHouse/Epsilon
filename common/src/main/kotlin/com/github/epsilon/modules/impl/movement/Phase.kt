@@ -5,16 +5,22 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.player.AutoTool
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.modules.impl.player.AutoTool.getBestTool
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.invSwap
+import com.github.epsilon.utils.player.InvUtils.invSwapBack
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
 import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.MoveUtils.forward
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
+import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -27,7 +33,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
 
 object Phase : Module("Phase", Category.MOVEMENT) {
 
@@ -191,7 +196,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
             if (afterPearlTime > 0) afterPearlTime--
 
             if (mode == Mode.Sunrise && (player.horizontalCollision || isPlayerInBlock()) && !player.isInWater && !player.isInLava && clipTimer <= 0) {
-                val dir = MoveUtils.forward(0.5)
+                val dir = forward(0.5)
 
                 var blockToBreak: BlockPos? = null
 
@@ -204,14 +209,14 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                 }
 
                 if (blockToBreak == null) return@safeEventHandler
-                val bestTool = AutoTool.getBestTool(blockToBreak)
+                val bestTool = getBestTool(blockToBreak)
                 if (bestTool == -1) return@safeEventHandler
 
-                InvUtils.swap(bestTool, true)
+                swap(bestTool, true)
                 gameMode.continueDestroyBlock(blockToBreak, player.direction)
                 SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
                 if (silent) {
-                    InvUtils.swapBack()
+                    swapBack()
                 }
             }
 
@@ -241,7 +246,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
             if (mode == Mode.Pearl && (player.onGround() || !onlyOnGround)) {
                 if (player.horizontalCollision && clipTimer <= 0 && player.tickCount > 60) {
-                    if (pauseOnEat && PlayerUtils.isEating()) {
+                    if (pauseOnEat && isEating()) {
                         return@safeEventHandler
                     }
 
@@ -249,18 +254,18 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         return@safeEventHandler
                     }
 
-                    val dir = MoveUtils.forward(0.5)
+                    val dir = forward(0.5)
                     val block = BlockPos.containing(player.x + dir[0], player.y, player.z + dir[1])
 
                     if (mc.options.keyShift.isDown) {
                         return@safeEventHandler
                     }
 
-                    val angle = RotationUtils.calculate(Vec3.atCenterOf(block))
+                    val angle = calculate(Vec3.atCenterOf(block))
                     val result = if (swapMode == SwapMode.Silent) {
-                        InvUtils.findInHotbar(Items.ENDER_PEARL)
+                        findInHotbar(Items.ENDER_PEARL)
                     } else {
-                        InvUtils.find(Items.ENDER_PEARL)
+                        find(Items.ENDER_PEARL)
                     }
                     if (result.found()) {
                         val prevYaw = player.yRot
@@ -279,22 +284,21 @@ object Phase : Module("Phase", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun doUsePearl(slot: Int) {
+    private fun NonNullContext.doUsePearl(slot: Int) {
         if (swapMode == SwapMode.Silent) {
-            InvUtils.swap(slot, true)
+            swap(slot, true)
         } else {
-            InvUtils.invSwap(slot)
+            invSwap(slot)
         }
 
-        nn.gameMode.useItem(nn.player, InteractionHand.MAIN_HAND)
+        gameMode.useItem(player, InteractionHand.MAIN_HAND)
 
         SwingMode.of(swingHand).interactSwing(InteractionHand.MAIN_HAND)
 
         if (swapMode == SwapMode.Silent) {
-            InvUtils.swapBack()
+            swapBack()
         } else {
-            InvUtils.invSwapBack()
+            invSwapBack()
         }
 
         if (autoDisable) {
@@ -305,9 +309,8 @@ object Phase : Module("Phase", Category.MOVEMENT) {
         afterPearlTime = afterPearl
     }
 
-    context(nn: NonNullContext)
-    private fun isPlayerInBlock(): Boolean {
-        return !nn.level.getBlockState(BlockPos.containing(nn.player.position())).isAir
+    private fun NonNullContext.isPlayerInBlock(): Boolean {
+        return !level.getBlockState(BlockPos.containing(player.position())).isAir
     }
 
 }

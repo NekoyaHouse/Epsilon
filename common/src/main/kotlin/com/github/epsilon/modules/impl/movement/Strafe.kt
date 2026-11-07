@@ -5,8 +5,8 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.MoveUtils.forward
+import com.github.epsilon.utils.player.PlayerUtils.isInBlock
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.Vec3
 
@@ -18,7 +18,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
     init {
         safeEventHandler<MoveEvent> { event ->
             if (player.isCrouching || player.isFallFlying || player.isInLava ||
-                PlayerUtils.isInBlock() || player.isInWater || player.abilities.flying ||
+                isInBlock() || player.isInWater || player.abilities.flying ||
                 Flight.isEnabled || Speed.isEnabled
             ) {
                 return@safeEventHandler
@@ -35,7 +35,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT) {
                 speed *= 1.0 + 0.2 * (player.getEffect(MobEffects.SPEED)!!.amplifier + 1.0)
             }
 
-            val strafe = MoveUtils.forward(speed)
+            val strafe = forward(speed)
             event.x = strafe[0]
             event.z = strafe[1]
             event.cancel()

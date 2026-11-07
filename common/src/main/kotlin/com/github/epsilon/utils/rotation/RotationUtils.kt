@@ -1,9 +1,12 @@
 package com.github.epsilon.utils.rotation
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toDegrees
+import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
+import kotlin.math.*
+import kotlin.random.Random
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -14,8 +17,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
-import kotlin.math.*
-import kotlin.random.Random
 
 object RotationUtils {
 
@@ -25,8 +26,7 @@ object RotationUtils {
      * @param pos 目标位置
      * @return 操作结果
      */
-    context(nn: NonNullContext)
-    fun getDirection(pos: BlockPos): Direction {
+    fun NonNullContext.getDirection(pos: BlockPos): Direction {
         val raycastSide = getNearestSide(pos) { direction -> canSeeWithContext(pos, direction) }
         if (raycastSide != null) {
             return raycastSide
@@ -38,11 +38,10 @@ object RotationUtils {
         return Direction.UP
     }
 
-    context(nn: NonNullContext)
-    private fun getNearestSide(pos: BlockPos, predicate: (Direction) -> Boolean): Direction? {
+    private fun NonNullContext.getNearestSide(pos: BlockPos, predicate: (Direction) -> Boolean): Direction? {
         var side: Direction? = null
         var closestDistanceSq = Double.MAX_VALUE
-        val eyePos = nn.player.eyePosition
+        val eyePos = player.eyePosition
 
         for (direction in Direction.entries) {
             if (!predicate(direction)) continue
@@ -64,24 +63,21 @@ object RotationUtils {
      * @param side 方块面方向
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun canSee(pos: BlockPos, side: Direction): Boolean {
+    fun NonNullContext.canSee(pos: BlockPos, side: Direction): Boolean {
         return canSeeWithContext(pos, side)
     }
 
-    context(nn: NonNullContext)
-    private fun canSeeWithContext(pos: BlockPos, side: Direction): Boolean {
+    private fun NonNullContext.canSeeWithContext(pos: BlockPos, side: Direction): Boolean {
         val testVec = Vec3.atCenterOf(pos).relative(side, 0.5)
         val context = ClipContext(
-            nn.player.eyePosition, testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, nn.player
+            player.eyePosition, testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player
         )
-        val result = nn.level.clip(context)
+        val result = level.clip(context)
         return result.type == HitResult.Type.MISS
     }
 
-    context(nn: NonNullContext)
-    private fun getCollisionBox(pos: BlockPos): AABB {
-        val shape: VoxelShape = nn.level.getBlockState(pos).getCollisionShape(nn.level, pos).move(pos)
+    private fun NonNullContext.getCollisionBox(pos: BlockPos): AABB {
+        val shape: VoxelShape = level.getBlockState(pos).getCollisionShape(level, pos).move(pos)
         var collisionBox = AABB(pos)
 
         for (box in shape.toAabbs()) {
@@ -98,17 +94,15 @@ object RotationUtils {
      * @param direction 方块面方向
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun isGrimDirection(pos: BlockPos, direction: Direction): Boolean {
+    fun NonNullContext.isGrimDirection(pos: BlockPos, direction: Direction): Boolean {
         return isGrimDirectionWithContext(pos, direction)
     }
 
-    context(nn: NonNullContext)
-    private fun isGrimDirectionWithContext(pos: BlockPos, direction: Direction): Boolean {
+    private fun NonNullContext.isGrimDirectionWithContext(pos: BlockPos, direction: Direction): Boolean {
         val collisionBox = getCollisionBox(pos)
         val eyePositions = AABB(
-            nn.player.x, nn.player.y + 0.4, nn.player.z,
-            nn.player.x, nn.player.y + 1.62, nn.player.z
+            player.x, player.y + 0.4, player.z,
+            player.x, player.y + 1.62, player.z
         ).inflate(0.0002)
         return eyePositions.intersects(collisionBox) || !(when (direction) {
             Direction.NORTH -> eyePositions.minZ > collisionBox.minZ
@@ -127,10 +121,9 @@ object RotationUtils {
      * @param fov    水平视野角度
      * @return 判断结果
      */
-    context(nn: NonNullContext)
-    fun isInFov(entity: Entity, fov: Float): Boolean {
+    fun NonNullContext.isInFov(entity: Entity, fov: Float): Boolean {
         if (fov >= 360f) return true
-        val yawDiff = abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - nn.player.yRot))
+        val yawDiff = abs(Mth.wrapDegrees(getRotationsToEntity(entity).yaw - player.yRot))
         return yawDiff <= fov / 2.0
     }
 
@@ -140,9 +133,8 @@ object RotationUtils {
      * @param entity 实体
      * @return 获取或计算得到的结果
      */
-    context(nn: NonNullContext)
-    fun getRotationsToEntity(entity: Entity): Rotation {
-        val eyePos = nn.player.eyePosition
+    fun NonNullContext.getRotationsToEntity(entity: Entity): Rotation {
+        val eyePos = player.eyePosition
         val targetPos = entity.position().add(0.0, entity.bbHeight / 2.0, 0.0)
         val dx = targetPos.x - eyePos.x
         val dy = targetPos.y - eyePos.y
@@ -159,9 +151,8 @@ object RotationUtils {
      * @param entity 实体
      * @return 获取或计算得到的结果
      */
-    context(nn: NonNullContext)
-    fun getEyeDistanceToEntity(entity: LivingEntity): Double {
-        val eyePos = nn.player.eyePosition
+    fun NonNullContext.getEyeDistanceToEntity(entity: LivingEntity): Double {
+        val eyePos = player.eyePosition
         val box = entity.boundingBox
         val dx = maxOf(box.minX - eyePos.x, maxOf(0.0, eyePos.x - box.maxX))
         val dy = maxOf(box.minY - eyePos.y, maxOf(0.0, eyePos.y - box.maxY))
@@ -190,12 +181,11 @@ object RotationUtils {
      * @param entity 实体
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(entity: Entity): Rotation {
+    fun NonNullContext.calculate(entity: Entity): Rotation {
         return calculate(
             entity.position().add(
                 0.0,
-                (nn.player.y - entity.y + nn.player.eyeHeight).coerceIn(
+                (player.y - entity.y + player.eyeHeight).coerceIn(
                     0.0,
                     (entity.boundingBox.maxY - entity.boundingBox.minY) * 0.9
                 ),
@@ -212,11 +202,10 @@ object RotationUtils {
      * @param range    射线追踪或自适应选点距离
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(entity: Entity, adaptive: Boolean, range: Double): Rotation {
+    fun NonNullContext.calculate(entity: Entity, adaptive: Boolean, range: Double): Rotation {
         val normalRotations = calculate(entity)
 
-        val result = RaytraceUtils.raytrace(normalRotations, range, 0.0f)
+        val result = raytrace(normalRotations, range, 0.0f)
 
         if (!adaptive || (result != null && result.type == HitResult.Type.ENTITY)) {
             return normalRotations
@@ -247,7 +236,7 @@ object RotationUtils {
 
                     val adaptiveRotations = calculate(targetPoint)
 
-                    val rayCastResult = RaytraceUtils.raytrace(adaptiveRotations, range, 0.0f)
+                    val rayCastResult = raytrace(adaptiveRotations, range, 0.0f)
 
                     if (rayCastResult != null && rayCastResult.type == HitResult.Type.ENTITY) {
                         return adaptiveRotations
@@ -269,9 +258,8 @@ object RotationUtils {
      * @param to 目标位置
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(to: BlockPos): Rotation {
-        return calculate(nn.player.eyePosition, Vec3.atCenterOf(to))
+    fun NonNullContext.calculate(to: BlockPos): Rotation {
+        return calculate(player.eyePosition, Vec3.atCenterOf(to))
     }
 
     /**
@@ -280,9 +268,8 @@ object RotationUtils {
      * @param to 目标位置
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(to: Vec3): Rotation {
-        return calculate(nn.player.eyePosition, to)
+    fun NonNullContext.calculate(to: Vec3): Rotation {
+        return calculate(player.eyePosition, to)
     }
 
     /**
@@ -292,8 +279,7 @@ object RotationUtils {
      * @param direction 方块面方向
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(position: Vec3, direction: Direction): Rotation {
+    fun NonNullContext.calculate(position: Vec3, direction: Direction): Rotation {
         var x = position.x + 0.5
         var y = position.y + 0.5
         var z = position.z + 0.5
@@ -310,8 +296,7 @@ object RotationUtils {
      * @param direction 方块面方向
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(position: BlockPos, direction: Direction): Rotation {
+    fun NonNullContext.calculate(position: BlockPos, direction: Direction): Rotation {
         var x = position.x + 0.5
         var y = position.y + 0.5
         var z = position.z + 0.5
@@ -328,11 +313,10 @@ object RotationUtils {
      * @param predict 是否按玩家速度预判
      * @return 计算得到的旋转角
      */
-    context(nn: NonNullContext)
-    fun calculate(vec: Vec3, predict: Boolean): Rotation {
-        var eyesPos = nn.player.eyePosition
+    fun NonNullContext.calculate(vec: Vec3, predict: Boolean): Rotation {
+        var eyesPos = player.eyePosition
 
-        if (predict) eyesPos = eyesPos.add(nn.player.deltaMovement)
+        if (predict) eyesPos = eyesPos.add(player.deltaMovement)
 
         val diffX = vec.x - eyesPos.x
         val diffY = vec.y - eyesPos.y
@@ -408,11 +392,10 @@ object RotationUtils {
      * @param rotation 旋转角
      * @return 操作结果
      */
-    context(nn: NonNullContext)
-    fun resetRotation(rotation: Rotation?): Rotation? {
+    fun NonNullContext.resetRotation(rotation: Rotation?): Rotation? {
         val target = rotation ?: return null
-        val yaw = target.yaw + Mth.wrapDegrees(nn.player.yRot - target.yaw)
-        val pitch = nn.player.xRot
+        val yaw = target.yaw + Mth.wrapDegrees(player.yRot - target.yaw)
+        val pitch = player.xRot
         return Rotation(yaw, pitch)
     }
 

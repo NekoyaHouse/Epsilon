@@ -5,14 +5,17 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.settings.impl.EnumSetting
+import java.awt.Color
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.roundToInt
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet
@@ -28,10 +31,6 @@ import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
-import java.util.*
-import java.util.concurrent.ThreadLocalRandom
-import kotlin.math.roundToInt
 
 object Backtrack : Module("Backtrack", Category.COMBAT) {
 
@@ -240,8 +239,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun processTarget(enemy: LivingEntity, now: Long) {
+    private fun NonNullContext.processTarget(enemy: LivingEntity, now: Long) {
         val pending: MutableList<Packet<ClientPacketListener>>
         synchronized(packetLock) {
             if (!shouldBacktrackLocked(enemy, now)) return
@@ -257,11 +255,10 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
         handlePackets(pending)
     }
 
-    context(nn: NonNullContext)
-    private fun shouldBacktrackLocked(candidate: LivingEntity, now: Long): Boolean {
+    private fun NonNullContext.shouldBacktrackLocked(candidate: LivingEntity, now: Long): Boolean {
         if (!isValidTarget(candidate)) return false
 
-        val distance = candidate.boundingBox.distanceToSqr(nn.player.eyePosition)
+        val distance = candidate.boundingBox.distanceToSqr(player.eyePosition)
         val min = minOf(minRange, maxRange)
         val max = maxOf(minRange, maxRange)
         val inRange = distance >= min * min && distance <= max * max
@@ -275,7 +272,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
             lastAttackAt != Long.MIN_VALUE && now - lastAttackAt <= lastAttackTime
 
         return (inRange || withinTrackingBuffer) &&
-                nn.player.tickCount > 10 &&
+                player.tickCount > 10 &&
                 chancePassed &&
                 now >= nextAllowedAt &&
                 attackedRecently &&
@@ -283,25 +280,23 @@ object Backtrack : Module("Backtrack", Category.COMBAT) {
                 (!pauseOnHurtTime || candidate.hurtTime < hurtTime)
     }
 
-    context(nn: NonNullContext)
-    private fun isValidTarget(candidate: LivingEntity): Boolean {
-        if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return false
-        if (candidate.level() !== nn.level || AntiBot.isBot(candidate)) return false
+    private fun NonNullContext.isValidTarget(candidate: LivingEntity): Boolean {
+        if (candidate === player || !candidate.isAlive || candidate.isDeadOrDying) return false
+        if (candidate.level() !== level || AntiBot.isBot(candidate)) return false
         if (TargetManager.isSameTeam(candidate)) return false
         return candidate !is Player || !FriendManager.isFriend(candidate)
     }
 
-    context(nn: NonNullContext)
-    private fun findRangeTarget(): LivingEntity? {
+    private fun NonNullContext.findRangeTarget(): LivingEntity? {
         val min = minOf(minRange, maxRange)
         val max = maxOf(minRange, maxRange)
         val minSquared = min * min
         val maxSquared = max * max
-        val eyePosition = nn.player.eyePosition
+        val eyePosition = player.eyePosition
         var nearest: LivingEntity? = null
         var nearestDistance = Double.MAX_VALUE
 
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val living = entity as? LivingEntity ?: continue
             if (entity is ArmorStand) continue
             if (!isValidTarget(living) || !isEnabledRangeTarget(living)) continue

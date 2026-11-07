@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -14,10 +14,12 @@ import com.github.epsilon.modules.impl.combat.AntiBot
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.PlayerUtils.isInBlock
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
+import java.util.*
+import kotlin.math.atan2
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -27,8 +29,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
-import java.util.*
-import kotlin.math.atan2
 
 object Velocity : Module("Velocity", Category.MOVEMENT) {
 
@@ -210,16 +210,15 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         if (newMode != Mode.Delay) resetDelayState()
     }
 
-    context(nn: NonNullContext)
-    private fun cancelPacket(event: PacketEvent.Receive) {
+    private fun NonNullContext.cancelPacket(event: PacketEvent.Receive) {
         val packet = event.packet
-        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
+        if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             event.cancel()
             return
         }
 
         if (explosion && packet is ClientboundExplodePacket &&
-            (!explosionOnlyBlock || PlayerUtils.isInBlock())
+            (!explosionOnlyBlock || isInBlock())
         ) {
             event.packet = ClientboundExplodePacket(
                 packet.center,
@@ -234,8 +233,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun reducePacket(event: PacketEvent.Receive) {
+    private fun NonNullContext.reducePacket(event: PacketEvent.Receive) {
         val packet = event.packet
 
         if (packet is ClientboundDisconnectPacket) {
@@ -258,7 +256,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             lag = System.currentTimeMillis()
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             val movement = packet.movement
             if (System.currentTimeMillis() - lag >= 100L) {
                 val knockback = movement.y > 0.0 && (movement.x != 0.0 || movement.z != 0.0)
@@ -273,8 +271,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun delayPacket(event: PacketEvent.Receive) {
+    private fun NonNullContext.delayPacket(event: PacketEvent.Receive) {
         val packet = event.packet
 
         if (packet is ClientboundDisconnectPacket) {
@@ -292,7 +289,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             return
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == nn.player.id &&
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id &&
             System.currentTimeMillis() - delayLag >= 100L
         ) {
             val movement = packet.movement

@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.utils.math.toRadians
 import kotlin.math.cos
@@ -29,11 +29,10 @@ object MoveUtils {
      *
      * @param speed 移动速度
      */
-    context(nn: NonNullContext)
-    fun forward(speed: Double): DoubleArray {
+    fun NonNullContext.forward(speed: Double): DoubleArray {
         var yaw = RotationManager.getYaw()
 
-        val moveVector = nn.player.input.moveVector
+        val moveVector = player.input.moveVector
         var forward = moveVector.y
         var left = moveVector.x
 

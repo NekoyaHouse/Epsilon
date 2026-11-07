@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
+import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -8,7 +9,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.PI
 
 /**
  * 玩家下落轨迹模拟器。
@@ -46,8 +46,7 @@ class FallingPlayer(
         player.speed,
     )
 
-    context(nn: NonNullContext)
-    private fun calculateForTick() {
+    private fun NonNullContext.calculateForTick() {
         var sr = strafe * 0.9800000190734863F
         var fw = forward * 0.9800000190734863F
         var movement = sr * sr + fw * fw
@@ -59,7 +58,7 @@ class FallingPlayer(
             }
 
             var fixedJumpFactor = jumpMovementFactor
-            if (nn.player.isSprinting) {
+            if (player.isSprinting) {
                 fixedJumpFactor *= 1.3F
             }
 
@@ -87,12 +86,11 @@ class FallingPlayer(
      *
      * @param ticks 模拟的 tick 数
      */
-    context(nn: NonNullContext)
-    fun calculate(ticks: Int): FallingPlayer {
+    fun NonNullContext.calculate(ticks: Int): FallingPlayer {
         for (i in 0 until ticks) {
             calculateForTick()
         }
-        return this
+        return this@FallingPlayer
     }
 
     /**
@@ -101,13 +99,12 @@ class FallingPlayer(
      * @param ticks 模拟的 tick 数
      * @return 最先碰撞的方块位置；未碰撞时返回 null
      */
-    context(nn: NonNullContext)
-    fun findCollision(ticks: Int): BlockPos? {
+    fun NonNullContext.findCollision(ticks: Int): BlockPos? {
         for (i in 0 until ticks) {
             val start = Vec3(x, y, z)
             calculateForTick()
             val end = Vec3(x, y, z)
-            val halfWidth = nn.player.bbWidth / 2.0F
+            val halfWidth = player.bbWidth / 2.0F
 
             raytrace(start, end)?.let { return it }
             raytrace(start.add(halfWidth.toDouble(), 0.0, halfWidth.toDouble()), end)?.let { return it }
@@ -123,15 +120,14 @@ class FallingPlayer(
         return null
     }
 
-    context(nn: NonNullContext)
-    private fun raytrace(start: Vec3, end: Vec3): BlockPos? {
-        val result = nn.level.clip(
+    private fun NonNullContext.raytrace(start: Vec3, end: Vec3): BlockPos? {
+        val result = level.clip(
             ClipContext(
                 start,
                 end,
                 ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE,
-                nn.player,
+                player,
             )
         )
 

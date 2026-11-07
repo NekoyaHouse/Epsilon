@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
-import net.minecraft.client.KeyMapping
 import kotlin.math.pow
+import net.minecraft.client.KeyMapping
 
 /**
  * @author Moli
@@ -81,8 +81,7 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
         return btn == ClickButton.RIGHT || btn == ClickButton.BOTH
     }
 
-    context(nn: NonNullContext)
-    private fun handleButton(state: ButtonState, clickButton: ClickButton, currentTime: Long) {
+    private fun NonNullContext.handleButton(state: ButtonState, clickButton: ClickButton, currentTime: Long) {
         if (!isButtonPressed(clickButton)) {
             state.reset()
             return
@@ -120,17 +119,16 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
         state.nextDelay = (1000.0 / adjustedCPS).toLong()
     }
 
-    context(nn: NonNullContext)
-    private fun applyJitter(clickButton: ClickButton) {
+    private fun NonNullContext.applyJitter(clickButton: ClickButton) {
         val jitterSetting = if (clickButton == ClickButton.LEFT) leftJitter else rightJitter
         if (!jitterSetting) return
 
-        val yaw = nn.player.yRot
-        val pitch = nn.player.xRot
+        val yaw = player.yRot
+        val pitch = player.xRot
         val yawRandom = MathUtils.getRandom(-0.5f, 0.5f) * 0.5f
         val pitchRandom = MathUtils.getRandom(-0.5f, 0.5f) * 0.5f
-        nn.player.yRot = yaw + yawRandom
-        nn.player.xRot = pitch + pitchRandom
+        player.yRot = yaw + yawRandom
+        player.xRot = pitch + pitchRandom
     }
 
     private fun isButtonPressed(clickButton: ClickButton): Boolean {

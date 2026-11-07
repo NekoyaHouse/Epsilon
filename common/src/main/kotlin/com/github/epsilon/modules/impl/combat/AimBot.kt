@@ -3,8 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -13,6 +12,7 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.*
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -20,7 +20,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.*
 
 object AimBot : Module("Aim Bot", Category.COMBAT) {
 
@@ -96,8 +95,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun updateBowAim() {
+    private fun NonNullContext.updateBowAim() {
         if (!isUsingBow()) {
             cancelBowAim()
             return
@@ -110,15 +108,15 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             return
         }
 
-        val charge = BowItem.getPowerForTime(nn.player.ticksUsingItem)
+        val charge = BowItem.getPowerForTime(player.ticksUsingItem)
         val velocity = charge * 3.0
 
         val predicted = predictPosition(bestTarget, predictTicks)
 
-        val dx = predicted.x - nn.player.x
-        val dz = predicted.z - nn.player.z
+        val dx = predicted.x - player.x
+        val dz = predicted.z - player.z
         val dy = (predicted.y + bestTarget.getEyeHeight(bestTarget.pose)) -
-                (nn.player.y + nn.player.getEyeHeight(nn.player.pose))
+                (player.y + player.getEyeHeight(player.pose))
 
         val targetPitch = computeProjectilePitch(dx, dz, dy, velocity)
         if (targetPitch.isNaN()) {
@@ -143,14 +141,13 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         bowTargetPitch = Float.NaN
     }
 
-    context(nn: NonNullContext)
-    private fun updateAimAssist() {
+    private fun NonNullContext.updateAimAssist() {
         if (lmbActivation && !mc.options.keyAttack.isDown) {
             resetAimAssist()
             return
         }
 
-        if (onlyWeapon && !nn.player.mainHandItem.has(DataComponents.WEAPON)) {
+        if (onlyWeapon && !player.mainHandItem.has(DataComponents.WEAPON)) {
             resetAimAssist()
             return
         }
@@ -171,7 +168,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         assistAcceleration = (assistAcceleration + aimStrength / 10000.0f).coerceIn(0.0f, 1.0f)
 
         if (nearestTarget != null) {
-            if (!nn.player.hasLineOfSight(nearestTarget) && !ignoreWalls) {
+            if (!player.hasLineOfSight(nearestTarget) && !ignoreWalls) {
                 visibleTime.reset()
             }
 
@@ -181,13 +178,13 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
 
             if (rotationYaw.isNaN()) {
-                rotationYaw = nn.player.yRot
+                rotationYaw = player.yRot
             }
 
             val deltaYaw = Mth.wrapDegrees(
                 (atan2(
-                    nearestTarget.eyePosition.z - nn.player.z,
-                    nearestTarget.eyePosition.x - nn.player.x
+                    nearestTarget.eyePosition.z - player.z,
+                    nearestTarget.eyePosition.x - player.x
                 )).toDegrees()
                     .toFloat() - 90.0f - rotationYaw
             )
@@ -223,28 +220,27 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         return -(atan(tanTheta)).toDegrees().toFloat()
     }
 
-    context(nn: NonNullContext)
-    private fun getBestBowTarget(): Player? {
+    private fun NonNullContext.getBestBowTarget(): Player? {
         var best: Player? = null
         var bestScore = Double.MAX_VALUE
         val halfFov = bowFov / 2.0f
         val rangeSq = bowRange.toDouble() * bowRange.toDouble()
 
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val candidate = entity as? Player ?: continue
             if (shouldSkipPlayer(candidate)) continue
 
-            val distSq = nn.player.distanceToSqr(candidate)
+            val distSq = player.distanceToSqr(candidate)
             if (distSq > rangeSq) continue
 
             val yawDiff = abs(
                 Mth.wrapDegrees(
-                    getYawBetween(nn.player.yRot, nn.player.x, nn.player.z, candidate.x, candidate.z) - nn.player.yRot
+                    getYawBetween(player.yRot, player.x, player.z, candidate.x, candidate.z) - player.yRot
                 )
             )
             if (yawDiff > halfFov) continue
 
-            if (!ignoreWalls && !nn.player.hasLineOfSight(candidate)) continue
+            if (!ignoreWalls && !player.hasLineOfSight(candidate)) continue
 
             val score = yawDiff * sqrt(distSq)
             if (score < bestScore) {
@@ -255,16 +251,15 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         return best
     }
 
-    context(nn: NonNullContext)
-    private fun getNearestTarget(range: Float): Player? {
+    private fun NonNullContext.getNearestTarget(range: Float): Player? {
         var nearest: Player? = null
         var bestDistance = (range * range).toDouble()
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             val candidate = entity as? Player ?: continue
             if (shouldSkipPlayer(candidate)) continue
             if (candidate.isInvisible && ignoreInvisible) continue
-            if (!ignoreWalls && !nn.player.hasLineOfSight(candidate)) continue
-            val distance = nn.player.distanceToSqr(candidate)
+            if (!ignoreWalls && !player.hasLineOfSight(candidate)) continue
+            val distance = player.distanceToSqr(candidate)
             if (distance < bestDistance) {
                 nearest = candidate
                 bestDistance = distance
@@ -273,9 +268,8 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         return nearest
     }
 
-    context(nn: NonNullContext)
-    private fun shouldSkipPlayer(candidate: Player): Boolean {
-        if (candidate === nn.player || !candidate.isAlive || candidate.isDeadOrDying) return true
+    private fun NonNullContext.shouldSkipPlayer(candidate: Player): Boolean {
+        if (candidate === player || !candidate.isAlive || candidate.isDeadOrDying) return true
         if (AntiBot.isBot(candidate)) return true
         if (FriendManager.isFriend(candidate)) return true
         return false
@@ -295,9 +289,8 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         return entity.position().add(motionX * ticks, motionY * ticks, motionZ * ticks)
     }
 
-    context(nn: NonNullContext)
-    private fun isUsingBow(): Boolean {
-        return nn.player.useItem.item is BowItem
+    private fun NonNullContext.isUsingBow(): Boolean {
+        return player.useItem.item is BowItem
     }
 
 }

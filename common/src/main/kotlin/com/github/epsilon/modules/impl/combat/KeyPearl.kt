@@ -6,15 +6,17 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
@@ -83,7 +85,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
             }
 
             if (pressed) {
-                val pearl = InvUtils.findInHotbar(Items.ENDER_PEARL)
+                val pearl = findInHotbar(Items.ENDER_PEARL)
                 if (!pearl.found()) {
                     resetState()
                     return@safeEventHandler
@@ -93,7 +95,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     return@safeEventHandler
                 }
 
-                if (pauseOnEat && (PlayerUtils.isEating() || NoSlowdown.isWorking())) {
+                if (pauseOnEat && (isEating() || NoSlowdown.isWorking())) {
                     return@safeEventHandler
                 } else {
                     if (NoSlowdown.isWorking()) {
@@ -110,7 +112,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                     Rotation(player.yRot, player.xRot), 180.0, Priority.Highest
                 )
 
-                InvUtils.swap(pearl.slot, switchBack)
+                swap(pearl.slot, switchBack)
 
                 if (clock < delay) {
                     clock++
@@ -128,13 +130,12 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleSwitchBack() {
+    private fun NonNullContext.handleSwitchBack() {
         if (switchClock < switchDelay) {
             switchClock++
             return
         }
-        InvUtils.swapBack()
+        swapBack()
         resetState()
     }
 

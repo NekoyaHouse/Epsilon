@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
@@ -14,18 +14,16 @@ object PlayerUtils {
     /**
      * 判断本地玩家是否正在使用食物。
      */
-    context(nn: NonNullContext)
-    fun isEating(): Boolean {
-        return (nn.player.mainHandItem.components.has(DataComponents.FOOD) ||
-                nn.player.offhandItem.components.has(DataComponents.FOOD)) && nn.player.isUsingItem
+    fun NonNullContext.isEating(): Boolean {
+        return (player.mainHandItem.components.has(DataComponents.FOOD) ||
+                player.offhandItem.components.has(DataComponents.FOOD)) && player.isUsingItem
     }
 
     /**
      * 判断本地玩家的包围盒是否与蜘蛛网相交。
      */
-    context(nn: NonNullContext)
-    fun isInWeb(): Boolean {
-        val box = nn.player.boundingBox.deflate(1.0E-6)
+    fun NonNullContext.isInWeb(): Boolean {
+        val box = player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -39,7 +37,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (nn.level.getBlockState(mutablePos).block is WebBlock) {
+                    if (level.getBlockState(mutablePos).block is WebBlock) {
                         return true
                     }
                 }
@@ -52,9 +50,8 @@ object PlayerUtils {
     /**
      * 判断本地玩家的包围盒是否与实体方块相交。
      */
-    context(nn: NonNullContext)
-    fun isInBlock(): Boolean {
-        val box = nn.player.boundingBox.deflate(1.0E-6)
+    fun NonNullContext.isInBlock(): Boolean {
+        val box = player.boundingBox.deflate(1.0E-6)
 
         val minX = Mth.floor(box.minX)
         val minY = Mth.floor(box.minY)
@@ -68,7 +65,7 @@ object PlayerUtils {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     mutablePos.set(x, y, z)
-                    if (nn.level.getBlockState(mutablePos).isSolidRender) {
+                    if (level.getBlockState(mutablePos).isSolidRender) {
                         return true
                     }
                 }

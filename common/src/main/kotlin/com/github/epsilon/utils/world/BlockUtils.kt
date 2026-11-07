@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.world
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -29,11 +29,10 @@ object BlockUtils {
      * @return 判断结果
      */
     @JvmOverloads
-    context(nn: NonNullContext)
-    fun canPlaceAt(pos: BlockPos, ignoreCrystals: Boolean = false): Boolean {
-        if (!nn.level.getBlockState(pos).canBeReplaced()) return false
+    fun NonNullContext.canPlaceAt(pos: BlockPos, ignoreCrystals: Boolean = false): Boolean {
+        if (!level.getBlockState(pos).canBeReplaced()) return false
         val except: Entity? = null
-        return nn.level.getEntities(
+        return level.getEntities(
             except,
             AABB(pos)
         ) { entity ->
@@ -45,9 +44,8 @@ object BlockUtils {
     /**
      * 计算方块交互命中的实际放置位置。
      */
-    context(nn: NonNullContext)
-    fun getPlacePos(hit: BlockHitResult, item: ItemStack): BlockPos {
-        val state = nn.level.getBlockState(hit.blockPos)
+    fun NonNullContext.getPlacePos(hit: BlockHitResult, item: ItemStack): BlockPos {
+        val state = level.getBlockState(hit.blockPos)
         if (!state.isAir && canBeReplacedWith(state, item)) {
             return hit.blockPos
         }
@@ -57,9 +55,8 @@ object BlockUtils {
     /**
      * 判断方块的某一面是否朝向本地玩家可见。
      */
-    context(nn: NonNullContext)
-    fun isFaceVisible(pos: BlockPos, face: Direction): Boolean {
-        val eyePos = nn.player.eyePosition
+    fun NonNullContext.isFaceVisible(pos: BlockPos, face: Direction): Boolean {
+        val eyePos = player.eyePosition
         val box = AABB(pos)
         return when (face) {
             Direction.NORTH -> eyePos.z > box.minZ
@@ -74,21 +71,19 @@ object BlockUtils {
     /**
      * 判断指定位置是否为有碰撞体积的实心方块。
      */
-    context(nn: NonNullContext)
-    fun isSolidBlock(pos: BlockPos): Boolean {
-        val state = nn.level.getBlockState(pos)
+    fun NonNullContext.isSolidBlock(pos: BlockPos): Boolean {
+        val state = level.getBlockState(pos)
         if (state.isAir) return false
         if (canBeReplacedWith(state, ItemStack.EMPTY)) return false
-        return !state.getCollisionShape(nn.level, pos).isEmpty
+        return !state.getCollisionShape(level, pos).isEmpty
     }
 
     /**
      * 判断包围盒内是否存在会阻挡放置的实体。
      */
-    context(nn: NonNullContext)
-    fun hasBlockingEntity(box: AABB): Boolean {
+    fun NonNullContext.hasBlockingEntity(box: AABB): Boolean {
         val except: Entity? = null
-        for (entity in nn.level.getEntities(except, box)) {
+        for (entity in level.getEntities(except, box)) {
             if (!entity.isAlive) continue
             if (entity is ItemEntity || entity is ExperienceOrb) continue
             if (entity is EndCrystal) continue
@@ -100,18 +95,16 @@ object BlockUtils {
     /**
      * 判断目标点是否处于本地玩家的方块交互距离内。
      */
-    context(nn: NonNullContext)
-    fun isWithinRange(point: Vec3): Boolean {
-        val range = nn.player.blockInteractionRange()
-        return point.distanceToSqr(nn.player.eyePosition) <= range * range
+    fun NonNullContext.isWithinRange(point: Vec3): Boolean {
+        val range = player.blockInteractionRange()
+        return point.distanceToSqr(player.eyePosition) <= range * range
     }
 
     /**
      * 计算方块朝向玩家一侧的大致方向。
      */
-    context(nn: NonNullContext)
-    fun getVisibleFace(pos: BlockPos): Direction {
-        return Direction.getApproximateNearest(nn.player.position().subtract(Vec3.atCenterOf(pos)))
+    fun NonNullContext.getVisibleFace(pos: BlockPos): Direction {
+        return Direction.getApproximateNearest(player.position().subtract(Vec3.atCenterOf(pos)))
     }
 
 }

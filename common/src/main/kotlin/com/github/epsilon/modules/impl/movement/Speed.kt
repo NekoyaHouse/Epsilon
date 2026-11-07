@@ -5,14 +5,17 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.PlayerUtils.isInBlock
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -26,10 +29,6 @@ import net.minecraft.world.entity.vehicle.boat.Boat
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import kotlin.math.cos
-import kotlin.math.hypot
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 object Speed : Module("Speed", Category.MOVEMENT) {
 
@@ -180,7 +179,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             if (!inWater && (player.isUnderWater || player.isInWater || player.isInLava) ||
                 player.isPassenger ||
                 player.onClimbable() ||
-                !inBlock && PlayerUtils.isInBlock() ||
+                !inBlock && isInBlock() ||
                 player.abilities.flying ||
                 player.isFallFlying ||
                 !player.isMoving
@@ -301,9 +300,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleStrafeMotion(speed: Float): Vec2 {
-        val moveVector = nn.player.input.moveVector
+    private fun NonNullContext.handleStrafeMotion(speed: Float): Vec2 {
+        val moveVector = player.input.moveVector
         val forward = moveVector.y
         val strafe = moveVector.x
         val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
@@ -316,58 +314,52 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         return Vec2((forward * speed * rz) + (strafe * speed * rx), (forward * speed * rx) - (strafe * speed * rz))
     }
 
-    context(nn: NonNullContext)
-    private fun getSpeed(slowness: Boolean): Double {
+    private fun NonNullContext.getSpeed(slowness: Boolean): Double {
         val defaultSpeed = 0.2873
         return getSpeed(slowness, defaultSpeed)
     }
 
-    context(nn: NonNullContext)
-    private fun getSpeed(slowness: Boolean, defaultSpeed: Double): Double {
+    private fun NonNullContext.getSpeed(slowness: Boolean, defaultSpeed: Double): Double {
         var result = defaultSpeed
-        if (nn.player.hasEffect(MobEffects.SPEED)) {
-            val amplifier = nn.player.getEffect(MobEffects.SPEED)!!.amplifier
+        if (player.hasEffect(MobEffects.SPEED)) {
+            val amplifier = player.getEffect(MobEffects.SPEED)!!.amplifier
             result *= 1.0 + 0.2 * (amplifier + 1)
         }
 
-        if (slowness && nn.player.hasEffect(MobEffects.SLOWNESS)) {
-            val amplifier = nn.player.getEffect(MobEffects.SLOWNESS)!!.amplifier
+        if (slowness && player.hasEffect(MobEffects.SLOWNESS)) {
+            val amplifier = player.getEffect(MobEffects.SLOWNESS)!!.amplifier
             result /= 1.0 + 0.2 * (amplifier + 1)
         }
 
-        if (nn.player.isCrouching) {
+        if (player.isCrouching) {
             result /= 5.0
         }
         return result
     }
 
-    context(nn: NonNullContext)
-    private fun getJumpSpeed(): Double {
+    private fun NonNullContext.getJumpSpeed(): Double {
         var defaultSpeed = 0.0
 
-        if (nn.player.hasEffect(MobEffects.JUMP_BOOST)) {
-            val amplifier = nn.player.getEffect(MobEffects.JUMP_BOOST)!!.amplifier
+        if (player.hasEffect(MobEffects.JUMP_BOOST)) {
+            val amplifier = player.getEffect(MobEffects.JUMP_BOOST)!!.amplifier
             defaultSpeed += (amplifier + 1) * 0.1
         }
 
         return defaultSpeed
     }
 
-    context(nn: NonNullContext)
-    private fun canCollide(entity: Entity?, box: AABB): Boolean {
-        return !nn.level.noBlockCollision(entity, box)
+    private fun NonNullContext.canCollide(entity: Entity?, box: AABB): Boolean {
+        return !level.noBlockCollision(entity, box)
     }
 
-    context(nn: NonNullContext)
-    private fun setMotionY(y: Double) {
-        val movement = nn.player.deltaMovement
-        nn.player.deltaMovement = Vec3(movement.x, y, movement.z)
+    private fun NonNullContext.setMotionY(y: Double) {
+        val movement = player.deltaMovement
+        player.deltaMovement = Vec3(movement.x, y, movement.z)
     }
 
-    context(nn: NonNullContext)
-    private fun getDistance2D(): Double {
-        val xDist = nn.player.x - nn.player.xo
-        val zDist = nn.player.z - nn.player.zo
+    private fun NonNullContext.getDistance2D(): Double {
+        val xDist = player.x - player.xo
+        val zDist = player.z - player.zo
         return sqrt(xDist * xDist + zDist * zDist)
     }
 

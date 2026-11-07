@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player
 
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
@@ -112,8 +112,7 @@ object InvHelper {
     /**
      * 判断当前界面是否应禁用背包辅助功能。
      */
-    context(nn: NonNullContext)
-    fun shouldDisableFeatures(): Boolean {
+    fun NonNullContext.shouldDisableFeatures(): Boolean {
         return getAllItems().any { item ->
             if (item.isEmpty) {
                 return@any false
@@ -198,9 +197,8 @@ object InvHelper {
     /**
      * 获取指定普通背包槽位中的物品堆。
      */
-    context(nn: NonNullContext)
-    fun getInventoryStack(slot: Int): ItemStack {
-        val items = nn.player.inventory.nonEquipmentItems
+    fun NonNullContext.getInventoryStack(slot: Int): ItemStack {
+        val items = player.inventory.nonEquipmentItems
 
         if (slot < 0 || slot >= items.size) {
             return ItemStack.EMPTY
@@ -212,17 +210,15 @@ object InvHelper {
     /**
      * 获取指定护甲槽位中的物品堆。
      */
-    context(nn: NonNullContext)
-    fun getArmorStack(slot: EquipmentSlot): ItemStack {
-        return nn.player.inventory.getItem(slot.getIndex(36))
+    fun NonNullContext.getArmorStack(slot: EquipmentSlot): ItemStack {
+        return player.inventory.getItem(slot.getIndex(36))
     }
 
     /**
      * 获取副手槽位中的物品堆。
      */
-    context(nn: NonNullContext)
-    fun getOffhandStack(): ItemStack {
-        return nn.player.inventory.getItem(Inventory.SLOT_OFFHAND)
+    fun NonNullContext.getOffhandStack(): ItemStack {
+        return player.inventory.getItem(Inventory.SLOT_OFFHAND)
     }
 
     /**
@@ -279,9 +275,8 @@ object InvHelper {
     /**
      * 查找普通背包区域中的空槽位。
      */
-    context(nn: NonNullContext)
-    fun findEmptyInventory(): Int {
-        val size = nn.player.inventory.nonEquipmentItems.size
+    fun NonNullContext.findEmptyInventory(): Int {
+        val size = player.inventory.nonEquipmentItems.size
 
         for (i in 9 until size) {
             if (getInventoryStack(i).isEmpty) {
@@ -295,8 +290,7 @@ object InvHelper {
     /**
      * 查找快捷栏中的空槽位。
      */
-    context(nn: NonNullContext)
-    fun findEmptySlot(): Int {
+    fun NonNullContext.findEmptySlot(): Int {
         for (i in 0 until 9) {
             if (getInventoryStack(i).isEmpty) {
                 return i
@@ -311,8 +305,7 @@ object InvHelper {
      *
      * @return 匹配槽位；未找到时返回 null
      */
-    context(nn: NonNullContext)
-    fun findItemHotbar(item: Item): Int? {
+    fun NonNullContext.findItemHotbar(item: Item): Int? {
         for (i in 0 until 9) {
             if (getInventoryStack(i).item === item) {
                 return i
@@ -339,10 +332,9 @@ object InvHelper {
     /**
      * 获取玩家背包中的全部物品堆。
      */
-    context(nn: NonNullContext)
-    fun getAllItems(): List<ItemStack> {
+    fun NonNullContext.getAllItems(): List<ItemStack> {
         val list = ArrayList<ItemStack>()
-        val inventory = nn.player.inventory
+        val inventory = player.inventory
 
         for (i in 0 until inventory.containerSize) {
             list.add(inventory.getItem(i))
@@ -354,8 +346,7 @@ object InvHelper {
     /**
      * 获取指定护甲槽位可用物品的最高评分。
      */
-    context(nn: NonNullContext)
-    fun getBestArmorScore(slot: EquipmentSlot): Float {
+    fun NonNullContext.getBestArmorScore(slot: EquipmentSlot): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && getArmorSlot(item) == slot }
             .map { item -> getProtection(item) }
@@ -365,16 +356,14 @@ object InvHelper {
     /**
      * 获取指定护甲槽位当前装备的评分。
      */
-    context(nn: NonNullContext)
-    fun getCurrentArmorScore(slot: EquipmentSlot): Float {
+    fun NonNullContext.getCurrentArmorScore(slot: EquipmentSlot): Float {
         return getProtection(getArmorStack(slot))
     }
 
     /**
      * 获取背包内剑的最高伤害评分。
      */
-    context(nn: NonNullContext)
-    fun getBestSwordDamage(): Float {
+    fun NonNullContext.getBestSwordDamage(): Float {
         return getAllItems()
             .filter { item -> isSword(item) }
             .map { item -> getSwordDamage(item) }
@@ -386,8 +375,7 @@ object InvHelper {
      *
      * @return 评分最高的剑；不存在时返回 null
      */
-    context(nn: NonNullContext)
-    fun getBestSword(): ItemStack? {
+    fun NonNullContext.getBestSword(): ItemStack? {
         return getAllItems()
             .filter { item -> isSword(item) }
             .maxByOrNull { item -> (getSwordDamage(item) * 100.0F).toInt() }
@@ -396,12 +384,11 @@ object InvHelper {
     /**
      * 按对象引用查找物品堆所在的背包槽位。
      */
-    context(nn: NonNullContext)
-    fun getItemStackSlot(stack: ItemStack?): Int {
+    fun NonNullContext.getItemStackSlot(stack: ItemStack?): Int {
         if (stack == null) {
             return -1
         }
-        val inventory = nn.player.inventory
+        val inventory = player.inventory
 
         for (i in 0 until inventory.containerSize) {
             if (inventory.getItem(i) === stack) {
@@ -437,9 +424,8 @@ object InvHelper {
     /**
      * 在普通背包槽位中查找指定物品。
      */
-    context(nn: NonNullContext)
-    fun getItemSlot(item: Item): Int {
-        val size = nn.player.inventory.nonEquipmentItems.size
+    fun NonNullContext.getItemSlot(item: Item): Int {
+        val size = player.inventory.nonEquipmentItems.size
 
         for (i in 0 until size) {
             if (getInventoryStack(i).item === item) {
@@ -453,8 +439,7 @@ object InvHelper {
     /**
      * 获取数量最多的可用投掷物。
      */
-    context(nn: NonNullContext)
-    fun getBestProjectile(): ItemStack? {
+    fun NonNullContext.getBestProjectile(): ItemStack? {
         return getAllItems()
             .filter { item ->
                 !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) && isItemValid(
@@ -467,8 +452,7 @@ object InvHelper {
     /**
      * 获取任意可用钓鱼竿。
      */
-    context(nn: NonNullContext)
-    fun getFishingRod(): ItemStack? {
+    fun NonNullContext.getFishingRod(): ItemStack? {
         return getAllItems()
             .firstOrNull { item -> !item.isEmpty && item.item is FishingRodItem && isItemValid(item) }
     }
@@ -476,8 +460,7 @@ object InvHelper {
     /**
      * 统计背包内可放置方块的总数。
      */
-    context(nn: NonNullContext)
-    fun getBlockCountInInventory(): Int {
+    fun NonNullContext.getBlockCountInInventory(): Int {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
             .sumOf { item -> item.count }
@@ -486,8 +469,7 @@ object InvHelper {
     /**
      * 获取数量最少的投掷物堆。
      */
-    context(nn: NonNullContext)
-    fun getWorstProjectile(): ItemStack? {
+    fun NonNullContext.getWorstProjectile(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && (item.item === Items.EGG || item.item === Items.SNOWBALL) }
             .minByOrNull { item -> item.count }
@@ -496,8 +478,7 @@ object InvHelper {
     /**
      * 获取数量最少的可用箭矢堆。
      */
-    context(nn: NonNullContext)
-    fun getWorstArrow(): ItemStack? {
+    fun NonNullContext.getWorstArrow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is ArrowItem && isItemValid(item) }
             .minByOrNull { item -> item.count }
@@ -506,8 +487,7 @@ object InvHelper {
     /**
      * 获取数量最少的可用方块堆。
      */
-    context(nn: NonNullContext)
-    fun getWorstBlock(): ItemStack? {
+    fun NonNullContext.getWorstBlock(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
             .minByOrNull { item -> item.count }
@@ -516,8 +496,7 @@ object InvHelper {
     /**
      * 获取数量最多的可用方块堆。
      */
-    context(nn: NonNullContext)
-    fun getBestBlock(): ItemStack? {
+    fun NonNullContext.getBestBlock(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BlockItem && isValidStack(item) && isItemValid(item) }
             .maxByOrNull { item -> item.count }
@@ -526,8 +505,7 @@ object InvHelper {
     /**
      * 获取背包内镐的最高工具评分。
      */
-    context(nn: NonNullContext)
-    fun getBestPickaxeScore(): Float {
+    fun NonNullContext.getBestPickaxeScore(): Float {
         return getAllItems()
             .filter { item -> isPickaxe(item) && isItemValid(item) }
             .map { item -> getToolScore(item) }
@@ -537,8 +515,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的镐。
      */
-    context(nn: NonNullContext)
-    fun getBestPickaxe(): ItemStack? {
+    fun NonNullContext.getBestPickaxe(): ItemStack? {
         return getAllItems()
             .filter { item -> isPickaxe(item) && isItemValid(item) }
             .maxByOrNull { item -> (getToolScore(item) * 100.0F).toInt() }
@@ -547,8 +524,7 @@ object InvHelper {
     /**
      * 获取背包内普通斧的最高工具评分。
      */
-    context(nn: NonNullContext)
-    fun getBestAxeScore(): Float {
+    fun NonNullContext.getBestAxeScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && isAxe(item) && !isSharpnessAxe(item) && isItemValid(item) }
             .map { item -> getToolScore(item) }
@@ -558,8 +534,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的普通斧。
      */
-    context(nn: NonNullContext)
-    fun getBestAxe(): ItemStack? {
+    fun NonNullContext.getBestAxe(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && isAxe(item) && !isSharpnessAxe(item) && isItemValid(item) }
             .maxByOrNull { item -> (getToolScore(item) * 100.0F).toInt() }
@@ -568,8 +543,7 @@ object InvHelper {
     /**
      * 获取背包内伤害评分最高的锋利斧。
      */
-    context(nn: NonNullContext)
-    fun getBestShapeAxe(): ItemStack? {
+    fun NonNullContext.getBestShapeAxe(): ItemStack? {
         return getAllItems()
             .filter { item ->
                 !item.isEmpty && isAxe(item) && isSharpnessAxe(item) && isItemValid(item) && !isGodAxe(
@@ -582,8 +556,7 @@ object InvHelper {
     /**
      * 获取背包内锹的最高工具评分。
      */
-    context(nn: NonNullContext)
-    fun getBestShovelScore(): Float {
+    fun NonNullContext.getBestShovelScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && isShovel(item) && isItemValid(item) }
             .map { item -> getToolScore(item) }
@@ -593,8 +566,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的锹。
      */
-    context(nn: NonNullContext)
-    fun getBestShovel(): ItemStack? {
+    fun NonNullContext.getBestShovel(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && isShovel(item) && isItemValid(item) }
             .maxByOrNull { item -> (getToolScore(item) * 100.0F).toInt() }
@@ -603,8 +575,7 @@ object InvHelper {
     /**
      * 获取背包内弩的最高附魔评分。
      */
-    context(nn: NonNullContext)
-    fun getBestCrossbowScore(): Float {
+    fun NonNullContext.getBestCrossbowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is CrossbowItem && isItemValid(item) }
             .map { item -> getCrossbowScore(item) }
@@ -614,8 +585,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的弩。
      */
-    context(nn: NonNullContext)
-    fun getBestCrossbow(): ItemStack? {
+    fun NonNullContext.getBestCrossbow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is CrossbowItem && isItemValid(item) }
             .maxByOrNull { item -> (getCrossbowScore(item) * 100.0F).toInt() }
@@ -624,8 +594,7 @@ object InvHelper {
     /**
      * 获取背包内冲击弓的最高评分。
      */
-    context(nn: NonNullContext)
-    fun getBestPunchBowScore(): Float {
+    fun NonNullContext.getBestPunchBowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
             .map { item -> getPunchBowScore(item) }
@@ -635,8 +604,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的冲击弓。
      */
-    context(nn: NonNullContext)
-    fun getBestPunchBow(): ItemStack? {
+    fun NonNullContext.getBestPunchBow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
             .maxByOrNull { item -> (getPunchBowScore(item) * 100.0F).toInt() }
@@ -645,8 +613,7 @@ object InvHelper {
     /**
      * 获取背包内力量弓的最高评分。
      */
-    context(nn: NonNullContext)
-    fun getBestPowerBowScore(): Float {
+    fun NonNullContext.getBestPowerBowScore(): Float {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
             .map { item -> getPowerBowScore(item) }
@@ -656,8 +623,7 @@ object InvHelper {
     /**
      * 获取背包内评分最高的力量弓。
      */
-    context(nn: NonNullContext)
-    fun getBestPowerBow(): ItemStack? {
+    fun NonNullContext.getBestPowerBow(): ItemStack? {
         return getAllItems()
             .filter { item -> !item.isEmpty && item.item is BowItem && isItemValid(item) }
             .maxByOrNull { item -> (getPowerBowScore(item) * 100.0F).toInt() }
@@ -680,16 +646,14 @@ object InvHelper {
     /**
      * 判断背包中是否含有指定物品。
      */
-    context(nn: NonNullContext)
-    fun hasItem(item: Item): Boolean {
+    fun NonNullContext.hasItem(item: Item): Boolean {
         return getAllItems().any { stack -> !stack.isEmpty && stack.item === item }
     }
 
     /**
      * 统计背包中指定物品的总数。
      */
-    context(nn: NonNullContext)
-    fun getItemCount(item: Item): Int {
+    fun NonNullContext.getItemCount(item: Item): Int {
         return getAllItems()
             .filter { stack -> !stack.isEmpty && stack.item === item }
             .sumOf { stack -> stack.count }

@@ -2,20 +2,19 @@ package com.github.epsilon.modules.impl.movement.elytrafly
 
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
@@ -57,7 +56,7 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             if (player.onGround()) {
                 hasTouchedGround = true
             }
-            val elytra = InvUtils.find(Items.ELYTRA)
+            val elytra = find(Items.ELYTRA)
             hasElytra = canGlide(elytra.found())
 
             // 仅释放本模式设置的临时变速。
@@ -205,11 +204,10 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
     /**
      * 按真实移动按键与插值朝向计算水平速度。
      */
-    context(nn: NonNullContext)
-    private fun directionSpeed(speed: Double): DoubleArray {
+    private fun NonNullContext.directionSpeed(speed: Double): DoubleArray {
         var forward = (if (mc.options.keyUp.isDown) 1.0f else 0.0f) - (if (mc.options.keyDown.isDown) 1.0f else 0.0f)
         var side = (if (mc.options.keyLeft.isDown) 1.0f else 0.0f) - (if (mc.options.keyRight.isDown) 1.0f else 0.0f)
-        var yaw = nn.player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
+        var yaw = player.getYRot(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
 
         if (forward != 0.0f) {
             if (side > 0.0f) {

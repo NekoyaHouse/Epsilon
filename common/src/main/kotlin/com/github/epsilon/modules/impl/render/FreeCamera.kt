@@ -4,7 +4,7 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -12,8 +12,9 @@ import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.player.ChatUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.mojang.blaze3d.platform.InputConstants
+import kotlin.math.sqrt
 import net.minecraft.client.CameraType
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket
@@ -24,7 +25,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
-import kotlin.math.sqrt
 
 object FreeCamera : Module("Free Camera", Category.RENDER) {
 
@@ -147,11 +147,11 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val hit = mc.hitResult
                 if (hit is EntityHitResult) {
-                    rotation = RotationUtils.calculate(hit.entity.blockPosition())
+                    rotation = calculate(hit.entity.blockPosition())
                 } else if (hit is BlockHitResult) {
                     val crossHairPos: BlockPos = hit.blockPos
                     if (!level.getBlockState(crossHairPos).isAir) {
-                        rotation = RotationUtils.calculate(hit.location)
+                        rotation = calculate(hit.location)
                     }
                 }
 

@@ -3,12 +3,15 @@ package com.github.epsilon.utils.render.esp
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
+import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
@@ -16,9 +19,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
-import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 object DeobfESP {
 
@@ -65,8 +65,7 @@ object DeobfESP {
     /**
      * 仅保留仍处于上升阶段的命中特效。
      */
-    context(nn: NonNullContext)
-    fun retainRisingEffects() {
+    fun NonNullContext.retainRisingEffects() {
         if (effects.isEmpty()) return
         val now = System.currentTimeMillis()
         val iterator = effects.values.iterator()
@@ -75,7 +74,7 @@ object DeobfESP {
             val effect = iterator.next()
             val target = effect.target
 
-            if (target.level() !== nn.level) {
+            if (target.level() !== level) {
                 iterator.remove()
             } else if (effect.killedAtMs < 0L) {
                 if (target.isDeadOrDying) {
@@ -96,8 +95,7 @@ object DeobfESP {
      * @param wobble    摆动幅度
      * @param flyHeight 特效上升高度
      */
-    context(nn: NonNullContext)
-    fun render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
+    fun NonNullContext.render(poseStack: PoseStack, size: Float, spins: Float, wobble: Float, flyHeight: Float) {
         if (effects.isEmpty()) return
 
         val now = System.currentTimeMillis()
@@ -109,7 +107,7 @@ object DeobfESP {
             val effect = iterator.next()
             val target = effect.target
 
-            if (target.level() !== nn.level) {
+            if (target.level() !== level) {
                 iterator.remove()
                 continue
             }

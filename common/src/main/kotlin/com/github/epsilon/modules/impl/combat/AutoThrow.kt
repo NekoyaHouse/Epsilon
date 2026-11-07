@@ -3,8 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -12,18 +11,19 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
+import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
@@ -109,11 +109,11 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
                     currentTarget = best
                     val target = currentTarget ?: return@safeEventHandler
 
-                    val rotation = RotationUtils.calculate(getAimVec(target), false)
+                    val rotation = calculate(getAimVec(target), false)
 
                     RotationManager.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
-                    val hit = RaytraceUtils.raytrace(rotation, maxRange) ?: return@safeEventHandler
+                    val hit = raytrace(rotation, maxRange) ?: return@safeEventHandler
                     if (hit.type != HitResult.Type.ENTITY) return@safeEventHandler
 
                     // 准备槽位与投掷状态
@@ -182,9 +182,8 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         return -1
     }
 
-    context(nn: NonNullContext)
-    private fun canWork(): Boolean {
-        if (nn.player.isUsingItem) {
+    private fun NonNullContext.canWork(): Boolean {
+        if (player.isUsingItem) {
             return false
         }
 
@@ -192,19 +191,18 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
             return false
         }
 
-        if (Scaffold.isEnabled && !nn.player.onGround()) {
+        if (Scaffold.isEnabled && !player.onGround()) {
             return false
         }
 
         val killAuraTarget = KillAura.target
-        return !(KillAura.isEnabled && killAuraTarget != null && RotationUtils.getEyeDistanceToEntity(killAuraTarget) > KillAura.aimRange) && (mc.options.keyUse.isDown || !mc.options.keyAttack.isDown)
+        return !(KillAura.isEnabled && killAuraTarget != null && getEyeDistanceToEntity(killAuraTarget) > KillAura.aimRange) && (mc.options.keyUse.isDown || !mc.options.keyAttack.isDown)
     }
 
     // 通过离散模拟计算可行的命中方向，移植自现有实现并适配 Vec3
-    context(nn: NonNullContext)
-    private fun getAimVec(livingEntity: LivingEntity): Vec3 {
-        val shooterPosNow = nn.player.eyePosition
-        val shooterVelNow = nn.player.deltaMovement
+    private fun NonNullContext.getAimVec(livingEntity: LivingEntity): Vec3 {
+        val shooterPosNow = player.eyePosition
+        val shooterVelNow = player.deltaMovement
 
         val targetPosNow = livingEntity.boundingBox.center
         val targetVelNow = livingEntity.deltaMovement
@@ -220,7 +218,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         val g = 0.03  // 重力
         val k = 0.99  // 阻力
 
-        val hasInHand = isThrowable(nn.player.mainHandItem) || isThrowable(nn.player.offhandItem)
+        val hasInHand = isThrowable(player.mainHandItem) || isThrowable(player.offhandItem)
         val fireDelay = if (hasInHand) 2 else 3
 
         // 只在 XZ 上外推到开火时刻；Y 维持当前高度

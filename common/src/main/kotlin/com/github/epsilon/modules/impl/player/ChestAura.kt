@@ -3,18 +3,19 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.github.epsilon.utils.timer.TimerUtils
+import kotlin.math.ceil
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -27,7 +28,6 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.ceil
 
 object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
@@ -91,7 +91,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
             val target = findTarget() ?: return@safeEventHandler
 
-            val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
+            val targetRotation = calculate(player.eyePosition, target.hit.location)
             RotationManager.setRotations(
                 targetRotation,
                 turnSpeed,
@@ -137,34 +137,31 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun shouldPause(): Boolean {
+    private fun NonNullContext.shouldPause(): Boolean {
         if (Scaffold.isEnabled) return true
         if (KillAura.isEnabled && KillAura.target != null) return true
-        if (pauseOnEat && PlayerUtils.isEating()) return true
+        if (pauseOnEat && isEating()) return true
         if (requireStealer && !Stealer.isEnabled) return true
         return disableInHypixelLobby && isInLobby()
     }
 
-    context(nn: NonNullContext)
-    private fun hasNearbyPlayer(): Boolean {
+    private fun NonNullContext.hasNearbyPlayer(): Boolean {
         val distance = cancelRange
         if (distance <= 0.0) return false
 
         val distanceSq = distance * distance
-        for (other in nn.level.players()) {
-            if (other !== nn.player && other.distanceToSqr(nn.player) <= distanceSq) {
+        for (other in level.players()) {
+            if (other !== player && other.distanceToSqr(player) <= distanceSq) {
                 return true
             }
         }
         return false
     }
 
-    context(nn: NonNullContext)
-    private fun findTarget(): Target? {
+    private fun NonNullContext.findTarget(): Target? {
         val radius = ceil(range).toInt()
-        val origin = nn.player.blockPosition()
-        val eyes = nn.player.eyePosition
+        val origin = player.blockPosition()
+        val eyes = player.eyePosition
 
         var best: Target? = null
         var bestDistance = Double.MAX_VALUE
@@ -174,7 +171,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             origin.offset(radius, radius, radius)
         )) {
             val immutable = pos.immutable()
-            if (!isSelectedContainer(nn.level.getBlockEntity(immutable))) continue
+            if (!isSelectedContainer(level.getBlockEntity(immutable))) continue
             if (isBlockedChest(immutable)) continue
             if (wasAlreadyOpened(immutable)) continue
 
@@ -189,19 +186,18 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         return best
     }
 
-    context(nn: NonNullContext)
-    private fun createTarget(pos: BlockPos, eyes: Vec3): Target? {
+    private fun NonNullContext.createTarget(pos: BlockPos, eyes: Vec3): Target? {
         val distanceSq = eyes.distanceToSqr(Vec3.atCenterOf(pos))
         val maxRange = range
         if (distanceSq > maxRange * maxRange) return null
 
-        val visibleHit = nn.level.clip(
+        val visibleHit = level.clip(
             ClipContext(
                 eyes,
                 Vec3.atCenterOf(pos),
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                nn.player,
+                player,
             )
         )
         if (visibleHit.type == HitResult.Type.BLOCK && visibleHit.blockPos == pos) {
@@ -211,38 +207,36 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val wallRange = throughWallRange
         if (distanceSq > wallRange * wallRange) return null
 
-        val rotation = RotationUtils.calculate(eyes, Vec3.atCenterOf(pos))
+        val rotation = calculate(eyes, Vec3.atCenterOf(pos))
         val throughWallHit = raycastTarget(rotation, pos, true) ?: return null
         return Target(pos, throughWallHit, true)
     }
 
-    context(nn: NonNullContext)
-    private fun hitsTarget(rotation: Rotation, target: Target): Boolean {
+    private fun NonNullContext.hitsTarget(rotation: Rotation, target: Target): Boolean {
         val hit = raycastTarget(rotation, target.pos, target.throughWalls)
         return hit != null && hit.blockPos == target.pos
     }
 
-    context(nn: NonNullContext)
-    private fun raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
-        val start = nn.player.getEyePosition(1.0F)
+    private fun NonNullContext.raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
+        val start = player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))
 
         if (!throughWalls) {
-            val hit = nn.level.clip(
+            val hit = level.clip(
                 ClipContext(
                     start,
                     end,
                     ClipContext.Block.OUTLINE,
                     ClipContext.Fluid.NONE,
-                    nn.player,
+                    player,
                 )
             )
             return if (hit.type == HitResult.Type.BLOCK) hit else null
         }
 
-        val state: BlockState = nn.level.getBlockState(pos)
-        val shape = state.getShape(nn.level, pos)
+        val state: BlockState = level.getBlockState(pos)
+        val shape = state.getShape(level, pos)
         return if (shape.isEmpty) null else shape.clip(start, end, pos)
     }
 
@@ -254,11 +248,10 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         return blockEntity is BrewingStandBlockEntity && brewingStands
     }
 
-    context(nn: NonNullContext)
-    private fun isBlockedChest(pos: BlockPos): Boolean {
+    private fun NonNullContext.isBlockedChest(pos: BlockPos): Boolean {
         val above = pos.above()
-        return nn.level.getBlockEntity(pos) is ChestBlockEntity && nn.level.getBlockState(above)
-            .isRedstoneConductor(nn.level, above)
+        return level.getBlockEntity(pos) is ChestBlockEntity && level.getBlockState(above)
+            .isRedstoneConductor(level, above)
     }
 
     private fun wasAlreadyOpened(pos: BlockPos): Boolean {
@@ -269,9 +262,8 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun markContainerOpened(pos: BlockPos) {
-        if (isSelectedContainer(nn.level.getBlockEntity(pos))) {
+    private fun NonNullContext.markContainerOpened(pos: BlockPos) {
+        if (isSelectedContainer(level.getBlockEntity(pos))) {
             clickedContainers.add(pos.immutable())
         }
     }
@@ -292,14 +284,13 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         openingStartedAt = 0L
     }
 
-    context(nn: NonNullContext)
-    private fun isInLobby(): Boolean {
-        for (entity in nn.level.entitiesForRendering()) {
+    private fun NonNullContext.isInLobby(): Boolean {
+        for (entity in level.entitiesForRendering()) {
             if (entity.name.string.contains("\u00A7e\u00A7lCLICK TO PLAY")) {
                 return true
             }
         }
-        return nn.player.inventory.getItem(8).`is`(Items.NETHER_STAR) && nn.player.inventory.getItem(0)
+        return player.inventory.getItem(8).`is`(Items.NETHER_STAR) && player.inventory.getItem(0)
             .`is`(Items.COMPASS)
     }
 

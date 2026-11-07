@@ -3,10 +3,7 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -15,10 +12,10 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
 import com.google.gson.JsonObject
+import kotlin.math.*
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import kotlin.math.*
 
 object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
@@ -139,8 +136,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         saveTicks = 0
     }
 
-    context(nn: NonNullContext)
-    private fun initializeInWorld() {
+    private fun NonNullContext.initializeInWorld() {
         initializedInWorld = true
 
         if (!routeLoaded || dimensionId != currentDimension()) {
@@ -244,10 +240,9 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         if (notify) sendMessage("已重置记录")
     }
 
-    context(nn: NonNullContext)
-    private fun resetRouteToPlayer(dirty: Boolean) {
-        centerX = nn.player.x
-        centerZ = nn.player.z
+    private fun NonNullContext.resetRouteToPlayer(dirty: Boolean) {
+        centerX = player.x
+        centerZ = player.z
         dimensionId = currentDimension()
         spiralAngle = normalizeAngle(angleStep())
         spiralRadius = radiusStep()

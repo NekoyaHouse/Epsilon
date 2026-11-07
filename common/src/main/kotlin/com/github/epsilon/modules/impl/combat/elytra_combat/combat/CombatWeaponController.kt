@@ -1,14 +1,17 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.invSwap
+import com.github.epsilon.utils.player.InvUtils.invSwapBack
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
 import com.github.epsilon.utils.player.SwingMode
+import java.util.function.Predicate
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -17,7 +20,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import java.util.function.Predicate
 
 /**
  * ElytraCombat 独立武器控制器，不依赖 AutoWeapon、MaceAura 或 SpearKill。
@@ -71,14 +73,12 @@ object CombatWeaponController {
         return runSafeOrFalse { attackMaceImpl(target, antiShield, swingHand, reachBuffer) }
     }
 
-    context(nn: NonNullContext)
-    private fun attackMaceImpl(
+    private fun NonNullContext.attackMaceImpl(
         target: LivingEntity?,
         antiShield: Boolean,
         swingHand: Boolean,
         reachBuffer: Double,
     ): Boolean {
-        val player = nn.player
         if (target == null || !target.isAlive) {
             return false
         }
@@ -91,7 +91,6 @@ object CombatWeaponController {
                 target.isBlocking &&
                 target.isUsingItem
         // 对方举盾时优先切斧破盾，否则切重锤；Selection 负责 finally 中恢复原槽位。
-        val gameMode = nn.gameMode
         val selection = selectMainHand(
             if (shieldSwap) {
                 Predicate { stack -> InvHelper.isAxe(stack) }
@@ -113,10 +112,7 @@ object CombatWeaponController {
         return runSafeOrFalse { ensureSpearUseImpl() }
     }
 
-    context(nn: NonNullContext)
-    private fun ensureSpearUseImpl(): Boolean {
-        val player = nn.player
-        val gameMode = nn.gameMode
+    private fun NonNullContext.ensureSpearUseImpl(): Boolean {
         if (isUsingSpear(player)) {
             if (!isSpearWindowExpired(player)) {
                 holdSpearKey()
@@ -138,7 +134,7 @@ object CombatWeaponController {
             stopSpearUse()
         }
 
-        val spear = InvUtils.find(Predicate { stack -> isSpearItem(stack) })
+        val spear = find(Predicate { stack -> isSpearItem(stack) })
         if (!spear.found()) {
             return false
         }
@@ -149,11 +145,11 @@ object CombatWeaponController {
             // 热栏长矛直接切换选中槽，记录原槽位以便恢复。
             if (spear.slot != player.inventory.selectedSlot) {
                 spearSavedHotbarSlot = player.inventory.selectedSlot
-                InvUtils.swap(spear.slot, false)
+                swap(spear.slot, false)
             }
         } else {
             // 背包内长矛需要与当前选中槽做 inventory swap。
-            InvUtils.invSwap(spear.slot)
+            invSwap(spear.slot)
             spearInventorySwapped = true
         }
         gameMode.useItem(player, spear.getHand())
@@ -230,10 +226,10 @@ object CombatWeaponController {
                 gameMode.releaseUsingItem(player)
             }
             if (spearInventorySwapped) {
-                InvUtils.invSwapBack()
+                invSwapBack()
             }
             if (spearSavedHotbarSlot >= 0) {
-                InvUtils.swap(spearSavedHotbarSlot, false)
+                swap(spearSavedHotbarSlot, false)
             }
         }
         spearInventorySwapped = false
@@ -267,28 +263,26 @@ object CombatWeaponController {
             return false
         }
         return runSafeOrFalse {
-            InvUtils.findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
+            findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
         }
     }
 
-    context(nn: NonNullContext)
-    private fun selectMainHand(predicate: Predicate<ItemStack>): Selection? {
-        val player = nn.player
+    private fun NonNullContext.selectMainHand(predicate: Predicate<ItemStack>): Selection? {
         if (predicate.test(player.mainHandItem)) {
             return Selection(false, false, null)
         }
 
-        val hotbar = InvUtils.find(predicate, 0, 8).slot
+        val hotbar = find(predicate, 0, 8).slot
         if (hotbar != -1) {
             // 热栏切换使用 silent swap，恢复动作延迟到 Selection.restore。
-            InvUtils.swap(hotbar, true)
-            return Selection(true, true, Runnable { InvUtils.swapBack() })
+            swap(hotbar, true)
+            return Selection(true, true, Runnable { swapBack() })
         }
 
-        val inventory = InvUtils.find(predicate, 9, 35).slot
+        val inventory = find(predicate, 9, 35).slot
         if (inventory != -1) {
-            InvUtils.invSwap(inventory)
-            return Selection(true, false, Runnable { InvUtils.invSwapBack() })
+            invSwap(inventory)
+            return Selection(true, false, Runnable { invSwapBack() })
         }
         return null
     }

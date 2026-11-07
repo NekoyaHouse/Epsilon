@@ -5,17 +5,15 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
 import com.github.epsilon.utils.timer.TimerUtils
-import net.minecraft.world.item.Items
 import kotlin.random.Random
+import net.minecraft.world.item.Items
 
 class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
@@ -47,8 +45,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         fireworkTimer.setMs(917813L)
     }
 
-    context(nn: NonNullContext)
-    private fun initializeInWorld() {
+    private fun NonNullContext.initializeInWorld() {
         val targetHeight = getTakeoffTargetHeight()
         if (shouldStartTakeoff(targetHeight)) {
             startTakeoff()
@@ -58,7 +55,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             completedTakeoffTarget = targetHeight
         }
 
-        if (nn.player.y - 40.0 < elytraFly.pitch40lowerBounds) {
+        if (player.y - 40.0 < elytraFly.pitch40lowerBounds) {
             fail(EpsilonTranslations.ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS)
         }
     }
@@ -138,7 +135,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 return@runSafe
             }
 
-            val elytra = InvUtils.find(Items.ELYTRA)
+            val elytra = find(Items.ELYTRA)
             if (!canGlide(elytra.found())) {
                 fail(EpsilonTranslations.ElytraFly.PITCH40_NO_USABLE_ELYTRA)
                 return@runSafe
@@ -169,7 +166,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         runSafe {
             if (player.onGround() || player.isInWater) return@runSafe
 
-            val elytra = InvUtils.find(Items.ELYTRA)
+            val elytra = find(Items.ELYTRA)
             if (!canGlide(elytra.found())) return@runSafe
 
             if (elytraFly.armored) {

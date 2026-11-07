@@ -2,12 +2,14 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
@@ -32,25 +34,25 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
 
         onDisable {
             if (shouldSwapBack) {
-                runSafe { InvUtils.swapBack() }
+                runSafe { swapBack() }
             }
             shouldSwapBack = false
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
-            val result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE)
+            val result = findInHotbar(Items.EXPERIENCE_BOTTLE)
             if (!result.found()) return@safeEventHandler
 
             RotationManager.setRotations(Rotation(player.yRot, 90f), 180.0, Priority.High)
 
-            InvUtils.swap(result.slot, true)
+            swap(result.slot, true)
 
             val hand = result.getHand()
             gameMode.useItem(player, hand)
             SwingMode.of(swingHand).interactSwing(hand)
 
             if (switchMode.`is`(SwitchMode.Silent)) {
-                InvUtils.swapBack()
+                swapBack()
             } else {
                 shouldSwapBack = true
             }

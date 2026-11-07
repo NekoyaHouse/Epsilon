@@ -4,9 +4,11 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import kotlin.math.abs
+import kotlin.math.sign
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.BlockItem
@@ -15,8 +17,6 @@ import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
-import kotlin.math.sign
 
 object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
 
@@ -96,31 +96,28 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun canSafeWalk(movementX: Double, movementZ: Double): Boolean {
+    private fun NonNullContext.canSafeWalk(movementX: Double, movementZ: Double): Boolean {
         if (Scaffold.isEnabled) return false
         if (directionCheck && mc.options.keyUp.isDown) return false
-        if (pitchCheck && nn.player.xRot < 69.0f) return false
+        if (pitchCheck && player.xRot < 69.0f) return false
         if (blocksOnly && !isHoldingBlock()) return false
         if (requirePress && !mc.options.keyUse.isDown) return false
 
-        return nn.player.onGround() && canMove(movementX, movementZ, -1.0) ||
+        return player.onGround() && canMove(movementX, movementZ, -1.0) ||
                 air && canMove(movementX, movementZ, -2.0)
     }
 
-    context(nn: NonNullContext)
-    private fun canMove(movementX: Double, movementZ: Double, movementY: Double): Boolean {
-        return nn.level.noCollision(
-            nn.player,
-            nn.player.boundingBox.move(movementX, movementY, movementZ)
+    private fun NonNullContext.canMove(movementX: Double, movementZ: Double, movementY: Double): Boolean {
+        return level.noCollision(
+            player,
+            player.boundingBox.move(movementX, movementY, movementZ)
         )
     }
 
-    context(nn: NonNullContext)
-    private fun canFallAtLeast(movementX: Double, movementZ: Double, minHeight: Double): Boolean {
-        val boundingBox = nn.player.boundingBox
-        return nn.level.noCollision(
-            nn.player,
+    private fun NonNullContext.canFallAtLeast(movementX: Double, movementZ: Double, minHeight: Double): Boolean {
+        val boundingBox = player.boundingBox
+        return level.noCollision(
+            player,
             AABB(
                 boundingBox.minX + 1.0E-7 + movementX,
                 boundingBox.minY - minHeight - 1.0E-7,
@@ -136,15 +133,14 @@ object SafeWalk : Module("Safe Walk", Category.MOVEMENT) {
         return mc.options.keyUp.isDown != mc.options.keyDown.isDown || mc.options.keyLeft.isDown != mc.options.keyRight.isDown
     }
 
-    context(nn: NonNullContext)
-    private fun isHoldingBlock(): Boolean {
-        val stack = nn.player.mainHandItem
+    private fun NonNullContext.isHoldingBlock(): Boolean {
+        val stack = player.mainHandItem
         if (stack.isEmpty) return false
         val blockItem = stack.item as? BlockItem ?: return false
 
         val block = blockItem.block
         val state: BlockState = block.defaultBlockState()
-        if (block is EntityBlock || state.getMenuProvider(nn.level, BlockPos.ZERO) != null) return false
+        if (block is EntityBlock || state.getMenuProvider(level, BlockPos.ZERO) != null) return false
         if (!state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) return false
 
         return block !is FallingBlock &&

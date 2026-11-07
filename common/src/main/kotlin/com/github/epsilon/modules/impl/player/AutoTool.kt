@@ -4,8 +4,7 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
@@ -65,15 +64,14 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    fun getBestTool(pos: BlockPos): Int {
-        val blockState = nn.level.getBlockState(pos)
+    fun NonNullContext.getBestTool(pos: BlockPos): Int {
+        val blockState = level.getBlockState(pos)
         val block = blockState.block
         var slot = 0
         var dmg = 1.0F
 
         for (index in 0 until 9) {
-            val itemStack = nn.player.inventory.getItem(index)
+            val itemStack = player.inventory.getItem(index)
             if (
                 !InvHelper.isGodItem(itemStack) &&
                 !itemStack.isEmpty &&

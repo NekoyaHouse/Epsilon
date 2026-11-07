@@ -2,10 +2,10 @@ package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.SendPositionEvent
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.MoveUtils
+import com.github.epsilon.utils.player.MoveUtils.forward
 import net.minecraft.world.phys.Vec3
 
 object Flight : Module("Flight", Category.MOVEMENT) {
@@ -30,7 +30,7 @@ object Flight : Module("Flight", Category.MOVEMENT) {
                 y = -verticalSpeed
             }
 
-            val strafe = MoveUtils.forward(horizontalSpeed)
+            val strafe = forward(horizontalSpeed)
             player.deltaMovement = Vec3(strafe[0], y, strafe[1])
         }
     }

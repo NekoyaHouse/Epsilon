@@ -5,16 +5,19 @@ import com.github.epsilon.events.impl.PacketMineEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.swap
 import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.getDirection
 import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
+import java.awt.Color
+import java.util.*
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -29,10 +32,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
-import java.awt.Color
-import java.util.*
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
@@ -143,10 +142,10 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         onDisable {
             runSafe {
                 if (hasSwitch) {
-                    InvUtils.swap(oldSlot, false)
+                    swap(oldSlot, false)
                 }
                 if (secondHasSwitch) {
-                    InvUtils.swap(oldSlot, false)
+                    swap(oldSlot, false)
                 }
             }
             hasSwitch = false
@@ -231,8 +230,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun onRender(event: Render3DEvent) {
+    private fun NonNullContext.onRender(event: Render3DEvent) {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
         val now = System.currentTimeMillis()
@@ -248,7 +246,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
         if (timer.passedMillise(switchTime.toLong()) && hasSwitch && switchMode != SwitchMode.None) {
             if (switchMode == SwitchMode.Delay) {
-                InvUtils.swap(oldSlot, false)
+                swap(oldSlot, false)
             } else if (switchMode == SwitchMode.Silent) {
                 this.mc.connection?.send(ServerboundSetCarriedItemPacket(oldSlot))
             }
@@ -303,7 +301,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             if (!hasSwitch) oldSlot = player.inventory.selectedSlot
             if (switchMode != SwitchMode.None && bestSlot != -1) {
                 if (switchMode == SwitchMode.Delay) {
-                    InvUtils.swap(bestSlot, false)
+                    swap(bestSlot, false)
                 } else if (switchMode == SwitchMode.Silent) {
                     this.mc.connection?.send(ServerboundSetCarriedItemPacket(bestSlot))
                 }
@@ -367,12 +365,11 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun sendStart(pos: BlockPos) {
+    private fun NonNullContext.sendStart(pos: BlockPos) {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
         val connection = this.mc.connection ?: return
-        val direction = RotationUtils.getDirection(pos)
+        val direction = getDirection(pos)
         connection.send(
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction,
@@ -414,8 +411,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun sendStop() {
+    private fun NonNullContext.sendStop() {
         val player = this.mc.player ?: return
         val level = this.mc.level ?: return
         if (usingPause && checkPause(onlyMain)) {
@@ -426,7 +422,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
             if (!hasSwitch) oldSlot = player.inventory.selectedSlot
             if (switchMode != SwitchMode.None && bestSlot != -1) {
                 if (switchMode == SwitchMode.Delay) {
-                    InvUtils.swap(bestSlot, false)
+                    swap(bestSlot, false)
                 }
                 if (switchMode == SwitchMode.Silent) {
                     this.mc.connection?.send(ServerboundSetCarriedItemPacket(bestSlot))
@@ -449,7 +445,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         if (target == null) return
         this.mc.connection?.send(
             ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, target, RotationUtils.getDirection(target),
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, target, getDirection(target),
                 level.blockStatePredictionHandler.startPredicting().currentSequence(),
             )
         )
@@ -459,8 +455,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         PacketMineEvent.BreakAttempt(target).post()
     }
 
-    context(nn: NonNullContext)
-    private fun sendStopSecond() {
+    private fun NonNullContext.sendStopSecond() {
         val player = this.mc.player ?: return
         val second = secondPos
         if (bypassGround && !player.isFallFlying && second != null && !isAir(second) && !player.onGround()) {

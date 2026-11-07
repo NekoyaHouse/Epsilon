@@ -5,7 +5,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -13,16 +13,21 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.invSwap
+import com.github.epsilon.utils.player.InvUtils.invSwapBack
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.esp.CaptureMarkESP
 import com.github.epsilon.utils.render.esp.CircleESP
 import com.github.epsilon.utils.render.esp.FireflyESP
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils
+import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
+import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.utils.rotation.RotationUtils.getRotationsToEntity
 import com.mojang.blaze3d.vertex.PoseStack
+import java.awt.Color
 import net.minecraft.client.KeyMapping
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.tags.ItemTags
@@ -34,7 +39,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
 
 /**
  * 长矛自动蓄力与瞄准，kinetic 命中后延迟一 tick 尝试重锤补刀。
@@ -265,7 +269,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 return@safeEventHandler
             }
 
-            if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= SPEAR_MIN_TRACK_DISTANCE) {
+            if (getEyeDistanceToEntity(currentTarget) <= SPEAR_MIN_TRACK_DISTANCE) {
                 aimRotations = null
                 return@safeEventHandler
             }
@@ -277,8 +281,8 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
 
             forceForward = move
 
-            val rotations = RotationUtils.calculate(currentTarget, true, range)
-            if (RaytraceUtils.raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
+            val rotations = calculate(currentTarget, true, range)
+            if (raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
                 aimRotations = null
                 return@safeEventHandler
             }
@@ -287,7 +291,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 rotations,
                 rotationSpeed.toDouble(),
                 { rotation ->
-                    val hit = RaytraceUtils.raytrace(rotation, range)
+                    val hit = raytrace(rotation, range)
                     hit is EntityHitResult && hit.entity === target
                 },
                 rotationPriority
@@ -459,9 +463,8 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun attackEntity(entity: Entity) {
-        nn.gameMode.attack(nn.player, entity)
+    private fun NonNullContext.attackEntity(entity: Entity) {
+        gameMode.attack(player, entity)
         SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
     }
 
@@ -470,22 +473,21 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
      *
      * Normal 保留切换结果，Silent 只静默切换快捷栏，InvSwitch 通过容器交换从背包取物。
      */
-    context(nn: NonNullContext)
-    private fun attackWithMace(entity: Entity) {
-        if (!mace || nn.player.fallDistance <= MACE_MIN_FALL_DISTANCE || !entity.isAlive) return
+    private fun NonNullContext.attackWithMace(entity: Entity) {
+        if (!mace || player.fallDistance <= MACE_MIN_FALL_DISTANCE || !entity.isAlive) return
 
         val maceResult: FindItemResult = findMace()
         if (!maceResult.found()) return
 
-        val selectedSlot = nn.player.inventory.selectedSlot
+        val selectedSlot = player.inventory.selectedSlot
         if (maceResult.slot == selectedSlot) {
             attackEntity(entity)
             return
         }
 
         when (maceSwapMode) {
-            MaceSwapMode.Normal, MaceSwapMode.Silent -> nn.player.inventory.selectedSlot = maceResult.slot
-            MaceSwapMode.InvSwitch -> InvUtils.invSwap(maceResult.slot)
+            MaceSwapMode.Normal, MaceSwapMode.Silent -> player.inventory.selectedSlot = maceResult.slot
+            MaceSwapMode.InvSwitch -> invSwap(maceResult.slot)
         }
 
         attackEntity(entity)
@@ -494,38 +496,34 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             MaceSwapMode.Normal -> {
             }
 
-            MaceSwapMode.Silent -> nn.player.inventory.selectedSlot = selectedSlot
-            MaceSwapMode.InvSwitch -> InvUtils.invSwapBack()
+            MaceSwapMode.Silent -> player.inventory.selectedSlot = selectedSlot
+            MaceSwapMode.InvSwitch -> invSwapBack()
         }
     }
 
-    context(nn: NonNullContext)
-    private fun findMace(): FindItemResult {
+    private fun NonNullContext.findMace(): FindItemResult {
         // 攻击只结算主手，因此排除副手槽位 40；Silent 只能操作快捷栏，InvSwitch 才搜索整个主背包。
         if (maceSwapMode == MaceSwapMode.InvSwitch) {
-            return InvUtils.find({ stack -> stack.`is`(Items.MACE) }, 0, 35)
+            return find({ stack -> stack.`is`(Items.MACE) }, 0, 35)
         }
-        return InvUtils.find({ stack -> stack.`is`(Items.MACE) }, 0, 8)
+        return find({ stack -> stack.`is`(Items.MACE) }, 0, 8)
     }
 
-    context(nn: NonNullContext)
-    private fun isHoldingSpear(): Boolean {
-        return nn.player.mainHandItem.`is`(ItemTags.SPEARS)
+    private fun NonNullContext.isHoldingSpear(): Boolean {
+        return player.mainHandItem.`is`(ItemTags.SPEARS)
     }
 
-    context(nn: NonNullContext)
-    private fun isUsingSpear(): Boolean {
-        return nn.player.isUsingItem && nn.player.useItem.`is`(ItemTags.SPEARS)
+    private fun NonNullContext.isUsingSpear(): Boolean {
+        return player.isUsingItem && player.useItem.`is`(ItemTags.SPEARS)
     }
 
     /**
      * 沿眼部到目标方向投影双方速度差，单位米/秒。
      */
-    context(nn: NonNullContext)
-    private fun getRelativeSpeedTo(entity: Entity): Double {
-        val look = RotationUtils.getRotationsToEntity(entity)
+    private fun NonNullContext.getRelativeSpeedTo(entity: Entity): Double {
+        val look = getRotationsToEntity(entity)
         val direction = Vec3.directionFromRotation(look.pitch, look.yaw)
-        val relativeMotion = nn.player.knownSpeed.subtract(entity.knownSpeed).scale(20.0)
+        val relativeMotion = player.knownSpeed.subtract(entity.knownSpeed).scale(20.0)
         return maxOf(0.0, direction.dot(relativeMotion))
     }
 

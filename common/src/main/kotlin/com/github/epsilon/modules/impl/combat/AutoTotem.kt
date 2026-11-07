@@ -2,12 +2,13 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.ClickSlotUtils
-import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.player.ClickSlotUtils.click
+import com.github.epsilon.utils.player.ClickSlotUtils.swap
+import com.github.epsilon.utils.player.InvHelper.getItemCount
+import com.github.epsilon.utils.player.InvHelper.getItemSlot
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 
@@ -27,7 +28,7 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
                 return@safeEventHandler
             }
 
-            val slot = InvHelper.getItemSlot(Items.TOTEM_OF_UNDYING)
+            val slot = getItemSlot(Items.TOTEM_OF_UNDYING)
             if (slot == -1) {
                 return@safeEventHandler
             }
@@ -36,28 +37,27 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
         }
     }
 
-    override fun getInfo(): String? = runSafe { InvHelper.getItemCount(Items.TOTEM_OF_UNDYING).toString() }
+    override fun getInfo(): String? = runSafe { getItemCount(Items.TOTEM_OF_UNDYING).toString() }
 
-    context(nn: NonNullContext)
-    private fun shouldHoldTotem(): Boolean {
-        val totalHealth = nn.player.health + nn.player.absorptionAmount
+    private fun NonNullContext.shouldHoldTotem(): Boolean {
+        val totalHealth = player.health + player.absorptionAmount
 
         if (totalHealth <= health.toFloat()) {
             return true
         }
 
         // Keep an empty offhand safe by filling it with a totem.
-        if (nn.player.offhandItem.isEmpty) {
+        if (player.offhandItem.isEmpty) {
             return true
         }
 
         // Simple void safety check for modern overworld min Y.
-        if (nn.player.y < -64.0) {
+        if (player.y < -64.0) {
             return true
         }
 
         if (checkGapple) {
-            val mainHandItem: Item = nn.player.mainHandItem.item
+            val mainHandItem: Item = player.mainHandItem.item
             if (mainHandItem === Items.GOLDEN_APPLE || mainHandItem === Items.ENCHANTED_GOLDEN_APPLE) {
                 return true
             }
@@ -66,23 +66,22 @@ object AutoTotem : Module("Auto Totem", Category.COMBAT) {
         return false
     }
 
-    context(nn: NonNullContext)
-    private fun moveItemToOffhand(slot: Int) {
+    private fun NonNullContext.moveItemToOffhand(slot: Int) {
         var target = slot
         if (target < 9) {
             target += 36
         }
 
         if (!strict) {
-            ClickSlotUtils.swap(target, 40)
+            swap(target, 40)
             return
         }
 
-        ClickSlotUtils.click(target)
-        ClickSlotUtils.click(45)
+        click(target)
+        click(45)
 
-        if (!nn.player.inventoryMenu.carried.isEmpty) {
-            ClickSlotUtils.click(target)
+        if (!player.inventoryMenu.carried.isEmpty) {
+            click(target)
         }
     }
 

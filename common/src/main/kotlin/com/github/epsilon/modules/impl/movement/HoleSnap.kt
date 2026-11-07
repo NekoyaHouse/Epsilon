@@ -7,8 +7,7 @@ import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -18,16 +17,17 @@ import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.world.hole.Hole
 import com.github.epsilon.utils.world.hole.HoleType
-import com.github.epsilon.utils.world.hole.HoleUtils
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec3
+import com.github.epsilon.utils.world.hole.HoleUtils.getHole
+import com.github.epsilon.utils.world.hole.HoleUtils.isBlock
 import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 
 object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
@@ -211,28 +211,26 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
         )
     }
 
-    context(nn: NonNullContext)
-    private fun singleBlocked(): Boolean {
+    private fun NonNullContext.singleBlocked(): Boolean {
         if (!singleTarget) return false
         val hole = singleHole ?: return false
 
         for (pos in hole.positions) {
-            if (HoleUtils.isBlock(pos)) return true
+            if (isBlock(pos)) return true
         }
         return false
     }
 
-    context(nn: NonNullContext)
-    private fun findHole(): Hole? {
+    private fun NonNullContext.findHole(): Hole? {
         var closest: Hole? = null
-        val playerPos = nn.player.position()
-        val playerBlockPos = nn.player.blockPosition()
+        val playerPos = player.position()
+        val playerBlockPos = player.blockPosition()
 
         for (x in -range..range) {
             for (y in -downRange..0) {
                 for (z in -range..range) {
                     val pos = playerBlockPos.offset(x, y, z)
-                    val hole = HoleUtils.getHole(pos, singleHoles, doubleHoles, quadHoles, depth, true)
+                    val hole = getHole(pos, singleHoles, doubleHoles, quadHoles, depth, true)
 
                     if (hole.type == HoleType.NotHole) continue
                     if (y == 0 && inHole(hole)) return hole
@@ -247,21 +245,19 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
         return closest
     }
 
-    context(nn: NonNullContext)
-    private fun inHole(hole: Hole): Boolean {
-        val playerBlockPos = nn.player.blockPosition()
+    private fun NonNullContext.inHole(hole: Hole): Boolean {
+        val playerBlockPos = player.blockPosition()
         for (pos in hole.positions) {
             if (playerBlockPos == pos) return true
         }
         return false
     }
 
-    context(nn: NonNullContext)
-    private fun getAngle(pos: Vec3): Float {
-        val deltaX = pos.x - nn.player.x
-        val deltaZ = pos.z - nn.player.z
+    private fun NonNullContext.getAngle(pos: Vec3): Float {
+        val deltaX = pos.x - player.x
+        val deltaZ = pos.z - player.z
         val targetYaw = (atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f
-        return nn.player.yRot + Mth.wrapDegrees(targetYaw - nn.player.yRot)
+        return player.yRot + Mth.wrapDegrees(targetYaw - player.yRot)
     }
 
     private fun speedValue(): Double {

@@ -5,7 +5,7 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
@@ -36,11 +36,10 @@ object KeyFriend : Module("Key Friend", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleInput(key: Int, action: Int): Boolean {
-        if (nn.mc.gui.screen() != null || key != activateKey || action != InputConstants.PRESS) return false
+    private fun NonNullContext.handleInput(key: Int, action: Int): Boolean {
+        if (mc.gui.screen() != null || key != activateKey || action != InputConstants.PRESS) return false
 
-        val hitResult = nn.mc.hitResult
+        val hitResult = mc.hitResult
         if (hitResult !is EntityHitResult) return false
 
         val target = hitResult.entity

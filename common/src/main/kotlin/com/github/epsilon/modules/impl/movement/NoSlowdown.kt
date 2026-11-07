@@ -6,13 +6,14 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
+import java.util.*
+import java.util.concurrent.LinkedBlockingQueue
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -25,8 +26,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
-import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 
 object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
@@ -199,33 +198,29 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
         useDuration = 32
     }
 
-    context(nn: NonNullContext)
-    private fun cancel(event: SlowdownEvent) {
+    private fun NonNullContext.cancel(event: SlowdownEvent) {
         event.isSlowdown = false
-        if (!nn.player.horizontalCollision && nn.player.input.hasForwardImpulse()) nn.player.isSprinting = true
+        if (!player.horizontalCollision && player.input.hasForwardImpulse()) player.isSprinting = true
     }
 
-    context(nn: NonNullContext)
-    private fun grimBlink(event: SlowdownEvent) {
-        if (nn.player.isUsingItem && nn.player.useItemRemainingTicks < 30 &&
-            !(isFoodOrDrink(nn.player.mainHandItem) && isFoodOrDrink(nn.player.offhandItem)) &&
-            isFoodOrDrink(nn.player.useItem)
+    private fun NonNullContext.grimBlink(event: SlowdownEvent) {
+        if (player.isUsingItem && player.useItemRemainingTicks < 30 &&
+            !(isFoodOrDrink(player.mainHandItem) && isFoodOrDrink(player.offhandItem)) &&
+            isFoodOrDrink(player.useItem)
         ) {
             event.isSlowdown = false
-            nn.player.isSprinting = true
+            player.isSprinting = true
         }
     }
 
-    context(nn: NonNullContext)
-    private fun grim50(event: SlowdownEvent) {
-        if (nn.player.useItemRemainingTicks % 2 == 0 && nn.player.useItemRemainingTicks <= 30) {
+    private fun NonNullContext.grim50(event: SlowdownEvent) {
+        if (player.useItemRemainingTicks % 2 == 0 && player.useItemRemainingTicks <= 30) {
             event.isSlowdown = false
         }
     }
 
-    context(nn: NonNullContext)
-    private fun grim33(event: SlowdownEvent) {
-        if (nn.player.useItemRemainingTicks % 3 == 0 && nn.player.useItemRemainingTicks <= 30) {
+    private fun NonNullContext.grim33(event: SlowdownEvent) {
+        if (player.useItemRemainingTicks % 3 == 0 && player.useItemRemainingTicks <= 30) {
             event.isSlowdown = false
         }
     }

@@ -2,12 +2,23 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.ClickSlotUtils
+import com.github.epsilon.utils.player.ClickSlotUtils.shiftClick
 import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.player.InvHelper.getBestArmorScore
+import com.github.epsilon.utils.player.InvHelper.getBestAxeScore
+import com.github.epsilon.utils.player.InvHelper.getBestCrossbowScore
+import com.github.epsilon.utils.player.InvHelper.getBestPickaxeScore
+import com.github.epsilon.utils.player.InvHelper.getBestPowerBowScore
+import com.github.epsilon.utils.player.InvHelper.getBestPunchBowScore
+import com.github.epsilon.utils.player.InvHelper.getBestShovelScore
+import com.github.epsilon.utils.player.InvHelper.getBestSwordDamage
+import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
+import com.github.epsilon.utils.player.InvHelper.getItemCount
+import com.github.epsilon.utils.player.InvHelper.hasItem
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -57,7 +68,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
                                             nextDelay.toLong()
                                         )
                                     ) {
-                                        ClickSlotUtils.shiftClick(menu.containerId, slotId)
+                                        shiftClick(menu.containerId, slotId)
                                         timer.reset()
                                         if (nextDelay > 0) {
                                             break
@@ -78,61 +89,60 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         return !timer.hasDelayed(3)
     }
 
-    context(nn: NonNullContext)
-    fun isItemUseful(stack: ItemStack): Boolean {
+    fun NonNullContext.isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) {
             return false
         } else if (InvHelper.isGodItem(stack) || InvHelper.isSharpnessAxe(stack)) {
             return true
         } else if (InvHelper.isArmor(stack)) {
             val protection = InvHelper.getProtection(stack)
-            val bestArmor = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
+            val bestArmor = getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
             return !(protection <= bestArmor)
         } else if (InvHelper.isSword(stack)) {
             val damage = InvHelper.getSwordDamage(stack)
-            val bestDamage = InvHelper.getBestSwordDamage()
+            val bestDamage = getBestSwordDamage()
             return !(damage <= bestDamage)
         } else if (InvHelper.isPickaxe(stack)) {
             val score = InvHelper.getToolScore(stack)
-            val bestScore = InvHelper.getBestPickaxeScore()
+            val bestScore = getBestPickaxeScore()
             return !(score <= bestScore)
         } else if (InvHelper.isAxe(stack)) {
             val score = InvHelper.getToolScore(stack)
-            val bestScore = InvHelper.getBestAxeScore()
+            val bestScore = getBestAxeScore()
             return !(score <= bestScore)
         } else if (InvHelper.isShovel(stack)) {
             val score = InvHelper.getToolScore(stack)
-            val bestScore = InvHelper.getBestShovelScore()
+            val bestScore = getBestShovelScore()
             return !(score <= bestScore)
         } else if (stack.item is CrossbowItem) {
             val score = InvHelper.getCrossbowScore(stack)
-            val bestScore = InvHelper.getBestCrossbowScore()
+            val bestScore = getBestCrossbowScore()
             return !(score <= bestScore)
         } else if (stack.item is BowItem && InvHelper.isPunchBow(stack)) {
             val score = InvHelper.getPunchBowScore(stack)
-            val bestScore = InvHelper.getBestPunchBowScore()
+            val bestScore = getBestPunchBowScore()
             return !(score <= bestScore)
         } else if (stack.item is BowItem && InvHelper.isPowerBow(stack)) {
             val score = InvHelper.getPowerBowScore(stack)
-            val bestScore = InvHelper.getBestPowerBowScore()
+            val bestScore = getBestPowerBowScore()
             return !(score <= bestScore)
         } else if (stack.item == Items.COMPASS) {
-            return !InvHelper.hasItem(stack.item)
-        } else if (stack.item == Items.WATER_BUCKET && InvHelper.getItemCount(Items.WATER_BUCKET) >= InvManager.waterBucketCount) {
+            return !hasItem(stack.item)
+        } else if (stack.item == Items.WATER_BUCKET && getItemCount(Items.WATER_BUCKET) >= InvManager.waterBucketCount) {
             return false
-        } else if (stack.item == Items.LAVA_BUCKET && InvHelper.getItemCount(Items.LAVA_BUCKET) >= InvManager.lavaBucketCount) {
+        } else if (stack.item == Items.LAVA_BUCKET && getItemCount(Items.LAVA_BUCKET) >= InvManager.lavaBucketCount) {
             return false
         } else if (stack.item is BlockItem &&
             InvHelper.isValidStack(stack) &&
-            InvHelper.getBlockCountInInventory() + stack.count >= InvManager.maxBlockSize
+            getBlockCountInInventory() + stack.count >= InvManager.maxBlockSize
         ) {
             return false
-        } else if (stack.item == Items.ARROW && InvHelper.getItemCount(Items.ARROW) + stack.count >= InvManager.maxArrowSize) {
+        } else if (stack.item == Items.ARROW && getItemCount(Items.ARROW) + stack.count >= InvManager.maxArrowSize) {
             return false
-        } else if (stack.item is FishingRodItem && InvHelper.getItemCount(Items.FISHING_ROD) >= 1) {
+        } else if (stack.item is FishingRodItem && getItemCount(Items.FISHING_ROD) >= 1) {
             return false
         } else if (stack.item != Items.SNOWBALL && stack.item != Items.EGG
-            || InvHelper.getItemCount(Items.SNOWBALL) + InvHelper.getItemCount(Items.EGG) + stack.count < InvManager.maxProjectileSize
+            || getItemCount(Items.SNOWBALL) + getItemCount(Items.EGG) + stack.count < InvManager.maxProjectileSize
             && InvManager.keepProjectile
         ) {
             return stack.item !is StandingAndWallBlockItem && InvHelper.isCommonItemUseful(stack)
@@ -141,8 +151,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun isBestItemInChest(menu: ChestMenu, stack: ItemStack): Boolean {
+    private fun NonNullContext.isBestItemInChest(menu: ChestMenu, stack: ItemStack): Boolean {
         if (!InvHelper.isGodItem(stack) && !InvHelper.isSharpnessAxe(stack)) {
             for (i in 0 until menu.rowCount * 9) {
                 val checkStack = menu.getSlot(i).item
@@ -178,8 +187,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun isChestEmpty(menu: ChestMenu): Boolean {
+    private fun NonNullContext.isChestEmpty(menu: ChestMenu): Boolean {
         for (i in 0 until menu.rowCount * 9) {
             val item = menu.getSlot(i).item
             if (!item.isEmpty && isItemUseful(item) && isBestItemInChest(menu, item)) {

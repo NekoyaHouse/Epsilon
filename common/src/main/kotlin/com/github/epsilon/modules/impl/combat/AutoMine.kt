@@ -3,8 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -14,7 +13,7 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world.hole.HoleUtils
+import com.github.epsilon.utils.world.hole.HoleUtils.inHole
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -185,8 +184,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     }
 
     /** Packet Mine 空闲后仍未消失的方块视为服务端拒绝破坏，加入冷却名单。 */
-    context(nn: NonNullContext)
-    private fun checkPendingBlock() {
+    private fun NonNullContext.checkPendingBlock() {
         val now = System.currentTimeMillis()
         failedUntil.values.removeAll { expireAt -> expireAt <= now }
         val pending = pendingPos ?: return
@@ -198,15 +196,13 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         pendingPos = null
     }
 
-    context(nn: NonNullContext)
-    private fun withinMineRange(pos: BlockPos): Boolean {
+    private fun NonNullContext.withinMineRange(pos: BlockPos): Boolean {
         val limit = minOf(range, PacketMine.rangeLimit().toDouble())
-        return nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
-    context(nn: NonNullContext)
-    private fun isAirOrReplacable(pos: BlockPos): Boolean {
-        val state = nn.level.getBlockState(pos)
+    private fun NonNullContext.isAirOrReplacable(pos: BlockPos): Boolean {
+        val state = level.getBlockState(pos)
         return state.isAir || state.canBeReplaced()
     }
 
@@ -221,8 +217,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     }
 
     /** 按目标排序逐个玩家收集候选方块，返回第一个存在可挖方块的玩家的候选列表。 */
-    context(nn: NonNullContext)
-    private fun findCandidates(): List<Candidate> {
+    private fun NonNullContext.findCandidates(): List<Candidate> {
         val targets = ArrayList(TargetManager.acquireTargets(createTargetRequest()))
         targets.sortWith(createTargetComparator())
 
@@ -254,10 +249,9 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         )
     }
 
-    context(nn: NonNullContext)
-    private fun createTargetComparator(): Comparator<LivingEntity> {
+    private fun NonNullContext.createTargetComparator(): Comparator<LivingEntity> {
         val byDistance = Comparator<LivingEntity> { a, b ->
-            nn.player.distanceToSqr(a).compareTo(nn.player.distanceToSqr(b))
+            player.distanceToSqr(a).compareTo(player.distanceToSqr(b))
         }
         return when (order.value) {
             TargetOrder.Distance -> byDistance
@@ -266,14 +260,13 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
                 .thenComparing(byDistance)
 
             TargetOrder.Hole -> Comparator.comparingInt<LivingEntity> { living ->
-                if (living is Player && HoleUtils.inHole(living)) 0 else 1
+                if (living is Player && inHole(living)) 0 else 1
             }.thenComparing(byDistance)
         }
     }
 
     /** 收集目标玩家周围所有可挖方块，并按目标类型去重。 */
-    context(nn: NonNullContext)
-    private fun collectCandidates(target: Player): MutableList<Candidate> {
+    private fun NonNullContext.collectCandidates(target: Player): MutableList<Candidate> {
         val candidates = ArrayList<Candidate>()
         val limit = minOf(range, PacketMine.rangeLimit().toDouble())
         val feet = target.blockPosition()
@@ -329,8 +322,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         return candidates
     }
 
-    context(nn: NonNullContext)
-    private fun addCandidate(
+    private fun NonNullContext.addCandidate(
         candidates: MutableList<Candidate>,
         pos: BlockPos,
         category: TargetCategory,
@@ -344,24 +336,22 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     }
 
     /** 复用 Packet Mine 的可挖判定：必须有碰撞体积、可破坏、在 Packet Mine 距离内且不在失败冷却中。 */
-    context(nn: NonNullContext)
-    private fun isMineable(pos: BlockPos, limit: Double): Boolean {
-        if (!nn.level.isLoaded(pos)) return false
+    private fun NonNullContext.isMineable(pos: BlockPos, limit: Double): Boolean {
+        if (!level.isLoaded(pos)) return false
         if ((failedUntil[pos] ?: 0L) > System.currentTimeMillis()) return false
-        val state = nn.level.getBlockState(pos)
+        val state = level.getBlockState(pos)
         if (state.isAir || state.canBeReplaced()) return false
         // Packet Mine 对硬度 < 0 的方块永远无法完成挖掘，选入会使其卡在忙碌状态。
-        if (state.getDestroySpeed(nn.level, pos) < 0.0f) return false
-        if (state.getCollisionShape(nn.level, pos).isEmpty) return false
+        if (state.getDestroySpeed(level, pos) < 0.0f) return false
+        if (state.getCollisionShape(level, pos).isEmpty) return false
         // 严格小于 Packet Mine 的 farCancel 阈值，避免在临界距离被反复取消。
-        return nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
+        return player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) < limit * limit
     }
 
-    context(nn: NonNullContext)
-    private fun sortCandidates(candidates: MutableList<Candidate>) {
+    private fun NonNullContext.sortCandidates(candidates: MutableList<Candidate>) {
         val byDistance = Comparator<Candidate> { a, b ->
-            nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(a.pos))
-                .compareTo(nn.player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
+            player.eyePosition.distanceToSqr(Vec3.atCenterOf(a.pos))
+                .compareTo(player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
         }
 
         when (feetLogic.value) {

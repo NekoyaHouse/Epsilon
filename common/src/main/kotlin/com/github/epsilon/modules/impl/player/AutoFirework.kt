@@ -2,11 +2,12 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -52,13 +53,13 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
                     previousItem = player.mainHandItem
                 }
 
-                val fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot
+                val fireworkSlot = findInHotbar(Items.FIREWORK_ROCKET).slot
                 if (fireworkSlot == -1) {
                     resetState()
                     return@safeEventHandler
                 }
 
-                InvUtils.swap(fireworkSlot, false)
+                swap(fireworkSlot, false)
 
                 if (useDelayCounter < delay) {
                     ++useDelayCounter
@@ -80,15 +81,14 @@ object AutoFirework : Module("Auto Firework", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleSwitchBack() {
+    private fun NonNullContext.handleSwitchBack() {
         if (switchDelayCounter < switchDelay) {
             ++switchDelayCounter
             return
         }
 
         if (previousSelectedSlot != -1) {
-            InvUtils.swap(previousSelectedSlot, false)
+            swap(previousSelectedSlot, false)
         }
 
         resetState()

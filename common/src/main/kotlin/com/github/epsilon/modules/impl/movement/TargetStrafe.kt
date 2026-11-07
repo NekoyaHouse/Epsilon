@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -16,6 +16,8 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
+import java.awt.Color
+import kotlin.math.*
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -23,8 +25,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
-import kotlin.math.*
 
 object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
@@ -128,13 +128,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         return offsets
     }
 
-    context(nn: NonNullContext)
-    private fun findClosestIndex(offsets: List<OrbitOffset>): Int {
+    private fun NonNullContext.findClosestIndex(offsets: List<OrbitOffset>): Int {
         var closestDistance = Double.MAX_VALUE
         var closestIndex = -1
         for (i in offsets.indices) {
             val position = getOrbitPosition(offsets[i])
-            val distance = nn.player.distanceToSqr(position.x, nn.player.y, position.z)
+            val distance = player.distanceToSqr(position.x, player.y, position.z)
             if (distance < closestDistance) {
                 closestDistance = distance
                 closestIndex = i
@@ -143,25 +142,23 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         return closestIndex
     }
 
-    context(nn: NonNullContext)
-    private fun getOrbitPosition(offset: OrbitOffset): Vec3 {
-        return Vec3(target!!.x + offset.x, nn.player.y, target!!.z + offset.z)
+    private fun NonNullContext.getOrbitPosition(offset: OrbitOffset): Vec3 {
+        return Vec3(target!!.x + offset.x, player.y, target!!.z + offset.z)
     }
 
-    context(nn: NonNullContext)
-    private fun isOverVoid(x: Double, z: Double): Boolean {
-        if (nn.player.isInWater || nn.player.isInLava) return false
+    private fun NonNullContext.isOverVoid(x: Double, z: Double): Boolean {
+        if (player.isInWater || player.isInLava) return false
 
         val box = AABB(
             x - 0.015,
-            nn.player.y,
+            player.y,
             z - 0.015,
             x + 0.015,
-            nn.player.y + nn.player.bbHeight,
+            player.y + player.bbHeight,
             z + 0.015
         )
         val minY = Mth.floor(box.minY)
-        if (minY < nn.level.minY) return true
+        if (minY < level.minY) return true
 
         val minX = Mth.floor(box.minX)
         val maxX = Mth.floor(box.maxX + 1.0)
@@ -172,8 +169,8 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
         for (blockX in minX until maxX) {
             for (blockZ in minZ until maxZ) {
                 var blockY = minY
-                while (blockY >= nn.level.minY) {
-                    val state: BlockState = nn.level.getBlockState(pos.set(blockX, blockY, blockZ))
+                while (blockY >= level.minY) {
+                    val state: BlockState = level.getBlockState(pos.set(blockX, blockY, blockZ))
                     if (!state.canBeReplaced()) {
                         return false
                     }

@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import net.minecraft.core.BlockPos
@@ -36,22 +36,20 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun canSnap(entity: Entity): Boolean {
-        return !(!entity.onGround() || entity.isUnderWater || entity.isInLava || mc.options.keyJump.isDown || entity.noPhysics) && !nn.level.noCollision(
+    private fun NonNullContext.canSnap(entity: Entity): Boolean {
+        return !(!entity.onGround() || entity.isUnderWater || entity.isInLava || mc.options.keyJump.isDown || entity.noPhysics) && !level.noCollision(
             entity,
             entity.boundingBox.move(0.0, (-(fallDistance + 0.01)).toFloat().toDouble(), 0.0)
         )
     }
 
-    context(nn: NonNullContext)
-    private fun isOnBed(): Boolean {
-        val blockPos = nn.player.blockPosition().mutable()
+    private fun NonNullContext.isOnBed(): Boolean {
+        val blockPos = player.blockPosition().mutable()
 
         if (check(blockPos, 0, 0)) return true
 
-        val xa = nn.player.x - blockPos.x
-        val za = nn.player.z - blockPos.z
+        val xa = player.x - blockPos.x
+        val za = player.z - blockPos.z
 
         if (xa >= 0 && xa <= 0.3 && check(blockPos, -1, 0)) return true
         if (xa >= 0.7 && check(blockPos, 1, 0)) return true
@@ -64,10 +62,9 @@ object ReverseStep : Module("Reverse Step", Category.MOVEMENT) {
         return xa >= 0.7 && za >= 0.7 && check(blockPos, 1, 1)
     }
 
-    context(nn: NonNullContext)
-    private fun check(blockPos: BlockPos.MutableBlockPos, x: Int, z: Int): Boolean {
+    private fun NonNullContext.check(blockPos: BlockPos.MutableBlockPos, x: Int, z: Int): Boolean {
         blockPos.move(x, 0, z)
-        val isBed = nn.level.getBlockState(blockPos).block is BedBlock
+        val isBed = level.getBlockState(blockPos).block is BedBlock
         blockPos.move(-x, 0, -z)
         return isBed
     }

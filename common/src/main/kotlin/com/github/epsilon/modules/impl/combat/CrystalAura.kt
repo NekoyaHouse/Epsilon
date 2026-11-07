@@ -8,8 +8,7 @@ import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -18,13 +17,24 @@ import com.github.epsilon.modules.impl.combat.crystalaura.*
 import com.github.epsilon.modules.impl.movement.Blink
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.combat.CrystalDamageUtils
-import com.github.epsilon.utils.player.ClickSlotUtils
+import com.github.epsilon.utils.combat.CrystalDamageUtils.captureWorld
+import com.github.epsilon.utils.combat.CrystalDamageUtils.damage
+import com.github.epsilon.utils.combat.CrystalDamageUtils.snapshot
+import com.github.epsilon.utils.player.ClickSlotUtils.swap
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.WorldToScreen
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.google.common.base.Suppliers
+import java.awt.Color
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.function.IntConsumer
+import kotlin.math.abs
+import kotlin.math.ceil
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -64,14 +74,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
-import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.function.IntConsumer
-import kotlin.math.abs
-import kotlin.math.ceil
 
 object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
@@ -381,8 +383,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun tickEntities() {
+    private fun NonNullContext.tickEntities() {
         val targets = targets()
         val self = selfSnapshot()
         breakCandidate = bestCrystal(targets, self)
@@ -394,7 +395,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         if (breakCandidate == null && placement != null && (!placement.antiSurround || resetCrystal)) {
             val blocking = crystalAt(placement.pos.above()) ?: crystalAt(placement.pos.above(2))
             if (blocking != null && blocking.blockPosition() != placement.pos.above()) {
-                val local = CrystalDamageUtils.damage(self, blocking.position(), blockDestruction)
+                val local = damage(self, blocking.position(), blockDestruction)
                 if (!safety || !rules().unsafe(local, self.health, self.creative)) {
                     breakCandidate = placement.copy(
                         pos = blocking.blockPosition().below(),
@@ -415,7 +416,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         val breakNow = breaking != null && attackDelay <= 0.0 &&
                 timing.attackReady(timing.tickInterval(breakDelay, timeout, minTimeout, breakTimeout))
         if (breaking != null && rotatesBreak()) {
-            val crystal = nn.level.getEntity(breaking.crystalId ?: -1) as? EndCrystal
+            val crystal = level.getEntity(breaking.crystalId ?: -1) as? EndCrystal
             if (crystal != null) rotationAim = crystalAim(crystal.boundingBox)
         } else if (placement != null && rotatesPlace()) {
             rotationAim = placeHit(placement.pos)?.location ?: Vec3.atCenterOf(placement.pos)
@@ -425,9 +426,9 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
         val aim = rotationAim
         if (managedRotation() && aim != null && (placement == null || canPlace())) {
-            val target = RotationUtils.calculate(aim)
+            val target = calculate(aim)
             if (yawStep == YawStepMode.Full || yawStep == YawStepMode.Semi && breakNow) {
-                val previous = Mth.wrapDegrees(serverYaw ?: nn.player.yRot)
+                val previous = Mth.wrapDegrees(serverYaw ?: player.yRot)
                 val delta = previous - target.yaw
                 // 原版先取绝对值再跨越 ±180° 修正方向，边界处可能多走一轮。
                 val difference = abs(delta)
@@ -460,8 +461,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         timing.resetPlace()
     }
 
-    context(nn: NonNullContext)
-    private fun submitPlacement() {
+    private fun NonNullContext.submitPlacement() {
         if (placementTask?.isDone == false) return
         val work = preparePlacement(targets(), selfSnapshot())
         if (work == null) {
@@ -489,11 +489,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         placementTask = null
     }
 
-    context(nn: NonNullContext)
-    private fun preparePlacement(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalPlacement? {
+    private fun NonNullContext.preparePlacement(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalPlacement? {
         if (!place || !canPlace() || !canAttackWithWeakness() || targets.isEmpty()) return null
         val points = ArrayList<CrystalPlacePoint>()
-        for (pos in scanPositions(nn.player.eyePosition, ceil(placeRange + 1.0).toInt())) {
+        for (pos in scanPositions(player.eyePosition, ceil(placeRange + 1.0).toInt())) {
             if (!placementSpace(pos, self) || !placeReachable(pos)) continue
             val base = isBase(pos)
             val hit = if (base) null else {
@@ -502,7 +501,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             }
             val surroundTargets = HashSet<Int>()
             for (target in targets) {
-                val entity = nn.level.getEntity(target.snapshot.id) as? Player ?: continue
+                val entity = level.getEntity(target.snapshot.id) as? Player ?: continue
                 if (surroundPlacement(entity, pos)) surroundTargets.add(entity.id)
                 val mining = PacketMine.targetPos
                 if (antiSurround && cevBomber && PacketMine.isEnabled && mining == pos &&
@@ -510,7 +509,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                         pos.above()
                     ) == null
                 ) {
-                    val damage = CrystalDamageUtils.damage(
+                    val damage = damage(
                         target.snapshot,
                         crystalCenter(pos),
                         blockDestruction,
@@ -526,27 +525,26 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         for (target in targets) bounds = bounds.minmax(target.snapshot.box)
         for (point in points) bounds = bounds.minmax(AABB(point.pos).expandTowards(0.0, 2.0, 0.0))
         return CrystalPlacement(
-            points, targets, self, CrystalDamageUtils.captureWorld(bounds, blockDestruction),
+            points, targets, self, captureWorld(bounds, blockDestruction),
             rules(), shieldMode == ShieldMode.Bypass, maxOverride, antiSurround
         )
     }
 
-    context(nn: NonNullContext)
-    private fun bestCrystal(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalCandidate? {
+    private fun NonNullContext.bestCrystal(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalCandidate? {
         val rules = rules()
         var best: CrystalCandidate? = null
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             if (entity !is EndCrystal || !entity.isAlive || entity.tickCount < ticksExisted ||
                 inhibit && timing.inhibited(entity.id) || !crystalReachable(entity)
             ) continue
-            val local = CrystalDamageUtils.damage(self, entity.position(), blockDestruction)
+            val local = damage(self, entity.position(), blockDestruction)
             val unsafe = rules.unsafe(local, self.health, self.creative)
             if (unsafe && !safetyOverride) continue
             for (target in targets) {
                 if (entity.position().distanceToSqr(target.snapshot.position) > 144.0 ||
                     shieldMode == ShieldMode.Bypass && target.snapshot.blocksExplosion(entity.position())
                 ) continue
-                val damage = CrystalDamageUtils.damage(target.snapshot, entity.position(), blockDestruction)
+                val damage = damage(target.snapshot, entity.position(), blockDestruction)
                 if (!rules.accepts(damage, local, unsafe, target.rules)) continue
                 if (best == null || damage > best.damage) best =
                     CrystalCandidate(entity.blockPosition().below(), target, damage, local, entity.id)
@@ -555,8 +553,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return best?.takeIf { it.damage >= rules.minimum(it.target.rules, it.damage) }
     }
 
-    context(nn: NonNullContext)
-    private fun onCrystalSpawn(crystal: EndCrystal) {
+    private fun NonNullContext.onCrystalSpawn(crystal: EndCrystal) {
         val own = timing.onSpawn(BlockPos.containing(crystal.position().add(0.0, -1.0, 0.0)).asLong())
         if (!instant || !timing.attackReady(instantDelay.toDouble())) return
         if (own && (breakCandidate != null || placeCandidate != null)) {
@@ -567,12 +564,12 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
         if (!instantCalc || !potentialCrystalReachable(crystal.position())) return
         val self = selfSnapshot()
-        val local = CrystalDamageUtils.damage(self, crystal.position(), blockDestruction)
+        val local = damage(self, crystal.position(), blockDestruction)
         val rules = rules()
         if (rules.unsafe(local, self.health, self.creative)) return
         for (target in targets()) {
             if (target.snapshot.position.distanceToSqr(crystal.position()) > 144.0) continue
-            val damage = CrystalDamageUtils.damage(target.snapshot, crystal.position(), blockDestruction)
+            val damage = damage(target.snapshot, crystal.position(), blockDestruction)
             if (damage > instantDamage || instantMax && breakCandidate?.let { damage >= it.damage } == true || rules.lethal(
                     damage,
                     target.rules
@@ -585,49 +582,44 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun attackRegular(candidate: CrystalCandidate) {
+    private fun NonNullContext.attackRegular(candidate: CrystalCandidate) {
         if (!timing.swapReady(swapPenalty) || crystalHand() == InteractionHand.MAIN_HAND && paused() || !canAttackWithWeakness()) return
-        val crystal = nn.level.getEntity(candidate.crystalId ?: return) as? EndCrystal ?: return
+        val crystal = level.getEntity(candidate.crystalId ?: return) as? EndCrystal ?: return
         if (!crystal.isAlive) return
         attackInstant(crystal)
         if (sequential == SequentialMode.Strict) placeSequential()
     }
 
-    context(nn: NonNullContext)
-    private fun attackInstant(crystal: EndCrystal) {
+    private fun NonNullContext.attackInstant(crystal: EndCrystal) {
         if (packetRotation()) rotatePacket(crystalAim(crystal.boundingBox))
         val action = {
             // 只发送攻击，不调用本地 player.attack；原版不会提前将水晶标记死亡。
-            nn.connection.send(ServerboundAttackPacket(crystal.id))
+            connection.send(ServerboundAttackPacket(crystal.id))
             breakSwing.attackSwing(crystalHand() ?: InteractionHand.MAIN_HAND)
             timing.recordAttack(crystal.id)
             true
         }
-        if (antiWeakness && weaponDamage(nn.player.mainHandItem) <= 0.0) {
-            val slot = (0..8).maxByOrNull { weaponDamage(nn.player.inventory.getItem(it)) } ?: return
-            if (weaponDamage(nn.player.inventory.getItem(slot)) <= 0.0) return
+        if (antiWeakness && weaponDamage(player.mainHandItem) <= 0.0) {
+            val slot = (0..8).maxByOrNull { weaponDamage(player.inventory.getItem(it)) } ?: return
+            if (weaponDamage(player.inventory.getItem(slot)) <= 0.0) return
             withSlot(slot, SwapActionMode.HotbarSwap, true, action)
         } else action()
     }
 
-    context(nn: NonNullContext)
-    private fun placeSequential() {
+    private fun NonNullContext.placeSequential() {
         val candidate = placeCandidate ?: return
         if (candidate.supportHit != null) return
-        val latency = nn.connection.getPlayerInfo(nn.player.uuid)?.latency ?: 0
-        if (nn.mc.currentServer?.ip?.contains("2b2t.org", true) == true && latency < 50) return
+        val latency = connection.getPlayerInfo(player.uuid)?.latency ?: 0
+        if (mc.currentServer?.ip?.contains("2b2t.org", true) == true && latency < 50) return
         // Normal 在生成即时攻击后、Strict 在普通攻击后调用；均不读取或重置 PlaceDelay。
         placeChecked(candidate.pos)
     }
 
-    context(nn: NonNullContext)
-    private fun placeChecked(pos: BlockPos) {
+    private fun NonNullContext.placeChecked(pos: BlockPos) {
         if (rotationReady() && canAttackWithWeakness()) placeCrystal(pos)
     }
 
-    context(nn: NonNullContext)
-    private fun placeCrystal(pos: BlockPos) {
+    private fun NonNullContext.placeCrystal(pos: BlockPos) {
         if (paused()) return
         val hit = placeHit(pos) ?: return
         withItem(Items.END_CRYSTAL, swapAction, swap) { hand ->
@@ -639,8 +631,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun placeBase(hit: BlockHitResult) {
+    private fun NonNullContext.placeBase(hit: BlockHitResult) {
         withItem(Items.OBSIDIAN, baseSwapAction, SwapMode.Silent) { hand ->
             if (baseRotate) rotatePacket(hit.location)
             sendPlace(hit, hand)
@@ -649,38 +640,35 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun sendPlace(hit: BlockHitResult, hand: InteractionHand) {
-        nn.connection.send(
+    private fun NonNullContext.sendPlace(hit: BlockHitResult, hand: InteractionHand) {
+        connection.send(
             ServerboundUseItemOnPacket(
                 hand,
                 hit,
-                nn.level.blockStatePredictionHandler.startPredicting().currentSequence()
+                level.blockStatePredictionHandler.startPredicting().currentSequence()
             )
         )
     }
 
-    context(nn: NonNullContext)
-    private fun confirmExplosion(center: Vec3) {
-        for (entity in nn.level.entitiesForRendering().toList()) {
+    private fun NonNullContext.confirmExplosion(center: Vec3) {
+        for (entity in level.entitiesForRendering().toList()) {
             if (entity is EndCrystal && entity.position().distanceToSqr(center) < 144.0) {
                 timing.confirm(entity.id)
-                nn.level.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
+                level.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
             }
         }
     }
 
-    context(nn: NonNullContext)
-    private fun targets(): List<CrystalTarget> {
+    private fun NonNullContext.targets(): List<CrystalTarget> {
         val result = ArrayList<CrystalTarget>()
-        for (entity in nn.level.entitiesForRendering()) {
-            if (entity !is LivingEntity || entity === nn.player || !entity.isAlive || !targetType(entity) ||
-                FriendManager.isFriend(entity.name.string) || nn.player.distanceToSqr(entity) > enemyRange * enemyRange ||
+        for (entity in level.entitiesForRendering()) {
+            if (entity !is LivingEntity || entity === player || !entity.isAlive || !targetType(entity) ||
+                FriendManager.isFriend(entity.name.string) || player.distanceToSqr(entity) > enemyRange * enemyRange ||
                 ignoreNakeds && CrystalDamageUtils.armorSlots.all { entity.getItemBySlot(it).isEmpty }
             ) continue
-            val snapshot = CrystalDamageUtils.snapshot(entity, extrapolationTicks, assumeBestArmor)
+            val snapshot = snapshot(entity, extrapolationTicks, assumeBestArmor)
             val nearbyShulker = shulkers && entity is Player && scanPositions(entity.position(), 3).any {
-                nn.level.getBlockState(it).block is ShulkerBoxBlock
+                level.getBlockState(it).block is ShulkerBoxBlock
             }
             result.add(
                 CrystalTarget(
@@ -716,57 +704,47 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         timing.attackElapsedMillis
     )
 
-    context(nn: NonNullContext)
-    private fun selfSnapshot() = CrystalDamageUtils.snapshot(nn.player, if (selfExtrapolate) extrapolationTicks else 0)
+    private fun NonNullContext.selfSnapshot() = snapshot(player, if (selfExtrapolate) extrapolationTicks else 0)
 
-    context(nn: NonNullContext)
-    private fun paused(): Boolean =
-        (!whileUsing && nn.player.isUsingItem) || (!whileMining && nn.gameMode.isDestroying) || Blink.isEnabled
+    private fun NonNullContext.paused(): Boolean =
+        (!whileUsing && player.isUsingItem) || (!whileMining && gameMode.isDestroying) || Blink.isEnabled
 
-    context(nn: NonNullContext)
-    private fun canPlace(): Boolean =
+    private fun NonNullContext.canPlace(): Boolean =
         crystalHand() != null || !paused() && swap != SwapMode.Off && findItem(Items.END_CRYSTAL, swapAction) != -1
 
-    context(nn: NonNullContext)
-    private fun managedRotation(): Boolean =
-        rotate != RotateMode.None && rotate != RotateMode.Packet && (rotate != RotateMode.Grim || !nn.player.isFallFlying)
+    private fun NonNullContext.managedRotation(): Boolean =
+        rotate != RotateMode.None && rotate != RotateMode.Packet && (rotate != RotateMode.Grim || !player.isFallFlying)
 
-    context(nn: NonNullContext)
-    private fun packetRotation(): Boolean =
-        rotate == RotateMode.Packet || rotate == RotateMode.Grim && nn.player.isFallFlying
+    private fun NonNullContext.packetRotation(): Boolean =
+        rotate == RotateMode.Packet || rotate == RotateMode.Grim && player.isFallFlying
 
-    context(nn: NonNullContext)
-    private fun rotatesBreak(): Boolean =
+    private fun NonNullContext.rotatesBreak(): Boolean =
         rotate == RotateMode.Normal || rotate == RotateMode.Break || rotate == RotateMode.Grim && managedRotation()
 
-    context(nn: NonNullContext)
-    private fun rotatesPlace(): Boolean =
+    private fun NonNullContext.rotatesPlace(): Boolean =
         rotate == RotateMode.Normal || rotate == RotateMode.Place || rotate == RotateMode.Grim && managedRotation()
 
-    context(nn: NonNullContext)
-    private fun rotationReady(): Boolean = !managedRotation() || yawComplete &&
+    private fun NonNullContext.rotationReady(): Boolean = !managedRotation() || yawComplete &&
             (!RotationManager.isActive() || rotationRequest?.let { RotationManager.ownsRotation(it) } == true)
 
-    context(nn: NonNullContext)
-    private fun rotatePacket(aim: Vec3) {
-        val rotation = RotationUtils.calculate(aim)
-        nn.connection.send(
+    private fun NonNullContext.rotatePacket(aim: Vec3) {
+        val rotation = calculate(aim)
+        connection.send(
             ServerboundMovePlayerPacket.PosRot(
-                nn.player.position(),
+                player.position(),
                 rotation.yaw,
                 rotation.pitch,
-                nn.player.onGround(),
-                nn.player.horizontalCollision
+                player.onGround(),
+                player.horizontalCollision
             )
         )
     }
 
-    context(nn: NonNullContext)
-    private fun placementSpace(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
-        if (!nn.level.isInWorldBounds(pos.above(2)) || !nn.level.worldBorder.isWithinBounds(pos)) return false
-        if (placements == PlacementsMode.Protocol && !nn.level.isEmptyBlock(pos.above(2))) return false
+    private fun NonNullContext.placementSpace(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
+        if (!level.isInWorldBounds(pos.above(2)) || !level.worldBorder.isWithinBounds(pos)) return false
+        if (placements == PlacementsMode.Protocol && !level.isEmptyBlock(pos.above(2))) return false
         val above = pos.above()
-        val state = nn.level.getBlockState(above)
+        val state = level.getBlockState(above)
         if (!state.isAir) {
             val crystal = crystalAt(above)
             if (!state.`is`(Blocks.FIRE) || crystal == null || crystal.blockPosition() != above) return false
@@ -774,12 +752,11 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return spaceClear(above, self) && spaceClear(pos.above(2), self)
     }
 
-    context(nn: NonNullContext)
-    private fun spaceClear(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
-        for (entity in nn.level.getEntities(null, AABB(pos))) {
+    private fun NonNullContext.spaceClear(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
+        for (entity in level.getEntities(null, AABB(pos))) {
             if (!entity.isAlive || entity is ItemEntity && ignoreItem && entity.tickCount <= 10) continue
             if (entity !is EndCrystal) return false
-            val local = CrystalDamageUtils.damage(self, entity.position(), blockDestruction)
+            val local = damage(self, entity.position(), blockDestruction)
             if (safety && rules().unsafe(local, self.health, self.creative) || !crystalReachable(entity) ||
                 timing.blocksPlacement(entity.id, attackLimit)
             ) return false
@@ -787,17 +764,15 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun placeReachable(pos: BlockPos): Boolean {
+    private fun NonNullContext.placeReachable(pos: BlockPos): Boolean {
         if (!potentialCrystalReachable(crystalCenter(pos))) return false
         val hit = placeHit(pos) ?: return false
         val range = if (visible(hit.location)) placeRange else placeWallRange
-        return nn.player.eyePosition.distanceTo(hit.location) <= range
+        return player.eyePosition.distanceTo(hit.location) <= range
     }
 
-    context(nn: NonNullContext)
-    private fun placeHit(pos: BlockPos): BlockHitResult? {
-        val eye = nn.player.eyePosition
+    private fun NonNullContext.placeHit(pos: BlockPos): BlockHitResult? {
+        val eye = player.eyePosition
         val face = Direction.entries.minBy { eye.distanceToSqr(Vec3.atCenterOf(pos).add(it.unitVec3.scale(0.5))) }
         val point = nearest(eye, AABB(pos)).let {
             when (face) {
@@ -812,17 +787,16 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return if (eye.distanceTo(point) <= placeRange) BlockHitResult(point, face, pos, false) else null
     }
 
-    context(nn: NonNullContext)
-    private fun supportHit(pos: BlockPos): BlockHitResult? {
-        if (!nn.level.getBlockState(pos).canBeReplaced() || nn.level.getEntities(null, AABB(pos))
+    private fun NonNullContext.supportHit(pos: BlockPos): BlockHitResult? {
+        if (!level.getBlockState(pos).canBeReplaced() || level.getEntities(null, AABB(pos))
                 .any { it.isAlive }
         ) return null
         for (direction in Direction.entries) {
             val neighbor = pos.relative(direction)
-            val state = nn.level.getBlockState(neighbor)
+            val state = level.getBlockState(neighbor)
             if (state.isAir || state.canBeReplaced() || state.block is EntityBlock || state.block is NoteBlock) continue
             val point = Vec3.atCenterOf(neighbor).add(direction.opposite.unitVec3.scale(0.5))
-            if (nn.player.eyePosition.distanceTo(point) <= placeRange) return BlockHitResult(
+            if (player.eyePosition.distanceTo(point) <= placeRange) return BlockHitResult(
                 point,
                 direction.opposite,
                 neighbor,
@@ -832,54 +806,47 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return if (airPlace) placeHit(pos) else null
     }
 
-    context(nn: NonNullContext)
-    private fun crystalAt(pos: BlockPos): EndCrystal? = nn.level.getEntities(null, AABB(pos))
-        .filterIsInstance<EndCrystal>().minByOrNull { nn.player.distanceToSqr(it) }
+    private fun NonNullContext.crystalAt(pos: BlockPos): EndCrystal? = level.getEntities(null, AABB(pos))
+        .filterIsInstance<EndCrystal>().minByOrNull { player.distanceToSqr(it) }
 
-    context(nn: NonNullContext)
-    private fun isBase(pos: BlockPos): Boolean {
-        val state = nn.level.getBlockState(pos)
+    private fun NonNullContext.isBase(pos: BlockPos): Boolean {
+        val state = level.getBlockState(pos)
         return state.`is`(Blocks.OBSIDIAN) || state.`is`(Blocks.BEDROCK)
     }
 
-    context(nn: NonNullContext)
-    private fun crystalAim(box: AABB): Vec3 {
+    private fun NonNullContext.crystalAim(box: AABB): Vec3 {
         val bottom = nearest(
-            nn.player.eyePosition,
+            player.eyePosition,
             AABB(box.minX + 0.5, box.minY, box.minZ + 0.5, box.maxX - 0.5, box.minY, box.maxZ - 0.5)
         )
-        return if (nn.player.eyePosition.distanceTo(bottom) <= breakRange) bottom else nearest(
-            nn.player.eyePosition,
+        return if (player.eyePosition.distanceTo(bottom) <= breakRange) bottom else nearest(
+            player.eyePosition,
             box
         )
     }
 
-    context(nn: NonNullContext)
-    private fun crystalReachable(crystal: EndCrystal): Boolean {
+    private fun NonNullContext.crystalReachable(crystal: EndCrystal): Boolean {
         val visible = visible(crystal.position()) && visible(crystal.eyePosition)
-        return nn.player.eyePosition.distanceTo(crystalAim(crystal.boundingBox)) <= if (visible) breakRange else breakWallRange
+        return player.eyePosition.distanceTo(crystalAim(crystal.boundingBox)) <= if (visible) breakRange else breakWallRange
     }
 
-    context(nn: NonNullContext)
-    private fun potentialCrystalReachable(center: Vec3): Boolean {
+    private fun NonNullContext.potentialCrystalReachable(center: Vec3): Boolean {
         val point = nearest(
-            nn.player.eyePosition,
+            player.eyePosition,
             AABB(center.x - 1.0, center.y, center.z - 1.0, center.x + 1.0, center.y + 2.0, center.z + 1.0)
         )
-        return nn.player.eyePosition.distanceTo(point) <= if (visible(point)) breakRange else breakWallRange
+        return player.eyePosition.distanceTo(point) <= if (visible(point)) breakRange else breakWallRange
     }
 
-    context(nn: NonNullContext)
-    private fun visible(point: Vec3): Boolean = nn.level.clip(
+    private fun NonNullContext.visible(point: Vec3): Boolean = level.clip(
         ClipContext(
-            nn.player.eyePosition, point,
-            ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, nn.player
+            player.eyePosition, point,
+            ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player
         )
     ).type == HitResult.Type.MISS
 
-    context(nn: NonNullContext)
-    private fun surroundPlacement(target: Player, pos: BlockPos): Boolean {
-        if (nn.level.getBlockState(target.blockPosition()).block.explosionResistance >= 600.0f) return false
+    private fun NonNullContext.surroundPlacement(target: Player, pos: BlockPos): Boolean {
+        if (level.getBlockState(target.blockPosition()).block.explosionResistance >= 600.0f) return false
         if (prePlacement && adjacent(target, pos.above(), false, false) && crystalAt(pos.above()) == null) return true
         val mining = PacketMine.targetPos ?: return false
         if (!antiSurround || !PacketMine.isEnabled || PacketMine.mainProgressPercent < miningProgress ||
@@ -903,20 +870,19 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun onMiningAttempt(mined: BlockPos) {
+    private fun NonNullContext.onMiningAttempt(mined: BlockPos) {
         if (findItem(Items.END_CRYSTAL, swapAction) == -1) return
         val pos = mined.below()
         val self = selfSnapshot()
-        if (!isBase(pos) || !placeReachable(pos) || placements == PlacementsMode.Protocol && !nn.level.isEmptyBlock(
+        if (!isBase(pos) || !placeReachable(pos) || placements == PlacementsMode.Protocol && !level.isEmptyBlock(
                 mined.above()
             )
         ) return
-        val local = CrystalDamageUtils.damage(self, crystalCenter(pos), blockDestruction, ignored = setOf(mined))
+        val local = damage(self, crystalCenter(pos), blockDestruction, ignored = setOf(mined))
         if (rules().unsafe(local, self.health, self.creative)) return
         for (target in targets()) {
             val damage =
-                CrystalDamageUtils.damage(target.snapshot, crystalCenter(pos), blockDestruction, ignored = setOf(mined))
+                damage(target.snapshot, crystalCenter(pos), blockDestruction, ignored = setOf(mined))
             val placement = placeCandidate
             if (damage > minDamage && (placement == null || damage > placement.damage - 1.0)) {
                 fastPlace(pos, target)
@@ -925,11 +891,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun fastPlace(pos: BlockPos, target: CrystalTarget) {
+    private fun NonNullContext.fastPlace(pos: BlockPos, target: CrystalTarget) {
         if (!isBase(pos) || !placeReachable(pos)) return
         val self = selfSnapshot()
-        val local = CrystalDamageUtils.damage(self, crystalCenter(pos), blockDestruction, ignored = setOf(pos))
+        val local = damage(self, crystalCenter(pos), blockDestruction, ignored = setOf(pos))
         if (rules().unsafe(local, self.health, self.creative)) return
         rotatePacket(placeHit(pos)?.location ?: Vec3.atCenterOf(pos))
         placeCrystal(pos)
@@ -937,51 +902,47 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             CrystalCandidate(
                 pos,
                 target,
-                CrystalDamageUtils.damage(target.snapshot, crystalCenter(pos), blockDestruction, ignored = setOf(pos)),
+                damage(target.snapshot, crystalCenter(pos), blockDestruction, ignored = setOf(pos)),
                 local
             )
         )
     }
 
-    context(nn: NonNullContext)
-    private fun crystalHand(): InteractionHand? = when {
-        nn.player.offhandItem.`is`(Items.END_CRYSTAL) -> InteractionHand.OFF_HAND
-        nn.player.mainHandItem.`is`(Items.END_CRYSTAL) -> InteractionHand.MAIN_HAND
+    private fun NonNullContext.crystalHand(): InteractionHand? = when {
+        player.offhandItem.`is`(Items.END_CRYSTAL) -> InteractionHand.OFF_HAND
+        player.mainHandItem.`is`(Items.END_CRYSTAL) -> InteractionHand.MAIN_HAND
         else -> null
     }
 
-    context(nn: NonNullContext)
-    private fun findItem(item: Item, action: SwapActionMode): Int {
-        if (nn.player.offhandItem.`is`(item)) return 40
+    private fun NonNullContext.findItem(item: Item, action: SwapActionMode): Int {
+        if (player.offhandItem.`is`(item)) return 40
         return (0..if (action == SwapActionMode.HotbarSwap) 8 else 35).firstOrNull {
-            nn.player.inventory.getItem(it).`is`(item)
+            player.inventory.getItem(it).`is`(item)
         } ?: -1
     }
 
-    context(nn: NonNullContext)
-    private fun withItem(
+    private fun NonNullContext.withItem(
         item: Item,
         action: SwapActionMode,
         mode: SwapMode,
         block: (InteractionHand) -> Boolean
     ): Boolean {
-        if (nn.player.offhandItem.`is`(item)) return block(InteractionHand.OFF_HAND)
-        if (nn.player.mainHandItem.`is`(item)) return block(InteractionHand.MAIN_HAND)
+        if (player.offhandItem.`is`(item)) return block(InteractionHand.OFF_HAND)
+        if (player.mainHandItem.`is`(item)) return block(InteractionHand.MAIN_HAND)
         if (mode == SwapMode.Off && action == SwapActionMode.HotbarSwap) return false
         val slot = findItem(item, action)
         if (slot == -1) return false
         return withSlot(slot, action, mode != SwapMode.Normal) { block(InteractionHand.MAIN_HAND) }
     }
 
-    context(nn: NonNullContext)
-    private fun withSlot(slot: Int, action: SwapActionMode, restore: Boolean, block: () -> Boolean): Boolean {
-        val inventory = nn.player.inventory
+    private fun NonNullContext.withSlot(slot: Int, action: SwapActionMode, restore: Boolean, block: () -> Boolean): Boolean {
+        val inventory = player.inventory
         val previous = inventory.selectedSlot
         if (action == SwapActionMode.InvSwitch || slot >= 9) {
-            if (nn.player.containerMenu !== nn.player.inventoryMenu) return false
+            if (player.containerMenu !== player.inventoryMenu) return false
             val menuSlot = if (slot < 9) slot + 36 else slot
             if (slot == previous) return block()
-            ClickSlotUtils.swap(menuSlot, previous)
+            swap(menuSlot, previous)
             if (!restore) {
                 // Normal 保留交换后的主手物品；只在停用或切换模式时恢复仍匹配的槽位。
                 normalInventorySwaps.add(
@@ -995,7 +956,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             return try {
                 block()
             } finally {
-                ClickSlotUtils.swap(menuSlot, previous)
+                swap(menuSlot, previous)
             }
         }
         if (!restore && previous != slot) {
@@ -1004,28 +965,26 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         }
         inventory.selectedSlot = slot
         return try {
-            nn.gameMode.ensureHasSentCarriedItem()
+            gameMode.ensureHasSentCarriedItem()
             block()
         } finally {
             if (restore) {
                 inventory.selectedSlot = previous
-                nn.gameMode.ensureHasSentCarriedItem()
+                gameMode.ensureHasSentCarriedItem()
             }
         }
     }
 
-    context(nn: NonNullContext)
-    private fun canAttackWithWeakness(): Boolean =
-        weaponDamage(nn.player.mainHandItem) > 0.0 || antiWeakness && (0..8).any {
+    private fun NonNullContext.canAttackWithWeakness(): Boolean =
+        weaponDamage(player.mainHandItem) > 0.0 || antiWeakness && (0..8).any {
             weaponDamage(
-                nn.player.inventory.getItem(it)
+                player.inventory.getItem(it)
             ) > 0.0
         }
 
-    context(nn: NonNullContext)
-    private fun weaponDamage(stack: ItemStack): Double {
-        val strength = nn.player.getEffect(MobEffects.STRENGTH)?.let { (it.amplifier + 1) * 3.0 } ?: 0.0
-        val weakness = nn.player.getEffect(MobEffects.WEAKNESS)?.let { (it.amplifier + 1) * 4.0 } ?: 0.0
+    private fun NonNullContext.weaponDamage(stack: ItemStack): Double {
+        val strength = player.getEffect(MobEffects.STRENGTH)?.let { (it.amplifier + 1) * 3.0 } ?: 0.0
+        val weakness = player.getEffect(MobEffects.WEAKNESS)?.let { (it.amplifier + 1) * 4.0 } ?: 0.0
         return stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
             .compute(Attributes.ATTACK_DAMAGE, 1.0 + strength - weakness, EquipmentSlot.MAINHAND)
     }
@@ -1043,7 +1002,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 if (menuSlot >= 0 && ItemStack.matches(source, swap.displaced) &&
                     (selected.isEmpty || ItemStack.isSameItemSameComponents(selected, swap.selected))
                 ) {
-                    ClickSlotUtils.swap(menu.containerId, menuSlot, swap.hotbar)
+                    swap(menu.containerId, menuSlot, swap.hotbar)
                 }
             }
             if (originalSlot in 0..8 && player.inventory.selectedSlot == normalSlot) {

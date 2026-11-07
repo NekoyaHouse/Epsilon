@@ -9,10 +9,7 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -21,13 +18,23 @@ import com.github.epsilon.utils.math.MathUtils
 import com.github.epsilon.utils.math.toDegrees
 import com.github.epsilon.utils.player.FallingPlayer
 import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.invSwap
+import com.github.epsilon.utils.player.InvUtils.invSwapBack
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack as restoreHotbarSlot
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.rotation.RaytraceUtils
+import com.github.epsilon.utils.rotation.RaytraceUtils.overBlock
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.github.epsilon.utils.world.LegacyPlacement
+import com.github.epsilon.utils.world.LegacyPlacement.placeBlock
+import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -43,10 +50,6 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.roundToInt
 
 object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
@@ -198,7 +201,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             emergencyPlacementActive = false
             pearlUsePacketSent = false
             if (shouldSwapBack) {
-                runSafe { InvUtils.swapBack() }
+                runSafe { restoreHotbarSlot() }
                 shouldSwapBack = false
             }
         }
@@ -268,7 +271,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             if (selfRescue) {
                 var reachable = true
                 if (player.deltaMovement.y < -0.1 && blockPos != null) {
-                    val fallingPlayer = FallingPlayer(player).calculate(2)
+                    val fallingPlayer = with(FallingPlayer(player)) { calculate(2) }
                     if (blockPos!!.y > fallingPlayer.y) {
                         reachable = false
                     }
@@ -443,8 +446,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             if (rotationMode != RotationMode.Packet) {
                 val skip = when (raytrace) {
-                    RaytraceMode.Normal -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos)
-                    RaytraceMode.Strict -> !RaytraceUtils.overBlock(RotationManager.getRotation(), pos, face)
+                    RaytraceMode.Normal -> !overBlock(RotationManager.getRotation(), pos)
+                    RaytraceMode.Strict -> !overBlock(RotationManager.getRotation(), pos, face)
                 }
                 if (skip) return@runSafe
             }
@@ -453,8 +456,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun placeBlock(pos: BlockPos, face: Direction) {
+    private fun NonNullContext.placeBlock(pos: BlockPos, face: Direction) {
         swap()
 
         val hand = blockResult.getHand()
@@ -463,9 +465,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         val hit = BlockHitResult(hitVec, face, pos, false)
 
         val result = if (packetRotation) {
-            LegacyPlacement.placeBlock(hand, hit)
+            placeBlock(hand, hit)
         } else {
-            nn.gameMode.useItemOn(nn.player, hand, hit)
+            gameMode.useItemOn(player, hand, hit)
         }
 
         if (result.consumesAction()) {
@@ -590,7 +592,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             return@runSafeOrElse current
         }
 
-        val calculated = RotationUtils.calculate(pos, direction)
+        val calculated = calculate(pos, direction)
         val yawArray = floatArrayOf(
             -135f,
             -90f,
@@ -629,9 +631,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     pitch + MathUtils.getRandom(-0.3f, 0.3f)
                 )
                 val matches = if (raytrace == RaytraceMode.Normal) {
-                    RaytraceUtils.overBlock(candidate, pos)
+                    overBlock(candidate, pos)
                 } else {
-                    RaytraceUtils.overBlock(candidate, pos, direction)
+                    overBlock(candidate, pos, direction)
                 }
                 if (matches) {
                     return@runSafeOrElse candidate
@@ -641,9 +643,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             for (pitch in -90 until 90) {
                 val candidate = Rotation(yaw, pitch.toFloat())
                 val matches = if (raytrace == RaytraceMode.Normal) {
-                    RaytraceUtils.overBlock(candidate, pos)
+                    overBlock(candidate, pos)
                 } else {
-                    RaytraceUtils.overBlock(candidate, pos, direction)
+                    overBlock(candidate, pos, direction)
                 }
                 if (matches) {
                     return@runSafeOrElse candidate
@@ -689,9 +691,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             return@runSafeOrElse FindItemResult(40, offhandStack.count, offhandStack.maxStackSize)
         }
         if (swapMode == SwapMode.InvSwitch) {
-            InvUtils.find { isValidStack(it) }
+            find { isValidStack(it) }
         } else {
-            InvUtils.findInHotbar { isValidStack(it) }
+            findInHotbar { isValidStack(it) }
         }
     }
 
@@ -711,29 +713,28 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             when (swapMode) {
                 SwapMode.Normal -> {
                     val selectedSlot = player.inventory.selectedSlot
-                    InvUtils.swap(blockResult.slot, true)
+                    swap(blockResult.slot, true)
                     if (swapBack && blockResult.slot != selectedSlot) {
                         shouldSwapBack = true
                     }
                 }
 
-                SwapMode.Silent -> InvUtils.swap(blockResult.slot, true)
-                SwapMode.InvSwitch -> InvUtils.invSwap(blockResult.slot)
+                SwapMode.Silent -> swap(blockResult.slot, true)
+                SwapMode.InvSwitch -> invSwap(blockResult.slot)
                 SwapMode.None -> {
                 }
             }
         }
     }
 
-    context(nn: NonNullContext)
-    private fun swapBack() {
+    private fun NonNullContext.swapBack() {
         if (blockResult.isOffhand()) {
             return
         }
 
         when (swapMode) {
-            SwapMode.Silent -> InvUtils.swapBack()
-            SwapMode.InvSwitch -> InvUtils.invSwapBack()
+            SwapMode.Silent -> restoreHotbarSlot()
+            SwapMode.InvSwitch -> invSwapBack()
             else -> {
             }
         }

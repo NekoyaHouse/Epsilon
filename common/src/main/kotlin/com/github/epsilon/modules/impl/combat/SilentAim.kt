@@ -10,7 +10,8 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.SwingMode
 import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
+import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
@@ -36,13 +37,13 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
 
             val currentTarget = target
             if (currentTarget == null || !currentTarget.isAlive || currentTarget.isDeadOrDying ||
-                RotationUtils.getEyeDistanceToEntity(currentTarget) > range
+                getEyeDistanceToEntity(currentTarget) > range
             ) {
                 redirecting = false
                 return@safeEventHandler
             }
 
-            val rotations = RotationUtils.calculate(currentTarget.eyePosition)
+            val rotations = calculate(currentTarget.eyePosition)
             RotationManager.setRotations(rotations, 180.0, Priority.High)
 
             val hitResult = RotationManager.getHitResult()

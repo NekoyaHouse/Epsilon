@@ -4,12 +4,12 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
 import com.github.epsilon.utils.math.MathUtils
+import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
@@ -17,7 +17,6 @@ import net.minecraft.world.level.EmptyBlockGetter
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
-import kotlin.math.PI
 
 object Eagle : Module("Eagle", Category.MOVEMENT) {
 
@@ -72,13 +71,12 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         sneakDelay = 0
     }
 
-    context(nn: NonNullContext)
-    private fun shouldSneak(): Boolean {
+    private fun NonNullContext.shouldSneak(): Boolean {
         if (directionCheck && mc.options.keyUp.isDown) return false
         if (jumpCheck && mc.options.keyJump.isDown) return false
-        if (pitchCheck && nn.player.xRot < 69.0f) return false
+        if (pitchCheck && player.xRot < 69.0f) return false
         if (sneakingOnly && !KeybindUtils.isPressed(mc.options.keyShift)) return false
-        return (!blocksOnly || isHoldingBlock()) && nn.player.onGround()
+        return (!blocksOnly || isHoldingBlock()) && player.onGround()
     }
 
     fun isOverEdge(): Boolean = runSafeOrFalse {
@@ -87,8 +85,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         level.noCollision(player, player.boundingBox.move(movement.x, -1.0, movement.z))
     }
 
-    context(nn: NonNullContext)
-    private fun predictMovement(): Vec3 {
+    private fun NonNullContext.predictMovement(): Vec3 {
         var strafeInput = getInput(mc.options.keyLeft.isDown, mc.options.keyRight.isDown) * 0.98f
         var forwardInput = getInput(mc.options.keyUp.isDown, mc.options.keyDown.isDown) * 0.98f
         var inputMagnitude = strafeInput * strafeInput + forwardInput * forwardInput
@@ -99,8 +96,8 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         strafeInput *= inputScale
         forwardInput *= inputScale
 
-        val sinYaw = Mth.sin((nn.player.yRot * (PI / 180.0).toFloat()).toDouble())
-        val cosYaw = Mth.cos((nn.player.yRot * (PI / 180.0).toFloat()).toDouble())
+        val sinYaw = Mth.sin((player.yRot * (PI / 180.0).toFloat()).toDouble())
+        val cosYaw = Mth.cos((player.yRot * (PI / 180.0).toFloat()).toDouble())
         return Vec3(
             (strafeInput * cosYaw - forwardInput * sinYaw).toDouble(),
             0.0,
@@ -108,11 +105,10 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         )
     }
 
-    context(nn: NonNullContext)
-    private fun getAllowedHorizontalDistance(): Float {
-        val posBelow = nn.player.blockPosBelowThatAffectsMyMovement
-        val blockFriction = nn.level.getBlockState(posBelow).block.friction
-        return nn.player.speed * (0.21600002f / (blockFriction * blockFriction * blockFriction))
+    private fun NonNullContext.getAllowedHorizontalDistance(): Float {
+        val posBelow = player.blockPosBelowThatAffectsMyMovement
+        val blockFriction = level.getBlockState(posBelow).block.friction
+        return player.speed * (0.21600002f / (blockFriction * blockFriction * blockFriction))
     }
 
     private fun getInput(positive: Boolean, negative: Boolean): Float {
@@ -120,15 +116,14 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         return if (positive) 1.0f else -1.0f
     }
 
-    context(nn: NonNullContext)
-    private fun isHoldingBlock(): Boolean {
-        val stack = nn.player.mainHandItem
+    private fun NonNullContext.isHoldingBlock(): Boolean {
+        val stack = player.mainHandItem
         if (stack.isEmpty) return false
         val blockItem = stack.item as? BlockItem ?: return false
 
         val block = blockItem.block
         val state: BlockState = block.defaultBlockState()
-        if (block is EntityBlock || state.getMenuProvider(nn.level, BlockPos.ZERO) != null) return false
+        if (block is EntityBlock || state.getMenuProvider(level, BlockPos.ZERO) != null) return false
         if (!state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) return false
 
         return block !is FallingBlock &&

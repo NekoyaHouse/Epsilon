@@ -4,17 +4,43 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.ClickSlotUtils
+import com.github.epsilon.utils.player.ClickSlotUtils.click as clickSlot
+import com.github.epsilon.utils.player.ClickSlotUtils.dropAll as dropAllInSlot
+import com.github.epsilon.utils.player.ClickSlotUtils.shiftClick as shiftClickSlot
+import com.github.epsilon.utils.player.ClickSlotUtils.swap as swapSlot
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.InvHelper.getArmorStack
+import com.github.epsilon.utils.player.InvHelper.getBestArmorScore
+import com.github.epsilon.utils.player.InvHelper.getBestAxe
+import com.github.epsilon.utils.player.InvHelper.getBestBlock
+import com.github.epsilon.utils.player.InvHelper.getBestCrossbow
+import com.github.epsilon.utils.player.InvHelper.getBestPickaxe
+import com.github.epsilon.utils.player.InvHelper.getBestPowerBow
+import com.github.epsilon.utils.player.InvHelper.getBestProjectile
+import com.github.epsilon.utils.player.InvHelper.getBestPunchBow
+import com.github.epsilon.utils.player.InvHelper.getBestShapeAxe
+import com.github.epsilon.utils.player.InvHelper.getBestShovel
+import com.github.epsilon.utils.player.InvHelper.getBestSword
+import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
+import com.github.epsilon.utils.player.InvHelper.getCurrentArmorScore
+import com.github.epsilon.utils.player.InvHelper.getFishingRod
+import com.github.epsilon.utils.player.InvHelper.getInventoryStack
+import com.github.epsilon.utils.player.InvHelper.getItemCount
+import com.github.epsilon.utils.player.InvHelper.getItemSlot
+import com.github.epsilon.utils.player.InvHelper.getItemStackSlot
+import com.github.epsilon.utils.player.InvHelper.getOffhandStack
+import com.github.epsilon.utils.player.InvHelper.getWorstArrow
+import com.github.epsilon.utils.player.InvHelper.getWorstBlock
+import com.github.epsilon.utils.player.InvHelper.getWorstProjectile
+import com.github.epsilon.utils.player.InvHelper.shouldDisableFeatures
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -172,7 +198,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         safeEventHandler<ClientTickEvent.Pre> {
             actionConsumed = false
 
-            if (InvHelper.shouldDisableFeatures()) {
+            if (shouldDisableFeatures()) {
                 cancelPendingAction()
                 return@safeEventHandler
             }
@@ -187,7 +213,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 this@InvManager.noMoveTicks++
             }
 
-            if (pauseOnEat && PlayerUtils.isEating()) {
+            if (pauseOnEat && isEating()) {
                 cancelPendingAction()
                 return@safeEventHandler
             }
@@ -216,9 +242,9 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val armorSlots =
                     arrayOf(EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD)
                 for (i in armorSlots.indices) {
-                    val stack = InvHelper.getArmorStack(armorSlots[i])
+                    val stack = getArmorStack(armorSlots[i])
                     if (InvHelper.isArmor(stack)) {
-                        if (!stack.isEmpty && canExecuteInventoryAction() && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(
+                        if (!stack.isEmpty && canExecuteInventoryAction() && getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(
                                 stack
                             )
                         ) {
@@ -227,13 +253,13 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     }
                 }
                 for (ix in 0 until player.inventory.nonEquipmentItems.size) {
-                    val stack = InvHelper.getInventoryStack(ix)
+                    val stack = getInventoryStack(ix)
                     if (!stack.isEmpty && InvHelper.isArmor(stack)) {
                         val currentItemScore = InvHelper.getProtection(stack)
                         val isBestItem =
-                            InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)!!) == currentItemScore
+                            getBestArmorScore(InvHelper.getArmorSlot(stack)!!) == currentItemScore
                         val isBetterItem =
-                            InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) < currentItemScore
+                            getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) < currentItemScore
                         if (isBestItem && isBetterItem && canExecuteInventoryAction()) {
                             if (ix < 9) {
                                 shiftClick(ix + 36)
@@ -252,11 +278,11 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             }
 
             if (this@InvManager.offhandItem == OffhandItemMode.GoldenApple) {
-                val offHand = InvHelper.getOffhandStack()
+                val offHand = getOffhandStack()
                 val offHandItem = offHand.item
 
-                val egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE)
-                val gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE)
+                val egapSlot = getItemSlot(Items.ENCHANTED_GOLDEN_APPLE)
+                val gapSlot = getItemSlot(Items.GOLDEN_APPLE)
 
                 if (offHandItem == Items.ENCHANTED_GOLDEN_APPLE) {
                     if (offHand.count < offHand.maxStackSize && egapSlot != -1) {
@@ -274,7 +300,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 } else if (offHandItem == Items.GOLDEN_APPLE) {
                     if (egapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this@InvManager.swapOffHand(egapSlot)
+                            swapOffHand(egapSlot)
                         }
                     } else if (offHand.count < offHand.maxStackSize && gapSlot != -1) {
                         if (canExecuteInventoryAction()) {
@@ -292,70 +318,70 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 } else {
                     if (egapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this@InvManager.swapOffHand(egapSlot)
+                            swapOffHand(egapSlot)
                         }
                     } else if (gapSlot != -1) {
                         if (canExecuteInventoryAction()) {
-                            this@InvManager.swapOffHand(gapSlot)
+                            swapOffHand(gapSlot)
                         }
                     }
                 }
             } else if (this@InvManager.offhandItem == OffhandItemMode.Projectile) {
-                val offHand = InvHelper.getOffhandStack()
-                val bestProjectile = InvHelper.getBestProjectile()
+                val offHand = getOffhandStack()
+                val bestProjectile = getBestProjectile()
                 if (bestProjectile != null) {
-                    val slot = InvHelper.getItemStackSlot(bestProjectile)
+                    val slot = getItemStackSlot(bestProjectile)
                     val shouldSwap =
                         offHand.item != Items.EGG && offHand.item != Items.SNOWBALL || offHand.count < bestProjectile.count
-                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this@InvManager.swapOffHand(slot)
+                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) swapOffHand(slot)
                 }
             } else if (this@InvManager.offhandItem == OffhandItemMode.FishingRod) {
-                val offHand = InvHelper.getOffhandStack()
-                val slot = InvHelper.getItemSlot(Items.FISHING_ROD)
+                val offHand = getOffhandStack()
+                val slot = getItemSlot(Items.FISHING_ROD)
                 if (slot != -1 && canExecuteInventoryAction() && offHand.item != Items.FISHING_ROD) {
-                    this@InvManager.swapOffHand(slot)
+                    swapOffHand(slot)
                 }
             } else if (this@InvManager.offhandItem == OffhandItemMode.Block) {
-                val offHand = InvHelper.getOffhandStack()
-                val bestBlock = InvHelper.getBestBlock()
+                val offHand = getOffhandStack()
+                val bestBlock = getBestBlock()
                 if (bestBlock != null) {
-                    val slot = InvHelper.getItemStackSlot(bestBlock)
+                    val slot = getItemStackSlot(bestBlock)
                     val shouldSwap = !InvHelper.isValidStack(offHand) || offHand.count < bestBlock.count
-                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) this@InvManager.swapOffHand(slot)
+                    if (shouldSwap && slot != -1 && canExecuteInventoryAction()) swapOffHand(slot)
                 }
             }
 
             if (this@InvManager.switchGoldenApple && this@InvManager.offhandItem != OffhandItemMode.GoldenApple) {
                 val targetSlotIdx = this@InvManager.goldenAppleSlot - 1
-                val egapSlot = InvHelper.getItemSlot(Items.ENCHANTED_GOLDEN_APPLE)
-                val gapSlot = InvHelper.getItemSlot(Items.GOLDEN_APPLE)
+                val egapSlot = getItemSlot(Items.ENCHANTED_GOLDEN_APPLE)
+                val gapSlot = getItemSlot(Items.GOLDEN_APPLE)
                 val bestGapSlot = if (egapSlot != -1) egapSlot else gapSlot
                 if (bestGapSlot != -1) {
-                    val currentInSlot = InvHelper.getInventoryStack(targetSlotIdx)
-                    val bestGapItem = InvHelper.getInventoryStack(bestGapSlot)
+                    val currentInSlot = getInventoryStack(targetSlotIdx)
+                    val bestGapItem = getInventoryStack(bestGapSlot)
                     if (currentInSlot.item != bestGapItem.item || (currentInSlot.count < bestGapItem.count && currentInSlot.item == bestGapItem.item)) {
-                        this@InvManager.swapItem(targetSlotIdx, bestGapItem)
+                        swapItem(targetSlotIdx, bestGapItem)
                     }
                 }
             }
 
             if (this@InvManager.switchBlock) {
                 val blockSlotIndex = this@InvManager.blockSlot - 1
-                val currentBlock = InvHelper.getInventoryStack(blockSlotIndex)
-                val bestBlock = InvHelper.getBestBlock()
+                val currentBlock = getInventoryStack(blockSlotIndex)
+                val bestBlock = getBestBlock()
                 if (bestBlock != null && (bestBlock.count > currentBlock.count || !InvHelper.isValidStack(currentBlock)) && this@InvManager.offhandItem != OffhandItemMode.Block) {
-                    this@InvManager.swapItem(blockSlotIndex, bestBlock)
+                    swapItem(blockSlotIndex, bestBlock)
                 }
-                if (InvHelper.getBlockCountInInventory().toFloat() > this@InvManager.maxBlockSize) {
-                    this@InvManager.throwItem(InvHelper.getWorstBlock())
+                if (getBlockCountInInventory().toFloat() > this@InvManager.maxBlockSize) {
+                    throwItem(getWorstBlock())
                 }
             }
 
             if (this@InvManager.switchSword) {
                 val slotIndex = this@InvManager.swordSlot - 1
-                val currentSword = InvHelper.getInventoryStack(slotIndex)
-                var bestSword = InvHelper.getBestSword()
-                val bestShapeAxe = InvHelper.getBestShapeAxe()
+                val currentSword = getInventoryStack(slotIndex)
+                var bestSword = getBestSword()
+                val bestShapeAxe = getBestShapeAxe()
                 if (InvHelper.getAxeDamage(bestShapeAxe) > InvHelper.getSwordDamage(bestSword)) {
                     bestSword = bestShapeAxe
                 }
@@ -368,108 +394,108 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                         if (InvHelper.isSword(bestSword)) InvHelper.getSwordDamage(bestSword) else InvHelper.getAxeDamage(
                             bestSword
                         )
-                    if (bestWeaponDamage > currentDamage) this@InvManager.swapItem(slotIndex, bestSword)
+                    if (bestWeaponDamage > currentDamage) swapItem(slotIndex, bestSword)
                 }
             }
 
             if (this@InvManager.switchPickaxe) {
                 val slotIndex = this@InvManager.pickaxeSlot - 1
-                val bestPickaxe = InvHelper.getBestPickaxe()
-                val currentPickaxe = InvHelper.getInventoryStack(slotIndex)
+                val bestPickaxe = getBestPickaxe()
+                val currentPickaxe = getInventoryStack(slotIndex)
                 if (bestPickaxe != null && InvHelper.isPickaxe(bestPickaxe) && (InvHelper.getToolScore(bestPickaxe) > InvHelper.getToolScore(
                         currentPickaxe
                     ) || !InvHelper.isPickaxe(currentPickaxe))
                 ) {
-                    this@InvManager.swapItem(slotIndex, bestPickaxe)
+                    swapItem(slotIndex, bestPickaxe)
                 }
             }
 
             if (this@InvManager.switchAxe) {
                 val slotIndex = this@InvManager.axeSlot - 1
-                val bestAxe = InvHelper.getBestAxe()
-                val currentAxe = InvHelper.getInventoryStack(slotIndex)
+                val bestAxe = getBestAxe()
+                val currentAxe = getInventoryStack(slotIndex)
                 if (bestAxe != null && InvHelper.isAxe(bestAxe) && (InvHelper.getToolScore(bestAxe) > InvHelper.getToolScore(
                         currentAxe
                     ) || !InvHelper.isAxe(currentAxe))
                 ) {
-                    this@InvManager.swapItem(slotIndex, bestAxe)
+                    swapItem(slotIndex, bestAxe)
                 }
             }
 
             if (this@InvManager.switchRod && this@InvManager.offhandItem != OffhandItemMode.FishingRod) {
                 val slotIndex = this@InvManager.rodSlot - 1
-                val bestRod = InvHelper.getFishingRod()
-                val currentRod = InvHelper.getInventoryStack(slotIndex)
-                if (currentRod.item !is FishingRodItem) this@InvManager.swapItem(slotIndex, bestRod)
+                val bestRod = getFishingRod()
+                val currentRod = getInventoryStack(slotIndex)
+                if (currentRod.item !is FishingRodItem) swapItem(slotIndex, bestRod)
             }
 
             if (this@InvManager.switchBow) {
                 val slotIndex = this@InvManager.bowSlot - 1
-                val currentBow = InvHelper.getInventoryStack(slotIndex)
+                val currentBow = getInventoryStack(slotIndex)
                 var bestBow: ItemStack? = null
                 var bestScore = 0.0f
                 var currentScore = 0.0f
                 when (this@InvManager.preferBow) {
                     BowPriorityMode.Crossbow -> {
-                        bestBow = InvHelper.getBestCrossbow()
+                        bestBow = getBestCrossbow()
                         bestScore = InvHelper.getCrossbowScore(bestBow)
                         currentScore = InvHelper.getCrossbowScore(currentBow)
                     }
 
                     BowPriorityMode.PowerBow -> {
-                        bestBow = InvHelper.getBestPowerBow()
+                        bestBow = getBestPowerBow()
                         bestScore = InvHelper.getPowerBowScore(bestBow)
                         currentScore = InvHelper.getPowerBowScore(currentBow)
                     }
 
                     BowPriorityMode.PunchBow -> {
-                        bestBow = InvHelper.getBestPunchBow()
+                        bestBow = getBestPunchBow()
                         bestScore = InvHelper.getPunchBowScore(bestBow)
                         currentScore = InvHelper.getPunchBowScore(currentBow)
                     }
                 }
                 if (bestBow == null) {
-                    bestBow = InvHelper.getBestCrossbow()
+                    bestBow = getBestCrossbow()
                     bestScore = InvHelper.getCrossbowScore(bestBow)
                     currentScore = InvHelper.getCrossbowScore(currentBow)
                 }
                 if (bestBow == null) {
-                    bestBow = InvHelper.getBestPowerBow()
+                    bestBow = getBestPowerBow()
                     bestScore = InvHelper.getPowerBowScore(bestBow)
                     currentScore = InvHelper.getPowerBowScore(currentBow)
                 }
                 if (bestBow == null) {
-                    bestBow = InvHelper.getBestPunchBow()
+                    bestBow = getBestPunchBow()
                     bestScore = InvHelper.getPunchBowScore(bestBow)
                     currentScore = InvHelper.getPunchBowScore(currentBow)
                 }
                 val finalBow = bestBow
-                if (finalBow != null && bestScore > currentScore) this@InvManager.swapItem(slotIndex, finalBow)
-                if (InvHelper.getItemCount(Items.ARROW).toFloat() > this@InvManager.maxArrowSize) {
-                    this@InvManager.throwItem(InvHelper.getWorstArrow())
+                if (finalBow != null && bestScore > currentScore) swapItem(slotIndex, finalBow)
+                if (getItemCount(Items.ARROW).toFloat() > this@InvManager.maxArrowSize) {
+                    throwItem(getWorstArrow())
                 }
             }
 
             if (this@InvManager.switchEnderPearl) {
-                this@InvManager.swapItem(this@InvManager.enderPearlSlot - 1, Items.ENDER_PEARL)
+                swapItem(this@InvManager.enderPearlSlot - 1, Items.ENDER_PEARL)
             }
             if (this@InvManager.switchWaterBucket) {
-                this@InvManager.swapItem(this@InvManager.waterBucketSlot - 1, Items.WATER_BUCKET)
+                swapItem(this@InvManager.waterBucketSlot - 1, Items.WATER_BUCKET)
             }
             if (this@InvManager.switchFireball) {
-                this@InvManager.swapItem(this@InvManager.fireballSlot - 1, Items.FIRE_CHARGE)
+                swapItem(this@InvManager.fireballSlot - 1, Items.FIRE_CHARGE)
             }
 
             if (this@InvManager.keepProjectile) {
-                if ((InvHelper.getItemCount(Items.EGG) + InvHelper.getItemCount(Items.SNOWBALL)).toFloat() > this@InvManager.maxProjectileSize) {
-                    this@InvManager.throwItem(InvHelper.getWorstProjectile())
+                if ((getItemCount(Items.EGG) + getItemCount(Items.SNOWBALL)).toFloat() > this@InvManager.maxProjectileSize) {
+                    throwItem(getWorstProjectile())
                 }
                 if (this@InvManager.switchProjectile && this@InvManager.offhandItem != OffhandItemMode.Projectile) {
                     val pSlot = this@InvManager.projectileSlot - 1
-                    if (InvHelper.getItemCount(Items.EGG) > 0) {
-                        this@InvManager.swapItem(pSlot, Items.EGG)
-                    } else if (InvHelper.getItemCount(Items.SNOWBALL) > 0) {
-                        this@InvManager.swapItem(pSlot, Items.SNOWBALL)
+                    if (getItemCount(Items.EGG) > 0) {
+                        swapItem(pSlot, Items.EGG)
+                    } else if (getItemCount(Items.SNOWBALL) > 0) {
+                        swapItem(pSlot, Items.SNOWBALL)
                     }
                 }
             }
@@ -478,9 +504,9 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val slots = (0 until player.inventory.nonEquipmentItems.size).toMutableList()
                 slots.shuffle()
                 for (slotIdx in slots) {
-                    val stack = InvHelper.getInventoryStack(slotIdx)
-                    if (!stack.isEmpty && !this@InvManager.isItemUseful(stack) && canExecuteInventoryAction()) {
-                        if (this@InvManager.throwItem(stack)) {
+                    val stack = getInventoryStack(slotIdx)
+                    if (!stack.isEmpty && !isItemUseful(stack) && canExecuteInventoryAction()) {
+                        if (throwItem(stack)) {
                             return@safeEventHandler
                         }
                     }
@@ -502,38 +528,37 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun isItemUseful(stack: ItemStack): Boolean {
+    private fun NonNullContext.isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         if (InvHelper.isGodItem(stack)) return true
         if (stack.displayName.string.contains("点击使用")) return true
         if (InvHelper.isArmor(stack)) {
             val protection = InvHelper.getProtection(stack)
-            if (InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) >= protection) return false
-            val bestArmor = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
+            if (getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) >= protection) return false
+            val bestArmor = getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
             return !(protection < bestArmor)
         }
-        if (InvHelper.isSword(stack)) return InvHelper.getBestSword() === stack
-        if (InvHelper.isPickaxe(stack)) return InvHelper.getBestPickaxe() === stack
+        if (InvHelper.isSword(stack)) return getBestSword() === stack
+        if (InvHelper.isPickaxe(stack)) return getBestPickaxe() === stack
         if (InvHelper.isAxe(stack) && !InvHelper.isSharpnessAxe(stack)) {
-            return InvHelper.getBestAxe() === stack
+            return getBestAxe() === stack
         }
-        if (InvHelper.isShovel(stack)) return InvHelper.getBestShovel() === stack
-        if (stack.item is CrossbowItem) return InvHelper.getBestCrossbow() === stack
+        if (InvHelper.isShovel(stack)) return getBestShovel() === stack
+        if (stack.item is CrossbowItem) return getBestCrossbow() === stack
         if (stack.item is BowItem && InvHelper.isPunchBow(stack)) {
-            return InvHelper.getBestPunchBow() === stack
+            return getBestPunchBow() === stack
         }
         if (stack.item is BowItem && InvHelper.isPowerBow(stack)) {
-            return InvHelper.getBestPowerBow() === stack
+            return getBestPowerBow() === stack
         }
-        if (stack.item is BowItem && InvHelper.getItemCount(Items.BOW) > 1) return false
-        if (stack.item == Items.WATER_BUCKET && InvHelper.getItemCount(Items.WATER_BUCKET) > waterBucketCount) {
+        if (stack.item is BowItem && getItemCount(Items.BOW) > 1) return false
+        if (stack.item == Items.WATER_BUCKET && getItemCount(Items.WATER_BUCKET) > waterBucketCount) {
             return false
         }
-        if (stack.item == Items.LAVA_BUCKET && InvHelper.getItemCount(Items.LAVA_BUCKET) > lavaBucketCount) {
+        if (stack.item == Items.LAVA_BUCKET && getItemCount(Items.LAVA_BUCKET) > lavaBucketCount) {
             return false
         }
-        if (stack.item is FishingRodItem && InvHelper.getItemCount(Items.FISHING_ROD) > 1) {
+        if (stack.item is FishingRodItem && getItemCount(Items.FISHING_ROD) > 1) {
             return false
         }
         if ((stack.item == Items.SNOWBALL || stack.item == Items.EGG) && !keepProjectile) {
@@ -543,8 +568,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return stack.item !is StandingAndWallBlockItem && InvHelper.isCommonItemUseful(stack)
     }
 
-    context(nn: NonNullContext)
-    private fun swapOffHand(slot: Int) {
+    private fun NonNullContext.swapOffHand(slot: Int) {
         if (slot < 9) {
             swap(slot + 36, 40)
         } else {
@@ -552,10 +576,9 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun throwItem(item: ItemStack?): Boolean {
+    private fun NonNullContext.throwItem(item: ItemStack?): Boolean {
         if (item != null && InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
-            val itemSlot = InvHelper.getItemStackSlot(item)
+            val itemSlot = getItemStackSlot(item)
             if (itemSlot != -1) {
                 return if (itemSlot < 9) {
                     dropAll(itemSlot + 36)
@@ -567,11 +590,10 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         return false
     }
 
-    context(nn: NonNullContext)
-    private fun swapItem(targetSlot: Int, bestItem: ItemStack?) {
-        val currentSlot = InvHelper.getInventoryStack(targetSlot)
+    private fun NonNullContext.swapItem(targetSlot: Int, bestItem: ItemStack?) {
+        val currentSlot = getInventoryStack(targetSlot)
         if (InvHelper.isItemValid(currentSlot) && bestItem !== currentSlot && canExecuteInventoryAction()) {
-            val bestItemSlot = InvHelper.getItemStackSlot(bestItem)
+            val bestItemSlot = getItemStackSlot(bestItem)
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
                     swap(bestItemSlot + 36, targetSlot)
@@ -582,13 +604,12 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun swapItem(targetSlot: Int, item: Item) {
-        val currentSlot = InvHelper.getInventoryStack(targetSlot)
+    private fun NonNullContext.swapItem(targetSlot: Int, item: Item) {
+        val currentSlot = getInventoryStack(targetSlot)
         if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
-            val bestItemSlot = InvHelper.getItemSlot(item)
+            val bestItemSlot = getItemSlot(item)
             if (bestItemSlot != -1) {
-                val bestItemStack = InvHelper.getInventoryStack(bestItemSlot)
+                val bestItemStack = getInventoryStack(bestItemSlot)
                 if (currentSlot.item != item || currentSlot.item == item && currentSlot.count < bestItemStack.count) {
                     if (bestItemSlot < 9) {
                         swap(bestItemSlot + 36, targetSlot)
@@ -649,34 +670,30 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun click(slot: Int): Boolean {
+    private fun NonNullContext.click(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
-        ClickSlotUtils.click(slot)
+        clickSlot(slot)
         completeInventoryAction()
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun swap(slot: Int, hotbarSlot: Int): Boolean {
+    private fun NonNullContext.swap(slot: Int, hotbarSlot: Int): Boolean {
         if (!prepareInventoryAction()) return false
-        ClickSlotUtils.swap(slot, hotbarSlot)
+        swapSlot(slot, hotbarSlot)
         completeInventoryAction()
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun shiftClick(slot: Int): Boolean {
+    private fun NonNullContext.shiftClick(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
-        ClickSlotUtils.shiftClick(slot)
+        shiftClickSlot(slot)
         completeInventoryAction()
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun dropAll(slot: Int): Boolean {
+    private fun NonNullContext.dropAll(slot: Int): Boolean {
         if (!prepareInventoryAction()) return false
-        ClickSlotUtils.dropAll(slot)
+        dropAllInSlot(slot)
         completeInventoryAction()
         return true
     }

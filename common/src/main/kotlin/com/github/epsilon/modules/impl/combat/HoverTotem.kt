@@ -4,11 +4,11 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.ClickSlotUtils
-import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.world.item.Items
+import com.github.epsilon.utils.player.ClickSlotUtils.swap
 import java.util.*
 import kotlin.math.ceil
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.item.Items
 
 object HoverTotem : Module("Hover Totem", Category.COMBAT) {
 
@@ -53,7 +53,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@safeEventHandler
                             }
-                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, totem)
+                            swap(player.containerMenu.containerId, slotIndex, totem)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         } else if (!player.offhandItem.`is`(Items.TOTEM_OF_UNDYING)) {
@@ -61,7 +61,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
                                 --clock
                                 return@safeEventHandler
                             }
-                            ClickSlotUtils.swap(player.containerMenu.containerId, slotIndex, 40)
+                            swap(player.containerMenu.containerId, slotIndex, 40)
                             currentDelay = getRandomDelay()
                             clock = currentDelay
                         }

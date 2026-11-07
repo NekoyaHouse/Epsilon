@@ -6,19 +6,25 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.player.*
+import com.github.epsilon.utils.player.ClickSlotUtils.swap
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.rotation.RaytraceUtils
+import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
 import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.calculate
+import com.github.epsilon.utils.rotation.RotationUtils.canSee
 import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world.BlockUtils
-import com.github.epsilon.utils.world.LegacyPlacement
+import com.github.epsilon.utils.world.BlockUtils.canPlaceAt
+import com.github.epsilon.utils.world.LegacyPlacement.placeBlock
+import java.awt.Color
+import java.util.concurrent.ConcurrentLinkedQueue
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -37,8 +43,6 @@ import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.NoteBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.*
-import java.awt.Color
-import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class TrapBase(
     name: String,
@@ -140,7 +144,7 @@ abstract class TrapBase(
             if (breakCrystal && target != null && pos != null && canAttackCrystal(target) &&
                 target.boundingBox.intersects(AABB(pos))
             ) {
-                requestRotation(RotationUtils.calculate(target.boundingBox.center))
+                requestRotation(calculate(target.boundingBox.center))
             } else if (rotate && rotationMode == RotationMode.Motion) {
                 breakingCrystal = null
                 val info = placing
@@ -167,7 +171,7 @@ abstract class TrapBase(
                 }
             }
 
-            if (player.isSpectator || (pauseOnEat && PlayerUtils.isEating()) || (!inAir && !player.onGround()) ||
+            if (player.isSpectator || (pauseOnEat && isEating()) || (!inAir && !player.onGround()) ||
                 (switchMode == SwitchMode.InvSwitch && player.containerMenu !== player.inventoryMenu)
             ) {
                 clearPlacement()
@@ -268,8 +272,7 @@ abstract class TrapBase(
         rotationRequest = null
     }
 
-    context(nn: NonNullContext)
-    private fun updatePendingBlocks() {
+    private fun NonNullContext.updatePendingBlocks() {
         val updates = blockUpdates ?: return
         if (pendingBlocks.isEmpty()) {
             blockUpdates = null
@@ -277,7 +280,7 @@ abstract class TrapBase(
         }
         while (true) {
             val update = updates.poll() ?: break
-            if (update.level !== nn.level || update.event.isCancelled) continue
+            if (update.level !== level || update.event.isCancelled) continue
 
             when (val packet = update.event.packet) {
                 is ClientboundBlockUpdatePacket -> pendingBlocks.replace(packet.pos, packet.blockState)
@@ -287,27 +290,23 @@ abstract class TrapBase(
             }
         }
         pendingBlocks.entries.removeIf { (pos, confirmedState) ->
-            val state = nn.level.getBlockState(pos)
+            val state = level.getBlockState(pos)
             // 方块包确认支撑；被拒绝的预测由原版 Ack 回滚后重新进入候选
             state == confirmedState || state.canBeReplaced()
         }
         if (pendingBlocks.isEmpty()) blockUpdates = null
     }
 
-    context(nn: NonNullContext)
-    protected abstract fun getTargetPositions(): Set<BlockPos>
+    protected abstract fun NonNullContext.getTargetPositions(): Set<BlockPos>
 
-    context(nn: NonNullContext)
-    protected open fun getPlaceRange(): Double = nn.player.blockInteractionRange()
+    protected open fun NonNullContext.getPlaceRange(): Double = player.blockInteractionRange()
 
-    context(nn: NonNullContext)
-    protected open fun getBreakRange(): Double = nn.player.entityInteractionRange()
+    protected open fun NonNullContext.getBreakRange(): Double = player.entityInteractionRange()
 
     protected open fun getBlockItems(): List<Item> =
         if (useEnderChest) listOf(Items.OBSIDIAN, Items.ENDER_CHEST) else listOf(Items.OBSIDIAN)
 
-    context(nn: NonNullContext)
-    private fun getPlacements(positions: Set<BlockPos>): MutableList<PlaceInfo> {
+    private fun NonNullContext.getPlacements(positions: Set<BlockPos>): MutableList<PlaceInfo> {
         val unsupported = mutableListOf<BlockPos>()
         val placements = linkedMapOf<BlockPos, PlaceInfo>()
         val rotation = RotationManager.getRotation()
@@ -331,8 +330,7 @@ abstract class TrapBase(
         }
     }
 
-    context(nn: NonNullContext)
-    private fun findSupportPlacement(pos: BlockPos, rotation: Rotation, planned: Set<BlockPos>): PlaceInfo? {
+    private fun NonNullContext.findSupportPlacement(pos: BlockPos, rotation: Rotation, planned: Set<BlockPos>): PlaceInfo? {
         val visited = mutableSetOf(pos)
         var frontier = listOf(pos)
         val priority = compareBy<PlaceInfo> { it.pos !in planned }
@@ -345,7 +343,7 @@ abstract class TrapBase(
                 for (side in Direction.entries) {
                     val helper = target.relative(side)
                     if (helper in pendingBlocks) {
-                        if (isClickable(nn.level.getBlockState(helper), helper) && canUseSupportFace(
+                        if (isClickable(level.getBlockState(helper), helper) && canUseSupportFace(
                                 helper,
                                 side.opposite
                             )
@@ -372,43 +370,40 @@ abstract class TrapBase(
         return null
     }
 
-    context(nn: NonNullContext)
-    private fun canUseSupportFace(pos: BlockPos, face: Direction): Boolean {
+    private fun NonNullContext.canUseSupportFace(pos: BlockPos, face: Direction): Boolean {
         val hit = Vec3.atCenterOf(pos).relative(face, 0.5)
-        val eye = nn.player.eyePosition
+        val eye = player.eyePosition
         val range = getPlaceRange()
         if (eye.distanceToSqr(hit) > range * range) return false
         // 辅助块尚未放下，射线不会撞到它；额外排除放下后背向玩家的面。
         val facing = (eye.x - hit.x) * face.stepX + (eye.y - hit.y) * face.stepY + (eye.z - hit.z) * face.stepZ
-        return facing > 0.0 && RotationUtils.canSee(pos, face)
+        return facing > 0.0 && canSee(pos, face)
     }
 
-    context(nn: NonNullContext)
-    private fun canPlace(pos: BlockPos): Boolean {
+    private fun NonNullContext.canPlace(pos: BlockPos): Boolean {
         val range = getPlaceRange()
-        return pos !in pendingBlocks && nn.level.isInWorldBounds(pos) && nn.level.worldBorder.isWithinBounds(pos) &&
-                AABB(pos).distanceToSqr(nn.player.eyePosition) < range * range && BlockUtils.canPlaceAt(
+        return pos !in pendingBlocks && level.isInWorldBounds(pos) && level.worldBorder.isWithinBounds(pos) &&
+                AABB(pos).distanceToSqr(player.eyePosition) < range * range && canPlaceAt(
             pos,
             breakCrystal
         )
     }
 
-    context(nn: NonNullContext)
-    private fun findPlacement(pos: BlockPos, rotation: Rotation): PlaceInfo? {
+    private fun NonNullContext.findPlacement(pos: BlockPos, rotation: Rotation): PlaceInfo? {
         var best: PlaceInfo? = null
         var bestDistance = Float.POSITIVE_INFINITY
         val current = placing?.takeIf { it.pos == pos }
-        val eye = nn.player.eyePosition
+        val eye = player.eyePosition
         val range = getPlaceRange()
         for (side in Direction.entries) {
             val neighbour = pos.relative(side)
             if (neighbour in pendingBlocks) continue
-            val state = nn.level.getBlockState(neighbour)
+            val state = level.getBlockState(neighbour)
             if (state.canBeReplaced() || !isClickable(state, neighbour)) continue
             val hitVec = Vec3.atCenterOf(neighbour).relative(side.opposite, 0.5)
-            if (eye.distanceToSqr(hitVec) > range * range || !RotationUtils.canSee(neighbour, side.opposite)) continue
+            if (eye.distanceToSqr(hitVec) > range * range || !canSee(neighbour, side.opposite)) continue
             val hit = BlockHitResult(hitVec, side.opposite, neighbour, false)
-            val info = PlaceInfo(pos, hit, RotationUtils.calculate(hitVec))
+            val info = PlaceInfo(pos, hit, calculate(hitVec))
             // 等待旋转时保留仍有效的点击面，避免支撑方块变化导致目标来回切换。
             if (!rotate || current != null && current.hit.blockPos == neighbour && current.hit.direction == hit.direction) {
                 return info
@@ -428,8 +423,7 @@ abstract class TrapBase(
         return yaw * yaw + pitch * pitch
     }
 
-    context(nn: NonNullContext)
-    private fun runPlacing(placements: MutableList<PlaceInfo>, blocks: FindItemResult) {
+    private fun NonNullContext.runPlacing(placements: MutableList<PlaceInfo>, blocks: FindItemResult) {
         // 先完成正在等待旋转的目标，其余候选按当前视角的转角排序。
         val currentIndex = placements.indexOfFirst { it.pos == placing?.pos }
         if (currentIndex > 0) placements.add(0, placements.removeAt(currentIndex))
@@ -445,7 +439,7 @@ abstract class TrapBase(
                 continue
             }
             breakingCrystal = null
-            if (!BlockUtils.canPlaceAt(info.pos)) {
+            if (!canPlaceAt(info.pos)) {
                 placing = placements.getOrNull(index + 1)
                 continue
             }
@@ -458,30 +452,28 @@ abstract class TrapBase(
         breakingCrystal = null
     }
 
-    context(nn: NonNullContext)
-    private fun isFacingPlacement(info: PlaceInfo): Boolean {
+    private fun NonNullContext.isFacingPlacement(info: PlaceInfo): Boolean {
         val rotation = RotationManager.getRotation()
-        val eye = nn.player.eyePosition
+        val eye = player.eyePosition
         val end = eye.add(Vec3.directionFromRotation(rotation.pitch, rotation.yaw).scale(getPlaceRange()))
-        val hit = nn.level.clip(ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, nn.player))
+        val hit = level.clip(ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player))
         return hit.type == HitResult.Type.BLOCK && hit.blockPos == info.hit.blockPos && hit.direction == info.hit.direction
     }
 
-    context(nn: NonNullContext)
-    private fun clearBlockingCrystal(pos: BlockPos): Boolean {
-        val crystals = nn.level.getEntitiesOfClass(EndCrystal::class.java, AABB(pos)) { it.isAlive }
+    private fun NonNullContext.clearBlockingCrystal(pos: BlockPos): Boolean {
+        val crystals = level.getEntitiesOfClass(EndCrystal::class.java, AABB(pos)) { it.isAlive }
         val previous = breakingCrystal
         breakingCrystal = null
         if (crystals.isEmpty()) return false
 
         if (breakTimer.passedMillise(breakDelay.toLong())) {
             val target = previous?.takeIf { it in crystals && canAttackCrystal(it) }
-                ?: crystals.filter { canAttackCrystal(it) }.minByOrNull { nn.player.distanceToSqr(it) }
+                ?: crystals.filter { canAttackCrystal(it) }.minByOrNull { player.distanceToSqr(it) }
             if (target != null) {
                 breakingCrystal = target
-                val hit = RaytraceUtils.raytrace(RotationManager.getRotation(), getBreakRange())
+                val hit = raytrace(RotationManager.getRotation(), getBreakRange())
                 if (hit !is EntityHitResult || hit.entity !== target) return true
-                nn.gameMode.attack(nn.player, target)
+                gameMode.attack(player, target)
                 SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)
                 breakTimer.reset()
             }
@@ -490,25 +482,23 @@ abstract class TrapBase(
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun canAttackCrystal(target: EndCrystal): Boolean {
+    private fun NonNullContext.canAttackCrystal(target: EndCrystal): Boolean {
         val range = getBreakRange()
-        return target.isAlive && nn.level.getEntity(target.id) === target &&
-                nn.level.worldBorder.isWithinBounds(target.blockPosition()) &&
-                target.boundingBox.distanceToSqr(nn.player.eyePosition) < range * range &&
-                nn.player.isWithinAttackRange(nn.player.mainHandItem, target.boundingBox, 0.0)
+        return target.isAlive && level.getEntity(target.id) === target &&
+                level.worldBorder.isWithinBounds(target.blockPosition()) &&
+                target.boundingBox.distanceToSqr(player.eyePosition) < range * range &&
+                player.isWithinAttackRange(player.mainHandItem, target.boundingBox, 0.0)
     }
 
-    context(nn: NonNullContext)
-    private fun placeBlock(info: PlaceInfo, blocks: FindItemResult): Boolean {
+    private fun NonNullContext.placeBlock(info: PlaceInfo, blocks: FindItemResult): Boolean {
         val hand = blocks.getHand()
         val swap = !blocks.isOffhand()
-        val selectedSlot = nn.player.inventory.selectedSlot
+        val selectedSlot = player.inventory.selectedSlot
         val containerSlot = if (blocks.slot < 9) blocks.slot + InventoryMenu.USE_ROW_SLOT_START else blocks.slot
 
         if (swap) when (switchMode) {
-            SwitchMode.Silent -> nn.player.inventory.selectedSlot = blocks.slot
-            SwitchMode.InvSwitch -> ClickSlotUtils.swap(containerSlot, selectedSlot)
+            SwitchMode.Silent -> player.inventory.selectedSlot = blocks.slot
+            SwitchMode.InvSwitch -> swap(containerSlot, selectedSlot)
         }
 
         // 先发布接收队列，再发送放置包，避免快速回包早于本地预测登记。
@@ -516,24 +506,24 @@ abstract class TrapBase(
 
         val result = try {
             val result = if (rotate && rotationMode == RotationMode.Silent) {
-                LegacyPlacement.placeBlock(hand, info.hit)
+                placeBlock(hand, info.hit)
             } else {
-                nn.gameMode.useItemOn(nn.player, hand, info.hit)
+                gameMode.useItemOn(player, hand, info.hit)
             }
             if (result.consumesAction()) SwingMode.of(swingHand).interactSwing(hand)
             result
         } finally {
             if (swap) when (switchMode) {
                 SwitchMode.Silent -> {
-                    nn.player.inventory.selectedSlot = selectedSlot
-                    nn.gameMode.ensureHasSentCarriedItem()
+                    player.inventory.selectedSlot = selectedSlot
+                    gameMode.ensureHasSentCarriedItem()
                 }
 
-                SwitchMode.InvSwitch -> ClickSlotUtils.swap(containerSlot, selectedSlot)
+                SwitchMode.InvSwitch -> swap(containerSlot, selectedSlot)
             }
         }
 
-        if (result.consumesAction() && !nn.level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
+        if (result.consumesAction() && !level.getBlockState(info.pos).canBeReplaced()) pendingBlocks[info.pos] = null
         if (pendingBlocks.isEmpty()) blockUpdates = null
         if (!result.consumesAction()) return false
         if (render) {
@@ -543,23 +533,21 @@ abstract class TrapBase(
         return true
     }
 
-    context(nn: NonNullContext)
-    private fun isClickable(state: BlockState, pos: BlockPos): Boolean {
-        if (nn.player.isSecondaryUseActive) return true
+    private fun NonNullContext.isClickable(state: BlockState, pos: BlockPos): Boolean {
+        if (player.isSecondaryUseActive) return true
         val block = state.block
-        return state.getMenuProvider(nn.level, pos) == null && block !is EntityBlock &&
+        return state.getMenuProvider(level, pos) == null && block !is EntityBlock &&
                 block !is NoteBlock && block !is LeverBlock &&
                 !state.`is`(BlockTags.BUTTONS) && !state.`is`(BlockTags.BEDS) &&
                 !state.`is`(BlockTags.FENCE_GATES) && !state.`is`(BlockTags.DOORS) && !state.`is`(BlockTags.TRAPDOORS)
     }
 
-    context(nn: NonNullContext)
-    private fun findBlocks(): FindItemResult {
+    private fun NonNullContext.findBlocks(): FindItemResult {
         for (item in getBlockItems()) {
             if (item === Items.AIR) continue
             val result = when (switchMode) {
-                SwitchMode.Silent -> InvUtils.findInHotbar(item)
-                SwitchMode.InvSwitch -> InvUtils.find(item)
+                SwitchMode.Silent -> findInHotbar(item)
+                SwitchMode.InvSwitch -> find(item)
             }
             if (result.found()) return result
         }

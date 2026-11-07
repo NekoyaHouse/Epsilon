@@ -3,13 +3,13 @@ package com.github.epsilon.managers.target
 import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.combat.AntiBot
-import com.github.epsilon.utils.rotation.RotationUtils
+import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.utils.rotation.RotationUtils.isInFov
+import java.util.*
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -19,7 +19,6 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
-import java.util.*
 
 object TargetManager : AlwaysListening {
 
@@ -74,32 +73,29 @@ object TargetManager : AlwaysListening {
         return sharedTarget
     }
 
-    context(nn: NonNullContext)
-    private fun collectTargets(request: TargetRequest): MutableList<LivingEntity> {
+    private fun NonNullContext.collectTargets(request: TargetRequest): MutableList<LivingEntity> {
         val targets = ArrayList<LivingEntity>()
 
-        for (entity in nn.level.entitiesForRendering()) {
+        for (entity in level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity is ArmorStand) continue
-            if (entity === nn.player) continue
+            if (entity === player) continue
             if (!isValidTarget(entity, request)) continue
             targets.add(entity)
         }
 
-        targets.sortWith(Comparator.comparingDouble { entity -> RotationUtils.getEyeDistanceToEntity(entity) })
+        targets.sortWith(Comparator.comparingDouble { entity -> getEyeDistanceToEntity(entity) })
         return targets
     }
 
-    context(nn: NonNullContext)
-    private fun isSharedTargetAlive(): Boolean {
+    private fun NonNullContext.isSharedTargetAlive(): Boolean {
         val shared = sharedTarget ?: return false
-        if (shared === nn.player) return false
+        if (shared === player) return false
         if (!shared.isAlive || shared.isDeadOrDying) return false
-        if (shared.level() !== nn.level) return false
+        if (shared.level() !== level) return false
         return !AntiBot.isBot(shared)
     }
 
-    context(nn: NonNullContext)
-    private fun isValidTarget(entity: LivingEntity, request: TargetRequest): Boolean {
+    private fun NonNullContext.isValidTarget(entity: LivingEntity, request: TargetRequest): Boolean {
         if (!entity.isAlive || entity.isDeadOrDying) return false
         if (AntiBot.isBot(entity)) return false
         if (isSameTeam(entity) &&
@@ -108,10 +104,10 @@ object TargetManager : AlwaysListening {
             return false
         }
 
-        val dist = RotationUtils.getEyeDistanceToEntity(entity)
+        val dist = getEyeDistanceToEntity(entity)
         if (dist > request.range) return false
 
-        if (request.fov < 360.0f && !RotationUtils.isInFov(entity, request.fov)) return false
+        if (request.fov < 360.0f && !isInFov(entity, request.fov)) return false
 
         if (entity is Player) {
             if (!request.allowFriends && FriendManager.isFriend(entity)) return false
@@ -160,9 +156,8 @@ object TargetManager : AlwaysListening {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun getTeam(entity: Entity): String? {
-        val playerInfo: PlayerInfo = nn.connection.getPlayerInfo(entity.uuid) ?: return null
+    private fun NonNullContext.getTeam(entity: Entity): String? {
+        val playerInfo: PlayerInfo = connection.getPlayerInfo(entity.uuid) ?: return null
         val team = playerInfo.team ?: return null
         return team.name
     }

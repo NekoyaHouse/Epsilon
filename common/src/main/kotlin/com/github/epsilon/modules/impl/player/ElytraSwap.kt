@@ -2,20 +2,22 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player.ClickSlotUtils
-import com.github.epsilon.utils.player.InvUtils
+import com.github.epsilon.utils.player.ClickSlotUtils.swap
+import com.github.epsilon.utils.player.InvUtils.find
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
 import com.github.epsilon.utils.player.SwingMode
 import com.mojang.blaze3d.platform.InputConstants
+import java.util.function.Predicate
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import java.util.function.Predicate
 
 object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
 
@@ -74,7 +76,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                     Predicate { stack -> stack.`is`(Items.ELYTRA) }
                 }
                 if (!isItemSwapped) {
-                    val targetSlot = InvUtils.findInHotbar(predicate).slot
+                    val targetSlot = findInHotbar(predicate).slot
 
                     if (targetSlot == -1) {
                         if (!moveToSlot) {
@@ -82,14 +84,14 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                             return@safeEventHandler
                         }
 
-                        val invSlot = InvUtils.find(predicate).slot
+                        val invSlot = find(predicate).slot
                         if (invSlot != -1) {
                             var containerSlot = invSlot
                             if (invSlot < 9) containerSlot += 36
 
                             val targetHotbarSlot = elytraSlotSetting - 1
 
-                            ClickSlotUtils.swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
+                            swap(player.containerMenu.containerId, containerSlot, targetHotbarSlot)
                             swapCounter = 0
                             return@safeEventHandler
                         } else {
@@ -98,7 +100,7 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
                         }
                     }
 
-                    InvUtils.swap(targetSlot, false)
+                    swap(targetSlot, false)
                     isItemSwapped = true
                 }
 
@@ -117,15 +119,14 @@ object ElytraSwap : Module("Elytra Swap", Category.PLAYER) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun handleSwitchBack() {
+    private fun NonNullContext.handleSwitchBack() {
         if (switchCounter < switchDelay) {
             ++switchCounter
             return
         }
 
         if (originalSlot != -1) {
-            InvUtils.swap(originalSlot, false)
+            swap(originalSlot, false)
         }
         resetState()
     }

@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
@@ -11,8 +11,11 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.player.EnchantmentUtils
 import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvUtils
-import com.github.epsilon.utils.player.PlayerUtils
+import com.github.epsilon.utils.player.InvUtils.findInHotbar
+import com.github.epsilon.utils.player.InvUtils.swap
+import com.github.epsilon.utils.player.InvUtils.swapBack
+import com.github.epsilon.utils.player.InvUtils.testInMainHand
+import com.github.epsilon.utils.player.PlayerUtils.isEating
 import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.ItemTags
@@ -164,18 +167,16 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         safeEventHandler<PlayerTickEvent.Pre> { onTick() }
     }
 
-    context(nn: NonNullContext)
-    private fun onAttackEntity(event: AttackEntityEvent) {
+    private fun NonNullContext.onAttackEntity(event: AttackEntityEvent) {
         if (ElytraCombat.isControllingCombat()) {
             return
         }
-        if (pauseOnEat && PlayerUtils.isEating()) return
+        if (pauseOnEat && isEating()) return
         if (!canSwapByWeapon()) return
         performSwap(event.entity)
     }
 
-    context(nn: NonNullContext)
-    private fun performSwap(target: Entity?) {
+    private fun NonNullContext.performSwap(target: Entity?) {
         if (awaitingBack) return
 
         val player = this.mc.player ?: return
@@ -188,24 +189,22 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         if (slotIndex < 0 || slotIndex > 8) return
         if (slotIndex == player.inventory.selectedSlot) return
 
-        InvUtils.swap(slotIndex, swapBack)
+        swap(slotIndex, swapBack)
 
         awaitingBack = swapBack
     }
 
-    context(nn: NonNullContext)
-    private fun onTick() {
+    private fun NonNullContext.onTick() {
         if (!awaitingBack) return
         if (backTimer.passedMillise(swapBackDelay.toLong())) {
-            InvUtils.swapBack()
+            swapBack()
             backTimer.reset()
             awaitingBack = false
         }
     }
 
-    context(nn: NonNullContext)
-    private fun canSwapByWeapon(): Boolean {
-        return !onlyOnWeapon || InvUtils.testInMainHand { item ->
+    private fun NonNullContext.canSwapByWeapon(): Boolean {
+        return !onlyOnWeapon || testInMainHand { item ->
             (sword && item == (ItemTags.SWORDS)) ||
                     (axe && item == (ItemTags.AXES)) ||
                     (pickaxe && item == (ItemTags.PICKAXES)) ||
@@ -216,15 +215,14 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         }
     }
 
-    context(nn: NonNullContext)
-    private fun getSmartSlot(target: Entity?): Int {
+    private fun NonNullContext.getSmartSlot(target: Entity?): Int {
         val player = this.mc.player ?: return -1
         val currentStack = player.mainHandItem
 
         val livingTarget = target as? LivingEntity
         if (livingTarget != null && smartShieldBreak && livingTarget.isBlocking) {
             if (InvHelper.isAxe(currentStack)) return -1
-            val axeSlot = InvUtils.findInHotbar { stack -> InvHelper.isAxe(stack) }.slot
+            val axeSlot = findInHotbar { stack -> InvHelper.isAxe(stack) }.slot
             if (axeSlot != -1) return axeSlot
         }
 

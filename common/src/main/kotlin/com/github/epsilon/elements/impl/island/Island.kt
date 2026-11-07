@@ -11,24 +11,21 @@ import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
 import com.github.epsilon.settings.platformOnly
 import com.github.epsilon.utils.client.ClientPlatform
 import com.github.epsilon.utils.client.PlatformRequirement
-import com.github.epsilon.utils.player.InvHelper
+import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
 import com.google.common.base.Suppliers
+import java.awt.Color
+import java.util.function.Supplier
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
-import java.awt.Color
-import java.util.function.Supplier
 
 object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
@@ -175,7 +172,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
         val instance = LandController.getInstance(ScaffoldBlocksInstance::class.java)
         if (instance == null) {
-            val count: Supplier<Int> = Supplier { runSafeOrElse(0) { InvHelper.getBlockCountInInventory() } }
+            val count: Supplier<Int> = Supplier { runSafeOrElse(0) { getBlockCountInInventory() } }
             val icon: Supplier<ItemStack> = Supplier { Scaffold.getBlockStack() }
             LandController.post(
                 ScaffoldBlocksInstance(

@@ -7,11 +7,12 @@ import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SendPositionEvent
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.network.NetworkUtils
+import kotlin.math.abs
+import kotlin.math.sign
 import net.minecraft.core.SectionPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
@@ -19,8 +20,6 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
-import kotlin.math.sign
 
 /**
  * 鞘翅 Grim 拉回加速，移植自 SlimefunHelper 的 {@code ElytraGrimAccelerate}。
@@ -214,24 +213,23 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     /**
      * 构造用于触发拉回的伪造位置包，坐标取回滚之后的本地位置。
      */
-    context(nn: NonNullContext)
-    private fun createSetBackPacket(moveX: Double, moveZ: Double): ServerboundMovePlayerPacket? {
+    private fun NonNullContext.createSetBackPacket(moveX: Double, moveZ: Double): ServerboundMovePlayerPacket? {
         if (fixKickFromLag) {
             // 区块未加载时服务端会忽略移动，发送伪造包只会换来踢出
             if (isFacingUnloadedChunk(moveX, moveZ)) return null
             // 已经在等待上一次拉回结果时不再继续发，避免刷包
-            if (nn.player.tickCount < lastSetBackPacketTick + setbackWait) return null
+            if (player.tickCount < lastSetBackPacketTick + setbackWait) return null
         }
 
-        val y = nn.player.y + SIMULATION_Y_OFFSETS[nn.player.tickCount % SIMULATION_Y_OFFSETS.size]
-        val yRot = nn.player.yRot
-        val xRot = nn.player.xRot
-        val onGround = nn.player.onGround()
-        val horizontalCollision = nn.player.horizontalCollision
+        val y = player.y + SIMULATION_Y_OFFSETS[player.tickCount % SIMULATION_Y_OFFSETS.size]
+        val yRot = player.yRot
+        val xRot = player.xRot
+        val onGround = player.onGround()
+        val horizontalCollision = player.horizontalCollision
 
         return when (mode) {
             SetBackTrigger.Simulation -> ServerboundMovePlayerPacket.PosRot(
-                nn.player.x, y, nn.player.z, yRot, xRot, onGround, horizontalCollision
+                player.x, y, player.z, yRot, xRot, onGround, horizontalCollision
             )
 
             SetBackTrigger.CrashPackets -> ServerboundMovePlayerPacket.PosRot(
@@ -243,12 +241,11 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
     /**
      * 判断前进方向上相邻的区块是否已经加载，对应上游 AntiChunkLag 的卡区块保护。
      */
-    context(nn: NonNullContext)
-    private fun isFacingUnloadedChunk(moveX: Double, moveZ: Double): Boolean {
+    private fun NonNullContext.isFacingUnloadedChunk(moveX: Double, moveZ: Double): Boolean {
         var directionX = moveX
         var directionZ = moveZ
         if (abs(directionX) < 1.0E-3 && abs(directionZ) < 1.0E-3) {
-            val velocity = nn.player.deltaMovement
+            val velocity = player.deltaMovement
             directionX = velocity.x
             directionZ = velocity.z
         }
@@ -257,11 +254,11 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
         val signZ = sign(directionZ).toInt()
         if (signX == 0 && signZ == 0) return false
 
-        val chunkX = SectionPos.blockToSectionCoord(nn.player.x)
-        val chunkZ = SectionPos.blockToSectionCoord(nn.player.z)
+        val chunkX = SectionPos.blockToSectionCoord(player.x)
+        val chunkZ = SectionPos.blockToSectionCoord(player.z)
         for (x in 0..1) {
             for (z in 0..1) {
-                if (!nn.level.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
+                if (!level.hasChunk(chunkX + x * signX, chunkZ + z * signZ)) {
                     return true
                 }
             }
@@ -274,10 +271,9 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
      *
      * 26.3 的 {@code FireworkRocketEntity#isAttachedToEntity} 仍不可见，这里用贴身检测代替。
      */
-    context(nn: NonNullContext)
-    private fun isFireworkBoosted(): Boolean {
-        val box: AABB = nn.player.boundingBox.inflate(1.0)
-        for (rocket in nn.level.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
+    private fun NonNullContext.isFireworkBoosted(): Boolean {
+        val box: AABB = player.boundingBox.inflate(1.0)
+        for (rocket in level.getEntitiesOfClass(FireworkRocketEntity::class.java, box)) {
             if (rocket.isAlive) {
                 return true
             }
