@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
@@ -14,16 +17,16 @@ import java.util.*
 class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     private val rows: MutableMap<Module, TrollSettingRow> = IdentityHashMap()
-    private var visibleModules: List<Module> = emptyList()
-    private var searchFilter: String = ""
+    private var visibleModules: List<Module> by mutableStateOf<List<Module>>(emptyList())
+    private var filterStore: String by mutableStateOf<String>("")
 
     private fun title(): String {
         return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name
     }
 
     fun setSearchFilter(filter: String) {
-        if (searchFilter == filter) return
-        searchFilter = filter
+        if (filterStore == filter) return
+        filterStore = filter
         scroll.reset()
     }
 
@@ -37,7 +40,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
             .filter { module -> module.category == category }
             .sorted(order)
             .toList()
-        visibleModules = if (searchFilter.isEmpty()) {
+        visibleModules = if (filterStore.isEmpty()) {
             allModules
         } else {
             allModules.filter { module -> matchesSearch(module) }
@@ -74,7 +77,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         scope.scissor(viewport) { content ->
             for (module in visibleModules) {
-                rows.getValue(module).draw(content, metrics, mouseX, mouseY)
+                content.asUiScope(metrics).LuminUIItem(rows.getValue(module)) { rows.getValue(module).draw(tree, metrics, mouseX, mouseY) }
             }
         }
     }
@@ -89,8 +92,8 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
     }
 
     private fun matchesSearch(module: Module): Boolean {
-        return normalizeSearchText(module.name).contains(searchFilter, ignoreCase = true) ||
-                normalizeSearchText(module.translatedName).contains(searchFilter, ignoreCase = true)
+        return normalizeSearchText(module.name).contains(filterStore, ignoreCase = true) ||
+                normalizeSearchText(module.translatedName).contains(filterStore, ignoreCase = true)
     }
 
     private fun normalizeSearchText(value: String): String {

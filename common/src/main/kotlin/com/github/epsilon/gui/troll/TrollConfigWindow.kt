@@ -1,11 +1,13 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.asUiScope
@@ -32,7 +34,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     private var listViewport: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var statusBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var metrics: TextRenderer? = null
-    private var status: String = ""
+    private var status: String by mutableStateOf<String>("")
 
     override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
         this.metrics = metrics
@@ -147,7 +149,6 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
             }
         }
 
-        val activeConfig = ConfigManager.activeConfigName
         scope.scissor(listViewport) { content ->
             if (rows.isEmpty()) {
                 val empty = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName()
@@ -162,70 +163,72 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 return@scissor
             }
             for (row in rows) {
-                val active = row.name == activeConfig
-                val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.layer(TrollZ.Base) { z ->
-                    z.rect(
-                        row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
-                        if (active) {
-                            TrollTheme.alpha(TrollTheme.primary(), 110)
-                        } else {
-                            Color(255, 255, 255, if (hovered) 30 else 16)
-                        }
-                    )
-                }
-
-                val nameScale = TrollTheme.VALUE_SCALE
-                content.layer(TrollZ.Highlight) { z ->
-                    z.textWithShadow(
-                        TrollTheme.trim(row.name, metrics, nameScale, row.bounds.width - DELETE_BUTTON_SIZE - 18.0f),
-                        row.bounds.x + 5.0f,
-                        row.bounds.y + 2.0f,
-                        nameScale, TrollTheme.text()
-                    )
-
-                    val hint = if (active) {
-                        EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
-                    } else {
-                        EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
+                content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                    val active = row.name == ConfigManager.activeConfigName
+                    val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Base) { z ->
+                        z.rect(
+                            row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
+                            if (active) {
+                                TrollTheme.alpha(TrollTheme.primary(), 110)
+                            } else {
+                                Color(255, 255, 255, if (hovered) 30 else 16)
+                            }
+                        )
                     }
-                    z.textWithShadow(
-                        TrollTheme.trim(
-                            hint,
-                            metrics,
-                            TrollTheme.VALUE_SCALE * 0.82f,
-                            row.bounds.width - DELETE_BUTTON_SIZE - 18.0f
-                        ),
-                        row.bounds.x + 5.0f,
-                        row.bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
-                        TrollTheme.VALUE_SCALE * 0.82f,
-                        TrollTheme.alpha(TrollTheme.text(), 180)
-                    )
-                }
 
-                val deleteHovered = row.deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.layer(TrollZ.Text) { z ->
-                    z.rect(
-                        row.deleteBounds.x, row.deleteBounds.y,
-                        row.deleteBounds.width, row.deleteBounds.height,
-                        TrollTheme.alpha(TrollTheme.primary(), if (deleteHovered) 180 else 40)
-                    )
-                }
-                val iconScale = TrollTheme.VALUE_SCALE
-                content.layer(TrollZ.Content) { z ->
-                    z.textWithShadow(
-                        IconChars.CLOSE,
-                        row.deleteBounds.centerX() - metrics.getWidth(
+                    val nameScale = TrollTheme.VALUE_SCALE
+                    tree.layer(TrollZ.Highlight) { z ->
+                        z.textWithShadow(
+                            TrollTheme.trim(row.name, metrics, nameScale, row.bounds.width - DELETE_BUTTON_SIZE - 18.0f),
+                            row.bounds.x + 5.0f,
+                            row.bounds.y + 2.0f,
+                            nameScale, TrollTheme.text()
+                        )
+
+                        val hint = if (active) {
+                            EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName()
+                        } else {
+                            EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
+                        }
+                        z.textWithShadow(
+                            TrollTheme.trim(
+                                hint,
+                                metrics,
+                                TrollTheme.VALUE_SCALE * 0.82f,
+                                row.bounds.width - DELETE_BUTTON_SIZE - 18.0f
+                            ),
+                            row.bounds.x + 5.0f,
+                            row.bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
+                            TrollTheme.VALUE_SCALE * 0.82f,
+                            TrollTheme.alpha(TrollTheme.text(), 180)
+                        )
+                    }
+
+                    val deleteHovered = row.deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Text) { z ->
+                        z.rect(
+                            row.deleteBounds.x, row.deleteBounds.y,
+                            row.deleteBounds.width, row.deleteBounds.height,
+                            TrollTheme.alpha(TrollTheme.primary(), if (deleteHovered) 180 else 40)
+                        )
+                    }
+                    val iconScale = TrollTheme.VALUE_SCALE
+                    tree.layer(TrollZ.Content) { z ->
+                        z.textWithShadow(
                             IconChars.CLOSE,
-                            iconScale,
-                            StaticFontLoader.ICONS
-                        ) / 2.0f,
-                        row.deleteBounds.y + (row.deleteBounds.height - metrics.getHeight(
-                            iconScale,
-                            StaticFontLoader.ICONS
-                        )) / 2.0f,
-                        iconScale, TrollTheme.text(), StaticFontLoader.ICONS
-                    )
+                            row.deleteBounds.centerX() - metrics.getWidth(
+                                IconChars.CLOSE,
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            ) / 2.0f,
+                            row.deleteBounds.y + (row.deleteBounds.height - metrics.getHeight(
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            )) / 2.0f,
+                            iconScale, TrollTheme.text(), StaticFontLoader.ICONS
+                        )
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.hudeditor
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -8,9 +9,8 @@ import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
 import com.github.epsilon.gui.dropdown.component.CategoryPanel
 import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.LuminUIGroupImmediate
+import com.github.epsilon.gui.lib.LuminUIGroup
 import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RectOutline
 import com.github.epsilon.gui.lib.RoundRect
@@ -29,7 +29,6 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.HudElementManager
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
@@ -94,27 +93,17 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private var preeditOverlay: IMEPreeditOverlay? = null
     private var renderFrameId = 0
     private var panelElementCount = -1
-    private var selectedElement: HudModule? = null
+    private var selectedElement: HudModule? by mutableStateOf<HudModule?>(null)
     private var draggingElement: HudModule? = null
     private var dragOffsetX = 0.0f
     private var dragOffsetY = 0.0f
-    private var currentSnap: SnapInfo = SnapInfo.none()
+    private var currentSnap: SnapInfo by mutableStateOf<SnapInfo>(SnapInfo.none())
 
     private val textMetrics: TextRenderer = TextRenderer.create()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
     private val popupHost: PanelPopupHost = PanelPopupHost()
     private var shouldRenderElements = false
 
-    /*
-     * 面板背景/内容的绘制放进 LuminUIGroupImmediate（面板自身用拉取式动画推进滚动与展开），
-     * 该子块每帧重建，因此这些当帧值必须通过字段传入，不能依赖 recompose 时的 lambda 捕获。
-     */
-    private var panelIntro = 1.0f
-    private var panelRevealedHeight = 0.0f
-    private var panelContentClipHeight = 0.0f
-    private var panelContentRequiresScissor = false
-    private var panelMouseX = Int.MIN_VALUE
-    private var panelMouseY = Int.MIN_VALUE
 
     override fun init() {
         NotificationManager.clearAll()
@@ -125,13 +114,31 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         panel.startIntro()
     }
 
+    private var hoveredElement: HudModule? by mutableStateOf(null)
+
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+        try {
+            luminView.render(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)) { extractContent(graphics, mouseX, mouseY, a) }
+        } catch (failure: Throwable) {
+            scene.abortFrame()
+            shouldRenderElements = false
+            throw failure
+        } finally {
+            LuminRenderSystem.setActiveTarget(null)
+        }
+    }
+
+    private fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+        if (shouldRenderElements) { scene.abortFrame(); shouldRenderElements = false }
         val window = minecraft.window
         val target = getRenderTarget(window.width, window.height)
         target.resize(window.width, window.height)
         target.clear()
 
         LuminRenderSystem.setActiveTarget(target)
+        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
         scene.beginFrame()
 
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
@@ -187,8 +194,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             Rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72))
         }
 
-        val snapKey = GuidesKey(currentSnap.verticalLineX.toRawBits(), currentSnap.horizontalLineY.toRawBits())
-        scene.LuminUIScene(screenBounds, UiLayer.CONTENT, HudEditorZ.Guides, key = snapKey) {
+        scene.LuminUIScene(screenBounds, UiLayer.CONTENT, HudEditorZ.Guides, key = HudEditorZ.Guides) {
             val centerX = screenW / 2.0f
             val centerY = screenH / 2.0f
             val centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52)
@@ -201,14 +207,14 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val backgroundMouseX = if (popupActive) Int.MIN_VALUE else mouseX
         val backgroundMouseY = if (popupActive) Int.MIN_VALUE else mouseY
 
-        val hovered = findElementAt(backgroundMouseX.toDouble(), backgroundMouseY.toDouble(), true)
+        hoveredElement = findElementAt(backgroundMouseX.toDouble(), backgroundMouseY.toDouble(), true)
         scene.LuminUIScene(
-            screenBounds, UiLayer.CONTENT, HudEditorZ.Frames, key = FramesKey(buildFramesSignature(hovered))
+            screenBounds, UiLayer.CONTENT, HudEditorZ.Frames, key = HudEditorZ.Frames
         ) {
             for (element in HudElementManager.getElements()) {
                 if (!element.isEnabled) continue
                 val selected = element === selectedElement
-                val hover = element === hovered
+                val hover = element === hoveredElement
                 if (!selected && !hover) continue
                 drawElementFrame(element, selected, hover)
             }
@@ -232,20 +238,25 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         val previousTarget = LuminRenderSystem.getActiveTarget()
         LuminRenderSystem.setActiveTarget(target)
 
-        for (element in HudElementManager.getElements()) {
-            if (element.isEnabled) {
-                element.renderWithBatch(
-                    minecraft.deltaTracker,
-                    scene.batch(UiLayer.CONTENT, HudEditorZ.Elements.value)
-                )
+        try {
+            for (element in HudElementManager.getElements()) {
+                if (element.isEnabled) {
+                    element.renderWithBatch(
+                        minecraft.deltaTracker,
+                        scene.batch(UiLayer.CONTENT, HudEditorZ.Elements.value)
+                    )
+                }
             }
-        }
-        scene.flush()
-        popupHost.flush()
-        scene.clear()
+            scene.flush()
+            popupHost.flush()
+            scene.clear()
+            scene.endFrame()
 
-        shouldRenderElements = false
-        LuminRenderSystem.setActiveTarget(previousTarget)
+        } finally {
+            scene.abortFrame()
+            shouldRenderElements = false
+            LuminRenderSystem.setActiveTarget(previousTarget)
+        }
     }
 
     private fun getRenderTarget(width: Int, height: Int): LuminRenderSystem.LuminRenderTarget {
@@ -274,7 +285,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
      *
      * 面板的作用域原点就是面板矩形：面板内部用 `x - scope.origin.x` 换算自身局部坐标，
      * 因此这里只需要把面板矩形交给 [LuminUIScene]，不要再写绝对定位入口。
-     * 面板自身仍用拉取式动画推进滚动与展开，因此绘制放进每帧重建的立即子块。
+     * 滚动与展开由宿主帧时钟推进，只有读取变化值的组合重建。
      */
     private fun drawPanel(mouseX: Int, mouseY: Int) {
         val panel = ensureHudPanel()
@@ -282,9 +293,6 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         panel.beginRenderFrame(++renderFrameId)
 
         val intro = panel.introValue
-        panelIntro = intro
-        panelMouseX = mouseX
-        panelMouseY = mouseY
         if (intro <= 0.001f) return
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
@@ -294,17 +302,15 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         try {
             val panelH = panel.panelHeight
             val revealedH = panelH * intro
-            panelRevealedHeight = revealedH
 
             val surfaceBounds = UiRect(panel.x, panel.y, panel.width, panelH)
             scene.LuminUIScene(surfaceBounds, UiLayer.CONTENT, HudEditorZ.PanelSurface, key = HudEditorZ.PanelSurface) {
-                // 面板背景会推进滚动平滑动画，必须每帧重建，因此放进立即子块。
-                LuminUIGroupImmediate {
-                    val activePanel = hudPanel ?: return@LuminUIGroupImmediate
+                LuminUIGroup(key = "panel-content") {
+                    val activePanel = hudPanel ?: return@LuminUIGroup
                     // 入场动画期间裁掉尚未展开的部分；scissor 矩形可以超出作用域矩形
                     ClipIf(
-                        panelIntro < 1.0f, -shadowPad, -shadowPad,
-                        activePanel.width + shadowPad * 2.0f, panelRevealedHeight + shadowPad * 2.0f
+                        intro < 1.0f, -shadowPad, -shadowPad,
+                        activePanel.width + shadowPad * 2.0f, revealedH + shadowPad * 2.0f
                     ) {
                         activePanel.drawBackground()
                     }
@@ -315,20 +321,18 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             val clipH = panel.contentClipHeight
             val revealedBottom = panel.y + revealedH
             val actualClipH = minOf(clipH, revealedBottom - clipY)
-            panelContentClipHeight = actualClipH
-            panelContentRequiresScissor = intro < 1.0f || panel.requiresContentScissor()
+            val requiresScissor = intro < 1.0f || panel.requiresContentScissor()
             if (actualClipH > 0.5f) {
                 val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
                 scene.LuminUIScene(
                     contentBounds, UiLayer.CONTENT, HudEditorZ.PanelContent, key = HudEditorZ.PanelContent
                 ) {
-                    // 面板内容自带展开/滚动动画，同样必须每帧重建。
-                    LuminUIGroupImmediate {
-                        val activePanel = hudPanel ?: return@LuminUIGroupImmediate
-                        val clipHeight = panelContentClipHeight
-                        if (clipHeight <= 0.5f) return@LuminUIGroupImmediate
-                        ClipIf(panelContentRequiresScissor, 0.0f, 0.0f, activePanel.width, clipHeight) {
-                            activePanel.drawContent(panelMouseX, panelMouseY)
+                    LuminUIGroup(key = "panel-content") {
+                        val activePanel = hudPanel ?: return@LuminUIGroup
+                        val clipHeight = actualClipH
+                        if (clipHeight <= 0.5f) return@LuminUIGroup
+                        ClipIf(requiresScissor, 0.0f, 0.0f, activePanel.width, clipHeight) {
+                            activePanel.drawContent(mouseX, mouseY)
                         }
                     }
                 }
@@ -358,7 +362,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
         val screenBounds = UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight())
         scene.LuminUIScene(
-            screenBounds, UiLayer.CONTENT, HudEditorZ.Chrome, key = ChromeKey(buildChromeSignature(selectedElement))
+            screenBounds, UiLayer.CONTENT, HudEditorZ.Chrome, key = "canvas-chrome"
         ) {
             Shadow(
                 labelX, labelY, boxW, boxH, radius, MD3Theme.FLOATING_LABEL_SHADOW_BLUR,
@@ -693,6 +697,8 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     override fun removed() {
         super.removed()
+        luminView.close()
+        scene.resetComposition()
         popupHost.close()
         shouldRenderElements = false
         scene.clear()
@@ -750,47 +756,6 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         panelElementCount = elementCount
         return panel
     }
-
-    /**
-     * 边框层的失效签名：选中/悬停对象、每个元素的开关与几何都参与。
-     *
-     * 元素拖动与锚点都是拉取式状态，绘制块只在这些输入变化时重建。
-     */
-    private fun buildFramesSignature(hovered: HudModule?): Long {
-        var signature = TranslationManager.getRevision()
-        signature = signature * 31L + System.identityHashCode(selectedElement)
-        signature = signature * 31L + System.identityHashCode(hovered)
-        for (element in HudElementManager.getElements()) {
-            signature = signature * 31L + System.identityHashCode(element)
-            signature = signature * 31L + (if (element.isEnabled) 1 else 0)
-            if (!element.isEnabled) continue
-            signature = signature * 31L + element.x.toRawBits()
-            signature = signature * 31L + element.y.toRawBits()
-            signature = signature * 31L + element.width.toRawBits()
-            signature = signature * 31L + element.height.toRawBits()
-            signature = signature * 31L + element.horizontalAnchor.ordinal
-            signature = signature * 31L + element.verticalAnchor.ordinal
-        }
-        return signature
-    }
-
-    /** 画布标题的失效签名：选中对象与翻译版本。 */
-    private fun buildChromeSignature(selected: HudModule?): Long {
-        var signature = TranslationManager.getRevision()
-        signature = signature * 31L + System.identityHashCode(selected)
-        return signature
-    }
-
-    /**
-     * recompose 入口 key。
-     *
-     * 各层用不同的私有类型，避免入口编号在某一层被跳过时复用其它层的缓存。
-     */
-    private data class GuidesKey(val verticalLineRawBits: Int, val horizontalLineRawBits: Int)
-
-    private data class FramesKey(val signature: Long)
-
-    private data class ChromeKey(val signature: Long)
 
     private data class SnapInfo(
         val x: Float, val y: Float, val verticalLineX: Float, val horizontalLineY: Float,

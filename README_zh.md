@@ -32,6 +32,8 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
+Panel、Dropdown、popup、HudEditor 与 Troll 使用 LuminUI 的轻量状态观察和组合运行时。稳定 key 维持组件身份，可观察读取自动触发局部重建，动画由宿主共享帧时钟推进。API、生命周期与验证说明见 [LuminUI 运行时](docs/lumin-ui-recompose.md)。HUD 元素自身保持现有立即绘制。
+
 ## ⚙️ 构建与运行
 
 ```bash

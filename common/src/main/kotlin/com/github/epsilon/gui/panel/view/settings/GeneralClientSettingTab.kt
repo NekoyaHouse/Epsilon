@@ -1,13 +1,11 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
 import com.github.epsilon.gui.panel.component.SettingRow
@@ -16,11 +14,9 @@ import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.SettingLayoutPlanner
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -36,18 +32,23 @@ class GeneralClientSettingTab(
 
     private val settingListController = SettingListController(popupHost)
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val contentState = UiInvalidationState()
     private val hoverAnimations = HashMap<Setting<*>, Animation>()
     private val scrollBarDrag = ScrollBarDragState()
 
     private var bounds: UiRect? = null
-    private var lastScroll = Float.NaN
-    private var lastVisibleSettings: List<String> = emptyList()
     private var lastListeningKey = ""
-    private var lastContentSignature = Long.MIN_VALUE
     private var scrollVelocity = 0.0f
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -59,7 +60,7 @@ class GeneralClientSettingTab(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val settings = ClientSetting.settings.filter { setting -> setting.isVisible }
@@ -68,69 +69,50 @@ class GeneralClientSettingTab(
         val maxScroll = maxOf(0.0f, contentHeight - bounds.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) bounds.width - ScrollBarUtils.TOTAL_WIDTH else bounds.width
-        val contentSignature = buildContentSignature(settings)
+
         val popupConsumesHover = settingListController.isPopupHovered(mouseX, mouseY)
         val effectiveMouseX = if (popupConsumesHover) Int.MIN_VALUE else mouseX
         val effectiveMouseY = if (popupConsumesHover) Int.MIN_VALUE else mouseY
-        val rebuildContent = shouldRebuildContent(
-            bounds, mouseX, mouseY, settings, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
-        }
+        contentBuffer.clear()
 
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
             Viewport(
                 contentBuffer, size, state.getClientSettingScroll(), maxScroll, contentHeight,
                 effectiveMouseX, effectiveMouseY
             ) {
-                if (!rebuildContent) {
-                    return@Viewport
-                }
                 settingListController.layoutRows(
                     SETTING_OWNER_KEY, settings, bounds, state.getClientSettingScroll(), rowWidth,
                     this, effectiveMouseX, effectiveMouseY
                 ) { setting, row, rowBounds ->
-                    if (row is KeybindSettingRow) {
-                        row.setListening(state.getListeningKeybindSetting() === row.getSetting())
-                    }
-                    val hoverAnimation = hoverAnimations.getOrPut(setting) {
-                        val animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
-                        animation.startValue = 0.0f
-                        animation
-                    }
-                    hoverAnimation.run(
-                        if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
-                    )
-                    val animating = !hoverAnimation.isFinished || row.hasActiveAnimation()
-                    // 逐行缓存：只有值或动画变化的行才重新捕获节点。
-                    val revision = row.cacheRevision() * 31L + (if (animating) System.nanoTime() else 0L)
-                    LuminUIItem(setting to rowBounds, revision) {
+                    LuminUIItem(setting) {
+                        if (row is KeybindSettingRow) {
+                            val listening = state.getListeningKeybindSetting() === row.getSetting()
+                            com.github.epsilon.gui.lib.state.afterLuminCommit { row.setListening(listening) }
+                        }
+                        val hoverAnimation = hoverAnimations.getOrPut(setting) {
+                            val animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
+                            animation.startValue = 0.0f
+                            animation
+                        }
+                        hoverAnimation.run(
+                            if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
+                        )
+
+                        // 逐行缓存：只有值或动画变化的行才重新捕获节点。
+
                         SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
                     }
-                    contentState.noteAnimation(animating)
+
                 }
-                contentState.noteAnimation(settingListController.hasActiveAnimations())
+
             }
         }
 
-        if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, settings, guiGraphics.guiHeight(), contentSignature)
-        }
     }
 
     override fun flushContent() {
         contentBuffer.flush()
-    }
-
-    override fun markDirty() {
-        contentState.markDirty()
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return contentState.hasActiveAnimations() || settingListController.hasActiveAnimations()
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -143,7 +125,7 @@ class GeneralClientSettingTab(
 
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null)
-            markDirty()
+
         }
 
         val maxScroll = state.getMaxClientSettingScroll()
@@ -159,7 +141,7 @@ class GeneralClientSettingTab(
             if (newScroll >= 0.0f) {
                 state.setClientSettingScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
 
@@ -176,7 +158,7 @@ class GeneralClientSettingTab(
             }
         }
         if (intercepted) {
-            markDirty()
+
             return true
         }
         return false
@@ -184,11 +166,11 @@ class GeneralClientSettingTab(
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         if (settingListController.mouseReleased(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -201,11 +183,11 @@ class GeneralClientSettingTab(
             if (newScroll >= 0.0f) {
                 state.setClientSettingScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
         if (settingListController.mouseDragged(event, mouseX, mouseY)) {
-            markDirty()
+
             return true
         }
         return false
@@ -215,7 +197,7 @@ class GeneralClientSettingTab(
         val currentBounds = bounds
         if (currentBounds != null && currentBounds.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24.0f
-            markDirty()
+
             return true
         }
         return false
@@ -226,22 +208,22 @@ class GeneralClientSettingTab(
         if (listening != null) {
             if (event.key() == InputConstants.KEY_ESCAPE) {
                 state.setListeningKeybindSetting(null)
-                markDirty()
+
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
                 listening.value = -1
                 state.setListeningKeybindSetting(null)
-                markDirty()
+
                 return true
             }
             listening.value = event.key()
             state.setListeningKeybindSetting(null)
-            markDirty()
+
             return true
         }
         if (settingListController.keyPressed(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -249,7 +231,7 @@ class GeneralClientSettingTab(
 
     override fun charTyped(event: CharacterEvent): Boolean {
         if (settingListController.charTyped(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -266,56 +248,13 @@ class GeneralClientSettingTab(
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null)
         }
-        markDirty()
-    }
 
-    private fun shouldRebuildContent(
-        bounds: UiRect, mouseX: Int, mouseY: Int, settings: List<Setting<*>>,
-        currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastScroll.compareTo(state.getClientSettingScroll()) != 0) {
-            return true
-        }
-        val listening = state.getListeningKeybindSetting()
-        val listeningKey = listening?.name ?: ""
-        if (lastListeningKey != listeningKey) {
-            return true
-        }
-        val visibleSettings = settings.map { setting -> setting.name }
-        return lastVisibleSettings != visibleSettings || lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        bounds: UiRect, mouseX: Int, mouseY: Int, settings: List<Setting<*>>,
-        currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastScroll = state.getClientSettingScroll()
-        lastListeningKey = state.getListeningKeybindSetting()?.name ?: ""
-        lastVisibleSettings = settings.map { setting -> setting.name }
-        lastContentSignature = contentSignature
-    }
-
-    private fun buildContentSignature(settings: List<Setting<*>>): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getClientSettingScroll())
-        signature = signature * 31L + state.getListeningKeybindSetting()?.name.hashCode()
-        for (setting in settings) {
-            signature = signature * 31L + setting.name.hashCode()
-            signature = signature * 31L + (if (setting.isVisible) 1 else 0)
-        }
-        signature = signature * 31L + SettingLayoutPlanner.signature(SETTING_OWNER_KEY, settings)
-        return signature
     }
 
     override fun close() {
         settingListController.close()
         contentBuffer.close()
-        markDirty()
+
     }
 
     private companion object {

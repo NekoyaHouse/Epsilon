@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.LuminUIScene
@@ -42,16 +43,25 @@ class ColorPickerPopup(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val indicatorAnimations = Array(4) { LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L) }
     private var draggingChannel: Channel? = null
-    private var focusedChannel: Channel? = null
-    private var inputBuffer: String? = null
-    private var cursorIndex = 0
-    private var pendingValue: Color? = null
+    private var focusedChannel: Channel? by mutableStateOf<Channel?>(null)
+    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var cursorIndex by mutableStateOf(0)
+    private var pendingValue: Color? by mutableStateOf<Color?>(null)
 
     override fun getBounds(): UiRect {
         return bounds
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -68,11 +78,8 @@ class ColorPickerPopup(
 
         val visibleColor = getVisibleColor()
         // 颜色、输入框焦点/缓冲、鼠标与主题决定绘制结果，任一变化都重建整层。
-        val contentKey = ContentKey(
-            visibleColor.rgb, visibleColor.alpha, focusedChannel, inputBuffer, cursorIndex, mouseX, mouseY,
-            popupThemeFingerprint()
-        )
-        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+
+        renderBatch.LuminUIScene(popupBounds, key = this) {
             val progress = openAnimation.value
             PopupCard(
                 size,
@@ -137,19 +144,8 @@ class ColorPickerPopup(
                 val hovered = rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())
                 val indicatorProgress = indicatorAnimations[i].value
                 // 逐项缓存：颜色、焦点、输入缓冲、悬停与指示器动画决定该行节点是否重建。
-                var revision = popupThemeFingerprint().toLong()
-                revision = revision * 31L + getVisibleColor().rgb
-                revision = revision * 31L + getVisibleColor().alpha
-                revision = revision * 31L + (if (hovered) 1 else 0)
-                revision = revision * 31L + (if (focusedChannel === channel) 1 else 0)
-                revision = revision * 31L + (inputBuffer?.hashCode() ?: 0)
-                revision = revision * 31L + cursorIndex
-                revision = revision * 31L + indicatorProgress.toRawBits()
-                revision = revision * 31L + rowBounds.y.toRawBits()
-                revision = revision * 31L + rowBounds.x.toRawBits()
-                revision = revision * 31L + rowBounds.width.toRawBits()
-                revision = revision * 31L + localTrackBounds.width.toRawBits()
-                LuminUIItem(setting to channel, revision) {
+
+                LuminUIItem(setting to channel) {
                     val channelProgress = getChannelValue(channel) / 255.0f
                     val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
                     val rowSurface: Color = if (hovered) {
@@ -509,16 +505,4 @@ class ColorPickerPopup(
         textRenderer.close()
     }
 
-    /** 颜色值、输入框状态与主题决定绘制结果；鼠标位置参与悬停态失效。 */
-    private data class ContentKey(
-        val colorRgb: Int,
-        val colorAlpha: Int,
-        val focusedChannel: Channel?,
-        val inputBuffer: String?,
-        val cursorIndex: Int,
-        val mouseX: Int,
-        val mouseY: Int,
-        val theme: Int,
-    )
-
-}
+    }

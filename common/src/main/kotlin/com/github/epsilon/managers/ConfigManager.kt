@@ -1,5 +1,6 @@
 package com.github.epsilon.managers
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.assets.config.LegacyConfigMigrator
@@ -52,11 +53,11 @@ object ConfigManager {
     private val gson: Gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
     private const val CONFIG_LIST_CACHE_TTL_MS = 1000L
 
-    var activeConfigName: String = DEFAULT_CONFIG_NAME
+    var activeConfigName: String by mutableStateOf(DEFAULT_CONFIG_NAME)
         private set
 
     private var rootDirectoriesEnsured = false
-    private var cachedConfigNames: List<String> = emptyList()
+    private var cachedConfigNames: List<String> by mutableStateOf(emptyList())
     private var configListCacheExpiresAt = 0L
     private var configListCacheDirty = true
 
@@ -79,6 +80,7 @@ object ConfigManager {
 
     @Synchronized
     fun listConfigs(): List<String> {
+        if (StateTracking.isBuildingUi) return cachedConfigNames
         try {
             return listConfigsCached(true)
         } catch (e: IOException) {
@@ -821,7 +823,7 @@ object ConfigManager {
             return cachedConfigNames
         }
         val configs = listConfigsInternal(createDefaultIfMissing)
-        cachedConfigNames = configs.toList()
+        cachedConfigNames = java.util.List.copyOf(configs)
         configListCacheDirty = false
         configListCacheExpiresAt = now + CONFIG_LIST_CACHE_TTL_MS
         return cachedConfigNames

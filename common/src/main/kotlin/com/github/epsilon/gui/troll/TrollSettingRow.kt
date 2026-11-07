@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -14,7 +15,7 @@ import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.*
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -39,16 +40,16 @@ class TrollSettingRow {
     private val progress: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private val hover: Animation = Animation(Easing.EASE_OUT_EXPO, 300L)
     private val click: Animation = Animation(Easing.EASE_OUT_CUBIC, 300L)
-    private var bounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
-    private var input: DropdownTextField? = null
+    private var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
+    private var input: DropdownTextField? by mutableStateOf<DropdownTextField?>(null)
     private var originalText: String? = null
-    private var listening: Boolean = false
-    private var dragging: Boolean = false
-    private var pressed: Boolean = false
-    private var enumDragged: Boolean = false
+    private var listening: Boolean by mutableStateOf<Boolean>(false)
+    private var dragging: Boolean by mutableStateOf<Boolean>(false)
+    private var pressed: Boolean by mutableStateOf<Boolean>(false)
+    private var enumDragged: Boolean by mutableStateOf<Boolean>(false)
     private var dragStartX: Double = 0.0
-    private var pendingNumber: Double? = null
-    private var pendingEnumIndex: Int = -1
+    private var pendingNumber: Double? by mutableStateOf<Double?>(null)
+    private var pendingEnumIndex: Int by mutableStateOf<Int>(-1)
 
     constructor(setting: Setting<*>) {
         this.setting = setting
@@ -218,7 +219,7 @@ class TrollSettingRow {
         var caretX = valueX + metrics.getWidth(text.substring(0, cursor), valueScale)
         caretX = minOf(caretX, bounds.right() - 3.0f)
         val caretY = bounds.bottom() - metrics.getHeight(valueScale) - 3.0f
-        if (System.currentTimeMillis() % 1000 > 500) {
+        if (com.github.epsilon.gui.lib.state.luminBlink(this to "caret")) {
             scope.layer(TrollZ.Content) { z ->
                 z.rect(caretX, caretY, 0.8f, metrics.getHeight(valueScale), TrollTheme.text())
             }

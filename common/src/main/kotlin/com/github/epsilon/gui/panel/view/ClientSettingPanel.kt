@@ -18,7 +18,6 @@ import com.github.epsilon.gui.panel.view.settings.ConfigClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.FriendClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.GeneralClientSettingTab
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -51,7 +50,16 @@ class ClientSettingPanel(
         }
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -74,10 +82,8 @@ class ClientSettingPanel(
         }
 
         // 标题与 tab 条只随当前 tab / 语言 / 主题变化重建；切换 tab 会同时切换下面的内容视图。
-        val contentKey = ContentKey(
-            state.getClientSettingTab(), TranslationManager.getRevision(), themeFingerprint()
-        )
-        renderBatch.LuminUIScene(bounds, key = contentKey) {
+
+        renderBatch.LuminUIScene(bounds, key = this) {
             Text(
                 EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET,
                 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY
@@ -94,18 +100,6 @@ class ClientSettingPanel(
         getCurrentTabView().flushContent()
     }
 
-    fun markDirty() {
-        for (view in tabViews.values) {
-            view.markDirty()
-        }
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        val tabsAnimating = tabIndicatorAnimation.isRunning ||
-                tabHoverAnimations.values.any { animation -> animation.isRunning }
-        return tabsAnimating || getCurrentTabView().hasActiveAnimations()
-    }
-
     fun resetTransientState() {
         for (view in tabViews.values) {
             view.onDeactivated()
@@ -119,7 +113,7 @@ class ClientSettingPanel(
 
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null)
-            markDirty()
+
         }
 
         val tabBar = getTabBarRect()
@@ -199,7 +193,7 @@ class ClientSettingPanel(
         getCurrentTabView().onDeactivated()
         state.setClientSettingTab(targetTab)
         getCurrentTabView().onActivated()
-        markDirty()
+
     }
 
     private fun resolveClickedTab(mouseX: Double, tabBar: UiRect): PanelState.ClientSettingTab {
@@ -219,9 +213,6 @@ class ClientSettingPanel(
             PanelState.ClientSettingTab.CONFIG -> 2
         }
     }
-
-    /** 主题指纹：tab 条颜色来自可变主题，主题切换后缓存必须失效。 */
-    private fun themeFingerprint(): Int = MD3Theme.SURFACE.rgb * 31 + MD3Theme.PRIMARY.rgb
 
     private fun getTabBarRect(): UiRect {
         val currentBounds = bounds!!
@@ -246,8 +237,7 @@ class ClientSettingPanel(
 
     private data class TabDefinition(val tab: PanelState.ClientSettingTab, val component: TranslateComponent)
 
-    /** tab 条与标题的静态输入：当前 tab、翻译版本与主题。 */
-    private data class ContentKey(val tab: PanelState.ClientSettingTab, val i18nRevision: Long, val theme: Int)
+
 
     override fun close() {
         for (view in tabViews.values) {

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -20,10 +21,10 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     private lateinit var hueBar: UiRect
     private lateinit var previousColor: UiRect
     private lateinit var currentColor: UiRect
-    private var hue: Float = 0.0f
-    private var saturation: Float = 0.0f
-    private var brightness: Float = 0.0f
-    private var alpha: Int = 255
+    private var hue: Float by mutableStateOf<Float>(0.0f)
+    private var saturation: Float by mutableStateOf<Float>(0.0f)
+    private var brightness: Float by mutableStateOf<Float>(0.0f)
+    private var alpha: Int by mutableStateOf<Int>(255)
     private var draggingPart: Int = -1
     private var closed: Boolean = false
 

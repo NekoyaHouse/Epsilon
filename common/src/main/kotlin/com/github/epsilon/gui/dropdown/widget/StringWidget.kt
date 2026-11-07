@@ -16,21 +16,6 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         return DropdownTheme.SETTING_HEIGHT + DropdownTheme.INPUT_HEIGHT + 2.0f
     }
 
-    /** 输入框聚焦时光标闪烁，必须逐帧重建。 */
-    override fun hasActiveAnimations(): Boolean {
-        return inputField.isFocused
-    }
-
-    override fun cacheRevision(): Long {
-        var revision = super.cacheRevision()
-        if (inputField.isFocused) {
-            // 未提交的输入文本与光标位置都只存在于输入框内，属于静止也会变化的输入。
-            revision = revision * 31L + inputField.text.hashCode()
-            revision = revision * 31L + inputField.getCursorIndex()
-        }
-        return revision
-    }
-
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         Text(
             setting.displayName,
@@ -46,7 +31,8 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
         val fieldH = DropdownTheme.INPUT_HEIGHT
 
         if (!inputField.isFocused && inputField.text != setting.value) {
-            inputField.text = setting.value
+            val currentValue = setting.value
+            com.github.epsilon.gui.lib.state.afterLuminCommit { inputField.text = currentValue }
         }
         inputField.draw(
             this,

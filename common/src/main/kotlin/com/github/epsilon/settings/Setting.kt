@@ -1,5 +1,6 @@
 package com.github.epsilon.settings
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.utils.client.PlatformRequirement
@@ -41,14 +42,14 @@ abstract class Setting<V>(
 
     var groupRef: SettingGroup? = null
 
-    var platformRequirement: PlatformRequirement = PlatformRequirement.ANY
+    var platformRequirement: PlatformRequirement by mutableStateOf(PlatformRequirement.ANY)
 
-    var viaRequirement: ViaVersionRequirement? = null
+    var viaRequirement: ViaVersionRequirement? by mutableStateOf(null)
 
     var translateComponent: TranslateComponent? = null
 
     // 泛型值用 Any? 存储：Java 版本同样是未初始化的泛型字段，子类构造期写入。
-    private var valueStore: Any? = null
+    private var valueStore: Any? by mutableStateOf(null)
 
     private var defaultValueStore: Any? = null
 

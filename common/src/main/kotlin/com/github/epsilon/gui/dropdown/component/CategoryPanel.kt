@@ -1,12 +1,11 @@
 package com.github.epsilon.gui.dropdown.component
 
-import com.github.epsilon.gui.dropdown.DropdownTheme
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.managers.ModuleManager
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
@@ -15,17 +14,10 @@ import java.util.*
 class CategoryPanel : AbstractDropdownPanel {
 
     val category: Category?
+    private var cachedContentHeightFrameId = Int.MIN_VALUE
+    private var cachedContentHeight = 0.0f
     private val moduleButtons: MutableList<ModuleButton> = ArrayList()
-    private var sortedModuleButtons: List<ModuleButton> = emptyList()
-    private var visibleModuleButtons: List<ModuleButton> = emptyList()
-    private val searchTextCache: MutableMap<ModuleButton, String> = HashMap()
-    private var searchQuery: String = ""
-    private var cachedSortMode: ClientSetting.ModuleSort? = null
-    private var cachedSortSignature: Long = Long.MIN_VALUE
-    private var cachedFilterSignature: Long = Long.MIN_VALUE
-    private var cachedSearchTextRevision: Long = Long.MIN_VALUE
-    private var cachedContentHeightFrameId: Int = Int.MIN_VALUE
-    private var cachedContentHeight: Float = 0.0f
+    private var queryStore: String by mutableStateOf<String>("")
 
     constructor(category: Category, panelIndex: Int) :
             super("category:$category", TitleSupplier { category.name }, category.icon, panelIndex) {
@@ -46,7 +38,6 @@ class CategoryPanel : AbstractDropdownPanel {
         for (module in modules) {
             moduleButtons.add(ModuleButton(module))
         }
-        refreshSortedModuleButtons()
     }
 
     override fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float) {
@@ -62,37 +53,13 @@ class CategoryPanel : AbstractDropdownPanel {
             if (visible) {
                 // 逐项缓存：只有模块状态、悬停或动画变化的行才重新捕获节点。
                 val itemBounds = UiRect(0.0f, itemY, buttonWidth, buttonHeight)
-                LuminUIItem(button, dropdownItemRevision(button, origin, itemBounds, mouseX, mouseY)) {
+                LuminUIItem(button) {
                     // 与迁移前一致：按钮宽度取 buttonWidth（滚动条出现时收窄），而不是面板宽度。
                     button.drawInScope(this, mouseX, mouseY, itemBounds)
                 }
             }
             itemY += buttonHeight
         }
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        if (super.hasActiveAnimations()) {
-            return true
-        }
-        for (button in visibleButtons()) {
-            if (button.hasActiveAnimations()) {
-                return true
-            }
-        }
-        return false
-    }
-
-    /**
-     * 内容层状态签名：模块开关/隐藏/键位/展开与排序、搜索过滤都会改变绘制结果。
-     */
-    override fun contentStateSignature(): Long {
-        var signature = buildSortSignature(ClientSetting.moduleSort.value)
-        signature = signature * 31L + searchQuery.hashCode()
-        for (button in visibleButtons()) {
-            signature = signature * 31L + button.cacheRevision()
-        }
-        return signature
     }
 
     override fun computeContentHeight(): Float {
@@ -147,13 +114,12 @@ class CategoryPanel : AbstractDropdownPanel {
         return false
     }
 
-    fun setSearchQuery(searchQuery: String?) {
-        val normalized = searchQuery?.trim()?.lowercase(Locale.ROOT) ?: ""
-        if (this.searchQuery == normalized) {
+    fun setSearchQuery(queryStore: String?) {
+        val normalized = queryStore?.trim()?.lowercase(Locale.ROOT) ?: ""
+        if (this.queryStore == normalized) {
             return
         }
-        this.searchQuery = normalized
-        cachedFilterSignature = Long.MIN_VALUE
+        this.queryStore = normalized
         setScrollImmediate(0.0f)
     }
 
@@ -164,45 +130,15 @@ class CategoryPanel : AbstractDropdownPanel {
         return false
     }
 
-    private fun refreshSortedModuleButtons() {
-        val sortMode: ClientSetting.ModuleSort = ClientSetting.moduleSort.value
-        val sortSignature = buildSortSignature(sortMode)
-        if (sortMode == cachedSortMode && sortSignature == cachedSortSignature) {
-            return
-        }
-        sortedModuleButtons = moduleButtons.stream()
-            .sorted(getComparator(sortMode))
-            .toList()
-        cachedSortMode = sortMode
-        cachedSortSignature = sortSignature
-        cachedFilterSignature = Long.MIN_VALUE
-    }
-
-    private fun visibleButtons(): List<ModuleButton> {
-        refreshSortedModuleButtons()
-        val filterSignature = cachedSortSignature * 31L + searchQuery.hashCode()
-        if (filterSignature == cachedFilterSignature) {
-            return visibleModuleButtons
-        }
-        visibleModuleButtons = sortedModuleButtons.stream()
-            .filter { button -> matchesSearch(button) }
-            .toList()
-        cachedFilterSignature = filterSignature
-        return visibleModuleButtons
-    }
-
-    private fun buildSortSignature(sortMode: ClientSetting.ModuleSort): Long {
-        var signature = 17L
-        signature = signature * 31L + sortMode.ordinal
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + moduleButtons.size
-        for (button in moduleButtons) {
+    private val visibleState = derivedStateOf {
+        moduleButtons.sortedWith(getComparator(ClientSetting.moduleSort.value)).filter { button ->
             val module = button.module
-            signature = signature * 31L + module.name.hashCode()
-            signature = signature * 31L + if (module.isEnabled) 1 else 0
+            queryStore.isBlank() || (module.translatedName + "\n" + module.name + "\n" + module.category?.name)
+                .lowercase(Locale.ROOT).contains(queryStore)
         }
-        return signature
     }
+
+    private fun visibleButtons(): List<ModuleButton> = visibleState.value
 
     private fun getComparator(sortMode: ClientSetting.ModuleSort): Comparator<ModuleButton> {
         val nameComparator: Comparator<ModuleButton> =
@@ -224,29 +160,6 @@ class CategoryPanel : AbstractDropdownPanel {
         if (translated.isNotBlank()) return translated
         val name = module.name
         return name
-    }
-
-    private fun matchesSearch(button: ModuleButton): Boolean {
-        if (searchQuery.isBlank()) return true
-        refreshSearchTextCache()
-        val searchText = searchTextCache[button]
-        return searchText != null && searchText.contains(searchQuery)
-    }
-
-    private fun refreshSearchTextCache() {
-        val revision = TranslationManager.getRevision()
-        if (cachedSearchTextRevision == revision && searchTextCache.isNotEmpty()) {
-            return
-        }
-        searchTextCache.clear()
-        for (button in moduleButtons) {
-            val module = button.module
-            val translated = module.translatedName
-            val name = module.name
-            val categoryName = module.category?.name ?: ""
-            searchTextCache[button] = (translated + '\n' + name + '\n' + categoryName).lowercase(Locale.ROOT)
-        }
-        cachedSearchTextRevision = revision
     }
 
 }

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.Rect
@@ -22,16 +23,18 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
 
     private val inputFilter: Predicate<String> = inputFilter ?: Predicate { true }
 
-    var isFocused: Boolean = false
+    var isFocused: Boolean by mutableStateOf<Boolean>(false)
         private set
 
-    var text: String = ""
+    private var textState by mutableStateOf("")
+    var text: String
+        get() = textState
         set(value) {
-            field = clamp(value)
-            cursor = cursor.coerceIn(0, field.length)
+            textState = clamp(value)
+            cursor = cursor.coerceIn(0, textState.length)
         }
 
-    private var cursor: Int = 0
+    private var cursor: Int by mutableStateOf<Int>(0)
     private var cursorMidpoints: FloatArray = FloatArray(0)
 
     private val safeCursor: Int
@@ -301,7 +304,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     }
 
     private fun UiScope.drawCaret(textMetrics: UiTextMetrics, x: Float, y: Float, textScale: Float) {
-        if (System.currentTimeMillis() % 1000 > 500) {
+        if (com.github.epsilon.gui.lib.state.luminBlink(this@DropdownTextField to "caret")) {
             Rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY)
         }
     }

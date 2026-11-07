@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.lib.control
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import java.util.*
 
@@ -17,7 +18,7 @@ class UiScrollBar(theme: UiTheme) {
 
     private val theme: UiTheme = Objects.requireNonNull(theme, "theme")
     private val hoverAnimation: Animation = Animation(Easing.EASE_OUT_CUBIC, theme.hoverAnimationDuration())
-    private var dragging = false
+    private var dragging by mutableStateOf(false)
     private var dragOffset = 0.0f
 
     fun isDragging(): Boolean {
@@ -87,11 +88,11 @@ class UiScrollBar(theme: UiTheme) {
         val trackX: Float, val trackY: Float, val trackWidth: Float, val trackHeight: Float
     ) {
         fun thumbContains(mouseX: Double, mouseY: Double): Boolean {
-            return mouseX >= trackX && mouseX <= trackX + trackWidth && mouseY >= thumbY && mouseY <= thumbY + thumbHeight
+            return UiRect(trackX, thumbY, trackWidth, thumbHeight).contains(mouseX, mouseY)
         }
 
         fun trackContains(mouseX: Double, mouseY: Double): Boolean {
-            return mouseX >= trackX && mouseX <= trackX + trackWidth && mouseY >= trackY && mouseY <= trackY + trackHeight
+            return UiRect(trackX, trackY, trackWidth, trackHeight).contains(mouseX, mouseY)
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
@@ -17,33 +18,22 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
 ) : SettingWidget<S>(setting) {
 
     protected val inputField: DropdownTextField = DropdownTextField(maxInputLength, inputFilter)
-    protected var dragging: Boolean = false
-    protected var pendingValue: T? = null
+    protected var dragging: Boolean by mutableStateOf<Boolean>(false)
+    protected var pendingValue: T? by mutableStateOf<T?>(null)
     private var sessionId: Int = -1
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT + 15.0f
     }
 
-    /** 输入框聚焦时光标闪烁，必须逐帧重建。 */
-    override fun hasActiveAnimations(): Boolean {
-        return inputField.isFocused
-    }
-
-    override fun cacheRevision(): Long {
-        var revision = super.cacheRevision()
-        // 拖拽/输入预览值不会写回设置，但会直接改变绘制结果。
-        revision = revision * 31L + getVisibleValue().hashCode()
-        revision = revision * 31L + (if (dragging) 1L else 0L)
-        if (inputField.isFocused) {
-            revision = revision * 31L + inputField.text.hashCode()
-            revision = revision * 31L + inputField.getCursorIndex()
-        }
-        return revision
-    }
-
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
-        syncSessionState()
+        com.github.epsilon.gui.lib.state.luminPointerInput(this) { pointerX, _ ->
+            syncSessionState()
+            if (dragging && pointerX >= 0 && !inputField.isFocused) {
+                DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
+                updateValueFromRatio(((pointerX - getTrackX()) / getTrackWidth()).coerceIn(0.0f, 1.0f))
+            }
+        }
 
         val ratio = getRatio()
         val sliderRatio = ratio.coerceIn(0.0f, 1.0f)
@@ -87,11 +77,6 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
             val kr = DropdownTheme.SLIDER_KNOB_RADIUS
             RoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob())
 
-            if (dragging && mouseX >= 0) {
-                DropdownScreen.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST)
-                val rawRatio = ((mouseX - getTrackX()) / trackW).coerceIn(0.0f, 1.0f)
-                updateValueFromRatio(rawRatio)
-            }
         }
 
         if (!editing) {

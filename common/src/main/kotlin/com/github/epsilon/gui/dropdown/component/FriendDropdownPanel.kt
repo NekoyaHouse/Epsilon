@@ -8,11 +8,9 @@ import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.managers.TranslationManager
 import com.mojang.blaze3d.platform.InputConstants
 
 class FriendDropdownPanel(panelIndex: Int) :
@@ -41,7 +39,7 @@ class FriendDropdownPanel(panelIndex: Int) :
 
         val addX = fieldX + fieldW + GAP
         val addHovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
-        LuminUIItem(ADD_BUTTON_KEY, addButtonRevision(origin, fieldY, addHovered)) {
+        LuminUIItem(ADD_BUTTON_KEY) {
             RoundRect(
                 addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                 if (addHovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
@@ -73,7 +71,7 @@ class FriendDropdownPanel(panelIndex: Int) :
                 this, mouseX.toDouble(), mouseY.toDouble(), removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE
             )
             // 逐项缓存：好友行位置、悬停状态或翻译变化时才重新捕获节点。
-            LuminUIItem("friend-row:$name", friendRowRevision(origin, rowY, hovered, removeHovered, name)) {
+            LuminUIItem("friend-row:$name") {
                 RoundRect(
                     rowX, rowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
@@ -100,37 +98,6 @@ class FriendDropdownPanel(panelIndex: Int) :
             }
             rowY += ROW_HEIGHT + GAP
         }
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return super.hasActiveAnimations() || inputField.isFocused
-    }
-
-    override fun contentStateSignature(): Long {
-        var signature = FriendManager.getFriends().hashCode().toLong()
-        signature = signature * 31L + inputField.text.hashCode()
-        signature = signature * 31L + (if (inputField.isFocused) 1L else 0L)
-        signature = signature * 31L + inputField.getCursorIndex()
-        return signature
-    }
-
-    private fun addButtonRevision(origin: UiRect, rowY: Float, hovered: Boolean): Long {
-        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
-        revision = revision * 31L + origin.hashCode()
-        revision = revision * 31L + (if (hovered) 1L else 0L)
-        return revision
-    }
-
-    private fun friendRowRevision(
-        origin: UiRect, rowY: Float, hovered: Boolean, removeHovered: Boolean, name: String,
-    ): Long {
-        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
-        revision = revision * 31L + origin.hashCode()
-        revision = revision * 31L + (if (hovered) 1L else 0L)
-        revision = revision * 31L + (if (removeHovered) 1L else 0L)
-        revision = revision * 31L + name.hashCode()
-        revision = revision * 31L + TranslationManager.getRevision()
-        return revision
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {

@@ -1,192 +1,148 @@
-# LuminUI recompose：状态驱动的增量绘制
+# LuminUI 自动状态观察与动画调度
 
-> 本文记录 LuminUI 在 layer 重构之后新增的第二套绘制模型：**recompose（状态驱动重建 + 节点缓存重放）**，
-> 以及 GUI 各子系统迁移到该模型的现状、约束与遗留项。
-> 相关前置文档：[`gui-layer-refactor.md`](gui-layer-refactor.md)（layer 扩展函数化与 Compose 风格 API）。
+LuminUI 保留现有 `UiTree`、Kotlin DSL 和 Lumin 绘制后端，通过轻量运行时实现 Group/Item 级重组。没有 Compose 依赖、编译插件或完整 Snapshot 多版本事务。
 
-## 1. 动机
+覆盖 Panel、Dropdown、popup、HudEditor、Troll 及共享控件。HUD 元素自身和其他 Screen 继续按现有方式绘制；使用共享 UiScene 的立即模式宿主仍需配对帧生命周期。
 
-layer 重构之后，GUI 每帧仍然从头重建整棵 `UiTree`：一个展开的 panel 约 200–400 个节点对象，
-每个文本都要测量、每个圆角/阴影都要重新算颜色插值。**内容没变的帧也在做同样的工作**。
+## 状态与失效
 
-`LuminUI` 在保留立即模式的同时引入 Compose 式模型：
+```text
+输入回调 / Manager 刷新 / 外部线程写入
+                  ↓
+        kernel.state 的可观察存储
+                  ↓
+      宿主线程排空合并的变更通知
+                  ↓
+        读取该状态的组合单元失效
+                  ↓
+   重建失效单元，重放其余不可变节点
+```
 
-- 内容是**状态**的函数：读 `MutableState` 时登记依赖；
-- 状态写入只让**读它的那部分**失效；
-- 其余帧直接重放上一轮构建好的节点；
-- 列表项逐项缓存，改一个设置只重建那一行。
-
-## 2. 两套绘制模型
-
-| 模型 | 入口 | 语义 | 典型用途 |
-|---|---|---|---|
-| **recompose**（默认推荐） | `LuminUIScene` / `LuminUISceneImmediate` | 默认 `LuminUIScene`：只在依赖状态变化时重建，其余帧重放缓存 | Panel、Dropdown、popup、HudEditor |
-| **立即** | `LuminUISceneImmediate`（旧 `Content` 语义） | 每帧重建 | HUD 元素、时间驱动的装饰（Reisa 立绘） |
-
-两者可以嵌套：recompose 块内的立即子块用 `LuminUIGroupImmediate { }` 表达（它每帧重建，但作为独立单元参与拼装，
-不会污染父级缓存）；立即块内也可以继续用 `LuminUIItem` 逐项缓存。
-
-### 入口一览
+通用状态内核位于 `kernel.state`，不依赖 GUI：
 
 ```kotlin
-// 场景级
-scene.LuminUIScene(bounds, layer, relative, key) { … }
-scene.LuminUISceneImmediate(bounds, layer, relative) { … }
+interface State<out T> { val value: T }
+interface MutableState<T> : State<T> { override var value: T }
 
-// 批次级（组件只拿到 UiRenderBatch 时；独立批次会退化为立即模式）
-batch.LuminUIScene(bounds, baseLayer, key) { … }
-batch.LuminUISceneImmediate(bounds, baseLayer) { … }
-
-// 块内的子单元
-LuminUIGroup(key) { … }            // 子缓存单元，失效粒度更细
-LuminUIGroupImmediate { … }        // 每帧重建的子块（拉取式动画可在此使用）
-LuminUIItem(key, revision) { … }   // 逐项缓存（列表行）
-LuminUIItems(items, key, revision) { … }
+val enabled = mutableStateOf(false)
+var expanded by mutableStateOf(false)
+val label = derivedStateOf { if (enabled.value) "on" else "off" }
 ```
 
-`key` 是**外部失效键**：`bounds` 或 `key` 变化即整层重建。列表项用 `LuminUIItem` 时，
-`key` 必须对列表项稳定（例如 setting 实例），`revision` 必须覆盖「静止时也会变化」的输入。
+- 写入默认按结构相等比较，同值不通知。
+- 读取只归属最内层观察作用域。成功重建后替换依赖集合，解除条件分支不再读取的订阅。
+- `derivedStateOf` 观察输入，仅在结果改变时通知下游。没有观察者时解除上游订阅，下一次读取按输入版本重新计算。
+- 构建失败不提交新依赖和半成品节点，新创建的记忆资源会清理，下次仍重试。
+- 普通业务状态禁止在组合构建期间改变。输入、配置写入、模块切换和网络操作在事件回调执行。
+- 外部线程只写状态和排队通知；观察图、组合和帧任务由宿主线程管理。观察器记录读取版本，构建期间发生外部写入也会重新失效。
+- 同一批配置加载的多次写入在宿主排空队列前合并通知；业务 `onChanged` 的调用顺序保持原样。
+- 集合发布不可变快照。普通对象内部修改、可变集合原地修改和直接读取系统时间不能自动产生失效。
 
-## 3. 运行时结构
+`gui.lib.state` 中的旧状态导入保留为兼容别名。新业务状态优先使用 `kernel.state`。
 
-```
-LuminRuntime                    渲染线程单例：当前重建上下文、动画表、帧时钟
-├─ recordRead(state)            重建期间把 state 记进当前 composition 的依赖集
-├─ invalidate(state)            写入时让订阅者标脏
-├─ registerAnimatable(...)      动画自注册，结束后自动摘除
-└─ advanceAnimations(now)       每帧由 UiScene.beginFrame() 推进
+## 已接入的数据源
 
-LuminState<T>                   可订阅状态基类
-├─ MutableState<T>              mutableStateOf(initial)，写入用 == 判等
-└─ SettingState<V>              Setting.asState() 适配器：读缓存、写回 setting.value
-
-LuminComposition                recompose 缓存单元
-├─ segments: [字面节点段 | 子单元段]   父级重放不牵动子单元
-├─ dependencies                      重建时重新收集，自动收敛
-└─ treeScope: UiTree.Scope           跨帧复用的作用域（逐项缓存随它存活）
-
-LuminSceneRoot                  场景级位置化注册表（入口按出现顺序编号）
-UiTree.Scope.itemCache          逐项节点缓存（LuminSceneCache）
-```
-
-### 为什么逐项缓存挂在 `UiTree.Scope` 上
-
-缓存本质是「节点收集 + 捕获 + 重放」的一部分，而这三件事本来就由 `UiTree.Scope` 负责
-（`nodes`、`openCapture`、`appendNodes`）。因此：
-
-- **作用域存活多久，缓存就存活多久**；
-- recompose 入口各自持有长生命周期 `Scope`（`LuminComposition.treeScope`），每帧 `clear()` 后重新填充，
-  缓存因此能跨帧命中；
-- `UiRenderBatch.Content` 复用场景入口的作用域，面板内容里的列表项同样能跨帧命中；
-- 一次性作用域（独立批次）等价于不缓存，行为退化为立即模式。
-
-全仓库只有 `UiTree.Scope` 一处构造 `LuminSceneCache`，面板/场景不再各自持有缓存对象。
-
-## 4. 状态与动画
-
-### 状态
-
-```kotlin
-val hover = mutableStateOf(0.0f)
-var hovered by mutableStateOf(false)      // 属性委托
-
-// Setting 接入：同一个 Setting 共享同一个适配器
-val enabled by setting.asState()
-```
-
-- 写入用 `==` 判等，值没变不触发任何重建；
-- 读取只在 recompose 期间登记依赖，立即模式下是纯读取；
-- `Setting.asState()` 通过 `Setting.addChangeListener` 推送（`writeValue` 派发），
-  与既有 `onChanged` 互不影响；`setValueSilently`（配置加载）不推送，加载后需 `scene.invalidateAllUi()`。
-
-### 动画
-
-拉取式 `animate(animation, target)` **不能在 recompose 块内使用**：它依赖每帧被调用才前进，
-在只于状态变化时执行的块里会冻结。因此：
-
-```kotlin
-// 旧（仅立即模式可用）
-val progress = animate(animation, target)
-
-// 新：推式动画，帧循环推进，结束后自动停止写状态
-val progress = rememberAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
-progress.target = if (hovered) 1.0f else 0.0f
-val value = progress.value
-```
-
-误用保护：recompose 块内调用 `UiScope.animate(...)` 会直接抛 `IllegalStateException`，
-错误信息提示改用 `LuminAnimatable` 或 `LuminUIGroupImmediate`（按团队决定：宁可直接报错，也不要静默冻结）。
-
-## 5. GUI 迁移现状
-
-| 区域 | 状态 |
+| 数据源 | 观察入口 |
 |---|---|
-| `gui/lib`（运行时、入口、图元、控件） | ✅ recompose 基础设施 |
-| `gui/panel/PanelScreen`（chrome 层） | ✅ `LuminUIScene(key = layout)` |
-| `gui/dropdown/**`（23 文件） | ✅ 全部 pass → `LuminUIScene`；Reisa 立绘保留立即模式 |
-| `gui/panel/popup/**`（6 个弹窗 + host） | ✅ `LuminUIScene` + `LuminUIItem` 行缓存 |
-| `gui/panel/view/ClientSettingPanel` | ✅ `LuminUIScene`，指示条/tab hover → `LuminAnimatable` |
-| `gui/hudeditor/HudEditorScreen` | ✅ 6 层 `LuminUIScene`，面板区域 `LuminUIGroupImmediate` |
-| `gui/panel/view/{ModuleDetailPanel,ModuleListPanel,CategoryRailPanel}` | 🚧 仍立即模式，但行/项已用 `LuminUIItem` 跨帧缓存 |
-| `gui/panel/view/settings/*ClientSettingTab` | 🚧 仍 `renderBatch.Content`，行已逐项缓存 |
-| `elements/**`（HUD 元素） | ⏸ 按约定保持立即模式（数据每帧变化） |
-| `gui/troll/**` | ⏸ 未迁移（layer 已于前一阶段迁移） |
+| Setting | 实际底层存储；原有 getter、委托、归一化和回调保留 |
+| 静默配置更新与 reset | 与普通写入共用可观察存储；静默路径继续跳过业务回调 |
+| BoolSetting | 区分配置值与经 Via 条件计算的有效值，特殊 setter 同样通知 UI |
+| Setting 可见性、分组折叠 | 在布局观察作用域执行条件，内部 Setting 读取成为布局依赖 |
+| Module | 启用、隐藏、快捷键和绑定模式的可观察存储；原有生命周期保留 |
+| 主题 | 一次发布不可变调色板，颜色 getter 观察同一状态 |
+| 翻译 | 完成组件资源刷新后发布资源状态，翻译 getter 自动观察 |
+| 字体 | 帧开始应用字体设置，默认字体加载器身份可观察 |
+| 好友与配置列表 | Manager 发布快照；配置目录外部变动沿用已有缓存周期检查 |
+| HudEditor | 选中、悬停、吸附及 HUD 位置、anchor、bounds；仍用既有移动/尺寸 API |
 
-### 逐项缓存（`LuminUIItem`）
+`Setting.asState()` 是直接访问真实 getter/setter 的兼容视图，不保存第二份值，也没有全局适配器缓存。布局可以直接读取 `setting.value`，无需先转为 State。
 
-行/项按 `key + revision` 缓存节点；命中时只做指针拷贝。典型 revision：
+覆盖范围内的宿主调用 `prepareLuminDataSources()` 同步 Via、配置列表、字体和主题，然后再构建 UI。配置目录的 I/O 与字体切换发生在宿主准备阶段；缓存绘制块只读取快照。
+
+## 组合身份与记忆
 
 ```kotlin
-val animating = !hover.isFinished || row.hasActiveAnimation()
-val revision = row.cacheRevision() * 31L + (if (animating) System.nanoTime() else 0L)
-LuminUIItem(setting to rowBounds, revision) {
-    SettingRow(row, rowBounds, hover.value, mouseX, mouseY)
+scene.LuminUIScene(bounds, key = "settings-root") {
+    LuminUIGroup(key = "header") { /* 标题 */ }
+    LuminUIItems(settings, key = { it }) { setting ->
+        val local = remember(key = "editor") { EditorModel() }
+        // 直接读取 setting.value、主题和翻译。
+    }
 }
 ```
 
-- `revision` 覆盖：设置值、选中/展开/监听、输入文本与光标、动画进度、行位置与宽高、i18n、主题；
-- 动画进行中叠加 `nanoTime()` → 该行每帧重建；静止后 revision 稳定 → 命中缓存；
-- `key` 里并入 `rowBounds` 可让滚动/布局变化自然失效（缓存条目数有界）。
+`LuminUIItem` 与 `LuminUIGroup` 共用组合树、依赖观察和生命周期，没有另一套 revision 缓存。
 
-## 6. 迁移新界面时的检查清单
+- 根入口、Group/Item、remember 使用显式稳定 key。同一父作用域下重复的组件或 remember key 会报错。
+- key 只表示身份。不要加入坐标、鼠标、颜色、主题、时间、翻译版本或动画进度。
+- 列表使用元素身份，不使用可变化的索引。插入、删除与重排保留对应组件的记忆。
+- 父级命中缓存时，子项仍独立响应自己的状态变化。
+- 父级重建并重新绑定子项时，保守重建该子项，更新普通参数和闭包捕获值；不比较 lambda 地址。
+- 根入口每帧的新 lambda 不使缓存失效。变化的宿主输入必须接入 State 或放在 `LuminView` 的布局观察作用域中。
+- 单独创建、没有 Scene 宿主的批次继续采用立即模式。
 
-1. **入口**：能拿到 `UiScene` 用 `scene.LuminUIScene`；只有 `UiRenderBatch` 用 `batch.LuminUIScene`。
-2. **key**：把一切影响几何/静态内容的输入放进 key（bounds 已自动参与；补充 scroll、鼠标、交互事件版本、
-   i18n `TranslationManager.getRevision()`、主题指纹）。
-3. **动画**：块内不得调用 `animate()`；改 `LuminAnimatable`，或包 `LuminUIGroupImmediate { }`。
-4. **每帧推进的值**：必须在进入子块之前刷新到字段/状态，不能依赖块内执行（命中缓存的帧不会执行）。
-5. **列表**：重复项用 `LuminUIItem`；`key` 稳定、`revision` 完整。
-6. **副作用**：块内只在重建时执行一次，写设置/发网络包必须放到事件回调。
-7. **坐标系**：块内坐标仍相对作用域原点，不要引入绝对定位。
+## 布局、嵌套与输入
 
-## 7. 已知陷阱与取舍
+第一版继续保存绝对坐标节点，不拆分 Compose 的布局、放置、绘制三个阶段。
 
-| 陷阱 | 说明 / 处理 |
-|---|---|
-| 缓存节点烘焙绝对坐标 | 几何必须进 key，否则重放旧坐标 |
-| `LuminUIGroupImmediate` 的父级重建帧 | `group()` 内渲染一次 + `emit` 再执行一次，滚动平滑在该帧前进两步；只影响入场/改尺寸/拖动帧 |
-| 从未启动过的 `Animation` 被判定为活动 | 新增 `Animation.isAdvancing()`（`!isFinished && millis != 0`）避免缓存永久失效 |
-| 主题在面板打开期间切换 | `PanelScreen.drawChrome` 的 key 目前只含 `layout`，切主题可能不刷新；建议接主题指纹或主题变更时 `scene.invalidateAllUi()` |
-| 弹窗缓存跨实例保留 | 缓存挂在共享 entry scope 上；key 含 setting 实例，不会串内容，只是少量常驻条目 |
-| `LuminAnimatable` 依赖宿主 | 宿主必须每帧调用 `UiScene.beginFrame()`（推进动画）；新增宿主需遵守 |
-| `UiScrollBar` 悬停动画在库外 | dropdown 用 240ms 宽限期兜底（鼠标离开后 ~0.24s 额外重建） |
+组合会比较 origin、bounds、文本度量资源和绘制上下文。几何变化重建节点，同时保留 remember。独立重建子项时重建其定位上下文，避免使用已退出的临时 bound 栈。
 
-## 8. 相关提交
+子组合引用保留在 Layer、Clip、Viewport 的实际嵌套位置，递归解析后才交给 renderer，不将子组合追加到根输出。
 
-| 提交 | 内容 |
-|---|---|
-| `a605c18f` | 新增 LuminUI recompose 运行时：状态驱动重建与节点缓存重放 |
-| `e3792112` | 列表内容改为逐行节点缓存（后被下移进 `UiTree.Scope`） |
-| `5384f097` | 把逐项缓存收进场景：`LuminUIScene` 自动分割 |
-| `248c244e` | 逐项缓存下沉到 `UiTree.Scope`，入口复用长生命周期作用域 |
-| `4b346ae1` | dropdown / popup / HudEditor 迁移到 recompose |
+`LuminView.render(mouseX, mouseY) { ... }` 包住宿主布局准备阶段，观察可见性、行高、展开进度与布局资源等输入。准备代码仍每帧运行；静止时组合内容不再重建，Minecraft 的绘制提交正常继续。需要先完成布局再路由命中的窗口使用同一 `LuminView.prepare { ... }` 观察布局，确保列表或可见性变化在尺寸不变时也能失效对应窗口。
 
-## 9. 后续
+命中探针由框架维护。宿主更新当前输入，只有局部 hovered 布尔值改变时通知读取者；鼠标在同一区域移动不会使每行订阅原始鼠标坐标。布局变化重新建立命中区域，支持鼠标静止时控件移动。被遮挡窗口使用宿主传入的禁用坐标。
 
-1. 把 `CategoryRailPanel`（10 处拉取动画）、`ModuleDetailPanel`（6 处）、`ModuleListPanel`（2 处）的
-   动画改为 `LuminAnimatable`，然后切到 `LuminUIScene`；
-2. `*ClientSettingTab` 切到 `LuminUIScene`（其行已逐项缓存）；
-3. 主题变更统一通过 `scene.invalidateAllUi()` 广播；
-4. 实机验证清单：切换主题、拖滚动条、折叠分组、枚举展开、取色拖拽、输入框光标、外部改设置后重绘。
+配置面板等输入框从外部数据填充文本时，在组合中读取目标值与焦点条件，通过 `afterLuminCommit { ... }` 同步文本，避免在构建阶段写入状态；失败构建不执行该同步。
 
-验证方式：`./gradlew :common:compileKotlin :fabric:compileKotlin :neoforge:compileKotlin`。
+旧式滑条/取色控件通过 `luminPointerInput(key)` 在宿主输入阶段更新拖动预览，离开组合时自动解除。IME 位置通过组合的逐帧提交回调维持，Viewport 滚动条读取当前宿主鼠标，不使用缓存帧的旧坐标。
+
+## 帧时钟与动画
+
+每个 Scene 宿主持有一个单调纳秒时钟与活动任务集合。batch 和内容缓冲共享宿主时钟，同一任务每帧只推进一次。
+
+```kotlin
+LuminUIItem(key = setting) {
+    val progress = animateFloatAsState(
+        key = "toggle", targetValue = if (setting.value) 1f else 0f,
+        easing = Easing.EASE_OUT_CUBIC, durationMs = 160L,
+    )
+    // 绘制时读取 progress.value。
+}
+```
+
+事件驱动的连续操作使用 `rememberAnimatable(key, initial, easing, durationMs)`，在回调里调用 `animateTo` / `snapTo`。
+
+目标声明在成功提交后执行。同目标不重启，反向或中途改目标从当前值继续；零时长直接到终值；结束精确写入终值并注销任务，`snapTo` 取消旧任务。未启动的动画不占活动集合。
+
+迁移期保留 `LuminAnimatable.run` 等兼容调用，语义为声明目标，数值仍由宿主时钟推进。旧 `utils.render.animation.Animation` 只允许立即模式调用，重组块内使用拉取式 `animate` 会报错。
+
+Troll 的惯性滚动是独立物理帧任务，沿用衰减、越界回弹和停止阈值。光标闪烁使用周期状态，仅在显隐切换时失效；失焦后撤销任务。跑马灯显式读取 `luminFrameTime`。Reisa 等即时内容保留立即 pass。
+
+## 帧与销毁
+
+- 每个完整宿主帧配对 `UiScene.beginFrame()` / `endFrame()`。异常帧使用 `abortFrame()` 丢弃命令并保留组合以便重试。
+- 父级成功重建才清理未出现的子组合；缓存重放保留子树。
+- 根入口按稳定 key 登记，在完整帧结束清理未出现的入口。
+- 销毁组合解除订阅、关闭 AutoCloseable 记忆资源，并取消其动画、周期与输入任务。
+- Screen 关闭调用 `resetComposition()`，单例重开创建新组合树；业务模型按现有规则保留。
+- 立即模式子组合每帧执行一次，父级重建帧不会额外执行第二次。
+
+## 验证
+
+`common/src/test` 使用假时钟、重建计数和无 GPU 文本度量桩覆盖：状态判等与条件订阅、派生状态、跨线程与构建期间写入、静默/重置/BoolSetting、资源通知、稳定身份与记忆清理、失败重试、Layer/Clip/Viewport 坐标、动态输入、配置 Dropdown 首次展开的输入框同步与失败回滚、动画反向/结束/销毁和周期任务。
+
+```powershell
+.\gradlew.bat :common:test :common:compileJava :common:compileKotlin :fabric:compileJava :fabric:compileKotlin :neoforge:compileJava :neoforge:compileKotlin
+.\gradlew.bat buildRelease
+```
+
+实机验收还需覆盖主题/语言/字体切换、展开折叠、滑条与取色拖拽、IME、外部设置更新、HudEditor 移动缩放和 Troll 惯性滚动。单元测试不代替 GPU、系统 IME 和游戏中提取/提交效果检查；没有据此推断 FPS 提升。
+
+## Compose 参考
+
+- [SnapshotStateObserver](https://github.com/androidx/androidx/blob/androidx-main/compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/snapshots/SnapshotStateObserver.kt)：按作用域观察读取与清理订阅。
+- [Composition](https://github.com/androidx/androidx/blob/androidx-main/compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/Composition.kt)：读取/写入失效、提交与销毁。
+- [BroadcastFrameClock](https://github.com/androidx/androidx/blob/androidx-main/compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/BroadcastFrameClock.kt)、[AnimateAsState](https://github.com/androidx/androidx/blob/androidx-main/compose/animation/animation-core/src/commonMain/kotlin/androidx/compose/animation/core/AnimateAsState.kt)：宿主时钟、动画记忆与提交后目标更新。
+
+坐标与 layer 规则见 [GUI layer 重构](gui-layer-refactor.md)。

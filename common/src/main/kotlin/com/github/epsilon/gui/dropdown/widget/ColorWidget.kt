@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RectGradient
 import com.github.epsilon.gui.lib.RoundRect
@@ -12,7 +12,7 @@ import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
@@ -27,11 +27,11 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     private val blueField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
     private val alphaField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
 
-    private var opened = false
-    private var pickingSB = false
-    private var pickingHue = false
-    private var pickingChannel: Channel? = null
-    private var pendingValue: Color? = null
+    private var opened by mutableStateOf(false)
+    private var pickingSB by mutableStateOf(false)
+    private var pickingHue by mutableStateOf(false)
+    private var pickingChannel: Channel? by mutableStateOf(null)
+    private var pendingValue: Color? by mutableStateOf<Color?>(null)
 
     override fun getHeight(): Float {
         openAnim.run(if (opened) 1.0f else 0.0f)
@@ -43,25 +43,11 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         return DropdownTheme.SETTING_HEIGHT + expandedHeight * openAnim.value
     }
 
-    override fun hasActiveAnimations(): Boolean {
-        return openAnim.isAdvancing() || hasFocusedInput()
-    }
-
-    override fun cacheRevision(): Long {
-        var revision = super.cacheRevision()
-        revision = revision * 31L + (if (opened) 1L else 0L)
-        revision = revision * 31L + visibleColor.rgb
-        revision = revision * 31L + visibleColor.alpha
-        val focused = focusedField
-        if (focused != null) {
-            revision = revision * 31L + focused.text.hashCode()
-            revision = revision * 31L + focused.getCursorIndex()
-        }
-        return revision
-    }
-
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
-        syncAlphaAvailability()
+        com.github.epsilon.gui.lib.state.luminPointerInput(this) { px, py ->
+            syncAlphaAvailability()
+            updatePointer(px, py)
+        }
         openAnim.run(if (opened) 1.0f else 0.0f)
         val t = openAnim.value
 
@@ -100,6 +86,25 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         }
         drawSliderPicker(gradX + gradW * hsb[0], hueY, hueH)
 
+        color = visibleColor
+        hsb = Color.RGBtoHSB(color.red, color.green, color.blue, null)
+
+        val pickerCx = gradX + gradW * hsb[1]
+        val pickerCy = gradY + gradH * (1.0f - hsb[2])
+        Rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, Color(0, 0, 0, 135))
+        Rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE)
+
+        drawChannelRows(mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t)
+    }
+
+    private fun updatePointer(mouseX: Int, mouseY: Int) {
+        val t = openAnim.value
+        if (!opened || t < 0.01f) return
+        val color = visibleColor
+        val hsb = Color.RGBtoHSB(color.red, color.green, color.blue, null)
+        val gradX = DropdownTheme.SETTING_PADDING_X
+        val gradY = DropdownTheme.SETTING_HEIGHT + 2.0f
+        val gradW = width - gradX * 2.0f
         if (pickingSB) {
             DropdownScreen.react(ReisaDropdownCompanion.Action.COLOR_PICK)
             val newSat = ((mouseX - absoluteX(gradX)) / gradW).coerceIn(0.0f, 1.0f)
@@ -123,15 +128,6 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
             updateChannelFromMouse(channel, mouseX.toDouble())
         }
 
-        color = visibleColor
-        hsb = Color.RGBtoHSB(color.red, color.green, color.blue, null)
-
-        val pickerCx = gradX + gradW * hsb[1]
-        val pickerCy = gradY + gradH * (1.0f - hsb[2])
-        Rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, Color(0, 0, 0, 135))
-        Rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE)
-
-        drawChannelRows(mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t)
     }
 
     private fun UiScope.drawSaturationBrightnessPalette(
@@ -161,7 +157,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         startY: Float,
         alphaProgress: Float,
     ) {
-        syncFieldsFromColor()
+        com.github.epsilon.gui.lib.state.afterLuminCommit { syncFieldsFromColor() }
         val channels = channels
         for (i in channels.indices) {
             val channel = channels[i]

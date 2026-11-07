@@ -13,7 +13,9 @@ class DefaultTranslateComponent private constructor(
         return fullKey
     }
 
+    @Synchronized
     override fun getTranslatedName(): String {
+        TranslationManager.getRevision()
         var cached = cachedName
         if (cached == null) {
             cached = resolveTranslation(fullKey)
@@ -22,6 +24,7 @@ class DefaultTranslateComponent private constructor(
         return cached
     }
 
+    @Synchronized
     override fun refresh() {
         cachedName = resolveTranslation(fullKey)
     }

@@ -5,7 +5,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RoundRect
@@ -20,7 +20,7 @@ import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -62,7 +62,16 @@ class CategoryRailPanel(protected val state: PanelState) {
         return expandAnimation.value
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -71,7 +80,7 @@ class CategoryRailPanel(protected val state: PanelState) {
         val targetContent = if (state.isSidebarExpanded()) 1.0f else 0.0f
         val requiresScissor = abs(bounds.width - targetWidth) > 0.001f ||
                 abs(contentAnimation.value - targetContent) > 0.001f
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
             ClipIf(requiresScissor, 0.0f, 0.0f, width, height) {
                 val contentProgress = animate(contentAnimation, state.isSidebarExpanded())
                 val titleProgress = animate(headerTitleAnimation, contentProgress)
@@ -247,20 +256,6 @@ class CategoryRailPanel(protected val state: PanelState) {
         return UiRect(
             currentBounds.x + 4.0f + RAIL_ICON_CENTER_X_OFFSET, currentBounds.y + 4.0f, 28.0f, 28.0f
         )
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return !expandAnimation.isFinished ||
-                !contentAnimation.isFinished ||
-                !menuHoverAnimation.isFinished ||
-                !headerTitleAnimation.isFinished ||
-                !headerSubtitleAnimation.isFinished ||
-                !headerDividerAnimation.isFinished ||
-                !selectionYAnimation.isFinished ||
-                !selectionHeightAnimation.isFinished ||
-                !hoverYAnimation.isFinished ||
-                !hoverAlphaAnimation.isFinished ||
-                !settingsHoverAnimation.isFinished
     }
 
     private fun mouseOver(rect: UiRect, mouseX: Int, mouseY: Int): Boolean {

@@ -75,6 +75,7 @@ object LuminUiRenderer {
         val theme = target.theme
 
         when (node) {
+            is UiTree.CompositionNode -> error("组合引用必须在提交前解析")
             is UiTree.ShadowNode -> {
                 layer.addShadow(
                     node.x, node.y, node.width, node.height,
@@ -277,8 +278,9 @@ object LuminUiRenderer {
             is UiTree.ViewportNode -> {
                 node.buffer.beginViewport(node.viewport)
                 renderNodesIntoTarget(node.children, RenderTarget.forContentBuffer(node.buffer), null)
+                val pointer = node.pointer?.invoke() ?: (node.mouseX to node.mouseY)
                 node.buffer.queueViewport(
-                    node.viewport, node.scroll, node.maxScroll, node.contentHeight, node.mouseX, node.mouseY
+                    node.viewport, node.scroll, node.maxScroll, node.contentHeight, pointer.first, pointer.second
                 )
             }
 

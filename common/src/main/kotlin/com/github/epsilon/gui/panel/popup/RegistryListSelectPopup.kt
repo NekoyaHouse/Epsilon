@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -22,7 +23,6 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.utils.render.animation.Easing
@@ -70,10 +70,10 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private val selectedScrollBarDrag = ScrollBarDragState()
     private val itemPreviews = ArrayList<ItemPreview>()
 
-    private var query = ""
-    private var selectedCategory = -1 // -1 = all
-    private var availableScroll = 0.0f
-    private var selectedScroll = 0.0f
+    private var query by mutableStateOf("")
+    private var selectedCategory by mutableStateOf(-1) // -1 = all
+    private var availableScroll by mutableStateOf(0.0f)
+    private var selectedScroll by mutableStateOf(0.0f)
     private var availableScrollVelocity = 0.0f
     private var selectedScrollVelocity = 0.0f
     private var maxAvailableScroll = 0.0f
@@ -128,7 +128,16 @@ class RegistryListSelectPopup<T : Any> private constructor(
         return bounds
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -175,13 +184,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
         IMEFocusHelper.updateCursorPos(searchBounds.x + 8.0f, searchBounds.y + 4.0f)
 
-        // 查询词、分类、滚动位置、列条数、鼠标、翻译版本与主题共同决定绘制结果。
-        val contentKey = ContentKey(
-            query, selectedCategory, availableScroll, selectedScroll,
-            available.size, selected.size, mouseX, mouseY,
-            TranslationManager.getRevision(), popupThemeFingerprint()
-        )
-        renderBatch.LuminUIScene(animatedBounds, key = contentKey) {
+        renderBatch.LuminUIScene(animatedBounds, key = this) {
             val progress = openAnimation.value
             PopupCard(
                 size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
@@ -474,14 +477,8 @@ class RegistryListSelectPopup<T : Any> private constructor(
 
             val localRowBounds = rowBounds.relativeTo(origin)
             // 逐项缓存：只有悬停/预览宽度/行位置变化的行才重新捕获节点。
-            var revision = popupThemeFingerprint().toLong()
-            revision = revision * 31L + rowY.toRawBits().toLong()
-            revision = revision * 31L + rowBounds.x.toRawBits()
-            revision = revision * 31L + columnWidth.toRawBits()
-            revision = revision * 31L + textMaxWidth.toRawBits()
-            revision = revision * 31L + (if (hovered) 1 else 0)
-            revision = revision * 31L + rawName.hashCode()
-            LuminUIItem(Triple(setting, addColumn, entry), revision) {
+
+            LuminUIItem(Triple(setting, addColumn, entry)) {
                 Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
                     if (addColumn) {
                         RoundRect(
@@ -652,18 +649,6 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private data class ItemPreview(val stack: ItemStack, val x: Float, val y: Float, val size: Float)
 
     /** 列表内容、滚动位置、鼠标与主题参与 recompose 失效判定。 */
-    private data class ContentKey(
-        val query: String,
-        val selectedCategory: Int,
-        val availableScroll: Float,
-        val selectedScroll: Float,
-        val availableCount: Int,
-        val selectedCount: Int,
-        val mouseX: Int,
-        val mouseY: Int,
-        val i18nRevision: Long,
-        val theme: Int,
-    )
 
     data class Category<T : Any>(val name: String, val predicate: Predicate<T>)
 

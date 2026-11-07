@@ -16,7 +16,7 @@ class UiRenderBatch private constructor(
     private val ownsScheduler: Boolean,
     private val baseLayer: Int,
     private val theme: UiTheme,
-    /** 场景级 recompose 注册表；由 UiScene 注入，用于复用长生命周期作用域（逐项缓存挂在 Scope 上）。 */
+    /** 场景组合根由 UiScene 注入；batch 与内容缓冲共享组合生命周期和帧时钟。 */
     private val sceneRoot: LuminSceneRoot? = null,
 ) : AutoCloseable {
 
@@ -36,18 +36,15 @@ class UiRenderBatch private constructor(
         return UiRenderBatch(scheduler, false, baseLayer + relativeBaseLayer, theme, sceneRoot)
     }
 
-    /** 取本次 Content 复用的长生命周期作用域；独立批次则新建。 */
+    /** 立即 Content 每次创建临时绘制作用域，重组内容由 composition 持有作用域。 */
     internal fun nextEntryScope(bounds: com.github.epsilon.gui.lib.UiRect): UiTree.Scope {
-        val root = sceneRoot ?: return UiTree.Scope()
-        val scope = root.nextEntry(bounds, null).treeScope
-        scope.clear()
-        return scope
+        return UiTree.Scope()
     }
 
     /** 取本次内容对应的 recompose 入口；独立批次返回 null（等价立即模式）。 */
     internal fun nextComposition(
         bounds: com.github.epsilon.gui.lib.UiRect,
-        key: Any?,
+        key: Any,
     ): com.github.epsilon.gui.lib.state.LuminComposition? {
         return sceneRoot?.nextEntry(bounds, key)
     }

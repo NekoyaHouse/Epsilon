@@ -19,7 +19,9 @@ import com.github.epsilon.utils.client.KeybindUtils
  * 一行通常包含模块名称、副标题、快捷键提示以及启用开关。
  * 该类只保存命中区域与视图模型，绘制入口是 [ModuleRow] 扩展函数。
  */
-class ModuleRow(private val moduleView: ModuleViewModel, private val rowBounds: UiRect) {
+class ModuleRow(private val module: com.github.epsilon.modules.Module, private val rowBounds: UiRect) {
+
+    private val moduleView: ModuleViewModel get() = ModuleViewModel.from(module)
 
     private val toggleArea: UiRect = PanelElements.switchBounds(rowBounds)
 
@@ -69,7 +71,7 @@ class ModuleRow(private val moduleView: ModuleViewModel, private val rowBounds: 
         internal fun marqueePhase(): Float {
             val period = 5000L
             val pause = 800L
-            val t = System.currentTimeMillis() % period
+            val t = (com.github.epsilon.gui.lib.state.luminFrameTime("marquee") / 1_000_000L) % period
             val travel = (period - pause * 2L) / 2L
             if (t < pause) {
                 return 0.0f

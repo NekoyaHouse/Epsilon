@@ -215,7 +215,7 @@ fun UiTree.Scope.asUiScope(renderer: TextRenderer, layer: LayerOffset = LayerOff
 /** 把 [TextRenderer] 适配成库内最小度量接口。 */
 fun TextRenderer.asUiTextMetrics(): UiTextMetrics = TextRendererMetrics(this)
 
-private class TextRendererMetrics(private val renderer: TextRenderer) : UiTextMetrics {
+private data class TextRendererMetrics(private val renderer: TextRenderer) : UiTextMetrics {
 
     override fun textWidth(text: String, scale: Float): Float = renderer.getWidth(text, scale)
 
@@ -227,4 +227,12 @@ private class TextRendererMetrics(private val renderer: TextRenderer) : UiTextMe
     override fun textHeight(scale: Float, fontLoader: TtfFontLoader): Float =
         renderer.getHeight(scale, fontLoader)
 
+}
+/** 推式动画只声明目标，帧时钟负责推进。 */
+fun UiScope.animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Boolean): Float =
+    animate(animation, if (target) 1.0f else 0.0f)
+
+fun UiScope.animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Float): Float {
+    animation.target = target
+    return animation.value
 }

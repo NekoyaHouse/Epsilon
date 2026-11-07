@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.view.settings
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.IconButton
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
@@ -11,7 +11,6 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
@@ -19,8 +18,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.managers.TranslationManager
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -35,9 +33,6 @@ class FriendClientSettingTab(
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
 
-
-
-    private val contentState = UiInvalidationState()
     private val rowHoverAnimations = HashMap<String, Animation>()
     private val removeHoverAnimations = HashMap<String, Animation>()
     private val scrollBarDrag = ScrollBarDragState()
@@ -45,12 +40,18 @@ class FriendClientSettingTab(
     private val inputField = ClientSettingTextField(MAX_FRIEND_NAME_LENGTH)
 
     private var bounds: UiRect? = null
-    private var lastScroll = Float.NaN
-    private var lastFriendList: List<String> = emptyList()
-    private var lastContentSignature = Long.MIN_VALUE
     private var scrollVelocity = 0.0f
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -62,7 +63,7 @@ class FriendClientSettingTab(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val inputBounds = getInputBounds(bounds)
@@ -73,19 +74,14 @@ class FriendClientSettingTab(
         val maxScroll = maxOf(0.0f, contentHeight - listViewport.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
-        val contentSignature = buildContentSignature(friends)
-        val rebuildContent =
-            shouldRebuild(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature)
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
-            rowEntries.clear()
-            rowHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
+        contentBuffer.clear()
+
+        rowHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
             removeHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
-        }
 
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
+            rowEntries.clear()
             val localInput = inputBounds.relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
                 ClientSettingTextField(
@@ -102,9 +98,6 @@ class FriendClientSettingTab(
                 mouseX,
                 mouseY
             ) {
-                if (!rebuildContent) {
-                    return@Viewport
-                }
                 var rowY = listViewport.y - state.getFriendScroll()
                 for (friendName in friends) {
                     val rowBounds = UiRect(listViewport.x, rowY, rowWidth, FRIEND_ROW_HEIGHT)
@@ -115,7 +108,6 @@ class FriendClientSettingTab(
                     val removeAnimation = removeHoverAnimations.getOrPut(friendName) { createAnimation() }
                     hoverAnimation.run(if (rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
                     removeAnimation.run(if (removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
-                    contentState.noteAnimation(!hoverAnimation.isFinished || !removeAnimation.isFinished)
 
                     val localRow = rowBounds.relativeTo(origin)
                     Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
@@ -136,23 +128,10 @@ class FriendClientSettingTab(
             }
         }
 
-        if (rebuildContent) {
-            rememberSnapshot(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature)
-        }
     }
 
     override fun flushContent() {
         contentBuffer.flush()
-    }
-
-    override fun markDirty() {
-        contentState.markDirty()
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        val hoveringRows = rowHoverAnimations.values.any { animation -> !animation.isFinished } ||
-                removeHoverAnimations.values.any { animation -> !animation.isFinished }
-        return contentState.hasActiveAnimations() || hoveringRows || inputField.hasActiveAnimations()
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -170,13 +149,13 @@ class FriendClientSettingTab(
             if (newScroll >= 0.0f) {
                 state.setFriendScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
 
         val inputBounds = getInputBounds(currentBounds)
         if (inputField.focusIfContains(inputBounds, event.x(), event.y())) {
-            markDirty()
+
             return true
         }
         inputField.blur()
@@ -184,7 +163,7 @@ class FriendClientSettingTab(
         for (entry in rowEntries) {
             if (entry.removeBounds.contains(event.x(), event.y())) {
                 FriendManager.removeFriend(entry.name)
-                markDirty()
+
                 return true
             }
         }
@@ -194,7 +173,7 @@ class FriendClientSettingTab(
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         return false
@@ -210,7 +189,7 @@ class FriendClientSettingTab(
         if (newScroll >= 0.0f) {
             state.setFriendScroll(newScroll)
         }
-        markDirty()
+
         return true
     }
 
@@ -219,7 +198,7 @@ class FriendClientSettingTab(
         val listViewport = getListViewport(currentBounds)
         if (listViewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24.0f
-            markDirty()
+
             return true
         }
         return false
@@ -234,13 +213,13 @@ class FriendClientSettingTab(
 
             InputConstants.KEY_ESCAPE -> {
                 inputField.blur()
-                markDirty()
+
                 true
             }
 
             else -> {
                 if (inputField.keyPressed(event)) {
-                    markDirty()
+
                     true
                 } else {
                     false
@@ -251,7 +230,7 @@ class FriendClientSettingTab(
 
     override fun charTyped(event: CharacterEvent): Boolean {
         if (inputField.charTyped(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -261,7 +240,7 @@ class FriendClientSettingTab(
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
         inputField.blur()
-        markDirty()
+
     }
 
     private fun addFriendFromInput() {
@@ -270,7 +249,7 @@ class FriendClientSettingTab(
             FriendManager.addFriend(name)
         }
         inputField.clear()
-        markDirty()
+
     }
 
     private fun UiScope.buildFriendRow(
@@ -331,42 +310,6 @@ class FriendClientSettingTab(
         )
     }
 
-    private fun shouldRebuild(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, friends: List<String>,
-        guiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(listViewport, mouseX, mouseY, guiHeight, contentSignature)) {
-            return true
-        }
-        if (lastScroll.compareTo(state.getFriendScroll()) != 0) {
-            return true
-        }
-        if (lastFriendList != friends) {
-            return true
-        }
-        return lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, friends: List<String>,
-        guiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(listViewport, mouseX, mouseY, guiHeight, contentSignature)
-        lastScroll = state.getFriendScroll()
-        lastFriendList = ArrayList(friends)
-        lastContentSignature = contentSignature
-    }
-
-    private fun buildContentSignature(friends: List<String>): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getFriendScroll())
-        for (friend in friends) {
-            signature = signature * 31L + friend.hashCode()
-        }
-        return signature
-    }
-
     private fun createAnimation(): Animation {
         val animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
         animation.startValue = 0.0f
@@ -375,7 +318,7 @@ class FriendClientSettingTab(
 
     override fun close() {
         contentBuffer.close()
-        markDirty()
+
     }
 
     private data class FriendRowEntry(val name: String, val rowBounds: UiRect, val removeBounds: UiRect)

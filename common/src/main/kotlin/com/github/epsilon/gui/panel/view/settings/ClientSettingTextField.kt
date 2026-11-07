@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.view.settings
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
@@ -7,7 +8,7 @@ import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -21,11 +22,11 @@ class ClientSettingTextField(private val maxLength: Int) {
 
     internal val focusAnimation = Animation(Easing.EASE_OUT_CUBIC, HOVER_DURATION)
 
-    internal var focused = false
+    internal var focused by mutableStateOf(false)
 
-    internal var text = ""
+    internal var text by mutableStateOf("")
 
-    internal var cursor = 0
+    internal var cursor by mutableStateOf(0)
 
     init {
         hoverAnimation.startValue = 0.0f
@@ -108,10 +109,6 @@ class ClientSettingTextField(private val maxLength: Int) {
         }
         insertText(typed)
         return true
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return !hoverAnimation.isFinished || !focusAnimation.isFinished
     }
 
     fun isFocused(): Boolean {

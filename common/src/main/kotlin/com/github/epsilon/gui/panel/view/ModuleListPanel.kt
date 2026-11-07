@@ -1,7 +1,8 @@
 package com.github.epsilon.gui.panel.view
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.Text
@@ -12,20 +13,17 @@ import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
-import com.github.epsilon.gui.panel.adapter.ModuleViewModel
 import com.github.epsilon.gui.panel.component.ModuleRow
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -35,16 +33,9 @@ import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.abs
 
-/**
- * 模块列表面板。
- *
- * 负责渲染分类下的模块列表、搜索框、滚动视口与模块行缓存，
- * 并维护与列表内容相关的输入状态、滚动状态和重建签名。
- */
 class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
     private val rows = ArrayList<ModuleRow>()
@@ -52,18 +43,12 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
     private val selectionAnimations = HashMap<Module, Animation>()
     private val toggleAnimations = HashMap<Module, Animation>()
     private val toggleHoverAnimations = HashMap<Module, Animation>()
-    private var lastModuleScroll = Float.NaN
-    private var lastSearchQuery = ""
-    private var lastSearchFocused = false
-    private var lastCategorySnapshot: CategorySnapshot? = null
-    private var lastSelectedModuleName = ""
     private val searchHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     private val searchFocusAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     private val scrollBarDrag = ScrollBarDragState()
     private var scrollVelocity = 0.0f
-    private var searchFocused = false
-    private var searchCursorIndex = 0
-    private var lastContentSignature = Long.MIN_VALUE
+    private var searchFocused by mutableStateOf(false)
+    private var searchCursorIndex by mutableStateOf(0)
 
     init {
         this.searchHoverAnimation.startValue = 0.0f
@@ -76,7 +61,16 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
      * 面板标题与搜索框会直接写入主批次；滚动列表内容则写入独立的 viewport 缓冲，
      * 并在之后的统一 flush 阶段输出。
      */
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -89,7 +83,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val viewport = getViewport()
@@ -99,18 +93,11 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         val maxModuleScroll = maxOf(0.0f, contentHeight - viewport.height)
         val hasScrollBar = maxModuleScroll > 0
         val rowWidth = if (hasScrollBar) viewport.width - ScrollBarUtils.TOTAL_WIDTH else viewport.width
-        val contentSignature = buildContentSignature(modules)
-        val rebuildContent = shouldRebuildContent(
-            bounds, mouseX, mouseY, modules, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
+        contentBuffer.clear()
+
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
             rows.clear()
-            contentBuffer.clear()
-            contentState.beginRebuild()
-        }
-
-        renderBatch.Content(bounds) {
             Text(
                 state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
                 MD3Theme.TEXT_PRIMARY
@@ -124,42 +111,27 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             Viewport(
                 contentBuffer, localViewport, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY
             ) {
-                if (!rebuildContent) {
-                    return@Viewport
-                }
                 var y = viewport.y - state.getModuleScroll()
                 for (module in modules) {
-                    val row = ModuleRow(ModuleViewModel.from(module), UiRect(viewport.x, y, rowWidth, ModuleRow.HEIGHT))
+                    val row = ModuleRow(module, UiRect(viewport.x, y, rowWidth, ModuleRow.HEIGHT))
                     rows.add(row)
-                    val hoverAnimation = hoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
-                    val selectionAnimation =
-                        selectionAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 160L) }
-                    val toggleAnimation =
-                        toggleAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_ELASTIC, 620L) }
-                    val toggleHoverAnimation =
-                        toggleHoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
-                    hoverAnimation.run(
-                        if (row.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
-                    )
-                    selectionAnimation.run(if (state.getSelectedModule() === module) 1.0f else 0.0f)
-                    toggleAnimation.run(if (module.isEnabled) 1.0f else 0.0f)
-                    toggleHoverAnimation.run(
-                        if (row.getToggleBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
-                    )
-                    val marqueeActive = row.hasOverflowingKeybind(metrics)
-                    contentState.noteAnimation(
-                        !hoverAnimation.isFinished ||
-                                !selectionAnimation.isFinished ||
-                                !toggleAnimation.isFinished ||
-                                !toggleHoverAnimation.isFinished ||
-                                marqueeActive
-                    )
                     val localRow = row.getBounds().relativeTo(origin)
-                    // 逐行缓存：只有动画进行中或模块状态变化的行才重新捕获节点。
-                    val animating = !hoverAnimation.isFinished || !selectionAnimation.isFinished ||
-                            !toggleAnimation.isFinished || !toggleHoverAnimation.isFinished || marqueeActive
-                    val revision = moduleRevision(module) * 31L + (if (animating) System.nanoTime() else 0L)
-                    LuminUIItem(module to row.getBounds(), revision) {
+                    LuminUIItem(module) {
+                        val hoverAnimation = hoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
+                        val selectionAnimation =
+                            selectionAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 160L) }
+                        val toggleAnimation =
+                            toggleAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_ELASTIC, 620L) }
+                        val toggleHoverAnimation =
+                            toggleHoverAnimations.getOrPut(module) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
+                        hoverAnimation.run(
+                            if (row.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
+                        )
+                        selectionAnimation.run(if (state.getSelectedModule() === module) 1.0f else 0.0f)
+                        toggleAnimation.run(if (module.isEnabled) 1.0f else 0.0f)
+                        toggleHoverAnimation.run(
+                            if (row.getToggleBounds().contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
+                        )
                         Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
                             ModuleRow(
                                 row, hoverAnimation.value, selectionAnimation.value,
@@ -172,9 +144,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             }
         }
 
-        if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, modules, guiGraphics.guiHeight(), contentSignature)
-        }
     }
 
     /**
@@ -184,26 +153,14 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         contentBuffer.flush()
     }
 
-    /**
-     * 将列表内容标记为脏，以便在下次渲染时触发重建。
-     */
-    fun markDirty() {
-        contentState.markDirty()
-    }
 
-    /**
-     * 返回列表内容是否仍包含未结束的动画。
-     */
-    fun hasActiveAnimations(): Boolean {
-        return contentState.hasActiveAnimations()
-    }
 
     fun resetTransientState() {
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
         if (searchFocused) {
             searchFocused = false
-            markDirty()
+
         }
     }
 
@@ -225,7 +182,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             if (newScroll >= 0) {
                 state.setModuleScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
         val searchBounds = getSearchBounds()
@@ -233,7 +190,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             searchFocused = true
             searchCursorIndex = state.getSearchQuery().length
             IMEFocusHelper.activate()
-            markDirty()
+
             return true
         }
         for (row in rows) {
@@ -248,7 +205,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             } else {
                 state.setSelectedModule(row.getModule().module)
             }
-            markDirty()
+
             return true
         }
         return false
@@ -256,7 +213,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         return false
@@ -269,7 +226,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             if (newScroll >= 0) {
                 state.setModuleScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
         return false
@@ -282,7 +239,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         val viewport = getViewport()
         if (bounds != null && viewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24f
-            markDirty()
+
             return true
         }
         return false
@@ -311,7 +268,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                         query.substring(0, searchCursorIndex - 1) + query.substring(searchCursorIndex)
                     )
                     searchCursorIndex--
-                    markDirty()
+
                 }
                 true
             }
@@ -321,20 +278,20 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                     state.setSearchQuery(
                         query.substring(0, searchCursorIndex) + query.substring(searchCursorIndex + 1)
                     )
-                    markDirty()
+
                 }
                 true
             }
 
             InputConstants.KEY_LEFT -> {
                 searchCursorIndex = maxOf(0, searchCursorIndex - 1)
-                markDirty()
+
                 true
             }
 
             InputConstants.KEY_RIGHT -> {
                 searchCursorIndex = minOf(state.getSearchQuery().length, searchCursorIndex + 1)
-                markDirty()
+
                 true
             }
 
@@ -353,7 +310,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         val typed = event.codepointAsString()
         state.setSearchQuery(query.substring(0, searchCursorIndex) + typed + query.substring(searchCursorIndex))
         searchCursorIndex++
-        markDirty()
+
         return true
     }
 
@@ -369,70 +326,6 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         if (!getSearchBounds().contains(mouseX, mouseY)) {
             searchFocused = false
             IMEFocusHelper.deactivate()
-            markDirty()
-        }
-    }
-
-    private fun shouldRebuildContent(
-        bounds: UiRect, mouseX: Int, mouseY: Int, modules: List<Module>,
-        currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastModuleScroll.compareTo(state.getModuleScroll()) != 0) {
-            return true
-        }
-        if (lastSearchQuery != state.getSearchQuery() || lastSearchFocused != searchFocused) {
-            return true
-        }
-        val selectedModuleName = state.getSelectedModule()?.name ?: ""
-        if (lastSelectedModuleName != selectedModuleName) {
-            return true
-        }
-        if (lastCategorySnapshot != CategorySnapshot.of(state.getSelectedCategory().name, modules)) {
-            return true
-        }
-        return lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        bounds: UiRect, mouseX: Int, mouseY: Int, modules: List<Module>,
-        currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastModuleScroll = state.getModuleScroll()
-        lastSearchQuery = state.getSearchQuery()
-        lastSearchFocused = searchFocused
-        lastCategorySnapshot = CategorySnapshot.of(state.getSelectedCategory().name, modules)
-        lastSelectedModuleName = state.getSelectedModule()?.name ?: ""
-        lastContentSignature = contentSignature
-    }
-
-    private fun buildContentSignature(modules: List<Module>): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + state.getSelectedCategory().name.hashCode()
-        signature = signature * 31L + state.getSearchQuery().hashCode()
-        signature = signature * 31L + (if (searchFocused) 1 else 0)
-        signature = signature * 31L + state.getSelectedModule()?.name.hashCode()
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getModuleScroll())
-        for (module in modules) {
-            signature = signature * 31L + module.name.hashCode()
-            signature = signature * 31L + module.keyBind
-            signature = signature * 31L + (if (module.isEnabled) 1 else 0)
-        }
-        return signature
-    }
-
-    private data class CategorySnapshot(val categoryName: String, val moduleIds: List<String>) {
-
-        companion object {
-
-            fun of(categoryName: String, modules: List<Module>): CategorySnapshot {
-                val ids = modules.map { it.name }
-                return CategorySnapshot(categoryName, ids)
-            }
 
         }
     }
@@ -494,17 +387,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     override fun close() {
         contentBuffer.close()
-        markDirty()
+
     }
 
-}
-/**
- * 模块行的失效版本：只包含影响该行绘制结果、且静止时也会变化的状态。
- *
- * 动画由调用点另外叠加时间戳，因此这里不包含动画进度。
- */
-private fun moduleRevision(module: Module): Long {
-    var result = if (module.isEnabled) 1L else 0L
-    result = result * 31L + module.keyBind
-    return result
 }

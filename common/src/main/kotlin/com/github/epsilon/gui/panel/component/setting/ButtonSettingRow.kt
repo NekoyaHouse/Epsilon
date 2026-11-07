@@ -7,7 +7,7 @@ import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.MouseButtonEvent
@@ -28,8 +28,6 @@ class ButtonSettingRow(private val buttonSetting: ButtonSetting) : SettingRow<Bu
         buttonSetting.value.run()
         return true
     }
-
-    override fun hasActiveAnimation(): Boolean = !hoverAnimation.isFinished
 
 }
 

@@ -59,7 +59,7 @@ interface DropdownPanel {
 
     fun updateMaxPanelHeight(maxPanelHeight: Float)
 
-    /** 展开/收起动画进度；背景层缓存键需要它。 */
+    /** 展开/收起动画进度；宿主布局观察它以刷新几何。 */
     val expandProgress: Float
 
     /** 内容区当前的滚动偏移。 */
@@ -71,15 +71,11 @@ interface DropdownPanel {
     /** 当前最大滚动距离。 */
     val maxScrollOffset: Float
 
-    /** 内容区是否有活动动画或逐帧变化的输入（光标闪烁等）。 */
-    fun hasActiveAnimations(): Boolean
-
     /**
      * 内容层的 recompose 失效键。
      *
      * 覆盖滚动/展开等几何量、设置值等静止也会变化的状态，以及动画进行中的逐帧时间戳。
      */
-    fun contentRevision(): Long
 
     val x: Float
 

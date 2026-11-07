@@ -150,9 +150,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
         scene.submit(UiLayer.CONTENT, tree)
 
-        scene.flush()
+        scene.flushAndClear()
         listBuffer.flush()
-        scene.clear()
+        scene.endFrame()
 
         LuminRenderSystem.setActiveTarget(null)
 

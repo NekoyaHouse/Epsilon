@@ -44,7 +44,7 @@ fun UiScope.Input(
         focusRingProgress, focusRingColor, focusRingInset,
         textInset, text, textScale, textColor,
         selection, selectionColor,
-        caretIndex, caretColor,
+        if (caretIndex != null && com.github.epsilon.gui.lib.state.luminBlink("input-caret")) caretIndex else null, caretColor,
         trailingHint, trailingHintScale, trailingHintColor
     )
 }

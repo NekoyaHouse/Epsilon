@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.view
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
@@ -13,7 +13,6 @@ import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
 import com.github.epsilon.gui.panel.component.SettingRow
@@ -23,12 +22,10 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -46,14 +43,10 @@ class ModuleDetailPanel(
 
     private val settingListController = SettingListController(popupHost)
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
     private var headerBounds: UiRect? = null
     private val hoverAnimations = HashMap<Setting<*>, Animation>()
-    private var lastDetailScroll = Float.NaN
-    private var lastModuleKey = ""
-    private var lastVisibleSettings: List<String> = emptyList()
     private val scrollBarDrag = ScrollBarDragState()
     private var scrollVelocity = 0.0f
     private val bindModeAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
@@ -62,7 +55,6 @@ class ModuleDetailPanel(
     private val keybindFocusAnimation = Animation(Easing.EASE_OUT_CUBIC, 150L)
     private val hiddenAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
     private val hiddenHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
-    private var lastContentSignature = Long.MIN_VALUE
 
     init {
         this.bindModeAnimation.startValue = 0.0f
@@ -73,7 +65,16 @@ class ModuleDetailPanel(
         this.hiddenHoverAnimation.startValue = 0.0f
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -86,7 +87,7 @@ class ModuleDetailPanel(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val popupConsumesHover = settingListController.isPopupHovered(mouseX, mouseY)
@@ -95,7 +96,7 @@ class ModuleDetailPanel(
 
         val module = state.getSelectedModule()
         val detailTitle = module?.translatedName ?: EpsilonTranslations.Gui.NO_MODULE.getTranslatedName()
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
             val titleScale = 0.78f
             val titleHeight = metrics.textHeight(titleScale)
             val titleY = 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f
@@ -111,7 +112,7 @@ class ModuleDetailPanel(
             bounds.width - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, 36.0f
         )
         val header = headerBounds!!
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-2") {
             val localHeader = header.relativeTo(bounds)
             Positioned(localHeader.x, localHeader.y, localHeader.width, localHeader.height) {
                 RoundRect(
@@ -132,52 +133,40 @@ class ModuleDetailPanel(
         val maxDetailScroll = maxOf(0.0f, contentHeight - viewport.height)
         val hasScrollBar = maxDetailScroll > 0
         val rowWidth = if (hasScrollBar) viewport.width - ScrollBarUtils.TOTAL_WIDTH else viewport.width
-        val contentSignature = buildContentSignature(module, settings, settingOwnerKey)
-        val rebuildContent = shouldRebuildContent(
-            bounds, mouseX, mouseY, module, settings, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
-        }
+        contentBuffer.clear()
 
-        renderBatch.Content(bounds) {
+        renderBatch.LuminUIScene(bounds, key = this to "pass-3") {
             val localViewport = viewport.relativeTo(bounds)
             Viewport(
                 contentBuffer, localViewport, state.getDetailScroll(), maxDetailScroll, contentHeight,
                 effectiveMouseX, effectiveMouseY
             ) {
-                if (!rebuildContent) {
-                    return@Viewport
-                }
                 settingListController.layoutRows(
                     settingOwnerKey, settings, viewport, state.getDetailScroll(), rowWidth,
                     this, effectiveMouseX, effectiveMouseY
                 ) { setting, row, rowBounds ->
-                    if (row is KeybindSettingRow) {
-                        row.setListening(state.getListeningKeybindSetting() === row.getSetting())
-                    }
-                    val hoverAnimation =
-                        hoverAnimations.getOrPut(setting) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
-                    hoverAnimation.run(
-                        if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
-                    )
-                    val animating = !hoverAnimation.isFinished || row.hasActiveAnimation()
-                    // 逐行缓存：只有值或动画变化的行才重新捕获节点，其余行直接重放。
-                    val revision = row.cacheRevision() * 31L + (if (animating) System.nanoTime() else 0L)
-                    LuminUIItem(setting to rowBounds, revision) {
+                    LuminUIItem(setting) {
+                        if (row is KeybindSettingRow) {
+                            val listening = state.getListeningKeybindSetting() === row.getSetting()
+                            com.github.epsilon.gui.lib.state.afterLuminCommit { row.setListening(listening) }
+                        }
+                        val hoverAnimation =
+                            hoverAnimations.getOrPut(setting) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
+                        hoverAnimation.run(
+                            if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
+                        )
+
+                        // 逐行缓存：只有值或动画变化的行才重新捕获节点，其余行直接重放。
+
                         SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
                     }
-                    contentState.noteAnimation(animating)
+
                 }
-                contentState.noteAnimation(settingListController.hasActiveAnimations())
+
             }
         }
 
-        if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, module, settings, guiGraphics.guiHeight(), contentSignature)
-        }
     }
 
     fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -193,7 +182,7 @@ class ModuleDetailPanel(
             if (keybindBounds.contains(event.x(), event.y())) {
                 module.keyBind = KeybindUtils.encodeMouseButton(event.button())
                 state.setListeningKeyBindModule(null)
-                markDirty()
+
                 return true
             }
         }
@@ -202,7 +191,7 @@ class ModuleDetailPanel(
         if (listeningKeybindSetting != null) {
             listeningKeybindSetting.value = KeybindUtils.encodeMouseButton(event.button())
             state.setListeningKeybindSetting(null)
-            markDirty()
+
             return true
         }
 
@@ -218,25 +207,25 @@ class ModuleDetailPanel(
             if (newScroll >= 0) {
                 state.setDetailScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
 
         val keybindBounds = getKeybindBounds()
         if (keybindBounds.contains(event.x(), event.y())) {
             state.setListeningKeyBindModule(module)
-            markDirty()
+
             return true
         } else if (state.getListeningKeyBindModule() === module) {
             state.setListeningKeyBindModule(null)
-            markDirty()
+
         }
 
         val bindModeBounds = getBindModeBounds()
         if (bindModeBounds.contains(event.x(), event.y())) {
             val midpoint = bindModeBounds.centerX()
             module.bindMode = if (event.x() < midpoint) Module.BindMode.Toggle else Module.BindMode.Hold
-            markDirty()
+
             return true
         }
 
@@ -244,7 +233,7 @@ class ModuleDetailPanel(
         if (hiddenBounds.contains(event.x(), event.y())) {
             val midpoint = hiddenBounds.centerX()
             module.isHidden = event.x() >= midpoint
-            markDirty()
+
             return true
         }
 
@@ -261,7 +250,7 @@ class ModuleDetailPanel(
             }
         }
         if (intercepted) {
-            markDirty()
+
             return true
         }
         return false
@@ -269,11 +258,11 @@ class ModuleDetailPanel(
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         if (settingListController.mouseReleased(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -286,11 +275,11 @@ class ModuleDetailPanel(
             if (newScroll >= 0) {
                 state.setDetailScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
         if (settingListController.mouseDragged(event, mouseX, mouseY)) {
-            markDirty()
+
             return true
         }
         return false
@@ -300,7 +289,7 @@ class ModuleDetailPanel(
         val viewport = getViewport()
         if (bounds != null && viewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24f
-            markDirty()
+
             return true
         }
         return false
@@ -311,40 +300,40 @@ class ModuleDetailPanel(
         if (listeningSetting != null) {
             if (event.key() == InputConstants.KEY_ESCAPE) {
                 state.setListeningKeybindSetting(null)
-                markDirty()
+
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
                 listeningSetting.value = -1
                 state.setListeningKeybindSetting(null)
-                markDirty()
+
                 return true
             }
             listeningSetting.value = event.key()
             state.setListeningKeybindSetting(null)
-            markDirty()
+
             return true
         }
         val module = state.getSelectedModule()
         if (module != null && state.getListeningKeyBindModule() === module) {
             if (event.key() == InputConstants.KEY_ESCAPE) {
                 state.setListeningKeyBindModule(null)
-                markDirty()
+
                 return true
             }
             if (event.key() == InputConstants.KEY_BACKSPACE || event.key() == InputConstants.KEY_DELETE) {
                 module.keyBind = -1
                 state.setListeningKeyBindModule(null)
-                markDirty()
+
                 return true
             }
             module.keyBind = event.key()
             state.setListeningKeyBindModule(null)
-            markDirty()
+
             return true
         }
         if (settingListController.keyPressed(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -352,7 +341,7 @@ class ModuleDetailPanel(
 
     fun charTyped(event: CharacterEvent): Boolean {
         if (settingListController.charTyped(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -565,21 +554,6 @@ class ModuleDetailPanel(
         contentBuffer.flush()
     }
 
-    fun markDirty() {
-        contentState.markDirty()
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return contentState.hasActiveAnimations() ||
-                settingListController.hasActiveAnimations() ||
-                !keybindHoverAnimation.isFinished ||
-                !keybindFocusAnimation.isFinished ||
-                !bindModeAnimation.isFinished ||
-                !bindModeHoverAnimation.isFinished ||
-                !hiddenAnimation.isFinished ||
-                !hiddenHoverAnimation.isFinished
-    }
-
     fun resetTransientState() {
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
@@ -590,68 +564,17 @@ class ModuleDetailPanel(
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null)
         }
-        markDirty()
-    }
 
-    private fun shouldRebuildContent(
-        bounds: UiRect, mouseX: Int, mouseY: Int, module: Module,
-        settings: List<Setting<*>>, currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastDetailScroll.compareTo(state.getDetailScroll()) != 0) {
-            return true
-        }
-        if (lastModuleKey !=
-            module.name + ":" + module.bindMode + ":" + module.keyBind + ":" + module.isHidden
-        ) {
-            return true
-        }
-        val visibleSettings = settings.map { setting -> setting.name }
-        return lastVisibleSettings != visibleSettings || lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        bounds: UiRect, mouseX: Int, mouseY: Int, module: Module,
-        settings: List<Setting<*>>, currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastDetailScroll = state.getDetailScroll()
-        lastModuleKey =
-            module.name + ":" + module.bindMode + ":" + module.keyBind + ":" + module.isHidden
-        lastVisibleSettings = settings.map { setting -> setting.name }
-        lastContentSignature = contentSignature
     }
 
     private fun getSettingOwnerKey(module: Module): String {
         return "panel-module:" + module.name.lowercase(Locale.ROOT).replace("[^a-z0-9]+".toRegex(), "_")
     }
 
-    private fun buildContentSignature(
-        module: Module, settings: List<Setting<*>>, settingOwnerKey: String,
-    ): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + module.name.hashCode()
-        signature = signature * 31L + module.bindMode.ordinal
-        signature = signature * 31L + module.keyBind
-        signature = signature * 31L + (if (module.isHidden) 1 else 0)
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getDetailScroll())
-        val listening = state.getListeningKeybindSetting()
-        signature = signature * 31L + listening?.name.hashCode()
-        for (setting in settings) {
-            signature = signature * 31L + setting.name.hashCode()
-            signature = signature * 31L + (if (setting.isVisible) 1 else 0)
-        }
-        signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings)
-        return signature
-    }
-
     override fun close() {
         settingListController.close()
         contentBuffer.close()
-        markDirty()
+
     }
 
 }

@@ -1,17 +1,17 @@
 package com.github.epsilon.gui.dropdown.component
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -19,7 +19,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
     AbstractDropdownPanel("config", EpsilonTranslations.Gui.TAB_CONFIG, "", panelIndex) {
 
     private val inputField: DropdownTextField = DropdownTextField(160)
-    private var status = ""
+    private var status by mutableStateOf("")
     private var cachedConfigFrameId = Int.MIN_VALUE
     private var cachedConfigs: List<String> = emptyList()
 
@@ -42,7 +42,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
 
         val placeholder = ConfigManager.activeConfigName
         if (!inputField.isFocused && inputField.text.isEmpty()) {
-            inputField.text = placeholder
+            afterLuminCommit { inputField.text = placeholder }
         }
         inputField.draw(
             this, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY,
@@ -67,7 +67,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), btnX, btnY, btnW, BUTTON_HEIGHT)
                 val label = actions[index]
                 // 逐项缓存：按钮位置/悬停/翻译变化时才重新捕获节点。
-                LuminUIItem("config-action:$index", actionRevision(origin, btnY, hovered, label, btnX, btnW)) {
+                LuminUIItem("config-action:$index") {
                     RoundRect(
                         btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
@@ -109,10 +109,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
             val deleteX = contentX + contentW - 18.0f
             val deleteHovered =
                 isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, rowY + 3.0f, 16.0f, 16.0f)
-            LuminUIItem(
-                "config-row:$name",
-                rowRevision(origin, rowY, hovered, activeRow, deleteHovered, contentX, contentW)
-            ) {
+            LuminUIItem("config-row:$name") {
                 RoundRect(
                     contentX, rowY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (activeRow) {
@@ -137,48 +134,6 @@ class ConfigDropdownPanel(panelIndex: Int) :
             }
             currentY += ROW_HEIGHT + GAP
         }
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return super.hasActiveAnimations() || inputField.isFocused
-    }
-
-    override fun contentStateSignature(): Long {
-        var signature = status.hashCode().toLong()
-        signature = signature * 31L + ConfigManager.activeConfigName.hashCode()
-        signature = signature * 31L + configsForFrame().hashCode()
-        signature = signature * 31L + inputField.text.hashCode()
-        signature = signature * 31L + (if (inputField.isFocused) 1L else 0L)
-        signature = signature * 31L + inputField.getCursorIndex()
-        return signature
-    }
-
-    private fun actionRevision(
-        origin: UiRect, rowY: Float, hovered: Boolean, label: String, x: Float, width: Float,
-    ): Long {
-        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
-        revision = revision * 31L + java.lang.Float.floatToIntBits(x)
-        revision = revision * 31L + java.lang.Float.floatToIntBits(width)
-        revision = revision * 31L + origin.hashCode()
-        revision = revision * 31L + (if (hovered) 1L else 0L)
-        revision = revision * 31L + label.hashCode()
-        revision = revision * 31L + TranslationManager.getRevision()
-        return revision
-    }
-
-    private fun rowRevision(
-        origin: UiRect, rowY: Float, hovered: Boolean, activeRow: Boolean, deleteHovered: Boolean,
-        x: Float, width: Float,
-    ): Long {
-        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
-        revision = revision * 31L + java.lang.Float.floatToIntBits(x)
-        revision = revision * 31L + java.lang.Float.floatToIntBits(width)
-        revision = revision * 31L + origin.hashCode()
-        revision = revision * 31L + (if (hovered) 1L else 0L)
-        revision = revision * 31L + (if (activeRow) 1L else 0L)
-        revision = revision * 31L + (if (deleteHovered) 1L else 0L)
-        revision = revision * 31L + TranslationManager.getRevision()
-        return revision
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {

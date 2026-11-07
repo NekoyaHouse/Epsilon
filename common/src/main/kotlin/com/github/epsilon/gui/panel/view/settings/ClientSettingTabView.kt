@@ -16,10 +16,6 @@ interface ClientSettingTabView : AutoCloseable {
 
     fun flushContent()
 
-    fun markDirty()
-
-    fun hasActiveAnimations(): Boolean
-
     fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean
 
     fun mouseReleased(event: MouseButtonEvent): Boolean

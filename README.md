@@ -32,6 +32,8 @@ The Lumin rendering system provides custom render pipelines for:
 
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
+Panel, Dropdown, popups, HudEditor and Troll use LuminUI’s lightweight observable state and composition runtime. Stable keys preserve component identity; state reads invalidate only observing scopes, and a shared host frame clock drives animations. See [LuminUI runtime](docs/lumin-ui-recompose.md) for APIs, lifecycle rules and verification. HUD elements retain their existing immediate rendering.
+
 ## ⚙️ Build & Run
 
 ```bash

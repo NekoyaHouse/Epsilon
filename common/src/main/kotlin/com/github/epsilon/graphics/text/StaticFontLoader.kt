@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.text
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
@@ -25,6 +26,8 @@ object StaticFontLoader {
     @Volatile
     private var DEFAULT: TtfFontLoader = builtinDefault!!
 
+    private val defaultFontState = mutableStateOf(DEFAULT)
+
     val ICONS: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/icons.ttf"))
 
     val JURA_LIGHT: TtfFontLoader = TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/jura-light.ttf"))
@@ -48,8 +51,10 @@ object StaticFontLoader {
         val settings = ClientSetting
         val mode = settings.font.value
         val fontPath = settings.customFont
-        if (isApplied(mode, fontPath)) return DEFAULT
-        return applyDefaultFont(mode, fontPath)
+        if (isApplied(mode, fontPath)) return defaultFontState.value
+        val loader = applyDefaultFont(mode, fontPath)
+        defaultFontState.value = loader
+        return defaultFontState.value
     }
 
     // 原 Java 的 static synchronized 锁在 StaticFontLoader.class 上，这里显式用同一个类锁，

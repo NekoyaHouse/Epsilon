@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.LuminUIItem
@@ -19,7 +20,6 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
@@ -41,8 +41,8 @@ class StringListSelectPopup(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val scrollBarDrag = ScrollBarDragState()
 
-    private var input = ""
-    private var scroll = 0.0f
+    private var input by mutableStateOf("")
+    private var scroll by mutableStateOf(0.0f)
     private var scrollVelocity = 0.0f
     private var maxScroll = 0.0f
     private var hoveredRemove: String? = null
@@ -54,7 +54,16 @@ class StringListSelectPopup(
         return bounds
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -73,11 +82,8 @@ class StringListSelectPopup(
         val inputBounds = getInputBounds(popupY)
         val animatedViewport = getViewport(popupY)
         lastViewport = animatedViewport
-        // 条目内容、输入框、滚动位置、鼠标、翻译版本与主题共同决定绘制结果。
-        val contentKey = ContentKey(
-            entries, input, scroll, mouseX, mouseY, TranslationManager.getRevision(), popupThemeFingerprint()
-        )
-        renderBatch.LuminUIScene(animatedBounds, key = contentKey) {
+
+        renderBatch.LuminUIScene(animatedBounds, key = this) {
             val progress = openAnimation.value
             PopupCard(
                 size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
@@ -237,18 +243,8 @@ class StringListSelectPopup(
             val display = trim(entry, 0.50f, rowBounds.width - actionAreaWidth - 14.0f)
             val localRowBounds = rowBounds.relativeTo(origin)
             // 逐项缓存：只有悬停/排序状态或行位置变化的行才重新捕获节点。
-            var revision = popupThemeFingerprint().toLong()
-            revision = revision * 31L + rowY.toRawBits().toLong()
-            revision = revision * 31L + rowBounds.x.toRawBits()
-            revision = revision * 31L + width.toRawBits()
-            revision = revision * 31L + (if (hovered) 1 else 0)
-            revision = revision * 31L + (if (canMoveUp) 1 else 0)
-            revision = revision * 31L + (if (canMoveDown) 1 else 0)
-            revision = revision * 31L + (if (upHovered) 1 else 0)
-            revision = revision * 31L + (if (downHovered) 1 else 0)
-            revision = revision * 31L + (if (removeHovered) 1 else 0)
-            revision = revision * 31L + display.hashCode()
-            LuminUIItem(setting to (i to entry), revision) {
+
+            LuminUIItem(setting to entry) {
                 Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
                     RoundRect(
                         0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
@@ -357,15 +353,6 @@ class StringListSelectPopup(
     }
 
     /** 条目列表、输入缓冲、滚动位置、鼠标与主题共同决定绘制结果。 */
-    private data class ContentKey(
-        val entries: List<String>,
-        val input: String,
-        val scroll: Float,
-        val mouseX: Int,
-        val mouseY: Int,
-        val i18nRevision: Long,
-        val theme: Int,
-    )
 
     private companion object {
 

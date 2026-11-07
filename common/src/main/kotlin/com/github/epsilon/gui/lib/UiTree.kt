@@ -38,7 +38,6 @@ class UiTree private constructor(
             boundStack.add(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
         }
 
-
         /**
          * 生成当前作用域内容的不可变树快照。
          *
@@ -48,15 +47,6 @@ class UiTree private constructor(
         fun snapshot(): UiTree {
             return UiTree(nodes.toList(), activeAnimations)
         }
-
-        /**
-         * 逐项节点缓存。
-         *
-         * 随作用域生命周期存活：长生命周期作用域（recompose 入口）跨帧复用缓存，
-         * 一次性作用域（立即模式）则等价于不缓存。
-         */
-        internal val itemCache: com.github.epsilon.gui.lib.state.LuminSceneCache =
-            com.github.epsilon.gui.lib.state.LuminSceneCache()
 
         /**
          * 把已经构建好的节点原样写回当前作用域。
@@ -298,8 +288,17 @@ class UiTree private constructor(
          * 推进一个浮点目标动画，并返回当前值。
          */
         fun animate(animation: Animation, target: Float): Float {
+            com.github.epsilon.gui.lib.state.LuminRuntime.requireImmediateAnimation("animate")
             animation.run(target)
             activeAnimations = activeAnimations || !animation.isFinished
+            return animation.value
+        }
+
+        fun animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Boolean): Float =
+            animate(animation, if (target) 1.0f else 0.0f)
+
+        fun animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Float): Float {
+            animation.target = target
             return animation.value
         }
 
@@ -1026,6 +1025,13 @@ class UiTree private constructor(
             mouseX: Int, mouseY: Int, content: (Scope) -> Unit
         ) {
             val resolvedViewport = resolveRect(viewport)
+            val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+            val view = composition?.view
+            val deltaX = mouseX - (composition?.inputX ?: 0)
+            val deltaY = mouseY - (composition?.inputY ?: 0)
+            val pointer: (() -> Pair<Int, Int>)? = if (view != null && mouseX != Int.MIN_VALUE && mouseY != Int.MIN_VALUE) {
+                { (view.mouseX + deltaX) to (view.mouseY + deltaY) }
+            } else null
             val capture = capture { scope ->
                 scope.pushAbsolute(
                     UiRect(
@@ -1039,7 +1045,7 @@ class UiTree private constructor(
             nodes.add(
                 ViewportNode(
                     buffer, resolvedViewport, scroll, maxScroll, contentHeight,
-                    mouseX, mouseY, capture.nodes
+                    mouseX, mouseY, capture.nodes, pointer
                 )
             )
         }
@@ -1204,6 +1210,8 @@ class UiTree private constructor(
     /**
      * 子树级 layer 偏移；适合一组节点整体提升或下沉。
      */
+    internal class CompositionNode(val resolve: () -> List<UiNode>) : UiNode
+
     data class LayerNode(val layer: Int, val children: List<UiNode>) : UiNode
 
     data class ScissorNode(val clip: UiRect, val children: List<UiNode>) : UiNode
@@ -1356,6 +1364,7 @@ class UiTree private constructor(
         val buffer: UiContentBuffer, val viewport: UiRect,
         val scroll: Float, val maxScroll: Float, val contentHeight: Float,
         val mouseX: Int, val mouseY: Int, val children: List<UiNode>,
+        internal val pointer: (() -> Pair<Int, Int>)? = null,
     ) : UiNode
 
     companion object {
@@ -1372,7 +1381,6 @@ class UiTree private constructor(
         fun from(scope: Scope): UiTree {
             return scope.snapshot()
         }
-
 
     }
 

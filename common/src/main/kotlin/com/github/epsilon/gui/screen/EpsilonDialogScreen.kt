@@ -134,8 +134,7 @@ abstract class EpsilonDialogScreen protected constructor(
             }
         }
         scene.submit(UiLayer.CONTENT, tree)
-        scene.flush()
-        scene.clear()
+        scene.endFrame()
 
         LuminRenderSystem.setActiveTarget(null)
         graphics.blit(

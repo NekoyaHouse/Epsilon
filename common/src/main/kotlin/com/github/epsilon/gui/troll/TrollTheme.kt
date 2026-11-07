@@ -85,25 +85,15 @@ object TrollTheme {
     }
 
     fun metrics(renderer: TextRenderer): UiTextMetrics {
-        return object : UiTextMetrics {
-            override fun textWidth(text: String, scale: Float): Float {
-                return renderer.getWidth(text, scale)
-            }
-
-            override fun textHeight(scale: Float): Float {
-                return renderer.getHeight(scale)
-            }
-
-            override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader): Float {
-                return renderer.getWidth(text, scale, fontLoader)
-            }
-
-            override fun textHeight(scale: Float, fontLoader: TtfFontLoader): Float {
-                return renderer.getHeight(scale, fontLoader)
-            }
-        }
+        return RendererMetrics(renderer)
     }
 
+    private data class RendererMetrics(val renderer: TextRenderer) : UiTextMetrics {
+        override fun textWidth(text: String, scale: Float) = renderer.getWidth(text, scale)
+        override fun textHeight(scale: Float) = renderer.getHeight(scale)
+        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader) = renderer.getWidth(text, scale, fontLoader)
+        override fun textHeight(scale: Float, fontLoader: TtfFontLoader) = renderer.getHeight(scale, fontLoader)
+    }
 }
 
 /**

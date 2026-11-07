@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
@@ -12,7 +13,7 @@ import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -28,11 +29,11 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     internal val pressAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     internal val indicatorAnimation = Animation(Easing.EASE_OUT_QUART, 150L)
     internal var textMetrics: UiTextMetrics? = null
-    private var dragging = false
-    private var focusedState = false
-    private var inputBuffer: String? = null
-    internal var cursorIndex = 0
-    private var pendingValue: Int? = null
+    private var dragging by mutableStateOf(false)
+    private var focusedState by mutableStateOf(false)
+    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    internal var cursorIndex by mutableStateOf(0)
+    private var pendingValue: Int? by mutableStateOf<Int?>(null)
 
     init {
         hoverAnimation.startValue = 0.0f
@@ -163,9 +164,6 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     }
 
     override fun isFocused(): Boolean = focusedState
-
-    override fun hasActiveAnimation(): Boolean =
-        !hoverAnimation.isFinished || !pressAnimation.isFinished || !indicatorAnimation.isFinished
 
     fun updateFromMouse(bounds: UiRect, mouseX: Double) {
         val trackBounds = getTrackBounds(bounds)

@@ -3,12 +3,11 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -18,10 +17,6 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT + 2.0f
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

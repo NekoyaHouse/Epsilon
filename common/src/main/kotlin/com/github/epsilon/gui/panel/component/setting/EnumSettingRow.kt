@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Chip
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.Triangle
@@ -12,7 +13,7 @@ import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.MouseButtonEvent
@@ -29,7 +30,7 @@ class EnumSettingRow(private val enumSetting: EnumSetting<*>) : SettingRow<EnumS
     // 绘制入口是与本类同文件的 [UiScope.EnumSettingRow]，动画与展开状态需要对该扩展函数可见。
     internal val dropdownAnimation = Animation(Easing.EASE_OUT_CUBIC, 180L)
 
-    internal var dropdownOpen = false
+    internal var dropdownOpen by mutableStateOf(false)
 
     init {
         dropdownAnimation.startValue = 0.0f
@@ -38,8 +39,6 @@ class EnumSettingRow(private val enumSetting: EnumSetting<*>) : SettingRow<EnumS
     fun setDropdownOpen(open: Boolean) {
         this.dropdownOpen = open
     }
-
-    override fun hasActiveAnimation(): Boolean = !dropdownAnimation.isFinished
 
     /**
      * 枚举 chip 的绝对矩形，供弹窗定位使用。

@@ -20,7 +20,7 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -106,7 +106,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
         val activeRow = activeEnumRow
         if (activeRow != null && popupHost.activePopup == null) {
-            activeRow.setDropdownOpen(false)
+            com.github.epsilon.gui.lib.state.afterLuminCommit { activeRow.setDropdownOpen(false) }
             activeEnumRow = null
         }
 
@@ -384,11 +384,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     override fun close() {
         clearAll()
         measureTextRenderer.close()
-    }
-
-    fun hasActiveAnimations(): Boolean {
-        return sectionHoverAnimations.values.any { animation -> !animation.isFinished } ||
-                sectionExpandAnimations.values.any { animation -> !animation.isFinished }
     }
 
     private fun UiScope.buildSectionCard(

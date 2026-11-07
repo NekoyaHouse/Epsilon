@@ -1,5 +1,6 @@
 package com.github.epsilon.settings
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
 import java.util.*
 
@@ -18,7 +19,7 @@ class SettingGroup(val name: String) {
 
     var translateComponent: TranslateComponent? = null
 
-    var isCollapsed: Boolean = true
+    var isCollapsed: Boolean by mutableStateOf(true)
 
     /**
      * 创建或复用同名子分组（忽略大小写）。

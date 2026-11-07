@@ -1,5 +1,6 @@
 package com.github.epsilon.elements
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper
 import com.github.epsilon.gui.lib.Content
@@ -37,14 +38,14 @@ abstract class HudModule : Module {
         Bottom,
     }
 
-    var x: Float = 0f
-    var y: Float = 0f
-    var width: Float = 0f
-    var height: Float = 0f
+    var x: Float by mutableStateOf(0f)
+    var y: Float by mutableStateOf(0f)
+    var width: Float by mutableStateOf(0f)
+    var height: Float by mutableStateOf(0f)
 
-    var anchorX: Float
+    var anchorX: Float by mutableStateOf(0f)
         private set
-    var anchorY: Float
+    var anchorY: Float by mutableStateOf(0f)
         private set
 
     private val defaultX: Float
@@ -52,9 +53,9 @@ abstract class HudModule : Module {
     private val defaultAnchorX: Float
     private val defaultAnchorY: Float
 
-    var horizontalAnchor: HorizontalAnchor = HorizontalAnchor.Left
+    var horizontalAnchor: HorizontalAnchor by mutableStateOf(HorizontalAnchor.Left)
         private set
-    var verticalAnchor: VerticalAnchor = VerticalAnchor.Top
+    var verticalAnchor: VerticalAnchor by mutableStateOf(VerticalAnchor.Top)
         private set
 
     constructor(name: String, width: Float, height: Float) : this(name, 0f, 0f, width, height)

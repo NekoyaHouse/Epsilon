@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -10,7 +11,7 @@ import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.MouseButtonEvent
@@ -27,7 +28,7 @@ class KeybindSettingRow(private val keybindSetting: KeybindSetting) : SettingRow
 
     internal val focusAnimation = Animation(Easing.EASE_OUT_CUBIC, 150L)
 
-    private var listeningState = false
+    private var listeningState by mutableStateOf(false)
 
     init {
         chipHoverAnimation.startValue = 0.0f
@@ -63,9 +64,6 @@ class KeybindSettingRow(private val keybindSetting: KeybindSetting) : SettingRow
         val chipBounds = getChipBounds(bounds)
         return chipBounds.contains(event.x, event.y)
     }
-
-    override fun hasActiveAnimation(): Boolean =
-        !chipHoverAnimation.isFinished || !focusAnimation.isFinished
 
     internal fun formatKeybind(keyCode: Int): String {
         if (keyCode == KeybindUtils.NONE) {

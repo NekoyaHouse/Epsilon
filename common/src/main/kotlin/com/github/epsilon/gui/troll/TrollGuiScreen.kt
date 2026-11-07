@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.troll
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
@@ -8,6 +9,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.LuminUITree
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
@@ -22,7 +24,7 @@ import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
@@ -50,11 +52,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private val configToggleHover: Animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     private var friendWindow: TrollFriendWindow? = null
     private var configWindow: TrollConfigWindow? = null
-    private var friendWindowOpen: Boolean = false
-    private var configWindowOpen: Boolean = false
+    private var friendWindowOpen: Boolean by mutableStateOf<Boolean>(false)
+    private var configWindowOpen: Boolean by mutableStateOf<Boolean>(false)
     private var guiAnimationStarted: Boolean = false
-    private var searchString: String = ""
-    private var searchUpdatedAt: Long = 0L
+    private var searchString: String by mutableStateOf<String>("")
+    private val searchFade = Animation(0.0f, Easing.EASE_IN_CUBIC, SEARCH_TEXT_FADE_MS)
     private var friendToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var configToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var settingsWindow: TrollSettingsWindow? = null
@@ -67,7 +69,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private var pendingBackground: UiRenderBatch? = null
     private var pendingWindowBlurStrength: Float = 0.0f
     private var pendingFullscreenBlurStrength: Float = 0.0f
-    private var guiOpenOffsetY: Float = 0.0f
+    private var guiOpenOffsetY: Float by mutableStateOf(0.0f)
     private var pendingFrameWidth: Float = 0.0f
     private var pendingFrameHeight: Float = 0.0f
 
@@ -169,11 +171,17 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     }
 
     private fun layoutWindows() {
-        for (window in windows) window.layout(textMetrics.get(), screenWidth(), screenHeight())
-        settingsWindow?.layout(textMetrics.get(), screenWidth(), screenHeight())
-        colorPicker?.layout(textMetrics.get(), screenWidth(), screenHeight())
+        for (window in windows) prepareWindow(window)
+        settingsWindow?.let { prepareWindow(it) }
+        colorPicker?.let { prepareWindow(it) }
         updateToggleBounds()
         popupHost.setOverlayBounds(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()))
+    }
+
+    private fun prepareWindow(window: TrollWindow) {
+        windowViews.getOrPut(window) { com.github.epsilon.gui.lib.state.LuminView() }.prepare {
+            window.layout(textMetrics.get(), screenWidth(), screenHeight())
+        }
     }
 
     private fun updateToggleBounds() {
@@ -190,8 +198,17 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         if (minecraft.level == null) extractPanorama(graphics, partialTick)
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        endPendingFrame()
+        luminView.render(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)) { extractContent(graphics, mouseX, mouseY, partialTick) }
+    }
+
+    private fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        endPendingFrame(abort = true)
+        windowViews.keys.toList().filter { it !in windows && it !== settingsWindow && it !== colorPicker }.forEach {
+            windowViews.remove(it)?.close()
+        }
         val window = minecraft.window
         var renderTarget = this.renderTarget
         if (renderTarget == null) {
@@ -202,28 +219,29 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         renderTarget.clear()
         val mx = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val my = LuminRenderSystem.toEpsilonMouseY(mouseY)
-        layoutWindows()
-        guiOpenAnimation.run(1.0f)
-        val openProgress = guiOpenAnimation.value
-        guiOpenOffsetY = (1.0f - openProgress) * screenHeight()
         val frame = scene.get()
+        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
         frame.beginFrame()
         pendingScene = frame
-        pendingFrameWidth = screenWidth()
-        pendingFrameHeight = screenHeight()
-        pendingWindowBlurStrength = GuiSetting.blurStrength.toFloat() * openProgress
-        pendingFullscreenBlurStrength = if (GuiSetting.backgroundBlur) {
-            maxOf(1.5f, GuiSetting.blurStrength.toFloat()) * openProgress
-        } else {
-            0.0f
-        }
         try {
+            layoutWindows()
+            guiOpenAnimation.run(1.0f)
+            val openProgress = guiOpenAnimation.value
+            guiOpenOffsetY = (1.0f - openProgress) * screenHeight()
+            pendingFrameWidth = screenWidth()
+            pendingFrameHeight = screenHeight()
+            pendingWindowBlurStrength = GuiSetting.blurStrength.toFloat() * openProgress
+            pendingFullscreenBlurStrength = if (GuiSetting.backgroundBlur) {
+                maxOf(1.5f, GuiSetting.blurStrength.toFloat()) * openProgress
+            } else {
+                0.0f
+            }
             graphics.blurBeforeThisStratum()
             pendingBackground = frame.batch(UiLayer.BACKGROUND)
             if (GuiSetting.background) {
                 val backgroundAlpha = (144.0f * openProgress).roundToInt()
                 pendingBackground!!.render(
-                    UiTree.build { scope ->
+                    frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-1") { scope ->
                         scope.rect(0.0f, 0.0f, pendingFrameWidth, pendingFrameHeight, Color(0, 0, 0, backgroundAlpha))
                     }
                 )
@@ -262,10 +280,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                 )
             }
         } catch (exception: RuntimeException) {
-            endPendingFrame()
+            endPendingFrame(abort = true)
             throw exception
         } catch (error: Error) {
-            endPendingFrame()
+            endPendingFrame(abort = true)
             throw error
         }
         graphics.blit(
@@ -303,29 +321,36 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         pendingWindows.add(WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount, blur))
     }
 
+    private val windowViews = java.util.IdentityHashMap<TrollWindow, com.github.epsilon.gui.lib.state.LuminView>()
+
     private fun renderAnimatedWindow(
         frame: UiScene, layer: UiLayer, relativeLayer: Int, window: TrollWindow, mouseX: Int, mouseY: Int,
     ) {
-        val windowProgress = window.getOpenProgress()
-        val fullHeight = window.bounds.height
-        val revealHeight = window.headerHeight + maxOf(0.0f, fullHeight - window.headerHeight) * windowProgress
-        if (revealHeight <= 0.01f) return
+        windowViews.getOrPut(window) { com.github.epsilon.gui.lib.state.LuminView() }.render(mouseX, mouseY) {
+            val windowProgress = window.getOpenProgress()
+            val fullHeight = window.bounds.height
+            val revealHeight = window.headerHeight + maxOf(0.0f, fullHeight - window.headerHeight) * windowProgress
+            if (revealHeight <= 0.01f) return@render
 
-        val clip = UiRect(window.bounds.x, window.bounds.y, window.bounds.width, revealHeight)
-        val passBounds = UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
-        val tree = UiTree.build { scope ->
-            scope.pushAbsolute(0.0f, guiOpenOffsetY) { translated ->
-                translated.scissor(clip) { content ->
-                    window.draw(content, textMetrics.get(), mouseX, mouseY)
+            val clip = UiRect(window.bounds.x, window.bounds.y, window.bounds.width, revealHeight)
+            val passBounds = UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
+            val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), window) { scope ->
+                com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition!!.retain(window.scroll) {
+                    AutoCloseable { window.scroll.close() }
+                }
+                scope.pushAbsolute(0.0f, guiOpenOffsetY) { translated ->
+                    translated.scissor(clip) { content ->
+                        window.draw(content, textMetrics.get(), mouseX, mouseY)
+                    }
                 }
             }
+            queueWindow(frame, layer, relativeLayer, passBounds, tree)
         }
-        queueWindow(frame, layer, relativeLayer, passBounds, tree)
     }
 
     private fun renderToggleButtons(frame: UiScene, mouseX: Int, mouseY: Int) {
         if (friendToggleBounds.width <= 0.0f || configToggleBounds.width <= 0.0f) return
-        val tree = UiTree.build { scope ->
+        val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-3") { scope ->
             drawToggleButton(
                 scope,
                 friendToggleBounds,
@@ -467,14 +492,16 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         return true
     }
 
-    private fun endPendingFrame() {
+    private fun endPendingFrame(abort: Boolean = false) {
         val frame = pendingScene
         pendingScene = null
         pendingBackground = null
         pendingWindows.clear()
         if (frame != null) {
-            frame.clear()
-            frame.endFrame()
+            if (abort) frame.abortFrame() else {
+                frame.clear()
+                frame.endFrame()
+            }
         }
     }
 
@@ -691,14 +718,15 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private fun appendSearch(text: String) {
         if (text.isEmpty()) return
         searchString += text
-        searchUpdatedAt = System.currentTimeMillis()
+        searchFade.snapTo(1.0f)
+        searchFade.target = 0.0f
         applySearchFilter()
     }
 
     private fun clearSearch() {
         if (searchString.isEmpty()) return
         searchString = ""
-        searchUpdatedAt = 0L
+        searchFade.snapTo(0.0f)
         applySearchFilter()
     }
 
@@ -711,10 +739,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
     private fun renderSearchText(frame: UiScene) {
         if (searchString.isBlank()) return
-        val elapsed = System.currentTimeMillis() - searchUpdatedAt
-        if (elapsed >= SEARCH_TEXT_FADE_MS) return
-        val progress = (elapsed.toFloat() / SEARCH_TEXT_FADE_MS).coerceIn(0.0f, 1.0f)
-        val alpha = (255.0f * (1.0f - Easing.EASE_IN_CUBIC.function.apply(progress))).roundToInt()
+        val alpha = (255.0f * searchFade.value).roundToInt()
         if (alpha <= 0) return
         val metrics = textMetrics.get()
         val text = TrollTheme.trim(
@@ -726,7 +751,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         if (text.isEmpty()) return
         val width = metrics.getWidth(text, SEARCH_TEXT_SCALE)
         val height = metrics.getHeight(SEARCH_TEXT_SCALE)
-        val tree = UiTree.build { scope ->
+        val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-4") { scope ->
             scope.textWithShadow(
                 text,
                 (screenWidth() - width) * 0.5f,
@@ -790,6 +815,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         renderTarget?.close()
         renderTarget = null
         super.removed()
+        luminView.close()
+        windowViews.values.forEach { it.close() }
+        windowViews.clear()
+        scene.get().resetComposition()
     }
 
     override fun isPauseScreen(): Boolean {

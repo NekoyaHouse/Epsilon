@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.asUiScope
@@ -103,51 +104,53 @@ class TrollFriendWindow : TrollWindow() {
                 return@scissor
             }
             for (row in rows) {
-                val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.layer(TrollZ.Base) { z ->
-                    z.rect(
-                        row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
-                        Color(255, 255, 255, if (hovered) 30 else 16)
-                    )
-                }
-                content.layer(TrollZ.Highlight) { z ->
-                    z.textWithShadow(
-                        TrollTheme.trim(
-                            row.name,
-                            metrics,
+                content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                    val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Base) { z ->
+                        z.rect(
+                            row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
+                            Color(255, 255, 255, if (hovered) 30 else 16)
+                        )
+                    }
+                    tree.layer(TrollZ.Highlight) { z ->
+                        z.textWithShadow(
+                            TrollTheme.trim(
+                                row.name,
+                                metrics,
+                                TrollTheme.TEXT_SCALE,
+                                row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f
+                            ),
+                            row.bounds.x + 5.0f,
+                            row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
                             TrollTheme.TEXT_SCALE,
-                            row.bounds.width - REMOVE_BUTTON_SIZE - 12.0f
-                        ),
-                        row.bounds.x + 5.0f,
-                        row.bounds.y + (row.bounds.height - metrics.getHeight(TrollTheme.TEXT_SCALE)) / 2.0f,
-                        TrollTheme.TEXT_SCALE,
-                        TrollTheme.text()
-                    )
-                }
+                            TrollTheme.text()
+                        )
+                    }
 
-                val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                content.layer(TrollZ.Text) { z ->
-                    z.rect(
-                        row.removeBounds.x, row.removeBounds.y,
-                        row.removeBounds.width, row.removeBounds.height,
-                        TrollTheme.alpha(TrollTheme.primary(), if (removeHovered) 180 else 40)
-                    )
-                }
-                val iconScale = TrollTheme.VALUE_SCALE
-                content.layer(TrollZ.Content) { z ->
-                    z.textWithShadow(
-                        IconChars.CLOSE,
-                        row.removeBounds.centerX() - metrics.getWidth(
+                    val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    tree.layer(TrollZ.Text) { z ->
+                        z.rect(
+                            row.removeBounds.x, row.removeBounds.y,
+                            row.removeBounds.width, row.removeBounds.height,
+                            TrollTheme.alpha(TrollTheme.primary(), if (removeHovered) 180 else 40)
+                        )
+                    }
+                    val iconScale = TrollTheme.VALUE_SCALE
+                    tree.layer(TrollZ.Content) { z ->
+                        z.textWithShadow(
                             IconChars.CLOSE,
-                            iconScale,
-                            StaticFontLoader.ICONS
-                        ) / 2.0f,
-                        row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(
-                            iconScale,
-                            StaticFontLoader.ICONS
-                        )) / 2.0f,
-                        iconScale, TrollTheme.text(), StaticFontLoader.ICONS
-                    )
+                            row.removeBounds.centerX() - metrics.getWidth(
+                                IconChars.CLOSE,
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            ) / 2.0f,
+                            row.removeBounds.y + (row.removeBounds.height - metrics.getHeight(
+                                iconScale,
+                                StaticFontLoader.ICONS
+                            )) / 2.0f,
+                            iconScale, TrollTheme.text(), StaticFontLoader.ICONS
+                        )
+                    }
                 }
             }
         }

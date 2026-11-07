@@ -3,6 +3,8 @@ package com.github.epsilon.gui.troll
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
@@ -124,7 +126,9 @@ class TrollSettingsWindow(
         scope.scissor(viewport) { content ->
             for (entry in entries) {
                 if (entry.row != null) {
-                    entry.row.draw(content, metrics, mouseX, mouseY)
+                    content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(entry.row) {
+                        entry.row.draw(tree, metrics, mouseX, mouseY)
+                    }
                 } else {
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
                     content.layer(TrollZ.Base) { z ->

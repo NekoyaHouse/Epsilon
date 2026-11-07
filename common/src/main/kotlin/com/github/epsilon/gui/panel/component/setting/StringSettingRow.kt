@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
@@ -22,10 +23,10 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
 
     // 绘制入口是与本类同文件的 [UiScope.StringSettingRow]，度量需要对该扩展函数可见。
     internal var textMetrics: UiTextMetrics? = null
-    private var focusedState = false
-    private var inputBuffer: String? = null
-    private var cursorIndex = 0
-    private var selectionAnchor = -1
+    private var focusedState by mutableStateOf(false)
+    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var cursorIndex by mutableStateOf(0)
+    private var selectionAnchor by mutableStateOf(-1)
 
     override fun mouseClicked(bounds: UiRect, event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {

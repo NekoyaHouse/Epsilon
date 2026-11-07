@@ -121,6 +121,12 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 ## GUI、HUD 与渲染约束
 
+- Panel、Dropdown、popup、HudEditor、Troll 的状态驱动 UI 使用 `kernel.state` 与 LuminUI 组合树；业务代码不得恢复内容签名、revision、主题指纹、时间戳缓存失效或递归动画活动汇总。
+- 根入口、Group/Item 与 remember 使用显式稳定 key，key 只表示身份，不含几何、鼠标、主题或时间；列表按元素身份建项。可观察集合发布不可变快照，不原地修改。
+- 组合构建只读取业务状态，配置写入、模块切换、网络操作和输入修改放到回调；动画目标由框架在提交后更新。重组块内禁止旧 Animation 的拉取式推进。
+- Scene 与内容缓冲共享宿主帧时钟；完整帧配对 `beginFrame()` / `endFrame()`，失败帧调用 `abortFrame()`，Screen 移除时清空组合。IME 等逐帧提交信息不能依赖重组块每帧执行。
+- 新外部数据源必须发布可观察状态，外部线程只写状态并排队通知，订阅图在宿主线程维护；布局准备通过 `LuminView` 观察，配置目录检查与字体切换在宿主准备阶段执行。
+
 - Panel、Dropdown、popup 和 HUD chrome 优先通过 `UiTree`/`UiScene`/`UiRenderBatch` 提交，不得为每个面板各建一套 renderer。
 - 一个 Screen 或 HUD 帧共享一个 `UiScene`；`beginFrame()` 与 `endFrame()` 必须配对。
 - 存在遮挡关系的 pass 必须使用不同的 `UiLayer` 或相对 layer 表达；相对 layer 用 `com.github.epsilon.gui.lib.scene.LayerOffset`，构造函数强制落在 `(-100, 100)` 内。

@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Button
 import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.PopupCard
@@ -29,7 +30,7 @@ class MessagePopup(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val buttonHoverAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L)
 
-    private var closeAfterClick = false
+    private var closeAfterClick by mutableStateOf(false)
     private lateinit var buttonBounds: UiRect
 
     init {
@@ -40,7 +41,16 @@ class MessagePopup(
         return bounds
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -55,8 +65,8 @@ class MessagePopup(
         val buttonLabel = buttonLabelSupplier.get()
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
         // 弹窗矩形随开启动画逐帧变化，bounds 变化会触发整层重建；供应商文本与主题并入 key。
-        val contentKey = ContentKey(title, message, detail, buttonLabel, popupThemeFingerprint())
-        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+
+        renderBatch.LuminUIScene(popupBounds, key = this) {
             val progress = openAnimation.value
             val hover = buttonHoverAnimation.value
             PopupCard(
@@ -108,13 +118,4 @@ class MessagePopup(
         )
     }
 
-    /** 影响绘制结果的静态输入；变化时整层重建。 */
-    private data class ContentKey(
-        val title: String,
-        val message: String,
-        val detail: String?,
-        val buttonLabel: String,
-        val theme: Int,
-    )
-
-}
+    }

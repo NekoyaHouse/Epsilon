@@ -3,7 +3,6 @@ package com.github.epsilon.gui.dropdown.component
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.dropdown.widget.*
 import com.github.epsilon.gui.lib.ClipIf
 import com.github.epsilon.gui.lib.LuminUIItem
@@ -22,7 +21,7 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 
 /**
@@ -250,8 +249,8 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     val widgetHeight = widget.getHeight()
                     val widgetBounds = UiRect(x, cursor, width, widgetHeight)
                     if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
-                        LuminUIItem(widget, dropdownItemRevision(widget, origin, widgetBounds, mouseX, mouseY)) {
-                            Positioned(x, cursor, width, widgetHeight) {
+                        LuminUIItem(widget) {
+                            Positioned(widgetBounds.x, widgetBounds.y, widgetBounds.width, widgetBounds.height) {
                                 Text(
                                     widget.setting.displayName + " · " + widget.setting.viaRequirement!!.displayName(),
                                     DropdownTheme.SETTING_PADDING_X,
@@ -263,7 +262,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                         }
                     } else {
                         // 逐项缓存：设置值、悬停状态或控件动画变化时才重新绘制该控件。
-                        LuminUIItem(widget, dropdownItemRevision(widget, origin, widgetBounds, mouseX, mouseY)) {
+                        LuminUIItem(widget) {
                             widget.drawInScope(this, mouseX, mouseY, widgetBounds)
                         }
                     }
@@ -277,60 +276,6 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                 }
             }
         }
-    }
-
-    /**
-     * section 树的状态签名：覆盖分组折叠、设置值与可见性等「静止时也会变化」的输入。
-     *
-     * 面板把它并入内容层的失效键，因此外部（配置加载、快捷键）改动设置后无需显式刷新。
-     */
-    fun signature(): Long {
-        var signature = 17L
-        for (node in nodes) {
-            signature = signature * 31L + nodeSignature(node)
-        }
-        return signature
-    }
-
-    /** 子控件或分组是否仍有活动动画；面板据此决定内容层是否需要逐帧重建。 */
-    fun hasActiveAnimations(): Boolean {
-        for (animation in hoverAnimations.values) {
-            if (animation.isAdvancing()) {
-                return true
-            }
-        }
-        for (animation in expandAnimations.values) {
-            if (animation.isAdvancing()) {
-                return true
-            }
-        }
-        return anyVisibleWidgetAnimated()
-    }
-
-    private fun anyVisibleWidgetAnimated(): Boolean {
-        for (node in nodes) {
-            if (visitWidget(node, { widget -> widget.hasActiveAnimations() }, true)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun nodeSignature(node: Node): Long {
-        var signature = node.key().hashCode().toLong()
-        signature = signature * 31L + (if (node.isCollapsed()) 1L else 0L)
-        for (element in node.elements) {
-            when (element) {
-                is WidgetElement -> {
-                    val widget = element.widget
-                    signature = signature * 31L + (widget.setting.value?.hashCode()?.toLong() ?: 0L)
-                    signature = signature * 31L + (if (widget.isVisible()) 1L else 0L)
-                }
-
-                is ChildElement -> signature = signature * 31L + nodeSignature(element.node)
-            }
-        }
-        return signature
     }
 
     // --- 命中 ---

@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Chip
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
@@ -17,7 +17,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
@@ -26,21 +26,11 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
 
     private val expandAnim: Animation = Animation(Easing.DECELERATE, DropdownTheme.ANIM_EXPAND)
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var expanded: Boolean = false
+    private var expanded: Boolean by mutableStateOf<Boolean>(false)
 
     override fun getHeight(): Float {
         expandAnim.run(if (shouldExpand()) 1.0f else 0.0f)
         return getCollapsedHeight() + getExpandedTotalHeight() * expandAnim.value
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return expandAnim.isAdvancing() || hoverAnim.isAdvancing()
-    }
-
-    override fun cacheRevision(): Long {
-        var revision = super.cacheRevision()
-        revision = revision * 31L + (if (expanded) 1L else 0L)
-        return revision
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

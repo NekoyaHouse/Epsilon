@@ -3,7 +3,7 @@ package com.github.epsilon.gui.panel.view.settings
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -15,7 +15,6 @@ import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
-import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup
 import com.github.epsilon.gui.panel.popup.MessagePopup
@@ -25,9 +24,8 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -49,9 +47,6 @@ class ConfigClientSettingTab(
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
 
-
-
-    private val contentState = UiInvalidationState()
     private val scrollBarDrag = ScrollBarDragState()
     private val inputField = ClientSettingTextField(MAX_INPUT_LENGTH)
     private val rowHoverAnimations = HashMap<String, Animation>()
@@ -60,13 +55,19 @@ class ConfigClientSettingTab(
     private val rowEntries = ArrayList<ConfigRowEntry>()
 
     private var bounds: UiRect? = null
-    private var lastScroll = Float.NaN
-    private var lastConfigList: List<String> = emptyList()
     private var lastActiveConfig = ""
-    private var lastContentSignature = Long.MIN_VALUE
     private var scrollVelocity = 0.0f
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun render(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -78,7 +79,7 @@ class ConfigClientSettingTab(
             if (abs(scrollVelocity) < 0.3f) {
                 scrollVelocity = 0.0f
             }
-            markDirty()
+
         }
 
         val configs = ConfigManager.listConfigs()
@@ -90,20 +91,14 @@ class ConfigClientSettingTab(
         val maxScroll = maxOf(0.0f, contentHeight - listViewport.height)
         val hasScrollBar = maxScroll > 0.0f
         val rowWidth = if (hasScrollBar) listViewport.width - ScrollBarUtils.TOTAL_WIDTH else listViewport.width
-        val contentSignature = buildContentSignature(configs, activeConfig)
-        val rebuildContent = shouldRebuild(
-            listViewport, mouseX, mouseY, configs, activeConfig, guiGraphics.guiHeight(), contentSignature
-        )
 
-        if (rebuildContent) {
-            contentBuffer.clear()
-            contentState.beginRebuild()
+        contentBuffer.clear()
+
+        rowHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
+        deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
+
+        renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
             rowEntries.clear()
-            rowHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
-            deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
-        }
-
-        renderBatch.Content(bounds) {
             val localInput = getInputFieldBounds(inputSection).relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
                 ClientSettingTextField(
@@ -118,9 +113,6 @@ class ConfigClientSettingTab(
                 contentBuffer, listViewport.relativeTo(bounds), state.getConfigScroll(), maxScroll, contentHeight,
                 mouseX, mouseY
             ) {
-                if (!rebuildContent) {
-                    return@Viewport
-                }
                 var rowY = listViewport.y - state.getConfigScroll()
                 for (configName in configs) {
                     val rowBounds = UiRect(listViewport.x, rowY, rowWidth, ROW_HEIGHT)
@@ -131,7 +123,6 @@ class ConfigClientSettingTab(
                     val deleteHover = deleteHoverAnimations.getOrPut(configName) { createAnimation() }
                     rowHover.run(if (rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
                     deleteHover.run(if (deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
-                    contentState.noteAnimation(!rowHover.isFinished || !deleteHover.isFinished)
 
                     val localRow = rowBounds.relativeTo(origin)
                     Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
@@ -152,29 +143,10 @@ class ConfigClientSettingTab(
             }
         }
 
-        if (rebuildContent) {
-            rememberSnapshot(
-                listViewport, mouseX, mouseY, configs, activeConfig, guiGraphics.guiHeight(), contentSignature
-            )
-        }
     }
 
     override fun flushContent() {
         contentBuffer.flush()
-    }
-
-    override fun markDirty() {
-        contentState.markDirty()
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        val rowAnimations = rowHoverAnimations.values.any { animation -> !animation.isFinished } ||
-                deleteHoverAnimations.values.any { animation -> !animation.isFinished }
-        val buttonAnimations = buttonHoverAnimations.values.any { animation -> !animation.isFinished }
-        return contentState.hasActiveAnimations() ||
-                rowAnimations ||
-                buttonAnimations ||
-                inputField.hasActiveAnimations()
     }
 
     override fun consumesHover(mouseX: Int, mouseY: Int): Boolean {
@@ -197,7 +169,7 @@ class ConfigClientSettingTab(
             if (newScroll >= 0.0f) {
                 state.setConfigScroll(newScroll)
             }
-            markDirty()
+
             return true
         }
 
@@ -205,7 +177,7 @@ class ConfigClientSettingTab(
         val inputBounds = getInputFieldBounds(inputSection)
         if (inputBounds.contains(event.x(), event.y())) {
             inputField.focusIfContains(inputBounds, event.x(), event.y())
-            markDirty()
+
             return true
         }
 
@@ -214,7 +186,7 @@ class ConfigClientSettingTab(
         for (button in getActionButtons(inputSection)) {
             if (button.bounds.contains(event.x(), event.y())) {
                 handleAction(button.type)
-                markDirty()
+
                 return true
             }
         }
@@ -222,12 +194,12 @@ class ConfigClientSettingTab(
         for (entry in rowEntries) {
             if (entry.deleteBounds.contains(event.x(), event.y())) {
                 openDeleteConfirmation(entry.name)
-                markDirty()
+
                 return true
             }
             if (entry.rowBounds.contains(event.x(), event.y())) {
                 trySwitchConfig(entry.name)
-                markDirty()
+
                 return true
             }
         }
@@ -237,7 +209,7 @@ class ConfigClientSettingTab(
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (scrollBarDrag.mouseReleased()) {
-            markDirty()
+
             return true
         }
         return false
@@ -253,7 +225,7 @@ class ConfigClientSettingTab(
         if (newScroll >= 0.0f) {
             state.setConfigScroll(newScroll)
         }
-        markDirty()
+
         return true
     }
 
@@ -262,7 +234,7 @@ class ConfigClientSettingTab(
         val listViewport = getListViewport(currentBounds)
         if (listViewport.contains(mouseX, mouseY)) {
             scrollVelocity -= scrollY.toFloat() * 24.0f
-            markDirty()
+
             return true
         }
         return false
@@ -271,11 +243,11 @@ class ConfigClientSettingTab(
     override fun keyPressed(event: KeyEvent): Boolean {
         if (event.key() == InputConstants.KEY_ESCAPE && inputField.isFocused()) {
             inputField.blur()
-            markDirty()
+
             return true
         }
         if (inputField.keyPressed(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -283,7 +255,7 @@ class ConfigClientSettingTab(
 
     override fun charTyped(event: CharacterEvent): Boolean {
         if (inputField.charTyped(event)) {
-            markDirty()
+
             return true
         }
         return false
@@ -294,14 +266,14 @@ class ConfigClientSettingTab(
             inputField.setText(ConfigManager.activeConfigName)
             inputField.setCursorToEnd()
         }
-        markDirty()
+
     }
 
     override fun onDeactivated() {
         scrollBarDrag.reset()
         scrollVelocity = 0.0f
         inputField.blur()
-        markDirty()
+
     }
 
     private fun UiScope.buildActionButton(button: ActionButton, mouseX: Int, mouseY: Int) {
@@ -460,7 +432,7 @@ class ConfigClientSettingTab(
     private fun tryReload() {
         try {
             ConfigManager.reloadOrThrow()
-            markDirty()
+
         } catch (exception: Exception) {
             Constants.LOGGER.error("重载配置失败", exception)
             openErrorPopup({ EpsilonTranslations.Gui.CONFIG_ERROR_RELOAD.getTranslatedName() }, exception)
@@ -547,7 +519,7 @@ class ConfigClientSettingTab(
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName(),
                 {
                     tryDeleteConfig(configName)
-                    markDirty()
+
                 }
             )
         )
@@ -595,47 +567,6 @@ class ConfigClientSettingTab(
     private fun buildErrorDetail(exception: Exception): String {
         val message = exception.message
         return if (message == null || message.isBlank()) exception.javaClass.simpleName else message
-    }
-
-    private fun shouldRebuild(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, configs: List<String>,
-        activeConfig: String, currentGuiHeight: Int, contentSignature: Long,
-    ): Boolean {
-        if (contentState.needsRebuild(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature)) {
-            return true
-        }
-        if (lastScroll.compareTo(state.getConfigScroll()) != 0) {
-            return true
-        }
-        if (lastConfigList != configs) {
-            return true
-        }
-        if (lastActiveConfig != activeConfig) {
-            return true
-        }
-        return lastContentSignature != contentSignature
-    }
-
-    private fun rememberSnapshot(
-        listViewport: UiRect, mouseX: Int, mouseY: Int, configs: List<String>,
-        activeConfig: String, currentGuiHeight: Int, contentSignature: Long,
-    ) {
-        contentState.rememberSnapshot(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature)
-        lastScroll = state.getConfigScroll()
-        lastConfigList = ArrayList(configs)
-        lastActiveConfig = activeConfig
-        lastContentSignature = contentSignature
-    }
-
-    private fun buildContentSignature(configs: List<String>, activeConfig: String): Long {
-        var signature = 17L
-        signature = signature * 31L + TranslationManager.getRevision()
-        signature = signature * 31L + java.lang.Float.floatToIntBits(state.getConfigScroll())
-        signature = signature * 31L + activeConfig.hashCode()
-        for (config in configs) {
-            signature = signature * 31L + config.hashCode()
-        }
-        return signature
     }
 
     private fun getInputSectionBounds(bounds: UiRect): UiRect {
@@ -728,7 +659,7 @@ class ConfigClientSettingTab(
     override fun close() {
         measureTextRenderer.close()
         contentBuffer.close()
-        markDirty()
+
     }
 
     private data class ConfigRowEntry(val name: String, val rowBounds: UiRect, val deleteBounds: UiRect)

@@ -10,7 +10,9 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.lib.scene.LayerOffset
-import com.github.epsilon.gui.lib.state.LuminSceneRoot
+import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import java.awt.Color
@@ -25,18 +27,20 @@ import java.util.*
 class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     private val theme: UiTheme = Objects.requireNonNull(theme, "theme")
-    private val batch = UiRenderBatch(theme)
-    private val scrollBarBatch = batch.view(8)
-    private val marqueeBatch = batch.view(9)
+    private val batchDelegate = lazy { UiRenderBatch(theme) }
+    private val batch by batchDelegate
+    private val scrollBarBatch by lazy { batch.view(8) }
+    private val marqueeBatch by lazy { batch.view(9) }
     private val scrollBar = UiScrollBar(theme)
     private val marqueeDraws = ArrayList<MarqueeTextDraw>()
+
+    private val scrollBarView = LuminView()
+    private val scrollFrame = mutableStateOf<ScrollFrame?>(null)
+    private data class ScrollFrame(val viewport: UiRect, val scroll: Float, val maximum: Float, val contentHeight: Float)
 
     private var pending = false
     private var pendingViewport: UiRect? = null
 
-    /** 内容层的 recompose 注册表与逐项缓存（跨帧保存）。 */
-    private val luminRoot = LuminSceneRoot()
-    private var luminEntryIndex = 0
 
     fun theme(): UiTheme {
         return theme
@@ -86,14 +90,26 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     ) {
         beginViewport(viewport)
         scrollBarBatch.clear()
-        scrollBarBatch.render(
-            UiTree.build { scope ->
-                scrollBar.draw(
-                    scope.asUiScope(batch.scheduler().textMetrics()),
-                    viewport, scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble()
-                )
+        val host = LuminRuntime.activeRoot
+        if (host == null) {
+            scrollBarBatch.render(UiTree.build { scope ->
+                scrollBar.draw(scope.asUiScope(batch.scheduler().textMetrics()), viewport,
+                    scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble())
+            })
+        } else {
+            scrollFrame.value = ScrollFrame(viewport, scroll, maxScroll, contentHeight)
+            scrollBarView.render(mouseX, mouseY) {
+                val entry = host.nextEntry(viewport, this to "scrollbar")
+                entry.bind(UiScope(entry.treeScope, batch.scheduler().textMetrics().asUiTextMetrics(), LayerOffset.Same, viewport), {
+                    val frame = checkNotNull(scrollFrame.value)
+                    scrollBar.draw(this, frame.viewport.relativeTo(origin), frame.scroll, frame.maximum,
+                        frame.contentHeight, mouseX - origin.x.toDouble(), mouseY - origin.y.toDouble())
+                })
+                val output = UiTree.Scope()
+                entry.emit(output)
+                scrollBarBatch.render(UiTree.from(output))
             }
-        )
+        }
         pendingViewport = viewport
         pending = true
     }
@@ -144,6 +160,8 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     }
 
     override fun close() {
+        scrollBarView.close()
+        if (!batchDelegate.isInitialized()) return
         clear()
         batch.close()
     }
@@ -160,31 +178,25 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     /** 每帧开始时调用，重置 recompose 入口编号。 */
     fun beginLuminFrame() {
-        luminEntryIndex = 0
+
     }
 
     /** 强制内容层全部重建（配置加载/语言切换）。 */
     fun invalidateAllUi() {
-        luminRoot.invalidateAll()
+        com.github.epsilon.gui.lib.state.LuminRuntime.activeRoot?.invalidateAll()
     }
 
     /**
      * 以 recompose 模式把内容写进本缓冲。
      *
-     * 作用域携带场景级逐项缓存，块内的 `LuminUIItem` 会自动按项缓存。
+     * 内容组合归属当前 Scene，块内的 `LuminUIItem` 独立观察状态与保存记忆。
      */
-    fun LuminUI(bounds: UiRect, key: Any? = null, block: UiScope.() -> Unit) {
-        val entry = luminRoot.nextEntryAt(luminEntryIndex++, bounds, key)
+    fun LuminUI(bounds: UiRect, key: Any, block: UiScope.() -> Unit) {
+        val entry = checkNotNull(com.github.epsilon.gui.lib.state.LuminRuntime.activeRoot).nextEntry(bounds, this to key)
         val metrics = batch.scheduler().textMetrics().asUiTextMetrics()
-        // 复用入口的长生命周期 Scope，逐项缓存随它跨帧存活。
-        val scope = entry.treeScope
-        scope.clear()
-        scope.pushAbsolute(bounds) { inner ->
-            entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds), block)
-            if (entry.emit(inner)) {
-                inner.markActiveAnimations(true)
-            }
-        }
-        batch.render(UiTree.from(scope))
+        entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
+        val output = UiTree.Scope()
+        entry.emit(output)
+        batch.render(UiTree.from(output))
     }
 }

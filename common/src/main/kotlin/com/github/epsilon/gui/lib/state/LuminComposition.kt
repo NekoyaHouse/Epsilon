@@ -3,282 +3,237 @@ package com.github.epsilon.gui.lib.state
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.kernel.state.StateNotifications
+import com.github.epsilon.kernel.state.StateObservation
+import com.github.epsilon.kernel.state.StateTracking
 
-/**
- * recompose 运行时。
- *
- * 渲染线程单线程使用：
- * - [currentComposition] 非空表示正处在一次重建中，状态读取会登记依赖；
- * - 状态写入直接把订阅者标脏，具体重建在当前帧渲染到该 composition 时惰性发生；
- * - 动画由 [advanceAnimations] 每帧推进，推进产生的状态写入同样走订阅失效。
- */
+/** 当前构建上下文只在 UI 宿主线程使用；状态内核不依赖此对象。 */
 object LuminRuntime {
-
     internal var currentComposition: LuminComposition? = null
         private set
-
-    private val animatables: MutableList<LuminAnimatable> = ArrayList()
-
-    private var lastFrameMs: Long = System.currentTimeMillis()
-
-    /** 当前是否处于 recompose（重建）过程中。 */
+    internal var currentView: LuminView? = null
+    internal var activeRoot: LuminSceneRoot? = null
     val isRecomposing: Boolean get() = currentComposition != null
 
-    internal fun recordRead(state: LuminState<*>) {
-        currentComposition?.recordDependency(state)
-    }
-
-    internal fun invalidate(state: LuminState<*>) {
-        state.invalidateSubscribers()
-    }
-
-    internal fun registerAnimatable(animatable: LuminAnimatable) {
-        if (!animatables.contains(animatable)) {
-            animatables.add(animatable)
-        }
-    }
-
-    internal fun <R> inComposition(composition: LuminComposition, block: () -> R): R {
+    internal fun <T> inComposition(composition: LuminComposition, block: () -> T): T {
         val previous = currentComposition
+        val previousView = currentView
         currentComposition = composition
-        try {
-            return block()
-        } finally {
+        currentView = composition.view
+        return try { StateTracking.buildingUi(block) } finally {
             currentComposition = previous
+            currentView = previousView
         }
     }
 
-    /** 每帧推进所有运行中的动画；推进产生的写入会精确失效相关 composition。 */
-    fun advanceAnimations(nowMs: Long = System.currentTimeMillis()) {
-        val delta = (nowMs - lastFrameMs).coerceIn(0L, 100L)
-        lastFrameMs = nowMs
-        if (animatables.isEmpty()) {
-            return
-        }
-        val iterator = animatables.iterator()
-        while (iterator.hasNext()) {
-            if (!iterator.next().advance(delta)) {
-                iterator.remove()
-            }
-        }
-    }
-
-    /**
-     * recompose 块内不允许使用拉取式动画。
-     *
-     * 旧 API 依赖每帧被调用，在只于状态变化时执行的块里会冻结，因此这里直接报错。
-     */
     internal fun requireImmediateAnimation(api: String) {
-        val composition = currentComposition ?: return
-        if (!composition.alwaysDirty) {
-            throw IllegalStateException(
-                "$api 不能在 LuminUIScene / LuminUIGroup 内使用：recompose 块只在状态变化时执行，拉取式动画会冻结。" +
-                        "请改用 LuminAnimatable（读取 value、写入 target），或把该段绘制放进 LuminUIGroupImmediate"
-            )
+        check(currentComposition?.alwaysDirty != false) {
+            "$api 不能在重组块中推进拉取动画，请使用 animateFloatAsState 或 rememberAnimatable"
         }
     }
-
 }
 
-/**
- * recompose 缓存单元。
- *
- * 输出被切成片段（字面节点 / 子 composition），命中缓存时只做引用拷贝；子 composition 各自维护
- * 自己的脏标记，因此一行设置变化只重建那一行。
- */
-class LuminComposition internal constructor(internal val key: Any?) {
-
-    internal var dirty: Boolean = true
-
-    /** 每帧强制重建（用于 recompose 内的立即模式子块）。 */
-    internal var alwaysDirty: Boolean = false
-
-    /** 上次绑定时的矩形；变化意味着节点里烘焙的绝对坐标失效。 */
+/** 缓存保存嵌套的组合引用，子项失效不需要重建父级。 */
+class LuminComposition internal constructor(internal val key: Any, internal val clock: LuminFrameClock) : AutoCloseable {
+    internal var dirty = true
+    internal var alwaysDirty = false
+    internal val treeScope = UiTree.Scope()
     internal var lastBounds: UiRect? = null
+    internal var inputX = 0
+    internal var inputY = 0
+    internal var view: LuminView? = null
+    private var owner: UiScope? = null
+    private var content: (UiScope.() -> Unit)? = null
+    private var nodes = emptyList<UiTree.UiNode>()
+    private val children = LinkedHashMap<Any, LuminComposition>()
+    private val memories = LinkedHashMap<Any, Any?>()
+    private var usedChildren: MutableSet<Any>? = null
+    private var usedMemories: MutableSet<Any>? = null
+    private val frameEffects = LinkedHashMap<Any, () -> Unit>()
+    private var effects: MutableList<() -> Unit>? = null
+    private var renderedFrame = Long.MIN_VALUE
+    private val observation = StateObservation { dirty = true }
+    internal var rebuildCount = 0L
+        private set
 
-    /** 上次绑定时的外部失效键（布局签名等）；变化意味着缓存内容过期。 */
-    internal var lastKey: Any? = null
-
-    /** 该入口跨帧复用的作用域；逐项缓存随它存活。 */
-    internal val treeScope: UiTree.Scope = UiTree.Scope()
-
-    private var scope: UiScope? = null
-
-    private var block: (UiScope.() -> Unit)? = null
-
-    private var segments: List<Segment> = emptyList()
-
-    private val dependencies: MutableSet<LuminState<*>> = LinkedHashSet()
-
-    private var childrenByKey: HashMap<Any, LuminComposition>? = null
-
-    private var childrenByIndex: ArrayList<LuminComposition>? = null
-
-    // 重建期状态
-    private var activeSession: UiTree.Scope.CaptureSession? = null
-
-    private var activeSegments: MutableList<Segment>? = null
-
-    private var buildingAnimations: Boolean = false
-
-    private var ordinal: Int = 0
-
-    internal fun markDirty() {
-        dirty = true
-    }
-
+    internal fun markDirty() { dirty = true }
     internal fun markDirtyDeep() {
         dirty = true
-        childrenByKey?.values?.forEach { it.markDirtyDeep() }
-        childrenByIndex?.forEach { it.markDirtyDeep() }
+        children.values.forEach { it.markDirtyDeep() }
     }
 
-    internal fun bind(scope: UiScope, block: UiScope.() -> Unit) {
-        this.scope = scope
-        this.block = block
-    }
-
-    internal fun recordDependency(state: LuminState<*>) {
-        if (dependencies.add(state)) {
-            state.subscribe(this)
+    internal fun bind(scope: UiScope, block: UiScope.() -> Unit, parentRebuilt: Boolean = false) {
+        if (lastBounds != scope.origin || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty = true
+        val nextView = LuminRuntime.currentView
+        if (view !== nextView) {
+            view?.detach(this)
+            view = nextView
+            nextView?.attach(this)
         }
+        inputX = nextView?.mouseX ?: 0
+        inputY = nextView?.mouseY ?: 0
+        lastBounds = scope.origin
+        owner = scope
+        content = block
     }
 
-    /**
-     * 把本单元的输出写进目标作用域，必要时先重建；返回本单元是否包含活动动画。
-     */
     internal fun emit(into: UiTree.Scope): Boolean {
-        if (scope == null) {
-            return false
-        }
-        if (dirty || alwaysDirty) {
-            recompose()
-        }
-        var animated = buildingAnimations
-        for (segment in segments) {
-            when (segment) {
-                is Segment.Nodes -> into.appendNodes(segment.nodes)
-                is Segment.Child -> if (segment.child.emit(into)) animated = true
-            }
-        }
-        return animated
+        into.appendNodes(resolve())
+        return false
     }
 
-    /**
-     * 声明一个子缓存单元；重建期把当前字面节点切成片段，非重建期交给运行时惰性处理。
-     */
-    internal fun group(owner: UiScope, key: Any?, block: UiScope.() -> Unit, alwaysDirty: Boolean = false) {
-        val segments = activeSegments
-        if (segments == null) {
-            // 不在重建期（例如立即模式里嵌套调用），直接执行即可。
-            block(owner)
-            return
-        }
-        flushLiteral()
-        ordinal += 1
-        val child = childAt(ordinal - 1, key)
+    internal fun resolve(): List<UiTree.UiNode> {
+        StateNotifications.drain()
+        if (dirty || (alwaysDirty && renderedFrame != clock.frame)) recompose()
+        val resolved = resolveNodes(nodes)
+        StateTracking.untracked { frameEffects.values.forEach { it() } }
+        return resolved
+    }
+
+    internal fun group(scope: UiScope, key: Any, block: UiScope.() -> Unit, alwaysDirty: Boolean = false) {
+        check(usedChildren?.add(key) == true) { "同一组合内重复的组件 key: $key" }
+        val child = children.getOrPut(key) { LuminComposition(key, clock) }
         child.alwaysDirty = alwaysDirty
-        child.bind(owner, block)
-        if (child.dirty || child.alwaysDirty) {
-            child.recompose()
-        }
-        segments.add(Segment.Child(child))
+        child.bind(scope, block, parentRebuilt = true)
+        scope.tree.appendNodes(listOf(UiTree.CompositionNode(child::resolve)))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T> remember(key: Any, factory: () -> T): T {
+        check(usedMemories?.add(key) == true) { "同一组合内重复的 remember key: $key" }
+        if (!memories.containsKey(key)) memories[key] = factory()
+        return memories[key] as T
+    }
+
+    internal fun <T> retain(key: Any, factory: () -> T): T {
+        checkNotNull(usedMemories).add(key)
+        if (!memories.containsKey(key)) memories[key] = factory()
+        @Suppress("UNCHECKED_CAST")
+        return memories[key] as T
+    }
+
+    internal fun onFrame(key: Any, effect: () -> Unit) { frameEffects[key] = effect }
+
+    internal fun afterCommit(effect: () -> Unit) {
+        checkNotNull(effects) { "提交操作必须在组合构建中声明" }.add(effect)
     }
 
     private fun recompose() {
-        val owner = scope ?: return
-        val content = block ?: return
+        val scope = owner ?: return
+        val block = content ?: return
+        val oldChildKeys = children.keys.toSet()
+        val oldMemoryKeys = memories.keys.toSet()
+        val nextChildren = LinkedHashSet<Any>()
+        val nextMemories = LinkedHashSet<Any>()
+        val nextEffects = ArrayList<() -> Unit>()
+        val previousFrameEffects = frameEffects.toMap()
+        frameEffects.clear()
+        usedChildren = nextChildren
+        usedMemories = nextMemories
+        effects = nextEffects
+        treeScope.clear()
         dirty = false
-        dependencies.forEach { it.unsubscribe(this) }
-        dependencies.clear()
-
-        val session = owner.tree.openCapture()
-        val built = ArrayList<Segment>()
-        activeSession = session
-        activeSegments = built
-        buildingAnimations = false
-        ordinal = 0
         try {
-            LuminRuntime.inComposition(this) { content(owner) }
-            flushLiteral()
+            val result = observation.observeReads {
+                LuminRuntime.inComposition(this) {
+                    treeScope.pushAbsolute(scope.origin) {
+                        block(UiScope(treeScope, scope.metrics, scope.layer, scope.origin))
+                    }
+                    treeScope.snapshot().nodes
+                }
+            }
+            nodes = result
+            children.keys.filter { it !in nextChildren }.forEach { children.remove(it)?.close() }
+            memories.keys.filter { it !in nextMemories }.forEach { (memories.remove(it) as? AutoCloseable)?.close() }
+            renderedFrame = clock.frame
+            rebuildCount++
+        } catch (failure: Throwable) {
+            frameEffects.clear()
+            frameEffects.putAll(previousFrameEffects)
+            dirty = true
+            children.keys.filter { it !in oldChildKeys }.forEach { children.remove(it)?.close() }
+            memories.keys.filter { it !in oldMemoryKeys }.forEach { (memories.remove(it) as? AutoCloseable)?.close() }
+            throw failure
         } finally {
-            activeSession = null
-            activeSegments = null
-            session.close()
+            usedChildren = null
+            usedMemories = null
+            effects = null
         }
-        segments = built
+        StateTracking.untracked { nextEffects.forEach { it() } }
     }
 
-    private fun flushLiteral() {
-        val session = activeSession ?: return
-        val segments = activeSegments ?: return
-        val chunk = session.flush()
-        if (chunk.activeAnimations) {
-            buildingAnimations = true
-        }
-        if (chunk.nodes.isNotEmpty()) {
-            segments.add(Segment.Nodes(chunk.nodes))
-        }
+    override fun close() {
+        view?.detach(this)
+        observation.close()
+        children.values.forEach { it.close() }
+        children.clear()
+        memories.values.forEach { (it as? AutoCloseable)?.close() }
+        memories.clear()
+        frameEffects.clear()
+        nodes = emptyList()
+        owner = null
+        content = null
     }
 
-    private fun childAt(ordinal: Int, key: Any?): LuminComposition {
-        if (key != null) {
-            val byKey = childrenByKey ?: HashMap<Any, LuminComposition>().also { childrenByKey = it }
-            return byKey.getOrPut(key) { LuminComposition(key) }
+    companion object {
+        private fun resolveNodes(nodes: List<UiTree.UiNode>): List<UiTree.UiNode> = buildList {
+            for (node in nodes) when (node) {
+                is UiTree.CompositionNode -> addAll(node.resolve())
+                is UiTree.LayerNode -> add(node.copy(children = resolveNodes(node.children)))
+                is UiTree.ScissorNode -> add(node.copy(children = resolveNodes(node.children)))
+                is UiTree.ViewportNode -> add(node.copy(children = resolveNodes(node.children)))
+                else -> add(node)
+            }
         }
-        val byIndex = childrenByIndex ?: ArrayList<LuminComposition>().also { childrenByIndex = it }
-        while (byIndex.size <= ordinal) {
-            byIndex.add(LuminComposition(null))
-        }
-        return byIndex[ordinal]
     }
-
-    private sealed interface Segment {
-
-        class Nodes(val nodes: List<UiTree.UiNode>) : Segment
-
-        class Child(val child: LuminComposition) : Segment
-
-    }
-
 }
 
-/**
- * 场景级的 recompose 注册表。
- *
- * 入口按出现顺序编号，编号在帧内稳定即可（与 Compose 的位置化记忆一致）。
- */
-class LuminSceneRoot internal constructor() {
-
-    private val entries: MutableList<LuminComposition> = ArrayList()
-
-    private var nextIndex: Int = 0
+/** 根身份由稳定 key 决定；帧结束清理消失的入口。 */
+class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFrameClock()) : AutoCloseable {
+    private val entries = LinkedHashMap<Any, LuminComposition>()
+    private val visited = LinkedHashSet<Any>()
+    internal var inFrame = false
+        private set
 
     internal fun beginFrame() {
-        nextIndex = 0
+        check(!inFrame) { "beginFrame/endFrame 必须配对" }
+        inFrame = true
+        visited.clear()
+        LuminRuntime.activeRoot = this
+        clock.advance()
     }
 
-    internal fun nextEntry(bounds: UiRect, key: Any?): LuminComposition {
-        return nextEntryAt(nextIndex++, bounds, key)
+    internal fun nextEntry(bounds: UiRect, key: Any): LuminComposition {
+        val identity = key
+        check(visited.add(identity)) { "同一帧重复的场景 key: $identity" }
+        return entries.getOrPut(identity) { LuminComposition(identity, clock) }
     }
 
-    /** 指定入口编号取缓存单元（内容缓冲按自己的计数重置节奏调用）。 */
-    internal fun nextEntryAt(index: Int, bounds: UiRect, key: Any?): LuminComposition {
-        while (entries.size <= index) {
-            entries.add(LuminComposition(null))
-        }
-        val entry = entries[index]
-        if (entry.lastBounds != bounds || entry.lastKey != key) {
-            entry.lastBounds = bounds
-            entry.lastKey = key
-            entry.markDirtyDeep()
-        }
-        return entry
+    internal fun endFrame() {
+        if (!inFrame) return
+        entries.keys.filter { it !in visited }.forEach { entries.remove(it)?.close() }
+        inFrame = false
+        if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
 
-    /** 配置加载、语言切换等场景变化后强制全部重建。 */
-    fun invalidateAll() {
-        entries.forEach { it.markDirtyDeep() }
+    internal fun abortFrame() {
+        inFrame = false
+        visited.clear()
+        if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
+    }
+
+    fun invalidateAll() { entries.values.forEach { it.markDirtyDeep() } }
+
+    override fun close() {
+        entries.values.forEach { it.close() }
+        entries.clear()
+        visited.clear()
+        clock.clear()
+        inFrame = false
+        if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
 
 }
+
+fun <T> remember(key: Any, factory: () -> T): T =
+    checkNotNull(LuminRuntime.currentComposition) { "remember 必须在 LuminUI 组合内调用" }.remember(key, factory)

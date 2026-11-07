@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -17,7 +18,6 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.render.animation.Easing
@@ -31,7 +31,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
     private val bounds: UiRect
     private val scrollable: Boolean
     private val maxScroll: Float
-    private var scroll = 0.0f
+    private var scroll by mutableStateOf(0.0f)
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 140L)
@@ -60,7 +60,16 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         return bounds
     }
 
+    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+
     override fun extractGui(
+        guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
+        mouseX: Int, mouseY: Int, partialTick: Float,
+    ) {
+        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, mouseX, mouseY, partialTick) }
+    }
+
+    private fun renderContent(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
@@ -77,12 +86,8 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
             bounds.width - CONTENT_PADDING * 2, viewportHeight
         )
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-        // 选中项、滚动位置、鼠标、翻译版本与主题共同决定绘制结果，任一变化都重建整层。
-        val contentKey = ContentKey(
-            setting.modeIndex, setting.modes.size, scroll, mouseX, mouseY,
-            TranslationManager.getRevision(), popupThemeFingerprint()
-        )
-        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+
+        renderBatch.LuminUIScene(popupBounds, key = this) {
             val progress = openAnimation.value
             PopupCard(
                 size,
@@ -109,16 +114,8 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                     val selected = i == setting.modeIndex
                     val supported = setting.isModeSupportedUnchecked(modes[i])
                     // 逐项缓存：行节点按位置与状态复用，只有悬停/选中/滚动变化的行重新捕获。
-                    var revision = TranslationManager.getRevision()
-                    revision = revision * 31L + popupThemeFingerprint()
-                    revision = revision * 31L + setting.modeIndex
-                    revision = revision * 31L + (if (selected) 1 else 0)
-                    revision = revision * 31L + (if (hovered) 1 else 0)
-                    revision = revision * 31L + (if (supported) 1 else 0)
-                    revision = revision * 31L + itemY.toRawBits()
-                    revision = revision * 31L + viewportBounds.x.toRawBits()
-                    revision = revision * 31L + itemAreaWidth.toRawBits()
-                    LuminUIItem(setting to i, revision) {
+
+                    LuminUIItem(setting to i) {
                         val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
                         val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
                         val hoverBackground = MD3Theme.lerp(
@@ -215,16 +212,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         contentBuffer.close()
     }
 
-    /** 逐项绘制依赖的输入；滚动位置、鼠标、翻译版本与主题都要参与失效判定。 */
-    private data class ContentKey(
-        val modeIndex: Int,
-        val modeCount: Int,
-        val scroll: Float,
-        val mouseX: Int,
-        val mouseY: Int,
-        val i18nRevision: Long,
-        val theme: Int,
-    )
+
 
     companion object {
 

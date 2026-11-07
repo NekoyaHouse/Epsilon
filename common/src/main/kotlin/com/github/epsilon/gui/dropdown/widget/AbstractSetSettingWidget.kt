@@ -3,7 +3,6 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -13,7 +12,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
@@ -45,10 +44,6 @@ abstract class AbstractSetSettingWidget<S : Setting<*>>(setting: S) : SettingWid
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT - 1.0f + FIELD_HEIGHT
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

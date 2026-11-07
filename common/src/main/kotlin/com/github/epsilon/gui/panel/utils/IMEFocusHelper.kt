@@ -73,6 +73,11 @@ object IMEFocusHelper {
      * @param y cursor top edge in GUI (scaled) coordinates
      */
     fun updateCursorPos(x: Float, y: Float) {
+        val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+        if (composition != null) {
+            composition.onFrame(this) { updateCursorPos(x, y) }
+            return
+        }
         activeCursorX = x
         activeCursorY = y
     }

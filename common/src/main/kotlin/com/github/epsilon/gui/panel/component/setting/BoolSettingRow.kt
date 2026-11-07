@@ -13,7 +13,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.MouseButtonEvent
@@ -42,8 +42,6 @@ class BoolSettingRow(private val boolSetting: BoolSetting) : SettingRow<BoolSett
         SoundManager.playInUi(if (boolSetting.value) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
         return true
     }
-
-    override fun hasActiveAnimation(): Boolean = !hoverAnimation.isFinished || !toggleAnimation.isFinished
 
 }
 

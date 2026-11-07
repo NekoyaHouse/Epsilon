@@ -1,10 +1,11 @@
 package com.github.epsilon.managers
 
+import com.github.epsilon.kernel.state.*
 import net.minecraft.world.entity.player.Player
 
 object FriendManager {
 
-    private val friends = HashSet<String>()
+    private var friends: Set<String> by mutableStateOf(emptySet())
 
     fun isFriend(player: Player): Boolean {
         return friends.contains(player.gameProfile.name())
@@ -15,15 +16,15 @@ object FriendManager {
     }
 
     fun addFriend(name: String) {
-        friends.add(name)
+        friends = friends + name
     }
 
     fun removeFriend(name: String) {
-        friends.remove(name)
+        friends = friends - name
     }
 
     fun clearFriends() {
-        friends.clear()
+        friends = emptySet()
     }
 
     fun getFriends(): List<String> {

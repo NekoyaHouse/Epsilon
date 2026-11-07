@@ -73,7 +73,7 @@ class RegistryListSetting<T : Any>(
     init {
         val normalized = normalize(defaultValue)
         initializeDefault(normalized)
-        initializeCurrent(ArrayList(normalized))
+        initializeCurrent(normalized)
     }
 
     override var value: List<T>
@@ -154,7 +154,7 @@ class RegistryListSetting<T : Any>(
                 result.add(entry)
             }
         }
-        return result
+        return java.util.List.copyOf(result)
     }
 
     private fun canUse(entry: T?): Boolean =

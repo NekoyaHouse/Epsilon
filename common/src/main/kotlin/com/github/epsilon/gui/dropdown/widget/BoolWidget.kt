@@ -3,7 +3,6 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Chip
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
@@ -15,7 +14,7 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.util.Mth
@@ -34,10 +33,6 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return toggleAnim.isAdvancing() || knobBounceAnim.isAdvancing() || hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

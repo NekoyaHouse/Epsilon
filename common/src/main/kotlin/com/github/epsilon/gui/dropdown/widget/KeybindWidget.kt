@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget
 
+import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -11,14 +11,14 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 
 class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(setting) {
 
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var listening: Boolean = false
+    private var listening: Boolean by mutableStateOf<Boolean>(false)
     private var buttonX: Float = 0.0f
     private var buttonY: Float = 0.0f
     private var buttonW: Float = DropdownTheme.KEYBIND_WIDTH
@@ -26,16 +26,6 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT
-    }
-
-    override fun hasActiveAnimations(): Boolean {
-        return hoverAnim.isAdvancing()
-    }
-
-    override fun cacheRevision(): Long {
-        var revision = super.cacheRevision()
-        revision = revision * 31L + (if (listening) 1L else 0L)
-        return revision
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
