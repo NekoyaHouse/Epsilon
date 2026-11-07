@@ -1,4 +1,4 @@
-package com.github.epsilon.smtc
+package com.github.epsilon.native.smtc
 
 import com.github.epsilon.Constants
 import java.util.concurrent.Executors

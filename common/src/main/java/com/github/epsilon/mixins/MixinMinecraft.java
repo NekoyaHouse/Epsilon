@@ -13,7 +13,7 @@ import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandView;
-import com.github.epsilon.smtc.SmtcService;
+import com.github.epsilon.utils.client.SmtcLifecycle;
 import com.github.epsilon.utils.player.SwingMode;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -166,7 +166,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
-        SmtcService.INSTANCE.stop();
+        SmtcLifecycle.stop();
         VideoPlayer.INSTANCE.stop();
         LuminRenderSystem.INSTANCE.destroyAll();
     }
