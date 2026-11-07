@@ -99,6 +99,9 @@ class LuminComposition internal constructor(internal val key: Any?) {
     /** 上次绑定时的外部失效键（布局签名等）；变化意味着缓存内容过期。 */
     internal var lastKey: Any? = null
 
+    /** 该入口跨帧复用的作用域；逐项缓存随它存活。 */
+    internal val treeScope: UiTree.Scope = UiTree.Scope()
+
     private var scope: UiScope? = null
 
     private var block: (UiScope.() -> Unit)? = null

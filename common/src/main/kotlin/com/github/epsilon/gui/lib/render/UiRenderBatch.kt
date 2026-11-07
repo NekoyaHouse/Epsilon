@@ -3,7 +3,7 @@ package com.github.epsilon.gui.lib.render
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.state.LuminSceneCache
+import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import java.util.*
 
 /**
@@ -16,15 +16,16 @@ class UiRenderBatch private constructor(
     private val ownsScheduler: Boolean,
     private val baseLayer: Int,
     private val theme: UiTheme,
-    private val sceneCache: LuminSceneCache? = null,
+    /** 场景级 recompose 注册表；由 UiScene 注入，用于复用长生命周期作用域（逐项缓存挂在 Scope 上）。 */
+    private val sceneRoot: LuminSceneRoot? = null,
 ) : AutoCloseable {
 
     private val touchedLayers: MutableSet<Int> = HashSet()
 
     constructor(theme: UiTheme) : this(Render2DScheduler(), true, 0, theme, null)
 
-    constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme, sceneCache: LuminSceneCache? = null) :
-        this(scheduler, false, baseLayer, theme, sceneCache)
+    constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme, sceneRoot: LuminSceneRoot? = null) :
+        this(scheduler, false, baseLayer, theme, sceneRoot)
 
     init {
         Objects.requireNonNull(scheduler, "scheduler")
@@ -32,7 +33,15 @@ class UiRenderBatch private constructor(
     }
 
     fun view(relativeBaseLayer: Int): UiRenderBatch {
-        return UiRenderBatch(scheduler, false, baseLayer + relativeBaseLayer, theme, sceneCache)
+        return UiRenderBatch(scheduler, false, baseLayer + relativeBaseLayer, theme, sceneRoot)
+    }
+
+    /** 取本次 Content 复用的长生命周期作用域；独立批次则新建。 */
+    internal fun nextEntryScope(bounds: com.github.epsilon.gui.lib.UiRect): UiTree.Scope {
+        val root = sceneRoot ?: return UiTree.Scope()
+        val scope = root.nextEntry(bounds, null).treeScope
+        scope.clear()
+        return scope
     }
 
     fun scheduler(): Render2DScheduler {
@@ -41,11 +50,6 @@ class UiRenderBatch private constructor(
 
     fun baseLayer(): Int {
         return baseLayer
-    }
-
-    /** 场景级逐项缓存；由 UiScene 注入，供 LuminUIItem 自动分割。 */
-    fun sceneCache(): LuminSceneCache? {
-        return sceneCache
     }
 
     fun theme(): UiTheme {

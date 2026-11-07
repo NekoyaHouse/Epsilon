@@ -26,8 +26,6 @@ open class UiScope internal constructor(
     val layer: LayerOffset,
     /** 当前绘制矩形；图元坐标相对它解析。 */
     val origin: UiRect,
-    /** 场景级逐项缓存；只有通过 LuminUIScene / LuminUI 入口创建的作用域才有。 */
-    internal val sceneCache: com.github.epsilon.gui.lib.state.LuminSceneCache? = null,
 ) {
 
     /** 当前可用尺寸，等价于 Compose 的 `size`。 */
@@ -46,7 +44,7 @@ open class UiScope internal constructor(
      * 推到同一个矩形上（见 [Positioned] / [Box] / [ColumnScope.Item]）。
      */
     internal fun derive(origin: UiRect, layer: LayerOffset = this.layer): UiScope =
-        UiScope(tree, metrics, layer, origin, sceneCache)
+        UiScope(tree, metrics, layer, origin)
 
     /** 把局部矩形解析成绝对坐标。 */
     internal fun absolute(x: Float, y: Float, width: Float, height: Float): UiRect =

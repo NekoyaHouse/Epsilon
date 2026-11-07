@@ -24,13 +24,13 @@ fun UiRenderBatch.Content(
     block: UiScope.() -> Unit,
 ) {
     val metrics = scheduler().textMetrics().asUiTextMetrics()
-    val tree = UiTree.build { scope ->
-        // 作用域的 origin 必须等于底层 bound，图元坐标才能与布局计算共用同一套坐标系。
-        scope.pushAbsolute(bounds) {
-            block(UiScope(it, metrics, LayerOffset.Same, bounds, sceneCache()))
-        }
+    // 场景批次复用入口的长生命周期 Scope，挂在 Scope 上的逐项缓存因此能跨帧命中；
+    // 独立批次（UiContentBuffer 内部）每次新建 Scope，等价于不缓存。
+    val scope = nextEntryScope(bounds)
+    scope.pushAbsolute(bounds) {
+        block(UiScope(it, metrics, LayerOffset.Same, bounds))
     }
-    render(tree, baseLayer)
+    render(UiTree.from(scope), baseLayer)
 }
 
 /**

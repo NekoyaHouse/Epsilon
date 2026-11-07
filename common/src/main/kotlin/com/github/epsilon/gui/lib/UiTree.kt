@@ -50,6 +50,15 @@ class UiTree private constructor(
         }
 
         /**
+         * 逐项节点缓存。
+         *
+         * 随作用域生命周期存活：长生命周期作用域（recompose 入口）跨帧复用缓存，
+         * 一次性作用域（立即模式）则等价于不缓存。
+         */
+        internal val itemCache: com.github.epsilon.gui.lib.state.LuminSceneCache =
+            com.github.epsilon.gui.lib.state.LuminSceneCache()
+
+        /**
          * 把已经构建好的节点原样写回当前作用域。
          *
          * 供 recompose 缓存重放使用：节点都是不可变 data class，可以跨帧复用。

@@ -10,7 +10,6 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.asUiTextMetrics
 import com.github.epsilon.gui.lib.scene.LayerOffset
-import com.github.epsilon.gui.lib.state.LuminSceneCache
 import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import com.github.epsilon.gui.lib.asUiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
@@ -37,7 +36,6 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     /** 内容层的 recompose 注册表与逐项缓存（跨帧保存）。 */
     private val luminRoot = LuminSceneRoot()
-    private val luminCache = LuminSceneCache()
     private var luminEntryIndex = 0
 
     fun theme(): UiTheme {
@@ -168,7 +166,6 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     /** 强制内容层全部重建（配置加载/语言切换）。 */
     fun invalidateAllUi() {
         luminRoot.invalidateAll()
-        luminCache.clear()
     }
 
     /**
@@ -179,14 +176,15 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     fun LuminUI(bounds: UiRect, key: Any? = null, block: UiScope.() -> Unit) {
         val entry = luminRoot.nextEntryAt(luminEntryIndex++, bounds, key)
         val metrics = batch.scheduler().textMetrics().asUiTextMetrics()
-        val tree = UiTree.build { scope ->
-            scope.pushAbsolute(bounds) { inner ->
-                entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds, luminCache), block)
-                if (entry.emit(inner)) {
-                    inner.markActiveAnimations(true)
-                }
+        // 复用入口的长生命周期 Scope，逐项缓存随它跨帧存活。
+        val scope = entry.treeScope
+        scope.clear()
+        scope.pushAbsolute(bounds) { inner ->
+            entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds), block)
+            if (entry.emit(inner)) {
+                inner.markActiveAnimations(true)
             }
         }
-        batch.render(tree)
+        batch.render(UiTree.from(scope))
     }
 }

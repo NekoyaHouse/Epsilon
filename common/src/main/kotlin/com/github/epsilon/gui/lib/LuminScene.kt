@@ -31,16 +31,16 @@ fun UiScene.LuminUIScene(
 ) {
     val entry = lumin.nextEntry(bounds, key)
     val metrics = scheduler().textMetrics().asUiTextMetrics()
-    val tree = UiTree.build { scope ->
-        // 重建时块内图元按 bounds 解析成绝对坐标，因此 bound 必须与 origin 一致。
-        scope.pushAbsolute(bounds) { inner ->
-            entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds, luminCache), block)
-            if (entry.emit(inner)) {
-                inner.markActiveAnimations(true)
-            }
+    // 复用入口的长生命周期 Scope：逐项缓存挂在 Scope 上，因此能跨帧命中。
+    val scope = entry.treeScope
+    scope.clear()
+    scope.pushAbsolute(bounds) { inner ->
+        entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds), block)
+        if (entry.emit(inner)) {
+            inner.markActiveAnimations(true)
         }
     }
-    batch(layer, relative.value).render(tree)
+    batch(layer, relative.value).render(UiTree.from(scope))
 }
 
 /** 以立即模式提交一层内容（每帧重建，等价于旧的 `Content`）。 */
@@ -100,12 +100,7 @@ fun UiScope.LuminUIGroupImmediate(block: UiScope.() -> Unit) {
  * ```
  */
 fun UiScope.LuminUIItem(key: Any, revision: Long = 0L, block: UiScope.() -> Unit) {
-    val cache = sceneCache
-    if (cache == null) {
-        block()
-        return
-    }
-    cache.draw(key, revision, tree, block, metrics)
+    tree.itemCache.draw(key, revision, tree, block, metrics)
 }
 
 /**
@@ -119,14 +114,7 @@ fun <T> UiScope.LuminUIItems(
     revision: (T) -> Long = { 0L },
     content: UiScope.(T) -> Unit,
 ) {
-    val cache = sceneCache
-    if (cache == null) {
-        for (item in items) {
-            content(item)
-        }
-        return
-    }
     for (item in items) {
-        cache.draw(key(item), revision(item), tree, { content(item) }, metrics)
+        tree.itemCache.draw(key(item), revision(item), tree, { content(item) }, metrics)
     }
 }
