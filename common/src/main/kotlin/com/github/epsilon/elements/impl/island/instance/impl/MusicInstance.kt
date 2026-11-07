@@ -70,7 +70,7 @@ class MusicInstance(
     }
 
     override fun draw(scope: UiTree.Scope, translateX: Float, translateY: Float, width: Float, height: Float) {
-        if (!snapshot.available()) return
+        if (!snapshot.available) return
 
         drawCover(scope)
 
@@ -92,7 +92,7 @@ class MusicInstance(
 
         val metaY = height - PADDING - textRenderer.getHeight(META_SCALE) - 1f
         drawIconText(
-            scope, if (snapshot.albumTitle().isBlank()) IconChars.AUDIO_FILE else IconChars.ALBUM,
+            scope, if (snapshot.albumTitle.isBlank()) IconChars.AUDIO_FILE else IconChars.ALBUM,
             metadata(snapshot), textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
         )
     }
@@ -185,11 +185,11 @@ class MusicInstance(
     }
 
     private fun updateCoverTexture(next: SmtcSnapshot) {
-        if (next.thumbnailRevision() == coverRevision) return
+        if (next.thumbnailRevision == coverRevision) return
 
-        coverRevision = next.thumbnailRevision()
+        coverRevision = next.thumbnailRevision
         coverAvailable = false
-        val thumbnail = next.thumbnail()
+        val thumbnail = next.thumbnail
         if (thumbnail == null || thumbnail.isEmpty()) return
 
         var image: NativeImage? = null
@@ -297,18 +297,18 @@ class MusicInstance(
         private const val COVER_TEXTURE_SIZE = 256
 
         private fun title(snapshot: SmtcSnapshot): String {
-            return if (snapshot.title().isBlank()) "Unknown track" else snapshot.title()
+            return if (snapshot.title.isBlank()) "Unknown track" else snapshot.title
         }
 
         private fun artist(snapshot: SmtcSnapshot): String {
-            return if (snapshot.artist().isBlank()) "Unknown artist" else snapshot.artist()
+            return if (snapshot.artist.isBlank()) "Unknown artist" else snapshot.artist
         }
 
         private fun metadata(snapshot: SmtcSnapshot): String {
-            val source = sourceName(snapshot.sourceAppId())
-            if (snapshot.albumTitle().isBlank()) return source
-            if (source.isBlank()) return snapshot.albumTitle()
-            return snapshot.albumTitle() + "  /  " + source
+            val source = sourceName(snapshot.sourceAppId)
+            if (snapshot.albumTitle.isBlank()) return source
+            if (source.isBlank()) return snapshot.albumTitle
+            return snapshot.albumTitle + "  /  " + source
         }
 
         private fun sourceName(sourceAppId: String?): String {

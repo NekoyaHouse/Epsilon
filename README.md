@@ -42,6 +42,11 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 ./gradlew runClient
 ```
 
+> Windows SMTC media session reading uses the Panama FFM API (`java.lang.foreign`) to call WinRT directly.
+> When launching the mod through an external launcher, add `--enable-native-access=ALL-UNNAMED` to the JVM
+> arguments to silence the restricted-method warning that Java 22+ prints once per module. The missing flag
+> only produces that warning; it does not prevent the mod from running.
+
 ## 🙏 Credits
 
 Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.

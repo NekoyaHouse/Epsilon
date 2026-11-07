@@ -69,7 +69,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     init {
         onEnable {
-            if (music && ClientPlatform.isWindowsX64()) SmtcService.INSTANCE.start()
+            if (music && ClientPlatform.isWindowsX64()) SmtcService.start()
         }
 
         onDisable {
@@ -78,7 +78,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             LandController.removeInstances(BalanceInstance::class.java)
             LandController.removeInstances(TabListInstance::class.java)
             LandController.removeInstances(MusicInstance::class.java)
-            SmtcService.INSTANCE.stop()
+            SmtcService.stop()
             rectRenderer?.clear()
             target = null
         }
@@ -215,9 +215,9 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     private fun updateMusicInstance() {
         if (music && ClientPlatform.isWindowsX64()) {
-            SmtcService.INSTANCE.start()
-            val snapshot = SmtcService.INSTANCE.snapshot()
-            if (!snapshot.available() || !snapshot.isPlaying) {
+            SmtcService.start()
+            val snapshot = SmtcService.snapshot()
+            if (!snapshot.available || !snapshot.isPlaying) {
                 LandController.removeInstances(MusicInstance::class.java)
                 return
             }
@@ -225,18 +225,18 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             if (LandController.getInstance(MusicInstance::class.java) == null) {
                 LandController.post(
                     MusicInstance(
-                        SmtcService.INSTANCE,
+                        SmtcService,
                         textRendererSupplier,
                         CheckPattern {
-                            val current = SmtcService.INSTANCE.snapshot()
-                            !music || !current.available() || !current.isPlaying
+                            val current = SmtcService.snapshot()
+                            !music || !current.available || !current.isPlaying
                         }
                     )
                 )
             }
         } else {
             LandController.removeInstances(MusicInstance::class.java)
-            SmtcService.INSTANCE.stop()
+            SmtcService.stop()
         }
     }
 
