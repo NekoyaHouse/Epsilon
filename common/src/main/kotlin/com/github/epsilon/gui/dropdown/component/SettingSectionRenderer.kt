@@ -436,7 +436,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     private fun isHovered(mouseX: Double, mouseY: Double, x: Float, y: Float, width: Float, height: Float): Boolean {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height
+        return UiRect(x, y, width, height).contains(mouseX, mouseY)
     }
 
     private fun trimToWidth(value: String?, scale: Float, maxWidth: Float, textMetrics: UiTextMetrics): String {

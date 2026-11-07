@@ -70,8 +70,10 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
             view = nextView
             nextView?.attach(this)
         }
-        inputX = nextView?.mouseX ?: 0
-        inputY = nextView?.mouseY ?: 0
+        // 子闭包沿用父级捕获的鼠标参数；父级独立重建时不能换成本帧坐标基准。
+        val parent = LuminRuntime.currentComposition?.takeIf { it.view === nextView }
+        inputX = parent?.inputX ?: nextView?.mouseX ?: 0
+        inputY = parent?.inputY ?: nextView?.mouseY ?: 0
         lastBounds = scope.origin
         owner = scope
         content = block

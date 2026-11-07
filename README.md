@@ -36,6 +36,8 @@ Panel, Dropdown, popups, HudEditor and Troll use LuminUI’s lightweight observa
 
 Dropdown skips measurement inside fully folded modules and groups, and consumes its scene commands after submission. Optional ViaFabricPlus class lookups cache both present and missing classes. Profiling evidence and regression checks are documented in the LuminUI runtime guide.
 
+Nested compositions preserve the pointer origin of captured parent parameters. Hover probes use current host input to keep highlights in sync while parent content stays cached.
+
 ## ⚙️ Build & Run
 
 ```bash

@@ -129,6 +129,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 
 - Panel、Dropdown、popup 和 HUD chrome 优先通过 `UiTree`/`UiScene`/`UiRenderBatch` 提交，不得为每个面板各建一套 renderer。
 - 一个 Screen 或 HUD 帧共享一个 `UiScene`；`beginFrame()` 与 `endFrame()` 必须配对。
+- 重组块内的悬停判断通过 `UiRect.contains()` 接入宿主命中探针，不得用普通坐标比较绕过观察；嵌套组合沿用父级捕获鼠标参数的坐标基准，不得将旧闭包参数与新帧基准混用。
 - `UiScene.flush()` 保留命令，`endFrame()` 还会提交剩余命令；帧中提前输出且无需重放的批次使用 `flushAndClear()` 或在输出后 `clear()`，避免同帧重复绘制和半透明叠加。
 - 存在遮挡关系的 pass 必须使用不同的 `UiLayer` 或相对 layer 表达；相对 layer 用 `com.github.epsilon.gui.lib.scene.LayerOffset`，构造函数强制落在 `(-100, 100)` 内。
 - 图层只能通过扩展函数表达：`UiTree.Scope.layer(LayerOffset) { }` 或 `UiScope` 上的 `Layer(offset) { }` / `Above { }` / `Below { }`。不得再给图元加 `layer: Int` 参数，也不得直接写 `LayerNode`。

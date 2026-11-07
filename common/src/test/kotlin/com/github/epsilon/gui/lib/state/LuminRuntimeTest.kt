@@ -132,6 +132,69 @@ class LuminRuntimeTest {
         assertEquals(3, builds)
     }
 
+    @Test fun nestedHoverKeepsCapturedPointerOriginWhenParentRebuildsIndependently() {
+        var rootBuilds = 0
+        var parentBuilds = 0
+        var childBuilds = 0
+        fun tick(px: Int, py: Int) = frame(x = px, y = py) {
+            rootBuilds++
+            LuminUIItem("parent") {
+                parentBuilds++
+                val hovered = origin.contains(px.toDouble(), py.toDouble())
+                Text("parent:$hovered", 0f, 0f, 1f, Color.WHITE)
+                LuminUIItem("child") {
+                    childBuilds++
+                    val localHovered = UiRect(0f, 0f, width, height)
+                        .contains(px - origin.x.toDouble(), py - origin.y.toDouble())
+                    Text("child:$localHovered", 0f, 1f, 1f, Color.WHITE)
+                }
+            }
+        }.filterIsInstance<UiTree.TextNode>().map { it.text }
+
+        assertEquals(listOf("parent:true", "child:true"), tick(12, 22))
+        assertEquals(listOf("parent:false", "child:false"), tick(200, 200))
+        assertEquals(1, rootBuilds)
+        val settled = parentBuilds to childBuilds
+        repeat(3) { assertEquals(listOf("parent:false", "child:false"), tick(201 + it, 201 + it)) }
+        assertEquals(settled, parentBuilds to childBuilds)
+        assertEquals(listOf("parent:true", "child:true"), tick(12, 22))
+        assertEquals(1, rootBuilds)
+        assertEquals(listOf("parent:false", "child:false"), tick(-1, -1))
+        assertEquals(listOf("parent:true", "child:true"), tick(12, 22))
+    }
+
+    @Test fun dropdownGroupHoverMovesToCurrentHeaderWithCachedParent() {
+        val theme = com.github.epsilon.gui.dropdown.DropdownTheme
+        val settings = List(2) { index ->
+            com.github.epsilon.settings.impl.BoolSetting("setting-$index", false, null, null).apply {
+                groupRef = com.github.epsilon.settings.SettingGroup("group-$index")
+            }
+        }
+        val renderer = com.github.epsilon.gui.dropdown.component.SettingSectionRenderer.create("hover", settings) {
+            com.github.epsilon.gui.dropdown.widget.BoolWidget(it as com.github.epsilon.settings.impl.BoolSetting)
+        }
+        var rootBuilds = 0
+        fun tick(py: Int) = frame(x = 30, y = py) {
+            rootBuilds++
+            LuminUIItem("settings") { renderer.draw(this, 30, py, 0f, 0f, width) }
+        }.filterIsInstance<UiTree.RoundRectNode>().filter {
+            it.height == theme.GROUP_HEADER_HEIGHT && it.color == theme.groupHeaderHover(1f)
+        }.map { it.y }
+
+        val lowerY = bounds.y + theme.GROUP_HEADER_HEIGHT + theme.SETTING_GAP
+        tick(lowerY.toInt() + 5)
+        time = 200_000_000L
+        assertEquals(listOf(lowerY), tick(lowerY.toInt() + 5))
+        tick(bounds.y.toInt() + 5)
+        time += 200_000_000L
+        assertEquals(listOf(bounds.y), tick(bounds.y.toInt() + 5))
+        tick(200)
+        time += 200_000_000L
+        assertEquals(emptyList(), tick(200))
+        assertEquals(1, rootBuilds)
+        assertEquals(0, clock.taskCount)
+    }
+
     @Test fun animationsRetargetFinishAndReleaseClockTasks() {
         val target = mutableStateOf(0f)
         lateinit var animation: LuminAnimatable

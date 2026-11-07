@@ -36,6 +36,8 @@ Panel、Dropdown、popup、HudEditor 与 Troll 使用 LuminUI 的轻量状态观
 
 Dropdown 跳过完全折叠模块与分组的内部测量，并在提交后消费场景命令；可选 ViaFabricPlus 类查询同时缓存存在与缺失的结果。采样依据与回归验证见 LuminUI 运行时文档。
 
+嵌套组合保留父级闭包捕获参数对应的鼠标坐标基准，命中探针结合宿主当前输入更新高亮，父级保持缓存时也能同步悬停状态。
+
 ## ⚙️ 构建与运行
 
 ```bash
