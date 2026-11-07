@@ -2,15 +2,15 @@ package com.github.epsilon.gui.panel.view
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.view.settings.ClientSettingTabView
@@ -18,7 +18,7 @@ import com.github.epsilon.gui.panel.view.settings.ConfigClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.FriendClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.GeneralClientSettingTab
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -35,8 +35,9 @@ class ClientSettingPanel(
     private val tabViews =
         EnumMap<PanelState.ClientSettingTab, ClientSettingTabView>(PanelState.ClientSettingTab::class.java)
     private val tabHoverAnimations =
-        EnumMap<PanelState.ClientSettingTab, Animation>(PanelState.ClientSettingTab::class.java)
-    private val tabIndicatorAnimation = Animation(Easing.EASE_OUT_CUBIC, 200L)
+        EnumMap<PanelState.ClientSettingTab, LuminAnimatable>(PanelState.ClientSettingTab::class.java)
+    private val tabIndicatorAnimation =
+        LuminAnimatable(getTabIndex(state.getClientSettingTab()).toFloat(), Easing.EASE_OUT_CUBIC, 200L)
 
     private var bounds: UiRect? = null
 
@@ -46,11 +47,8 @@ class ClientSettingPanel(
         tabViews[PanelState.ClientSettingTab.CONFIG] = ConfigClientSettingTab(state, popupHost)
 
         for (tab in PanelState.ClientSettingTab.entries) {
-            val animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
-            animation.startValue = 0.0f
-            tabHoverAnimations[tab] = animation
+            tabHoverAnimations[tab] = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L)
         }
-        tabIndicatorAnimation.startValue = getTabIndex(state.getClientSettingTab()).toFloat()
     }
 
     fun render(
@@ -64,12 +62,27 @@ class ClientSettingPanel(
         val effectiveMouseX = if (popupConsumesHover) Int.MIN_VALUE else mouseX
         val effectiveMouseY = if (popupConsumesHover) Int.MIN_VALUE else mouseY
 
-        renderBatch.Content(bounds) {
+        // 推式动画：指示条与逐个 tab 的悬停进度在命令阶段写目标，绘制块内只读取 value。
+        val tabBar = getTabBarRect()
+        val segmentWidth = tabBar.width / TABS.size
+        tabIndicatorAnimation.target = getTabIndex(state.getClientSettingTab()).toFloat()
+        for (index in TABS.indices) {
+            val tab = TABS[index]
+            val tabBounds = UiRect(tabBar.x + segmentWidth * index, tabBar.y, segmentWidth, tabBar.height)
+            tabHoverAnimations[tab.tab]!!.target =
+                if (tabBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
+        }
+
+        // 标题与 tab 条只随当前 tab / 语言 / 主题变化重建；切换 tab 会同时切换下面的内容视图。
+        val contentKey = ContentKey(
+            state.getClientSettingTab(), TranslationManager.getRevision(), themeFingerprint()
+        )
+        renderBatch.LuminUIScene(bounds, key = contentKey) {
             Text(
                 EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET,
                 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY
             )
-            buildTabs(effectiveMouseX, effectiveMouseY)
+            buildTabs()
         }
 
         activeTab.render(
@@ -88,8 +101,8 @@ class ClientSettingPanel(
     }
 
     fun hasActiveAnimations(): Boolean {
-        val tabsAnimating = !tabIndicatorAnimation.isFinished ||
-                tabHoverAnimations.values.any { animation -> !animation.isFinished }
+        val tabsAnimating = tabIndicatorAnimation.isRunning ||
+                tabHoverAnimations.values.any { animation -> animation.isRunning }
         return tabsAnimating || getCurrentTabView().hasActiveAnimations()
     }
 
@@ -138,24 +151,21 @@ class ClientSettingPanel(
         return getCurrentTabView().charTyped(event)
     }
 
-    private fun UiScope.buildTabs(mouseX: Int, mouseY: Int) {
+    private fun UiScope.buildTabs() {
         val tabBar = getTabBarRect()
         val localTabBar = tabBar.relativeTo(origin)
         val segmentWidth = tabBar.width / TABS.size
         val labelScale = 0.62f
         val textHeight = metrics.textHeight(labelScale)
-        val activeIndex = getTabIndex(state.getClientSettingTab()).toFloat()
-        val indicatorProgress = animate(tabIndicatorAnimation, activeIndex)
+        val indicatorProgress = tabIndicatorAnimation.value
 
         Positioned(localTabBar.x, localTabBar.y, localTabBar.width, localTabBar.height) {
             for (index in TABS.indices) {
                 val tab = TABS[index]
                 val tabBounds = UiRect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height)
-                val absoluteTabBounds = UiRect(tabBar.x + tabBounds.x, tabBar.y, tabBounds.width, tabBounds.height)
                 val active = tab.tab == state.getClientSettingTab()
 
-                val hoverAnimation = tabHoverAnimations[tab.tab]!!
-                val hover = animate(hoverAnimation, absoluteTabBounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+                val hover = tabHoverAnimations[tab.tab]!!.value
                 if (hover > 0.01f) {
                     RoundRect(
                         tabBounds.x, tabBounds.y, tabBounds.width, tabBounds.height, 6.0f,
@@ -210,6 +220,9 @@ class ClientSettingPanel(
         }
     }
 
+    /** 主题指纹：tab 条颜色来自可变主题，主题切换后缓存必须失效。 */
+    private fun themeFingerprint(): Int = MD3Theme.SURFACE.rgb * 31 + MD3Theme.PRIMARY.rgb
+
     private fun getTabBarRect(): UiRect {
         val currentBounds = bounds!!
         return UiRect(
@@ -232,6 +245,9 @@ class ClientSettingPanel(
     }
 
     private data class TabDefinition(val tab: PanelState.ClientSettingTab, val component: TranslateComponent)
+
+    /** tab 条与标题的静态输入：当前 tab、翻译版本与主题。 */
+    private data class ContentKey(val tab: PanelState.ClientSettingTab, val i18nRevision: Long, val theme: Int)
 
     override fun close() {
         for (view in tabViews.values) {

@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RectGradient
 import com.github.epsilon.gui.lib.RoundRect
@@ -40,6 +41,23 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
                 maxOf(0, channelCount - 1) * CHANNEL_GAP +
                 BOTTOM_PADDING
         return DropdownTheme.SETTING_HEIGHT + expandedHeight * openAnim.value
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return openAnim.isAdvancing() || hasFocusedInput()
+    }
+
+    override fun cacheRevision(): Long {
+        var revision = super.cacheRevision()
+        revision = revision * 31L + (if (opened) 1L else 0L)
+        revision = revision * 31L + visibleColor.rgb
+        revision = revision * 31L + visibleColor.alpha
+        val focused = focusedField
+        if (focused != null) {
+            revision = revision * 31L + focused.text.hashCode()
+            revision = revision * 31L + focused.getCursorIndex()
+        }
+        return revision
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

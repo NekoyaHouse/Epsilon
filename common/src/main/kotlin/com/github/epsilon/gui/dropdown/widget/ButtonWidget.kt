@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
@@ -17,6 +18,10 @@ class ButtonWidget(setting: ButtonSetting) : SettingWidget<ButtonSetting>(settin
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT + 2.0f
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

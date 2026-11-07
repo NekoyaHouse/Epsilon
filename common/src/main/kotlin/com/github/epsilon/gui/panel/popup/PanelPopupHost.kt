@@ -3,11 +3,20 @@ package com.github.epsilon.gui.panel.popup
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
+import com.github.epsilon.gui.theme.MD3Theme
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+
+/**
+ * 弹窗内容缓存的主题指纹。
+ *
+ * 弹窗关闭期间主题可能被切换；重开时若位置、悬停等状态恰好与上次一致，必须靠该指纹
+ * 让 recompose 缓存与逐项缓存失效，否则会沿用旧主题的颜色节点。
+ */
+internal fun popupThemeFingerprint(): Int = MD3Theme.SURFACE.rgb * 31 + MD3Theme.PRIMARY.rgb
 
 /**
  * 面板弹窗宿主。

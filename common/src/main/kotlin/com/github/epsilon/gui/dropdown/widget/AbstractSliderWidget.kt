@@ -25,6 +25,23 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         return DropdownTheme.SETTING_HEIGHT + 15.0f
     }
 
+    /** 输入框聚焦时光标闪烁，必须逐帧重建。 */
+    override fun hasActiveAnimations(): Boolean {
+        return inputField.isFocused
+    }
+
+    override fun cacheRevision(): Long {
+        var revision = super.cacheRevision()
+        // 拖拽/输入预览值不会写回设置，但会直接改变绘制结果。
+        revision = revision * 31L + getVisibleValue().hashCode()
+        revision = revision * 31L + (if (dragging) 1L else 0L)
+        if (inputField.isFocused) {
+            revision = revision * 31L + inputField.text.hashCode()
+            revision = revision * 31L + inputField.getCursorIndex()
+        }
+        return revision
+    }
+
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         syncSessionState()
 

@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.dropdown.widget.*
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.Rect
@@ -43,6 +44,33 @@ class ModuleButton(val module: Module) : Component() {
 
     override fun getHeight(): Float {
         return computeHeight()
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        if (expandAnim.isAdvancing() || toggleAnim.isAdvancing() || hoverAnim.isAdvancing() ||
+            keybindHoverAnim.isAdvancing()
+        ) {
+            return true
+        }
+        // 设置区只在模块展开后才绘制，折叠时内部控件的动画没有推进的必要。
+        return expanded && sectionRenderer.hasActiveAnimations()
+    }
+
+    /**
+     * 模块行的缓存版本：模块状态、展开/键位监听等「静止时也会变化」的输入全部并入；
+     * 动画进行中叠加时间戳，保证悬停/开关/展开动画逐帧推进。
+     */
+    override fun cacheRevision(): Long {
+        var revision = if (hasActiveAnimations()) System.nanoTime() else 0L
+        revision = revision * 31L + (if (module.isEnabled) 1L else 0L)
+        revision = revision * 31L + (if (module.isHidden) 1L else 0L)
+        revision = revision * 31L + module.keyBind
+        revision = revision * 31L + module.bindMode.ordinal
+        revision = revision * 31L + module.translatedName.hashCode()
+        revision = revision * 31L + (if (expanded) 1L else 0L)
+        revision = revision * 31L + (if (listeningKeybind) 1L else 0L)
+        revision = revision * 31L + sectionRenderer.signature()
+        return revision
     }
 
     fun getHeightForFrame(frameId: Int): Float {

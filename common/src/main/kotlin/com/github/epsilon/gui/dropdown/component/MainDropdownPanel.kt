@@ -5,11 +5,15 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
+import com.github.epsilon.gui.dropdown.isAdvancing
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.render.animation.Animation
@@ -145,29 +149,32 @@ class MainDropdownPanel(
             val iconY = currentY + row * (ICON_SIZE + ICON_GAP)
             val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), iconX, iconY, ICON_SIZE, ICON_SIZE)
             val active = entry.isActive()
+            // 悬停动画在逐项缓存之外推进，否则缓存命中时动画会冻结。
             entry.hoverAnim.run(if (hovered) 1.0f else 0.0f)
             val hover = entry.hoverAnim.value
-            RoundRect(
-                iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS,
-                MD3Theme.lerp(
-                    if (active) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH,
-                    MD3Theme.PRIMARY_CONTAINER,
-                    hover * 0.5f
+            LuminUIItem(entry, entryRevision(entry, origin, iconX, iconY, hovered, active)) {
+                RoundRect(
+                    iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS,
+                    MD3Theme.lerp(
+                        if (active) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH,
+                        MD3Theme.PRIMARY_CONTAINER,
+                        hover * 0.5f
+                    )
                 )
-            )
-            val iconScale = ICON_SCALE
-            val iconW = metrics.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS)
-            val iconH = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
-            Text(
-                entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) / 2.0f, iconScale,
-                if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS
-            )
-            if (hovered) {
-                val label = entry.labelSupplier.get()
-                val labelScale = 0.42f
-                val labelW = metrics.textWidth(label, labelScale)
-                val labelX = (iconX + (ICON_SIZE - labelW) * 0.5f).coerceIn(2.0f, width - labelW - 2.0f)
-                Text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED)
+                val iconScale = ICON_SCALE
+                val iconW = metrics.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS)
+                val iconH = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
+                Text(
+                    entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) / 2.0f, iconScale,
+                    if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS
+                )
+                if (hovered) {
+                    val label = entry.labelSupplier.get()
+                    val labelScale = 0.42f
+                    val labelW = metrics.textWidth(label, labelScale)
+                    val labelX = (iconX + (ICON_SIZE - labelW) * 0.5f).coerceIn(2.0f, width - labelW - 2.0f)
+                    Text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED)
+                }
             }
         }
         val rows = iconRows
@@ -177,6 +184,47 @@ class MainDropdownPanel(
             MD3Theme.withAlpha(MD3Theme.OUTLINE, 55)
         )
         settingsContent.draw(this, mouseX, mouseY, currentY, width, getRenderFrameId())
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        if (super.hasActiveAnimations() || settingsContent.hasActiveAnimations()) {
+            return true
+        }
+        for (entry in entries) {
+            if (entry.hoverAnim.isAdvancing()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    override fun contentStateSignature(): Long {
+        var signature = super.contentStateSignature()
+        signature = signature * 31L + settingsContent.signature()
+        for (entry in entries) {
+            signature = signature * 31L + (if (entry.isActive()) 1L else 0L)
+        }
+        return signature
+    }
+
+    /** 主页图标项的缓存版本：位置、悬停/激活状态与翻译都会影响绘制结果。 */
+    private fun entryRevision(
+        entry: Entry, origin: UiRect, iconX: Float, iconY: Float, hovered: Boolean, active: Boolean,
+    ): Long {
+        var revision = java.lang.Float.floatToIntBits(iconX).toLong()
+        revision = revision * 31L + java.lang.Float.floatToIntBits(iconY)
+        revision = revision * 31L + origin.hashCode()
+        revision = revision * 31L + java.lang.Float.floatToIntBits(entry.hoverAnim.value)
+        revision = revision * 31L + (if (hovered) 1L else 0L)
+        revision = revision * 31L + (if (active) 1L else 0L)
+        revision = revision * 31L + TranslationManager.getRevision()
+        if (hovered) {
+            revision = revision * 31L + entry.labelSupplier.get().hashCode()
+        }
+        if (entry.hoverAnim.isAdvancing()) {
+            revision = revision * 31L + System.nanoTime()
+        }
+        return revision
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {

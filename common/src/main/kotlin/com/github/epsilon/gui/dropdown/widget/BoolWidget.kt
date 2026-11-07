@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Chip
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
@@ -33,6 +34,10 @@ class BoolWidget(setting: BoolSetting) : SettingWidget<BoolSetting>(setting) {
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return toggleAnim.isAdvancing() || knobBounceAnim.isAdvancing() || hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

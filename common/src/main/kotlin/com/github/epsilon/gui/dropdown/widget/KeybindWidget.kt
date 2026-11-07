@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -25,6 +26,16 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return hoverAnim.isAdvancing()
+    }
+
+    override fun cacheRevision(): Long {
+        var revision = super.cacheRevision()
+        revision = revision * 31L + (if (listening) 1L else 0L)
+        return revision
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

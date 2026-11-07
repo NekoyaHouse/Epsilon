@@ -4,6 +4,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Chip
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
@@ -30,6 +31,16 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
     override fun getHeight(): Float {
         expandAnim.run(if (shouldExpand()) 1.0f else 0.0f)
         return getCollapsedHeight() + getExpandedTotalHeight() * expandAnim.value
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return expandAnim.isAdvancing() || hoverAnim.isAdvancing()
+    }
+
+    override fun cacheRevision(): Long {
+        var revision = super.cacheRevision()
+        revision = revision * 31L + (if (expanded) 1L else 0L)
+        return revision
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

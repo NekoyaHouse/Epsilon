@@ -3,12 +3,15 @@ package com.github.epsilon.gui.dropdown.component
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -62,16 +65,20 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 val btnX = contentX + col * (btnW + GAP)
                 val btnY = currentY + row * (BUTTON_HEIGHT + GAP)
                 val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), btnX, btnY, btnW, BUTTON_HEIGHT)
-                RoundRect(
-                    btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
-                    if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
-                )
-                val labelScale = 0.48f
-                val labelW = metrics.textWidth(actions[index], labelScale)
-                Text(
-                    actions[index], btnX + (btnW - labelW) * 0.5f,
-                    getCenteredTextY(metrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY
-                )
+                val label = actions[index]
+                // 逐项缓存：按钮位置/悬停/翻译变化时才重新捕获节点。
+                LuminUIItem("config-action:$index", actionRevision(origin, btnY, hovered, label, btnX, btnW)) {
+                    RoundRect(
+                        btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                        if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
+                    )
+                    val labelScale = 0.48f
+                    val labelW = metrics.textWidth(label, labelScale)
+                    Text(
+                        label, btnX + (btnW - labelW) * 0.5f,
+                        getCenteredTextY(metrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY
+                    )
+                }
             }
         }
         currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f
@@ -97,35 +104,81 @@ class ConfigDropdownPanel(panelIndex: Int) :
         }
         for (name in configs) {
             val activeRow = name == active
-            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), contentX, currentY, contentW, ROW_HEIGHT)
-            RoundRect(
-                contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
-                if (activeRow) {
-                    MD3Theme.PRIMARY_CONTAINER
-                } else if (hovered) {
-                    MD3Theme.SURFACE_CONTAINER_HIGH
-                } else {
-                    MD3Theme.SURFACE_CONTAINER_LOW
-                }
-            )
-            val nameScale = 0.56f
-            Text(
-                trimToWidth(name, nameScale, contentW - 28.0f, metrics), contentX + 6.0f,
-                getCenteredTextY(metrics, currentY, ROW_HEIGHT, nameScale), nameScale,
-                if (activeRow) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
-            )
+            val rowY = currentY
+            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), contentX, rowY, contentW, ROW_HEIGHT)
             val deleteX = contentX + contentW - 18.0f
-            val deleteScale = 0.52f
-            Text(
-                "x", deleteX + 5.0f, getCenteredTextY(metrics, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
-                if (isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
-                    MD3Theme.ERROR
-                } else {
-                    MD3Theme.TEXT_MUTED
-                }
-            )
+            val deleteHovered =
+                isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, rowY + 3.0f, 16.0f, 16.0f)
+            LuminUIItem(
+                "config-row:$name",
+                rowRevision(origin, rowY, hovered, activeRow, deleteHovered, contentX, contentW)
+            ) {
+                RoundRect(
+                    contentX, rowY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                    if (activeRow) {
+                        MD3Theme.PRIMARY_CONTAINER
+                    } else if (hovered) {
+                        MD3Theme.SURFACE_CONTAINER_HIGH
+                    } else {
+                        MD3Theme.SURFACE_CONTAINER_LOW
+                    }
+                )
+                val nameScale = 0.56f
+                Text(
+                    trimToWidth(name, nameScale, contentW - 28.0f, metrics), contentX + 6.0f,
+                    getCenteredTextY(metrics, rowY, ROW_HEIGHT, nameScale), nameScale,
+                    if (activeRow) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
+                )
+                val deleteScale = 0.52f
+                Text(
+                    "x", deleteX + 5.0f, getCenteredTextY(metrics, rowY + 3.0f, 16.0f, deleteScale), deleteScale,
+                    if (deleteHovered) MD3Theme.ERROR else MD3Theme.TEXT_MUTED
+                )
+            }
             currentY += ROW_HEIGHT + GAP
         }
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return super.hasActiveAnimations() || inputField.isFocused
+    }
+
+    override fun contentStateSignature(): Long {
+        var signature = status.hashCode().toLong()
+        signature = signature * 31L + ConfigManager.activeConfigName.hashCode()
+        signature = signature * 31L + configsForFrame().hashCode()
+        signature = signature * 31L + inputField.text.hashCode()
+        signature = signature * 31L + (if (inputField.isFocused) 1L else 0L)
+        signature = signature * 31L + inputField.getCursorIndex()
+        return signature
+    }
+
+    private fun actionRevision(
+        origin: UiRect, rowY: Float, hovered: Boolean, label: String, x: Float, width: Float,
+    ): Long {
+        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
+        revision = revision * 31L + java.lang.Float.floatToIntBits(x)
+        revision = revision * 31L + java.lang.Float.floatToIntBits(width)
+        revision = revision * 31L + origin.hashCode()
+        revision = revision * 31L + (if (hovered) 1L else 0L)
+        revision = revision * 31L + label.hashCode()
+        revision = revision * 31L + TranslationManager.getRevision()
+        return revision
+    }
+
+    private fun rowRevision(
+        origin: UiRect, rowY: Float, hovered: Boolean, activeRow: Boolean, deleteHovered: Boolean,
+        x: Float, width: Float,
+    ): Long {
+        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
+        revision = revision * 31L + java.lang.Float.floatToIntBits(x)
+        revision = revision * 31L + java.lang.Float.floatToIntBits(width)
+        revision = revision * 31L + origin.hashCode()
+        revision = revision * 31L + (if (hovered) 1L else 0L)
+        revision = revision * 31L + (if (activeRow) 1L else 0L)
+        revision = revision * 31L + (if (deleteHovered) 1L else 0L)
+        revision = revision * 31L + TranslationManager.getRevision()
+        return revision
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {

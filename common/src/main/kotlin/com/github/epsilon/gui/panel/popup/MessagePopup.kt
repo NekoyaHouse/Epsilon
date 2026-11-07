@@ -1,13 +1,13 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.gui.lib.Button
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -26,15 +26,13 @@ class MessagePopup(
         bounds, Supplier { title }, Supplier { message }, detail, Supplier { buttonLabel }
     )
 
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
-    private val buttonHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
+    private val buttonHoverAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L)
 
     private var closeAfterClick = false
     private lateinit var buttonBounds: UiRect
 
     init {
-        this.openAnimation.startValue = 0.0f
-        this.buttonHoverAnimation.startValue = 0.0f
         updateLayout(bounds.y)
     }
 
@@ -46,13 +44,21 @@ class MessagePopup(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        openAnimation.run(1.0f)
-        val progress = openAnimation.value
-        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        // 推式动画：目标在命令阶段写入，绘制块内只读取 value，避免 recompose 块内调用 animate。
+        val popupY = bounds.y - (1.0f - openAnimation.value) * 6.0f
         updateLayout(popupY)
-        buttonHoverAnimation.run(if (buttonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
+        buttonHoverAnimation.target = if (buttonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
+        openAnimation.target = 1.0f
+
+        val title = titleSupplier.get()
+        val message = messageSupplier.get()
+        val buttonLabel = buttonLabelSupplier.get()
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-        renderBatch.Content(popupBounds) {
+        // 弹窗矩形随开启动画逐帧变化，bounds 变化会触发整层重建；供应商文本与主题并入 key。
+        val contentKey = ContentKey(title, message, detail, buttonLabel, popupThemeFingerprint())
+        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+            val progress = openAnimation.value
+            val hover = buttonHoverAnimation.value
             PopupCard(
                 size,
                 MD3Theme.CARD_RADIUS.toFloat(),
@@ -64,16 +70,12 @@ class MessagePopup(
             val titleScale = 0.66f
             val messageScale = 0.56f
             val detailScale = 0.52f
-            val title = titleSupplier.get()
-            val message = messageSupplier.get()
-            val buttonLabel = buttonLabelSupplier.get()
             Text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
             Text(message, 12.0f, 25.0f, messageScale, MD3Theme.TEXT_SECONDARY)
             if (detail != null && !detail.isBlank()) {
                 Text(detail, 12.0f, 38.0f, detailScale, MD3Theme.TEXT_MUTED)
             }
 
-            val hover = buttonHoverAnimation.value
             val localButtonBounds = buttonBounds.relativeTo(popupBounds)
             Button(
                 localButtonBounds, localButtonBounds.height / 2.0f,
@@ -105,5 +107,14 @@ class MessagePopup(
             buttonHeight
         )
     }
+
+    /** 影响绘制结果的静态输入；变化时整层重建。 */
+    private data class ContentKey(
+        val title: String,
+        val message: String,
+        val detail: String?,
+        val buttonLabel: String,
+        val theme: Int,
+    )
 
 }

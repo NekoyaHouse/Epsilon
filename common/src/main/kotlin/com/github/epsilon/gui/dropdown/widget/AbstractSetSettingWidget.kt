@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.widget
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.Outline
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -44,6 +45,10 @@ abstract class AbstractSetSettingWidget<S : Setting<*>>(setting: S) : SettingWid
 
     override fun getHeight(): Float {
         return DropdownTheme.SETTING_HEIGHT - 1.0f + FIELD_HEIGHT
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return hoverAnim.isAdvancing()
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {

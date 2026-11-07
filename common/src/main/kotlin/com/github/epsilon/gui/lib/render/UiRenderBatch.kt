@@ -44,6 +44,14 @@ class UiRenderBatch private constructor(
         return scope
     }
 
+    /** 取本次内容对应的 recompose 入口；独立批次返回 null（等价立即模式）。 */
+    internal fun nextComposition(
+        bounds: com.github.epsilon.gui.lib.UiRect,
+        key: Any?,
+    ): com.github.epsilon.gui.lib.state.LuminComposition? {
+        return sceneRoot?.nextEntry(bounds, key)
+    }
+
     fun scheduler(): Render2DScheduler {
         return scheduler
     }

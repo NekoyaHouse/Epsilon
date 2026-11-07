@@ -4,7 +4,8 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.Chip
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -12,12 +13,13 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -32,7 +34,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
     private var scroll = 0.0f
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 140L)
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 140L)
     private var hoveredIndex = -1
 
     init {
@@ -48,8 +50,6 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         val fullContentHeight = optionCount * ITEM_HEIGHT
         val viewportHeight = this.bounds.height - CONTENT_PADDING * 2
         this.maxScroll = maxOf(0.0f, fullContentHeight - viewportHeight)
-
-        this.openAnimation.startValue = 0.0f
     }
 
     fun getSetting(): EnumSetting<*> {
@@ -65,9 +65,10 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
         contentBuffer.clear()
-        openAnimation.run(1.0f)
-        val progress = openAnimation.value
-        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        // 开启动画是推式动画：目标在命令阶段写入，绘制块内只读取 value。
+        val popupY = bounds.y - (1.0f - openAnimation.value) * 6.0f
+        openAnimation.target = 1.0f
+
         val viewportHeight = bounds.height - CONTENT_PADDING * 2
         val fullContentHeight = setting.modes.size * ITEM_HEIGHT
         val itemAreaWidth = bounds.width - CONTENT_PADDING * 2 - (if (scrollable) 6.0f else 0.0f)
@@ -75,9 +76,14 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
             bounds.x + CONTENT_PADDING, popupY + CONTENT_PADDING,
             bounds.width - CONTENT_PADDING * 2, viewportHeight
         )
-
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-        renderBatch.Content(popupBounds) {
+        // 选中项、滚动位置、鼠标、翻译版本与主题共同决定绘制结果，任一变化都重建整层。
+        val contentKey = ContentKey(
+            setting.modeIndex, setting.modes.size, scroll, mouseX, mouseY,
+            TranslationManager.getRevision(), popupThemeFingerprint()
+        )
+        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+            val progress = openAnimation.value
             PopupCard(
                 size,
                 MD3Theme.CARD_RADIUS.toFloat(),
@@ -102,56 +108,69 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                     }
                     val selected = i == setting.modeIndex
                     val supported = setting.isModeSupportedUnchecked(modes[i])
-                    val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
-                    val hoverBackground =
-                        MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f)
-                    val selectedBackground = MD3Theme.SECONDARY_CONTAINER
-                    val background: Color =
-                        if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
-                    val textColor: Color = if (!supported) {
-                        MD3Theme.TEXT_MUTED
-                    } else if (selected) {
-                        MD3Theme.ON_SECONDARY_CONTAINER
-                    } else if (hovered) {
-                        MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255)
-                    } else {
-                        MD3Theme.TEXT_SECONDARY
-                    }
-                    val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
-                    RoundRect(
-                        localItemBounds.x, localItemBounds.y, localItemBounds.width, localItemBounds.height,
-                        8.0f, background
-                    )
-                    val textScale = 0.62f
-                    val textHeight = metrics.textHeight(textScale)
-                    val textY = localItemBounds.y + (localItemBounds.height - textHeight) / 2.0f
-                    if (selected) {
-                        val iconScale = 0.72f
-                        val iconHeight = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
-                        val iconY = localItemBounds.y + (localItemBounds.height - iconHeight) / 2.0f
-                        // TODO: 换个更合适的 icon
+                    // 逐项缓存：行节点按位置与状态复用，只有悬停/选中/滚动变化的行重新捕获。
+                    var revision = TranslationManager.getRevision()
+                    revision = revision * 31L + popupThemeFingerprint()
+                    revision = revision * 31L + setting.modeIndex
+                    revision = revision * 31L + (if (selected) 1 else 0)
+                    revision = revision * 31L + (if (hovered) 1 else 0)
+                    revision = revision * 31L + (if (supported) 1 else 0)
+                    revision = revision * 31L + itemY.toRawBits()
+                    revision = revision * 31L + viewportBounds.x.toRawBits()
+                    revision = revision * 31L + itemAreaWidth.toRawBits()
+                    LuminUIItem(setting to i, revision) {
+                        val localItemBounds = UiRect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT)
+                        val baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0)
+                        val hoverBackground = MD3Theme.lerp(
+                            MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f
+                        )
+                        val selectedBackground = MD3Theme.SECONDARY_CONTAINER
+                        val background: Color =
+                            if (selected) selectedBackground else (if (hovered) hoverBackground else baseBackground)
+                        val textColor: Color = if (!supported) {
+                            MD3Theme.TEXT_MUTED
+                        } else if (selected) {
+                            MD3Theme.ON_SECONDARY_CONTAINER
+                        } else if (hovered) {
+                            MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255)
+                        } else {
+                            MD3Theme.TEXT_SECONDARY
+                        }
+                        RoundRect(
+                            localItemBounds.x, localItemBounds.y, localItemBounds.width, localItemBounds.height,
+                            8.0f, background
+                        )
+                        val textScale = 0.62f
+                        val textHeight = metrics.textHeight(textScale)
+                        val textY = localItemBounds.y + (localItemBounds.height - textHeight) / 2.0f
+                        if (selected) {
+                            val iconScale = 0.72f
+                            val iconHeight = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
+                            val iconY = localItemBounds.y + (localItemBounds.height - iconHeight) / 2.0f
+                            // TODO: 换个更合适的 icon
+                            Text(
+                                IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x + 8.0f, iconY, iconScale,
+                                MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
+                            )
+                        }
                         Text(
-                            IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x + 8.0f, iconY, iconScale,
-                            MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
+                            setting.getTranslatedValueByIndex(i),
+                            localItemBounds.x + (if (selected) 22.0f else 10.0f), textY, textScale, textColor
                         )
-                    }
-                    Text(
-                        setting.getTranslatedValueByIndex(i),
-                        localItemBounds.x + (if (selected) 22.0f else 10.0f), textY, textScale, textColor
-                    )
-                    if (!supported) {
-                        val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
-                        val badgeScale = 0.52f
-                        // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
-                        val badgeWidth = metrics.textWidth(badge, badgeScale) + 16.0f
-                        val badgeHeight = 12.0f
-                        val badgeX = localItemBounds.right() - badgeWidth - 8.0f
-                        val badgeY = localItemBounds.y + (localItemBounds.height - badgeHeight) * 0.5f
-                        Chip(
-                            UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
-                            MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255),
-                            MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
-                        )
+                        if (!supported) {
+                            val badge = EpsilonTranslations.PlatformOnly.BADGE.getTranslatedName()
+                            val badgeScale = 0.52f
+                            // assist chip 固定 8px 左内边距，左右各留 8px 才能让文字居中。
+                            val badgeWidth = metrics.textWidth(badge, badgeScale) + 16.0f
+                            val badgeHeight = 12.0f
+                            val badgeX = localItemBounds.right() - badgeWidth - 8.0f
+                            val badgeY = localItemBounds.y + (localItemBounds.height - badgeHeight) * 0.5f
+                            Chip(
+                                UiRect(badgeX, badgeY, badgeWidth, badgeHeight), badge, badgeScale,
+                                MD3Theme.withAlpha(MD3Theme.TERTIARY_CONTAINER, 255),
+                                MD3Theme.ON_TERTIARY_CONTAINER, null, 0.0f, null
+                            )
+                        }
                     }
                 }
             }
@@ -195,6 +214,17 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
     override fun close() {
         contentBuffer.close()
     }
+
+    /** 逐项绘制依赖的输入；滚动位置、鼠标、翻译版本与主题都要参与失效判定。 */
+    private data class ContentKey(
+        val modeIndex: Int,
+        val modeCount: Int,
+        val scroll: Float,
+        val mouseX: Int,
+        val mouseY: Int,
+        val i18nRevision: Long,
+        val theme: Int,
+    )
 
     companion object {
 

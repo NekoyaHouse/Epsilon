@@ -4,8 +4,8 @@ import com.github.epsilon.gui.lib.Layer
 import com.github.epsilon.gui.lib.Texture
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.managers.AssetManager
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
@@ -15,7 +15,8 @@ import kotlin.math.sin
 
 class ReisaDropdownCompanion {
 
-    private val entranceAnim: Animation = Animation(Easing.EASE_OUT_BACK, 520L)
+    /** 入场缩放由帧循环推进；立绘整体绘制在立即模式中，因此这里也可以安全地读 [LuminAnimatable.value]。 */
+    private val entranceAnim: LuminAnimatable = LuminAnimatable(0.0f, Easing.EASE_OUT_BACK, 520L)
 
     private var shownAction: Action = Action.IDLE
     private var activeAction: Action? = null
@@ -36,9 +37,8 @@ class ReisaDropdownCompanion {
         shownAction = Action.IDLE
         activeAction = null
         texturesPrewarmed = false
-        entranceAnim.startValue = 0.0f
-        entranceAnim.run(0.0f)
-        entranceAnim.run(1.0f)
+        entranceAnim.snapTo(0.0f)
+        entranceAnim.target = 1.0f
 
         val now = Util.getMillis()
         nextBlinkMs = now + 2_800L + (newSessionId * 347L).mod(1_300L)
@@ -87,7 +87,7 @@ class ReisaDropdownCompanion {
             texturesPrewarmed = true
         }
 
-        entranceAnim.run(1.0f)
+        entranceAnim.target = 1.0f
 
         val entrance = entranceAnim.value.coerceIn(0.0f, 1.0f)
         val pulse = resolveActionPulse(now)

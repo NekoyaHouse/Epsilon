@@ -5,7 +5,8 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.LuminUISceneImmediate
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
@@ -13,6 +14,7 @@ import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
@@ -20,11 +22,11 @@ import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -43,7 +45,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private val panels: MutableList<DropdownPanel> = ArrayList()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
     private val popupHost: PanelPopupHost = PanelPopupHost()
-    private val scrimAnim: Animation = Animation(Easing.EASE_OUT_SINE, 200L)
+    private val scrimAnim: LuminAnimatable = LuminAnimatable(0.0f, Easing.EASE_OUT_SINE, 200L)
     private val searchField: DropdownTextField = DropdownTextField(64)
     private val reisaCompanion: ReisaDropdownCompanion = ReisaDropdownCompanion()
     private val visiblePanelIds: MutableSet<String> = HashSet()
@@ -56,6 +58,14 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private var dropdownBatch: UiRenderBatch? = null
     private var dropdownLayer = 0
 
+    /**
+     * 输入事件版本。
+     *
+     * 键鼠输入可能改变局部状态（光标、监听态、展开态、预览值等），这些状态不体现在
+     * 面板几何或设置值里，因此用该版本统一让各 recompose 内容层失效。
+     */
+    private var interactionRevision = 0L
+
     override fun init() {
         super.init()
         currentSessionId++
@@ -65,9 +75,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
         }
-        scrimAnim.startValue = 0.0f
-        scrimAnim.run(0.0f)
-        scrimAnim.run(1.0f)
+        scrimAnim.snapTo(0.0f)
+        scrimAnim.target = 1.0f
 
         if (!initialized) {
             buildPanels()
@@ -109,7 +118,6 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     private fun drawGui(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        scrimAnim.run(1.0f)
         dropdownBatch = scene.batch(UiLayer.CONTENT)
         dropdownLayer = -10
         val screenBounds = UiRect(
@@ -121,7 +129,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         updateVisiblePanelIds()
         beginPanelFrames()
 
-        dropdownContent(screenBounds) {
+        // 遮罩层：只有淡入进度变化时才重建。
+        dropdownContent(screenBounds, scrimAnim.value) {
             val scrim = DropdownTheme.scrim()
             val scrimAlpha = scrimAnim.value
             Rect(
@@ -151,7 +160,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
-            dropdownContent(screenBounds) {
+            // 立绘由本地时间驱动（眨眼、脉冲、漂浮），几乎每帧都不同，保持立即模式。
+            dropdownContentImmediate(screenBounds) {
                 reisaCompanion.draw(
                     this,
                     screenBounds.width,
@@ -175,7 +185,16 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             val panelH = panel.panelHeight
             val revealedH = panelH * intro
 
-            dropdownContent(UiRect(panel.x, panel.y, panel.width, panelH)) {
+            val panelBounds = UiRect(panel.x, panel.y, panel.width, panelH)
+            // 背景层：位置、高度、展开/淡入进度、滚动平滑位置任一变化才重建。
+            dropdownContent(
+                panelBounds,
+                PanelBackgroundKey(
+                    panel.id, panel.x, panel.y, panel.width, panelH, intro, panel.expandProgress,
+                    panel.scrollOffset, panel.targetScrollOffset, panel.maxScrollOffset,
+                    TranslationManager.getRevision()
+                )
+            ) {
                 ClipIf(
                     intro < 1.0f,
                     -shadowPad,
@@ -195,7 +214,16 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
                 val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
                 val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
                 val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
-                dropdownContent(UiRect(panel.x, clipY, panel.width, actualClipH)) {
+                val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
+                // 内容层：面板自报的状态签名（设置值、滚动、动画进度）决定是否重建；
+                // 内部重复项再通过 LuminUIItem 逐项缓存。
+                dropdownContent(
+                    contentBounds,
+                    PanelContentKey(
+                        panel.id, hoverMouseX, hoverMouseY, requiresContentScissor,
+                        interactionRevision, panel.contentRevision()
+                    )
+                ) {
                     ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
                         panel.drawContent(hoverMouseX, hoverMouseY)
                     }
@@ -205,7 +233,19 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             panel.setPosition(panel.x, origY)
         }
 
-        dropdownContent(screenBounds) {
+        val searchCaretPhase = if (searchField.isFocused) System.currentTimeMillis() / CARET_BLINK_PERIOD_MS else 0L
+        val reisaVisible = isReisaCompanionEnabled()
+        val companionLeftEdge = if (reisaVisible) {
+            reisaCompanion.getLeftEdge(screenBounds.width, screenBounds.height)
+        } else {
+            0.0f
+        }
+        val searchKey = SearchPassKey(
+            screenBounds.width, screenBounds.height, mouseX, mouseY, interactionRevision,
+            scrimAnim.value, searchField.text, searchField.getCursorIndex(), searchCaretPhase, searchField.isFocused,
+            ClientSetting.dropdownHints, reisaVisible, companionLeftEdge, TranslationManager.getRevision()
+        )
+        dropdownContent(screenBounds, searchKey) {
             searchField.draw(
                 this, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
                 EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
@@ -219,13 +259,19 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     /**
-     * 在当前批次上追加一层内容。
+     * 以 recompose 模式在当前批次上追加一层内容。
      *
-     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析。
+     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析，[key] 变化才重建。
      */
-    private fun dropdownContent(bounds: UiRect, content: UiScope.() -> Unit) {
+    private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownBatch!!.Content(bounds, dropdownLayer, content)
+        dropdownBatch!!.LuminUIScene(bounds, dropdownLayer, key, content)
+    }
+
+    /** 立即模式的绘制 pass（每帧重建）。 */
+    private fun dropdownContentImmediate(bounds: UiRect, content: UiScope.() -> Unit) {
+        dropdownLayer += 10
+        dropdownBatch!!.LuminUISceneImmediate(bounds, dropdownLayer, content)
     }
 
     private fun UiScope.drawHints() {
@@ -260,6 +306,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+        interactionRevision++
         val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
         val mx = epsilonEvent.x()
         val my = epsilonEvent.y()
@@ -307,6 +354,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
+        interactionRevision++
         val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
         val mx = epsilonEvent.x()
         val my = epsilonEvent.y()
@@ -329,6 +377,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
+        interactionRevision++
         val epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event)
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
@@ -360,6 +409,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        interactionRevision++
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
@@ -378,6 +428,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
+        interactionRevision++
         if (popupHost.keyPressed(event)) {
             react(if (event.isEscape) ReisaDropdownCompanion.Action.CANCEL else ReisaDropdownCompanion.Action.CONFIRM)
             return true
@@ -429,6 +480,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
+        interactionRevision++
         if (popupHost.charTyped(event)) {
             react(ReisaDropdownCompanion.Action.TYPING)
             return true
@@ -647,6 +699,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
 
         val INSTANCE: DropdownScreen = DropdownScreen()
 
+        /** 光标闪烁周期（与 [DropdownTextField] 内部实现一致：每 500ms 翻转一次）。 */
+        private const val CARET_BLINK_PERIOD_MS = 500L
+
         /** 供 Kotlin 调用方使用的静态入口（原 Java 的 `DropdownScreen.INSTANCE.react(...)`）。 */
         fun react(action: ReisaDropdownCompanion.Action?) {
             INSTANCE.reactInstance(action)
@@ -660,3 +715,46 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     }
 
 }
+
+/** 面板背景层的 recompose 键：几何量、淡入/展开进度与滚动位置。 */
+private data class PanelBackgroundKey(
+    val panelId: String,
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val panelHeight: Float,
+    val intro: Float,
+    val expand: Float,
+    val scroll: Float,
+    val targetScroll: Float,
+    val maxScroll: Float,
+    val translationRevision: Long,
+)
+
+/** 面板内容层的 recompose 键：鼠标（悬停）、裁剪开关、输入事件版本与面板自报的内容状态签名。 */
+private data class PanelContentKey(
+    val panelId: String,
+    val mouseX: Int,
+    val mouseY: Int,
+    val scissor: Boolean,
+    val interactionRevision: Long,
+    val contentRevision: Long,
+)
+
+/** 搜索框与操作提示层的 recompose 键。 */
+private data class SearchPassKey(
+    val screenWidth: Float,
+    val screenHeight: Float,
+    val mouseX: Int,
+    val mouseY: Int,
+    val interactionRevision: Long,
+    val scrimAlpha: Float,
+    val searchText: String,
+    val searchCursor: Int,
+    val caretPhase: Long,
+    val searchFocused: Boolean,
+    val hintsEnabled: Boolean,
+    val reisaVisible: Boolean,
+    val companionLeftEdge: Float,
+    val translationRevision: Long,
+)

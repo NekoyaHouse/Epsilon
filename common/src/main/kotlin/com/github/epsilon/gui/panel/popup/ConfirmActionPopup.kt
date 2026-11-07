@@ -1,14 +1,14 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.gui.lib.Button
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -34,9 +34,9 @@ class ConfirmActionPopup(
         Supplier { confirmLabel }, Supplier { cancelLabel }, onConfirm
     )
 
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
-    private val confirmHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
-    private val cancelHoverAnimation = Animation(Easing.EASE_OUT_CUBIC, 120L)
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
+    private val confirmHoverAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L)
+    private val cancelHoverAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L)
 
     private var closeAfterClick = false
     private var animatedY = 0.0f
@@ -44,9 +44,6 @@ class ConfirmActionPopup(
     private lateinit var cancelButtonBounds: UiRect
 
     init {
-        this.openAnimation.startValue = 0.0f
-        this.confirmHoverAnimation.startValue = 0.0f
-        this.cancelHoverAnimation.startValue = 0.0f
         updateLayout(bounds.y)
     }
 
@@ -58,17 +55,24 @@ class ConfirmActionPopup(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        openAnimation.run(1.0f)
-        val progress = openAnimation.value
-        animatedY = bounds.y - (1.0f - progress) * 6.0f
+        // 推式动画：目标在命令阶段写入，绘制块内只读取 value，避免 recompose 块内调用 animate。
+        animatedY = bounds.y - (1.0f - openAnimation.value) * 6.0f
         updateLayout(animatedY)
-
-        confirmHoverAnimation.run(
+        confirmHoverAnimation.target =
             if (confirmButtonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
-        )
-        cancelHoverAnimation.run(if (cancelButtonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f)
+        cancelHoverAnimation.target =
+            if (cancelButtonBounds.contains(mouseX.toDouble(), mouseY.toDouble())) 1.0f else 0.0f
+        openAnimation.target = 1.0f
+
+        val title = titleSupplier.get()
+        val message = messageSupplier.get()
+        val cancelLabel = cancelLabelSupplier.get()
+        val confirmLabel = confirmLabelSupplier.get()
         val popupBounds = UiRect(bounds.x, animatedY, bounds.width, bounds.height)
-        renderBatch.Content(popupBounds) {
+        // 弹窗矩形随开启动画逐帧变化，bounds 变化会触发整层重建；供应商文本与主题并入 key。
+        val contentKey = ContentKey(title, message, detail, confirmLabel, cancelLabel, popupThemeFingerprint())
+        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+            val progress = openAnimation.value
             PopupCard(
                 size,
                 MD3Theme.CARD_RADIUS.toFloat(),
@@ -80,10 +84,6 @@ class ConfirmActionPopup(
             val titleScale = 0.66f
             val messageScale = 0.56f
             val detailScale = 0.60f
-            val title = titleSupplier.get()
-            val message = messageSupplier.get()
-            val cancelLabel = cancelLabelSupplier.get()
-            val confirmLabel = confirmLabelSupplier.get()
             Text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
             Text(message, 12.0f, 24.0f, messageScale, MD3Theme.TEXT_SECONDARY)
             if (detail != null && !detail.isBlank()) {
@@ -146,5 +146,15 @@ class ConfirmActionPopup(
         cancelButtonBounds = UiRect(cancelX, buttonY, buttonWidth, buttonHeight)
         confirmButtonBounds = UiRect(confirmX, buttonY, buttonWidth, buttonHeight)
     }
+
+    /** 影响绘制结果的静态输入；变化时整层重建。 */
+    private data class ContentKey(
+        val title: String,
+        val message: String,
+        val detail: String?,
+        val confirmLabel: String,
+        val cancelLabel: String,
+        val theme: Int,
+    )
 
 }

@@ -71,6 +71,14 @@ class SettingsListPanel : AbstractDropdownPanel {
         return settingsContent.hasActiveInput()
     }
 
+    override fun hasActiveAnimations(): Boolean {
+        return super.hasActiveAnimations() || settingsContent.hasActiveAnimations()
+    }
+
+    override fun contentStateSignature(): Long {
+        return super.contentStateSignature() * 31L + settingsContent.signature()
+    }
+
     companion object {
 
         fun createWidget(setting: Setting<*>): SettingWidget<*>? {

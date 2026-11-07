@@ -1,8 +1,9 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.Content
 import com.github.epsilon.gui.lib.Input
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.RoundRect
@@ -12,13 +13,14 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -36,7 +38,7 @@ class StringListSelectPopup(
 ) : PanelPopupHost.Popup {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val scrollBarDrag = ScrollBarDragState()
 
     private var input = ""
@@ -47,10 +49,6 @@ class StringListSelectPopup(
     private var hoveredMoveUp: String? = null
     private var hoveredMoveDown: String? = null
     private var lastViewport: UiRect? = null
-
-    init {
-        this.openAnimation.startValue = 0.0f
-    }
 
     override fun getBounds(): UiRect {
         return bounds
@@ -68,14 +66,19 @@ class StringListSelectPopup(
         scroll = scroll.coerceIn(0.0f, maxScroll)
         updateSmoothScroll(partialTick)
 
-        openAnimation.run(1.0f)
-        val progress = openAnimation.value
-        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        // 开启动画是推式动画：目标在命令阶段写入，绘制块内只读取 value。
+        val popupY = bounds.y - (1.0f - openAnimation.value) * 6.0f
+        openAnimation.target = 1.0f
         val animatedBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
         val inputBounds = getInputBounds(popupY)
         val animatedViewport = getViewport(popupY)
         lastViewport = animatedViewport
-        renderBatch.Content(animatedBounds) {
+        // 条目内容、输入框、滚动位置、鼠标、翻译版本与主题共同决定绘制结果。
+        val contentKey = ContentKey(
+            entries, input, scroll, mouseX, mouseY, TranslationManager.getRevision(), popupThemeFingerprint()
+        )
+        renderBatch.LuminUIScene(animatedBounds, key = contentKey) {
+            val progress = openAnimation.value
             PopupCard(
                 size, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
                 MD3Theme.withAlpha(MD3Theme.SHADOW, (MD3Theme.POPUP_SHADOW_ALPHA * progress).toInt()),
@@ -233,18 +236,32 @@ class StringListSelectPopup(
             val actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f
             val display = trim(entry, 0.50f, rowBounds.width - actionAreaWidth - 14.0f)
             val localRowBounds = rowBounds.relativeTo(origin)
-            Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
-                RoundRect(
-                    0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
-                    MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
-                )
-                Text(
-                    display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
-                    MD3Theme.ON_SECONDARY_CONTAINER
-                )
-                drawAction(upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
-                drawAction(downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
-                drawAction(removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
+            // 逐项缓存：只有悬停/排序状态或行位置变化的行才重新捕获节点。
+            var revision = popupThemeFingerprint().toLong()
+            revision = revision * 31L + rowY.toRawBits().toLong()
+            revision = revision * 31L + rowBounds.x.toRawBits()
+            revision = revision * 31L + width.toRawBits()
+            revision = revision * 31L + (if (hovered) 1 else 0)
+            revision = revision * 31L + (if (canMoveUp) 1 else 0)
+            revision = revision * 31L + (if (canMoveDown) 1 else 0)
+            revision = revision * 31L + (if (upHovered) 1 else 0)
+            revision = revision * 31L + (if (downHovered) 1 else 0)
+            revision = revision * 31L + (if (removeHovered) 1 else 0)
+            revision = revision * 31L + display.hashCode()
+            LuminUIItem(setting to (i to entry), revision) {
+                Positioned(localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height) {
+                    RoundRect(
+                        0.0f, 0.0f, rowBounds.width, rowBounds.height, MD3Theme.CONTROL_RADIUS,
+                        MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover)
+                    )
+                    Text(
+                        display, 6.0f, centeredTextY(0.0f, rowBounds.height, 0.50f), 0.50f,
+                        MD3Theme.ON_SECONDARY_CONTAINER
+                    )
+                    drawAction(upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered)
+                    drawAction(downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered)
+                    drawAction(removeBounds.relativeTo(rowBounds), "-", true, removeHovered)
+                }
             }
         }
     }
@@ -338,6 +355,17 @@ class StringListSelectPopup(
     override fun close() {
         contentBuffer.close()
     }
+
+    /** 条目列表、输入缓冲、滚动位置、鼠标与主题共同决定绘制结果。 */
+    private data class ContentKey(
+        val entries: List<String>,
+        val input: String,
+        val scroll: Float,
+        val mouseX: Int,
+        val mouseY: Int,
+        val i18nRevision: Long,
+        val theme: Int,
+    )
 
     private companion object {
 

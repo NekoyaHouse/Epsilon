@@ -107,6 +107,16 @@ class SettingsContent(ownerKey: String, settings: List<Setting<*>>) {
         return renderer.hasActiveInput()
     }
 
+    /** 设置内容的状态签名，供宿主生成内容层缓存键。 */
+    fun signature(): Long {
+        return if (renderer.isEmpty()) 0L else renderer.signature()
+    }
+
+    /** 设置内容是否仍有活动动画。 */
+    fun hasActiveAnimations(): Boolean {
+        return !renderer.isEmpty() && renderer.hasActiveAnimations()
+    }
+
     companion object {
 
         fun createWidget(setting: Setting<*>): SettingWidget<*>? {

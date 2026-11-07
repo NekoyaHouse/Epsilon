@@ -118,3 +118,30 @@ fun <T> UiScope.LuminUIItems(
         tree.itemCache.draw(key(item), revision(item), tree, { content(item) }, metrics)
     }
 }
+/**
+ * 以 recompose 模式在批次上提交一层内容（组件拿到的都是批次而非场景时使用）。
+ *
+ * 与 [UiScene.LuminUIScene] 语义一致；独立批次没有跨帧身份，会退化为立即模式。
+ */
+fun UiRenderBatch.LuminUIScene(
+    bounds: UiRect,
+    baseLayer: Int = 0,
+    key: Any? = null,
+    block: UiScope.() -> Unit,
+) {
+    val metrics = scheduler().textMetrics().asUiTextMetrics()
+    val entry = nextComposition(bounds, key)
+    if (entry == null) {
+        Content(bounds, baseLayer, block)
+        return
+    }
+    val scope = entry.treeScope
+    scope.clear()
+    scope.pushAbsolute(bounds) { inner ->
+        entry.bind(UiScope(inner, metrics, LayerOffset.Same, bounds), block)
+        if (entry.emit(inner)) {
+            inner.markActiveAnimations(true)
+        }
+    }
+    render(UiTree.from(scope), baseLayer)
+}

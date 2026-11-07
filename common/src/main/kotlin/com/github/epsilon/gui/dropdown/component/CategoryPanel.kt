@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown.component
 
 import com.github.epsilon.gui.dropdown.DropdownTheme
-import com.github.epsilon.gui.lib.Stack
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
@@ -54,19 +54,45 @@ class CategoryPanel : AbstractDropdownPanel {
         val expand = openAnim.value
         val frameId = getRenderFrameId()
         val buttonWidth = if (maxScroll > 0.0f) width - UiScrollBar.HOVER_WIDTH + 1f else width
-        // 内容栈的局部原点：横向从面板左边开始，纵向是滚动偏移。
-        val stack = Stack(0.0f, -scroll, buttonWidth, computeContentHeight())
         val visibleBottom = visibleHeight * expand
+        var itemY = -scroll
         for (button in buttons) {
-            val btnH = button.getHeightForFrame(frameId)
-            val itemY = stack.cursor()
-            val visible = itemY + btnH > 0.0f && itemY < visibleBottom
-            stack.Item(btnH) {
-                if (visible) {
-                    button.drawInScope(this, mouseX, mouseY, UiRect(0.0f, 0.0f, width, btnH))
+            val buttonHeight = button.getHeightForFrame(frameId)
+            val visible = itemY + buttonHeight > 0.0f && itemY < visibleBottom
+            if (visible) {
+                // 逐项缓存：只有模块状态、悬停或动画变化的行才重新捕获节点。
+                val itemBounds = UiRect(0.0f, itemY, buttonWidth, buttonHeight)
+                LuminUIItem(button, dropdownItemRevision(button, origin, itemBounds, mouseX, mouseY)) {
+                    // 与迁移前一致：按钮宽度取 buttonWidth（滚动条出现时收窄），而不是面板宽度。
+                    button.drawInScope(this, mouseX, mouseY, itemBounds)
                 }
             }
+            itemY += buttonHeight
         }
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        if (super.hasActiveAnimations()) {
+            return true
+        }
+        for (button in visibleButtons()) {
+            if (button.hasActiveAnimations()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * 内容层状态签名：模块开关/隐藏/键位/展开与排序、搜索过滤都会改变绘制结果。
+     */
+    override fun contentStateSignature(): Long {
+        var signature = buildSortSignature(ClientSetting.moduleSort.value)
+        signature = signature * 31L + searchQuery.hashCode()
+        for (button in visibleButtons()) {
+            signature = signature * 31L + button.cacheRevision()
+        }
+        return signature
     }
 
     override fun computeContentHeight(): Float {

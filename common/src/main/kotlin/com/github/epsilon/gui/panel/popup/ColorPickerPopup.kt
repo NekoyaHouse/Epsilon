@@ -1,7 +1,8 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.Content
+import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.LuminUIScene
 import com.github.epsilon.gui.lib.Positioned
 import com.github.epsilon.gui.lib.PopupCard
 import com.github.epsilon.gui.lib.Rect
@@ -10,11 +11,10 @@ import com.github.epsilon.gui.lib.Slider
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -39,25 +39,13 @@ class ColorPickerPopup(
     }
 
     private val textRenderer: TextRenderer = TextRenderer.create()
-    private val openAnimation = Animation(Easing.EASE_OUT_CUBIC, 160L)
-    private val indicatorAnimations = arrayOf(
-        Animation(Easing.EASE_OUT_CUBIC, 120L),
-        Animation(Easing.EASE_OUT_CUBIC, 120L),
-        Animation(Easing.EASE_OUT_CUBIC, 120L),
-        Animation(Easing.EASE_OUT_CUBIC, 120L)
-    )
+    private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
+    private val indicatorAnimations = Array(4) { LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L) }
     private var draggingChannel: Channel? = null
     private var focusedChannel: Channel? = null
     private var inputBuffer: String? = null
     private var cursorIndex = 0
     private var pendingValue: Color? = null
-
-    init {
-        this.openAnimation.startValue = 0.0f
-        for (animation in indicatorAnimations) {
-            animation.startValue = 0.0f
-        }
-    }
 
     override fun getBounds(): UiRect {
         return bounds
@@ -67,11 +55,25 @@ class ColorPickerPopup(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        openAnimation.run(1.0f)
-        val progress = openAnimation.value
-        val popupY = bounds.y - (1.0f - progress) * 6.0f
+        // 推式动画：目标在命令阶段写入，绘制块内只读取 value。
+        val popupY = bounds.y - (1.0f - openAnimation.value) * 6.0f
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
-        renderBatch.Content(popupBounds) {
+        val channels = getChannels()
+        for (i in channels.indices) {
+            val rowBounds = getChannelRowBounds(popupY, i)
+            val hovered = rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+            indicatorAnimations[i].target = if (hovered || draggingChannel === channels[i]) 1.0f else 0.0f
+        }
+        openAnimation.target = 1.0f
+
+        val visibleColor = getVisibleColor()
+        // 颜色、输入框焦点/缓冲、鼠标与主题决定绘制结果，任一变化都重建整层。
+        val contentKey = ContentKey(
+            visibleColor.rgb, visibleColor.alpha, focusedChannel, inputBuffer, cursorIndex, mouseX, mouseY,
+            popupThemeFingerprint()
+        )
+        renderBatch.LuminUIScene(popupBounds, key = contentKey) {
+            val progress = openAnimation.value
             PopupCard(
                 size,
                 MD3Theme.CARD_RADIUS.toFloat(),
@@ -123,9 +125,9 @@ class ColorPickerPopup(
                 localPreviewBounds.x + 40.0f, localPreviewBounds.y + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY
             )
 
-            val channels = getChannels()
-            for (i in channels.indices) {
-                val channel = channels[i]
+            val rowChannels = getChannels()
+            for (i in rowChannels.indices) {
+                val channel = rowChannels[i]
                 val rowBounds = getChannelRowBounds(popupY, i)
                 val localRowBounds = rowBounds.relativeTo(popupBounds)
                 val trackBounds = getTrackBounds(rowBounds)
@@ -133,44 +135,58 @@ class ColorPickerPopup(
                 val valueBounds = getValueBounds(rowBounds)
                 val localValueBounds = valueBounds.relativeTo(popupBounds)
                 val hovered = rowBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                val channelProgress = getChannelValue(channel) / 255.0f
-                val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
-                val indicatorProgress = animate(
-                    indicatorAnimations[i], hovered || draggingChannel === channel
-                )
-                val rowSurface: Color = if (hovered) {
-                    if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
-                } else {
-                    MD3Theme.SURFACE_CONTAINER
-                }
+                val indicatorProgress = indicatorAnimations[i].value
+                // 逐项缓存：颜色、焦点、输入缓冲、悬停与指示器动画决定该行节点是否重建。
+                var revision = popupThemeFingerprint().toLong()
+                revision = revision * 31L + getVisibleColor().rgb
+                revision = revision * 31L + getVisibleColor().alpha
+                revision = revision * 31L + (if (hovered) 1 else 0)
+                revision = revision * 31L + (if (focusedChannel === channel) 1 else 0)
+                revision = revision * 31L + (inputBuffer?.hashCode() ?: 0)
+                revision = revision * 31L + cursorIndex
+                revision = revision * 31L + indicatorProgress.toRawBits()
+                revision = revision * 31L + rowBounds.y.toRawBits()
+                revision = revision * 31L + rowBounds.x.toRawBits()
+                revision = revision * 31L + rowBounds.width.toRawBits()
+                revision = revision * 31L + localTrackBounds.width.toRawBits()
+                LuminUIItem(setting to channel, revision) {
+                    val channelProgress = getChannelValue(channel) / 255.0f
+                    val handleX = localTrackBounds.x + localTrackBounds.width * channelProgress - 2.0f
+                    val rowSurface: Color = if (hovered) {
+                        if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGHEST
+                        else MD3Theme.SURFACE_CONTAINER_HIGH
+                    } else {
+                        MD3Theme.SURFACE_CONTAINER
+                    }
 
-                Text(
-                    channel.shortLabel, localRowBounds.x + 8.0f, localRowBounds.y + 6.5f, 0.58f,
-                    if (MD3Theme.isLightTheme()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
-                )
-                RoundRect(
-                    localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height,
-                    8.0f, MD3Theme.withAlpha(rowSurface, 255)
-                )
-                Slider(
-                    localTrackBounds, channelProgress, 2.5f,
-                    MD3Theme.withAlpha(
-                        if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH
-                        else MD3Theme.SURFACE_CONTAINER_HIGHEST,
-                        255
-                    ),
-                    0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
-                    4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255)
-                )
-
-                val valueText =
-                    if (focusedChannel === channel) getDisplayBuffer() else getChannelValue(channel).toString()
-                buildValueBox(localValueBounds, valueText, focusedChannel === channel, 255)
-                if (indicatorProgress > 0.01f) {
-                    buildValueIndicator(
-                        handleX + 2.0f, localRowBounds.y - 4.0f,
-                        getChannelValue(channel).toString(), indicatorProgress
+                    Text(
+                        channel.shortLabel, localRowBounds.x + 8.0f, localRowBounds.y + 6.5f, 0.58f,
+                        if (MD3Theme.isLightTheme()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
                     )
+                    RoundRect(
+                        localRowBounds.x, localRowBounds.y, localRowBounds.width, localRowBounds.height,
+                        8.0f, MD3Theme.withAlpha(rowSurface, 255)
+                    )
+                    Slider(
+                        localTrackBounds, channelProgress, 2.5f,
+                        MD3Theme.withAlpha(
+                            if (MD3Theme.isLightTheme()) MD3Theme.SURFACE_CONTAINER_HIGH
+                            else MD3Theme.SURFACE_CONTAINER_HIGHEST,
+                            255
+                        ),
+                        0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
+                        4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255)
+                    )
+
+                    val valueText =
+                        if (focusedChannel === channel) getDisplayBuffer() else getChannelValue(channel).toString()
+                    buildValueBox(localValueBounds, valueText, focusedChannel === channel, 255)
+                    if (indicatorProgress > 0.01f) {
+                        buildValueIndicator(
+                            handleX + 2.0f, localRowBounds.y - 4.0f,
+                            getChannelValue(channel).toString(), indicatorProgress
+                        )
+                    }
                 }
             }
         }
@@ -492,5 +508,17 @@ class ColorPickerPopup(
     override fun close() {
         textRenderer.close()
     }
+
+    /** 颜色值、输入框状态与主题决定绘制结果；鼠标位置参与悬停态失效。 */
+    private data class ContentKey(
+        val colorRgb: Int,
+        val colorAlpha: Int,
+        val focusedChannel: Channel?,
+        val inputBuffer: String?,
+        val cursorIndex: Int,
+        val mouseX: Int,
+        val mouseY: Int,
+        val theme: Int,
+    )
 
 }

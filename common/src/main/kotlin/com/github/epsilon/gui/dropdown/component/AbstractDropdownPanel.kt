@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
+import com.github.epsilon.gui.dropdown.isAdvancing
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Shadow
 import com.github.epsilon.gui.lib.Text
@@ -15,6 +16,7 @@ import com.github.epsilon.gui.lib.UiTextMetrics
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.utils.render.animation.Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
@@ -62,6 +64,14 @@ abstract class AbstractDropdownPanel protected constructor(
     private var cachedVisibleContentHeight: Float = 0.0f
     private var cachedPanelHeight: Float = 0.0f
 
+    /**
+     * 滚动条悬停动画的收尾时间。
+     *
+     * 滚动条动画由 [UiScrollBar] 内部推进，但只有在内容层重绘时才会被 run；
+     * 鼠标离开滚动条后仍需若干帧把进度回落到 0，因此这里记录一个短暂的宽限期。
+     */
+    private var scrollBarHoverUntilMs: Long = 0L
+
     override var isOpened: Boolean
         get() = openedState
         set(value) {
@@ -107,7 +117,7 @@ abstract class AbstractDropdownPanel protected constructor(
         val visibleHeight = cachedVisibleContentHeight
         updateScroll(contentHeight, visibleHeight, true)
         val panelHeight = cachedPanelHeight
-        // 面板左上角的局部坐标：调用方通常用 Content(面板矩形) 使之为 0。
+        // 面板左上角的局部坐标：调用方用面板矩形开 LuminUIScene 作用域使其归零。
         val left = x - scope.origin.x
         val top = y - scope.origin.y
         val panelWidth = width
@@ -166,6 +176,10 @@ abstract class AbstractDropdownPanel protected constructor(
         )
         val contentMouseX = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseX
         val contentMouseY = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseY
+        if (scrollbarHovered || scrollBar.isDragging()) {
+            // 悬停动画由 UiScrollBar 内部推进，内容层必须继续重绘直到它回落。
+            scrollBarHoverUntilMs = System.currentTimeMillis() + SCROLLBAR_HOVER_GRACE_MS
+        }
         scope.drawPanelContent(contentMouseX, contentMouseY, visibleHeight)
         // 滚动条与内容共用同一作用域：把视口和鼠标都平移到该作用域的坐标系。
         scrollBar.draw(
@@ -300,6 +314,56 @@ abstract class AbstractDropdownPanel protected constructor(
         this.maxPanelHeight = maxPanelHeight
     }
 
+    override val expandProgress: Float
+        get() {
+            ensureFrameMetrics()
+            return cachedExpand
+        }
+
+    override val scrollOffset: Float get() = scroll
+
+    override val targetScrollOffset: Float get() = targetScroll
+
+    override val maxScrollOffset: Float get() = maxScroll
+
+    override fun hasActiveAnimations(): Boolean {
+        if (openAnim.isAdvancing() || introAnim.isAdvancing()) {
+            return true
+        }
+        if (abs(scroll - targetScroll) > SCROLL_EPSILON) {
+            return true
+        }
+        if (scrollBar.isDragging()) {
+            return true
+        }
+        return System.currentTimeMillis() < scrollBarHoverUntilMs
+    }
+
+    /**
+     * 内容层状态签名。
+     *
+     * 面板自身的几何量（滚动、展开）已由 [contentRevision] 统一并入，子类只需补充
+     * 各自「静止时也会变化」的内容状态（设置值、模块开关、配置/好友列表等）。
+     */
+    protected open fun contentStateSignature(): Long = 17L
+
+    override fun contentRevision(): Long {
+        ensureFrameMetrics()
+        var revision = 17L
+        revision = revision * 31L + contentStateSignature()
+        revision = revision * 31L + TranslationManager.getRevision()
+        revision = revision * 31L + java.lang.Float.floatToIntBits(scroll)
+        revision = revision * 31L + java.lang.Float.floatToIntBits(targetScroll)
+        revision = revision * 31L + java.lang.Float.floatToIntBits(maxScroll)
+        revision = revision * 31L + java.lang.Float.floatToIntBits(cachedExpand)
+        revision = revision * 31L + (if (scrollBar.isDragging()) 1L else 0L)
+        if (hasActiveAnimations()) {
+            // 动画进行中必须每帧重建；动画结束后时间戳消失，缓存重新生效。
+            revision = revision * 31L + System.nanoTime()
+        }
+        return revision
+    }
+
     protected abstract fun computeContentHeight(): Float
 
     /**
@@ -423,6 +487,9 @@ abstract class AbstractDropdownPanel protected constructor(
     companion object {
         private const val SCROLL_SMOOTHING = 0.16f
         private const val SCROLL_EPSILON = 0.05f
+
+        /** 鼠标离开滚动条后继续重建内容层的宽限时间，用于让滚动条悬停动画回落到 0。 */
+        private const val SCROLLBAR_HOVER_GRACE_MS = 240L
     }
 
 }

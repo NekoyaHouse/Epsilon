@@ -5,11 +5,14 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.FriendManager
+import com.github.epsilon.managers.TranslationManager
 import com.mojang.blaze3d.platform.InputConstants
 
 class FriendDropdownPanel(panelIndex: Int) :
@@ -37,18 +40,17 @@ class FriendDropdownPanel(panelIndex: Int) :
         )
 
         val addX = fieldX + fieldW + GAP
-        RoundRect(
-            addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
-            if (isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) {
-                MD3Theme.SURFACE_CONTAINER_HIGH
-            } else {
-                MD3Theme.SURFACE_CONTAINER_LOW
-            }
-        )
-        val plusScale = 1.0f
-        val addTextX = addX + (ADD_BUTTON_WIDTH - metrics.textWidth("+", plusScale)) / 2.0f
-        val addTextY = fieldY + (FIELD_HEIGHT - metrics.textHeight(plusScale)) / 2.0f
-        Text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
+        val addHovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
+        LuminUIItem(ADD_BUTTON_KEY, addButtonRevision(origin, fieldY, addHovered)) {
+            RoundRect(
+                addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                if (addHovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
+            )
+            val plusScale = 1.0f
+            val addTextX = addX + (ADD_BUTTON_WIDTH - metrics.textWidth("+", plusScale)) / 2.0f
+            val addTextY = fieldY + (FIELD_HEIGHT - metrics.textHeight(plusScale)) / 2.0f
+            Text("+", addTextX, addTextY, plusScale, MD3Theme.ON_PRIMARY_CONTAINER)
+        }
 
         val friends = FriendManager.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()
         var rowY = fieldY + FIELD_HEIGHT + GAP
@@ -65,46 +67,70 @@ class FriendDropdownPanel(panelIndex: Int) :
             val rowX = PADDING
             val rowWidth = width - PADDING * 2.0f
             val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, rowY, rowWidth, ROW_HEIGHT)
-            RoundRect(
-                rowX, rowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
-                if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
-            )
             val removeX = width - PADDING - 18.0f
             val removeY = rowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
-            val displayName = trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, metrics)
-            Text(
-                displayName, PADDING + 6.0f,
-                rowY + (ROW_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
-                DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY
+            val removeHovered = isHoveredAt(
+                this, mouseX.toDouble(), mouseY.toDouble(), removeX, removeY, REMOVE_BUTTON_SIZE, REMOVE_BUTTON_SIZE
             )
-            val iconScale = 0.8f
-            val removeTextX = removeX + (REMOVE_BUTTON_SIZE - metrics.textWidth(
-                IconChars.CLOSE,
-                iconScale,
-                StaticFontLoader.ICONS
-            )) / 2.0f
-            val removeTextY =
-                removeY + (REMOVE_BUTTON_SIZE - metrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
-            Text(
-                IconChars.CLOSE, removeTextX, removeTextY, iconScale,
-                if (isHoveredAt(
-                        this,
-                        mouseX.toDouble(),
-                        mouseY.toDouble(),
-                        removeX,
-                        removeY,
-                        REMOVE_BUTTON_SIZE,
-                        REMOVE_BUTTON_SIZE
-                    )
-                ) {
-                    MD3Theme.ERROR
-                } else {
-                    MD3Theme.TEXT_MUTED
-                },
-                StaticFontLoader.ICONS
-            )
+            // 逐项缓存：好友行位置、悬停状态或翻译变化时才重新捕获节点。
+            LuminUIItem("friend-row:$name", friendRowRevision(origin, rowY, hovered, removeHovered, name)) {
+                RoundRect(
+                    rowX, rowY, rowWidth, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                    if (hovered) MD3Theme.SURFACE_CONTAINER_HIGH else MD3Theme.SURFACE_CONTAINER_LOW
+                )
+                val displayName = trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, metrics)
+                Text(
+                    displayName, PADDING + 6.0f,
+                    rowY + (ROW_HEIGHT - metrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) / 2.0f,
+                    DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY
+                )
+                val iconScale = 0.8f
+                val removeTextX = removeX + (REMOVE_BUTTON_SIZE - metrics.textWidth(
+                    IconChars.CLOSE,
+                    iconScale,
+                    StaticFontLoader.ICONS
+                )) / 2.0f
+                val removeTextY =
+                    removeY + (REMOVE_BUTTON_SIZE - metrics.textHeight(iconScale, StaticFontLoader.ICONS)) / 2.0f
+                Text(
+                    IconChars.CLOSE, removeTextX, removeTextY, iconScale,
+                    if (removeHovered) MD3Theme.ERROR else MD3Theme.TEXT_MUTED,
+                    StaticFontLoader.ICONS
+                )
+            }
             rowY += ROW_HEIGHT + GAP
         }
+    }
+
+    override fun hasActiveAnimations(): Boolean {
+        return super.hasActiveAnimations() || inputField.isFocused
+    }
+
+    override fun contentStateSignature(): Long {
+        var signature = FriendManager.getFriends().hashCode().toLong()
+        signature = signature * 31L + inputField.text.hashCode()
+        signature = signature * 31L + (if (inputField.isFocused) 1L else 0L)
+        signature = signature * 31L + inputField.getCursorIndex()
+        return signature
+    }
+
+    private fun addButtonRevision(origin: UiRect, rowY: Float, hovered: Boolean): Long {
+        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
+        revision = revision * 31L + origin.hashCode()
+        revision = revision * 31L + (if (hovered) 1L else 0L)
+        return revision
+    }
+
+    private fun friendRowRevision(
+        origin: UiRect, rowY: Float, hovered: Boolean, removeHovered: Boolean, name: String,
+    ): Long {
+        var revision = java.lang.Float.floatToIntBits(rowY).toLong()
+        revision = revision * 31L + origin.hashCode()
+        revision = revision * 31L + (if (hovered) 1L else 0L)
+        revision = revision * 31L + (if (removeHovered) 1L else 0L)
+        revision = revision * 31L + name.hashCode()
+        revision = revision * 31L + TranslationManager.getRevision()
+        return revision
     }
 
     override fun mouseClickedContent(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -174,6 +200,8 @@ class FriendDropdownPanel(panelIndex: Int) :
     }
 
     private companion object {
+
+        private const val ADD_BUTTON_KEY = "friend-add"
 
         private const val ROW_HEIGHT = 20.0f
         private const val FIELD_HEIGHT = 18.0f
