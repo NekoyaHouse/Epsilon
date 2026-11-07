@@ -245,14 +245,15 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
 
         popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick)
-        scene.flush()
+        // endFrame 仍会提交剩余命令；这里消费主批次，避免重复绘制并覆盖弹窗附加缓冲。
+        scene.flushAndClear()
         popupHost.flush()
     }
 
     /**
      * 以 recompose 模式在当前批次上追加一层内容。
      *
-     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析，[key] 变化才重建。
+     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析，稳定 [key] 维持身份。
      */
     private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10

@@ -113,6 +113,22 @@ class StateTest {
         assertFailsWith<IllegalStateException> { StateTracking.buildingUi { state.value = 1 } }
         assertEquals(0, state.value)
     }
+
+    @Test fun repeatedReadAfterConcurrentWriteKeepsTheFirstReadVersion() {
+        val state = mutableStateOf(0)
+        var changes = 0
+        val observer = StateObservation { changes++ }
+        observer.observeReads {
+            assertEquals(0, state.value)
+            Thread { state.value = 1 }.apply { start(); join() }
+            repeat(100) { assertEquals(1, state.value) }
+        }
+        assertEquals(1, changes)
+        observer.observeReads { repeat(100) { assertEquals(1, state.value) } }
+        StateNotifications.drain()
+        assertEquals(1, changes)
+        observer.close()
+    }
     @Test fun unusedDerivedStateDoesNotRetainAnUpstreamSubscription() {
         val input = mutableStateOf(0)
         var calculations = 0

@@ -122,8 +122,10 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         if (!node.hasHeader()) {
             return elementsHeight(node)
         }
+        val progress = expandProgress(node)
+        if (progress == 0.0f) return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
         val contentHeight = DropdownTheme.GROUP_INSET + elementsHeight(node)
-        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * expandProgress(node)
+        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * progress
     }
 
     private fun elementsHeight(node: Node): Float {
@@ -156,7 +158,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val cardBounds = card(node, depth, x, width)
         val progress = expandProgress(node)
-        val contentHeight = DropdownTheme.GROUP_INSET + elementsHeight(node)
+        val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET + elementsHeight(node)
         val cardHeight = DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
         val radius = DropdownTheme.groupCardRadius(progress)
 

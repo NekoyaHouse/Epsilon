@@ -1,5 +1,6 @@
 package com.github.epsilon.kernel.state
 
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.reflect.KProperty
 
@@ -69,11 +70,12 @@ class StateObservation(private val onChanged: () -> Unit) : AutoCloseable {
     fun <T> observeReads(block: () -> T): T = observeReads(true, block)
 
     internal fun <T> observeReads(subscribe: Boolean, block: () -> T): T {
-        val reads = LinkedHashMap<StateSource, Long>()
+        val reads = IdentityHashMap<StateSource, Long>()
         val result = StateTracking.collect(reads, block)
-        val nextSubscriptions = if (subscribe) reads.keys.toSet() else emptySet()
-        subscriptions.filter { it !in nextSubscriptions }.forEach { it.unsubscribe(listener) }
-        nextSubscriptions.filter { it !in subscriptions }.forEach { it.subscribe(listener) }
+        // 成功收集后不再修改 reads，订阅可直接复用其 key 视图，无需再复制一份哈希集合。
+        val nextSubscriptions = if (subscribe) reads.keys else emptySet()
+        for (source in subscriptions) if (source !in nextSubscriptions) source.unsubscribe(listener)
+        for (source in nextSubscriptions) if (source !in subscriptions) source.subscribe(listener)
         subscriptions = nextSubscriptions
         dependencies = reads
         if (reads.any { (source, version) -> source.version() != version }) onChanged()
@@ -81,8 +83,8 @@ class StateObservation(private val onChanged: () -> Unit) : AutoCloseable {
     }
 
     internal fun activate() {
-        dependencies.keys.filter { it !in subscriptions }.forEach { it.subscribe(listener) }
-        subscriptions = dependencies.keys.toSet()
+        for (source in dependencies.keys) if (source !in subscriptions) source.subscribe(listener)
+        subscriptions = dependencies.keys
         if (!isCurrent()) onChanged()
     }
 

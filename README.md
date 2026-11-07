@@ -34,6 +34,8 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 
 Panel, Dropdown, popups, HudEditor and Troll use LuminUI’s lightweight observable state and composition runtime. Stable keys preserve component identity; state reads invalidate only observing scopes, and a shared host frame clock drives animations. See [LuminUI runtime](docs/lumin-ui-recompose.md) for APIs, lifecycle rules and verification. HUD elements retain their existing immediate rendering.
 
+Dropdown skips measurement inside fully folded modules and groups, and consumes its scene commands after submission. Optional ViaFabricPlus class lookups cache both present and missing classes. Profiling evidence and regression checks are documented in the LuminUI runtime guide.
+
 ## ⚙️ Build & Run
 
 ```bash

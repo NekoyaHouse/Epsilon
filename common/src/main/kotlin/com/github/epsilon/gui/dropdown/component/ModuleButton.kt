@@ -60,8 +60,11 @@ class ModuleButton(val module: Module) : Component() {
 
     private fun computeHeight(): Float {
         expandAnim.run(if (expanded) 1.0f else 0.0f)
+        val progress = expandAnim.value
+        // 完全折叠时设置不影响高度；仍观察展开状态与进度，动画开始后恢复测量。
+        if (progress == 0.0f) return DropdownTheme.MODULE_HEIGHT
         val settingsHeight = computeSettingsHeight()
-        return DropdownTheme.MODULE_HEIGHT + settingsHeight * expandAnim.value
+        return DropdownTheme.MODULE_HEIGHT + settingsHeight * progress
     }
 
     private fun computeSettingsHeight(): Float {

@@ -91,6 +91,8 @@ scene.LuminUIScene(bounds, key = "settings-root") {
 
 `LuminView.render(mouseX, mouseY) { ... }` 包住宿主布局准备阶段，观察可见性、行高、展开进度与布局资源等输入。准备代码仍每帧运行；静止时组合内容不再重建，Minecraft 的绘制提交正常继续。需要先完成布局再路由命中的窗口使用同一 `LuminView.prepare { ... }` 观察布局，确保列表或可见性变化在尺寸不变时也能失效对应窗口。Dropdown 的帧前测量归属各 Panel 的布局观察；模块的帧内高度缓存以可观察状态发布，缓存命中也保留布局依赖，展开/折叠时后续行随高度更新，无需滚动触发重建。
 
+完全折叠的 Dropdown 模块与设置分组只读取展开状态和动画进度，不测量其内部设置。进度离开零后恢复测量和可见性依赖，关闭动画期间仍测量，到零才停止。依赖读取以对象身份记录；成功提交后订阅直接复用依赖表的 key 视图，避免每帧复制成另一份哈希集合。
+
 命中探针由框架维护。宿主更新当前输入，只有局部 hovered 布尔值改变时通知读取者；鼠标在同一区域移动不会使每行订阅原始鼠标坐标。布局变化重新建立命中区域，支持鼠标静止时控件移动。被遮挡窗口使用宿主传入的禁用坐标。
 
 配置面板等输入框从外部数据填充文本时，在组合中读取目标值与焦点条件，通过 `afterLuminCommit { ... }` 同步文本，避免在构建阶段写入状态；失败构建不执行该同步。
@@ -122,6 +124,7 @@ Troll 的惯性滚动是独立物理帧任务，沿用衰减、越界回弹和�
 ## 帧与销毁
 
 - 每个完整宿主帧配对 `UiScene.beginFrame()` / `endFrame()`。异常帧使用 `abortFrame()` 丢弃命令并保留组合以便重试。
+- `flush()` 保留命令，`endFrame()` 仍会提交剩余命令。Dropdown 为先输出主场景、再输出 popup 私有缓冲，提前调用 `flushAndClear()` 消费主命令，避免帧末重复绘制及半透明叠加。
 - 父级成功重建才清理未出现的子组合；缓存重放保留子树。
 - 根入口按稳定 key 登记，在完整帧结束清理未出现的入口。
 - 销毁组合解除订阅、关闭 AutoCloseable 记忆资源，并取消其动画、周期与输入任务。
@@ -132,12 +135,26 @@ Troll 的惯性滚动是独立物理帧任务，沿用衰减、越界回弹和�
 
 `common/src/test` 使用假时钟、重建计数和无 GPU 文本度量桩覆盖：状态判等与条件订阅、派生状态、跨线程与构建期间写入、静默/重置/BoolSetting、资源通知、稳定身份与记忆清理、失败重试、Layer/Clip/Viewport 坐标、动态输入、配置 Dropdown 首次展开的输入框同步与失败回滚、模块展开/折叠时静止鼠标下的后续行位置、动画反向/结束/销毁和周期任务。
 
+折叠测量回归分别使用 100 个设置：连续 10 帧完全折叠时可见性计算次数为零，展开动画中恢复测量，动态可见性更新高度，关闭后再次归零。状态内核还验证同一次观察中发生跨线程写入并重复读取时，保留第一次读取版本而不漏失效。可选类缓存通过并发重复查询验证存在与缺失类均只解析一次，LinkageError 继续向外传播，不被误缓存为类缺失；Via 后端实例仍每次获取，避免未初始化实例被永久缓存。
+
 ```powershell
 .\gradlew.bat :common:test :common:compileJava :common:compileKotlin :fabric:compileJava :fabric:compileKotlin :neoforge:compileJava :neoforge:compileKotlin
 .\gradlew.bat buildRelease
 ```
 
 实机验收还需覆盖主题/语言/字体切换、展开折叠、滑条与取色拖拽、IME、外部设置更新、HudEditor 移动缩放和 Troll 惯性滚动。单元测试不代替 GPU、系统 IME 和游戏中提取/提交效果检查；没有据此推断 FPS 提升。
+
+## Spark 采样依据（2026-11-07）
+
+[用户提供的客户端采样](https://spark.lucko.me/lXOHqjLs8l) 持续约 18.4 秒，间隔 4 ms；Render thread 的记录权重合计 15,332 ms。以下比例以该线程采样权重为分母，来自调用树的包含子调用耗时，不代表优化后的 FPS 提升，也不能与其嵌套热点相加。
+
+| 调用路径 | 采样占比 | 对应修改 |
+| --- | ---: | --- |
+| `prepareLuminDataSources → refreshUiVersion → queryVersion` | 11.7% | 缓存不存在的 Via 可选类，避免每帧扫描类路径并构造异常 |
+| `DropdownScreen.beginPanelFrames` | 14.6% | 跳过完全折叠的模块/分组内部测量，减少状态读取；观察器移除订阅集合复制 |
+| `DropdownScreen.extractRenderState → UiScene.endFrame → flush` | 5.8% | 消费此前已提交的命令，取消重复输出主场景 |
+
+这次采样来自连接 IDE 调试器的开发客户端，且采样较短。已验证操作次数与刷新正确性；实际帧时间、分配率和 GPU 输出需在相同场景下重新采样，性能对照宜使用充分预热且未连接调试器的客户端。
 
 ## Compose 参考
 

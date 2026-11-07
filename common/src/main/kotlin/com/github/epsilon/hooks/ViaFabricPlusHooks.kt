@@ -9,7 +9,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object ViaFabricPlusHooks {
-    private val classes = ConcurrentHashMap<String, Class<*>>()
+    private val classes = OptionalClassCache()
     private val warnings = ConcurrentHashMap.newKeySet<String>()
     private val protocolPattern = Regex("[0-9_]+to[0-9_]+")
 
@@ -163,13 +163,9 @@ object ViaFabricPlusHooks {
                 ?.let { Backend(it, null) }
         }
 
-    private fun type(name: String): Class<*> = classes.computeIfAbsent(name, Class<*>::forName)
+    private fun type(name: String): Class<*> = classes.find(name) ?: throw ClassNotFoundException(name)
 
-    private fun optionalType(name: String): Class<*>? = try {
-        type(name)
-    } catch (_: ClassNotFoundException) {
-        null
-    }
+    private fun optionalType(name: String): Class<*>? = classes.find(name)
 
     private inline fun <T> query(action: () -> T): T? = try {
         action()
