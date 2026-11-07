@@ -34,6 +34,9 @@ class FriendClientSettingTab(
 ) : ClientSettingTabView {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
+
+
+
     private val contentState = UiInvalidationState()
     private val rowHoverAnimations = HashMap<String, Animation>()
     private val removeHoverAnimations = HashMap<String, Animation>()

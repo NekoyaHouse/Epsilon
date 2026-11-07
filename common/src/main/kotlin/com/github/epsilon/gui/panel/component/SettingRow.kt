@@ -37,6 +37,17 @@ abstract class SettingRow<T : Setting<*>>(private val settingValue: T) : AutoClo
 
     open fun getHeight(): Float = 28.0f
 
+    /**
+     * 逐行节点缓存的失效版本。
+     *
+     * 设置值变化、或行内动画进行中（每帧变化）时版本变化，迫使该行重新捕获节点；
+     * 静止时版本稳定，列表滚动/鼠标移动到其它行都不会重建这一行。
+     */
+    open fun cacheRevision(): Long {
+        val valueHash = getSetting().value.hashCode().toLong()
+        return if (hasActiveAnimation()) valueHash * 31L + System.nanoTime() else valueHash
+    }
+
     open fun mouseClicked(bounds: UiRect, event: MouseButtonEvent, isDoubleClick: Boolean): Boolean = false
 
     open fun mouseReleased(bounds: UiRect, event: MouseButtonEvent): Boolean = false

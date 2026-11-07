@@ -48,6 +48,9 @@ class ConfigClientSettingTab(
     private val measureTextRenderer: TextRenderer = TextRenderer.create()
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
+
+
+
     private val contentState = UiInvalidationState()
     private val scrollBarDrag = ScrollBarDragState()
     private val inputField = ClientSettingTextField(MAX_INPUT_LENGTH)

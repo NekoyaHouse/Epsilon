@@ -5,6 +5,7 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.render.UiContentBuffer
+import com.github.epsilon.gui.lib.state.LuminRowCache
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
@@ -35,6 +36,9 @@ class GeneralClientSettingTab(
 
     private val settingListController = SettingListController(popupHost)
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
+
+    /** 设置行的逐行节点缓存：只有值/动画变化的行才重建。 */
+    private val rowCache = LuminRowCache()
     private val contentState = UiInvalidationState()
     private val hoverAnimations = HashMap<Setting<*>, Animation>()
     private val scrollBarDrag = ScrollBarDragState()
@@ -103,8 +107,13 @@ class GeneralClientSettingTab(
                     hoverAnimation.run(
                         if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
                     )
-                    SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
-                    contentState.noteAnimation(!hoverAnimation.isFinished || row.hasActiveAnimation())
+                    val animating = !hoverAnimation.isFinished || row.hasActiveAnimation()
+                    // 逐行缓存：只有值或动画变化的行才重新捕获节点。
+                    val revision = row.cacheRevision() * 31L + (if (animating) System.nanoTime() else 0L)
+                    rowCache.draw(setting, revision, tree, metrics) {
+                        SettingRow(row, rowBounds, hoverAnimation.value, effectiveMouseX, effectiveMouseY)
+                    }
+                    contentState.noteAnimation(animating)
                 }
                 contentState.noteAnimation(settingListController.hasActiveAnimations())
             }

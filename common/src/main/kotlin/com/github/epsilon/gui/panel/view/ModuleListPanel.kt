@@ -10,6 +10,7 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.Viewport
 import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.lib.render.UiContentBuffer
+import com.github.epsilon.gui.lib.state.LuminRowCache
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.UiInvalidationState
 import com.github.epsilon.gui.panel.PanelState
@@ -43,6 +44,11 @@ import kotlin.math.abs
 class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private val contentBuffer = UiContentBuffer(EpsilonUiTheme)
+
+
+    /** 模块行的逐行节点缓存。 */
+
+    private val rowCache = LuminRowCache()
     private val contentState = UiInvalidationState()
     private var bounds: UiRect? = null
     private var guiHeight = 0
@@ -154,11 +160,17 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                                 marqueeActive
                     )
                     val localRow = row.getBounds().relativeTo(origin)
-                    Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
-                        ModuleRow(
-                            row, hoverAnimation.value, selectionAnimation.value,
-                            toggleAnimation.value, toggleHoverAnimation.value
-                        )
+                    // 逐行缓存：只有动画进行中或模块状态变化的行才重新捕获节点。
+                    val animating = !hoverAnimation.isFinished || !selectionAnimation.isFinished ||
+                            !toggleAnimation.isFinished || !toggleHoverAnimation.isFinished || marqueeActive
+                    val revision = moduleRevision(module) * 31L + (if (animating) System.nanoTime() else 0L)
+                    rowCache.draw(module, revision, tree, metrics) {
+                        Positioned(localRow.x, localRow.y, localRow.width, localRow.height) {
+                            ModuleRow(
+                                row, hoverAnimation.value, selectionAnimation.value,
+                                toggleAnimation.value, toggleHoverAnimation.value
+                            )
+                        }
                     }
                     y += ModuleRow.HEIGHT + MD3Theme.ROW_GAP
                 }
@@ -490,4 +502,14 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         markDirty()
     }
 
+}
+/**
+ * 模块行的失效版本：只包含影响该行绘制结果、且静止时也会变化的状态。
+ *
+ * 动画由调用点另外叠加时间戳，因此这里不包含动画进度。
+ */
+private fun moduleRevision(module: Module): Long {
+    var result = if (module.isEnabled) 1L else 0L
+    result = result * 31L + module.keyBind
+    return result
 }
