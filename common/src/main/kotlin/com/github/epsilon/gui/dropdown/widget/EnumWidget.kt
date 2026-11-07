@@ -1,26 +1,22 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.lib.Chip
-import com.github.epsilon.gui.lib.Outline
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.Triangle
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(setting) {
 

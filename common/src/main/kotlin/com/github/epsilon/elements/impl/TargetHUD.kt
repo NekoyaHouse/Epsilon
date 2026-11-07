@@ -18,6 +18,7 @@ import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.utils.render.animation.Easing
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -88,7 +89,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private var frameMaxHealth: Float = 1.0f
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     override fun measure(deltaTracker: DeltaTracker) {
         frameTarget = null

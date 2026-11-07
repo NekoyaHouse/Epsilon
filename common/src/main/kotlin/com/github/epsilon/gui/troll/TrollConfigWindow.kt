@@ -1,21 +1,18 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup
 import com.github.epsilon.gui.panel.popup.MessagePopup
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import net.minecraft.client.input.CharacterEvent
@@ -240,10 +237,6 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 }
             }
         }
-    }
-
-    override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        return super.mouseClicked(event)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {

@@ -4,9 +4,12 @@ import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import com.github.epsilon.gui.lib.input.UiInputSubscription
 import com.github.epsilon.gui.lib.render.LuminUiRenderer
-import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.render.UiContentBuffer
+import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.utils.render.animation.Animation
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
@@ -288,16 +291,16 @@ class UiTree private constructor(
          * 推进一个浮点目标动画，并返回当前值。
          */
         fun animate(animation: Animation, target: Float): Float {
-            com.github.epsilon.gui.lib.state.LuminRuntime.requireImmediateAnimation("animate")
+            LuminRuntime.requireImmediateAnimation("animate")
             animation.run(target)
             activeAnimations = activeAnimations || !animation.isFinished
             return animation.value
         }
 
-        fun animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Boolean): Float =
+        fun animate(animation: LuminAnimatable, target: Boolean): Float =
             animate(animation, if (target) 1.0f else 0.0f)
 
-        fun animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Float): Float {
+        fun animate(animation: LuminAnimatable, target: Float): Float {
             animation.target = target
             return animation.value
         }
@@ -1025,7 +1028,7 @@ class UiTree private constructor(
             mouseX: Int, mouseY: Int, content: (Scope) -> Unit
         ) {
             val resolvedViewport = resolveRect(viewport)
-            val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+            val composition = LuminRuntime.currentComposition
             val view = composition?.view
             val deltaX = mouseX - (composition?.inputX ?: 0)
             val deltaY = mouseY - (composition?.inputY ?: 0)
@@ -1217,7 +1220,7 @@ class UiTree private constructor(
     data class ScissorNode(val clip: UiRect, val children: List<UiNode>) : UiNode
 
     internal data class InteractionNode(
-        val subscription: com.github.epsilon.gui.lib.input.UiInputSubscription,
+        val subscription: UiInputSubscription,
         val bounds: UiRect,
         val handlers: UiInteraction,
     ) : UiNode

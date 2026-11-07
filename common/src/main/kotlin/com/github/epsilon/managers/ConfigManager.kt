@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
+import java.util.List.copyOf as immutableListCopyOf
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -823,7 +824,7 @@ object ConfigManager {
             return cachedConfigNames
         }
         val configs = listConfigsInternal(createDefaultIfMissing)
-        cachedConfigNames = java.util.List.copyOf(configs)
+        cachedConfigNames = immutableListCopyOf(configs)
         configListCacheDirty = false
         configListCacheExpiresAt = now + CONFIG_LIST_CACHE_TTL_MS
         return cachedConfigNames

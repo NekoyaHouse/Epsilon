@@ -2,6 +2,7 @@ package com.github.epsilon.gui.lib
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.render.UiContentBuffer
+import com.github.epsilon.gui.lib.state.luminBlink
 import java.awt.Color
 
 /*
@@ -44,7 +45,7 @@ fun UiScope.Input(
         focusRingProgress, focusRingColor, focusRingInset,
         textInset, text, textScale, textColor,
         selection, selectionColor,
-        if (caretIndex != null && com.github.epsilon.gui.lib.state.luminBlink("input-caret")) caretIndex else null, caretColor,
+        if (caretIndex != null && luminBlink("input-caret")) caretIndex else null, caretColor,
         trailingHint, trailingHintScale, trailingHintColor
     )
 }

@@ -1,17 +1,11 @@
 package com.github.epsilon.gui.panel.view
 
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.view.settings.ClientSettingTabView
@@ -47,7 +41,7 @@ class ClientSettingPanel(
         }
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,

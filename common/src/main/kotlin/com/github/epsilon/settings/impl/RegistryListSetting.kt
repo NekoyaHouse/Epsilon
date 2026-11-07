@@ -10,6 +10,7 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
+import java.util.List.copyOf as immutableListCopyOf
 import java.util.function.Predicate
 
 class RegistryListSetting<T : Any>(
@@ -154,7 +155,7 @@ class RegistryListSetting<T : Any>(
                 result.add(entry)
             }
         }
-        return java.util.List.copyOf(result)
+        return immutableListCopyOf(result)
     }
 
     private fun canUse(entry: T?): Boolean =

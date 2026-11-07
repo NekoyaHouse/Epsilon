@@ -1,20 +1,10 @@
 package com.github.epsilon.gui.dropdown.component
 
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
-import com.github.epsilon.gui.dropdown.widget.*
-import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.Outline
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.Triangle
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.dropdown.widget.SettingWidget
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.sound.SoundKey
@@ -22,8 +12,8 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 /**
  * Dropdown 侧 Setting section 树的共用渲染器。

@@ -1,11 +1,7 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
@@ -142,7 +138,7 @@ class TrollSettingsWindow(
                             Color(255, 255, 255, if (hovered) 32 else 12)
                         )
                     }
-                    val label = (if (entry.section!!.isCollapsed()) "+ " else "- ") + entry.section.title()
+                    val label = (if (entry.section.isCollapsed()) "+ " else "- ") + entry.section.title()
                     content.layer(TrollZ.Text) { z ->
                         z.textWithShadow(
                             TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
@@ -160,18 +156,6 @@ class TrollSettingsWindow(
                 }
             }
         }
-    }
-
-    override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        return super.mouseClicked(event)
-    }
-
-    override fun mouseDragged(event: MouseButtonEvent): Boolean {
-        return super.mouseDragged(event)
-    }
-
-    override fun mouseReleased(event: MouseButtonEvent) {
-        super.mouseReleased(event)
     }
 
     fun startSettingAnimations() {

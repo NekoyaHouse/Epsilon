@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.utils
 
+import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.client.gui.screens.Screen
 
@@ -73,7 +74,7 @@ object IMEFocusHelper {
      * @param y cursor top edge in GUI (scaled) coordinates
      */
     fun updateCursorPos(x: Float, y: Float) {
-        val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+        val composition = LuminRuntime.currentComposition
         if (composition != null) {
             composition.onFrame(this) { updateCursorPos(x, y) }
             return

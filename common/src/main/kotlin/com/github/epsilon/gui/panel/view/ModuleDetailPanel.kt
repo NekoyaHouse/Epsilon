@@ -1,20 +1,10 @@
 package com.github.epsilon.gui.panel.view
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Segmented
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.Viewport
-import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
 import com.github.epsilon.gui.panel.component.SettingRow
@@ -26,7 +16,6 @@ import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -36,6 +25,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.util.*
 import kotlin.math.abs
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class ModuleDetailPanel(
     protected val state: PanelState,
@@ -66,7 +56,7 @@ class ModuleDetailPanel(
         this.hiddenHoverAnimation.startValue = 0.0f
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
@@ -194,11 +184,7 @@ class ModuleDetailPanel(
     }
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (scrollBarDrag.mouseReleased()) {
-
-            return true
-        }
-        return false
+        return scrollBarDrag.mouseReleased()
     }
 
     fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {

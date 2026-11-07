@@ -22,6 +22,7 @@ import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.utils.render.animation.Easing
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
@@ -80,7 +81,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     ).group(appearanceGroup)
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     @Volatile
     private var animationStartMs: Long = 0L

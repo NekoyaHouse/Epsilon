@@ -1,25 +1,19 @@
 package com.github.epsilon.gui.panel.popup
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.Chip
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.PopupCard
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.Viewport
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.utils.render.animation.Easing
@@ -59,7 +53,7 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         return bounds
     }
 
-    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,

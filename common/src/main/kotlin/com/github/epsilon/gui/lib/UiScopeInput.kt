@@ -2,6 +2,7 @@ package com.github.epsilon.gui.lib
 
 import com.github.epsilon.gui.lib.input.UiInputSubscription
 import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.gui.lib.state.LuminView
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -124,4 +125,4 @@ fun UiScope.Interaction(
     )))
 }
 
-private data class InputKey(val key: Any, val owner: com.github.epsilon.gui.lib.state.LuminView)
+private data class InputKey(val key: Any, val owner: LuminView)

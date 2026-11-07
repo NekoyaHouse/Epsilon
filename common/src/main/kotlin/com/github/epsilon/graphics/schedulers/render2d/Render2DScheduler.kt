@@ -14,7 +14,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.awt.Color
+import java.lang.Float as JavaFloat
 import java.util.*
+import java.util.ArrayDeque as JavaArrayDeque
+import java.util.Collections
+import java.util.Deque
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -696,7 +700,7 @@ class Render2DScheduler : AutoCloseable {
             text: String, x: Float, y: Float, scale: Float, color: Color,
             blurRadius: Float, intensity: Int, fontLoader: TtfFontLoader?,
         ) {
-            if (!java.lang.Float.isFinite(blurRadius) || blurRadius <= 0.0f) {
+            if (!JavaFloat.isFinite(blurRadius) || blurRadius <= 0.0f) {
                 return
             }
             val clampedBlur = minOf(blurRadius, MAX_FONT_BLUR_RADIUS)
@@ -834,7 +838,7 @@ class Render2DScheduler : AutoCloseable {
 
         fun planBatches(): List<BatchGroup> {
             val orderedLayers: MutableList<Int> = ArrayList(layerBuckets.keys)
-            java.util.Collections.sort(orderedLayers)
+            Collections.sort(orderedLayers)
 
             val result = ArrayList<BatchGroup>()
             for (layer in orderedLayers) {
@@ -1154,7 +1158,7 @@ class Render2DScheduler : AutoCloseable {
     }
 
     private class RendererPool : AutoCloseable {
-        private val available: MutableMap<Render2DCommandKind, java.util.Deque<RendererBundle>> =
+        private val available: MutableMap<Render2DCommandKind, Deque<RendererBundle>> =
             Object2ObjectOpenHashMap()
         private val used: MutableList<RendererBundle> = ArrayList()
         private var frameId: Long = Long.MIN_VALUE
@@ -1165,7 +1169,7 @@ class Render2DScheduler : AutoCloseable {
                 clear()
                 frameId = currentFrameId
             }
-            val bundles = available.computeIfAbsent(kind) { java.util.ArrayDeque<RendererBundle>() }
+            val bundles = available.computeIfAbsent(kind) { JavaArrayDeque<RendererBundle>() }
             val bundle = bundles.pollFirst() ?: RendererBundle.create(kind)
             bundle.applyScissor(scissor)
             used.add(bundle)
@@ -1175,7 +1179,7 @@ class Render2DScheduler : AutoCloseable {
         fun clear() {
             for (bundle in used) {
                 bundle.clear()
-                available.computeIfAbsent(bundle.kind) { java.util.ArrayDeque<RendererBundle>() }.addLast(bundle)
+                available.computeIfAbsent(bundle.kind) { JavaArrayDeque<RendererBundle>() }.addLast(bundle)
             }
             used.clear()
         }

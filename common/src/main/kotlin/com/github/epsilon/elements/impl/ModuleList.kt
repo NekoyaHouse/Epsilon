@@ -15,6 +15,7 @@ import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.utils.render.ColorUtils
 import com.github.epsilon.utils.render.animation.Easing
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
@@ -152,7 +153,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private var lastSortedModules: MutableList<Module> = ArrayList()
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
     private var frameSimple = false

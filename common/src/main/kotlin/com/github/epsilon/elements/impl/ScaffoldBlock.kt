@@ -11,6 +11,7 @@ import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.utils.render.animation.Easing
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
@@ -48,7 +49,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private var frameVisible: Boolean = false
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     init {
         onEnable {

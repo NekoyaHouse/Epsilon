@@ -11,6 +11,7 @@ import com.github.epsilon.gui.lib.GlitchText
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.utils.render.ColorUtils
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
@@ -93,7 +94,7 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
         0.05, { mode == Mode.Glitch })
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     override fun measure(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()

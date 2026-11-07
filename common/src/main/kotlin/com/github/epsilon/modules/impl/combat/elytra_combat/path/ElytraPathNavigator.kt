@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
+import java.util.Arrays
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -372,7 +373,7 @@ class ElytraPathNavigator {
             this.initialFillCursor = 0
             this.queue = LongQueue(minOf(16_384, maxOf(64, size * size)))
             this.scheduledPositions = LongArray(size * size * size)
-            java.util.Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
+            Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
 
             val desiredX = alignedWindowOrigin(playerPos.x, size)
             val desiredY = alignedWindowOrigin(playerPos.y, size)
@@ -415,7 +416,7 @@ class ElytraPathNavigator {
             if (rescheduleWindow) {
                 this.queue = LongQueue(minOf(16_384, maxOf(64, size * size)))
                 this.scheduledPositions = LongArray(size * size * size)
-                java.util.Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
+                Arrays.fill(this.scheduledPositions, Long.MIN_VALUE)
                 this.originX = newX
                 this.originY = newY
                 this.originZ = newZ
@@ -547,8 +548,8 @@ class ElytraPathNavigator {
                     sequence,
                     this.dataSize,
                     BlockPos(this.originX, this.originY, this.originZ),
-                    java.util.Arrays.copyOf(positions, count),
-                    java.util.Arrays.copyOf(states, count),
+                    Arrays.copyOf(positions, count),
+                    Arrays.copyOf(states, count),
                 )
             )
             queuedSampleBatches.incrementAndGet()

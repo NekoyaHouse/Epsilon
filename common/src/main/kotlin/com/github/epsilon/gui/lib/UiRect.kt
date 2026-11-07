@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.lib
 
+import com.github.epsilon.gui.lib.state.LuminRuntime
+
+
 /**
  * 与具体屏幕和渲染后端无关的矩形值对象。
  */
@@ -28,7 +31,7 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
     }
 
     fun contains(px: Double, py: Double): Boolean {
-        val composition = com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition
+        val composition = LuminRuntime.currentComposition
         val view = composition?.view
         if (composition != null && view != null && !composition.alwaysDirty) return view.contains(composition, this, px, py)
         return px >= x && px <= right() && py >= y && py <= bottom()

@@ -1,8 +1,10 @@
 package com.github.epsilon.gui.lib.render
 
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.state.LuminComposition
 import com.github.epsilon.gui.lib.state.LuminSceneRoot
 import java.util.*
 
@@ -37,15 +39,15 @@ class UiRenderBatch private constructor(
     }
 
     /** 立即 Content 每次创建临时绘制作用域，重组内容由 composition 持有作用域。 */
-    internal fun nextEntryScope(bounds: com.github.epsilon.gui.lib.UiRect): UiTree.Scope {
+    internal fun nextEntryScope(bounds: UiRect): UiTree.Scope {
         return UiTree.Scope()
     }
 
     /** 取本次内容对应的 recompose 入口；独立批次返回 null（等价立即模式）。 */
     internal fun nextComposition(
-        bounds: com.github.epsilon.gui.lib.UiRect,
+        bounds: UiRect,
         key: Any,
-    ): com.github.epsilon.gui.lib.state.LuminComposition? {
+    ): LuminComposition? {
         return sceneRoot?.nextEntry(bounds, key)
     }
 

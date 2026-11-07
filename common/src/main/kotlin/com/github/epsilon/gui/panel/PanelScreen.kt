@@ -1,14 +1,11 @@
 package com.github.epsilon.gui.panel
 
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.prepareLuminDataSources
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.panel.view.CategoryRailPanel
@@ -67,7 +64,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         target.resize(window.width, window.height)
 
         LuminRenderSystem.setActiveTarget(target)
-        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
+        prepareLuminDataSources()
         scene.beginFrame()
         try {
 

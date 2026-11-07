@@ -1,22 +1,12 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.Viewport
-import com.github.epsilon.gui.lib.animate
-import com.github.epsilon.gui.lib.asUiTextMetrics
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup
 import com.github.epsilon.gui.panel.popup.MessagePopup
@@ -27,7 +17,6 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -38,6 +27,7 @@ import java.awt.Color
 import java.nio.file.Path
 import java.util.function.Supplier
 import kotlin.math.abs
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class ConfigClientSettingTab(
     private val state: PanelState,
@@ -59,7 +49,7 @@ class ConfigClientSettingTab(
     private var lastActiveConfig = ""
     private var scrollVelocity = 0.0f
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     override fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
@@ -185,11 +175,7 @@ class ConfigClientSettingTab(
     }
 
     private fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (scrollBarDrag.mouseReleased()) {
-
-            return true
-        }
-        return false
+        return scrollBarDrag.mouseReleased()
     }
 
     private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
@@ -231,11 +217,7 @@ class ConfigClientSettingTab(
     }
 
     private fun charTyped(event: CharacterEvent): Boolean {
-        if (inputField.charTyped(event)) {
-
-            return true
-        }
-        return false
+        return inputField.charTyped(event)
     }
 
     override fun onActivated() {

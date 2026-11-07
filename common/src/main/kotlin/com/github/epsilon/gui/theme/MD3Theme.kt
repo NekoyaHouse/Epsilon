@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.theme
 
-import com.github.epsilon.kernel.state.*
+import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.modules.impl.ClientSetting
 import java.awt.Color
 

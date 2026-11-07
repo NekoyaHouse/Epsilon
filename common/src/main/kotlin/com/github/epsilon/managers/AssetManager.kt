@@ -19,6 +19,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.LongSupplier
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
@@ -502,7 +503,7 @@ object AssetManager {
     private fun installReisa(archive: Path) {
         Files.createDirectories(reisaDir)
         ZipFile(archive.toFile()).use { zip ->
-            val entries = LinkedHashMap<String, java.util.zip.ZipEntry>()
+            val entries = LinkedHashMap<String, ZipEntry>()
             val iterator = zip.entries().asIterator()
             while (iterator.hasNext()) {
                 val entry = iterator.next()
@@ -541,7 +542,7 @@ object AssetManager {
         Files.createDirectories(ffmpegNativeDir)
         val nativeFiles = platform.nativeFiles()
         val required = nativeFiles.toSet()
-        val entries = LinkedHashMap<String, java.util.zip.ZipEntry>()
+        val entries = LinkedHashMap<String, ZipEntry>()
         ZipFile(archive.toFile()).use { zip ->
             val iterator = zip.entries().asIterator()
             while (iterator.hasNext()) {

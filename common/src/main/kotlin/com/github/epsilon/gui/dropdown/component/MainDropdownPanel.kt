@@ -1,25 +1,19 @@
 package com.github.epsilon.gui.dropdown.component
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import kotlin.math.ceil
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class MainDropdownPanel(
     panelIndex: Int,

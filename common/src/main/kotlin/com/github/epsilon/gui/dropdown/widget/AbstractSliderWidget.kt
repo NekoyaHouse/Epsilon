@@ -1,12 +1,15 @@
 package com.github.epsilon.gui.dropdown.widget
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.state.afterLuminCommit
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.Setting
 import com.mojang.blaze3d.platform.InputConstants
 import java.util.function.Predicate
@@ -27,7 +30,7 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
     }
 
     override fun UiScope.draw(mouseX: Int, mouseY: Int) {
-        com.github.epsilon.gui.lib.state.afterLuminCommit { syncSessionState() }
+        afterLuminCommit { syncSessionState() }
 
         val ratio = getRatio()
         val sliderRatio = ratio.coerceIn(0.0f, 1.0f)

@@ -1,15 +1,11 @@
 package com.github.epsilon.gui.screen
 
-import com.github.epsilon.gui.lib.LuminUITree
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -74,7 +70,7 @@ abstract class EpsilonDialogScreen protected constructor(
 
     override fun onClose() {
         onDialogClosed()
-        minecraft.gui?.setScreen(parent)
+        minecraft.gui.setScreen(parent)
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {

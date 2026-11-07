@@ -1,17 +1,8 @@
 package com.github.epsilon.gui.panel.adapter
 
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.Triangle
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.animate
-import com.github.epsilon.gui.lib.asUiTextMetrics
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.gui.panel.popup.*
@@ -22,9 +13,9 @@ import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseable {
 
@@ -98,7 +89,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
 
         val activeRow = activeEnumRow
         if (activeRow != null && popupHost.activePopup == null) {
-            com.github.epsilon.gui.lib.state.afterLuminCommit { activeRow.setDropdownOpen(false) }
+            afterLuminCommit { activeRow.setDropdownOpen(false) }
             activeEnumRow = null
         }
 

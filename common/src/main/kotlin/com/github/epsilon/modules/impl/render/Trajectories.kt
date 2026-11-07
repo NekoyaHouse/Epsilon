@@ -28,6 +28,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
 import java.util.function.Predicate
 
 object Trajectories : Module("Trajectories", Category.RENDER) {
@@ -49,17 +50,17 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         true, { firedProjectiles }).group(generalGroup)
     private val simulationSteps by intSetting("Simulation Steps", 500, 0..5000, 25).group(generalGroup)
     private val ignoreFirstTicks by intSetting("Ignore First Ticks", 3, 0..20, 1).group(renderGroup)
-    private val lineColor by colorSetting("Line Color", java.awt.Color(255, 150, 0, 245)).group(renderGroup)
+    private val lineColor by colorSetting("Line Color", Color(255, 150, 0, 245)).group(renderGroup)
     private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.25).group(renderGroup)
     private val impactFill by boolSetting("Impact Fill", true).group(renderGroup)
     private val impactOutline by boolSetting("Impact Outline", true).group(renderGroup)
     private val impactFillColor by colorSetting(
-        "Impact Fill Color", java.awt.Color(255, 150, 0, 45),
+        "Impact Fill Color", Color(255, 150, 0, 45),
         true,
         { impactFill }
     ).group(renderGroup)
     private val impactOutlineColor by colorSetting(
-        "Impact Outline Color", java.awt.Color(255, 180, 55, 245),
+        "Impact Outline Color", Color(255, 180, 55, 245),
         true,
         { impactOutline }
     ).group(renderGroup)
@@ -69,12 +70,12 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         { positionBoxes }
     ).group(renderGroup)
     private val positionFillColor by colorSetting(
-        "Position Fill Color", java.awt.Color(255, 150, 0, 28),
+        "Position Fill Color", Color(255, 150, 0, 28),
         true,
         { positionBoxes }
     ).group(renderGroup)
     private val positionOutlineColor by colorSetting(
-        "Position Outline Color", java.awt.Color(255, 180, 55, 180),
+        "Position Outline Color", Color(255, 180, 55, 180),
         true,
         { positionBoxes }
     ).group(renderGroup)

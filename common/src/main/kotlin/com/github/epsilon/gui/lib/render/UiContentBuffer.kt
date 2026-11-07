@@ -4,17 +4,12 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTheme
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiTextMetrics
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.kernel.state.mutableStateOf
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.gui.lib.control.UiScrollBar
 import java.awt.Color
 import java.util.*
 
@@ -183,7 +178,7 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     /** 强制内容层全部重建（配置加载/语言切换）。 */
     fun invalidateAllUi() {
-        com.github.epsilon.gui.lib.state.LuminRuntime.activeRoot?.invalidateAll()
+        LuminRuntime.activeRoot?.invalidateAll()
     }
 
     /**
@@ -192,7 +187,7 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
      * 内容组合归属当前 Scene，块内的 `LuminUIItem` 独立观察状态与保存记忆。
      */
     fun LuminUI(bounds: UiRect, key: Any, block: UiScope.() -> Unit) {
-        val entry = checkNotNull(com.github.epsilon.gui.lib.state.LuminRuntime.activeRoot).nextEntry(bounds, this to key)
+        val entry = checkNotNull(LuminRuntime.activeRoot).nextEntry(bounds, this to key)
         val metrics = batch.scheduler().textMetrics().asUiTextMetrics()
         entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
         val output = UiTree.Scope()

@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.Input
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
@@ -8,12 +7,15 @@ import com.github.epsilon.gui.lib.animate
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import java.awt.Color
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class ClientSettingTextField(private val maxLength: Int) {
 

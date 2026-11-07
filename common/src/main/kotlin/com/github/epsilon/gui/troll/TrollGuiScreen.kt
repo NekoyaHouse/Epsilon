@@ -1,32 +1,32 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.LuminUITree
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.gui.lib.state.prepareLuminDataSources
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.EpsilonUiTheme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import com.github.epsilon.settings.impl.StringListSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
@@ -41,7 +41,9 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import java.awt.Color
+import java.util.IdentityHashMap
 import kotlin.math.roundToInt
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
 
@@ -180,7 +182,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     }
 
     private fun prepareWindow(window: TrollWindow) {
-        windowViews.getOrPut(window) { com.github.epsilon.gui.lib.state.LuminView() }.prepare {
+        windowViews.getOrPut(window) { LuminView() }.prepare {
             window.layout(textMetrics.get(), screenWidth(), screenHeight())
         }
     }
@@ -199,7 +201,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         if (minecraft.level == null) extractPanorama(graphics, partialTick)
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         luminView.render(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)) { extractContent(graphics, mouseX, mouseY, partialTick) }
@@ -221,7 +223,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         val mx = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val my = LuminRenderSystem.toEpsilonMouseY(mouseY)
         val frame = scene.get()
-        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
+        prepareLuminDataSources()
         frame.beginFrame()
         pendingScene = frame
         try {
@@ -322,12 +324,12 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         pendingWindows.add(WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount, blur))
     }
 
-    private val windowViews = java.util.IdentityHashMap<TrollWindow, com.github.epsilon.gui.lib.state.LuminView>()
+    private val windowViews = IdentityHashMap<TrollWindow, LuminView>()
 
     private fun renderAnimatedWindow(
         frame: UiScene, layer: UiLayer, relativeLayer: Int, window: TrollWindow, mouseX: Int, mouseY: Int,
     ) {
-        windowViews.getOrPut(window) { com.github.epsilon.gui.lib.state.LuminView() }.render(mouseX, mouseY) {
+        windowViews.getOrPut(window) { LuminView() }.render(mouseX, mouseY) {
             val windowProgress = window.getOpenProgress()
             val fullHeight = window.bounds.height
             val revealHeight = window.headerHeight + maxOf(0.0f, fullHeight - window.headerHeight) * windowProgress
@@ -348,7 +350,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                         onScroll { _, _, _, _ -> true }
                     }
                 }
-                com.github.epsilon.gui.lib.state.LuminRuntime.currentComposition!!.retain(window.scroll) {
+                LuminRuntime.currentComposition!!.retain(window.scroll) {
                     AutoCloseable { window.scroll.close() }
                 }
                 scope.pushAbsolute(0.0f, guiOpenOffsetY) { translated ->

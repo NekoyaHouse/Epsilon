@@ -1,5 +1,6 @@
 package com.github.epsilon.hooks
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.*
 
@@ -16,7 +17,7 @@ class OptionalClassCacheTest {
                 throw ClassNotFoundException(name)
             }
         }
-        val failures = java.util.concurrent.ConcurrentLinkedQueue<Throwable>()
+        val failures = ConcurrentLinkedQueue<Throwable>()
         val threads = List(8) {
             Thread {
                 try {

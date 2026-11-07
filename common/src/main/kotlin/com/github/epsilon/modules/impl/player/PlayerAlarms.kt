@@ -24,6 +24,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
 import java.util.*
+import java.util.Objects
 
 object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
 
@@ -254,7 +255,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         )
                                     }
                                     if (mode == AlertMode.Notification || mode == AlertMode.Both) {
-                                        val hash = java.util.Objects.hash(playerName, "gamemode")
+                                        val hash = Objects.hash(playerName, "gamemode")
                                         NotificationManager.notifyHud(msg, "", NotificationMode.Info, hash)
                                     }
                                 }
@@ -350,7 +351,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         }
         // HUD Notification (no chat side-effect)
         if ((mode == AlertMode.Notification || mode == AlertMode.Both) && playerId != null) {
-            val hash = java.util.Objects.hash(playerName, template.getTranslatedName())
+            val hash = Objects.hash(playerName, template.getTranslatedName())
             val notifMode = if (color == ChatFormatting.RED || color == ChatFormatting.DARK_RED) {
                 NotificationMode.Error
             } else {

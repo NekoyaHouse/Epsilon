@@ -119,35 +119,6 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 - raytrace 回调会在平滑旋转校验中被多次调用，必须无副作用。
 - 服务端位置/旋转包会重置托管旋转；需要等待命中后攻击或放置时，由模块自行维护 pending 状态并保证动作只执行一次。
 
-## GUI、HUD 与渲染约束
-
-- Panel、Dropdown、popup、HudEditor、Troll 的状态驱动 UI 使用 `kernel.state` 与 LuminUI 组合树；业务代码不得恢复内容签名、revision、主题指纹、时间戳缓存失效或递归动画活动汇总。
-- 根入口、Group/Item 与 remember 使用显式稳定 key，key 只表示身份，不含几何、鼠标、主题或时间；列表按元素身份建项。可观察集合发布不可变快照，不原地修改。
-- 组合构建只读取业务状态，配置写入、模块切换、网络操作和输入修改放到回调；动画目标由框架在提交后更新。重组块内禁止旧 Animation 的拉取式推进。
-- Scene 与内容缓冲共享宿主帧时钟；完整帧配对 `beginFrame()` / `endFrame()`，失败帧调用 `abortFrame()`，Screen 移除时清空组合。IME 等逐帧提交信息不能依赖重组块每帧执行。
-- 新外部数据源必须发布可观察状态，外部线程只写状态并排队通知，订阅图在宿主线程维护；布局准备通过 `LuminView` 观察，配置目录检查与字体切换在宿主准备阶段执行。
-
-- Panel、Dropdown、popup 和 HUD chrome 优先通过 `UiTree`/`UiScene`/`UiRenderBatch` 提交，不得为每个面板各建一套 renderer。
-- 一个 Screen 或 HUD 帧共享一个 `UiScene`；`beginFrame()` 与 `endFrame()` 必须配对。
-- 重组块内的悬停判断通过 `UiRect.contains()` 接入宿主命中探针，不得用普通坐标比较绕过观察；嵌套组合沿用父级捕获鼠标参数的坐标基准，不得将旧闭包参数与新帧基准混用。
-- `UiScene.flush()` 保留命令，`endFrame()` 还会提交剩余命令；帧中提前输出且无需重放的批次使用 `flushAndClear()` 或在输出后 `clear()`，避免同帧重复绘制和半透明叠加。
-- 存在遮挡关系的 pass 必须使用不同的 `UiLayer` 或相对 layer 表达；相对 layer 用 `com.github.epsilon.gui.lib.scene.LayerOffset`，构造函数强制落在 `(-100, 100)` 内。
-- 图层只能通过扩展函数表达：`UiTree.Scope.layer(LayerOffset) { }` 或 `UiScope` 上的 `Layer(offset) { }` / `Above { }` / `Below { }`。不得再给图元加 `layer: Int` 参数，也不得直接写 `LayerNode`。
-- 同一 GUI 子系统的偏移必须收敛到命名空间对象（例如 `TrollZ`、`MenuZ`、`DialogZ`），不得在调用点写裸数字。
-- 新绘制的 GUI 组件优先写成 `UiScope` 扩展函数（Compose 风格：接收者携带度量、layer 与坐标原点），由 `UiRenderBatch.Content(bounds) { }` / `UiScene.Content(bounds, layer) { }` 提交；旧式 `buildUi(scope, textRenderer, ...)` 形参不再新增。
-- 绘制坐标必须相对作用域原点（`UiScope.origin`）；`Positioned` / `Box` / `ColumnScope.Item` / `Stack` 是唯一的位置入口，禁止再引入绝对定位入口（`pushAbsolute` 已删除）。命中测试、anchor 计算与持久化坐标仍用绝对坐标，两者互不混用。
-- 跨包的组件绘制接口（如 `DropdownPanel`）使用 `context(scope: UiScope) fun drawXxx()`，调用点必须存在隐式 `UiScope`（`Content { }` 的 receiver 即可满足）；度量从 `scope.metrics`（`UiTextMetrics`）取，不再传 `TextRenderer`。
-- 元素布局与绘制必须分离：HUD 等自测量组件先 `measure()` 得到最新 bounds，再用该 bounds 开 `Content`，不得用上一帧 bounds 近似。
-- 发射 UI 的扩展函数使用 PascalCase（`Fill` / `Text` / `Box` / `Column` / `Layer`）；返回值或推进动画的工具函数保持 camelCase（`animate`）。
-- `UiScope` 的 `origin` 必须与底层 `UiTree.Scope` 的 bound 一致；派生作用域只能经 `Positioned` / `Box` / `ColumnScope.Item`，不得自行 `pushAbsolute` 后手改 origin。
-- HUD 尺寸变化调用 `setBounds()`；位置通过 anchor/move API 修改，不得绕过 anchor 状态直接写持久化坐标。
-- `Render2DScheduler` 按 layer 规划批次并复用 renderer；需要严格遮挡顺序时必须显式分层，不能依赖同 layer 内不同 pipeline 的提交顺序。
-- `Render3DScheduler` 在 priority `-999` flush；模块必须在更高 priority 的监听器中提交命令。
-- 2D 世界覆盖层优先使用 `WorldToScreen.calcWorld2Screen`，不得再次除以 GUI scale，也不得自行用归一化深度判断摄像机后方。
-- 2D AABB 边界必须投影 8 个顶点后取屏幕空间最小/最大坐标；贴近近裁剪面时还要把边与近裁剪面的交点纳入边界。
-- 文本测量与绘制必须使用相同的 scale 和 font loader；自定义字体经 `StaticFontLoader` 解析，失败时回退默认字体。
-- 调用后处理前必须核验 render target、采样器和当前 RenderPipeline 状态。
-
 ## i18n 约束
 
 - Module、HUD、Setting、SettingGroup、Enum 选项和静态 UI 文案必须进入 i18n，不得在 GUI 类散落重复 key。
@@ -159,6 +130,7 @@ rg -n "methodName" reference/vanilla-26.3/net/minecraft -g "*.java"
 ## 代码规范
 
 - Java 25 / Kotlin、UTF-8，沿用相邻代码格式和命名；Kotlin 与 Java 共用 JDK 25 toolchain 与 JVM target 25。
+- Kotlin 代码中的类型和函数通过 `import` 引入，不在调用或类型声明处写完整包名；名称冲突时使用 `import ... as ...` 别名。
 - 优先使用 Kotlin 原生写法：`java.lang.Math` 改用 `kotlin.math`（`abs`/`sqrt`/`sin`/`atan2`/`hypot`/`pow`/`floor`/`ceil`/`ln`/`log10`/`sign`/`exp`/`PI`/`E`）、`maxOf`/`minOf`、`coerceIn`、`roundToInt`、`floorDiv`/`mod`、`nextUp`、`Random.nextDouble()`；角度/弧度转换用 `com.github.epsilon.utils.math` 中的 `Double.toRadians()` / `Double.toDegrees()` 扩展。无 Kotlin 等价物的 `Math.toIntExact` / `Math.multiplyExact` 保留。
 - Java getter 调用一律改用 Kotlin 属性访问（`player.getX()` → `player.x`）；Kotlin 自定义的 `getXxx()` 方法保持函数调用，不得为同名属性替换。
 - Kotlin 源码目录固定：共享代码放 `common/src/main/kotlin`（loader 会重复编译），加载器专属代码放各自的 `src/main/kotlin`。

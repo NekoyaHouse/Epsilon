@@ -1,21 +1,15 @@
 package com.github.epsilon.gui.panel.popup
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.PopupCard
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Slider
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.impl.ColorSetting
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
@@ -52,7 +46,7 @@ class ColorPickerPopup(
         return bounds
     }
 
-    override val inputView = com.github.epsilon.gui.lib.state.LuminView()
+    override val inputView = LuminView()
 
     override fun extractGui(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch,
@@ -406,7 +400,7 @@ class ColorPickerPopup(
                 valueText.substring(0, minOf(cursorIndex, valueText.length)), textScale
             )
             Rect(caretX, bounds.y + 3.0f, 1.0f, bounds.height - 6.0f, MD3Theme.INVERSE_ON_SURFACE)
-            com.github.epsilon.gui.panel.utils.IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + textY)
+            IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + textY)
         }
     }
 

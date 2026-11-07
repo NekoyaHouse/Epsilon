@@ -2,7 +2,9 @@ package com.github.epsilon.gui.lib.state
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.kernel.state.StateNotifications
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -223,7 +225,7 @@ class UiScopeInputTest {
     }
 
     @Test fun viewportClipsScrolledInputAndCaptureKeepsReceivingOutside() {
-        val buffer = com.github.epsilon.gui.lib.render.UiContentBuffer(com.github.epsilon.gui.theme.EpsilonUiTheme)
+        val buffer = UiContentBuffer(EpsilonUiTheme)
         var updates = 0
         try {
             frame {
@@ -499,7 +501,7 @@ class UiScopeInputTest {
     }
 
     @Test fun viewportInputUsesTheBuffersPaintOrderAndOuterLayer() {
-        val buffer = com.github.epsilon.gui.lib.render.UiContentBuffer(com.github.epsilon.gui.theme.EpsilonUiTheme)
+        val buffer = UiContentBuffer(EpsilonUiTheme)
         val events = mutableListOf<String>()
         try {
             frame {

@@ -32,14 +32,6 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
-Panel、Dropdown、popup、HudEditor 与 Troll 使用 LuminUI 的轻量状态观察和组合运行时。稳定 key 维持组件身份，可观察读取自动触发局部重建，动画由宿主共享帧时钟推进。API、生命周期与验证说明见 [LuminUI 运行时](docs/lumin-ui-recompose.md)。HUD 元素自身保持现有立即绘制。
-
-Dropdown 跳过完全折叠模块与分组的内部测量，并在提交后消费场景命令；可选 ViaFabricPlus 类查询同时缓存存在与缺失的结果。采样依据与回归验证见 LuminUI 运行时文档。
-
-嵌套组合保留父级闭包捕获参数对应的鼠标坐标基准，命中探针结合宿主当前输入更新高亮，父级保持缓存时也能同步悬停状态。
-
-UiScope 通过随组合存活的 `Interaction` 订阅声明点击、指针捕获拖动和焦点键盘/文字输入。命中遵循图层与裁剪，节点销毁时释放焦点并取消拖动。Panel、Dropdown、Troll、HudEditor、所有弹窗、主菜单、账号管理、对话框和下载卡片均已接入。一个 Scene 内的多个 View 共享焦点与捕获，模态派发限定到弹窗自己的 View。用法和宿主接入见 [UiScope 输入订阅](docs/lumin-ui-recompose.md#uiscope-输入订阅)。
-
 ## ⚙️ 构建与运行
 
 ```bash

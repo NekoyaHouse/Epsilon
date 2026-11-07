@@ -1,12 +1,14 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -80,10 +82,6 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
                 content.asUiScope(metrics).LuminUIItem(rows.getValue(module)) { rows.getValue(module).draw(tree, metrics, mouseX, mouseY) }
             }
         }
-    }
-
-    override fun mouseClicked(event: MouseButtonEvent): Boolean {
-        return super.mouseClicked(event)
     }
 
     private fun matchesSearch(module: Module): Boolean {

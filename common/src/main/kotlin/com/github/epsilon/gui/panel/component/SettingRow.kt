@@ -1,21 +1,8 @@
 package com.github.epsilon.gui.panel.component
 
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.asUiTextMetrics
-import com.github.epsilon.gui.panel.component.setting.BoolSettingRow
-import com.github.epsilon.gui.panel.component.setting.ButtonSettingRow
-import com.github.epsilon.gui.panel.component.setting.ColorSettingRow
-import com.github.epsilon.gui.panel.component.setting.DoubleSettingRow
-import com.github.epsilon.gui.panel.component.setting.EnumSettingRow
-import com.github.epsilon.gui.panel.component.setting.IntSettingRow
-import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow
-import com.github.epsilon.gui.panel.component.setting.RegistryListSettingRow
-import com.github.epsilon.gui.panel.component.setting.StringListSettingRow
-import com.github.epsilon.gui.panel.component.setting.StringSettingRow
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.settings.Setting
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent

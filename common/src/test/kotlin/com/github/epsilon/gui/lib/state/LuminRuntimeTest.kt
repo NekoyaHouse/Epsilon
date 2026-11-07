@@ -1,9 +1,26 @@
 package com.github.epsilon.gui.lib.state
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import com.github.epsilon.gui.dropdown.DropdownTheme
+import com.github.epsilon.gui.dropdown.component.CategoryPanel
+import com.github.epsilon.gui.dropdown.component.ConfigDropdownPanel
+import com.github.epsilon.gui.dropdown.component.ModuleButton
+import com.github.epsilon.gui.dropdown.component.SettingSectionRenderer
+import com.github.epsilon.gui.dropdown.widget.BoolWidget
 import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.theme.EpsilonUiTheme
+import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.gui.troll.TrollScroll
+import com.github.epsilon.kernel.state.MutableState
 import com.github.epsilon.kernel.state.StateNotifications
+import com.github.epsilon.managers.ConfigManager
+import com.github.epsilon.modules.Module
+import com.github.epsilon.modules.impl.ClientSetting
+import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.impl.BoolSetting
 import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import kotlin.test.*
@@ -164,14 +181,14 @@ class LuminRuntimeTest {
     }
 
     @Test fun dropdownGroupHoverMovesToCurrentHeaderWithCachedParent() {
-        val theme = com.github.epsilon.gui.dropdown.DropdownTheme
+        val theme = DropdownTheme
         val settings = List(2) { index ->
-            com.github.epsilon.settings.impl.BoolSetting("setting-$index", false, null, null).apply {
-                groupRef = com.github.epsilon.settings.SettingGroup("group-$index")
+            BoolSetting("setting-$index", false, null, null).apply {
+                groupRef = SettingGroup("group-$index")
             }
         }
-        val renderer = com.github.epsilon.gui.dropdown.component.SettingSectionRenderer.create("hover", settings) {
-            com.github.epsilon.gui.dropdown.widget.BoolWidget(it as com.github.epsilon.settings.impl.BoolSetting)
+        val renderer = SettingSectionRenderer.create("hover", settings) {
+            BoolWidget(it as BoolSetting)
         }
         var rootBuilds = 0
         fun tick(py: Int) = frame(x = 30, y = py) {
@@ -251,7 +268,7 @@ class LuminRuntimeTest {
         assertEquals(0, clock.taskCount)
     }
     @Test fun viewportChildPreservesItsNestingAndScrolledOrigin() {
-        val buffer = com.github.epsilon.gui.lib.render.UiContentBuffer(com.github.epsilon.gui.theme.EpsilonUiTheme)
+        val buffer = UiContentBuffer(EpsilonUiTheme)
         try {
             val offset = mutableStateOf(1f)
             var parents = 0
@@ -329,7 +346,7 @@ class LuminRuntimeTest {
     }
 
     @Test fun cachedViewportReadsTheCurrentPointerAndGeometryKeepsRemember() {
-        val buffer = com.github.epsilon.gui.lib.render.UiContentBuffer(com.github.epsilon.gui.theme.EpsilonUiTheme)
+        val buffer = UiContentBuffer(EpsilonUiTheme)
         try {
             var builds = 0
             var remembered: Any? = null
@@ -449,7 +466,7 @@ class LuminRuntimeTest {
     }
 
     @Test fun trollPhysicsScrollSettlesAndClosesWithItsComposition() {
-        val scroll = com.github.epsilon.gui.troll.TrollScroll()
+        val scroll = TrollScroll()
         var position = 0f
         fun tick() {
             root.beginFrame()
@@ -482,9 +499,9 @@ class LuminRuntimeTest {
     }
 
     @Test fun configDropdownInitialTextSyncRunsOnlyAfterSuccessfulComposition() {
-        com.github.epsilon.assets.i18n.EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName()
-        val activeName = com.github.epsilon.managers.ConfigManager.activeConfigName
-        val panel = com.github.epsilon.gui.dropdown.component.ConfigDropdownPanel(0)
+        EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName()
+        val activeName = ConfigManager.activeConfigName
+        val panel = ConfigDropdownPanel(0)
         panel.isOpened = true
         val fail = mutableStateOf(false)
         var frameId = 0
@@ -501,19 +518,19 @@ class LuminRuntimeTest {
         assertEquals("discard config frame", assertFailsWith<IllegalStateException> { frame(block = draw) }.message)
         fail.value = false
         val first = frame(block = draw).filterIsInstance<UiTree.TextNode>().single { it.text == activeName }
-        assertEquals(com.github.epsilon.gui.theme.MD3Theme.TEXT_MUTED, first.color)
+        assertEquals(MD3Theme.TEXT_MUTED, first.color)
         val committed = frame(block = draw).filterIsInstance<UiTree.TextNode>().single { it.text == activeName }
-        assertEquals(com.github.epsilon.gui.theme.MD3Theme.TEXT_PRIMARY, committed.color)
+        assertEquals(MD3Theme.TEXT_PRIMARY, committed.color)
         val settled = builds
         repeat(3) { time += 16_000_000L; frame(block = draw) }
         assertEquals(settled, builds)
     }
 
     @Test fun dropdownExpansionMovesFollowingRowsWithoutScrolling() {
-        com.github.epsilon.modules.impl.ClientSetting.moduleSort.value
-        val modules = (0..7).map { com.github.epsilon.modules.Module("module-$it", null) }
+        ClientSetting.moduleSort.value
+        val modules = (0..7).map { Module("module-$it", null) }
         modules.first().boolSetting("detail", false)
-        val panel = com.github.epsilon.gui.dropdown.component.CategoryPanel("test", "test", "", 0, modules)
+        val panel = CategoryPanel("test", "test", "", 0, modules)
         panel.isOpened = true
         panel.startIntro()
         panel.updateMaxPanelHeight(90f)
@@ -550,17 +567,17 @@ class LuminRuntimeTest {
             val initialY = texts(tick()).single { it.text == modules[1].name }.y
             val buttonsField = panel.javaClass.getDeclaredField("moduleButtons").apply { isAccessible = true }
             @Suppress("UNCHECKED_CAST")
-            val buttons = buttonsField.get(panel) as List<com.github.epsilon.gui.dropdown.component.ModuleButton>
+            val buttons = buttonsField.get(panel) as List<ModuleButton>
             // 直接驱动控件状态，避免输入反馈初始化游戏 Screen 与资源系统。
             val expandedField = buttons.first().javaClass.getDeclaredField("expanded\$delegate").apply { isAccessible = true }
             @Suppress("UNCHECKED_CAST")
-            val expanded = expandedField.get(buttons.first()) as com.github.epsilon.kernel.state.MutableState<Boolean>
+            val expanded = expandedField.get(buttons.first()) as MutableState<Boolean>
             expanded.value = true
             tick()
             for (timestamp in listOf(110_000_000L, 165_000_000L, 220_000_000L)) {
                 time = timestamp
                 val rendered = texts(tick())
-                val extra = buttons.first().getHeightForFrame(frameId) - com.github.epsilon.gui.dropdown.DropdownTheme.MODULE_HEIGHT
+                val extra = buttons.first().getHeightForFrame(frameId) - DropdownTheme.MODULE_HEIGHT
                 assertTrue(extra > 0f)
                 assertEquals(initialY + extra, rendered.single { it.text == modules[1].name }.y, 0.0001f)
                 assertEquals(buttons.first().y + buttons.first().getHeightForFrame(frameId), buttons[1].y, 0.0001f)

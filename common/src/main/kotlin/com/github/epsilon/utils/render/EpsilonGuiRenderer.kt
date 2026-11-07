@@ -33,6 +33,7 @@ import org.joml.Matrix4f
 import org.joml.Vector4f
 import org.joml.Vector4fc
 import org.slf4j.Logger
+import java.lang.Double as JavaDouble
 import java.util.*
 import java.util.function.Supplier
 import kotlin.math.ceil
@@ -317,7 +318,7 @@ class EpsilonGuiRenderer(
 
     private fun getGuiScaleInvalidatingItemAtlasIfChanged(): Int {
         val guiScale = LuminRenderSystem.getGuiScale()
-        if (java.lang.Double.compare(guiScale, cachedGuiScale) != 0) {
+        if (JavaDouble.compare(guiScale, cachedGuiScale) != 0) {
             invalidateItemAtlas()
 
             for (renderer in oversizedItemRenderers.values) {

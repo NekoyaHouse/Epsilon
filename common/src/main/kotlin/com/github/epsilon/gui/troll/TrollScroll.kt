@@ -1,9 +1,11 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.kernel.state.*
-import com.github.epsilon.gui.lib.state.LuminFrameTask
 import com.github.epsilon.gui.lib.state.LuminFrameClock
+import com.github.epsilon.gui.lib.state.LuminFrameTask
 import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.ln

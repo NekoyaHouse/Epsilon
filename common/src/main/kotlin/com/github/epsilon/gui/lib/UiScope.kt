@@ -3,6 +3,7 @@ package com.github.epsilon.gui.lib
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.scene.LayerOffset
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.utils.render.animation.Animation
 import kotlin.math.max
@@ -229,10 +230,10 @@ private data class TextRendererMetrics(private val renderer: TextRenderer) : UiT
 
 }
 /** 推式动画只声明目标，帧时钟负责推进。 */
-fun UiScope.animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Boolean): Float =
+fun UiScope.animate(animation: LuminAnimatable, target: Boolean): Float =
     animate(animation, if (target) 1.0f else 0.0f)
 
-fun UiScope.animate(animation: com.github.epsilon.gui.lib.state.LuminAnimatable, target: Float): Float {
+fun UiScope.animate(animation: LuminAnimatable, target: Float): Float {
     animation.target = target
     return animation.value
 }

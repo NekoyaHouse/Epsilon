@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import net.minecraft.resources.Identifier
 import java.awt.Color
 
 /*
@@ -266,7 +267,7 @@ fun UiScope.Texture(
 }
 
 fun UiScope.Texture(
-    texture: net.minecraft.resources.Identifier, x: Float, y: Float, width: Float, height: Float,
+    texture: Identifier, x: Float, y: Float, width: Float, height: Float,
     u0: Float, v0: Float, u1: Float, v1: Float, color: Color, linearFilter: Boolean = false,
 ) {
     tree.texture(texture, x, y, width, height, u0, v0, u1, v1, color, linearFilter)
@@ -287,7 +288,7 @@ fun UiScope.RoundedTexture(
 }
 
 fun UiScope.RoundedTexture(
-    texture: net.minecraft.resources.Identifier, x: Float, y: Float, width: Float, height: Float, radius: Float,
+    texture: Identifier, x: Float, y: Float, width: Float, height: Float, radius: Float,
     u0: Float, v0: Float, u1: Float, v1: Float, color: Color, linearFilter: Boolean = false,
 ) {
     tree.roundedTexture(texture, x, y, width, height, radius, u0, v0, u1, v1, color, linearFilter)
@@ -312,7 +313,7 @@ fun UiScope.PlayerHead(
 }
 
 fun UiScope.PlayerHead(
-    identifier: net.minecraft.resources.Identifier, x: Float, y: Float, size: Float, radius: Float, color: Color,
+    identifier: Identifier, x: Float, y: Float, size: Float, radius: Float, color: Color,
 ) {
     tree.playerHead(identifier, x, y, size, radius, color)
 }

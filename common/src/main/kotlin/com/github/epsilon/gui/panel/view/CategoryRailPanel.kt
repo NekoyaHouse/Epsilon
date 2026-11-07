@@ -1,31 +1,23 @@
 package com.github.epsilon.gui.panel.view
 
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.animate
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 import kotlin.math.abs
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class CategoryRailPanel(protected val state: PanelState) {
 
@@ -61,7 +53,7 @@ class CategoryRailPanel(protected val state: PanelState) {
         return expandAnimation.value
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,

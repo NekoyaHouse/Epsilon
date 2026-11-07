@@ -1,16 +1,12 @@
 package com.github.epsilon.gui.screen
 
-import com.github.epsilon.gui.lib.LuminUITree
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.shaders.GlslSandBox
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.video.VideoPlayer
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
@@ -121,7 +117,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     private fun reisaShutdownFinalTexture(): Identifier? = AssetManager.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX)
 
     init {
-        entries.add(MenuEntry("Singleplayer", Runnable { minecraft.gui?.setScreen(SelectWorldScreen(this)) }))
+        entries.add(MenuEntry("Singleplayer", Runnable { minecraft.gui.setScreen(SelectWorldScreen(this)) }))
         entries.add(
             MenuEntry(
                 "Multiplayer", Runnable {
@@ -135,12 +131,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 }
             )
         )
-        entries.add(MenuEntry("Accounts", Runnable { minecraft.gui?.setScreen(AccountsScreen) }))
-        entries.add(MenuEntry("GUI", Runnable { minecraft.gui?.setScreen(ClientSetting.getGuiScreen()) }))
+        entries.add(MenuEntry("Accounts", Runnable { minecraft.gui.setScreen(AccountsScreen) }))
+        entries.add(MenuEntry("GUI", Runnable { minecraft.gui.setScreen(ClientSetting.getGuiScreen()) }))
         entries.add(
             MenuEntry(
                 "Options", Runnable {
-                    minecraft.gui?.setScreen(OptionsScreen(this, minecraft.options))
+                    minecraft.gui.setScreen(OptionsScreen(this, minecraft.options))
                 }
             )
         )
@@ -227,7 +223,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             return
         }
         reisaGreetingQueued = true
-        if (initialized && minecraft.gui?.screen() === this) {
+        if (initialized && minecraft.gui.screen() === this) {
             startReisaGreeting()
         }
     }
@@ -1384,8 +1380,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        if (reisaShutdownStartMs >= 0L) return true
-        return scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
+        return reisaShutdownStartMs >= 0L || scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
     }
 
     override fun removed() {
@@ -1398,10 +1393,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
         initialized = false
         if (reisaWelcomeSound != null) {
-            minecraft.soundManager?.stop(reisaWelcomeSound!!)
+            minecraft.soundManager.stop(reisaWelcomeSound!!)
         }
         if (reisaShutdownSound != null) {
-            minecraft.soundManager?.stop(reisaShutdownSound!!)
+            minecraft.soundManager.stop(reisaShutdownSound!!)
         }
         clearReisaGreeting()
         clearReisaShutdown()

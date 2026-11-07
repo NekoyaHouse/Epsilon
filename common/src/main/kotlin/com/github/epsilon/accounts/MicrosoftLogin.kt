@@ -4,6 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.utils.network.Http
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.Blaze3D
+import com.mojang.datafixers.util.Pair as DataFixerPair
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import java.io.IOException
@@ -190,8 +191,8 @@ object MicrosoftLogin {
     }
 
     // reimplementation of apache https URLEncodedUtils#parse
-    private fun parseURL(string: String?): List<com.mojang.datafixers.util.Pair<String, String>> {
-        val query = ArrayList<com.mojang.datafixers.util.Pair<String, String>>()
+    private fun parseURL(string: String?): List<DataFixerPair<String, String>> {
+        val query = ArrayList<DataFixerPair<String, String>>()
         val buf = (string ?: "").toCharArray()
         var i = 0
         while (i < buf.size) {
@@ -223,7 +224,7 @@ object MicrosoftLogin {
 
             if (name.isNotEmpty()) {
                 query.add(
-                    com.mojang.datafixers.util.Pair.of(
+                    DataFixerPair.of(
                         urlDecode(name.toString()),
                         urlDecode(value.toString()) ?: ""
                     )

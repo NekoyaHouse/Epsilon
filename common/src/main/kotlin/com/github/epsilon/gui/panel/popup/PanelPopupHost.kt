@@ -1,17 +1,19 @@
 package com.github.epsilon.gui.panel.popup
 
-import net.minecraft.client.input.PreeditEvent
-import com.github.epsilon.gui.lib.input.UiInputRouter
-import com.github.epsilon.gui.lib.state.LuminView
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.UiRect
+import com.github.epsilon.gui.lib.input.UiInputRouter
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.client.input.PreeditEvent
 
 /**
  * 面板弹窗宿主。

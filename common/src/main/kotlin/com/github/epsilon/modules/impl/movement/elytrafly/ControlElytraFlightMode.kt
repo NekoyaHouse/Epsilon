@@ -11,6 +11,7 @@ import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
+import com.github.epsilon.utils.player.FindItemResult
 import com.github.epsilon.utils.player.InvUtils
 import com.github.epsilon.utils.rotation.Priority
 import com.github.epsilon.utils.rotation.Rotation
@@ -367,7 +368,7 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         return climbTicks > 0
     }
 
-    private fun handleEatGlide(elytra: com.github.epsilon.utils.player.FindItemResult) {
+    private fun handleEatGlide(elytra: FindItemResult) {
         runSafe {
             if (eatGlideElytraSlot < 0) {
                 if (!elytra.found()) return@runSafe

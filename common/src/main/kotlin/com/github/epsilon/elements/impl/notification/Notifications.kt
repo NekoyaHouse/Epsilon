@@ -9,6 +9,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.managers.NotificationManager
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.util.function.Supplier
@@ -30,7 +31,7 @@ object Notifications : HudModule("Notifications", 3.2f, 3.2f, 120.0f, 30.0f) {
     private val akarin = AkarinNotification(this)
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
 
     /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
     private var frameVisible: Boolean = false

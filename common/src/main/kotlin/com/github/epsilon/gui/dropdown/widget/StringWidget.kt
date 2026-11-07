@@ -5,6 +5,7 @@ import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.settings.impl.StringSetting
 import com.mojang.blaze3d.platform.InputConstants
 
@@ -32,7 +33,7 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
 
         if (!inputField.isFocused && inputField.text != setting.value) {
             val currentValue = setting.value
-            com.github.epsilon.gui.lib.state.afterLuminCommit { inputField.text = currentValue }
+            afterLuminCommit { inputField.text = currentValue }
         }
         inputField.draw(
             this,

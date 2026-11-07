@@ -1,13 +1,15 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.impl.ColorSetting
 import java.awt.Color
 import kotlin.math.roundToInt

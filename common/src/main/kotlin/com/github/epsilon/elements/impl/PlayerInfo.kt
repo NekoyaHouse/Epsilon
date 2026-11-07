@@ -21,6 +21,7 @@ import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
+import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel
@@ -61,7 +62,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private val popCounts: ConcurrentHashMap<UUID, Int> = ConcurrentHashMap()
     private val nameScrollStartTimes: MutableMap<UUID, Long> = HashMap()
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(com.google.common.base.Supplier { TextRenderer.create() })
+        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
     private var cachedRows: List<PlayerRow> = emptyList()
     private var rowsInitialized: Boolean = false
 

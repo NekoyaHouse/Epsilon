@@ -1,20 +1,10 @@
 package com.github.epsilon.gui.panel.view
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Input
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.Viewport
-import com.github.epsilon.gui.lib.animate
-import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.component.ModuleRow
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
@@ -22,10 +12,12 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -34,6 +26,7 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.abs
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
@@ -62,7 +55,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
      * 面板标题与搜索框会直接写入主批次；滚动列表内容则写入独立的 viewport 缓冲，
      * 并在之后的统一 flush 阶段输出。
      */
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
@@ -200,11 +193,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
     }
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (scrollBarDrag.mouseReleased()) {
-
-            return true
-        }
-        return false
+        return scrollBarDrag.mouseReleased()
     }
 
     fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {

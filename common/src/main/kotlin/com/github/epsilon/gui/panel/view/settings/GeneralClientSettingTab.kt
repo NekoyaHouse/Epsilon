@@ -1,12 +1,9 @@
 package com.github.epsilon.gui.panel.view.settings
 
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.Viewport
-import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.render.UiRenderBatch
+import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.panel.adapter.SettingListController
 import com.github.epsilon.gui.panel.component.SettingRow
@@ -16,12 +13,12 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import kotlin.math.abs
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class GeneralClientSettingTab(
     private val state: PanelState,
@@ -37,7 +34,7 @@ class GeneralClientSettingTab(
     private var lastListeningKey = ""
     private var scrollVelocity = 0.0f
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     override fun render(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
@@ -142,11 +139,7 @@ class GeneralClientSettingTab(
     }
 
     private fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (scrollBarDrag.mouseReleased()) {
-
-            return true
-        }
-        return false
+        return scrollBarDrag.mouseReleased()
     }
 
     private fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {

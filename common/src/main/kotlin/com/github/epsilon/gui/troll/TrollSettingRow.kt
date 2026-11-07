@@ -1,22 +1,24 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.state.luminBlink
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.impl.*
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -26,6 +28,7 @@ import java.awt.Color
 import java.math.BigDecimal
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class TrollSettingRow {
 
@@ -231,7 +234,7 @@ class TrollSettingRow {
         var caretX = valueX + metrics.getWidth(text.substring(0, cursor), valueScale)
         caretX = minOf(caretX, bounds.right() - 3.0f)
         val caretY = bounds.bottom() - metrics.getHeight(valueScale) - 3.0f
-        if (com.github.epsilon.gui.lib.state.luminBlink(this to "caret")) {
+        if (luminBlink(this to "caret")) {
             scope.layer(TrollZ.Content) { z ->
                 z.rect(caretX, caretY, 0.8f, metrics.getHeight(valueScale), TrollTheme.text())
             }

@@ -1,28 +1,25 @@
 package com.github.epsilon.gui.dropdown
 
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
-import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.LuminUISceneImmediate
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.Text
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.gui.lib.state.prepareLuminDataSources
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
@@ -39,6 +36,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import java.awt.Color
+import java.util.IdentityHashMap
 import java.util.function.Consumer
 
 class DropdownScreen private constructor() : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
@@ -92,7 +90,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         target.resize(window.width, window.height)
         target.clear()
         LuminRenderSystem.setActiveTarget(target)
-        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
+        prepareLuminDataSources()
         scene.beginFrame()
         try {
 
@@ -117,8 +115,8 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
     }
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
-    private val panelViews = java.util.IdentityHashMap<DropdownPanel, com.github.epsilon.gui.lib.state.LuminView>()
+    private val luminView = LuminView()
+    private val panelViews = IdentityHashMap<DropdownPanel, LuminView>()
 
     private fun drawGui(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         luminView.render(mouseX, mouseY) { drawContent(graphics, mouseX, mouseY, partialTick) }
@@ -181,7 +179,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
 
         for (panel in panels) {
-            panelViews.getOrPut(panel) { com.github.epsilon.gui.lib.state.LuminView() }.render(if (panel === topmostHovered) backgroundMouseX else -1, if (panel === topmostHovered) backgroundMouseY else -1) {
+            panelViews.getOrPut(panel) { LuminView() }.render(if (panel === topmostHovered) backgroundMouseX else -1, if (panel === topmostHovered) backgroundMouseY else -1) {
             if (!panel.isVisible) return@render
             val intro = panel.introValue
             if (intro < 0.001f) return@render
@@ -480,7 +478,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private fun beginPanelFrames() {
         val frameId = ++renderFrameId
         for (panel in panels) {
-            panelViews.getOrPut(panel) { com.github.epsilon.gui.lib.state.LuminView() }.prepare {
+            panelViews.getOrPut(panel) { LuminView() }.prepare {
                 panel.beginRenderFrame(frameId)
             }
         }

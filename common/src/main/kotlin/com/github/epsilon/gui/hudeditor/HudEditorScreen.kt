@@ -1,7 +1,5 @@
 package com.github.epsilon.gui.hudeditor
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -9,25 +7,21 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ListSettingPopupScreen
 import com.github.epsilon.gui.dropdown.component.CategoryPanel
-import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.LuminUIGroup
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RectOutline
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.gui.lib.state.prepareLuminDataSources
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.HudElementManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.impl.ClientSetting
@@ -117,7 +111,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     private var hoveredElement: HudModule? by mutableStateOf(null)
 
-    private val luminView = com.github.epsilon.gui.lib.state.LuminView()
+    private val luminView = LuminView()
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         try {
@@ -139,7 +133,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         target.clear()
 
         LuminRenderSystem.setActiveTarget(target)
-        com.github.epsilon.gui.lib.state.prepareLuminDataSources()
+        prepareLuminDataSources()
         scene.beginFrame()
 
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)

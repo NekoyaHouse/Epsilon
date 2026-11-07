@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.panel
 
-import com.github.epsilon.kernel.state.*
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module

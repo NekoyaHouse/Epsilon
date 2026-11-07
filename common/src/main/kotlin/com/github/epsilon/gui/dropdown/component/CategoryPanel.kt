@@ -1,10 +1,13 @@
 package com.github.epsilon.gui.dropdown.component
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
+import com.github.epsilon.kernel.state.derivedStateOf
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module

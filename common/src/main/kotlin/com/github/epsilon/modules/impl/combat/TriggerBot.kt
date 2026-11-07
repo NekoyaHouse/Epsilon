@@ -10,6 +10,7 @@ import com.github.epsilon.utils.player.SwingMode
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -131,7 +132,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
     private fun shouldAttack(): Boolean {
         val canCrit = !nn.player.abilities.flying &&
                 !nn.player.isFallFlying &&
-                !nn.player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) &&
+                !nn.player.hasEffect(MobEffects.BLINDNESS) &&
                 nn.level.getBlockState(nn.player.blockPosition()).block !== Blocks.COBWEB
 
         if (nn.player.fallDistance > MIN_CRIT_FALL.toDouble() && nn.player.fallDistance < MAX_CRIT_FALL.toDouble()) {

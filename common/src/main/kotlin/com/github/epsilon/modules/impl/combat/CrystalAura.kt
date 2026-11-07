@@ -69,6 +69,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.function.IntConsumer
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -320,7 +321,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     confirmExplosion(Vec3(packet.x, packet.y, packet.z))
                 }
 
-                is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach(java.util.function.IntConsumer {
+                is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach(IntConsumer {
                     timing.confirm(
                         it
                     )

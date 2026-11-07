@@ -15,6 +15,8 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.Map.copyOf as immutableMapCopyOf
+import java.util.Map.of as immutableMapOf
 import java.util.regex.Pattern
 
 object EpsilonLanguageManager {
@@ -25,7 +27,7 @@ object EpsilonLanguageManager {
     private const val LANGUAGE_DIRECTORY = "i18n"
 
     @Volatile
-    private var translations: Map<String, String> = java.util.Map.of()
+    private var translations: Map<String, String> = immutableMapOf()
 
     @Volatile
     private var selectedLanguage: EpsilonLanguage = EpsilonLanguage.English
@@ -59,7 +61,7 @@ object EpsilonLanguageManager {
             appendLanguage(resourceManager, selectedCode, loadedTranslations)
         }
 
-        translations = java.util.Map.copyOf(loadedTranslations)
+        translations = immutableMapCopyOf(loadedTranslations)
         refreshUi()
     }
 

@@ -3,6 +3,7 @@ package com.github.epsilon.gui.lib.state
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.input.UiInputRouter
 import com.github.epsilon.kernel.state.StateNotifications
 import com.github.epsilon.kernel.state.StateObservation
 import com.github.epsilon.kernel.state.StateTracking
@@ -196,8 +197,8 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
 /** 根身份由稳定 key 决定；帧结束清理消失的入口。 */
 class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFrameClock()) : AutoCloseable {
     internal val defaultView = LuminView()
-    val input = com.github.epsilon.gui.lib.input.UiInputRouter()
-    private val inputFrame = ArrayList<com.github.epsilon.gui.lib.input.UiInputRouter.Entry>()
+    val input = UiInputRouter()
+    private val inputFrame = ArrayList<UiInputRouter.Entry>()
     internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) { input.collect(nodes, layer, inputFrame) }
     private val entries = LinkedHashMap<Any, LuminComposition>()
     private val visited = LinkedHashSet<Any>()

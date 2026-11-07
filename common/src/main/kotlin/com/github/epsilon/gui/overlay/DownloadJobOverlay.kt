@@ -1,15 +1,8 @@
 package com.github.epsilon.gui.overlay
 
-import com.github.epsilon.gui.lib.LuminUIScene
-import com.github.epsilon.gui.lib.Interaction
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.gui.lib.Outline
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.screen.EpsilonDialogScreen
@@ -37,7 +30,7 @@ object DownloadJobOverlay : AutoCloseable {
     private var renderedJob: AssetManager.DownloadJob? = null
 
     fun extractRenderState(screen: Screen, graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
-        val minecraft = mc ?: return
+        val minecraft = mc
         val job = AssetManager.activeJob()
         if (screen != minecraft.gui.screen() || screen is EpsilonDialogScreen || job == null || !job.isRunning()) {
             close()
@@ -168,7 +161,7 @@ object DownloadJobOverlay : AutoCloseable {
     }
 
     fun mouseClicked(screen: Screen, event: MouseButtonEvent): Boolean {
-        val minecraft = mc ?: return false
+        val minecraft = mc
         val cardBounds = bounds
         if (minecraft.gui.screen() != screen || screen != renderedScreen || cardBounds == null ||
             event.button() != InputConstants.MOUSE_BUTTON_LEFT

@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel.component.setting
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
@@ -9,13 +8,16 @@ import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.impl.KeybindSetting
 import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.input.MouseButtonEvent
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 private const val CHIP_WIDTH = 56.0f
 private const val CHIP_HEIGHT = 18.0f

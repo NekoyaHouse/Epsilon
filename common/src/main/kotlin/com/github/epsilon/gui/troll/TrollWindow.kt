@@ -1,18 +1,20 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.asUiScope
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.gui.lib.InputRegion
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
+import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 abstract class TrollWindow protected constructor() {
 

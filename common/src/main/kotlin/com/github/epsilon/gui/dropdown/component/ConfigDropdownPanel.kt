@@ -1,19 +1,14 @@
 package com.github.epsilon.gui.dropdown.component
 
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ConfigManager
 import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants

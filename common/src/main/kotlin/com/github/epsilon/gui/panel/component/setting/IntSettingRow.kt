@@ -1,19 +1,13 @@
 package com.github.epsilon.gui.panel.component.setting
 
-import com.github.epsilon.kernel.state.*
-import com.github.epsilon.gui.lib.Input
-import com.github.epsilon.gui.lib.Positioned
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Slider
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.UiTextMetrics
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.panel.component.RowSurface
 import com.github.epsilon.gui.panel.component.SettingRow
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.impl.IntSetting
-import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
@@ -21,6 +15,7 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import kotlin.math.roundToInt
+import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>(intSetting) {
 

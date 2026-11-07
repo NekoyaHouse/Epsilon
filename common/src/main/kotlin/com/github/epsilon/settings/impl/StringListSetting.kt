@@ -1,6 +1,7 @@
 package com.github.epsilon.settings.impl
 
 import com.github.epsilon.settings.Setting
+import java.util.List.copyOf as immutableListCopyOf
 
 class StringListSetting(
     name: String,
@@ -66,7 +67,7 @@ class StringListSetting(
                 result.add(entry)
             }
         }
-        return java.util.List.copyOf(result)
+        return immutableListCopyOf(result)
     }
 
 }
