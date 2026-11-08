@@ -62,7 +62,16 @@ class ModuleDetailPanel(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -88,7 +97,12 @@ class ModuleDetailPanel(
         val module = state.getSelectedModule()
         val detailTitle = module?.translatedName ?: EpsilonTranslations.Gui.NO_MODULE.getTranslatedName()
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            InputRegion(key = this@ModuleDetailPanel to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+            InputRegion(
+                key = this@ModuleDetailPanel to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
                 onCancel = { scrollBarDrag.reset() })
 
             val titleScale = 0.78f
@@ -144,7 +158,11 @@ class ModuleDetailPanel(
                         val hoverAnimation =
                             hoverAnimations.getOrPut(setting) { Animation(Easing.EASE_OUT_CUBIC, 120L) }
                         hoverAnimation.run(
-                            if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
+                            if (rowBounds.contains(
+                                    effectiveMouseX.toDouble(),
+                                    effectiveMouseY.toDouble()
+                                )
+                            ) 1.0f else 0.0f
                         )
 
                         // 逐行缓存：只有值或动画变化的行才重新捕获节点，其余行直接重放。
@@ -328,7 +346,12 @@ class ModuleDetailPanel(
 
     private fun UiScope.buildBindModeControl(module: Module, mouseX: Int, mouseY: Int) {
         val bindModeBounds = getBindModeBounds()
-        Interaction(module to "buildBindModeControl", bindModeBounds.relativeTo(origin)) { onClick { module.bindMode = if (it.x < bindModeBounds.centerX()) Module.BindMode.Toggle else Module.BindMode.Hold; true } }
+        Interaction(module to "buildBindModeControl", bindModeBounds.relativeTo(origin)) {
+            onClick {
+                module.bindMode =
+                    if (it.x < bindModeBounds.centerX()) Module.BindMode.Toggle else Module.BindMode.Hold; true
+            }
+        }
         val localBounds = bindModeBounds.relativeTo(origin)
         val bindProgress = animate(bindModeAnimation, module.bindMode == Module.BindMode.Hold)
         val hoverProgress =
@@ -345,15 +368,20 @@ class ModuleDetailPanel(
 
     private fun UiScope.buildKeybindControl(module: Module, mouseX: Int, mouseY: Int) {
         val keybindBounds = getKeybindBounds()
-        InputRegion(module to "bind", keybindBounds.relativeTo(origin),
+        InputRegion(
+            module to "bind", keybindBounds.relativeTo(origin),
             onPreviewPress = { event, _ ->
                 if (state.getListeningKeyBindModule() === module) {
-                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(null); true
+                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(
+                        null
+                    ); true
                 } else false
             },
             onPress = { event, _ ->
                 if (state.getListeningKeyBindModule() === module) {
-                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(null); true
+                    module.keyBind = KeybindUtils.encodeMouseButton(event.button()); state.setListeningKeyBindModule(
+                        null
+                    ); true
                 } else if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                     state.setListeningKeyBindModule(module); true
                 } else false
@@ -401,7 +429,11 @@ class ModuleDetailPanel(
 
     private fun UiScope.buildHiddenControl(module: Module, mouseX: Int, mouseY: Int) {
         val hiddenBounds = getHiddenBounds()
-        Interaction(module to "buildHiddenControl", hiddenBounds.relativeTo(origin)) { onClick { module.isHidden = it.x >= hiddenBounds.centerX(); true } }
+        Interaction(module to "buildHiddenControl", hiddenBounds.relativeTo(origin)) {
+            onClick {
+                module.isHidden = it.x >= hiddenBounds.centerX(); true
+            }
+        }
         val localBounds = hiddenBounds.relativeTo(origin)
         val hiddenProgress = animate(hiddenAnimation, module.isHidden)
         val hoverProgress =

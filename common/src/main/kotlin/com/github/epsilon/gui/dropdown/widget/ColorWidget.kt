@@ -353,7 +353,9 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         clearPendingColor()
     }
 
-    override fun blurInput() { commitFocusedInput(); blurFields() }
+    override fun blurInput() {
+        commitFocusedInput(); blurFields()
+    }
 
     fun hasFocusedInput(): Boolean {
         return focusedField != null

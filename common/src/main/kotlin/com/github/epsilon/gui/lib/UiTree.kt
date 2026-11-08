@@ -5,6 +5,9 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.input.UiInputSubscription
+import com.github.epsilon.gui.lib.render.UiPhaseValue
+import com.github.epsilon.gui.lib.state.LuminComposition
+import com.github.epsilon.graphics.schedulers.render2d.Render2DProperties
 import com.github.epsilon.gui.lib.render.LuminUiRenderer
 import com.github.epsilon.gui.lib.render.UiContentBuffer
 import com.github.epsilon.gui.lib.scene.LayerOffset
@@ -1013,7 +1016,7 @@ class UiTree private constructor(
         }
 
         /**
-         * 在独立视口缓冲中构建一个可裁剪子树。
+         * 构建在宿主批次内按插入顺序展开的可裁剪子树。
          */
         fun viewport(
             buffer: UiContentBuffer, viewport: UiRect,
@@ -1032,9 +1035,10 @@ class UiTree private constructor(
             val view = composition?.view
             val deltaX = mouseX - (composition?.inputX ?: 0)
             val deltaY = mouseY - (composition?.inputY ?: 0)
-            val pointer: (() -> Pair<Int, Int>)? = if (view != null && mouseX != Int.MIN_VALUE && mouseY != Int.MIN_VALUE) {
-                { (view.mouseX + deltaX) to (view.mouseY + deltaY) }
-            } else null
+            val pointer: (() -> Pair<Int, Int>)? =
+                if (view != null && mouseX != Int.MIN_VALUE && mouseY != Int.MIN_VALUE) {
+                    { (view.mouseX + deltaX) to (view.mouseY + deltaY) }
+                } else null
             val capture = capture { scope ->
                 scope.pushAbsolute(
                     UiRect(
@@ -1213,7 +1217,18 @@ class UiTree private constructor(
     /**
      * 子树级 layer 偏移；适合一组节点整体提升或下沉。
      */
-    internal class CompositionNode(val resolve: () -> List<UiNode>) : UiNode
+    internal class CompositionNode(val composition: LuminComposition) : UiNode {
+        fun resolve() = composition.resolve()
+    }
+
+    internal data class PropertyValue(val properties: Render2DProperties, val clip: UiRect?)
+    internal class PropertyNode(
+        val origin: UiRect,
+        val value: UiPhaseValue<PropertyValue>,
+        val children: List<UiNode>
+    ) : UiNode
+
+    internal class GeometryNode(val value: UiPhaseValue<List<UiNode>>) : UiNode
 
     data class LayerNode(val layer: Int, val children: List<UiNode>) : UiNode
 

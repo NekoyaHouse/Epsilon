@@ -229,6 +229,7 @@ private data class TextRendererMetrics(private val renderer: TextRenderer) : UiT
         renderer.getHeight(scale, fontLoader)
 
 }
+
 /** 推式动画只声明目标，帧时钟负责推进。 */
 fun UiScope.animate(animation: LuminAnimatable, target: Boolean): Float =
     animate(animation, if (target) 1.0f else 0.0f)

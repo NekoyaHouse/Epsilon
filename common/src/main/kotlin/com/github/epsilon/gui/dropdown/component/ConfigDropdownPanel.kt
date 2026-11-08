@@ -42,10 +42,12 @@ class ConfigDropdownPanel(panelIndex: Int) :
         if (!inputField.isFocused && inputField.text.isEmpty()) {
             afterLuminCommit { inputField.text = placeholder }
         }
-        InputRegion(inputField, UiRect(contentX, currentY, contentW, FIELD_HEIGHT),
+        InputRegion(
+            inputField, UiRect(contentX, currentY, contentW, FIELD_HEIGHT),
             onPress = { _, _ -> inputField.focus(); true },
             onKey = { keyPressed(it.key(), it.keycode(), it.modifiers()) },
-            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur)
+            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur
+        )
         inputField.draw(
             this, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY,
             placeholder, DropdownTheme.SETTING_TEXT_SCALE
@@ -70,7 +72,10 @@ class ConfigDropdownPanel(panelIndex: Int) :
                 val label = actions[index]
                 // 逐项缓存：按钮位置/悬停/翻译变化时才重新捕获节点。
                 LuminUIItem("config-action:$index") {
-                    Interaction("action", UiRect(btnX, btnY, btnW, BUTTON_HEIGHT)) { onClick { runAction(index); true } }
+                    Interaction(
+                        "action",
+                        UiRect(btnX, btnY, btnW, BUTTON_HEIGHT)
+                    ) { onClick { runAction(index); true } }
                     RoundRect(
                         btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         if (hovered) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH
@@ -113,26 +118,30 @@ class ConfigDropdownPanel(panelIndex: Int) :
             val deleteHovered =
                 isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), deleteX, rowY + 3.0f, 16.0f, 16.0f)
             LuminUIItem("config-row:$name") {
-                Interaction("switch", UiRect(contentX, rowY, contentW, ROW_HEIGHT)) { onClick {
-                try {
-                    ConfigManager.switchConfig(name)
-                    inputField.text = name
-                    inputField.setCursorToEnd()
-                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name
-                } catch (e: Exception) {
-                    status = errorText(e)
+                Interaction("switch", UiRect(contentX, rowY, contentW, ROW_HEIGHT)) {
+                    onClick {
+                        try {
+                            ConfigManager.switchConfig(name)
+                            inputField.text = name
+                            inputField.setCursorToEnd()
+                            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name
+                        } catch (e: Exception) {
+                            status = errorText(e)
+                        }
+                        true
+                    }
                 }
-                    true
-                } }
-                Interaction("delete", UiRect(deleteX, rowY + 3f, 16f, 16f)) { onClick {
-                try {
-                    ConfigManager.deleteConfig(name)
-                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name
-                } catch (e: Exception) {
-                    status = errorText(e)
+                Interaction("delete", UiRect(deleteX, rowY + 3f, 16f, 16f)) {
+                    onClick {
+                        try {
+                            ConfigManager.deleteConfig(name)
+                            status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name
+                        } catch (e: Exception) {
+                            status = errorText(e)
+                        }
+                        true
+                    }
                 }
-                    true
-                } }
                 RoundRect(
                     contentX, rowY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     if (activeRow) {

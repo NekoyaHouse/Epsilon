@@ -56,6 +56,7 @@ class TtfTextRenderer : ITextRenderer {
     private val batches: MutableMap<BatchKey, Batch> = LinkedHashMap()
 
     // 缓存与 scale 无关的布局数据，绘制时只做平移和缩放。
+    private var runCursor = 0
     private val layoutCache: MutableMap<LayoutKey, TextLayout> =
         object : LinkedHashMap<LayoutKey, TextLayout>(64, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<LayoutKey, TextLayout>): Boolean {
@@ -168,7 +169,7 @@ class TtfTextRenderer : ITextRenderer {
 
     private fun buildLayout(text: String, fontLoader: TtfFontLoader, revision: Long, atlasRevision: Long): TextLayout {
         // 坐标统一存 DEFAULT_SCALE 下的基础值，emit 时再乘调用方传入的 scale。
-        val runBuilders = LinkedHashMap<TtfGlyphAtlas, LayoutRunBuilder>()
+        val runBuilders = ArrayList<LayoutRunBuilder>()
         var xOffset = 0.0f
         var yOffset = 0.0f
         var maxLine = 0.0f
@@ -213,7 +214,8 @@ class TtfTextRenderer : ITextRenderer {
             val y2 = y1 + descriptor.height * scaledFont
             val advance = descriptor.advance * scaledFont + SPACING
 
-            runBuilders.getOrPut(descriptor.atlas) { LayoutRunBuilder(descriptor.atlas) }
+            (runBuilders.lastOrNull()?.takeIf { it.atlas === descriptor.atlas }
+                ?: LayoutRunBuilder(descriptor.atlas).also { runBuilders.add(it) })
                 .add(x1, y1, x2, y2, descriptor.uv, xOffset, xOffset + descriptor.advance * scaledFont)
 
             xOffset += advance
@@ -223,7 +225,7 @@ class TtfTextRenderer : ITextRenderer {
         maxLine = maxOf(maxLine, xOffset)
 
         val runs = ArrayList<LayoutRun>(runBuilders.size)
-        for (builder in runBuilders.values) {
+        for (builder in runBuilders) {
             runs.add(builder.build())
         }
 
@@ -319,10 +321,15 @@ class TtfTextRenderer : ITextRenderer {
     }
 
     private fun batchFor(atlas: TtfGlyphAtlas, blurRadius: Float, glitchEffect: TextGlitchEffect?): Batch {
-        val key = BatchKey(atlas, blurRadius, glitchEffect)
+        val last = batches.entries.firstOrNull { it.key.order == runCursor - 1 && it.value.offsetInAtlas > 0 }
+        if (last != null && last.key.atlas === atlas && last.key.blurRadius == blurRadius && last.key.glitchEffect == glitchEffect) return last.value
+        val order = runCursor++
+        val key = BatchKey(atlas, blurRadius, glitchEffect, order)
+        val obsolete = batches.keys.firstOrNull { it.order == order && it != key }
+        obsolete?.let { batches.remove(it)?.buffer?.close() }
         return batches.getOrPut(key) {
             Batch(
-                LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX), atlas, blurRadius, glitchEffect
+                LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX, stride), atlas, blurRadius, glitchEffect
             )
         }
     }
@@ -464,7 +471,7 @@ class TtfTextRenderer : ITextRenderer {
             val vertexCount = (batch.offsetInAtlas / stride).toInt()
             val indexCount = vertexCount / 4 * 6
 
-            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice())
+            pass.setVertexBuffer(0, batch.buffer.getGpuSlice())
             val fontTexture: LuminTexture = if (mode == Mode.STANDARD) atlas.getTexture() else atlas.getAlphaTexture()
             pass.setUniform("Sampler0", fontTexture.textureView, fontTexture.sampler)
             if (mode == Mode.FONT_BLUR) {
@@ -478,6 +485,9 @@ class TtfTextRenderer : ITextRenderer {
     }
 
     override fun clear() {
+        val unused = batches.keys.filter { it.order >= runCursor }
+        unused.forEach { batches.remove(it)?.buffer?.close() }
+        runCursor = 0
         for (batch in batches.values) {
             if (batch.offsetInAtlas > 0) {
                 if (batch.buffer.isMapped()) {
@@ -568,7 +578,12 @@ class TtfTextRenderer : ITextRenderer {
         }
     }
 
-    private data class BatchKey(val atlas: TtfGlyphAtlas, val blurRadius: Float, val glitchEffect: TextGlitchEffect?)
+    private data class BatchKey(
+        val atlas: TtfGlyphAtlas,
+        val blurRadius: Float,
+        val glitchEffect: TextGlitchEffect?,
+        val order: Int
+    )
 
     private data class FontBlurUniforms(val blurRadius: Float) : DynamicGpuDataStorage.DynamicGpuData {
         override fun write(buffer: ByteBuffer) {
@@ -601,7 +616,7 @@ class TtfTextRenderer : ITextRenderer {
 
     private class LayoutRun(val atlas: TtfGlyphAtlas, val data: FloatArray, val glyphCount: Int)
 
-    private class LayoutRunBuilder(private val atlas: TtfGlyphAtlas) {
+    private class LayoutRunBuilder(val atlas: TtfGlyphAtlas) {
 
         private var data = FloatArray(LAYOUT_FLOATS_PER_GLYPH * 16)
         private var glyphCount = 0

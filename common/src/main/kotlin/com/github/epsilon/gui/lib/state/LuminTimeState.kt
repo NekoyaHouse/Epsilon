@@ -9,12 +9,17 @@ private class ClockState<T>(
     private val sample: (Long) -> T,
 ) : State<T>, LuminFrameTask, AutoCloseable {
     private val state = mutableStateOf(sample(clock.nowNanos))
-    init { clock.register(this) }
+
+    init {
+        clock.register(this)
+    }
+
     override val value: T get() = state.value
     override fun advance(nowNanos: Long): Boolean {
         state.value = sample(nowNanos)
         return true
     }
+
     override fun close() = clock.unregister(this)
 }
 
@@ -22,7 +27,8 @@ private class ClockState<T>(
 fun luminBlink(key: Any, periodMs: Long = 500L): Boolean {
     require(periodMs > 0L)
     val composition = LuminRuntime.currentComposition
-    if (composition == null) return ((LuminRuntime.activeRoot?.clock?.nowNanos ?: System.nanoTime()) / (periodMs * 1_000_000L)) % 2L == 0L
+    if (composition == null) return ((LuminRuntime.activeRoot?.clock?.nowNanos
+        ?: System.nanoTime()) / (periodMs * 1_000_000L)) % 2L == 0L
     return composition.retain(ClockKey("blink", key)) {
         ClockState(composition.clock) { nanos -> (nanos / (periodMs * 1_000_000L)) % 2L == 0L }
     }.value

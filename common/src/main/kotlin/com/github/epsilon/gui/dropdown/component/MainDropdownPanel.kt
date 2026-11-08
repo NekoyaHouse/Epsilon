@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
@@ -129,10 +130,12 @@ class MainDropdownPanel(
     ) {
         val contentTop = contentLocalTop(origin)
         var currentY = contentTop - scroll + CONTENT_PADDING
-        Rect(
-            CONTENT_PADDING, contentTop, width - CONTENT_PADDING * 2.0f, 0.7f,
-            MD3Theme.withAlpha(MD3Theme.OUTLINE, 55)
-        )
+        Layer(ICON_SURFACE) {
+            Rect(
+                CONTENT_PADDING, contentTop, width - CONTENT_PADDING * 2.0f, 0.7f,
+                MD3Theme.withAlpha(MD3Theme.OUTLINE, 55)
+            )
+        }
 
         for (index in entries.indices) {
             val entry = entries[index]
@@ -148,21 +151,25 @@ class MainDropdownPanel(
                 Interaction(key = entry, bounds = UiRect(iconX, iconY, ICON_SIZE, ICON_SIZE)) {
                     onClick { entry.action.accept(entry.panelId); true }
                 }
-                RoundRect(
-                    iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS,
-                    MD3Theme.lerp(
-                        if (active) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH,
-                        MD3Theme.PRIMARY_CONTAINER,
-                        hover * 0.5f
+                Layer(ICON_SURFACE) {
+                    RoundRect(
+                        iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS,
+                        MD3Theme.lerp(
+                            if (active) MD3Theme.PRIMARY_CONTAINER else MD3Theme.SURFACE_CONTAINER_HIGH,
+                            MD3Theme.PRIMARY_CONTAINER,
+                            hover * 0.5f
+                        )
                     )
-                )
+                }
                 val iconScale = ICON_SCALE
                 val iconW = metrics.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS)
                 val iconH = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
-                Text(
-                    entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) / 2.0f, iconScale,
-                    if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS
-                )
+                Layer(ICON_CONTENT) {
+                    Text(
+                        entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) / 2.0f, iconScale,
+                        if (active) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS
+                    )
+                }
                 if (hovered) {
                     val label = entry.labelSupplier.get()
                     val labelScale = 0.42f
@@ -224,6 +231,10 @@ class MainDropdownPanel(
     }
 
     private companion object {
+        // 图标底板互不重叠，按局部阶段提交，避免每个缓存项切换形状/字体管线。
+        // 设置区和悬停提示仍在原层，偏移不越过相邻面板预留的 10 层间隔。
+        val ICON_SURFACE = LayerOffset(-2)
+        val ICON_CONTENT = LayerOffset(-1)
 
         private const val ICON_SIZE = 30.0f
         private const val ICON_GAP = 7.0f

@@ -202,7 +202,11 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
         val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
-        val layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), categoryRailPanel.getAnimatedWidth())
+        val layout = PanelLayout.compute(
+            LuminRenderSystem.getScaledWidthInt(),
+            LuminRenderSystem.getScaledHeightInt(),
+            categoryRailPanel.getAnimatedWidth()
+        )
         if (!layout.panel.contains(mouse.x(), mouse.y())) {
             scene.input.clearFocus()
             if (ClientSetting.closeOnOutside) minecraft.gui.setScreen(null)
@@ -213,8 +217,14 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (popupHost.activePopup != null) return popupHost.mouseScrolled(
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
-        return scene.input.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY
+        )
+        return scene.input.mouseScrolled(
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY),
+            scrollX,
+            scrollY
+        )
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
@@ -224,16 +234,24 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
 
-        return scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        return scene.input.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
         if (popupHost.activePopup != null) return popupHost.keyPressed(event)
         if (scene.input.keyPressed(event)) return true
-        if (event.isEscape) { onClose(); return true }
+        if (event.isEscape) {
+            onClose(); return true
+        }
         return super.keyPressed(event)
     }
 

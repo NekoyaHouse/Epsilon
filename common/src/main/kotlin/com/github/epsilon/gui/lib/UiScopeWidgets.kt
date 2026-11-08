@@ -85,8 +85,8 @@ fun UiScope.Slider(
 /**
  * 可裁剪滚动视口。
  *
- * 内容在独立缓冲里绘制，滚动时通过绝对平移模拟位移；子作用域的 [UiScope.origin]
- * 与 [UiTree.Scope] 内部推送的矩形保持一致。
+ * 内容在宿主批次的插入位置展开，继承属性和裁剪；旧 scroll 参数仍在构建时平移坐标。
+ * 需要避免滚动重建时，使用延迟 Transform 表达位移，并保持 scroll 参数为零。
  */
 fun UiScope.Viewport(
     buffer: UiContentBuffer, bounds: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float,

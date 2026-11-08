@@ -76,8 +76,14 @@ class StringListSelectPopup(
         lastViewport = animatedViewport
 
         renderBatch.LuminUIScene(animatedBounds, key = this) {
-            InputRegion(key = this@StringListSelectPopup to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
-                onBlur = {}, onCancel = { scrollBarDrag.reset() })
+            InputRegion(
+                key = this@StringListSelectPopup to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
+                onBlur = {},
+                onCancel = { scrollBarDrag.reset() })
 
             val progress = openAnimation.value
             PopupCard(

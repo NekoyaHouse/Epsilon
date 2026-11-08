@@ -16,11 +16,13 @@ data class UiPointerEvent(
     val doubleClick: Boolean = false,
     val deltaX: Double = 0.0,
     val deltaY: Double = 0.0,
+    internal val mappedLocal: Pair<Double, Double>? = null,
+    internal val declarationSource: MouseButtonEvent? = null,
 ) {
     val x: Double get() = source.x()
     val y: Double get() = source.y()
-    val localX: Double get() = x - bounds.x
-    val localY: Double get() = y - bounds.y
+    val localX: Double get() = mappedLocal?.first ?: (x - bounds.x)
+    val localY: Double get() = mappedLocal?.second ?: (y - bounds.y)
 }
 
 /** 回调只在宿主输入阶段执行。返回 true 的点击消费事件，false 继续向下命中。 */
@@ -37,13 +39,18 @@ class UiInteraction internal constructor() {
     internal var previewClick: ((UiPointerEvent) -> Boolean)? = null
 
     /** 聚焦控件优先读取按下事件，供快捷键录制捕获区域外鼠标键。 */
-    fun onPreviewClick(handler: (UiPointerEvent) -> Boolean) { focusable = true; previewClick = handler }
+    fun onPreviewClick(handler: (UiPointerEvent) -> Boolean) {
+        focusable = true; previewClick = handler
+    }
 
     fun onClick(button: Int = InputConstants.MOUSE_BUTTON_LEFT, handler: (UiPointerEvent) -> Boolean) {
         check(clicks.putIfAbsent(button, handler) == null) { "同一交互节点重复订阅按键: $button" }
     }
 
-    /** 按下时开始捕获；区域外仍收到拖动与同一按键的释放，节点消失时收到取消。 */
+    /**
+     * 按下时开始捕获；区域外仍收到拖动与同一按键的释放，节点消失时收到取消。
+     * 释放或取消后结束本次捕获；交互区域保留以接受下一次按下，键盘焦点独立管理。
+     */
     fun onDrag(
         button: Int = InputConstants.MOUSE_BUTTON_LEFT,
         onStart: (UiPointerEvent) -> Boolean = { true },
@@ -54,11 +61,25 @@ class UiInteraction internal constructor() {
         check(drags.putIfAbsent(button, UiDragSubscription(button, onStart, handler, onEnd, onCancel)) == null)
     }
 
-    fun onFocusChanged(handler: (Boolean) -> Unit) { focus = handler }
-    fun onKeyPressed(handler: (KeyEvent) -> Boolean) { focusable = true; key = handler }
-    fun onTextInput(handler: (CharacterEvent) -> Boolean) { focusable = true; text = handler }
-    fun onPreedit(handler: (PreeditEvent?) -> Boolean) { focusable = true; preedit = handler }
-    fun onScroll(handler: (Double, Double, Double, Double) -> Boolean) { scroll = handler }
+    fun onFocusChanged(handler: (Boolean) -> Unit) {
+        focus = handler
+    }
+
+    fun onKeyPressed(handler: (KeyEvent) -> Boolean) {
+        focusable = true; key = handler
+    }
+
+    fun onTextInput(handler: (CharacterEvent) -> Boolean) {
+        focusable = true; text = handler
+    }
+
+    fun onPreedit(handler: (PreeditEvent?) -> Boolean) {
+        focusable = true; preedit = handler
+    }
+
+    fun onScroll(handler: (Double, Double, Double, Double) -> Boolean) {
+        scroll = handler
+    }
 }
 
 /** 给持有编辑模型的控件声明输入订阅，区域相对当前作用域。 */
@@ -73,20 +94,25 @@ fun UiScope.InputRegion(
     onKey: ((KeyEvent) -> Boolean)? = null,
     onText: ((CharacterEvent) -> Boolean)? = null,
     onPreedit: ((PreeditEvent?) -> Boolean)? = null,
+    // 路由焦点不等于内部文本框正在编辑；控件须自行核验编辑状态后再提交缓冲。
     onBlur: () -> Unit = {},
     onScroll: ((Double, Double, Double, Double) -> Boolean)? = null,
     autoFocus: Boolean = false,
+    screenCoordinates: Boolean = true,
 ) {
+    fun UiPointerEvent.event() = if (screenCoordinates) source else declarationSource ?: source
     Interaction(key, bounds) {
         this.autoFocus = autoFocus
-        onPreviewPress?.let { handler -> onPreviewClick { handler(it.source, it.doubleClick) } }
+        onPreviewPress?.let { handler -> onPreviewClick { handler(it.event(), it.doubleClick) } }
         if (onPress != null) for (button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_8) {
             if (onDrag != null || onRelease != null) {
-                onDrag(button, onStart = { onPress(it.source, it.doubleClick) },
-                    onEnd = { onRelease?.invoke(it.source) }, onCancel = onCancel) {
-                    onDrag?.invoke(it.source, it.deltaX, it.deltaY)
+                onDrag(
+                    button, onStart = { onPress(it.event(), it.doubleClick) },
+                    onEnd = { onRelease?.invoke(it.event()) }, onCancel = onCancel
+                ) {
+                    onDrag?.invoke(it.event(), it.deltaX, it.deltaY)
                 }
-            } else onClick(button) { onPress(it.source, it.doubleClick) }
+            } else onClick(button) { onPress(it.event(), it.doubleClick) }
         }
         onKey?.let { onKeyPressed(it) }
         onText?.let { onTextInput(it) }
@@ -120,9 +146,13 @@ fun UiScope.Interaction(
     val router = view.input
     val subscription = composition.remember(InputKey(key, view)) { UiInputSubscription(router, key, view) }
     val handlers = UiInteraction().apply(block)
-    tree.appendNodes(listOf(UiTree.InteractionNode(
-        subscription, absolute(bounds.x, bounds.y, bounds.width, bounds.height), handlers,
-    )))
+    tree.appendNodes(
+        listOf(
+            UiTree.InteractionNode(
+                subscription, absolute(bounds.x, bounds.y, bounds.width, bounds.height), handlers,
+            )
+        )
+    )
 }
 
 private data class InputKey(val key: Any, val owner: LuminView)

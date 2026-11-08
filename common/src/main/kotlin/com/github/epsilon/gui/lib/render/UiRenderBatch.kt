@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.lib.render
 
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
+import com.github.epsilon.graphics.schedulers.render2d.Render2DProperties
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme
 import com.github.epsilon.gui.lib.UiTree
@@ -27,7 +29,7 @@ class UiRenderBatch private constructor(
     constructor(theme: UiTheme) : this(Render2DScheduler(), true, 0, theme, null)
 
     constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme, sceneRoot: LuminSceneRoot? = null) :
-        this(scheduler, false, baseLayer, theme, sceneRoot)
+            this(scheduler, false, baseLayer, theme, sceneRoot)
 
     init {
         Objects.requireNonNull(scheduler, "scheduler")
@@ -72,13 +74,13 @@ class UiRenderBatch private constructor(
      *
      * 该入口只用于底层编译器和少量需要设置 scissor 的容器，业务 UI 应优先提交 [UiTree]。
      */
-    fun layerHandle(relativeLayer: Int): Render2DScheduler.LayerHandle {
+    fun canvas(relativeLayer: Int): Render2DScheduler.Canvas {
         return absoluteLayer(baseLayer + relativeLayer)
     }
 
-    internal fun absoluteLayer(layer: Int): Render2DScheduler.LayerHandle {
+    internal fun absoluteLayer(layer: Int): Render2DScheduler.Canvas {
         touchedLayers.add(layer)
-        return scheduler.layer(layer)
+        return scheduler.canvas(layer)
     }
 
     fun render(tree: UiTree) {
@@ -86,7 +88,19 @@ class UiRenderBatch private constructor(
     }
 
     fun render(tree: UiTree, baseLayer: Int) {
-        LuminUiRenderer.renderIntoLayeredBatch(tree, this, this.baseLayer + baseLayer)
+        try {
+            LuminUiRenderer.renderIntoLayeredBatch(tree, this, this.baseLayer + baseLayer)
+        } finally {
+            UiRenderNode.release(tree.nodes)
+        }
+    }
+
+    internal fun renderProperties(tree: UiTree, properties: Render2DProperties, clip: Render2DScissor?) {
+        try {
+            UiRetainedRenderer.render(tree.nodes, this, baseLayer, properties, clip)
+        } finally {
+            UiRenderNode.release(tree.nodes)
+        }
     }
 
     fun flush() {

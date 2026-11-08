@@ -32,6 +32,11 @@ float glyphAlpha(vec2 uv) {
     return texture(Sampler0, uv).r;
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     float chromX = Params0.x;
     float chromY = Params0.y;
@@ -96,3 +101,11 @@ void main() {
     rgb += vec3(max(noise, 0.0)) * coverage;
     f_Color = vec4(max(rgb, 0.0), alpha);
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    f_Color *= epsilonTint;
+}
+#endif

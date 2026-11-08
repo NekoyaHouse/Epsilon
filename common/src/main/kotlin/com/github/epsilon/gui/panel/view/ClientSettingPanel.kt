@@ -47,7 +47,16 @@ class ClientSettingPanel(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(

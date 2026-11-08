@@ -16,7 +16,11 @@ import java.nio.ByteBuffer
  *
  * 该类只负责缓冲区管理，不负责具体顶点格式或绘制逻辑。
  */
-open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
+open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int, vertexStride: Int = 1) {
+
+    private val recording =
+        GeometryArena.current?.let { GeometryArena.RecordingBuffer(it, checkedBufferSize(size), vertexStride) }
+    private var recordingMapped = false
 
     private val usage: Int
     private val buffers = arrayOfNulls<GpuBuffer>(BUFFER_COUNT)
@@ -31,7 +35,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
     init {
         val initialSize = checkedBufferSize(size)
         this.usage = GpuBuffer.USAGE_MAP_WRITE or GpuBuffer.USAGE_COPY_DST or GpuBuffer.USAGE_COPY_SRC or usage
-        for (i in buffers.indices) {
+        if (recording == null) for (i in buffers.indices) {
             buffers[i] = createBuffer(i, initialSize)
             sizes[i] = initialSize
         }
@@ -42,14 +46,14 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      *
      * @return 当前 GPU 缓冲区大小，单位字节
      */
-    fun size(): Int = sizes[current]
+    fun size(): Int = recording?.size() ?: sizes[current]
 
     /**
      * 判断当前槽位是否已经映射到 CPU 可写内存。
      *
      * @return 已映射返回 true
      */
-    fun isMapped(): Boolean = mapped
+    fun isMapped(): Boolean = recordingMapped || mapped
 
     /**
      * 获取当前映射视图。
@@ -58,6 +62,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * @throws IllegalStateException 当缓冲区尚未映射时抛出
      */
     fun getMappedBuffer(): ByteBuffer {
+        recording?.let { check(recordingMapped); return it.map() }
         val buffer = mappedBuffer ?: throw IllegalStateException("LuminRingBuffer is not mapped")
         return buffer.data()
     }
@@ -70,6 +75,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * @param requiredBytes 所需的最小字节数
      */
     fun ensureCapacity(requiredBytes: Long) {
+        recording?.let { it.ensureCapacity(Math.toIntExact(requiredBytes)); return }
         if (requiredBytes <= size()) {
             return
         }
@@ -83,6 +89,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * 如果已经映射，则直接返回。
      */
     fun tryMap() {
+        recording?.let { it.map(); recordingMapped = true; return }
         if (mapped) return
         beginFrameIfNeeded()
         mappedBuffer = getGpuBuffer().map(false, true)
@@ -93,6 +100,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * 取消当前槽位映射。
      */
     fun unmap() {
+        recording?.let { it.unmap(); recordingMapped = false; return }
         if (!mapped) return
         mappedBuffer!!.close()
         mappedBuffer = null
@@ -103,6 +111,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * 切换到下一个轮转槽位。
      */
     fun rotate() {
+        recording?.let { it.reset(); recordingMapped = false; return }
         beginFrameIfNeeded()
         current = (current + 1) % buffers.size
     }
@@ -124,7 +133,9 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      *
      * @return 当前 GPU 缓冲区
      */
-    fun getGpuBuffer(): GpuBuffer = buffers[current]!!
+    fun getGpuBuffer(): GpuBuffer = recording?.slice()?.buffer() ?: buffers[current]!!
+
+    fun getGpuSlice(): GpuBufferSlice = recording?.slice() ?: getGpuBuffer().slice()
 
     /**
      * 将源数据写入当前槽位的指定偏移。
@@ -142,6 +153,7 @@ open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int) {
      * 关闭所有 GPU 资源。
      */
     fun close() {
+        recording?.let { it.reset(); recordingMapped = false; return }
         if (mapped) unmap()
         for (buffer in buffers) {
             buffer!!.close()

@@ -15,6 +15,11 @@ float aastep(float x) {
     return smoothstep(-afwidth, afwidth, x);
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     vec4 tex = texture(Sampler0, f_TexCoord);
     vec4 color = tex * f_Color;
@@ -36,3 +41,11 @@ void main() {
     if (alpha < 0.001 || color.a < 0.01) discard;
     fragColor = vec4(color.rgb, color.a * alpha);
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    fragColor *= epsilonTint;
+}
+#endif

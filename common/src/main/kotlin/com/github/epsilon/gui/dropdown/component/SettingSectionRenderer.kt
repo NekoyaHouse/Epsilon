@@ -54,10 +54,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val sectionWidth = sectionWidth(width)
         var cursor = y
         with(scope) {
+            val labels = ArrayList<HeaderLabels>()
             for (node in nodes) {
-                drawNode(mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth)
+                drawNode(mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth, labels)
                 cursor += nodeHeight(node)
             }
+            flushLabels(labels)
         }
     }
 
@@ -96,14 +98,18 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     private fun UiScope.drawNode(
         mouseX: Int, mouseY: Int,
         node: Node, depth: Int, x: Float, y: Float, width: Float,
+        labels: MutableList<HeaderLabels>,
     ) {
         if (!node.hasHeader()) {
+            flushLabels(labels)
             drawElements(mouseX, mouseY, node, depth, x, y, width)
             return
         }
 
         val cardBounds = card(node, depth, x, width)
         val progress = expandProgress(node)
+        // 只跨越互不重叠的折叠组头合批；展开卡片与内容保留独立的绘制边界。
+        if (progress > 0.0f) flushLabels(labels)
         val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET + elementsHeight(node)
         Interaction(key = node, bounds = UiRect(cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
             onClick { toggleCollapsed(node); true }
@@ -142,10 +148,6 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         )
         val labelY =
             y + (DropdownTheme.GROUP_HEADER_HEIGHT - metrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f
-        Text(
-            label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
-            DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
-        )
 
         val countLabel = node.totalSettingCount().toString()
         val countWidth = metrics.textWidth(
@@ -157,10 +159,6 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val countY = y + (DropdownTheme.GROUP_HEADER_HEIGHT - chipHeight) * 0.5f
         RoundRect(countX, countY, countWidth, chipHeight, chipHeight / 2.0f, DropdownTheme.groupCountChip())
         val countTextY = countY + (chipHeight - metrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f
-        Text(
-            countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY,
-            DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText()
-        )
 
         val chevronSize = 2.5f
         Triangle(
@@ -168,6 +166,13 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             y + DropdownTheme.GROUP_HEADER_HEIGHT * 0.5f, chevronSize, progress,
             DropdownTheme.groupChevron(hoverProgress)
         )
+        labels.add(
+            HeaderLabels(
+                label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
+                countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY
+            )
+        )
+        if (progress > 0.0f) flushLabels(labels)
 
         if (progress > 0.001f) {
             val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
@@ -190,6 +195,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         node: Node, depth: Int, x: Float, y: Float, width: Float,
     ) {
         var cursor = y
+        val labels = ArrayList<HeaderLabels>()
         for (element in node.elements) {
             when (element) {
                 is WidgetElement -> {
@@ -197,6 +203,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
                     if (!widget.isVisible()) {
                         continue
                     }
+                    flushLabels(labels)
                     val widgetHeight = widget.getHeight()
                     val widgetBounds = UiRect(x, cursor, width, widgetHeight)
                     if (widget.setting !is BoolSetting && !widget.setting.isViaSupported()) {
@@ -225,11 +232,27 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
                 is ChildElement -> {
                     val child = element.node
-                    drawNode(mouseX, mouseY, child, depth, x, cursor, width)
+                    drawNode(mouseX, mouseY, child, depth, x, cursor, width, labels)
                     cursor += nodeHeight(child)
                 }
             }
         }
+        // 队列属于当前裁剪作用域，不能把文字带出展开动画的 ClipIf。
+        flushLabels(labels)
+    }
+
+    private fun UiScope.flushLabels(labels: MutableList<HeaderLabels>) {
+        for (header in labels) {
+            Text(
+                header.title, header.titleX, header.titleY,
+                DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
+            )
+            Text(
+                header.count, header.countX, header.countY,
+                DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText()
+            )
+        }
+        labels.clear()
     }
 
     // --- 命中 ---
@@ -284,6 +307,11 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     private data class Card(val x: Float, val width: Float)
+
+    private data class HeaderLabels(
+        val title: String, val titleX: Float, val titleY: Float,
+        val count: String, val countX: Float, val countY: Float,
+    )
 
     private sealed interface Element
 

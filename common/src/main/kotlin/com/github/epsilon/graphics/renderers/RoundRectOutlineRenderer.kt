@@ -8,15 +8,19 @@ import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
 import java.awt.Color
 import java.util.*
 
-class RoundRectOutlineRenderer private constructor() : IRenderer {
+class RoundRectOutlineRenderer private constructor(
+    private val pipeline: RenderPipeline = LuminRenderPipelines.ROUND_RECT_OUTLINE,
+    private val fillSupported: Boolean = false,
+) : IRenderer {
 
-    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX)
+    private val buffer = LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE)
 
     private var scissorEnabled = false
     private var scissorX = 0
@@ -34,6 +38,9 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
         private const val OUTLINE_BYTES = STRIDE * 4L
 
         fun create(): RoundRectOutlineRenderer = RendererManager.register(RoundRectOutlineRenderer())
+
+        internal fun createShape(): RoundRectOutlineRenderer =
+            RendererManager.register(RoundRectOutlineRenderer(LuminRenderPipelines.UI_SHAPE, true))
 
     }
 
@@ -99,12 +106,12 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
         radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
         outlineWidth: Float, colorTopLeft: Color, colorBottomLeft: Color, colorBottomRight: Color, colorTopRight: Color,
     ) {
-        if (outlineWidth <= 0.0f) return
+        if (outlineWidth == 0f || outlineWidth < 0f && !fillSupported) return
 
         buffer.ensureCapacity(currentOffset + OUTLINE_BYTES)
         buffer.tryMap()
 
-        val halfOutline = outlineWidth * 0.5f
+        val halfOutline = maxOf(0f, outlineWidth * 0.5f)
         val x2 = x + width
         val y2 = y + height
         val outerX1 = x - halfOutline
@@ -132,6 +139,29 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
             outerX2, outerY1, x, y, x2, y2, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
             outlineWidth, argbTopRight
         )
+    }
+
+    /** 箭头用包围四边形承载，片段阶段恢复原三角形重心覆盖率，与圆角形状共用管线。 */
+    internal fun addChevronTriangle(centerX: Float, centerY: Float, size: Float, progress: Float, color: Color) {
+        check(fillSupported)
+        val t = progress.coerceIn(0f, 1f)
+        val x1 = centerX - size
+        val y1 = centerY - size
+        val x2 = centerX - size + size * 2f * t
+        val y2 = centerY + size - size * 2f * t
+        val x3 = centerX + size - size * t
+        val y3 = centerY + size * t
+        val left = minOf(x1, x2, x3);
+        val right = maxOf(x1, x2, x3)
+        val top = minOf(y1, y2, y3);
+        val bottom = maxOf(y1, y2, y3)
+        buffer.ensureCapacity(currentOffset + OUTLINE_BYTES)
+        buffer.tryMap()
+        val abgr = ARGB.toABGR(color.rgb)
+        addVertex(left, top, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(left, bottom, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(right, bottom, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(right, top, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
     }
 
     private fun addVertex(
@@ -183,7 +213,7 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
             { "Round Rect Outline Draw" }, colorView, Optional.empty<Vector4fc>(),
             info.depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.ROUND_RECT_OUTLINE))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("DynamicTransforms", info.dynamicUniforms)
@@ -217,7 +247,7 @@ class RoundRectOutlineRenderer private constructor() : IRenderer {
             pass.disableScissor()
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer().slice())
+        pass.setVertexBuffer(0, buffer.getGpuSlice())
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount), LuminRenderSystem.getQuadIndexType())
         pass.drawIndexed(info.indexCount, 1, 0, 0, 0)
     }

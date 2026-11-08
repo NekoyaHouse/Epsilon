@@ -96,7 +96,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
                 }
 
                 for (index in tags.indices) {
-                    renderTag(scheduler.layer(index), tags[index])
+                    renderTag(scheduler.canvas(index), tags[index])
                 }
 
                 scheduler.flushAndClear()
@@ -216,7 +216,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         )
     }
 
-    private fun renderTag(layer: Render2DScheduler.LayerHandle, tag: TagLayout) {
+    private fun renderTag(layer: Render2DScheduler.Canvas, tag: TagLayout) {
         val segmentRects = segmentRects(tag.segments)
         val segmentRadii = segmentRadii(tag.segments)
 
@@ -247,7 +247,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         }
     }
 
-    private fun renderSegmentContent(layer: Render2DScheduler.LayerHandle, segment: SegmentLayout, renderScale: Float) {
+    private fun renderSegmentContent(layer: Render2DScheduler.Canvas, segment: SegmentLayout, renderScale: Float) {
         val content = segment.content
         var cursorX = segment.x + segment.paddingX
         val textY = segment.y + (segment.height - segment.textHeight) * 0.5f

@@ -88,7 +88,9 @@ class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(set
         )
     }
 
-    override fun blurInput() { listening = false }
+    override fun blurInput() {
+        listening = false
+    }
 
     override fun previewMouseClicked(button: Int): Boolean {
         if (!listening) return false

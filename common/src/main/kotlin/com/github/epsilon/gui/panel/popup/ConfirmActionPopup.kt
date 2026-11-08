@@ -147,6 +147,8 @@ class ConfirmActionPopup(
         confirmButtonBounds = UiRect(confirmX, buttonY, buttonWidth, buttonHeight)
     }
 
-    override fun close() { inputView.close() }
-
+    override fun close() {
+        inputView.close()
     }
+
+}

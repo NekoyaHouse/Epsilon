@@ -44,7 +44,9 @@ class KeybindSettingRow(private val keybindSetting: KeybindSetting) : SettingRow
         this.listeningState = listening
     }
 
-    override fun setFocused(focused: Boolean) { if (!focused) listeningState = false }
+    override fun setFocused(focused: Boolean) {
+        if (!focused) listeningState = false
+    }
 
     fun bindMouse(event: MouseButtonEvent): Boolean {
         if (!listeningState) return false

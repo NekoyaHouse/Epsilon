@@ -46,8 +46,10 @@ abstract class TrollWindow protected constructor() {
     fun bindInput(scope: UiTree.Scope, metrics: TextRenderer) {
         val ui = scope.asUiScope(TrollTheme.metrics(metrics))
         val origin = ui.origin
-        fun eventInModel(event: MouseButtonEvent) = MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
-        ui.InputRegion(key = this, bounds = bounds,
+        fun eventInModel(event: MouseButtonEvent) =
+            MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
+        ui.InputRegion(
+            key = this, bounds = bounds,
             onPress = { event, _ ->
                 val pointer = eventInModel(event)
                 mouseClicked(pointer) || bounds.contains(pointer.x(), pointer.y())

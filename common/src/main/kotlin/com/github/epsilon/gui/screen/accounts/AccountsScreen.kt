@@ -287,10 +287,16 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     private fun drawToolbar(scope: UiTree.Scope, mouseX: Int, mouseY: Int) {
         val searchBounds = this.searchBounds ?: return
         val sortBounds = this.sortBounds ?: return
-        scope.asUiScope(textRenderer).InputRegion(searchField, searchBounds,
+        scope.asUiScope(textRenderer).InputRegion(
+            searchField, searchBounds,
             onPress = { _, _ -> searchField.focus(); true }, onKey = searchField::keyPressed,
-            onText = { val handled = searchField.charTyped(it); if (handled) { scroll = 0f; scrollVelocity = 0f }; handled },
-            onBlur = searchField::blur)
+            onText = {
+                val handled = searchField.charTyped(it); if (handled) {
+                scroll = 0f; scrollVelocity = 0f
+            }; handled
+            },
+            onBlur = searchField::blur
+        )
         scope.asUiScope(textRenderer).Interaction("sort", sortBounds) {
             onClick { sortMode = sortMode.next(); this@AccountsScreen.scroll = 0f; scrollVelocity = 0f; true }
         }
@@ -336,8 +342,9 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
                         onClick {
                             focusedIndex = i
                             if (authenticating.get() !== account) {
-                                if (row.isConfirmingDelete()) { row.setConfirmingDelete(false); AccountManager.remove(account) }
-                                else row.setConfirmingDelete(true)
+                                if (row.isConfirmingDelete()) {
+                                    row.setConfirmingDelete(false); AccountManager.remove(account)
+                                } else row.setConfirmingDelete(true)
                             }
                             true
                         }
@@ -410,8 +417,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             val rect = UiRect(x, addBarY, buttonWidth, buttonHeight)
             scope.asUiScope(textRenderer).Interaction("add" to i, rect) {
                 onClick {
-                    when (i) { 0 -> startAdd(AddMode.CRACKED); 1 -> startAdd(AddMode.ALTENING)
-                        2 -> startAdd(AddMode.SESSION); 3 -> startAddMicrosoft() }
+                    when (i) {
+                        0 -> startAdd(AddMode.CRACKED); 1 -> startAdd(AddMode.ALTENING)
+                        2 -> startAdd(AddMode.SESSION); 3 -> startAddMicrosoft()
+                    }
                     true
                 }
             }
@@ -467,10 +476,20 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
         val fieldBounds = formFieldBounds
         if (fieldBounds != null) {
-            scope.asUiScope(textRenderer).InputRegion(field, fieldBounds,
+            scope.asUiScope(textRenderer).InputRegion(
+                field, fieldBounds,
                 onPress = { _, _ -> field.focus(); true }, onKey = field::keyPressed,
-                onText = field::charTyped, onBlur = field::blur, autoFocus = true)
-            field.buildUi(scope.asUiScope(textRenderer), fieldBounds, mouseX.toDouble(), mouseY.toDouble(), textRenderer, placeholder, 0.7f)
+                onText = field::charTyped, onBlur = field::blur, autoFocus = true
+            )
+            field.buildUi(
+                scope.asUiScope(textRenderer),
+                fieldBounds,
+                mouseX.toDouble(),
+                mouseY.toDouble(),
+                textRenderer,
+                placeholder,
+                0.7f
+            )
         }
 
         drawFormButtons(scope, true)
@@ -513,7 +532,12 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        return scene.input.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY)
+        return scene.input.mouseScrolled(
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY),
+            scrollX,
+            scrollY
+        )
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {

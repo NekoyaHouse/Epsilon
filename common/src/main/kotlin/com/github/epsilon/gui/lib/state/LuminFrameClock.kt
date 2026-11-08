@@ -15,8 +15,13 @@ class LuminFrameClock(private val timeSource: () -> Long = System::nanoTime) {
         private set
     val taskCount: Int get() = tasks.size
 
-    fun register(task: LuminFrameTask) { tasks.add(task) }
-    fun unregister(task: LuminFrameTask) { tasks.remove(task) }
+    fun register(task: LuminFrameTask) {
+        tasks.add(task)
+    }
+
+    fun unregister(task: LuminFrameTask) {
+        tasks.remove(task)
+    }
 
     fun advance(nowNanos: Long = timeSource()) {
         check(nowNanos >= this.nowNanos) { "帧时钟必须单调递增" }

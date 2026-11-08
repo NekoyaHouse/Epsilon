@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.component
 
 import com.github.epsilon.gui.lib.LuminUIItem
+import com.github.epsilon.gui.lib.Transform
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.control.UiScrollBar
@@ -45,23 +47,16 @@ class CategoryPanel : AbstractDropdownPanel {
 
     override fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float) {
         val buttons = visibleButtons()
-        val expand = openAnim.value
         val frameId = getRenderFrameId()
         val buttonWidth = if (maxScroll > 0.0f) width - UiScrollBar.HOVER_WIDTH + 1f else width
-        val visibleBottom = visibleHeight * expand
-        var itemY = -scroll
-        for (button in buttons) {
-            val buttonHeight = button.getHeightForFrame(frameId)
-            val visible = itemY + buttonHeight > 0.0f && itemY < visibleBottom
-            if (visible) {
-                // 逐项缓存：只有模块状态、悬停或动画变化的行才重新捕获节点。
-                val itemBounds = UiRect(0.0f, itemY, buttonWidth, buttonHeight)
-                LuminUIItem(button) {
-                    // 与迁移前一致：按钮宽度取 buttonWidth（滚动条出现时收窄），而不是面板宽度。
-                    button.drawInScope(this, mouseX, mouseY, itemBounds)
-                }
+        Transform({ Render2DTransform.translation(0f, -scroll) }) {
+            var itemY = 0f
+            for (button in buttons) {
+                val buttonHeight = button.getHeightForFrame(frameId)
+                val itemBounds = UiRect(0f, itemY, buttonWidth, buttonHeight)
+                LuminUIItem(button) { button.drawInScope(this, mouseX, mouseY, itemBounds) }
+                itemY += buttonHeight
             }
-            itemY += buttonHeight
         }
     }
 

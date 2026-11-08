@@ -81,7 +81,8 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
         val popupBounds = UiRect(bounds.x, popupY, bounds.width, bounds.height)
 
         renderBatch.LuminUIScene(popupBounds, key = this) {
-            InputRegion(key = this@EnumSelectPopup to "input", onScroll = ::mouseScrolled,
+            InputRegion(
+                key = this@EnumSelectPopup to "input", onScroll = ::mouseScrolled,
                 onBlur = {}, onCancel = {})
 
             val progress = openAnimation.value
@@ -112,7 +113,10 @@ class EnumSelectPopup(bounds: UiRect, private val setting: EnumSetting<*>) : Pan
                         Interaction(modes[i], localItemBounds) {
                             onClick {
                                 val mode = modes[i]
-                                if (!setting.isModeSupportedUnchecked(mode)) PlatformNoticeScreen.showOption(setting, mode)
+                                if (!setting.isModeSupportedUnchecked(mode)) PlatformNoticeScreen.showOption(
+                                    setting,
+                                    mode
+                                )
                                 else setModeUnchecked(setting, mode)
                                 true
                             }

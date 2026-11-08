@@ -219,13 +219,17 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         return true
     }
 
-    override fun cancelInput() { dragging = false; clearPendingValue() }
+    override fun cancelInput() {
+        dragging = false; clearPendingValue()
+    }
 
     fun isFocused(): Boolean {
         return inputField.isFocused
     }
 
     override fun blurInput() {
+        // 路由焦点也覆盖拖动；只有文本编辑会话才能提交输入缓冲，避免写回旧值。
+        if (!inputField.isFocused) return
         commitInput()
         inputField.blur()
     }

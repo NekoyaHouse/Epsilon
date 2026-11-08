@@ -179,68 +179,86 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         }
 
         for (panel in panels) {
-            panelViews.getOrPut(panel) { LuminView() }.render(if (panel === topmostHovered) backgroundMouseX else -1, if (panel === topmostHovered) backgroundMouseY else -1) {
-            if (!panel.isVisible) return@render
-            val intro = panel.introValue
-            if (intro < 0.001f) return@render
-
-            val slideOffset = (1.0f - intro) * 10.0f
-            val origY = panel.y
-            panel.setPosition(panel.x, origY - slideOffset)
-
-            val panelH = panel.panelHeight
-            val revealedH = panelH * intro
-
-            val panelBounds = UiRect(panel.x, panel.y, panel.width, panelH)
-            // 背景层：位置、高度、展开/淡入进度、滚动平滑位置任一变化才重建。
-            dropdownContent(
-                panelBounds,
-                panel.id to "background"
+            panelViews.getOrPut(panel) { LuminView() }.render(
+                if (panel === topmostHovered) backgroundMouseX else -1,
+                if (panel === topmostHovered) backgroundMouseY else -1
             ) {
-                ClipIf(
-                    intro < 1.0f,
-                    -shadowPad,
-                    -shadowPad,
-                    panel.width + shadowPad * 2.0f,
-                    revealedH + shadowPad * 2.0f
-                ) {
-                    panel.drawBackground()
-                }
-            }
+                if (!panel.isVisible) return@render
+                val intro = panel.introValue
+                if (intro < 0.001f) return@render
 
-            val clipY = panel.contentClipY
-            val clipH = panel.contentClipHeight
-            val revealedBottom = panel.y + revealedH
-            val actualClipH = minOf(clipH, revealedBottom - clipY)
-            if (actualClipH > 0.5f) {
-                val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
-                val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
-                val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
-                val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
+                val slideOffset = (1.0f - intro) * 10.0f
+                val origY = panel.y
+                panel.setPosition(panel.x, origY - slideOffset)
 
-                // 内部重复项再通过 LuminUIItem 逐项缓存。
+                val panelH = panel.panelHeight
+                val revealedH = panelH * intro
+
+                val panelBounds = UiRect(panel.x, panel.y, panel.width, panelH)
+                // 背景层：位置、高度、展开/淡入进度、滚动平滑位置任一变化才重建。
                 dropdownContent(
-                    contentBounds,
-                    panel.id to "content"
+                    panelBounds,
+                    panel.id to "background"
                 ) {
-                    ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
-                        panel.drawContent(hoverMouseX, hoverMouseY)
+                    ClipIf(
+                        intro < 1.0f,
+                        -shadowPad,
+                        -shadowPad,
+                        panel.width + shadowPad * 2.0f,
+                        revealedH + shadowPad * 2.0f
+                    ) {
+                        panel.drawBackground()
                     }
                 }
-            }
 
-            panel.setPosition(panel.x, origY)
+                val clipY = panel.contentClipY
+                val clipH = panel.contentClipHeight
+                val revealedBottom = panel.y + revealedH
+                val actualClipH = minOf(clipH, revealedBottom - clipY)
+                if (actualClipH > 0.5f) {
+                    val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
+                    val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
+                    val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
+                    val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
+
+                    // 内部重复项再通过 LuminUIItem 逐项缓存。
+                    dropdownContent(
+                        contentBounds,
+                        panel.id to "content"
+                    ) {
+                        ClipIf(requiresContentScissor, 0.0f, 0.0f, panel.width, actualClipH) {
+                            panel.drawContent(hoverMouseX, hoverMouseY)
+                        }
+                    }
+                }
+
+                panel.setPosition(panel.x, origY)
 
             }
         }
 
         dropdownContent(screenBounds, "search") {
-            InputRegion(key = searchField, bounds = UiRect(searchX, searchY, searchWidth, searchHeight),
-                onPress = { event, _ -> searchField.focusIfContains(event.x(), event.y(), searchX, searchY, searchWidth, searchHeight) },
+            InputRegion(
+                key = searchField,
+                bounds = UiRect(searchX, searchY, searchWidth, searchHeight),
+                onPress = { event, _ ->
+                    searchField.focusIfContains(
+                        event.x(),
+                        event.y(),
+                        searchX,
+                        searchY,
+                        searchWidth,
+                        searchHeight
+                    )
+                },
                 onKey = { event ->
-                    if (event.isEscape) { searchField.blur(); scene.input.clearFocus(); true }
-                    else searchField.keyPressed(event).also { if (it) syncSearchQuery() }
-                }, onText = { event -> searchField.charTyped(event).also { if (it) syncSearchQuery() } }, onBlur = searchField::blur)
+                    if (event.isEscape) {
+                        searchField.blur(); scene.input.clearFocus(); true
+                    } else searchField.keyPressed(event).also { if (it) syncSearchQuery() }
+                },
+                onText = { event -> searchField.charTyped(event).also { if (it) syncSearchQuery() } },
+                onBlur = searchField::blur
+            )
             searchField.draw(
                 this, searchX, searchY, searchWidth, searchHeight, mouseX, mouseY,
                 EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f
@@ -261,7 +279,13 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
      */
     private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownBatch!!.LuminUIScene(bounds, dropdownLayer, key, content)
+        dropdownBatch!!.LuminUIScene(
+            bounds,
+            dropdownLayer,
+            key,
+            retainPosition = key is Pair<*, *> && key.second == "background",
+            block = content
+        )
     }
 
     /** 立即模式的绘制 pass（每帧重建）。 */
@@ -306,8 +330,15 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
         val handled = scene.input.mouseClicked(mouse, isDoubleClick)
         if (handled) {
-            val panel = panels.lastOrNull { it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(mouse.x(), mouse.y()) }
-            if (panel != null) { panels.remove(panel); panels.add(panel) }
+            val panel = panels.lastOrNull {
+                it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(
+                    mouse.x(),
+                    mouse.y()
+                )
+            }
+            if (panel != null) {
+                panels.remove(panel); panels.add(panel)
+            }
             DropdownLayoutState.save(panels)
             reactMouseButton(mouse.button())
         }
@@ -318,15 +349,23 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
 
         val handled = scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
-        if (handled) { DropdownLayoutState.save(panels); react(ReisaDropdownCompanion.Action.CONFIRM) }
+        if (handled) {
+            DropdownLayoutState.save(panels); react(ReisaDropdownCompanion.Action.CONFIRM)
+        }
         return handled
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
 
-        val handled = scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        val handled = scene.input.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
         if (handled) DropdownLayoutState.save(panels)
         return handled
     }
@@ -345,7 +384,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
             return true
         }
         if (scene.input.keyPressed(event)) return true
-        if (event.isEscape) { onClose(); return true }
+        if (event.isEscape) {
+            onClose(); return true
+        }
         return super.keyPressed(event)
     }
 

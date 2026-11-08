@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.lib
 
 import com.github.epsilon.gui.lib.state.LuminRuntime
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 
 
 /**
@@ -33,7 +34,12 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
     fun contains(px: Double, py: Double): Boolean {
         val composition = LuminRuntime.currentComposition
         val view = composition?.view
-        if (composition != null && view != null && !composition.alwaysDirty) return view.contains(composition, this, px, py)
+        if (composition != null && view != null && !composition.alwaysDirty) return view.contains(
+            composition,
+            this,
+            px,
+            py
+        )
         return px >= x && px <= right() && py >= y && py <= bottom()
     }
 
@@ -59,6 +65,22 @@ data class UiRect(val x: Float, val y: Float, val width: Float, val height: Floa
 
     fun translate(deltaX: Float, deltaY: Float): UiRect {
         return UiRect(x + deltaX, y + deltaY, width, height)
+    }
+
+    fun transformed(transform: Render2DTransform): UiRect {
+        val xs = floatArrayOf(
+            transform.mapX(x, y),
+            transform.mapX(right(), y),
+            transform.mapX(x, bottom()),
+            transform.mapX(right(), bottom())
+        )
+        val ys = floatArrayOf(
+            transform.mapY(x, y),
+            transform.mapY(right(), y),
+            transform.mapY(x, bottom()),
+            transform.mapY(right(), bottom())
+        )
+        return UiRect(xs.min(), ys.min(), xs.max() - xs.min(), ys.max() - ys.min())
     }
 
     fun intersect(other: UiRect): UiRect? {

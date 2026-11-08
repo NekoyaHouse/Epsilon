@@ -127,10 +127,11 @@ class TrollSettingsWindow(
                         entry.row.draw(tree, metrics, mouseX, mouseY)
                     }
                 } else {
-                    content.asUiScope(TrollTheme.metrics(metrics)).Interaction(key = entry.section!!, bounds = entry.bounds) {
-                        onClick { entry.section.toggleCollapsed(); true }
-                        onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
-                    }
+                    content.asUiScope(TrollTheme.metrics(metrics))
+                        .Interaction(key = entry.section!!, bounds = entry.bounds) {
+                            onClick { entry.section.toggleCollapsed(); true }
+                            onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
+                        }
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
                     content.layer(TrollZ.Base) { z ->
                         z.rect(

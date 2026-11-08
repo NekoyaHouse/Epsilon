@@ -1,41 +1,44 @@
 package com.github.epsilon.gui.theme
 
+import com.github.epsilon.graphics.schedulers.render2d.Render2DResources
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.modules.impl.ClientSetting
 import java.awt.Color
 
 object MD3Theme {
 
-    private val colors = mutableStateOf(mapOf(
-        "SHADOW" to Color(0, 0, 0, 96),
-        "SURFACE" to Color(20, 18, 24, 238),
-        "SURFACE_DIM" to Color(15, 13, 19, 232),
-        "SURFACE_CONTAINER_LOW" to Color(29, 27, 32, 240),
-        "SURFACE_CONTAINER" to Color(33, 31, 38, 244),
-        "SURFACE_CONTAINER_HIGH" to Color(43, 41, 48, 248),
-        "SURFACE_CONTAINER_HIGHEST" to Color(54, 52, 59, 252),
-        "OUTLINE" to Color(147, 143, 153, 180),
-        "OUTLINE_SOFT" to Color(147, 143, 153, 96),
-        "PRIMARY" to Color(208, 188, 255),
-        "ON_PRIMARY" to Color(56, 30, 114),
-        "PRIMARY_CONTAINER" to Color(79, 55, 139, 236),
-        "ON_PRIMARY_CONTAINER" to Color(234, 221, 255),
-        "SECONDARY" to Color(204, 194, 220),
-        "ON_SECONDARY" to Color(51, 45, 65),
-        "SECONDARY_CONTAINER" to Color(74, 68, 88, 236),
-        "ON_SECONDARY_CONTAINER" to Color(232, 222, 248),
-        "TERTIARY" to Color(239, 184, 200),
-        "ON_TERTIARY" to Color(73, 37, 50),
-        "TERTIARY_CONTAINER" to Color(99, 59, 72, 236),
-        "ON_TERTIARY_CONTAINER" to Color(255, 216, 228),
-        "INVERSE_SURFACE" to Color(230, 224, 233),
-        "INVERSE_ON_SURFACE" to Color(49, 48, 51),
-        "TEXT_PRIMARY" to Color(230, 224, 233),
-        "TEXT_SECONDARY" to Color(202, 196, 208),
-        "TEXT_MUTED" to Color(147, 143, 153),
-        "SUCCESS" to Color(204, 194, 220),
-        "ERROR" to Color(242, 184, 181),
-    ))
+    private val colors = mutableStateOf(
+        mapOf(
+            "SHADOW" to Color(0, 0, 0, 96),
+            "SURFACE" to Color(20, 18, 24, 238),
+            "SURFACE_DIM" to Color(15, 13, 19, 232),
+            "SURFACE_CONTAINER_LOW" to Color(29, 27, 32, 240),
+            "SURFACE_CONTAINER" to Color(33, 31, 38, 244),
+            "SURFACE_CONTAINER_HIGH" to Color(43, 41, 48, 248),
+            "SURFACE_CONTAINER_HIGHEST" to Color(54, 52, 59, 252),
+            "OUTLINE" to Color(147, 143, 153, 180),
+            "OUTLINE_SOFT" to Color(147, 143, 153, 96),
+            "PRIMARY" to Color(208, 188, 255),
+            "ON_PRIMARY" to Color(56, 30, 114),
+            "PRIMARY_CONTAINER" to Color(79, 55, 139, 236),
+            "ON_PRIMARY_CONTAINER" to Color(234, 221, 255),
+            "SECONDARY" to Color(204, 194, 220),
+            "ON_SECONDARY" to Color(51, 45, 65),
+            "SECONDARY_CONTAINER" to Color(74, 68, 88, 236),
+            "ON_SECONDARY_CONTAINER" to Color(232, 222, 248),
+            "TERTIARY" to Color(239, 184, 200),
+            "ON_TERTIARY" to Color(73, 37, 50),
+            "TERTIARY_CONTAINER" to Color(99, 59, 72, 236),
+            "ON_TERTIARY_CONTAINER" to Color(255, 216, 228),
+            "INVERSE_SURFACE" to Color(230, 224, 233),
+            "INVERSE_ON_SURFACE" to Color(49, 48, 51),
+            "TEXT_PRIMARY" to Color(230, 224, 233),
+            "TEXT_SECONDARY" to Color(202, 196, 208),
+            "TEXT_MUTED" to Color(147, 143, 153),
+            "SUCCESS" to Color(204, 194, 220),
+            "ERROR" to Color(242, 184, 181),
+        )
+    )
 
     val SHADOW: Color get() = colors.value.getValue("SHADOW")
 
@@ -113,6 +116,7 @@ object MD3Theme {
         if (preset == appliedPreset && mode == appliedMode) {
             return
         }
+        Render2DResources.invalidate()
         val palette = forPreset(preset, mode)
         colors.value = mapOf(
             "SHADOW" to palette.shadow,

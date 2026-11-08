@@ -96,6 +96,7 @@ class StringWidget(setting: StringSetting) : SettingWidget<StringSetting>(settin
     }
 
     override fun blurInput() {
+        if (!inputField.isFocused) return
         commitSetting()
         inputField.blur()
     }

@@ -4,6 +4,7 @@ import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.input.UiInputRouter
+import com.github.epsilon.gui.lib.render.UiRenderNode
 import com.github.epsilon.kernel.state.StateNotifications
 import com.github.epsilon.kernel.state.StateObservation
 import com.github.epsilon.kernel.state.StateTracking
@@ -21,7 +22,9 @@ object LuminRuntime {
         val previousView = currentView
         currentComposition = composition
         currentView = composition.view
-        return try { StateTracking.buildingUi(block) } finally {
+        return try {
+            StateTracking.buildingUi(block)
+        } finally {
             currentComposition = previous
             currentView = previousView
         }
@@ -35,9 +38,13 @@ object LuminRuntime {
 }
 
 /** 缓存保存嵌套的组合引用，子项失效不需要重建父级。 */
-class LuminComposition internal constructor(internal val key: Any, internal val clock: LuminFrameClock) : AutoCloseable {
+class LuminComposition internal constructor(internal val key: Any, internal val clock: LuminFrameClock) :
+    AutoCloseable {
+    internal val renderNode = UiRenderNode()
+    private var effectsFrame = Long.MIN_VALUE
     internal var dirty = true
     internal var alwaysDirty = false
+    internal var retainPosition = false
     internal val treeScope = UiTree.Scope()
     internal var lastBounds: UiRect? = null
     internal var inputX = 0
@@ -57,14 +64,19 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
     internal var rebuildCount = 0L
         private set
 
-    internal fun markDirty() { dirty = true }
+    internal fun markDirty() {
+        dirty = true
+    }
+
     internal fun markDirtyDeep() {
         dirty = true
         children.values.forEach { it.markDirtyDeep() }
     }
 
     internal fun bind(scope: UiScope, block: UiScope.() -> Unit, parentRebuilt: Boolean = false) {
-        if (lastBounds != scope.origin || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty = true
+        if ((!retainPosition && lastBounds != scope.origin) || lastBounds?.width != scope.origin.width || lastBounds?.height != scope.origin.height || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty =
+            true
+        renderNode.currentOrigin = scope.origin
         val nextView = LuminRuntime.currentView ?: LuminRuntime.activeRoot?.defaultView
         if (view !== nextView) {
             dirty = true
@@ -82,26 +94,32 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
     }
 
     internal fun emit(into: UiTree.Scope, inputLayer: Int = 0): Boolean {
-        val resolved = resolve()
-        view?.collectInput(resolved, inputLayer)
-        into.appendNodes(resolved)
+        prepare()
+        val retained = listOf(UiTree.CompositionNode(this))
+        view?.collectInput(retained, inputLayer)
+        into.appendNodes(retained)
         return false
     }
 
-    internal fun resolve(): List<UiTree.UiNode> {
+    internal fun prepare(): UiRenderNode {
         StateNotifications.drain()
         if (dirty || (alwaysDirty && renderedFrame != clock.frame)) recompose()
-        val resolved = resolveNodes(nodes)
-        StateTracking.untracked { frameEffects.values.forEach { it() } }
-        return resolved
+        if (effectsFrame != clock.frame) {
+            effectsFrame = clock.frame
+            StateTracking.untracked { frameEffects.values.forEach { it() } }
+        }
+        return renderNode
     }
+
+    /** 仅供诊断与测试展开，绘制和输入都沿持久引用遍历。 */
+    internal fun resolve(): List<UiTree.UiNode> = resolveNodes(prepare().nodes)
 
     internal fun group(scope: UiScope, key: Any, block: UiScope.() -> Unit, alwaysDirty: Boolean = false) {
         check(usedChildren?.add(key) == true) { "同一组合内重复的组件 key: $key" }
         val child = children.getOrPut(key) { LuminComposition(key, clock) }
         child.alwaysDirty = alwaysDirty
         child.bind(scope, block, parentRebuilt = true)
-        scope.tree.appendNodes(listOf(UiTree.CompositionNode(child::resolve)))
+        scope.tree.appendNodes(listOf(UiTree.CompositionNode(child)))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -118,7 +136,9 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
         return memories[key] as T
     }
 
-    internal fun onFrame(key: Any, effect: () -> Unit) { frameEffects[key] = effect }
+    internal fun onFrame(key: Any, effect: () -> Unit) {
+        frameEffects[key] = effect
+    }
 
     internal fun afterCommit(effect: () -> Unit) {
         checkNotNull(effects) { "提交操作必须在组合构建中声明" }.add(effect)
@@ -148,12 +168,14 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
                     treeScope.snapshot().nodes
                 }
             }
+            renderNode.commit(result, scope.origin)
             nodes = result
             children.keys.filter { it !in nextChildren }.forEach { children.remove(it)?.close() }
             memories.keys.filter { it !in nextMemories }.forEach { (memories.remove(it) as? AutoCloseable)?.close() }
             renderedFrame = clock.frame
             rebuildCount++
         } catch (failure: Throwable) {
+            UiRenderNode.release(treeScope.snapshot().nodes)
             frameEffects.clear()
             frameEffects.putAll(previousFrameEffects)
             dirty = true
@@ -176,6 +198,7 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
         memories.values.forEach { (it as? AutoCloseable)?.close() }
         memories.clear()
         frameEffects.clear()
+        renderNode.close()
         nodes = emptyList()
         owner = null
         content = null
@@ -188,6 +211,8 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
                 is UiTree.LayerNode -> add(node.copy(children = resolveNodes(node.children)))
                 is UiTree.ScissorNode -> add(node.copy(children = resolveNodes(node.children)))
                 is UiTree.ViewportNode -> add(node.copy(children = resolveNodes(node.children)))
+                is UiTree.PropertyNode -> addAll(resolveNodes(node.children))
+                is UiTree.GeometryNode -> addAll(resolveNodes(node.value.get()))
                 else -> add(node)
             }
         }
@@ -199,7 +224,10 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
     internal val defaultView = LuminView()
     val input = UiInputRouter()
     private val inputFrame = ArrayList<UiInputRouter.Entry>()
-    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) { input.collect(nodes, layer, inputFrame) }
+    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) {
+        input.collect(nodes, layer, inputFrame)
+    }
+
     private val entries = LinkedHashMap<Any, LuminComposition>()
     private val visited = LinkedHashSet<Any>()
     internal var inFrame = false
@@ -235,7 +263,9 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
         if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
 
-    fun invalidateAll() { entries.values.forEach { it.markDirtyDeep() } }
+    fun invalidateAll() {
+        entries.values.forEach { it.markDirtyDeep() }
+    }
 
     override fun close() {
         input.close()

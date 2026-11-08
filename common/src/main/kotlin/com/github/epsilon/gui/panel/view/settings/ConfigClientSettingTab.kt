@@ -55,7 +55,16 @@ class ConfigClientSettingTab(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -89,13 +98,20 @@ class ConfigClientSettingTab(
         deleteHoverAnimations.keys.removeIf { name -> !configs.contains(name) }
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            InputRegion(key = this@ConfigClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+            InputRegion(
+                key = this@ConfigClientSettingTab to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
                 onCancel = { scrollBarDrag.reset() })
 
             val localInput = getInputFieldBounds(inputSection).relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
-                InputRegion(inputField, onPress = { _, _ -> inputField.focus(); true },
-                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+                InputRegion(
+                    inputField, onPress = { _, _ -> inputField.focus(); true },
+                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur
+                )
                 ClientSettingTextField(
                     inputField, mouseX, mouseY,
                     EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null
@@ -124,7 +140,14 @@ class ConfigClientSettingTab(
                         Interaction(configName to "delete", deleteBounds.relativeTo(rowBounds)) {
                             onClick { openDeleteConfirmation(configName); true }
                         }
-                        buildConfigRow(configName, activeConfig, rowBounds, deleteBounds, rowHover.value, deleteHover.value)
+                        buildConfigRow(
+                            configName,
+                            activeConfig,
+                            rowBounds,
+                            deleteBounds,
+                            rowHover.value,
+                            deleteHover.value
+                        )
                     }
                     rowY += ROW_HEIGHT + MD3Theme.ROW_GAP
                 }

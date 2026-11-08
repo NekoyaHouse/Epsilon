@@ -110,5 +110,7 @@ class MessagePopup(
         )
     }
 
-        override fun close() { inputView.close() }
+    override fun close() {
+        inputView.close()
+    }
 }

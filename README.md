@@ -23,13 +23,6 @@ A modern multi loader Minecraft utility client built on NeoForge & Fabric with a
 
 ## 🎨 Graphics System
 
-The Lumin rendering system provides custom render pipelines for:
-- Rectangles & Round Rectangles
-- Shadows & Blur effects
-- TTF Font rendering
-- Texture rendering
-- Custom vertex formats
-
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run

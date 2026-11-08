@@ -72,5 +72,7 @@ class TrollScroll : LuminFrameTask, AutoCloseable {
         lastUpdate = 0L
     }
 
-    override fun close() { stop(); clock = null }
+    override fun close() {
+        stop(); clock = null
+    }
 }

@@ -44,6 +44,11 @@ float blurredAlpha(vec2 uv, vec2 screenDx, vec2 screenDy, float radius) {
     return total / max(weightTotal, 0.0001);
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     float blurRadius = max(FontBlurInfo.x, 0.001);
     float blurred = blurredAlpha(v_TexCoord, dFdx(v_TexCoord), dFdy(v_TexCoord), blurRadius);
@@ -55,3 +60,11 @@ void main() {
     }
     f_Color = vec4(v_Color.rgb, alpha);
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    f_Color *= epsilonTint;
+}
+#endif

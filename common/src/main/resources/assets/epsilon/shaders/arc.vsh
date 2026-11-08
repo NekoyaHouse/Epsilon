@@ -2,6 +2,7 @@
 
 #include <minecraft:dynamictransforms.glsl>
 #include <minecraft:projection.glsl>
+#include <epsilon:ui_properties.glsl>
 
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec4 StartColor;
@@ -18,7 +19,10 @@ layout(location = 4) out vec4 f_Circle;
 layout(location = 5) out vec4 f_Sweep;
 
 void main() {
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+#ifdef EPSILON_RETAINED
+    epsilonTint = UiTint;
+#endif
+    gl_Position = ProjMat * ModelViewMat * epsilonPosition(vec4(Position, 1.0));
 
     f_Position = Position.xy;
     f_StartColor = StartColor;

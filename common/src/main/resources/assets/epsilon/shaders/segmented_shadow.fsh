@@ -64,6 +64,11 @@ float maskAt(vec2 position, int count, float antialias) {
     return 1.0 - smoothstep(0.0, antialias, segmentedDistance(position, count));
 }
 
+#ifdef EPSILON_RETAINED
+layout(location = 7) flat in vec4 epsilonTint;
+#define main epsilonOriginalMain
+#endif
+
 void main() {
     int count = int(ShadowInfo.y);
     float blurRadius = max(0.0, ShadowInfo.x);
@@ -96,3 +101,11 @@ void main() {
 
     fragColor = vec4(shadowColorAt(f_Position.y, count), alpha);
 }
+
+#ifdef EPSILON_RETAINED
+#undef main
+void main() {
+    epsilonOriginalMain();
+    fragColor *= epsilonTint;
+}
+#endif

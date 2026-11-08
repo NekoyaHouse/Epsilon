@@ -24,15 +24,21 @@ class LuminAnimatable(
             attach()
             return state.value
         }
-        set(value) { snapTo(value) }
+        set(value) {
+            snapTo(value)
+        }
 
     var startValue: Float
         get() = from
-        set(value) { snapTo(value) }
+        set(value) {
+            snapTo(value)
+        }
 
     var target: Float
         get() = destination
-        set(value) { animateTo(value) }
+        set(value) {
+            animateTo(value)
+        }
 
     val isRunning: Boolean get() = running
     val isFinished: Boolean get() = !running
@@ -68,7 +74,9 @@ class LuminAnimatable(
         else if (running) clock?.register(this)
     }
 
-    fun run(value: Float) { target = value }
+    fun run(value: Float) {
+        target = value
+    }
 
     fun reset() {
         val composition = LuminRuntime.currentComposition

@@ -286,6 +286,7 @@ class ReisaDropdownCompanion {
     }
 
 }
+
 /**
  * Reisa 侧边立绘的层叠语义。
  *

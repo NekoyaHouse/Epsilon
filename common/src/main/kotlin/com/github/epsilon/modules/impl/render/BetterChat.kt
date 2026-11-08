@@ -158,7 +158,7 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
 
         val renderScheduler = scheduler.get()
         renderScheduler.clear()
-        val layer = renderScheduler.layer(0)
+        val layer = renderScheduler.canvas(0)
 
         if (dropShadow) {
             val shadowRadius = shadowBlur.toFloat() * coordinateScale

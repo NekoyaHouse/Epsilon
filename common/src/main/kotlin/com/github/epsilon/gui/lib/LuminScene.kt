@@ -7,7 +7,13 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.lib.state.LuminRuntime
 
 /** 供需要先排队树快照、再执行后处理的宿主使用，生命周期仍属于 scene。 */
-internal fun UiScene.LuminUITree(bounds: UiRect, key: Any, inputLayer: Int = UiLayer.CONTENT.baseLayer(), immediate: Boolean = false, block: (UiTree.Scope) -> Unit): UiTree {
+internal fun UiScene.LuminUITree(
+    bounds: UiRect,
+    key: Any,
+    inputLayer: Int = UiLayer.CONTENT.baseLayer(),
+    immediate: Boolean = false,
+    block: (UiTree.Scope) -> Unit
+): UiTree {
     val entry = lumin.nextEntry(bounds, key)
     entry.alwaysDirty = immediate
     val metrics = scheduler().textMetrics().asUiTextMetrics()
@@ -31,7 +37,8 @@ internal fun UiScene.LuminUITree(bounds: UiRect, key: Any, inputLayer: Int = UiL
  * 以 recompose 模式提交一层内容。
  *
  * 该层观察内部读取的 State，并在状态、几何或绘制上下文变化时重新执行；
- * 其余帧直接重放上一轮构建的节点。矩形变化会自动触发整层重建。
+ * 其余帧复用上一轮节点与几何；默认矩形变化触发重建。
+ * retainPosition 仅适用于不捕获绝对位置的局部坐标内容，此时同尺寸移动只更新变换。
  */
 fun UiScene.LuminUIScene(
     bounds: UiRect,
@@ -39,10 +46,12 @@ fun UiScene.LuminUIScene(
     relative: LayerOffset = LayerOffset.Same,
     key: Any,
     immediate: Boolean = false,
+    retainPosition: Boolean = false,
     block: UiScope.() -> Unit,
 ) {
     val entry = lumin.nextEntry(bounds, key)
     entry.alwaysDirty = immediate
+    entry.retainPosition = retainPosition
     val metrics = scheduler().textMetrics().asUiTextMetrics()
     entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
     val output = UiTree.Scope()
@@ -96,6 +105,7 @@ fun UiScope.LuminUIGroupImmediate(key: Any, block: UiScope.() -> Unit) {
     }
     composition.group(this, key, block, alwaysDirty = true)
 }
+
 /** 列表项与 Group 共用独立的状态观察和记忆生命周期。 */
 fun UiScope.LuminUIItem(key: Any, block: UiScope.() -> Unit) = LuminUIGroup(key, block)
 
@@ -112,6 +122,7 @@ fun UiRenderBatch.LuminUIScene(
     bounds: UiRect,
     baseLayer: Int = 0,
     key: Any,
+    retainPosition: Boolean = false,
     block: UiScope.() -> Unit,
 ) {
     val metrics = scheduler().textMetrics().asUiTextMetrics()
@@ -120,6 +131,7 @@ fun UiRenderBatch.LuminUIScene(
         Content(bounds, baseLayer, block)
         return
     }
+    entry.retainPosition = retainPosition
     entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), block)
     val output = UiTree.Scope()
     entry.emit(output, baseLayer() + baseLayer)

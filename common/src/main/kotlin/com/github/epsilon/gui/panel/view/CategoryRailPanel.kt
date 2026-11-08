@@ -59,7 +59,16 @@ class CategoryRailPanel(protected val state: PanelState) {
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -86,11 +95,13 @@ class CategoryRailPanel(protected val state: PanelState) {
 
                 val menuButton = getMenuButtonBounds()
                 val menuHover = animate(menuHoverAnimation, mouseOver(menuButton, mouseX, mouseY))
-                Interaction("menu", menuButton.relativeTo(origin)) { onClick {
-                    state.toggleSidebarExpanded()
-                    SoundManager.playInUi(if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
-                    true
-                } }
+                Interaction("menu", menuButton.relativeTo(origin)) {
+                    onClick {
+                        state.toggleSidebarExpanded()
+                        SoundManager.playInUi(if (state.isSidebarExpanded()) SoundKey.SETTINGS_OPEN else SoundKey.SETTINGS_CLOSE)
+                        true
+                    }
+                }
                 val localMenu = menuButton.relativeTo(origin)
                 Positioned(localMenu.x, localMenu.y, localMenu.width, localMenu.height) {
                     menuGlyph(menuButton.width, menuButton.height, menuHover)
@@ -193,9 +204,11 @@ class CategoryRailPanel(protected val state: PanelState) {
                     val hovered = itemRect.contains(mouseX.toDouble(), mouseY.toDouble())
                     val selected = !state.isClientSettingMode() && state.getSelectedCategory() === category
                     val count = getCategoryCount(category)
-                    Interaction(category, itemRect.relativeTo(origin)) { onClick {
-                        state.setClientSettingMode(false); state.setSelectedCategory(category); true
-                    } }
+                    Interaction(category, itemRect.relativeTo(origin)) {
+                        onClick {
+                            state.setClientSettingMode(false); state.setSelectedCategory(category); true
+                        }
+                    }
                     buildCategoryItem(
                         menuButton, itemRect, category, count, hovered, selected, contentProgress,
                         itemIconScale, itemLabelScale, itemCountScale
@@ -208,7 +221,10 @@ class CategoryRailPanel(protected val state: PanelState) {
                 val settingsHovered = settingsRect.contains(mouseX.toDouble(), mouseY.toDouble())
                 val settingsSelected = state.isClientSettingMode()
                 val settingsHover = animate(settingsHoverAnimation, settingsHovered)
-                Interaction("settings", settingsRect.relativeTo(origin)) { onClick { state.setClientSettingMode(true); true } }
+                Interaction(
+                    "settings",
+                    settingsRect.relativeTo(origin)
+                ) { onClick { state.setClientSettingMode(true); true } }
                 buildSettingsItem(
                     menuButton, settingsRect, settingsHovered, settingsSelected, contentProgress,
                     settingsHover, itemIconScale, itemLabelScale

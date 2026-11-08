@@ -172,7 +172,7 @@ class TextureRenderer private constructor() : IRenderer {
         u0: Float, v0: Float, u1: Float, v1: Float, color: Color, useLinearFilter: Boolean,
     ) {
         val batch = batches.getOrPut(TextureKey(textureKey, useLinearFilter)) {
-            Batch(LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX))
+            Batch(LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE))
         }
 
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES)
@@ -202,7 +202,7 @@ class TextureRenderer private constructor() : IRenderer {
         originX: Float, originY: Float, rotationDegrees: Float, useLinearFilter: Boolean,
     ) {
         val batch = batches.getOrPut(TextureKey(textureKey, useLinearFilter)) {
-            Batch(LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX))
+            Batch(LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX, STRIDE))
         }
 
         batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES)
@@ -388,7 +388,7 @@ class TextureRenderer private constructor() : IRenderer {
             val indexCount = batch.vertexCount / 4 * 6
             val texture = batch.preparedTexture ?: continue
 
-            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice())
+            pass.setVertexBuffer(0, batch.buffer.getGpuSlice())
             pass.setUniform("Sampler0", texture.view, texture.sampler)
             pass.drawIndexed(indexCount, 1, 0, 0, 0)
         }

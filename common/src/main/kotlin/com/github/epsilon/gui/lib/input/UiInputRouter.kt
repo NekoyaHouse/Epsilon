@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.lib.input
 
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 import com.github.epsilon.gui.lib.UiPointerEvent
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTree
@@ -12,6 +13,7 @@ internal class UiInputSubscription(router: UiInputRouter, val key: Any, val owne
     var router: UiInputRouter? = router
     var closed = false
         private set
+
     override fun close() {
         closed = true
         router?.detach(this)
@@ -25,12 +27,42 @@ class UiInputRouter internal constructor() : AutoCloseable {
     fun <T> within(owner: Any, block: UiInputRouter.() -> T): T {
         val previous = dispatchOwner
         dispatchOwner = owner
-        return try { block() } finally { dispatchOwner = previous }
+        return try {
+            block()
+        } finally {
+            dispatchOwner = previous
+        }
     }
-    private fun accepts(subscription: UiInputSubscription) = dispatchOwner == null || subscription.owner === dispatchOwner
-    internal data class Entry(val node: UiTree.InteractionNode, val layer: Int, val clip: UiRect?) {
-        fun hit(x: Double, y: Double): Boolean = node.bounds.width > 0f && node.bounds.height > 0f &&
-            node.bounds.contains(x, y) && (clip == null || clip.contains(x, y))
+
+    private fun accepts(subscription: UiInputSubscription) =
+        dispatchOwner == null || subscription.owner === dispatchOwner
+
+    internal data class Entry(
+        val node: UiTree.InteractionNode, val layer: Int, val clip: UiRect?,
+        val transform: Render2DTransform = Render2DTransform.IDENTITY
+    ) {
+        fun hit(x: Double, y: Double): Boolean {
+            val inverse = transform.inverse() ?: return false
+            val px = inverse.mapX(x.toFloat(), y.toFloat()).toDouble()
+            val py = inverse.mapY(x.toFloat(), y.toFloat()).toDouble()
+            return node.bounds.width > 0 && node.bounds.height > 0 && node.bounds.contains(px, py) &&
+                    (clip == null || clip.contains(x, y))
+        }
+
+        fun pointer(
+            event: MouseButtonEvent,
+            doubleClick: Boolean = false,
+            dx: Double = 0.0,
+            dy: Double = 0.0
+        ): UiPointerEvent {
+            val inverse = transform.inverse() ?: Render2DTransform.IDENTITY
+            val px = inverse.mapX(event.x().toFloat(), event.y().toFloat()) - node.bounds.x
+            val py = inverse.mapY(event.x().toFloat(), event.y().toFloat()) - node.bounds.y
+            return UiPointerEvent(
+                event, node.bounds.transformed(transform), doubleClick, dx, dy, px.toDouble() to py.toDouble(),
+                MouseButtonEvent((px + node.bounds.x).toDouble(), (py + node.bounds.y).toDouble(), event.buttonInfo())
+            )
+        }
     }
 
     private var entries = emptyList<Entry>()
@@ -38,24 +70,61 @@ class UiInputRouter internal constructor() : AutoCloseable {
     private var captured: UiInputSubscription? = null
     private var capturedButton = -1
     private var pointerGeneration = 0L
-    private fun entry(subscription: UiInputSubscription?) = entries.firstOrNull { it.node.subscription === subscription }
+    private fun entry(subscription: UiInputSubscription?) =
+        entries.firstOrNull { it.node.subscription === subscription }
 
     internal fun collect(
         nodes: List<UiTree.UiNode>, layer: Int, into: MutableList<Entry>, clip: UiRect? = null,
-        layered: Boolean = true,
+        layered: Boolean = true, transform: Render2DTransform = Render2DTransform.IDENTITY,
     ) {
         for (node in nodes) when (node) {
-            is UiTree.InteractionNode -> into.add(Entry(node, layer, clip))
-            is UiTree.LayerNode -> collect(node.children, if (layered) layer + node.layer else layer, into, clip, layered)
+            is UiTree.InteractionNode -> into.add(Entry(node, layer, clip, transform))
+            is UiTree.LayerNode -> collect(
+                node.children,
+                if (layered) layer + node.layer else layer,
+                into,
+                clip,
+                layered,
+                transform
+            )
+
             is UiTree.ScissorNode -> {
-                val intersection = if (clip == null) node.clip else clip.intersect(node.clip) ?: continue
-                collect(node.children, layer, into, intersection, layered)
+                val transformed = node.clip.transformed(transform)
+                val intersection = if (clip == null) transformed else clip.intersect(transformed) ?: continue
+                collect(node.children, layer, into, intersection, layered, transform)
             }
+
             is UiTree.ViewportNode -> {
-                val intersection = if (clip == null) node.viewport else clip.intersect(node.viewport) ?: continue
-                // 内容缓冲在同一渲染层按声明顺序绘制，不应用内部 Layer 偏移。
-                collect(node.children, layer, into, intersection, layered = false)
+                val transformed = node.viewport.transformed(transform)
+                val intersection = if (clip == null) transformed else clip.intersect(transformed) ?: continue
+                // 视口内部遵循相同的显式层级与声明顺序，输入顺序必须与绘制一致。
+                collect(node.children, layer, into, intersection, layered = true, transform = transform)
             }
+
+            is UiTree.CompositionNode -> {
+                val render = node.composition.prepare()
+                val next = transform.then(
+                    Render2DTransform.translation(
+                        render.currentOrigin.x - render.recordedOrigin.x,
+                        render.currentOrigin.y - render.recordedOrigin.y
+                    )
+                )
+                node.composition.view?.refreshHover(node.composition, next)
+                collect(node.composition.prepare().nodes, layer, into, clip, layered, next)
+            }
+
+            is UiTree.PropertyNode -> {
+                val value = node.value.get()
+                val pivot = Render2DTransform.translation(node.origin.x, node.origin.y).then(value.properties.transform)
+                    .then(Render2DTransform.translation(-node.origin.x, -node.origin.y))
+                val next = transform.then(pivot)
+                val area = value.clip?.translate(node.origin.x, node.origin.y)?.transformed(next)
+                val intersection =
+                    if (clip == null) area else if (area == null) clip else clip.intersect(area) ?: continue
+                collect(node.children, layer, into, intersection, layered, next)
+            }
+
+            is UiTree.GeometryNode -> Unit
             else -> Unit
         }
     }
@@ -96,7 +165,9 @@ class UiInputRouter internal constructor() : AutoCloseable {
         }
     }
 
-    fun clearFocus() { setFocus(null) }
+    fun clearFocus() {
+        setFocus(null)
+    }
 
     fun cancelPointer() {
         pointerGeneration++
@@ -111,13 +182,15 @@ class UiInputRouter internal constructor() : AutoCloseable {
         if (captured != null && capturedButton != event.button()) return false
         cancelPointer()
         val generation = pointerGeneration
-        val focus = entry(focused)?.node
+        val focusEntry = entry(focused)
+        val focus = focusEntry?.node
         if (focus != null && accepts(focus.subscription) &&
-            focus.handlers.previewClick?.invoke(UiPointerEvent(event, focus.bounds, doubleClick)) == true) return true
+            focus.handlers.previewClick?.invoke(focusEntry.pointer(event, doubleClick)) == true
+        ) return true
         for (item in entries.asReversed()) {
             val node = item.node
             if (node.subscription.closed || !accepts(node.subscription) || !item.hit(event.x(), event.y())) continue
-            val pointer = UiPointerEvent(event, node.bounds, doubleClick)
+            val pointer = item.pointer(event, doubleClick)
             val drag = node.handlers.drags[event.button()]
             val acceptedDrag = drag?.start?.invoke(pointer) == true
             val acceptedClick = !acceptedDrag && node.handlers.clicks[event.button()]?.invoke(pointer) == true
@@ -141,19 +214,21 @@ class UiInputRouter internal constructor() : AutoCloseable {
 
     fun mouseDragged(event: MouseButtonEvent, deltaX: Double, deltaY: Double): Boolean {
         if (capturedButton != event.button()) return false
-        val node = entry(captured)?.node ?: return false
+        val capturedEntry = entry(captured) ?: return false
+        val node = capturedEntry.node
         if (!accepts(node.subscription)) return false
-        node.handlers.drags[event.button()]?.update?.invoke(UiPointerEvent(event, node.bounds, deltaX = deltaX, deltaY = deltaY))
+        node.handlers.drags[event.button()]?.update?.invoke(capturedEntry.pointer(event, dx = deltaX, dy = deltaY))
         return true
     }
 
     fun mouseReleased(event: MouseButtonEvent): Boolean {
         if (capturedButton != event.button()) return false
-        val node = entry(captured)?.node ?: return false
+        val capturedEntry = entry(captured) ?: return false
+        val node = capturedEntry.node
         if (!accepts(node.subscription)) return false
         captured = null
         capturedButton = -1
-        node.handlers.drags[event.button()]?.end?.invoke(UiPointerEvent(event, node.bounds))
+        node.handlers.drags[event.button()]?.end?.invoke(capturedEntry.pointer(event))
         return true
     }
 
@@ -164,13 +239,21 @@ class UiInputRouter internal constructor() : AutoCloseable {
 
     fun mouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {
         for (entry in entries.asReversed()) {
-            if (accepts(entry.node.subscription) && entry.hit(x, y) && entry.node.handlers.scroll?.invoke(x, y, scrollX, scrollY) == true) return true
+            if (accepts(entry.node.subscription) && entry.hit(x, y) && entry.node.handlers.scroll?.invoke(
+                    x,
+                    y,
+                    scrollX,
+                    scrollY
+                ) == true
+            ) return true
         }
         return false
     }
 
     fun requestFocus(key: Any): Boolean {
-        val target = entries.lastOrNull { accepts(it.node.subscription) && it.node.subscription.key == key && it.node.handlers.focusable } ?: return false
+        val target =
+            entries.lastOrNull { accepts(it.node.subscription) && it.node.subscription.key == key && it.node.handlers.focusable }
+                ?: return false
         setFocus(target.node.subscription)
         return true
     }

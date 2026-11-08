@@ -196,7 +196,8 @@ class UiTextField(maxLength: Int) {
     }
 
     private fun safeCursor(): Int {
-        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((textStore.length).toLong()).toLong()).toInt().toInt()
+        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((textStore.length).toLong()).toLong()).toInt()
+            .toInt()
     }
 
     private fun handleControlShortcut(key: Int): Boolean {
