@@ -141,6 +141,27 @@ class RoundRectOutlineRenderer private constructor(
         )
     }
 
+    /** 箭头用包围四边形承载，片段阶段恢复原三角形重心覆盖率，与圆角形状共用管线。 */
+    internal fun addChevronTriangle(centerX: Float, centerY: Float, size: Float, progress: Float, color: Color) {
+        check(fillSupported)
+        val t = progress.coerceIn(0f, 1f)
+        val x1 = centerX - size
+        val y1 = centerY - size
+        val x2 = centerX - size + size * 2f * t
+        val y2 = centerY + size - size * 2f * t
+        val x3 = centerX + size - size * t
+        val y3 = centerY + size * t
+        val left = minOf(x1, x2, x3); val right = maxOf(x1, x2, x3)
+        val top = minOf(y1, y2, y3); val bottom = maxOf(y1, y2, y3)
+        buffer.ensureCapacity(currentOffset + OUTLINE_BYTES)
+        buffer.tryMap()
+        val abgr = ARGB.toABGR(color.rgb)
+        addVertex(left, top, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(left, bottom, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(right, bottom, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+        addVertex(right, top, x1, y1, x2, y2, x3, y3, 0f, 0f, -2f, abgr)
+    }
+
     private fun addVertex(
         vx: Float, vy: Float, rx1: Float, ry1: Float, rx2: Float, ry2: Float,
         r1: Float, r2: Float, r3: Float, r4: Float, outlineWidth: Float, color: Int,

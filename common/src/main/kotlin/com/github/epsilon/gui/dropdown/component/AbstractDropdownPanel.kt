@@ -141,6 +141,14 @@ abstract class AbstractDropdownPanel protected constructor(
                 })
             Shadow(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow())
             RoundRect(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
+            // 箭头与标题不重叠，先提交箭头，让图标和标题进入连续的文字批次。
+            Triangle(
+                left + panelWidth - 10.0f,
+                top + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f,
+                3.0f,
+                expand,
+                DropdownTheme.groupChevron(0.0f)
+            )
 
             val iconX = left + 7.5f
             val textX = if (icon == null || icon.isBlank()) left + 10.0f else iconX + 16.0f
@@ -163,13 +171,6 @@ abstract class AbstractDropdownPanel protected constructor(
             }
             val headerTitle = getTitle()
             Text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY)
-            Triangle(
-                left + panelWidth - 10.0f,
-                top + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f,
-                3.0f,
-                expand,
-                DropdownTheme.groupChevron(0.0f)
-            )
         }
     }
 

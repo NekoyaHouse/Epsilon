@@ -3,9 +3,12 @@ package com.github.epsilon.graphics.schedulers.render2d
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.ShaderType
+import com.mojang.renderpearl.api.pipeline.UniformType
 import com.mojang.renderpearl.api.vertex.VertexFormat
+import net.minecraft.client.renderer.BindGroupLayouts
 import java.util.Optional
 
 /** 每实例属性让不同组件的变换与 tint 共享一次绑定。 */
@@ -17,6 +20,12 @@ internal object Render2DPipelines {
         LuminRenderPipelines.TTF_FONT_BLUR, LuminRenderPipelines.TTF_FONT_GLITCH,
     )
     private val variants = HashMap<RenderPipeline, RenderPipeline>()
+    private val textTextures = BindGroupLayout.builder().apply {
+        repeat(Render2DDrawPlan.TEXTURE_SLOTS) { withUniform("Sampler$it", UniformType.COMBINED_IMAGE_SAMPLER) }
+    }.build()
+
+    fun usesTextureTable(source: RenderPipeline): Boolean =
+        source === LuminRenderPipelines.TTF_FONT_AA || source === LuminRenderPipelines.TTF_FONT_NO_AA
     private val properties = VertexFormat.builder(1)
         .addAttribute("UiRow0", GpuFormat.RGBA32_FLOAT)
         .addAttribute("UiRow1", GpuFormat.RGBA32_FLOAT)
@@ -36,7 +45,11 @@ internal object Render2DPipelines {
             .withShaderDefine("UI_PROPERTY_LOCATION", format.elements.size)
             .withShaderDefine("UI_PROPERTY_ROW1_LOCATION", format.elements.size + 1)
             .withShaderDefine("UI_PROPERTY_TINT_LOCATION", format.elements.size + 2)
-        source.bindGroupLayouts.forEach { builder.withBindGroupLayout(it) }
+        val textureTable = usesTextureTable(source)
+        if (textureTable) builder.withShaderDefine("EPSILON_TEXTURE_TABLE")
+        source.bindGroupLayouts.forEach {
+            builder.withBindGroupLayout(if (textureTable && it === BindGroupLayouts.SAMPLER0) textTextures else it)
+        }
         source.colorTargetStates.forEachIndexed { index, state ->
             if (state != null) builder.withColorTargetState(index, state) else builder.withUnusedColorTargetState(index)
         }

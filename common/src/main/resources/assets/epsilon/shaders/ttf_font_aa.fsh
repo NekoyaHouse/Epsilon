@@ -3,14 +3,14 @@
 layout(location = 0) in vec4 v_Color;
 layout(location = 1) in vec2 v_TexCoord;
 
-uniform sampler2D Sampler0;
+#include <epsilon:ui_font_texture.glsl>
 
 layout(location = 0) out vec4 f_Color;
 
 const float EDGE_THRESHOLD = 0.5;
 
 float coverage(vec2 uv, float aa) {
-    float d = 1.0 - texture(Sampler0, uv).r;
+    float d = 1.0 - epsilonFontDistance(uv);
     return smoothstep(EDGE_THRESHOLD - aa, EDGE_THRESHOLD + aa, d);
 }
 
@@ -20,7 +20,7 @@ layout(location = 7) flat in vec4 epsilonTint;
 #endif
 
 void main() {
-    float distance = 1.0 - texture(Sampler0, v_TexCoord).r;
+    float distance = 1.0 - epsilonFontDistance(v_TexCoord);
     vec2 dx = dFdx(v_TexCoord);
     vec2 dy = dFdy(v_TexCoord);
 

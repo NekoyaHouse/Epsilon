@@ -30,6 +30,23 @@ layout(location = 7) flat in vec4 epsilonTint;
 #endif
 
 void main() {
+    if (f_OutlineWidth < -1.5) {
+        vec2 a = f_InnerRect.xy;
+        vec2 b = f_InnerRect.zw;
+        vec2 c = f_Radius.xy;
+        vec2 ab = b - a;
+        vec2 ac = c - a;
+        vec2 ap = f_Position - a;
+        float det = ab.x * ac.y - ab.y * ac.x;
+        if (abs(det) < 0.000001) discard;
+        float v = (ap.x * ac.y - ap.y * ac.x) / det;
+        float w = (ab.x * ap.y - ab.y * ap.x) / det;
+        float d = min(min(v, w), 1.0 - v - w);
+        float alpha = smoothstep(0.0, max(fwidth(d), 0.000001), d);
+        fragColor = vec4(f_Color.rgb, f_Color.a * alpha);
+        if (fragColor.a < 0.001) discard;
+        return;
+    }
     float dist = roundRectDistance(f_Position, f_InnerRect, f_Radius);
     float halfOutline = max(f_OutlineWidth * 0.5, 0.0);
     float delta = max(fwidth(dist), 0.0001);

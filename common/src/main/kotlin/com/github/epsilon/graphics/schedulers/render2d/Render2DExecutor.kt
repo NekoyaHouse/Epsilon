@@ -2,6 +2,10 @@ package com.github.epsilon.graphics.schedulers.render2d
 
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.GeometryArena
+import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Binding
+import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Packet
+import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Range
+import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Texture
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
@@ -21,17 +25,11 @@ import java.util.function.Supplier
 internal class Render2DExecutor(private val arena: GeometryArena, private val stats: Render2DStats) : AutoCloseable {
     data class Draw(val pipeline: RenderPipeline, val properties: Render2DProperties,
                     val prepare: () -> Boolean, val submit: (RenderPass) -> Unit)
-    private data class Texture(val view: GpuTextureView?, val sampler: GpuSampler?)
-    private data class Binding(val pipeline: RenderPipeline, val vertices: GpuBuffer, val indices: GpuBuffer?,
-                               val indexType: IndexType?, val clip: Render2DScissor?,
-                               val textures: Map<String, Texture>, val uniforms: Map<String, GpuBufferSlice>)
-    private data class Range(val count: Int, val first: Int, val baseVertex: Int, val property: Int)
-    private data class Packet(val binding: Binding, val range: Range)
-    private data class Run(val binding: Binding, val ranges: List<Range>)
-    private var properties = emptyList<Render2DProperties>()
+    private data class Instance(val properties: Render2DProperties, val textureSlot: Int)
+    private var properties = emptyList<Instance>()
     private var propertyBuffer: GeometryArena.Handle? = null
     private var packets = emptyList<Packet>()
-    private var plan = emptyList<Run>()
+    private var plan = Render2DDrawPlan.Plan(emptyList(), emptyList())
     private val indirect = LinkedHashMap<List<Range>, GeometryArena.Handle>(32, 0.75f, true)
     /** 可关闭 GPU 时间查询；读取结果从不等待 GPU。 */
     var measureGpu = false
@@ -44,7 +42,6 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         val resolved = draws.filter { it.prepare() }
         if (resolved.isEmpty()) return
         LuminRenderSystem.applyOrthoProjection()
-        updateProperties(resolved.map { it.properties })
         val originals = Render2DPipelines.sources.associateBy { RenderSystem.getCompiledPipeline(it) }
         val recorder = RecordingPass(originals)
         resolved.forEachIndexed { index, draw ->
@@ -55,24 +52,15 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         if (packets != recorder.packets) {
             val start = System.nanoTime()
             packets = recorder.packets
-            val runs = ArrayList<Run>()
-            var ranges = ArrayList<Range>()
-            var binding: Binding? = null
-            for (packet in packets) {
-                if (binding != packet.binding && ranges.isNotEmpty()) {
-                    runs.add(Run(checkNotNull(binding), ranges)); ranges = ArrayList()
-                }
-                binding = packet.binding
-                ranges.add(packet.range)
-            }
-            if (ranges.isNotEmpty()) runs.add(Run(checkNotNull(binding), ranges))
-            plan = runs
+            plan = Render2DDrawPlan.build(packets)
             stats.planBuilds++
             stats.planningNanos += System.nanoTime() - start
         }
+        if (plan.runs.isEmpty()) return
+        updateProperties(plan.properties.map { Instance(resolved[it.source].properties, it.textureSlot) })
         val features = RenderSystem.getDevice().deviceInfo.features()
         val useIndirect = features.multiDrawIndirect() && features.nonZeroFirstInstance()
-        val prepared = plan.map { run ->
+        val prepared = plan.runs.map { run ->
             val compiled = RenderSystem.getCompiledPipeline(Render2DPipelines.variant(run.binding.pipeline))
             val commands = if (useIndirect && run.ranges.size > 1 && run.binding.indices != null) indirect(run.ranges) else null
             Triple(run, compiled, commands)
@@ -134,13 +122,13 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         } catch (failure: Throwable) { query?.close(); throw failure }
     }
 
-    private fun updateProperties(next: List<Render2DProperties>) {
+    private fun updateProperties(next: List<Instance>) {
         if (next == properties && propertyBuffer != null) return
         val data = MemoryUtil.memAlloc(next.size * 48)
         try {
-            for (property in next) {
+            for ((property, textureSlot) in next) {
                 val t = property.transform
-                data.putFloat(t.m00).putFloat(t.m01).putFloat(t.x).putFloat(0f)
+                data.putFloat(t.m00).putFloat(t.m01).putFloat(t.x).putFloat(textureSlot.toFloat())
                 data.putFloat(t.m10).putFloat(t.m11).putFloat(t.y).putFloat(0f)
                 data.putFloat(property.red).putFloat(property.green).putFloat(property.blue).putFloat(property.alpha)
             }
@@ -177,7 +165,7 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
     }
     fun resetCache() {
         propertyBuffer?.let { arena.retire(it) }; propertyBuffer = null
-        properties = emptyList(); packets = emptyList(); plan = emptyList()
+        properties = emptyList(); packets = emptyList(); plan = Render2DDrawPlan.Plan(emptyList(), emptyList())
         indirect.values.forEach { arena.retire(it) }; indirect.clear()
     }
     override fun close() { resetCache(); queries.forEach { it.close() }; queries.clear() }

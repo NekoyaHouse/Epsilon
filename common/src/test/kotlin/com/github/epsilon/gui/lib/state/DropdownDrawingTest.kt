@@ -116,4 +116,15 @@ class DropdownDrawingTest {
             }
         } finally { toggle.close() }
     }
+
+    @Test fun holdIndicatorsDoNotSplitEveryTextRow() {
+        val module = Module("module", null).apply { bindMode = Module.BindMode.Hold }
+        val draws = draw(listOf(ModuleButton(module)))
+        val shapes = draws.filter { it.node is UiTree.RectNode || it.node is UiTree.RoundRectNode || it.node is UiTree.OutlineNode }
+        val texts = draws.filter { it.node is UiTree.TextNode }
+        assertEquals(2, texts.size)
+        assertEquals(3, shapes.count { it.node is UiTree.RectNode })
+        assertTrue(shapes.maxOf { it.layer } < texts.minOf { it.layer })
+        assertEquals(1, texts.map { it.layer }.distinct().size)
+    }
 }

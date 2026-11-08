@@ -155,7 +155,9 @@ class ModuleButton(val module: Module) : Component() {
         val textY = btnY + (btnH - textH) * 0.5f - 0.5f
         Layer(KEYBIND_LABEL) {
             Text(keyText, textX, textY, textScale, text)
-            if (module.bindMode == Module.BindMode.Hold && !listeningKeybind) {
+        }
+        if (module.bindMode == Module.BindMode.Hold && !listeningKeybind) {
+            Layer(ROW_BACKGROUND) {
                 Rect(textX, textY + textH + 0.5f, textW, 0.75f, text)
             }
         }
@@ -333,7 +335,7 @@ class ModuleButton(val module: Module) : Component() {
         val ROW_BACKGROUND = LayerOffset(-2)
         val ROW_NAME = LayerOffset(-1)
         val KEYBIND_LABEL = LayerOffset(-1)
-        val ROW_ICON = LayerOffset(2)
+        val ROW_ICON = LayerOffset(-1)
 
         private fun createWidget(setting: Setting<*>): SettingWidget<*>? {
             if (setting is BoolSetting) return BoolWidget(setting)

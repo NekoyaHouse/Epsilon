@@ -32,7 +32,7 @@ The Lumin rendering system provides custom render pipelines for:
 
 Retained UI caches local GPU geometry and updates transform, clip and paint independently. The shared 2D canvas preserves layer/declaration order and consumes records on flush; immediate mode remains available.
 
-Dropdown module rows use explicit drawing stages within each panel to batch compatible shapes and labels while preserving panel overlap and button text visibility.
+Dropdown module rows use explicit drawing stages within each panel to batch compatible shapes and labels while preserving panel overlap and button text visibility. Ordinary text batches can bind up to eight font/icon atlases, and panel arrows share the shape pipeline, so atlas changes and row decorations no longer split every row into separate draws.
 
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 

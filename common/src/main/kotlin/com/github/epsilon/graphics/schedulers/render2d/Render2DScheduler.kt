@@ -298,7 +298,7 @@ class Render2DScheduler : IRenderer {
         Render2DCommandKind.ROUND_RECT -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.ROUND_RECT_OUTLINE -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.RECT -> LuminRenderPipelines.UI_SHAPE
-        Render2DCommandKind.TRIANGLE -> LuminRenderPipelines.TRIANGLE
+        Render2DCommandKind.TRIANGLE -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.ARC -> LuminRenderPipelines.ARC
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
         Render2DCommandKind.BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR
@@ -342,7 +342,7 @@ class Render2DScheduler : IRenderer {
                 0f, 0f, 0f, 0f, -1f, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
             )
 
-            is Render2DCommand.Triangle -> renderers.triangleRenderer().addChevronTriangle(
+            is Render2DCommand.Triangle -> renderers.shapeRenderer().addChevronTriangle(
                 command.centerX, command.centerY, command.size, command.progress, command.color
             )
 
@@ -950,8 +950,6 @@ class Render2DScheduler : IRenderer {
 
         fun shadowRenderer(): ShadowRenderer = renderer as ShadowRenderer
 
-        fun triangleRenderer(): TriangleRenderer = renderer as TriangleRenderer
-
         fun arcRenderer(): ArcRenderer = renderer as ArcRenderer
 
         fun textureRenderer(): TextureRenderer = renderer as TextureRenderer
@@ -1009,7 +1007,7 @@ class Render2DScheduler : IRenderer {
                 Render2DCommandKind.ROUND_RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.ROUND_RECT_OUTLINE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
-                Render2DCommandKind.TRIANGLE -> RendererBundle(kind, TriangleRenderer.create())
+                Render2DCommandKind.TRIANGLE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.ARC -> RendererBundle(kind, ArcRenderer.create())
                 Render2DCommandKind.TEXTURE -> RendererBundle(kind, TextureRenderer.create())
                 Render2DCommandKind.BLUR_TEXT -> RendererBundle(kind, TextRenderer.createFontBlur())
