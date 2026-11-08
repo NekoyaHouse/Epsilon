@@ -287,7 +287,7 @@ class EpsilonFontGlyph private constructor(
             }
 
             font.requestChars(String(Character.toChars(codepoint)))
-            val descriptor = font.getGlyph(codepoint)
+            val descriptor = font.getGlyph(codepoint) ?: font.getFallbackGlyph(codepoint)
             return if (descriptor != null) EpsilonFontGlyph(codepoint, font, descriptor) else null
         }
     }
