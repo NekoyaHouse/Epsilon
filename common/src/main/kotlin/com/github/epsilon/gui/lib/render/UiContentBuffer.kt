@@ -33,7 +33,13 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
 
     private val scrollBarView = LuminView()
     private val scrollFrame = mutableStateOf<ScrollFrame?>(null)
-    private data class ScrollFrame(val viewport: UiRect, val scroll: Float, val maximum: Float, val contentHeight: Float)
+
+    private data class ScrollFrame(
+        val viewport: UiRect,
+        val scroll: Float,
+        val maximum: Float,
+        val contentHeight: Float
+    )
 
     private var pending = false
     private var pendingViewport: UiRect? = null
@@ -87,36 +93,60 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     ) {
         beginViewport(viewport)
         scrollBarBatch.clear()
-        queueScrollBar(scrollBarBatch, Render2DProperties.DEFAULT, null, viewport, scroll, maxScroll, contentHeight, mouseX, mouseY)
+        queueScrollBar(
+            scrollBarBatch,
+            Render2DProperties.DEFAULT,
+            null,
+            viewport,
+            scroll,
+            maxScroll,
+            contentHeight,
+            mouseX,
+            mouseY
+        )
         pendingViewport = viewport
         pending = true
     }
 
     /** 视口内容与滚动条直接进入宿主 canvas，避免独立 flush 改变子树顺序或丢失属性。 */
-    internal fun queueSharedViewport(destination: UiRenderBatch, properties: Render2DProperties, clip: Render2DScissor?,
-                                     viewport: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float,
-                                     mouseX: Int, mouseY: Int) {
+    internal fun queueSharedViewport(
+        destination: UiRenderBatch, properties: Render2DProperties, clip: Render2DScissor?,
+        viewport: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float,
+        mouseX: Int, mouseY: Int
+    ) {
         queueScrollBar(destination, properties, clip, viewport, scroll, maxScroll, contentHeight, mouseX, mouseY)
     }
 
-    private fun queueScrollBar(destination: UiRenderBatch, properties: Render2DProperties, clip: Render2DScissor?,
-                               viewport: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float,
-                               mouseX: Int, mouseY: Int) {
+    private fun queueScrollBar(
+        destination: UiRenderBatch, properties: Render2DProperties, clip: Render2DScissor?,
+        viewport: UiRect, scroll: Float, maxScroll: Float, contentHeight: Float,
+        mouseX: Int, mouseY: Int
+    ) {
         val host = LuminRuntime.activeRoot
         if (host == null) {
             destination.renderProperties(UiTree.build { scope ->
-                scrollBar.draw(scope.asUiScope(destination.scheduler().textMetrics()), viewport,
-                    scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble())
+                scrollBar.draw(
+                    scope.asUiScope(destination.scheduler().textMetrics()), viewport,
+                    scroll, maxScroll, contentHeight, mouseX.toDouble(), mouseY.toDouble()
+                )
             }, properties, clip)
         } else {
             scrollFrame.value = ScrollFrame(viewport, scroll, maxScroll, contentHeight)
             scrollBarView.render(mouseX, mouseY) {
                 val entry = host.nextEntry(viewport, this to "scrollbar")
-                entry.bind(UiScope(entry.treeScope, destination.scheduler().textMetrics().asUiTextMetrics(), LayerOffset.Same, viewport), {
-                    val frame = checkNotNull(scrollFrame.value)
-                    scrollBar.draw(this, frame.viewport.relativeTo(origin), frame.scroll, frame.maximum,
-                        frame.contentHeight, mouseX - origin.x.toDouble(), mouseY - origin.y.toDouble())
-                })
+                entry.bind(
+                    UiScope(
+                        entry.treeScope,
+                        destination.scheduler().textMetrics().asUiTextMetrics(),
+                        LayerOffset.Same,
+                        viewport
+                    ), {
+                        val frame = checkNotNull(scrollFrame.value)
+                        scrollBar.draw(
+                            this, frame.viewport.relativeTo(origin), frame.scroll, frame.maximum,
+                            frame.contentHeight, mouseX - origin.x.toDouble(), mouseY - origin.y.toDouble()
+                        )
+                    })
                 val output = UiTree.Scope()
                 entry.emit(output)
                 destination.renderProperties(UiTree.from(output), properties, clip)

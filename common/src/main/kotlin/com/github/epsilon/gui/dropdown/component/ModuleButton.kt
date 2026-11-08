@@ -34,6 +34,7 @@ class ModuleButton(val module: Module) : Component() {
     private var expanded by mutableStateOf(false)
     private var listeningKeybind by mutableStateOf(false)
     private var cachedHeightFrameId = Int.MIN_VALUE
+
     // 帧内缓存也必须可观察，否则列表重放时无法感知测量结果变化。
     private var cachedHeight by mutableStateOf(0.0f)
 
@@ -43,7 +44,9 @@ class ModuleButton(val module: Module) : Component() {
     }
 
     override fun inputHeight(): Float = DropdownTheme.MODULE_HEIGHT
-    override fun blurInput() { listeningKeybind = false }
+    override fun blurInput() {
+        listeningKeybind = false
+    }
 
     override fun getHeight(): Float {
         return computeHeight()
@@ -80,7 +83,13 @@ class ModuleButton(val module: Module) : Component() {
         hoverAnim.run(if (headerHovered) 1.0f else 0.0f)
 
         Layer(ROW_BACKGROUND) {
-            Paint({ MD3Theme.lerp(DropdownTheme.moduleDisabled(hoverAnim.value), DropdownTheme.moduleEnabled(hoverAnim.value), toggleAnim.value) }) {
+            Paint({
+                MD3Theme.lerp(
+                    DropdownTheme.moduleDisabled(hoverAnim.value),
+                    DropdownTheme.moduleEnabled(hoverAnim.value),
+                    toggleAnim.value
+                )
+            }) {
                 Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, Color.WHITE)
             }
             Rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
@@ -89,7 +98,13 @@ class ModuleButton(val module: Module) : Component() {
         val textY = (DropdownTheme.MODULE_HEIGHT - metrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
         val leftX = DropdownTheme.MODULE_PADDING_X
         Layer(ROW_NAME) {
-            Paint({ MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hoverAnim.value), DropdownTheme.moduleTextEnabled(), toggleAnim.value) }) {
+            Paint({
+                MD3Theme.lerp(
+                    DropdownTheme.moduleTextDisabled(hoverAnim.value),
+                    DropdownTheme.moduleTextEnabled(),
+                    toggleAnim.value
+                )
+            }) {
                 Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, Color.WHITE)
             }
         }

@@ -94,46 +94,48 @@ abstract class EpsilonDialogScreen protected constructor(
         val hits = layoutButtons()
 
         scene.beginFrame()
-        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "dialog", immediate = true) { scope ->
-            scope.rect(0.0f, 0.0f, width.toFloat(), height.toFloat(), SCRIM)
-            scope.layer(DialogZ.Card) { card ->
-                card.shadow(
-                    cardArea.x, cardArea.y, cardArea.width, cardArea.height,
-                    MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.POPUP_SHADOW_ALPHA)
-                )
-                card.roundRect(
-                    cardArea.x, cardArea.y, cardArea.width, cardArea.height,
-                    MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.SURFACE_CONTAINER_LOW
-                )
-            }
-            scope.pushAbsolute(cardArea) { content ->
-                content.text(titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
-                buildBody(content, CARD_PADDING + 22.0f, epsilonMouseX, epsilonMouseY)
-            }
-            scope.layer(DialogZ.Content) { content ->
-                for ((index, hit) in hits.withIndex()) {
-                    content.asUiScope(textMetrics()).Interaction(index, hit.bounds) {
-                        onClick { hit.button.action.run(); true }
-                    }
-                    val hovered = hit.bounds.contains(epsilonMouseX.toDouble(), epsilonMouseY.toDouble())
-                    val background = if (hit.button.primary) {
-                        MD3Theme.PRIMARY_CONTAINER
-                    } else {
-                        if (hovered) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
-                    }
-                    val foreground = if (hit.button.primary) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
-                    content.button(
-                        hit.bounds,
-                        MD3Theme.CONTROL_RADIUS.toFloat(),
-                        background,
-                        hit.button.label,
-                        0.62f,
-                        foreground
+        val tree =
+            scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "dialog", immediate = true) { scope ->
+                scope.rect(0.0f, 0.0f, width.toFloat(), height.toFloat(), SCRIM)
+                scope.layer(DialogZ.Card) { card ->
+                    card.shadow(
+                        cardArea.x, cardArea.y, cardArea.width, cardArea.height,
+                        MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.POPUP_SHADOW_BLUR,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.POPUP_SHADOW_ALPHA)
+                    )
+                    card.roundRect(
+                        cardArea.x, cardArea.y, cardArea.width, cardArea.height,
+                        MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.SURFACE_CONTAINER_LOW
                     )
                 }
+                scope.pushAbsolute(cardArea) { content ->
+                    content.text(titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
+                    buildBody(content, CARD_PADDING + 22.0f, epsilonMouseX, epsilonMouseY)
+                }
+                scope.layer(DialogZ.Content) { content ->
+                    for ((index, hit) in hits.withIndex()) {
+                        content.asUiScope(textMetrics()).Interaction(index, hit.bounds) {
+                            onClick { hit.button.action.run(); true }
+                        }
+                        val hovered = hit.bounds.contains(epsilonMouseX.toDouble(), epsilonMouseY.toDouble())
+                        val background = if (hit.button.primary) {
+                            MD3Theme.PRIMARY_CONTAINER
+                        } else {
+                            if (hovered) MD3Theme.SURFACE_CONTAINER_HIGHEST else MD3Theme.SURFACE_CONTAINER_HIGH
+                        }
+                        val foreground =
+                            if (hit.button.primary) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
+                        content.button(
+                            hit.bounds,
+                            MD3Theme.CONTROL_RADIUS.toFloat(),
+                            background,
+                            hit.button.label,
+                            0.62f,
+                            foreground
+                        )
+                    }
+                }
             }
-        }
         scene.submit(UiLayer.CONTENT, tree)
         scene.endFrame()
 

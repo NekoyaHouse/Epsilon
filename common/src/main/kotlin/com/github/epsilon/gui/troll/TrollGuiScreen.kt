@@ -204,7 +204,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private val luminView = LuminView()
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        luminView.render(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)) { extractContent(graphics, mouseX, mouseY, partialTick) }
+        luminView.render(
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY)
+        ) { extractContent(graphics, mouseX, mouseY, partialTick) }
     }
 
     private fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
@@ -336,8 +339,13 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             if (revealHeight <= 0.01f) return@render
 
             val clip = UiRect(window.bounds.x, window.bounds.y, window.bounds.width, revealHeight)
-            val passBounds = UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
-            val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), window, inputLayer = layer.baseLayer() + relativeLayer) { scope ->
+            val passBounds =
+                UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
+            val tree = frame.LuminUITree(
+                UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
+                window,
+                inputLayer = layer.baseLayer() + relativeLayer
+            ) { scope ->
                 if (window === settingsWindow || window === colorPicker) {
                     scope.asUiScope(textMetrics.get()).Interaction(key = window to "dismiss") {
                         for (button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_8) onClick(button) {
@@ -366,7 +374,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
     private fun renderToggleButtons(frame: UiScene, mouseX: Int, mouseY: Int) {
         if (friendToggleBounds.width <= 0.0f || configToggleBounds.width <= 0.0f) return
-        val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-3", inputLayer = UiLayer.FLOATING.baseLayer() - 90) { scope ->
+        val tree = frame.LuminUITree(
+            UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
+            "troll-pass-3",
+            inputLayer = UiLayer.FLOATING.baseLayer() - 90
+        ) { scope ->
             drawToggleButton(
                 scope,
                 friendToggleBounds,
@@ -598,7 +610,9 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private fun closeSettings() {
         val previous = settingsWindow
         settingsWindow = null
-        if (previous != null) { windowViews.remove(previous)?.close(); previous.resetInput() }
+        if (previous != null) {
+            windowViews.remove(previous)?.close(); previous.resetInput()
+        }
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
@@ -618,10 +632,16 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     }
 
     override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {
-        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(dx), LuminRenderSystem.toEpsilonMouseY(dy))
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(dx),
+            LuminRenderSystem.toEpsilonMouseY(dy)
+        )
 
-        return scene.get().input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(dx), LuminRenderSystem.toEpsilonMouseY(dy))
+        return scene.get().input.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(dx), LuminRenderSystem.toEpsilonMouseY(dy)
+        )
     }
 
     override fun mouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {

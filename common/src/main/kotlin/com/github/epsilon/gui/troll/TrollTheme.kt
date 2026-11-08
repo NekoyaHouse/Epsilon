@@ -91,7 +91,9 @@ object TrollTheme {
     private data class RendererMetrics(val renderer: TextRenderer) : UiTextMetrics {
         override fun textWidth(text: String, scale: Float) = renderer.getWidth(text, scale)
         override fun textHeight(scale: Float) = renderer.getHeight(scale)
-        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader) = renderer.getWidth(text, scale, fontLoader)
+        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader) =
+            renderer.getWidth(text, scale, fontLoader)
+
         override fun textHeight(scale: Float, fontLoader: TtfFontLoader) = renderer.getHeight(scale, fontLoader)
     }
 }

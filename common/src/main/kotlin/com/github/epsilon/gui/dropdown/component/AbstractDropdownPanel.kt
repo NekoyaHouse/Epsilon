@@ -48,7 +48,9 @@ abstract class AbstractDropdownPanel protected constructor(
     private val scrollAnimation = Animation(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     protected var scroll: Float
         get() = scrollAnimation.value
-        set(value) { scrollAnimation.snapTo(value) }
+        set(value) {
+            scrollAnimation.snapTo(value)
+        }
     protected var targetScroll: Float by mutableStateOf<Float>(0.0f)
     protected var maxScroll: Float = 0.0f
     protected var maxPanelHeight: Float = 300.0f
@@ -114,32 +116,46 @@ abstract class AbstractDropdownPanel protected constructor(
         val panelWidth = width
 
         with(scope) {
-            InputRegion(key = this@AbstractDropdownPanel to "header",
+            InputRegion(
+                key = this@AbstractDropdownPanel to "header",
                 bounds = UiRect(left, top, panelWidth, DropdownTheme.PANEL_HEADER_HEIGHT),
                 onPress = { event, _ ->
                     when (event.button()) {
                         InputConstants.MOUSE_BUTTON_LEFT -> {
-                            dragging = true; dragOffsetX = (x - event.x()).toFloat(); dragOffsetY = (y - event.y()).toFloat()
+                            dragging = true; dragOffsetX = (x - event.x()).toFloat(); dragOffsetY =
+                                (y - event.y()).toFloat()
                             DropdownScreen.react(ReisaDropdownCompanion.Action.DRAG); true
                         }
+
                         InputConstants.MOUSE_BUTTON_RIGHT -> {
                             isOpened = !isOpened
                             DropdownScreen.react(if (isOpened) ReisaDropdownCompanion.Action.PANEL_OPEN else ReisaDropdownCompanion.Action.PANEL_CLOSE); true
                         }
+
                         else -> false
                     }
                 },
                 onDrag = { event, _, _ -> mouseDragged(event.x(), event.y()) },
                 onRelease = { event -> mouseReleased(event.x(), event.y(), event.button()) },
                 onCancel = { dragging = false; scrollBar.reset() })
-            InputRegion(key = this@AbstractDropdownPanel to "scroll", bounds = UiRect(left, top, panelWidth, panelHeight),
+            InputRegion(
+                key = this@AbstractDropdownPanel to "scroll", bounds = UiRect(left, top, panelWidth, panelHeight),
                 onScroll = { _, _, _, amount ->
                     if (openedState) {
-                        targetScroll = (targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED).coerceIn(0f, maxScroll)
+                        targetScroll =
+                            (targetScroll - amount.toFloat() * DropdownTheme.SCROLL_SPEED).coerceIn(0f, maxScroll)
                         true
                     } else false
                 })
-            Shadow(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow())
+            Shadow(
+                left,
+                top,
+                panelWidth,
+                panelHeight,
+                DropdownTheme.PANEL_RADIUS,
+                DropdownTheme.PANEL_SHADOW_BLUR,
+                DropdownTheme.panelShadow()
+            )
             RoundRect(left, top, panelWidth, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground())
             // 箭头与标题不重叠，先提交箭头，让图标和标题进入连续的文字批次。
             Triangle(
@@ -193,15 +209,20 @@ abstract class AbstractDropdownPanel protected constructor(
         val contentMouseX = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseX
         val contentMouseY = if (scrollbarHovered || scrollBar.isDragging()) Integer.MIN_VALUE else mouseY
         scope.drawPanelContent(contentMouseX, contentMouseY, visibleHeight)
-        scope.InputRegion(key = this to "scrollbar", bounds = UiRect(
+        scope.InputRegion(
+            key = this to "scrollbar", bounds = UiRect(
             scrollbarViewport.right() - UiScrollBar.HOVER_WIDTH - scope.origin.x,
-            scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height),
+            scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height
+        ),
             onPress = { event, _ ->
-                val handled = scrollBar.mouseClicked(event.x(), event.y(), scrollbarViewport, scroll, maxScroll, contentHeight)
-                if (handled) scrollBar.mouseDragged(event.y(), scrollbarViewport, maxScroll, contentHeight).takeIf { it >= 0f }?.let(::setScrollImmediate)
+                val handled =
+                    scrollBar.mouseClicked(event.x(), event.y(), scrollbarViewport, scroll, maxScroll, contentHeight)
+                if (handled) scrollBar.mouseDragged(event.y(), scrollbarViewport, maxScroll, contentHeight)
+                    .takeIf { it >= 0f }?.let(::setScrollImmediate)
                 handled
             }, onDrag = { event, _, _ ->
-                scrollBar.mouseDragged(event.y(), getScrollbarViewport(), maxScroll, cachedContentHeight).takeIf { it >= 0f }?.let(::setScrollImmediate)
+                scrollBar.mouseDragged(event.y(), getScrollbarViewport(), maxScroll, cachedContentHeight)
+                    .takeIf { it >= 0f }?.let(::setScrollImmediate)
                 true
             }, onRelease = { scrollBar.mouseReleased() }, onCancel = { scrollBar.reset() })
         // 滚动条与内容共用同一作用域：把视口和鼠标都平移到该作用域的坐标系。
@@ -238,7 +259,9 @@ abstract class AbstractDropdownPanel protected constructor(
 
 
     private fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (button == InputConstants.MOUSE_BUTTON_LEFT && dragging) { dragging = false; return true }
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && dragging) {
+            dragging = false; return true
+        }
         return false
     }
 
@@ -343,7 +366,15 @@ abstract class AbstractDropdownPanel protected constructor(
      *
      * 绘制走局部坐标，命中测试仍使用绝对坐标，因此这里补上作用域原点。
      */
-    protected fun isHoveredAt(scope: UiScope, mouseX: Double, mouseY: Double, x: Float, y: Float, w: Float, h: Float): Boolean {
+    protected fun isHoveredAt(
+        scope: UiScope,
+        mouseX: Double,
+        mouseY: Double,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float
+    ): Boolean {
         return isHovered(mouseX, mouseY, scope.origin.x + x, scope.origin.y + y, w, h)
     }
 

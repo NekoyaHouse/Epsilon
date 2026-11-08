@@ -178,8 +178,14 @@ class RegistryListSelectPopup<T : Any> private constructor(
         IMEFocusHelper.updateCursorPos(searchBounds.x + 8.0f, searchBounds.y + 4.0f)
 
         renderBatch.LuminUIScene(animatedBounds, key = this) {
-            InputRegion(key = this@RegistryListSelectPopup to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
-                onBlur = {}, onCancel = { availableScrollBarDrag.reset(); selectedScrollBarDrag.reset() })
+            InputRegion(
+                key = this@RegistryListSelectPopup to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
+                onBlur = {},
+                onCancel = { availableScrollBarDrag.reset(); selectedScrollBarDrag.reset() })
 
             val progress = openAnimation.value
             PopupCard(

@@ -6,5 +6,7 @@ import com.github.epsilon.settings.Setting
 fun <V> Setting<V>.asState(): MutableState<V> = object : MutableState<V> {
     override var value: V
         get() = this@asState.value
-        set(value) { this@asState.value = value }
+        set(value) {
+            this@asState.value = value
+        }
 }

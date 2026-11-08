@@ -31,7 +31,18 @@ fun UiScope.Shadow(
     radiusTopLeft: Float, radiusTopRight: Float, radiusBottomRight: Float, radiusBottomLeft: Float,
     blurRadius: Float, color: Color,
 ) {
-    tree.shadow(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color)
+    tree.shadow(
+        x,
+        y,
+        width,
+        height,
+        radiusTopLeft,
+        radiusTopRight,
+        radiusBottomRight,
+        radiusBottomLeft,
+        blurRadius,
+        color
+    )
 }
 
 /**

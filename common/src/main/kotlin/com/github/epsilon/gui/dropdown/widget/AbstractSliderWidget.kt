@@ -219,7 +219,9 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
         return true
     }
 
-    override fun cancelInput() { dragging = false; clearPendingValue() }
+    override fun cancelInput() {
+        dragging = false; clearPendingValue()
+    }
 
     fun isFocused(): Boolean {
         return inputField.isFocused

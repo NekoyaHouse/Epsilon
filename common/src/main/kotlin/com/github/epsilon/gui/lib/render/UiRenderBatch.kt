@@ -29,7 +29,7 @@ class UiRenderBatch private constructor(
     constructor(theme: UiTheme) : this(Render2DScheduler(), true, 0, theme, null)
 
     constructor(scheduler: Render2DScheduler, baseLayer: Int, theme: UiTheme, sceneRoot: LuminSceneRoot? = null) :
-        this(scheduler, false, baseLayer, theme, sceneRoot)
+            this(scheduler, false, baseLayer, theme, sceneRoot)
 
     init {
         Objects.requireNonNull(scheduler, "scheduler")
@@ -88,13 +88,19 @@ class UiRenderBatch private constructor(
     }
 
     fun render(tree: UiTree, baseLayer: Int) {
-        try { LuminUiRenderer.renderIntoLayeredBatch(tree, this, this.baseLayer + baseLayer) }
-        finally { UiRenderNode.release(tree.nodes) }
+        try {
+            LuminUiRenderer.renderIntoLayeredBatch(tree, this, this.baseLayer + baseLayer)
+        } finally {
+            UiRenderNode.release(tree.nodes)
+        }
     }
 
     internal fun renderProperties(tree: UiTree, properties: Render2DProperties, clip: Render2DScissor?) {
-        try { UiRetainedRenderer.render(tree.nodes, this, baseLayer, properties, clip) }
-        finally { UiRenderNode.release(tree.nodes) }
+        try {
+            UiRetainedRenderer.render(tree.nodes, this, baseLayer, properties, clip)
+        } finally {
+            UiRenderNode.release(tree.nodes)
+        }
     }
 
     fun flush() {

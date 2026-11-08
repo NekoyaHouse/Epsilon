@@ -61,7 +61,16 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -91,7 +100,12 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
         contentBuffer.clear()
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            InputRegion(key = this@ModuleListPanel to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+            InputRegion(
+                key = this@ModuleListPanel to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
                 onCancel = { scrollBarDrag.reset() })
 
             Text(
@@ -315,12 +329,19 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
 
     private fun UiScope.buildSearchField(mouseX: Int, mouseY: Int) {
         val searchBounds = getSearchBounds()
-        InputRegion("search", searchBounds.relativeTo(origin),
+        InputRegion(
+            "search", searchBounds.relativeTo(origin),
             onPress = { _, _ ->
-                if (!searchFocused) { searchFocused = true; searchCursorIndex = state.getSearchQuery().length; IMEFocusHelper.activate() }
+                if (!searchFocused) {
+                    searchFocused = true; searchCursorIndex = state.getSearchQuery().length; IMEFocusHelper.activate()
+                }
                 true
             }, onKey = ::keyPressed, onText = ::charTyped,
-            onBlur = { if (searchFocused) { searchFocused = false; IMEFocusHelper.deactivate() } })
+            onBlur = {
+                if (searchFocused) {
+                    searchFocused = false; IMEFocusHelper.deactivate()
+                }
+            })
         val localBounds = searchBounds.relativeTo(origin)
         val hoverProgress =
             animate(searchHoverAnimation, searchBounds.contains(mouseX.toDouble(), mouseY.toDouble()))

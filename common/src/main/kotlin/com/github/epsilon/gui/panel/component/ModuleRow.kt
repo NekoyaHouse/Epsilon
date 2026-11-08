@@ -125,7 +125,14 @@ fun UiScope.ModuleRow(
 
     RoundRect(0.0f, 0.0f, width, height, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.rowSurface(hover))
     if (selected > 0.01f) {
-        RoundRect(0.0f, 0.0f, width, height, MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.stateLayer(MD3Theme.PRIMARY, selected, 42))
+        RoundRect(
+            0.0f,
+            0.0f,
+            width,
+            height,
+            MD3Theme.CARD_RADIUS.toFloat(),
+            MD3Theme.stateLayer(MD3Theme.PRIMARY, selected, 42)
+        )
     }
 
     Text(moduleView.displayName, PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor)

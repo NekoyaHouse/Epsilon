@@ -109,8 +109,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
         val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        ui.InputRegion(inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
-            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+        ui.InputRegion(
+            inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
+            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur
+        )
 
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         inputField.draw(
@@ -185,7 +187,12 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                     val nameScale = TrollTheme.VALUE_SCALE
                     tree.layer(TrollZ.Highlight) { z ->
                         z.textWithShadow(
-                            TrollTheme.trim(row.name, metrics, nameScale, row.bounds.width - DELETE_BUTTON_SIZE - 18.0f),
+                            TrollTheme.trim(
+                                row.name,
+                                metrics,
+                                nameScale,
+                                row.bounds.width - DELETE_BUTTON_SIZE - 18.0f
+                            ),
                             row.bounds.x + 5.0f,
                             row.bounds.y + 2.0f,
                             nameScale, TrollTheme.text()

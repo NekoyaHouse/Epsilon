@@ -7,7 +7,13 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.lib.state.LuminRuntime
 
 /** 供需要先排队树快照、再执行后处理的宿主使用，生命周期仍属于 scene。 */
-internal fun UiScene.LuminUITree(bounds: UiRect, key: Any, inputLayer: Int = UiLayer.CONTENT.baseLayer(), immediate: Boolean = false, block: (UiTree.Scope) -> Unit): UiTree {
+internal fun UiScene.LuminUITree(
+    bounds: UiRect,
+    key: Any,
+    inputLayer: Int = UiLayer.CONTENT.baseLayer(),
+    immediate: Boolean = false,
+    block: (UiTree.Scope) -> Unit
+): UiTree {
     val entry = lumin.nextEntry(bounds, key)
     entry.alwaysDirty = immediate
     val metrics = scheduler().textMetrics().asUiTextMetrics()
@@ -99,6 +105,7 @@ fun UiScope.LuminUIGroupImmediate(key: Any, block: UiScope.() -> Unit) {
     }
     composition.group(this, key, block, alwaysDirty = true)
 }
+
 /** 列表项与 Group 共用独立的状态观察和记忆生命周期。 */
 fun UiScope.LuminUIItem(key: Any, block: UiScope.() -> Unit) = LuminUIGroup(key, block)
 

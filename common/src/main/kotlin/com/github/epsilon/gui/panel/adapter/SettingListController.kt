@@ -202,7 +202,8 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     }
 
     private fun UiScope.bindRowInput(row: SettingRow<*>, bounds: UiRect, popupBounds: UiRect) {
-        InputRegion(key = row, bounds = bounds.relativeTo(origin),
+        InputRegion(
+            key = row, bounds = bounds.relativeTo(origin),
             onPreviewPress = { event, _ -> row is KeybindSettingRow && row.bindMouse(event) },
             onPress = { event, double ->
                 if (!row.getSetting().isViaSupported()) {
@@ -216,6 +217,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                             row.setDropdownOpen(true)
                             activeEnumRow = row
                         }
+
                         is ColorSettingRow -> popupHost.open(createColorPopup(row, bounds, popupBounds))
                         is StringListSettingRow -> popupHost.open(createStringListSettingPopup(row, popupBounds))
                         is RegistryListSettingRow -> popupHost.open(createRegistryListSettingPopup(row, popupBounds))

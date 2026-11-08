@@ -66,8 +66,10 @@ class TrollFriendWindow : TrollWindow() {
 
     override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
         val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        ui.InputRegion(inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
-            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+        ui.InputRegion(
+            inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
+            onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur
+        )
 
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         inputField.draw(

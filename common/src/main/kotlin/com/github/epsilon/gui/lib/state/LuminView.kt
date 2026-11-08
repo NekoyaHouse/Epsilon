@@ -19,7 +19,9 @@ class LuminView : AutoCloseable {
     private val observation = StateObservation { invalidate() }
     private val preparation = StateObservation { invalidate() }
 
-    private fun invalidate() { compositions.forEach { it.markDirty() } }
+    private fun invalidate() {
+        compositions.forEach { it.markDirty() }
+    }
 
     /** 布局可早于命中路由执行，依赖仍归属实际绘制该布局的宿主。 */
     fun <T> prepare(block: () -> T): T = preparation.observeReads(compositions.isNotEmpty(), block)
@@ -55,8 +57,9 @@ class LuminView : AutoCloseable {
 
     internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) {
         val root = LuminRuntime.activeRoot
-        if (root != null) { sharedInput = root.input; root.collectInput(nodes, layer) }
-        else if (inputDelegate.isInitialized()) inputFrame?.let { input.collect(nodes, layer, it) }
+        if (root != null) {
+            sharedInput = root.input; root.collectInput(nodes, layer)
+        } else if (inputDelegate.isInitialized()) inputFrame?.let { input.collect(nodes, layer, it) }
     }
 
     internal fun attach(composition: LuminComposition) {
@@ -64,6 +67,7 @@ class LuminView : AutoCloseable {
         compositions.add(composition)
         preparation.activate()
     }
+
     internal fun detach(composition: LuminComposition) {
         compositions.remove(composition)
         if (compositions.isEmpty()) {
@@ -84,7 +88,12 @@ class LuminView : AutoCloseable {
         return probe.hovered.value
     }
 
-    private inner class HoverProbe(val composition: LuminComposition, val rect: UiRect, val offsetX: Double, val offsetY: Double) : AutoCloseable {
+    private inner class HoverProbe(
+        val composition: LuminComposition,
+        val rect: UiRect,
+        val offsetX: Double,
+        val offsetY: Double
+    ) : AutoCloseable {
         var transform = Render2DTransform.IDENTITY
         val hovered = mutableStateOf(hit())
         private fun hit(): Boolean {
@@ -94,7 +103,11 @@ class LuminView : AutoCloseable {
             val py = inverse.mapY((mouseX + offsetX).toFloat(), (mouseY + offsetY).toFloat())
             return px >= rect.x && px <= rect.right() && py >= rect.y && py <= rect.bottom()
         }
-        fun update() { hovered.value = hit() }
+
+        fun update() {
+            hovered.value = hit()
+        }
+
         override fun close() {
             val group = probes[composition] ?: return
             group.remove(this)

@@ -41,7 +41,16 @@ class FriendClientSettingTab(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -71,16 +80,23 @@ class FriendClientSettingTab(
         contentBuffer.clear()
 
         rowHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
-            removeHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
+        removeHoverAnimations.keys.removeIf { name -> !friends.contains(name) }
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            InputRegion(key = this@FriendClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
+            InputRegion(
+                key = this@FriendClientSettingTab to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
                 onCancel = { scrollBarDrag.reset() })
 
             val localInput = inputBounds.relativeTo(bounds)
             Positioned(localInput.x, localInput.y, localInput.width, localInput.height) {
-                InputRegion(inputField, onPress = { _, _ -> inputField.focus(); true },
-                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur)
+                InputRegion(
+                    inputField, onPress = { _, _ -> inputField.focus(); true },
+                    onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur
+                )
                 ClientSettingTextField(
                     inputField, mouseX, mouseY,
                     EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵"

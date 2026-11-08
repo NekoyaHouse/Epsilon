@@ -29,17 +29,20 @@ class FriendDropdownPanel(panelIndex: Int) :
         val fieldX = PADDING
         val fieldY = top + PADDING - scroll
         val fieldW = width - PADDING * 2.0f - 24.0f
-        InputRegion(inputField, UiRect(fieldX, fieldY, fieldW, FIELD_HEIGHT),
+        InputRegion(
+            inputField, UiRect(fieldX, fieldY, fieldW, FIELD_HEIGHT),
             onPress = { _, _ -> inputField.focus(); true },
             onKey = { keyPressed(it.key(), it.keycode(), it.modifiers()) },
-            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur)
+            onText = { charTyped(it.codepointAsString()) }, onBlur = inputField::blur
+        )
         inputField.draw(
             this, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY,
             EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), DropdownTheme.SETTING_TEXT_SCALE
         )
 
         val addX = fieldX + fieldW + GAP
-        val addHovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
+        val addHovered =
+            isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)
         LuminUIItem(ADD_BUTTON_KEY) {
             Interaction("add", UiRect(addX, fieldY, ADD_BUTTON_WIDTH, FIELD_HEIGHT)) { onClick { addFriend(); true } }
             RoundRect(
@@ -67,7 +70,8 @@ class FriendDropdownPanel(panelIndex: Int) :
             val currentRowY = rowY
             val rowX = PADDING
             val rowWidth = width - PADDING * 2.0f
-            val hovered = isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, currentRowY, rowWidth, ROW_HEIGHT)
+            val hovered =
+                isHoveredAt(this, mouseX.toDouble(), mouseY.toDouble(), rowX, currentRowY, rowWidth, ROW_HEIGHT)
             val removeX = width - PADDING - 18.0f
             val removeY = currentRowY + (ROW_HEIGHT - REMOVE_BUTTON_SIZE) * 0.5f
             val removeHovered = isHoveredAt(

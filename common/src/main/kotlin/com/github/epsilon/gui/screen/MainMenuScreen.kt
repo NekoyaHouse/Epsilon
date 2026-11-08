@@ -536,178 +536,180 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         val rowHeight = minOf(58.9f * scale, rowStride * 0.78f)
 
         scene.beginFrame()
-        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
-            scope.pushAbsolute(layoutX, layoutY) { content ->
-                if (AssetManager.isReisaReady()) {
-                    if (!reisaShutdownTexturesPrewarmed) {
-                        prewarmReisaShutdownTextures(content)
-                        reisaShutdownTexturesPrewarmed = true
-                    }
-                    if (reisaShutdownStartMs >= 0L) {
-                        drawReisaShutdown(
-                            content,
-                            layoutWidth,
-                            layoutHeight,
-                            scale,
-                            now,
-                            -layoutX,
-                            -layoutY.toFloat(),
-                            width,
-                            height
-                        )
-                    } else {
-                        drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
-                    }
-                }
-
-                val titleStart = applyAlpha(Color(158, 181, 222), titleVisibility * 0.98f)
-                val titleEnd = applyAlpha(Color(242, 247, 255), titleVisibility)
-                val titleOuterGlow = applyAlpha(Color(112, 158, 235), titleVisibility * 0.66f)
-                val titleInnerGlow = applyAlpha(Color(205, 226, 255), titleVisibility * 0.90f)
-                val subtitleStart = applyAlpha(Color(180, 198, 226), subtitleVisibility * 0.92f)
-                val subtitleEnd = applyAlpha(Color(224, 233, 246), subtitleVisibility * 0.96f)
-                val subtitleGlow = applyAlpha(Color(184, 207, 239), subtitleVisibility * 0.52f)
-                val secondary = applyAlpha(Color(178, 197, 224), subtitleVisibility * 0.88f)
-
-                content.layer(MenuZ.Glow) { layer ->
-                    layer.blurredText(
-                        clientName, titleX, titleY, titleScale, titleOuterGlow, titleScale * 2.0f, 3,
-                        StaticFontLoader.CINZEL_DECORATIVE
-                    )
-                    layer.blurredText(
-                        clientName, titleX, titleY, titleScale, titleInnerGlow, titleScale * 0.90f, 4,
-                        StaticFontLoader.CINZEL_DECORATIVE
-                    )
-                    layer.gradientText(
-                        clientName,
-                        titleX,
-                        titleY,
-                        titleScale,
-                        titleStart,
-                        titleEnd,
-                        StaticFontLoader.CINZEL_DECORATIVE
-                    )
-                    layer.blurredText(
-                        subtitle,
-                        subtitleX,
-                        subtitleY,
-                        subtitleScale,
-                        subtitleScale * 1.25f,
-                        2,
-                        subtitleGlow
-                    )
-                    layer.gradientText(subtitle, subtitleX, subtitleY, subtitleScale, subtitleStart, subtitleEnd)
-                }
-
-                for (index in entries.indices) {
-                    val entry = entries[index]
-                    val itemDelay = COLUMBINA_MENU_DELAY_MS + index * COLUMBINA_ITEM_STAGGER_MS
-                    val itemProgress = Easing.EASE_OUT_CUBIC.function.apply(
-                        ((introElapsed - itemDelay) / COLUMBINA_ITEM_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
-                    )
-                    val itemVisibility = itemProgress * menuVisibility
-                    val rowY = menuTop + index * rowStride + (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_RISE * scale
-                    val offsets = floatArrayOf(-31.0f, 57.35f, 90.0f, 80.0f, 48.0f, -15.0f)
-                    val rowX = menuX + menuWidth * 0.20f + offsets[index] * scale +
-                            (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_OFFSET * scale
-                    if (itemProgress <= 0.001f || menuVisibility <= 0.001f) {
-                        entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f)
-                    } else {
-                        entry.setBounds(
-                            rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale
-                        )
-                    }
-                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
-                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
-                    }
-                    val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
-                    entry.hoverProgress =
-                        Mth.lerp(if (hovered) 0.26f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
-                    val hover = entry.hoverProgress
-                    val animatedRowX = rowX + hover * 7.75f * scale
-                    val labelStart = MD3Theme.lerp(
-                        applyAlpha(Color(226, 234, 247), itemVisibility * 0.96f),
-                        applyAlpha(Color(243, 247, 255), itemVisibility), hover
-                    )
-                    val labelEnd = MD3Theme.lerp(
-                        applyAlpha(Color(177, 199, 232), itemVisibility * 0.94f),
-                        applyAlpha(Color(213, 226, 246), itemVisibility * 0.98f), hover
-                    )
-                    val numberStart = MD3Theme.lerp(
-                        applyAlpha(Color(202, 216, 238), itemVisibility * 0.88f),
-                        applyAlpha(Color(232, 240, 252), itemVisibility * 0.96f), hover
-                    )
-                    val numberEnd = MD3Theme.lerp(
-                        applyAlpha(Color(151, 177, 216), itemVisibility * 0.86f),
-                        applyAlpha(Color(195, 216, 242), itemVisibility * 0.94f), hover
-                    )
-                    val labelGlow = MD3Theme.lerp(
-                        applyAlpha(Color(163, 196, 241), itemVisibility * 0.50f),
-                        applyAlpha(Color(205, 225, 252), itemVisibility * 0.76f), hover
-                    )
-                    val numberGlow = MD3Theme.lerp(
-                        applyAlpha(Color(146, 181, 231), itemVisibility * 0.34f),
-                        applyAlpha(Color(191, 215, 247), itemVisibility * 0.56f), hover
-                    )
-                    val numberShadow = applyAlpha(Color(3, 7, 20), itemVisibility * (0.30f + hover * 0.06f))
-                    val labelScale = (2.976f + hover * 0.124f) * scale
-                    val textHeight = metrics.getHeight(labelScale)
-                    val textY = rowY + (rowHeight - textHeight) * 0.5f
-                    val numberScale = (1.829f + hover * 0.0775f) * scale
-                    val numberHeight = metrics.getHeight(numberScale)
-                    val numberY = rowY + (rowHeight - numberHeight) * 0.5f
-                    val numberShadowBlur = 4.65f * scale
-
-                    val numberLabel = "0" + (index + 1)
-                    val labelText = localizedTitle(entry.title)
-                    val labelX = animatedRowX + 46.5f * scale
-                    val labelWidth = metrics.getWidth(labelText, labelScale)
-                    content.layer(MenuZ.Glow) { layer ->
-                        layer.blurredText(
-                            numberLabel,
-                            animatedRowX,
-                            numberY + 1.55f * scale,
-                            numberScale,
-                            numberShadowBlur,
-                            1,
-                            numberShadow
-                        )
-                        layer.blurredText(
-                            numberLabel,
-                            animatedRowX,
-                            numberY,
-                            numberScale,
-                            numberScale * 0.85f,
-                            1,
-                            numberGlow
-                        )
-                        layer.gradientText(numberLabel, animatedRowX, numberY, numberScale, numberStart, numberEnd)
-                        layer.blurredText(labelText, labelX, textY, labelScale, labelScale * 1.35f, 1, labelGlow)
-                        layer.gradientText(labelText, labelX, textY, labelScale, labelStart, labelEnd)
-                        if (hover > 0.001f) {
-                            layer.roundRect(
-                                labelX, rowY + rowHeight - 2.3f * scale,
-                                labelWidth * (0.18f + hover * 0.28f), maxOf(1.0f, 1.55f * scale),
-                                maxOf(0.8f, 0.78f * scale),
-                                applyAlpha(Color(210, 229, 255), itemVisibility * hover * 0.78f)
+        val tree =
+            scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
+                scope.pushAbsolute(layoutX, layoutY) { content ->
+                    if (AssetManager.isReisaReady()) {
+                        if (!reisaShutdownTexturesPrewarmed) {
+                            prewarmReisaShutdownTextures(content)
+                            reisaShutdownTexturesPrewarmed = true
+                        }
+                        if (reisaShutdownStartMs >= 0L) {
+                            drawReisaShutdown(
+                                content,
+                                layoutWidth,
+                                layoutHeight,
+                                scale,
+                                now,
+                                -layoutX,
+                                -layoutY.toFloat(),
+                                width,
+                                height
                             )
+                        } else {
+                            drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                         }
                     }
-                }
 
-                val footerY = layoutHeight - maxOf(27.9f * scale, layoutHeight * 0.045f)
-                val user = this.minecraft.user.name
-                content.layer(MenuZ.Glow) { layer ->
-                    val userWidth = metrics.getWidth(user, 1.55f * scale)
-                    val userX = layoutWidth - rightMargin - userWidth + 50.0f * scale - menuCenterCorrectionX
-                    layer.blurredText(
-                        user, userX, footerY - 6.2f * scale, 1.55f * scale, 3.1f * scale, 2,
-                        applyAlpha(secondary, 0.42f)
-                    )
-                    layer.text(user, userX, footerY - 6.2f * scale, 1.55f * scale, secondary)
+                    val titleStart = applyAlpha(Color(158, 181, 222), titleVisibility * 0.98f)
+                    val titleEnd = applyAlpha(Color(242, 247, 255), titleVisibility)
+                    val titleOuterGlow = applyAlpha(Color(112, 158, 235), titleVisibility * 0.66f)
+                    val titleInnerGlow = applyAlpha(Color(205, 226, 255), titleVisibility * 0.90f)
+                    val subtitleStart = applyAlpha(Color(180, 198, 226), subtitleVisibility * 0.92f)
+                    val subtitleEnd = applyAlpha(Color(224, 233, 246), subtitleVisibility * 0.96f)
+                    val subtitleGlow = applyAlpha(Color(184, 207, 239), subtitleVisibility * 0.52f)
+                    val secondary = applyAlpha(Color(178, 197, 224), subtitleVisibility * 0.88f)
+
+                    content.layer(MenuZ.Glow) { layer ->
+                        layer.blurredText(
+                            clientName, titleX, titleY, titleScale, titleOuterGlow, titleScale * 2.0f, 3,
+                            StaticFontLoader.CINZEL_DECORATIVE
+                        )
+                        layer.blurredText(
+                            clientName, titleX, titleY, titleScale, titleInnerGlow, titleScale * 0.90f, 4,
+                            StaticFontLoader.CINZEL_DECORATIVE
+                        )
+                        layer.gradientText(
+                            clientName,
+                            titleX,
+                            titleY,
+                            titleScale,
+                            titleStart,
+                            titleEnd,
+                            StaticFontLoader.CINZEL_DECORATIVE
+                        )
+                        layer.blurredText(
+                            subtitle,
+                            subtitleX,
+                            subtitleY,
+                            subtitleScale,
+                            subtitleScale * 1.25f,
+                            2,
+                            subtitleGlow
+                        )
+                        layer.gradientText(subtitle, subtitleX, subtitleY, subtitleScale, subtitleStart, subtitleEnd)
+                    }
+
+                    for (index in entries.indices) {
+                        val entry = entries[index]
+                        val itemDelay = COLUMBINA_MENU_DELAY_MS + index * COLUMBINA_ITEM_STAGGER_MS
+                        val itemProgress = Easing.EASE_OUT_CUBIC.function.apply(
+                            ((introElapsed - itemDelay) / COLUMBINA_ITEM_DURATION_MS.toFloat()).coerceIn(0.0f, 1.0f)
+                        )
+                        val itemVisibility = itemProgress * menuVisibility
+                        val rowY =
+                            menuTop + index * rowStride + (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_RISE * scale
+                        val offsets = floatArrayOf(-31.0f, 57.35f, 90.0f, 80.0f, 48.0f, -15.0f)
+                        val rowX = menuX + menuWidth * 0.20f + offsets[index] * scale +
+                                (1.0f - itemProgress) * COLUMBINA_ITEM_ENTER_OFFSET * scale
+                        if (itemProgress <= 0.001f || menuVisibility <= 0.001f) {
+                            entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f)
+                        } else {
+                            entry.setBounds(
+                                rowX - 12.4f * scale, rowY - 6.2f * scale, menuWidth * 0.78f, rowHeight + 12.4f * scale
+                            )
+                        }
+                        content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                            onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                        }
+                        val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
+                        entry.hoverProgress =
+                            Mth.lerp(if (hovered) 0.26f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
+                        val hover = entry.hoverProgress
+                        val animatedRowX = rowX + hover * 7.75f * scale
+                        val labelStart = MD3Theme.lerp(
+                            applyAlpha(Color(226, 234, 247), itemVisibility * 0.96f),
+                            applyAlpha(Color(243, 247, 255), itemVisibility), hover
+                        )
+                        val labelEnd = MD3Theme.lerp(
+                            applyAlpha(Color(177, 199, 232), itemVisibility * 0.94f),
+                            applyAlpha(Color(213, 226, 246), itemVisibility * 0.98f), hover
+                        )
+                        val numberStart = MD3Theme.lerp(
+                            applyAlpha(Color(202, 216, 238), itemVisibility * 0.88f),
+                            applyAlpha(Color(232, 240, 252), itemVisibility * 0.96f), hover
+                        )
+                        val numberEnd = MD3Theme.lerp(
+                            applyAlpha(Color(151, 177, 216), itemVisibility * 0.86f),
+                            applyAlpha(Color(195, 216, 242), itemVisibility * 0.94f), hover
+                        )
+                        val labelGlow = MD3Theme.lerp(
+                            applyAlpha(Color(163, 196, 241), itemVisibility * 0.50f),
+                            applyAlpha(Color(205, 225, 252), itemVisibility * 0.76f), hover
+                        )
+                        val numberGlow = MD3Theme.lerp(
+                            applyAlpha(Color(146, 181, 231), itemVisibility * 0.34f),
+                            applyAlpha(Color(191, 215, 247), itemVisibility * 0.56f), hover
+                        )
+                        val numberShadow = applyAlpha(Color(3, 7, 20), itemVisibility * (0.30f + hover * 0.06f))
+                        val labelScale = (2.976f + hover * 0.124f) * scale
+                        val textHeight = metrics.getHeight(labelScale)
+                        val textY = rowY + (rowHeight - textHeight) * 0.5f
+                        val numberScale = (1.829f + hover * 0.0775f) * scale
+                        val numberHeight = metrics.getHeight(numberScale)
+                        val numberY = rowY + (rowHeight - numberHeight) * 0.5f
+                        val numberShadowBlur = 4.65f * scale
+
+                        val numberLabel = "0" + (index + 1)
+                        val labelText = localizedTitle(entry.title)
+                        val labelX = animatedRowX + 46.5f * scale
+                        val labelWidth = metrics.getWidth(labelText, labelScale)
+                        content.layer(MenuZ.Glow) { layer ->
+                            layer.blurredText(
+                                numberLabel,
+                                animatedRowX,
+                                numberY + 1.55f * scale,
+                                numberScale,
+                                numberShadowBlur,
+                                1,
+                                numberShadow
+                            )
+                            layer.blurredText(
+                                numberLabel,
+                                animatedRowX,
+                                numberY,
+                                numberScale,
+                                numberScale * 0.85f,
+                                1,
+                                numberGlow
+                            )
+                            layer.gradientText(numberLabel, animatedRowX, numberY, numberScale, numberStart, numberEnd)
+                            layer.blurredText(labelText, labelX, textY, labelScale, labelScale * 1.35f, 1, labelGlow)
+                            layer.gradientText(labelText, labelX, textY, labelScale, labelStart, labelEnd)
+                            if (hover > 0.001f) {
+                                layer.roundRect(
+                                    labelX, rowY + rowHeight - 2.3f * scale,
+                                    labelWidth * (0.18f + hover * 0.28f), maxOf(1.0f, 1.55f * scale),
+                                    maxOf(0.8f, 0.78f * scale),
+                                    applyAlpha(Color(210, 229, 255), itemVisibility * hover * 0.78f)
+                                )
+                            }
+                        }
+                    }
+
+                    val footerY = layoutHeight - maxOf(27.9f * scale, layoutHeight * 0.045f)
+                    val user = this.minecraft.user.name
+                    content.layer(MenuZ.Glow) { layer ->
+                        val userWidth = metrics.getWidth(user, 1.55f * scale)
+                        val userX = layoutWidth - rightMargin - userWidth + 50.0f * scale - menuCenterCorrectionX
+                        layer.blurredText(
+                            user, userX, footerY - 6.2f * scale, 1.55f * scale, 3.1f * scale, 2,
+                            applyAlpha(secondary, 0.42f)
+                        )
+                        layer.text(user, userX, footerY - 6.2f * scale, 1.55f * scale, secondary)
+                    }
                 }
             }
-        }
         scene.submit(UiLayer.CONTENT, tree)
         scene.endFrame()
     }
@@ -767,91 +769,110 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 buttonTextHeight + buttonTextToLineGap + buttonLineHeight
         val buttonsY = layoutHeight - 74.4f * scale - buttonListHeight
 
-        val tree = scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
-            scope.pushAbsolute(layoutX, layoutY) { content ->
-                if (!reisaShutdownTexturesPrewarmed) {
-                    prewarmReisaShutdownTextures(content)
-                    reisaShutdownTexturesPrewarmed = true
-                }
-                if (reisaShutdownStartMs >= 0L) {
-                    drawReisaShutdown(content, layoutWidth, layoutHeight, scale, now, -layoutX, -layoutY, width, height)
-                } else {
-                    drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
-                }
-                content.layer(MenuZ.Surface) { layer ->
-                    layer.rect(
-                        titleX,
-                        titleY + titleHeight + titleAccentGap,
-                        titleAccentWidth,
-                        titleAccentHeight,
-                        accentColor
-                    )
-                }
-                content.layer(MenuZ.Content) { layer ->
-                    layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT)
-                    layer.text(subtitle, titleX, subtitleY, subtitleScale, subtitleColor)
-                }
-                for (index in entries.indices) {
-                    val entry = entries[index]
-                    val staged = ((introProgress - index * 0.08f) / 0.52f).coerceIn(0.0f, 1.0f)
-                    val appear = Easing.EASE_OUT_CUBIC.function.apply(staged) * menuVisibility
-                    if (appear <= 0.001f) {
-                        entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f)
-                        continue
+        val tree =
+            scene.LuminUITree(UiRect(0f, 0f, width.toFloat(), height.toFloat()), "menu", immediate = true) { scope ->
+                scope.pushAbsolute(layoutX, layoutY) { content ->
+                    if (!reisaShutdownTexturesPrewarmed) {
+                        prewarmReisaShutdownTextures(content)
+                        reisaShutdownTexturesPrewarmed = true
                     }
-
-                    val drawX = buttonColumnX - (1.0f - appear) * buttonRevealDistance
-                    val buttonY = buttonsY + index * buttonStride
-                    val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
-                    entry.hoverProgress =
-                        Mth.lerp(if (hovered) 0.24f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
-
-                    val hover = entry.hoverProgress
-                    val hoveredX = drawX + hover * buttonHoverShiftX
-                    entry.setBounds(
-                        drawX - buttonHitPaddingX,
-                        buttonY - buttonHitPaddingTop,
-                        buttonWidth + buttonHitPaddingX * 2.0f,
-                        buttonStride
-                    )
-
-                    content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
-                        onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                    if (reisaShutdownStartMs >= 0L) {
+                        drawReisaShutdown(
+                            content,
+                            layoutWidth,
+                            layoutHeight,
+                            scale,
+                            now,
+                            -layoutX,
+                            -layoutY,
+                            width,
+                            height
+                        )
+                    } else {
+                        drawReisaGreeting(content, layoutWidth, layoutHeight, scale)
                     }
-                    val lineBase = applyAlpha(Color(147, 143, 153), 0.70f * appear)
-                    val lineHover = applyAlpha(Color(208, 188, 255), 0.98f * appear)
-                    val labelColor = MD3Theme.lerp(
-                        applyAlpha(Color(230, 224, 233), 0.94f * appear),
-                        applyAlpha(Color(234, 221, 255), 0.98f * appear),
-                        hover * 0.68f
-                    )
-
-                    val lineY = buttonY + buttonTextHeight + buttonTextToLineGap
                     content.layer(MenuZ.Surface) { layer ->
                         layer.rect(
-                            hoveredX + 1.55f * scale, lineY + 1.55f * scale, buttonWidth + scale * 0.775f,
-                            buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear)
-                        )
-                        layer.rect(
-                            hoveredX,
-                            lineY,
-                            buttonWidth,
-                            buttonLineHeight,
-                            MD3Theme.lerp(lineBase, lineHover, hover)
+                            titleX,
+                            titleY + titleHeight + titleAccentGap,
+                            titleAccentWidth,
+                            titleAccentHeight,
+                            accentColor
                         )
                     }
+                    content.layer(MenuZ.Content) { layer ->
+                        layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT)
+                        layer.text(subtitle, titleX, subtitleY, subtitleScale, subtitleColor)
+                    }
+                    for (index in entries.indices) {
+                        val entry = entries[index]
+                        val staged = ((introProgress - index * 0.08f) / 0.52f).coerceIn(0.0f, 1.0f)
+                        val appear = Easing.EASE_OUT_CUBIC.function.apply(staged) * menuVisibility
+                        if (appear <= 0.001f) {
+                            entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f)
+                            continue
+                        }
 
-                    val label = localizedTitle(entry.title)
-                    val labelWidth = metrics.getWidth(label, preferredButtonTextScale)
-                    val buttonTextScale = if (labelWidth > buttonWidth && labelWidth > 0.0f) {
-                        preferredButtonTextScale * buttonWidth / labelWidth
-                    } else {
-                        preferredButtonTextScale
+                        val drawX = buttonColumnX - (1.0f - appear) * buttonRevealDistance
+                        val buttonY = buttonsY + index * buttonStride
+                        val hovered = entry.isHovered(layoutMouseX.toDouble(), layoutMouseY.toDouble())
+                        entry.hoverProgress =
+                            Mth.lerp(if (hovered) 0.24f else 0.16f, entry.hoverProgress, if (hovered) 1.0f else 0.0f)
+
+                        val hover = entry.hoverProgress
+                        val hoveredX = drawX + hover * buttonHoverShiftX
+                        entry.setBounds(
+                            drawX - buttonHitPaddingX,
+                            buttonY - buttonHitPaddingTop,
+                            buttonWidth + buttonHitPaddingX * 2.0f,
+                            buttonStride
+                        )
+
+                        content.asUiScope(metrics).Interaction(entry, entry.bounds()) {
+                            onClick { if (reisaShutdownStartMs < 0L) entry.action.run(); true }
+                        }
+                        val lineBase = applyAlpha(Color(147, 143, 153), 0.70f * appear)
+                        val lineHover = applyAlpha(Color(208, 188, 255), 0.98f * appear)
+                        val labelColor = MD3Theme.lerp(
+                            applyAlpha(Color(230, 224, 233), 0.94f * appear),
+                            applyAlpha(Color(234, 221, 255), 0.98f * appear),
+                            hover * 0.68f
+                        )
+
+                        val lineY = buttonY + buttonTextHeight + buttonTextToLineGap
+                        content.layer(MenuZ.Surface) { layer ->
+                            layer.rect(
+                                hoveredX + 1.55f * scale, lineY + 1.55f * scale, buttonWidth + scale * 0.775f,
+                                buttonLineHeight + 1.55f * scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear)
+                            )
+                            layer.rect(
+                                hoveredX,
+                                lineY,
+                                buttonWidth,
+                                buttonLineHeight,
+                                MD3Theme.lerp(lineBase, lineHover, hover)
+                            )
+                        }
+
+                        val label = localizedTitle(entry.title)
+                        val labelWidth = metrics.getWidth(label, preferredButtonTextScale)
+                        val buttonTextScale = if (labelWidth > buttonWidth && labelWidth > 0.0f) {
+                            preferredButtonTextScale * buttonWidth / labelWidth
+                        } else {
+                            preferredButtonTextScale
+                        }
+                        content.layer(MenuZ.Content) { layer ->
+                            layer.text(
+                                label,
+                                hoveredX,
+                                buttonY,
+                                buttonTextScale,
+                                labelColor
+                            )
+                        }
                     }
-                    content.layer(MenuZ.Content) { layer -> layer.text(label, hoveredX, buttonY, buttonTextScale, labelColor) }
                 }
             }
-        }
 
         scene.submit(UiLayer.CONTENT, tree)
     }
@@ -1380,7 +1401,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        return reisaShutdownStartMs >= 0L || scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
+        return reisaShutdownStartMs >= 0L || scene.input.mouseClicked(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            doubleClick
+        )
     }
 
     override fun removed() {

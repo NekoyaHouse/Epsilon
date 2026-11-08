@@ -22,7 +22,9 @@ object LuminRuntime {
         val previousView = currentView
         currentComposition = composition
         currentView = composition.view
-        return try { StateTracking.buildingUi(block) } finally {
+        return try {
+            StateTracking.buildingUi(block)
+        } finally {
             currentComposition = previous
             currentView = previousView
         }
@@ -36,7 +38,8 @@ object LuminRuntime {
 }
 
 /** 缓存保存嵌套的组合引用，子项失效不需要重建父级。 */
-class LuminComposition internal constructor(internal val key: Any, internal val clock: LuminFrameClock) : AutoCloseable {
+class LuminComposition internal constructor(internal val key: Any, internal val clock: LuminFrameClock) :
+    AutoCloseable {
     internal val renderNode = UiRenderNode()
     private var effectsFrame = Long.MIN_VALUE
     internal var dirty = true
@@ -61,14 +64,18 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
     internal var rebuildCount = 0L
         private set
 
-    internal fun markDirty() { dirty = true }
+    internal fun markDirty() {
+        dirty = true
+    }
+
     internal fun markDirtyDeep() {
         dirty = true
         children.values.forEach { it.markDirtyDeep() }
     }
 
     internal fun bind(scope: UiScope, block: UiScope.() -> Unit, parentRebuilt: Boolean = false) {
-        if ((!retainPosition && lastBounds != scope.origin) || lastBounds?.width != scope.origin.width || lastBounds?.height != scope.origin.height || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty = true
+        if ((!retainPosition && lastBounds != scope.origin) || lastBounds?.width != scope.origin.width || lastBounds?.height != scope.origin.height || owner?.metrics != scope.metrics || owner?.layer != scope.layer || parentRebuilt) dirty =
+            true
         renderNode.currentOrigin = scope.origin
         val nextView = LuminRuntime.currentView ?: LuminRuntime.activeRoot?.defaultView
         if (view !== nextView) {
@@ -129,7 +136,9 @@ class LuminComposition internal constructor(internal val key: Any, internal val 
         return memories[key] as T
     }
 
-    internal fun onFrame(key: Any, effect: () -> Unit) { frameEffects[key] = effect }
+    internal fun onFrame(key: Any, effect: () -> Unit) {
+        frameEffects[key] = effect
+    }
 
     internal fun afterCommit(effect: () -> Unit) {
         checkNotNull(effects) { "提交操作必须在组合构建中声明" }.add(effect)
@@ -215,7 +224,10 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
     internal val defaultView = LuminView()
     val input = UiInputRouter()
     private val inputFrame = ArrayList<UiInputRouter.Entry>()
-    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) { input.collect(nodes, layer, inputFrame) }
+    internal fun collectInput(nodes: List<UiTree.UiNode>, layer: Int) {
+        input.collect(nodes, layer, inputFrame)
+    }
+
     private val entries = LinkedHashMap<Any, LuminComposition>()
     private val visited = LinkedHashSet<Any>()
     internal var inFrame = false
@@ -251,7 +263,9 @@ class LuminSceneRoot internal constructor(val clock: LuminFrameClock = LuminFram
         if (LuminRuntime.activeRoot === this) LuminRuntime.activeRoot = null
     }
 
-    fun invalidateAll() { entries.values.forEach { it.markDirtyDeep() } }
+    fun invalidateAll() {
+        entries.values.forEach { it.markDirtyDeep() }
+    }
 
     override fun close() {
         input.close()

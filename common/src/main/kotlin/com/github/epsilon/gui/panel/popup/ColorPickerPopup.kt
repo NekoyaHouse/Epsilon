@@ -165,8 +165,10 @@ class ColorPickerPopup(
                     }
                     Interaction(
                         key = "track",
-                        bounds = UiRect(localTrackBounds.x, localTrackBounds.y - 5f,
-                            localTrackBounds.width, localTrackBounds.height + 10f),
+                        bounds = UiRect(
+                            localTrackBounds.x, localTrackBounds.y - 5f,
+                            localTrackBounds.width, localTrackBounds.height + 10f
+                        ),
                     ) {
                         onDrag(
                             onStart = {
@@ -490,4 +492,4 @@ class ColorPickerPopup(
         textRenderer.close()
     }
 
-    }
+}

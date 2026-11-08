@@ -39,7 +39,9 @@ class UiInteraction internal constructor() {
     internal var previewClick: ((UiPointerEvent) -> Boolean)? = null
 
     /** 聚焦控件优先读取按下事件，供快捷键录制捕获区域外鼠标键。 */
-    fun onPreviewClick(handler: (UiPointerEvent) -> Boolean) { focusable = true; previewClick = handler }
+    fun onPreviewClick(handler: (UiPointerEvent) -> Boolean) {
+        focusable = true; previewClick = handler
+    }
 
     fun onClick(button: Int = InputConstants.MOUSE_BUTTON_LEFT, handler: (UiPointerEvent) -> Boolean) {
         check(clicks.putIfAbsent(button, handler) == null) { "同一交互节点重复订阅按键: $button" }
@@ -59,11 +61,25 @@ class UiInteraction internal constructor() {
         check(drags.putIfAbsent(button, UiDragSubscription(button, onStart, handler, onEnd, onCancel)) == null)
     }
 
-    fun onFocusChanged(handler: (Boolean) -> Unit) { focus = handler }
-    fun onKeyPressed(handler: (KeyEvent) -> Boolean) { focusable = true; key = handler }
-    fun onTextInput(handler: (CharacterEvent) -> Boolean) { focusable = true; text = handler }
-    fun onPreedit(handler: (PreeditEvent?) -> Boolean) { focusable = true; preedit = handler }
-    fun onScroll(handler: (Double, Double, Double, Double) -> Boolean) { scroll = handler }
+    fun onFocusChanged(handler: (Boolean) -> Unit) {
+        focus = handler
+    }
+
+    fun onKeyPressed(handler: (KeyEvent) -> Boolean) {
+        focusable = true; key = handler
+    }
+
+    fun onTextInput(handler: (CharacterEvent) -> Boolean) {
+        focusable = true; text = handler
+    }
+
+    fun onPreedit(handler: (PreeditEvent?) -> Boolean) {
+        focusable = true; preedit = handler
+    }
+
+    fun onScroll(handler: (Double, Double, Double, Double) -> Boolean) {
+        scroll = handler
+    }
 }
 
 /** 给持有编辑模型的控件声明输入订阅，区域相对当前作用域。 */
@@ -90,8 +106,10 @@ fun UiScope.InputRegion(
         onPreviewPress?.let { handler -> onPreviewClick { handler(it.event(), it.doubleClick) } }
         if (onPress != null) for (button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_8) {
             if (onDrag != null || onRelease != null) {
-                onDrag(button, onStart = { onPress(it.event(), it.doubleClick) },
-                    onEnd = { onRelease?.invoke(it.event()) }, onCancel = onCancel) {
+                onDrag(
+                    button, onStart = { onPress(it.event(), it.doubleClick) },
+                    onEnd = { onRelease?.invoke(it.event()) }, onCancel = onCancel
+                ) {
                     onDrag?.invoke(it.event(), it.deltaX, it.deltaY)
                 }
             } else onClick(button) { onPress(it.event(), it.doubleClick) }
@@ -128,9 +146,13 @@ fun UiScope.Interaction(
     val router = view.input
     val subscription = composition.remember(InputKey(key, view)) { UiInputSubscription(router, key, view) }
     val handlers = UiInteraction().apply(block)
-    tree.appendNodes(listOf(UiTree.InteractionNode(
-        subscription, absolute(bounds.x, bounds.y, bounds.width, bounds.height), handlers,
-    )))
+    tree.appendNodes(
+        listOf(
+            UiTree.InteractionNode(
+                subscription, absolute(bounds.x, bounds.y, bounds.width, bounds.height), handlers,
+            )
+        )
+    )
 }
 
 private data class InputKey(val key: Any, val owner: LuminView)

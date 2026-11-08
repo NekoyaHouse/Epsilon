@@ -115,7 +115,10 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         try {
-            luminView.render(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)) { extractContent(graphics, mouseX, mouseY, a) }
+            luminView.render(
+                LuminRenderSystem.toEpsilonMouseX(mouseX),
+                LuminRenderSystem.toEpsilonMouseY(mouseY)
+            ) { extractContent(graphics, mouseX, mouseY, a) }
         } catch (failure: Throwable) {
             scene.abortFrame()
             shouldRenderElements = false
@@ -126,7 +129,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     private fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        if (shouldRenderElements) { scene.abortFrame(); shouldRenderElements = false }
+        if (shouldRenderElements) {
+            scene.abortFrame(); shouldRenderElements = false
+        }
         val window = minecraft.window
         val target = getRenderTarget(window.width, window.height)
         target.resize(window.width, window.height)
@@ -220,7 +225,8 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
                             dragOffsetY = it.y.toFloat() - element.y
                             currentSnap = SnapInfo.none()
                             true
-                        }, onEnd = { draggingElement = null; currentSnap = SnapInfo.none() },
+                        },
+                        onEnd = { draggingElement = null; currentSnap = SnapInfo.none() },
                         onCancel = { draggingElement = null; currentSnap = SnapInfo.none() },
                     ) { moveElementTo(element, it.x.toFloat() - dragOffsetX, it.y.toFloat() - dragOffsetY, true) }
                     onKeyPressed(::handleEditorKey)
@@ -441,7 +447,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     override fun keyPressed(event: KeyEvent): Boolean {
         if (popupHost.activePopup != null) return popupHost.keyPressed(event)
         if (scene.input.keyPressed(event)) return true
-        if (event.isEscape) { onClose(); return true }
+        if (event.isEscape) {
+            onClose(); return true
+        }
         return handleEditorKey(event) || super.keyPressed(event)
     }
 
@@ -470,10 +478,16 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
-        if (popupHost.activePopup != null) return popupHost.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event), LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        if (popupHost.activePopup != null) return popupHost.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX),
+            LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
 
-        return scene.input.mouseDragged(LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
+        return scene.input.mouseDragged(
+            LuminRenderSystem.toEpsilonMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)
+        )
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {

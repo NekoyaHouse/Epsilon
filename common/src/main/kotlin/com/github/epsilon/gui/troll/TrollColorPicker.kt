@@ -71,9 +71,12 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         val ui = scope.asUiScope(TrollTheme.metrics(metrics))
         val origin = ui.origin
         for (part in 0 until channelCount() + 2) {
-            val region = when (part) { 0 -> field; 1 -> hueBar; else -> sliders[part - 2] }
+            val region = when (part) {
+                0 -> field; 1 -> hueBar; else -> sliders[part - 2]
+            }
             ui.Interaction("picker" to part, region) {
-                onDrag(onStart = { draggingPart = part; update(it.x - origin.x, it.y - origin.y); true },
+                onDrag(
+                    onStart = { draggingPart = part; update(it.x - origin.x, it.y - origin.y); true },
                     onEnd = { draggingPart = -1 }, onCancel = { draggingPart = -1 }) {
                     update(it.x - origin.x, it.y - origin.y)
                 }
@@ -82,7 +85,9 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         for (index in buttons.indices) {
             ui.Interaction("button" to index, buttons[index]) {
                 onClick {
-                    when (index) { 0 -> confirm(); 1 -> cancel(); else -> setting.value = color() }
+                    when (index) {
+                        0 -> confirm(); 1 -> cancel(); else -> setting.value = color()
+                    }
                     true
                 }
             }
@@ -198,7 +203,9 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
     }
 
 
-    override fun resetInput() { draggingPart = -1; super.resetInput() }
+    override fun resetInput() {
+        draggingPart = -1; super.resetInput()
+    }
 
     fun confirm() {
         setting.value = color()

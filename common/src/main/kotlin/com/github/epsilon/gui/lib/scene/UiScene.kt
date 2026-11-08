@@ -26,7 +26,9 @@ class UiScene(theme: UiTheme) : AutoCloseable {
 
     fun beginFrame() {
         // Screen 返回同一个实例时重新建立 GPU 所有权，不能复用已销毁的 arena。
-        if (closed) { scheduler = Render2DScheduler(); closed = false }
+        if (closed) {
+            scheduler = Render2DScheduler(); closed = false
+        }
         // 丢弃未提交的上一帧记录，保留仍活跃的持久几何。
         scheduler.clear()
         scheduler.beginFrame()
@@ -82,7 +84,9 @@ class UiScene(theme: UiTheme) : AutoCloseable {
         lumin.abortFrame()
     }
 
-    fun resetComposition() { lumin.close(); scheduler.resetCache() }
+    fun resetComposition() {
+        lumin.close(); scheduler.resetCache()
+    }
 
     fun scheduler(): Render2DScheduler {
         return scheduler

@@ -166,10 +166,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             y + DropdownTheme.GROUP_HEADER_HEIGHT * 0.5f, chevronSize, progress,
             DropdownTheme.groupChevron(hoverProgress)
         )
-        labels.add(HeaderLabels(
-            label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
-            countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY
-        ))
+        labels.add(
+            HeaderLabels(
+                label, cardBounds.x + DropdownTheme.SETTING_PADDING_X, labelY,
+                countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY
+            )
+        )
         if (progress > 0.0f) flushLabels(labels)
 
         if (progress > 0.001f) {
@@ -241,10 +243,14 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
     private fun UiScope.flushLabels(labels: MutableList<HeaderLabels>) {
         for (header in labels) {
-            Text(header.title, header.titleX, header.titleY,
-                DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText())
-            Text(header.count, header.countX, header.countY,
-                DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText())
+            Text(
+                header.title, header.titleX, header.titleY,
+                DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText()
+            )
+            Text(
+                header.count, header.countX, header.countY,
+                DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText()
+            )
         }
         labels.clear()
     }

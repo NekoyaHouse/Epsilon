@@ -79,7 +79,8 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
         scope.scissor(viewport) { content ->
             for (module in visibleModules) {
-                content.asUiScope(metrics).LuminUIItem(rows.getValue(module)) { rows.getValue(module).draw(tree, metrics, mouseX, mouseY) }
+                content.asUiScope(metrics)
+                    .LuminUIItem(rows.getValue(module)) { rows.getValue(module).draw(tree, metrics, mouseX, mouseY) }
             }
         }
     }

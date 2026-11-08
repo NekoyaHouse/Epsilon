@@ -22,15 +22,20 @@ internal class UiRenderNode : AutoCloseable {
         currentOrigin = origin
         revision++
     }
+
     override fun close() {
         if (closed) return
         release(nodes); nodes = emptyList(); closed = true
     }
+
     companion object {
         private val generations = AtomicLong()
         internal fun release(nodes: List<UiTree.UiNode>) {
             for (node in nodes) when (node) {
-                is UiTree.PropertyNode -> { node.value.close(); release(node.children) }
+                is UiTree.PropertyNode -> {
+                    node.value.close(); release(node.children)
+                }
+
                 is UiTree.GeometryNode -> node.value.close()
                 is UiTree.LayerNode -> release(node.children)
                 is UiTree.ScissorNode -> release(node.children)
@@ -48,6 +53,7 @@ internal class UiPhaseValue<T>(private val calculate: () -> T, private val dispo
     private var cached: T? = null
     var revision = 0L; private set
     private val observation = StateObservation { dirty = true }
+
     @Suppress("UNCHECKED_CAST")
     fun get(): T {
         if (dirty) {
@@ -60,6 +66,9 @@ internal class UiPhaseValue<T>(private val calculate: () -> T, private val dispo
         }
         return cached as T
     }
+
     @Suppress("UNCHECKED_CAST")
-    override fun close() { observation.close(); if (initialized) dispose(cached as T); initialized = false; dirty = true; cached = null }
+    override fun close() {
+        observation.close(); if (initialized) dispose(cached as T); initialized = false; dirty = true; cached = null
+    }
 }

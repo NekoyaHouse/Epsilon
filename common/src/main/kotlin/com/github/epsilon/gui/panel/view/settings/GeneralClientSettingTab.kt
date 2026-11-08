@@ -40,7 +40,16 @@ class GeneralClientSettingTab(
         guiGraphics: GuiGraphicsExtractor, renderBatch: UiRenderBatch, bounds: UiRect,
         mouseX: Int, mouseY: Int, partialTick: Float,
     ) {
-        luminView.render(mouseX, mouseY) { renderContent(guiGraphics, renderBatch, bounds, mouseX, mouseY, partialTick) }
+        luminView.render(mouseX, mouseY) {
+            renderContent(
+                guiGraphics,
+                renderBatch,
+                bounds,
+                mouseX,
+                mouseY,
+                partialTick
+            )
+        }
     }
 
     private fun renderContent(
@@ -72,8 +81,14 @@ class GeneralClientSettingTab(
         contentBuffer.clear()
 
         renderBatch.LuminUIScene(bounds, key = this to "pass-1") {
-            InputRegion(key = this@GeneralClientSettingTab to "input", onPress = ::mouseClicked, onDrag = ::mouseDragged, onRelease = ::mouseReleased, onScroll = ::mouseScrolled,
-                onBlur = {}, onCancel = { scrollBarDrag.reset() })
+            InputRegion(
+                key = this@GeneralClientSettingTab to "input",
+                onPress = ::mouseClicked,
+                onDrag = ::mouseDragged,
+                onRelease = ::mouseReleased,
+                onScroll = ::mouseScrolled,
+                onBlur = {},
+                onCancel = { scrollBarDrag.reset() })
 
             Viewport(
                 contentBuffer, size, state.getClientSettingScroll(), maxScroll, contentHeight,
@@ -90,7 +105,11 @@ class GeneralClientSettingTab(
                             animation
                         }
                         hoverAnimation.run(
-                            if (rowBounds.contains(effectiveMouseX.toDouble(), effectiveMouseY.toDouble())) 1.0f else 0.0f
+                            if (rowBounds.contains(
+                                    effectiveMouseX.toDouble(),
+                                    effectiveMouseY.toDouble()
+                                )
+                            ) 1.0f else 0.0f
                         )
 
                         // 逐行缓存：只有值或动画变化的行才重新捕获节点。
