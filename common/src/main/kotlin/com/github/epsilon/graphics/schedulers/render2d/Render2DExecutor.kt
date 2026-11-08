@@ -35,7 +35,9 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
     var measureGpu = false
     private val queries = ArrayDeque<GpuQueryPool>()
 
-    fun execute(draws: List<Draw>) = LuminRenderSystem.withSharedGuiTransform { executePrepared(draws) }
+    fun execute(draws: List<Draw>) = LuminRenderSystem.withSharedGuiTransform {
+        arena.batchUploads { executePrepared(draws) }
+    }
 
     private fun executePrepared(draws: List<Draw>) {
         val color = LuminRenderSystem.resolveColorView() ?: return
@@ -171,8 +173,10 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
     }
     override fun close() { resetCache(); queries.forEach { it.close() }; queries.clear() }
 
-    private class RecordingPass(private val originals: Map<CompiledRenderPipeline, RenderPipeline>) : AbstractRecordingPass() {
+    internal class RecordingPass(private val originals: Map<CompiledRenderPipeline, RenderPipeline>) : AbstractRecordingPass() {
         lateinit var source: RenderPipeline
+        private var cachedBinding: Binding? = null
+        private var cachedIndexed = false
         var property = 0
         val packets = ArrayList<Packet>()
         private var vertices: GpuBufferSlice? = null
@@ -182,17 +186,39 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         private val textures = HashMap<String, Texture>()
         private val uniforms = HashMap<String, GpuBufferSlice>()
         override fun setPipeline(pipeline: CompiledRenderPipeline) { source = originals.getValue(pipeline) }
-        override fun setVertexBuffer(slot: Int, vertexBuffer: GpuBufferSlice?) { check(slot == 0); vertices = vertexBuffer }
-        override fun setIndexBuffer(indexBuffer: GpuBuffer, indexType: IndexType) { indices = indexBuffer; this.indexType = indexType }
-        override fun setUniform(name: String, textureView: GpuTextureView?, sampler: GpuSampler?) { textures[name] = Texture(textureView, sampler) }
+        override fun setVertexBuffer(slot: Int, vertexBuffer: GpuBufferSlice?) {
+            check(slot == 0)
+            if (vertices?.buffer() !== vertexBuffer?.buffer()) cachedBinding = null
+            vertices = vertexBuffer
+        }
+        override fun setIndexBuffer(indexBuffer: GpuBuffer, indexType: IndexType) {
+            if (indices !== indexBuffer || this.indexType != indexType) cachedBinding = null
+            indices = indexBuffer; this.indexType = indexType
+        }
+        override fun setUniform(name: String, textureView: GpuTextureView?, sampler: GpuSampler?) {
+            val value = Texture(textureView, sampler)
+            if (textures.put(name, value) != value) cachedBinding = null
+        }
         override fun setUniform(name: String, value: GpuBuffer) = setUniform(name, value.slice())
-        override fun setUniform(name: String, value: GpuBufferSlice) { if (name != "DynamicTransforms") uniforms[name] = value }
-        override fun enableScissor(x: Int, y: Int, width: Int, height: Int) { clip = Render2DScissor(x, y, width, height) }
-        override fun disableScissor() { clip = null }
+        override fun setUniform(name: String, value: GpuBufferSlice) {
+            if (name != "DynamicTransforms" && uniforms.put(name, value) != value) cachedBinding = null
+        }
+        override fun enableScissor(x: Int, y: Int, width: Int, height: Int) {
+            val next = Render2DScissor(x, y, width, height)
+            if (clip != next) cachedBinding = null
+            clip = next
+        }
+        override fun disableScissor() { if (clip != null) cachedBinding = null; clip = null }
         private fun binding(indexed: Boolean): Binding {
-            val names = source.bindGroupLayouts.flatMap { it.uniforms() }.map { it.name() }.toSet()
+            // packet 保留不可变快照，绑定未变化时复用；slice 偏移仍由每个 range 单独记录。
+            cachedBinding?.let { if (it.pipeline === source && cachedIndexed == indexed) return it }
+            val names = Render2DPipelines.uniformNames(source)
             return Binding(source, checkNotNull(vertices).buffer(), if (indexed) indices else null,
-                if (indexed) indexType else null, clip, textures.filterKeys { it in names }, uniforms.filterKeys { it in names })
+                if (indexed) indexType else null, clip,
+                if (textures.isEmpty()) emptyMap() else textures.filterKeys { it in names },
+                if (uniforms.isEmpty()) emptyMap() else uniforms.filterKeys { it in names }).also {
+                cachedBinding = it; cachedIndexed = indexed
+            }
         }
         override fun drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
             check(instanceCount == 1 && firstInstance == 0)

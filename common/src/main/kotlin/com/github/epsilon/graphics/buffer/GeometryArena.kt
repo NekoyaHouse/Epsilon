@@ -27,7 +27,16 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     private val pending = ArrayList<() -> Unit>()
     private var generation = 0L
     private var geometryDirty = false
+    private var uploadBatchDepth = 0
     private var closed = false
+
+    /** 一次提交的准备阶段只轮询一次 fence，小范围上传不重复进入驱动查询。 */
+    internal fun <T> batchUploads(block: () -> T): T {
+        check(!closed)
+        if (uploadBatchDepth == 0) collect()
+        uploadBatchDepth++
+        return try { block() } finally { uploadBatchDepth-- }
+    }
 
     fun upload(data: ByteBuffer, stride: Int): Handle = upload(data, stride, false)
 
@@ -36,23 +45,29 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     private fun upload(data: ByteBuffer, stride: Int, geometry: Boolean): Handle {
         check(!closed)
         require(stride > 0 && data.hasRemaining() && data.remaining() % stride == 0)
-        collect()
+        if (uploadBatchDepth == 0) collect()
         val bytes = data.remaining()
         var page: Page? = null
         var offset = -1
-        for (candidate in pages) {
-            if (candidate.stride != stride || candidate.geometry != geometry || !candidate.writable) continue
-            offset = candidate.allocator.allocate(bytes)
-            if (offset >= 0) { page = candidate; break }
-        }
-        if (page == null) {
+        var retried = false
+        while (page == null) {
+            for (candidate in pages) {
+                if (candidate.stride != stride || candidate.geometry != geometry || !candidate.writable) continue
+                offset = candidate.allocator.allocate(bytes)
+                if (offset >= 0) { page = candidate; break }
+            }
+            if (page != null) break
             val capacity = ((maxOf(64 * 1024, bytes) + stride - 1) / stride) * stride
+            // 长批次中 GPU 可能已完成旧提交；仅在预算压力下额外尝试一次非阻塞回收。
+            if (uploadBatchDepth > 0 && !retried && stats.residentBytes + capacity > budget) {
+                collect(); retried = true; continue
+            }
             // fence 可能属于尚未提交的 Vulkan command buffer，不能在渲染线程阻塞等待。
             check(stats.residentBytes + capacity <= budget) { "Lumin geometry budget exceeded: $bytes bytes requested" }
             page = createPage(capacity, stride, geometry)
             offset = page.allocator.allocate(bytes)
         }
-        val selected = page
+        val selected = checkNotNull(page)
         val slice = selected.buffer.slice(offset.toLong(), bytes.toLong())
         val uploadStart = System.nanoTime()
         try { device().createCommandEncoder().writeToBuffer(slice, data) }
@@ -84,7 +99,7 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     internal fun compactGeometry() {
         check(!closed)
         if (!geometryDirty) return
-        collect()
+        if (uploadBatchDepth == 0) collect()
         var retry = false
         val groups = active.entries.filter { it.value.geometry }.map { it.key to it.value }.groupBy { it.second.stride }
         for ((stride, entries) in groups) {

@@ -2,6 +2,7 @@ package com.github.epsilon.gui.lib.state
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.component.CategoryPanel
 import com.github.epsilon.gui.dropdown.component.ConfigDropdownPanel
@@ -147,6 +148,43 @@ class LuminRuntimeTest {
         assertEquals(2, builds)
         frame(UiRect(190f, 190f, 100f, 100f), x = 200, y = 200, block = draw)
         assertEquals(3, builds)
+    }
+
+    @Test fun siblingHoverProbesKeepTheirOwnTransformsAfterRemovalAndRecreation() {
+        val items = mutableStateOf(listOf("a", "b"))
+        val shift = mutableStateOf(0f)
+        val draw: UiScope.() -> Unit = {
+            val px = LuminRuntime.currentView!!.mouseX.toDouble()
+            val py = LuminRuntime.currentView!!.mouseY.toDouble()
+            for ((index, id) in items.value.withIndex()) {
+                Transform({ Render2DTransform.translation(shift.value + index * 80f, 0f) }) {
+                    LuminUIItem(id) {
+                        val hovered = UiRect(origin.x, origin.y, 30f, 30f).contains(px, py)
+                        Text("$id:$hovered", 0f, 0f, 1f, Color.WHITE)
+                    }
+                }
+            }
+        }
+        fun tick(x: Int): List<String> {
+            root.beginFrame()
+            return try {
+                view.render(x, 25) {
+                    val entry = root.nextEntry(bounds, "root")
+                    entry.bind(UiScope(entry.treeScope, metrics, LayerOffset.Same, bounds), draw)
+                    entry.emit(UiTree.Scope())
+                    entry.resolve().filterIsInstance<UiTree.TextNode>().map { it.text }
+                }
+            } finally { root.endFrame() }
+        }
+        assertEquals(listOf("a:true", "b:false"), tick(15))
+        shift.value = 100f
+        assertEquals(listOf("a:false", "b:false"), tick(15))
+        assertEquals(listOf("a:false", "b:true"), tick(195))
+        items.value = listOf("a")
+        assertEquals(listOf("a:false"), tick(195))
+        items.value = listOf("a", "b")
+        assertEquals(listOf("a:false", "b:true"), tick(195))
+        assertEquals(listOf("a:true", "b:false"), tick(115))
     }
 
     @Test fun nestedHoverKeepsCapturedPointerOriginWhenParentRebuildsIndependently() {

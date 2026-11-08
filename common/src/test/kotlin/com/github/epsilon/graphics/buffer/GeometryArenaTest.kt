@@ -18,8 +18,10 @@ class GeometryArenaTest {
     private class Fence : GpuFence {
         var completed = false
         var closed = false
+        var polls = 0
         override fun awaitCompletion(timeoutNS: Long): Boolean {
             check(timeoutNS == 0L) { "尚未提交的 Vulkan fence 不允许阻塞等待" }
+            polls++
             return completed
         }
         override fun close() { closed = true }
@@ -121,6 +123,62 @@ class GeometryArenaTest {
                 assertEquals(0, stats.liveBytes)
             }
             assertEquals(65536, stats.peakBytes)
+        } finally { arena.close(); MemoryUtil.memFree(data) }
+    }
+
+    @Test fun oneUploadBatchPollsOnceAndKeepsInFlightRangesIntact() {
+        val stats = Render2DStats()
+        val arena = GeometryArena(stats, device = { device })
+        val data = MemoryUtil.memAlloc(65536)
+        try {
+            val previous = arena.upload(data, 16)
+            arena.retire(previous); arena.seal()
+            val fence = fences.single()
+            arena.batchUploads {
+                repeat(100) {
+                    val next = arena.batchUploads { arena.upload(data.duplicate().limit(256), 16) }
+                    assertNotSame(previous.slice.buffer(), next.slice.buffer())
+                }
+            }
+            assertEquals(1, fence.polls)
+            assertFalse(previous.slice.buffer().isClosed())
+            fence.completed = true
+            arena.batchUploads { arena.upload(data.duplicate().limit(256), 16) }
+            assertEquals(2, fence.polls)
+            assertTrue(previous.slice.buffer().isClosed())
+        } finally { arena.close(); MemoryUtil.memFree(data) }
+    }
+
+    @Test fun failedUploadBatchRestoresNormalReclamationForRetry() {
+        val stats = Render2DStats()
+        val arena = GeometryArena(stats, device = { device })
+        val data = MemoryUtil.memAlloc(48)
+        try {
+            arena.retire(arena.upload(data, 16)); arena.seal()
+            failUpload = true
+            assertFailsWith<IllegalStateException> { arena.batchUploads { arena.upload(data, 16) } }
+            assertEquals(1, fences.single().polls)
+            failUpload = false
+            fences.single().completed = true
+            arena.upload(data, 16)
+            assertEquals(2, fences.single().polls)
+            assertEquals(48, stats.liveBytes)
+        } finally { arena.close(); MemoryUtil.memFree(data) }
+    }
+
+    @Test fun uploadBatchCanReclaimNewlyCompletedFenceUnderBudgetPressure() {
+        val stats = Render2DStats()
+        val arena = GeometryArena(stats, budget = 65536, device = { device })
+        val data = MemoryUtil.memAlloc(65536)
+        try {
+            arena.retire(arena.upload(data, 16)); arena.seal()
+            arena.batchUploads {
+                fences.single().completed = true
+                arena.upload(data, 16)
+            }
+            assertEquals(2, fences.single().polls)
+            assertEquals(65536, stats.liveBytes)
+            assertEquals(65536, stats.residentBytes)
         } finally { arena.close(); MemoryUtil.memFree(data) }
     }
 

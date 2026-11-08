@@ -8,11 +8,12 @@ class AdjacentBatchPlannerTest {
     private fun rect(sequence: Long) = Render2DCommand.Rect(0, sequence, bounds, null,
         Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
 
-    @Test fun shapeKindsMergeWithoutCrossingOtherPrimitives() {
+    @Test fun fillsOutlinesAndChevronsShareOneGeometryBatchInDeclarationOrder() {
         val outline = Render2DCommand.RoundRectOutline(0, 1, bounds, null, 2f, 2f, 2f, 2f, 1f, Color.WHITE)
         val triangle = Render2DCommand.Triangle(0, 2, bounds, null, 5f, 5f, 2f, 0f, Color.WHITE)
         val groups = AdjacentBatchPlanner.plan(listOf(rect(0), outline, triangle, rect(3)))
-        assertEquals(listOf(listOf(0L, 1L), listOf(2L), listOf(3L)), groups.map { it.commands.map { c -> c.sequence } })
+        assertEquals(listOf(listOf(0L, 1L, 2L, 3L)), groups.map { it.commands.map { c -> c.sequence } })
+        assertEquals(listOf(rect(0), outline, triangle, rect(3)), groups.single().commands)
     }
 
     @Test fun clipsSplitAdjacentRuns() {

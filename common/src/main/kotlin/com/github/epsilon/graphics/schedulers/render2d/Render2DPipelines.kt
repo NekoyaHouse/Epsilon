@@ -20,6 +20,10 @@ internal object Render2DPipelines {
         LuminRenderPipelines.TTF_FONT_BLUR, LuminRenderPipelines.TTF_FONT_GLITCH,
     )
     private val variants = HashMap<RenderPipeline, RenderPipeline>()
+    private val names = HashMap<RenderPipeline, Set<String>>()
+    fun uniformNames(source: RenderPipeline): Set<String> = names.getOrPut(source) {
+        source.bindGroupLayouts.flatMap { it.uniforms() }.mapTo(HashSet()) { it.name() }
+    }
     private val textTextures = BindGroupLayout.builder().apply {
         repeat(Render2DDrawPlan.TEXTURE_SLOTS) { withUniform("Sampler$it", UniformType.COMBINED_IMAGE_SAMPLER) }
     }.build()

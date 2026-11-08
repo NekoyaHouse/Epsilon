@@ -118,4 +118,29 @@ class Render2DDrawPlanTest {
         assertEquals(packets.indices.toList(), plan.properties.map { it.source })
         assertEquals(5, Render2DDrawPlan.build(packets.dropLast(1)).runs.size)
     }
+
+    @Test fun mainPanelIconGridBatchesSevenRetainedButtonsIntoTwoRuns() {
+        val clip = Render2DScissor(0, 28, 160, 200)
+        val shape = Binding(LuminRenderPipelines.UI_SHAPE, shapePage, indices, IndexType.SHORT, clip, emptyMap(), emptyMap())
+        val icons = text(Texture(View(), null), clip)
+        val interleaved = (0 until 7).flatMap { index ->
+            listOf(packet(shape, index * 2), packet(icons, index * 2 + 1))
+        }
+        assertEquals(14, Render2DDrawPlan.build(interleaved).runs.size)
+        // 两个局部阶段只交换不同按钮之间的底板和图标；每个图标仍在自身底板之后。
+        val staged = interleaved.filter { it.binding == shape } + interleaved.filter { it.binding == icons }
+        val plan = Render2DDrawPlan.build(staged)
+        assertEquals(listOf(7, 7), plan.runs.map { it.ranges.size })
+        assertEquals(staged.map { it.range.property }, plan.properties.map { it.source })
+        assertTrue(plan.runs.all { it.binding.clip == clip })
+        for (index in 0 until 7) {
+            assertTrue(plan.properties.indexOfFirst { it.source == index * 2 } <
+                plan.properties.indexOfFirst { it.source == index * 2 + 1 })
+        }
+        // 后续设置或滚动条的形状仍在图标之后，不能被拉入底板批次。
+        val settings = packet(shape, 14)
+        val withSettings = Render2DDrawPlan.build(staged + settings)
+        assertEquals(listOf(7, 7, 1), withSettings.runs.map { it.ranges.size })
+        assertEquals(14, withSettings.properties.last().source)
+    }
 }

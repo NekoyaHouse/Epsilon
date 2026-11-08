@@ -28,7 +28,8 @@ internal object AdjacentBatchPlanner {
             else -> null
         }
         val kind = when (command.kind()) {
-            Render2DCommandKind.RECT, Render2DCommandKind.ROUND_RECT, Render2DCommandKind.ROUND_RECT_OUTLINE -> Render2DCommandKind.ROUND_RECT
+            Render2DCommandKind.RECT, Render2DCommandKind.ROUND_RECT, Render2DCommandKind.ROUND_RECT_OUTLINE,
+            Render2DCommandKind.TRIANGLE -> Render2DCommandKind.ROUND_RECT
             else -> command.kind()
         }
         return Triple(kind, command.scissor, material)

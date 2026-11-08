@@ -6,6 +6,7 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.input.UiInputRouter
 import com.github.epsilon.kernel.state.StateObservation
 import com.github.epsilon.kernel.state.StateTracking
+import java.util.IdentityHashMap
 
 /** 观察宿主布局准备阶段，绘制块仍由各 composition 独立观察。 */
 class LuminView : AutoCloseable {
@@ -14,7 +15,7 @@ class LuminView : AutoCloseable {
     val input: UiInputRouter get() = sharedInput ?: inputDelegate.value
     private var inputFrame: MutableList<UiInputRouter.Entry>? = null
     private val compositions = LinkedHashSet<LuminComposition>()
-    private val probes = LinkedHashSet<HoverProbe>()
+    private val probes = IdentityHashMap<LuminComposition, MutableSet<HoverProbe>>()
     private val observation = StateObservation { invalidate() }
     private val preparation = StateObservation { invalidate() }
 
@@ -33,7 +34,9 @@ class LuminView : AutoCloseable {
         this.mouseX = mouseX
         this.mouseY = mouseY
         StateTracking.untracked {
-            probes.filter { it.transform == Render2DTransform.IDENTITY }.toList().forEach { it.update() }
+            for (group in probes.values) for (probe in group) {
+                if (probe.transform == Render2DTransform.IDENTITY) probe.update()
+            }
         }
         val previous = LuminRuntime.currentView
         LuminRuntime.currentView = this
@@ -74,7 +77,9 @@ class LuminView : AutoCloseable {
         val offsetY = py - composition.inputY
         val key = HoverKey(rect, offsetX, offsetY)
         val probe = composition.retain(key) {
-            HoverProbe(composition, rect, offsetX, offsetY).also { probes.add(it) }
+            HoverProbe(composition, rect, offsetX, offsetY).also {
+                probes.getOrPut(composition) { LinkedHashSet() }.add(it)
+            }
         }
         return probe.hovered.value
     }
@@ -90,11 +95,16 @@ class LuminView : AutoCloseable {
             return px >= rect.x && px <= rect.right() && py >= rect.y && py <= rect.bottom()
         }
         fun update() { hovered.value = hit() }
-        override fun close() { probes.remove(this) }
+        override fun close() {
+            val group = probes[composition] ?: return
+            group.remove(this)
+            if (group.isEmpty()) probes.remove(composition)
+        }
     }
 
     internal fun refreshHover(composition: LuminComposition, transform: Render2DTransform) {
-        probes.filter { it.composition === composition }.forEach { it.transform = transform; it.update() }
+        // 每个组合只访问自身的探针，避免遍历整棵输入树时反复扫描 View 的全部探针。
+        probes[composition]?.forEach { it.transform = transform; it.update() }
     }
 
     override fun close() {
