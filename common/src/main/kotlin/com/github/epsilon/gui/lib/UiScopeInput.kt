@@ -45,7 +45,10 @@ class UiInteraction internal constructor() {
         check(clicks.putIfAbsent(button, handler) == null) { "同一交互节点重复订阅按键: $button" }
     }
 
-    /** 按下时开始捕获；区域外仍收到拖动与同一按键的释放，节点消失时收到取消。 */
+    /**
+     * 按下时开始捕获；区域外仍收到拖动与同一按键的释放，节点消失时收到取消。
+     * 释放或取消后结束本次捕获；交互区域保留以接受下一次按下，键盘焦点独立管理。
+     */
     fun onDrag(
         button: Int = InputConstants.MOUSE_BUTTON_LEFT,
         onStart: (UiPointerEvent) -> Boolean = { true },
@@ -75,6 +78,7 @@ fun UiScope.InputRegion(
     onKey: ((KeyEvent) -> Boolean)? = null,
     onText: ((CharacterEvent) -> Boolean)? = null,
     onPreedit: ((PreeditEvent?) -> Boolean)? = null,
+    // 路由焦点不等于内部文本框正在编辑；控件须自行核验编辑状态后再提交缓冲。
     onBlur: () -> Unit = {},
     onScroll: ((Double, Double, Double, Double) -> Boolean)? = null,
     autoFocus: Boolean = false,
