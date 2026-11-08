@@ -32,6 +32,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
     private var eatCompleted = false
     private var eatClimbed = false
     private var climbTicks = 0
+    private var lastSeamlessLaunchTick = -1000
+    private var seamlessAliveUntilTick = -1
     private val timer = TimerUtils()
 
     override fun onEnable() {
@@ -42,6 +44,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         eatCompleted = false
         eatClimbed = false
         climbTicks = 0
+        lastSeamlessLaunchTick = -1000
+        seamlessAliveUntilTick = -1
     }
 
     override fun onDisable() {
@@ -50,6 +54,8 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
         eatCompleted = false
         eatClimbed = false
         climbTicks = 0
+        lastSeamlessLaunchTick = -1000
+        seamlessAliveUntilTick = -1
         releaseEatGlide()
     }
 
@@ -163,6 +169,10 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
                 }
                 return@runSafe
             }
+            if (elytraFly.fireworkSeamless) {
+                useSeamlessFirework()
+                return@runSafe
+            }
             val lowMomentum = isLowMomentum()
             val waitTicks = if (lowMomentum) {
                 minOf(LOW_MOMENTUM_BOOST_INTERVAL_TICKS, elytraFly.boostDelay)
@@ -183,6 +193,29 @@ class ControlElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             } else {
                 ElytraDebug.log(ElytraDebug.SLOT_FIREWORK, "firework", "use failed")
             }
+        }
+    }
+
+    /**
+     * 无缝续发：只在自己烟花的推进窗口结束时补一根，避免推进中断造成掉速。
+     *
+     * 自己烟花在场期间不补发（`seamlessAliveUntilTick` 顺延），离场后再按间隔与寿命窗口判断。
+     */
+    private fun NonNullContext.useSeamlessFirework() {
+        val tick = player.tickCount
+        if (elytraFly.hasActiveFirework()) {
+            seamlessAliveUntilTick = maxOf(seamlessAliveUntilTick, tick + 1)
+            return
+        }
+        if (tick < seamlessAliveUntilTick) return
+        if (tick - lastSeamlessLaunchTick < maxOf(3, elytraFly.fireworkSeamlessGap)) return
+
+        if (useFirework()) {
+            lastSeamlessLaunchTick = tick
+            seamlessAliveUntilTick = tick + elytraFly.fireworkSeamlessLife
+            hasFirstFirework = true
+            pendingFirework = false
+            timer.reset()
         }
     }
 
