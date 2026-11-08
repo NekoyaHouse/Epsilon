@@ -34,6 +34,8 @@ Retained UI caches local GPU geometry and updates transform, clip and paint inde
 
 Dropdown module rows use explicit drawing stages within each panel to batch compatible shapes and labels while preserving panel overlap and button text visibility. Ordinary text batches can bind up to eight font/icon atlases, and panel arrows share the shape pipeline, so atlas changes and row decorations no longer split every row into separate draws.
 
+On devices supporting indexed multi-draw indirect and nonzero first-instance, the arena consolidates same-stride geometry pages before recording draws. This removes vertex-page switches from otherwise compatible ranges without changing drawing order. Geometry remains on the GPU; unchanged scenes perform no repeated consolidation. Migration uses spare resident budget and fence-delayed reclamation, with the original pages retained when budget is insufficient.
+
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run

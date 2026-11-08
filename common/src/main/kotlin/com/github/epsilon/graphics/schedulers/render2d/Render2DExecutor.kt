@@ -41,6 +41,9 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         val color = LuminRenderSystem.resolveColorView() ?: return
         val resolved = draws.filter { it.prepare() }
         if (resolved.isEmpty()) return
+        val features = RenderSystem.getDevice().deviceInfo.features()
+        val useIndirect = features.multiDrawIndirect() && features.nonZeroFirstInstance()
+        if (useIndirect) arena.compactGeometry()
         LuminRenderSystem.applyOrthoProjection()
         val originals = Render2DPipelines.sources.associateBy { RenderSystem.getCompiledPipeline(it) }
         val recorder = RecordingPass(originals)
@@ -58,8 +61,6 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         }
         if (plan.runs.isEmpty()) return
         updateProperties(plan.properties.map { Instance(resolved[it.source].properties, it.textureSlot) })
-        val features = RenderSystem.getDevice().deviceInfo.features()
-        val useIndirect = features.multiDrawIndirect() && features.nonZeroFirstInstance()
         val prepared = plan.runs.map { run ->
             val compiled = RenderSystem.getCompiledPipeline(Render2DPipelines.variant(run.binding.pipeline))
             val commands = if (useIndirect && run.ranges.size > 1 && run.binding.indices != null) indirect(run.ranges) else null

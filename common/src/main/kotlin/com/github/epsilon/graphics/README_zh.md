@@ -43,7 +43,9 @@ Composition → UiRenderNode → 局部 DisplayList → GeometryArena
 
 Dropdown 模块行在每个面板预留的层区间内显式保留旧版透明叠加关系：按钮填充/描边、半透明行表面与 Hold 下划线、名称/按键文字/可见性图标。旧调度器隐式先画圆角和描边、后画矩形，因此行表面会压暗按钮；直接改为声明顺序会改变外观。局部分层保留压暗效果与浅色标签，后提交的面板仍覆盖先前面板。互不遮挡的标题箭头先于标题文字提交，行内图标与文字共用阶段。兼容范围保持相邻以进行间接合批；执行器在同一个 pass 内复用未变化的 buffer、scissor 与资源绑定。
 
-包含四十个折叠模块行、两张图集的绘制规划回归用例，连同阴影/标题共生成五个批次，末尾带滚动条时为六个。这是规划测试，不能代替 GPU 捕获验收：几何分页、展开设置、不同 clip/uniform、额外特效或超过八组图集/sampler 都可能增加批次。设备支持 multi-draw indirect 与非零 first-instance 时，每个索引批次使用一次 API draw；否则沿用逐范围普通 draw 回退。
+包含四十个折叠模块行、两张图集的绘制规划回归用例，连同阴影/标题共生成五个批次，末尾带滚动条时为六个。这是规划测试，不能代替 GPU 捕获验收：无法合并时的几何分页、展开设置、不同 clip/uniform、额外特效或超过八组图集/sampler 都可能增加批次。设备支持 multi-draw indirect 与非零 first-instance 时，每个索引批次使用一次 API draw；否则沿用逐范围普通 draw 回退。
+
+在上述间接绘制路径中，arena 等 renderer 完成准备后、packet 捕获 buffer 绑定前，将相同 stride 的活跃几何合并到一个 GPU 页。实例属性与间接命令使用独立页，不随几何移动。迁移只改变地址，保持绘制顺序、资源与 scissor 边界；源页连续范围共用复制命令，持久 renderer 在提交时读取更新后的 slice。复现抓帧中 A/B/A/B/A 顶点页切换的回归用例，将包含五十个范围的五个形状批次合为一个；这验证分配与规划，不代表新抓帧或帧耗时实测。
 
 旧的 `layer()` / `LayerHandle` 已替换为 `canvas(layer)` / `Canvas`；`UiRenderBatch.layerHandle()` 改为 `canvas()`。
 
@@ -84,7 +86,9 @@ scene.LuminUIScene(bounds, key = "list") {
 
 scene 与 GPU 资源在渲染线程创建、更新和销毁。场景帧配对调用 `beginFrame()` / `endFrame()`，失败时 `abortFrame()` 丢弃待提交工作。提交捕获稳定几何引用和属性值。更新先分配新范围再替换句柄，旧范围只在 GPU fence 完成后复用。scene 关闭沿用 Manager 生命周期，清理订阅、DisplayList、查询池和几何页。buffer 销毁交给后端处理，不阻塞等待尚未提交的 fence。保留同一个 Screen 实例返回页面时，`beginFrame()` 为已关闭 scene 创建新后端。字体 loader 身份、字形/图集 revision、缩放及资源重载 generation 使相关缓存失效。编译失败保留旧缓存，记录并抛出错误，由宿主中止异常帧后重试。
 
-每个 scheduler 的 arena 驻留上限为 64 MiB。冷 DisplayList 使用 32 MiB / 2,048 条软预算，不再提交的记录会清理；活跃或仍排队的内容不得提前释放。硬预算耗尽会报告分配失败，不阻塞渲染线程等待当前 submit 的 fence。空闲相邻范围自动合并。`stats` 提供累计记录数、几何构建数、DrawPlan 构建数、命中数、上传字节、实际 API draw 数/范围数、CPU 组合/记录/几何/规划/上传/提交时间及 live/resident/peak 字节。`unusedResidentBytes` 包括空闲范围与页内填充，不单指外部碎片；上传时间统计 CPU 编码，不代表 GPU 传输完成。开启 `measureGpu = true` 使用异步时间戳查询，`gpuNanos` 表示最近完成的样本，不同步等待当前帧 GPU。
+每个 scheduler 的 arena 驻留上限为 64 MiB。冷 DisplayList 使用 32 MiB / 2,048 条软预算，不再提交的记录会清理；活跃或仍排队的内容不得提前释放。硬预算耗尽会报告分配失败，不阻塞渲染线程等待当前 submit 的 fence。空闲相邻范围自动合并。合并目标页预留约两倍活跃几何容量（至少 64 KiB，按 stride 对齐），并以可用驻留预算为上限。新页与旧分配短暂共存，旧范围等 fence 完成后释放；迁移空间不足则保留原分页，稍后重试。部分复制失败时隔离目标页直到 fence 完成，原句柄保持有效以便重试。只有几何变化才触发检查，静态几何不反复扫描或复制。
+
+`stats` 提供累计记录数、几何构建数、DrawPlan 构建数、命中数、上传字节、实际 API draw 数/范围数、CPU 组合/记录/几何/规划/上传/提交时间及 live/resident/peak 字节。`geometryCompactions` 统计成功的页合并次数，`geometryCopiedBytes` 统计已编码的 GPU 复制字节（包括失败尝试中已成功编码的命令），`geometryCopyNanos` 统计 CPU 复制命令准备与编码耗时；复制与上传时间都不代表 GPU 传输完成。`unusedResidentBytes` 包括空闲范围与页内填充，不单指外部碎片。开启 `measureGpu = true` 对绘制 pass 使用异步时间戳查询；`gpuNanos` 是最近完成的绘制样本，不包含前面的几何复制，也不等待当前帧 GPU。
 
 静态记录预热后避免重录、几何生成和静态顶点上传。执行器仍遍历持久引用并比较当前绘制 packet，以验证可复用计划；本版尚未实现变更计划的局部拼接，不保证遍历耗时与节点数无关。测量时同时比较预热后计数增量、完整 CPU/GPU 帧时间、上传量和实际 draw 数；编译成功不代表视觉验收或具体加速倍数。
 

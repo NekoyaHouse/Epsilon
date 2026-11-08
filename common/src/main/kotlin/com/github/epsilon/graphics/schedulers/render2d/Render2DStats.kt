@@ -7,6 +7,9 @@ class Render2DStats {
     var planBuilds = 0L; internal set
     var cacheHits = 0L; internal set
     var uploadedBytes = 0L; internal set
+    var geometryCompactions = 0L; internal set
+    var geometryCopiedBytes = 0L; internal set
+    var geometryCopyNanos = 0L; internal set
     var drawCalls = 0L; internal set
     var drawRanges = 0L; internal set
     var recordingNanos = 0L; internal set

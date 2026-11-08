@@ -13,23 +13,35 @@ import java.util.TreeMap
 /** 不覆盖已提交的分配；只有 fence 完成后空洞才重新进入分配器。 */
 class GeometryArena(private val stats: Render2DStats, private val budget: Long = 64L * 1024 * 1024,
                     private val device: () -> GpuDevice = RenderSystem::getDevice) : AutoCloseable {
-    private class Page(val buffer: GpuBuffer, val allocator: RangeAllocator, val stride: Int)
-    class Handle internal constructor(val slice: GpuBufferSlice, val generation: Long, internal val release: () -> Unit)
-    private data class Retirement(val fence: GpuFence, val handles: List<Handle>)
+    private class Page(val buffer: GpuBuffer, val allocator: RangeAllocator, val stride: Int, val geometry: Boolean) {
+        var writable = true
+    }
+    class Handle internal constructor(slice: GpuBufferSlice, generation: Long, internal var release: () -> Unit) {
+        var slice = slice; internal set
+        var generation = generation; internal set
+    }
+    private data class Retirement(val fence: GpuFence, val releases: List<() -> Unit>)
     private val pages = ArrayList<Page>()
+    private val active = LinkedHashMap<Handle, Page>()
     private val retired = ArrayDeque<Retirement>()
-    private val pending = ArrayList<Handle>()
+    private val pending = ArrayList<() -> Unit>()
     private var generation = 0L
+    private var geometryDirty = false
     private var closed = false
 
-    fun upload(data: ByteBuffer, stride: Int): Handle {
+    fun upload(data: ByteBuffer, stride: Int): Handle = upload(data, stride, false)
+
+    internal fun uploadGeometry(data: ByteBuffer, stride: Int): Handle = upload(data, stride, true)
+
+    private fun upload(data: ByteBuffer, stride: Int, geometry: Boolean): Handle {
         check(!closed)
+        require(stride > 0 && data.hasRemaining() && data.remaining() % stride == 0)
         collect()
         val bytes = data.remaining()
         var page: Page? = null
         var offset = -1
         for (candidate in pages) {
-            if (candidate.stride != stride) continue
+            if (candidate.stride != stride || candidate.geometry != geometry || !candidate.writable) continue
             offset = candidate.allocator.allocate(bytes)
             if (offset >= 0) { page = candidate; break }
         }
@@ -37,12 +49,7 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             val capacity = ((maxOf(64 * 1024, bytes) + stride - 1) / stride) * stride
             // fence 可能属于尚未提交的 Vulkan command buffer，不能在渲染线程阻塞等待。
             check(stats.residentBytes + capacity <= budget) { "Lumin geometry budget exceeded: $bytes bytes requested" }
-            val buffer = device().createBuffer({ "Lumin Geometry Page" },
-                GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_INDIRECT_PARAMETERS or GpuBuffer.USAGE_COPY_DST, capacity.toLong())
-            page = Page(buffer, RangeAllocator(capacity), stride)
-            pages.add(page)
-            stats.residentBytes += capacity
-            stats.peakBytes = maxOf(stats.peakBytes, stats.residentBytes)
+            page = createPage(capacity, stride, geometry)
             offset = page.allocator.allocate(bytes)
         }
         val selected = page
@@ -53,13 +60,97 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
         finally { stats.uploadNanos += System.nanoTime() - uploadStart }
         stats.uploadedBytes += bytes
         stats.liveBytes += bytes
-        return Handle(slice, ++generation) {
-            selected.allocator.free(offset, bytes)
-            stats.liveBytes -= bytes
+        if (geometry) geometryDirty = true
+        return Handle(slice, ++generation, release(selected, offset, bytes)).also { active[it] = selected }
+    }
+
+    private fun createPage(capacity: Int, stride: Int, geometry: Boolean): Page {
+        val buffer = device().createBuffer({ if (geometry) "Lumin Geometry Page" else "Lumin Draw Data Page" },
+            GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_INDIRECT_PARAMETERS or GpuBuffer.USAGE_COPY_DST or GpuBuffer.USAGE_COPY_SRC,
+            capacity.toLong())
+        return Page(buffer, RangeAllocator(capacity), stride, geometry).also {
+            pages.add(it)
+            stats.residentBytes += capacity
+            stats.peakBytes = maxOf(stats.peakBytes, stats.residentBytes)
         }
     }
 
-    fun retire(handle: Handle) { if (!closed) pending.add(handle) }
+    private fun release(page: Page, offset: Int, bytes: Int): () -> Unit = {
+        page.allocator.free(offset, bytes)
+        stats.liveBytes -= bytes
+    }
+
+    /** 所有 renderer 完成准备后、记录 packet 前调用；不能使已记录的顶点绑定失效。 */
+    internal fun compactGeometry() {
+        check(!closed)
+        if (!geometryDirty) return
+        collect()
+        var retry = false
+        val groups = active.entries.filter { it.value.geometry }.map { it.key to it.value }.groupBy { it.second.stride }
+        for ((stride, entries) in groups) {
+            val sources = entries.groupBy { it.second }
+            if (sources.size < 2) continue
+            val bytes = entries.sumOf { it.first.slice.length() }
+            val available = minOf(budget - stats.residentBytes, Int.MAX_VALUE.toLong()) / stride * stride
+            // 预算不足时保持原有分页；合批优化不能要求等待 GPU 或突破驻留上限。
+            if (available < bytes) { retry = true; continue }
+            val desired = maxOf(64L * 1024, bytes * 2)
+            val capacity = minOf((desired + stride - 1) / stride * stride, available).toInt()
+            val target = createPage(capacity, stride, true)
+            val replacements = ArrayList<Pair<Handle, GpuBufferSlice>>()
+            val allocations = ArrayList<Pair<Int, Int>>()
+            val copies = ArrayList<Pair<GpuBufferSlice, GpuBufferSlice>>()
+            val start = System.nanoTime()
+            try {
+                for ((handle, _) in sources.values.flatMap { page -> page.sortedBy { it.first.slice.offset() } }) {
+                    val source = handle.slice
+                    val offset = target.allocator.allocate(Math.toIntExact(source.length()))
+                    check(offset >= 0)
+                    allocations.add(offset to Math.toIntExact(source.length()))
+                    stats.liveBytes += source.length()
+                    val slice = target.buffer.slice(offset.toLong(), source.length())
+                    // 复制顺序不影响绘制顺序；合并连续范围，避免每个小图元都触发后端复制屏障。
+                    val previous = copies.lastOrNull()
+                    if (previous != null && previous.first.buffer() === source.buffer() &&
+                        previous.first.offset() + previous.first.length() == source.offset() &&
+                        previous.second.offset() + previous.second.length() == slice.offset()) {
+                        val length = previous.first.length() + source.length()
+                        copies[copies.lastIndex] = source.buffer().slice(previous.first.offset(), length) to
+                            target.buffer.slice(previous.second.offset(), length)
+                    } else copies.add(source to slice)
+                    replacements.add(handle to slice)
+                }
+                val encoder = device().createCommandEncoder()
+                for ((source, destination) in copies) {
+                    encoder.copyToBuffer(source, destination)
+                    stats.geometryCopiedBytes += source.length()
+                }
+            } catch (failure: Throwable) {
+                // copy 可能已部分录入 command buffer，隔离目标页并等 fence 后再回收。
+                target.writable = false
+                allocations.forEach { (offset, size) -> pending.add(release(target, offset, size)) }
+                throw failure
+            } finally { stats.geometryCopyNanos += System.nanoTime() - start }
+            for ((handle, slice) in replacements) {
+                pending.add(handle.release)
+                handle.slice = slice
+                handle.generation = ++generation
+                handle.release = release(target, Math.toIntExact(slice.offset()), Math.toIntExact(slice.length()))
+                active[handle] = target
+            }
+            sources.keys.forEach { it.writable = false }
+            stats.geometryCompactions++
+        }
+        geometryDirty = retry
+    }
+
+    fun retire(handle: Handle) {
+        if (!closed) {
+            val page = checkNotNull(active.remove(handle)) { "无效或重复的几何句柄回收" }
+            if (page.geometry) geometryDirty = true
+            pending.add(handle.release)
+        }
+    }
 
     /** 在所有 pass 关闭后调用；pending 可能仍被当前提交引用。 */
     fun seal() {
@@ -71,7 +162,7 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     fun collect() {
         while (retired.isNotEmpty() && retired.first().fence.awaitCompletion(0)) {
             val item = retired.removeFirst()
-            item.handles.forEach { it.release() }
+            item.releases.forEach { it() }
             item.fence.close()
         }
         val iterator = pages.iterator()
@@ -94,6 +185,7 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     override fun close() {
         if (closed) return
         closed = true
+        active.clear()
         pending.clear()
         for (item in retired) {
             item.fence.close()
@@ -130,7 +222,7 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             val source = data ?: return
             val upload = source.duplicate().position(0).limit(((used + stride - 1) / stride) * stride)
             // 上传失败保留 CPU 副本供后续帧重试，不能留下永远没有句柄的缓存。
-            handle = arena.upload(upload, stride)
+            handle = arena.uploadGeometry(upload, stride)
             MemoryUtil.memFree(source)
             data = null
         }

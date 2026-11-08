@@ -34,6 +34,8 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 Dropdown 模块行通过面板内显式绘制分层合批兼容形状与文字，保持面板遮挡关系与按钮文字可读性。普通文字批次最多同时绑定八张字体/图标图集，面板箭头并入形状管线，避免图集切换和行内装饰逐行拆分 draw。
 
+设备支持 indexed multi-draw indirect 与非零 first-instance 时，arena 在记录绘制命令前合并相同 stride 的几何页，减少兼容范围之间的顶点页切换，并保持绘制顺序。迁移使用 GPU 内复制，静态场景不重复合并；新旧分配短暂共存且受驻留预算约束，旧范围等 fence 完成后回收，预算不足则保留原分页。
+
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
 ## ⚙️ 构建与运行
