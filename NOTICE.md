@@ -6,6 +6,14 @@ Epsilon is licensed under the GNU General Public License v3.0. See
 This project contains code derived from or adapted from the following upstream
 projects.
 
+## msdfgen / LWJGL msdfgen bindings
+
+- Repositories: [Chlumsky/msdfgen](https://github.com/Chlumsky/msdfgen), [LWJGL/lwjgl3](https://github.com/LWJGL/lwjgl3)
+- Licenses: MIT (msdfgen), BSD-3-Clause (LWJGL bindings).
+- Used in Epsilon: generating RGB MSDF glyph atlases from STB_truetype outlines.
+- Distributed with both loader artifacts as LWJGL Java and native jars. License texts are included under
+  `assets/epsilon/licenses/msdfgen.txt` and `assets/epsilon/licenses/lwjgl-msdfgen.txt`.
+
 ## Meteor Client
 
 - Repository: [MeteorDevelopment/meteor-client](https://github.com/MeteorDevelopment/meteor-client)

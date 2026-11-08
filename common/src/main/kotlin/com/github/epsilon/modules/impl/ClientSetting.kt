@@ -148,8 +148,6 @@ object ClientSetting : Module("Client Setting", null) {
         onChanged = { TranslationManager.refresh() }
     ).group(sgGeneral)
 
-    val fontAntiAliasing by boolSetting("Font Anti Aliasing", true).group(sgGeneral)
-
     val font: EnumSetting<FontMode> = enumSetting("Font", FontMode.Default).group(sgGeneral)
 
     val customFont by stringSetting(

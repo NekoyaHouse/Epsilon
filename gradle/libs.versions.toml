@@ -15,6 +15,8 @@ foojay-resolver-convention = "1.0.0"
 # 因此这里的 kotlin 版本同时决定 Kotlin 编译器、kotlin-stdlib 与 kotlinx 库的可用语言特性。
 kotlin = "2.4.21"
 kotlinx-coroutines = "1.11.0"
+# 与 Minecraft 26.3 自带的 LWJGL 保持一致，仅额外分发 msdfgen 模块。
+lwjgl = "3.4.3"
 mixin = "0.8.5"
 mixinextras = "0.5.4"
 asm = "9.8"
@@ -32,6 +34,7 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+lwjgl-msdfgen = { module = "org.lwjgl:lwjgl-msdfgen", version.ref = "lwjgl" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "project-fabric-loader" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "project-fabric-api" }
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }

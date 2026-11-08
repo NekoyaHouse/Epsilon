@@ -23,6 +23,8 @@ A modern multi loader Minecraft utility client built on NeoForge & Fabric with a
 
 ## 🎨 Graphics System
 
+TTF text uses MSDF atlases generated from STB_truetype outlines through the bundled msdfgen core.
+
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run

@@ -35,7 +35,7 @@ class TtfGlyphAtlas(atlasId: Int) {
         val texture = RenderSystem.getDevice().createTexture(
             { "Lumin-TtfGlyphAtlas" },
             GpuTexture.USAGE_TEXTURE_BINDING or GpuTexture.USAGE_COPY_DST,
-            GpuFormat.R8_UNORM,
+            GpuFormat.RGBA8_UNORM,
             SIZE, SIZE,
             1, 1
         )
@@ -62,7 +62,7 @@ class TtfGlyphAtlas(atlasId: Int) {
             1, OptionalDouble.empty()
         )
         this.alphaTexture = LuminTexture(alphaTexture, alphaTextureView, alphaSampler)
-        fillTexture(texture, 0xFF.toByte())
+        fillTexture(texture, 0x00.toByte())
         fillTexture(alphaTexture, 0x00.toByte())
         mc.textureManager.register(this.textureId, this.texture)
         mc.textureManager.register(this.alphaTextureId, this.alphaTexture)
@@ -159,9 +159,10 @@ class TtfGlyphAtlas(atlasId: Int) {
         }
 
         private fun fillTexture(texture: GpuTexture, value: Byte) {
-            val pixels = MemoryUtil.memAlloc(SIZE * SIZE)
+            val byteSize = SIZE * SIZE * texture.format.blockSize()
+            val pixels = MemoryUtil.memAlloc(byteSize)
             try {
-                MemoryUtil.memSet(MemoryUtil.memAddress(pixels), value.toInt() and 0xFF, (SIZE * SIZE).toLong())
+                MemoryUtil.memSet(MemoryUtil.memAddress(pixels), value.toInt() and 0xFF, byteSize.toLong())
                 uploadToTexture(texture, pixels, 0, 0, SIZE, SIZE)
             } finally {
                 MemoryUtil.memFree(pixels)

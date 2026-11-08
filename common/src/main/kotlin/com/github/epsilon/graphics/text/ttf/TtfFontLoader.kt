@@ -1,12 +1,13 @@
 package com.github.epsilon.graphics.text.ttf
 
+import com.github.epsilon.Constants
 import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.IFontLoader
 import net.minecraft.resources.Identifier
-import org.lwjgl.stb.STBTruetype
 import org.lwjgl.system.MemoryUtil
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,12 +43,12 @@ class TtfFontLoader : IFontLoader {
     private var atlasRevision = 0L
 
     constructor(ttfFile: Identifier) {
-        this.fontFile = TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + SDF_PADDING * 2, SDF_PADDING)
+        this.fontFile = TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + MSDF_PADDING * 2, MSDF_PADDING)
         asciiAdvanceMap.fill(ADVANCE_UNSET)
     }
 
     constructor(ttfFile: Path) {
-        this.fontFile = TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + SDF_PADDING * 2, SDF_PADDING)
+        this.fontFile = TtfFontFile(ttfFile, FONT_PIXEL_HEIGHT + MSDF_PADDING * 2, MSDF_PADDING)
         asciiAdvanceMap.fill(ADVANCE_UNSET)
     }
 
@@ -76,12 +77,14 @@ class TtfFontLoader : IFontLoader {
 
         val pending = removePendingGlyph(codepoint)
         deferredReadyGlyphs.remove(codepoint)
-        var glyph: TtfGlyph? = null
-        try {
-            glyph = if (pending != null) pending.join() else fontFile.generateGlyph(codepoint)
-        } catch (ignored: RuntimeException) {
-            glyph = fontFile.generateGlyph(codepoint)
-        }
+        val glyph = if (pending != null) {
+            try {
+                pending.join()
+            } catch (failure: CompletionException) {
+                Constants.LOGGER.error("Failed to generate MSDF glyph U+{} asynchronously; retrying", codepoint.toString(16), failure)
+                fontFile.generateGlyph(codepoint)
+            }
+        } else fontFile.generateGlyph(codepoint)
         appendGlyph(codepoint, glyph)
     }
 
@@ -137,9 +140,25 @@ class TtfFontLoader : IFontLoader {
 
             putPendingGlyph(
                 codepoint,
-                CompletableFuture.supplyAsync({ fontFile.generateGlyph(codepoint) }, GLYPH_WORKER)
+                generateGlyphAsync(codepoint)
             )
         }
+    }
+
+    private fun generateGlyphAsync(codepoint: Int): CompletableFuture<TtfGlyph> {
+        val future = CompletableFuture<TtfGlyph>()
+        GLYPH_WORKER.execute {
+            if (!future.isCancelled) {
+                try {
+                    val glyph = fontFile.generateGlyph(codepoint)
+                    // cancel(false) 不会打断已运行的原生调用，完成时仍须接管并释放生成结果。
+                    if (!future.complete(glyph)) freeGlyph(glyph)
+                } catch (failure: Throwable) {
+                    future.completeExceptionally(failure)
+                }
+            }
+        }
+        return future
     }
 
     fun drainReadyGlyphs() {
@@ -171,8 +190,14 @@ class TtfFontLoader : IFontLoader {
             val codepoint = iterator.next()
             iterator.remove()
             val future = removePendingGlyph(codepoint)
-            if (future != null && !future.isCompletedExceptionally && !future.isCancelled) {
-                appendGlyph(codepoint, future.join())
+            if (future != null && !future.isCancelled) {
+                val glyph = try {
+                    future.join()
+                } catch (failure: CompletionException) {
+                    Constants.LOGGER.error("Failed to generate MSDF glyph U+{}", codepoint.toString(16), failure)
+                    continue
+                }
+                appendGlyph(codepoint, glyph)
                 glyphUploadsThisFrame++
             }
         }
@@ -206,19 +231,21 @@ class TtfFontLoader : IFontLoader {
             return
         }
 
-        val uv = appendToAtlas(glyph)
-        if (uv != null) {
-            val descriptor = GlyphDescriptor(
-                currentAtlas!!, uv,
-                glyph.width, glyph.height,
-                glyph.xOffset, glyph.yOffset,
-                glyph.advance
-            )
-            putGlyph(codepoint, descriptor)
-            glyphRevision++
+        try {
+            val uv = appendToAtlas(glyph)
+            if (uv != null) {
+                val descriptor = GlyphDescriptor(
+                    currentAtlas!!, uv,
+                    glyph.width, glyph.height,
+                    glyph.xOffset, glyph.yOffset,
+                    glyph.advance
+                )
+                putGlyph(codepoint, descriptor)
+                glyphRevision++
+            }
+        } finally {
+            freeGlyph(glyph)
         }
-
-        freeGlyph(glyph)
     }
 
     /**
@@ -259,9 +286,7 @@ class TtfFontLoader : IFontLoader {
             fallbackYOffset = glyph.yOffset
             return true
         } finally {
-            // 占位字形由 MemoryUtil 分配，不是 stb 内存，不能交给 stbtt_FreeSDF 释放。
-            MemoryUtil.memFree(glyph.glyphData)
-            MemoryUtil.memFree(glyph.alphaData)
+            freeGlyph(glyph)
         }
     }
 
@@ -298,11 +323,11 @@ class TtfFontLoader : IFontLoader {
     }
 
     override fun destroy() {
-        fontFile.destroy()
         for (atlas in atlases) {
             atlas.destroy()
         }
         atlases.clear()
+        currentAtlas = null
         glyphMap.clear()
         advanceMap.clear()
         asciiGlyphMap.fill(null)
@@ -314,13 +339,14 @@ class TtfFontLoader : IFontLoader {
         fallbackHeight = 0
         fallbackYOffset = 0
         for (future in pendingGlyphs.values) {
-            if (future.isDone && !future.isCompletedExceptionally && !future.isCancelled) {
+            // 原子取消也覆盖“检查时未完成，取消前刚完成”的竞争，避免丢失原生缓冲区。
+            if (!future.cancel(false) && !future.isCompletedExceptionally && !future.isCancelled) {
                 freeGlyph(future.join())
-            } else {
-                future.cancel(false)
             }
         }
         pendingGlyphs.clear()
+        // 先取消排队任务，再与正在生成的字形互斥释放 STB 字体数据。
+        fontFile.destroy()
         deferredReadyGlyphs.clear()
         glyphRevision++
         // atlas 已被释放，任何缓存布局里保存的 atlas 引用都必须失效。
@@ -329,7 +355,7 @@ class TtfFontLoader : IFontLoader {
 
     private fun freeGlyph(glyph: TtfGlyph?) {
         if (glyph != null && glyph.glyphData != null) {
-            STBTruetype.stbtt_FreeSDF(glyph.glyphData)
+            MemoryUtil.memFree(glyph.glyphData)
         }
         if (glyph != null && glyph.alphaData != null) {
             MemoryUtil.memFree(glyph.alphaData)
@@ -385,7 +411,7 @@ class TtfFontLoader : IFontLoader {
 
         private const val ASCII_LIMIT = 128
         private const val FONT_PIXEL_HEIGHT = 40
-        private const val SDF_PADDING = 16
+        private const val MSDF_PADDING = 16
         private const val ADVANCE_UNSET = Int.MIN_VALUE
         private const val DEFAULT_MAX_GLYPH_UPLOADS_PER_FRAME = 8
         private val WORKER_ID = AtomicInteger()
