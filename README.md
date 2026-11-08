@@ -36,6 +36,8 @@ Dropdown module rows use explicit drawing stages within each panel to batch comp
 
 The Dropdown main-panel icon grid also submits button surfaces and icons in separate local stages, reducing seven alternating pairs to two compatible planner runs when geometry and resources are shared.
 
+Setting Group headers submit their card, outline, count chip and arrow before their labels. Consecutive collapsed siblings share a shape stage and a text stage in Dropdown and Panel GUI; expanded cards, setting controls and animation clips keep their drawing boundaries.
+
 On devices supporting indexed multi-draw indirect and nonzero first-instance, the arena consolidates same-stride geometry pages before recording draws. This removes vertex-page switches from otherwise compatible ranges without changing drawing order. Geometry remains on the GPU; unchanged scenes perform no repeated consolidation. Migration uses spare resident budget and fence-delayed reclamation, with the original pages retained when budget is insufficient.
 
 CPU submission reuses unchanged binding snapshots and caches immutable pipeline layouts. Upload batches poll retirement fences together, while hover refresh looks up probes by their owning composition instead of scanning every probe in the View.

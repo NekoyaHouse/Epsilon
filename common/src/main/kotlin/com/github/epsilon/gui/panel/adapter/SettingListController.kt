@@ -110,16 +110,18 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         callback: RowRenderCallback,
     ) {
         var rowY = viewport.y - scroll
+        val labels = ArrayList<HeaderLabels>()
         for (section in buildSections(ownerKey, settings)) {
             if (section.hasHeader()) {
                 rowY += scope.appendGroupSection(
-                    section, viewport.x, rowY, rowWidth, 0, mouseX, mouseY, callback
+                    section, viewport.x, rowY, rowWidth, 0, mouseX, mouseY, callback, labels
                 ) + MD3Theme.ROW_GAP
                 continue
             }
 
             for (setting in section.settings()) {
                 val row = rowFor(setting) ?: continue
+                scope.flushLabels(labels)
                 val rowBounds = UiRect(viewport.x, rowY, rowWidth, row.getHeight())
                 scope.bindRowInput(row, rowBounds, viewport)
                 if (setting !is BoolSetting && !setting.isViaSupported()) {
@@ -128,6 +130,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 rowY += row.getHeight() + MD3Theme.ROW_GAP
             }
         }
+        scope.flushLabels(labels)
     }
 
     /**
@@ -152,26 +155,32 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         section: SettingLayoutPlanner.Section,
         x: Float, y: Float, width: Float, depth: Int, mouseX: Int, mouseY: Int,
         callback: RowRenderCallback,
+        labels: MutableList<HeaderLabels>,
     ): Float {
         val nest = groupNestInset(depth, width)
         val cardX = x + nest
         val cardWidth = maxOf(1.0f, width - nest * 2.0f)
         val sectionBounds = UiRect(cardX, y, cardWidth, getSectionHeight(section))
         val headerBounds = UiRect(cardX, y, cardWidth, GROUP_HEADER_HEIGHT)
-        buildSectionCard(section, sectionBounds, headerBounds, depth, mouseX, mouseY)
+        // 同层折叠组头互不重叠；遇到展开卡片先提交前面的文字，保留父子遮挡顺序。
+        if (!section.isCollapsed()) flushLabels(labels)
+        labels.add(buildSectionCard(section, sectionBounds, headerBounds, depth, mouseX, mouseY))
 
         if (section.isCollapsed()) {
             return sectionBounds.height
         }
+        flushLabels(labels)
 
         val innerX = cardX + GROUP_ROW_INSET
         val innerWidth = maxOf(1.0f, cardWidth - GROUP_ROW_INSET * 2.0f)
         var cursor = y + GROUP_HEADER_HEIGHT + GROUP_ROW_INSET
+        val childLabels = ArrayList<HeaderLabels>()
         for (element in section.elements()) {
             when (element) {
                 is SettingLayoutPlanner.Section.SettingElement -> {
                     val setting = element.setting()
                     val row = rowFor(setting) ?: continue
+                    flushLabels(childLabels)
                     val rowBounds = UiRect(innerX, cursor, innerWidth, row.getHeight())
                     bindRowInput(row, rowBounds, sectionBounds)
                     if (setting !is BoolSetting && !setting.isViaSupported()) {
@@ -183,11 +192,12 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 is SettingLayoutPlanner.Section.GroupElement -> {
                     cursor += appendGroupSection(
                         element.section(), innerX, cursor, innerWidth, depth + 1,
-                        mouseX, mouseY, callback
+                        mouseX, mouseY, callback, childLabels
                     ) + MD3Theme.ROW_GAP
                 }
             }
         }
+        flushLabels(childLabels)
         return sectionBounds.height
     }
 
@@ -263,7 +273,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     private fun UiScope.buildSectionCard(
         section: SettingLayoutPlanner.Section,
         groupBounds: UiRect, headerBounds: UiRect, depth: Int, mouseX: Int, mouseY: Int,
-    ) {
+    ): HeaderLabels {
         Interaction(key = section.key() to "header", bounds = headerBounds.relativeTo(origin)) {
             onClick {
                 section.toggleCollapsed()
@@ -279,6 +289,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         val expandProgress = animate(expandAnimation, !section.isCollapsed())
 
         val localGroup = groupBounds.relativeTo(origin)
+        var labels: HeaderLabels? = null
         Positioned(localGroup.x, localGroup.y, localGroup.width, localGroup.height) {
             val localHeader = headerBounds.relativeTo(groupBounds)
             RoundRect(
@@ -303,9 +314,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
             val labelScale = 0.66f
             val label = trimToWidth(section.title(), labelScale, headerBounds.width - 74.0f, metrics)
             val labelY = localHeader.y + (GROUP_HEADER_HEIGHT - metrics.textHeight(labelScale)) / 2.0f
-            Text(
-                label, localHeader.x + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY
-            )
 
             val countLabel = section.totalSettingCount().toString()
             val countScale = 0.46f
@@ -316,13 +324,6 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 countX, countY, countWidth, GROUP_COUNT_CHIP_HEIGHT, GROUP_COUNT_CHIP_HEIGHT / 2.0f,
                 MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210)
             )
-            Text(
-                countLabel,
-                countX + (countWidth - metrics.textWidth(countLabel, countScale)) / 2.0f,
-                countY + (GROUP_COUNT_CHIP_HEIGHT - metrics.textHeight(countScale)) / 2.0f,
-                countScale,
-                MD3Theme.ON_SECONDARY_CONTAINER
-            )
 
             val chevronSize = 3.0f
             val chevronCenterX = localHeader.x + localHeader.width - MD3Theme.ROW_TRAILING_INSET - chevronSize - 3.0f
@@ -331,8 +332,31 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
                 chevronCenterX, chevronCenterY, chevronSize, expandProgress,
                 MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress)
             )
+            labels = HeaderLabels(
+                localGroup, label, localHeader.x + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, countLabel,
+                countX + (countWidth - metrics.textWidth(countLabel, countScale)) / 2.0f,
+                countY + (GROUP_COUNT_CHIP_HEIGHT - metrics.textHeight(countScale)) / 2.0f,
+                countScale
+            )
         }
+        return checkNotNull(labels)
     }
+
+    private fun UiScope.flushLabels(labels: MutableList<HeaderLabels>) {
+        for (header in labels) {
+            val bounds = header.bounds
+            Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
+                Text(header.title, header.titleX, header.titleY, header.titleScale, MD3Theme.TEXT_PRIMARY)
+                Text(header.count, header.countX, header.countY, header.countScale, MD3Theme.ON_SECONDARY_CONTAINER)
+            }
+        }
+        labels.clear()
+    }
+
+    private data class HeaderLabels(
+        val bounds: UiRect, val title: String, val titleX: Float, val titleY: Float, val titleScale: Float,
+        val count: String, val countX: Float, val countY: Float, val countScale: Float,
+    )
 
     private fun buildSections(ownerKey: String?, settings: List<Setting<*>>): List<SettingLayoutPlanner.Section> {
         if (settings.isEmpty()) {
