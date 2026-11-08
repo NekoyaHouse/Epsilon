@@ -41,6 +41,8 @@ Composition → UiRenderNode → 局部 DisplayList → GeometryArena
 
 每次 flush 内按显式 layer 升序绘制，同层保持声明顺序，子树在插入位置展开。视口遵循同样的规则，内容与滚动条进入宿主批次。图元种类、字体图集和纹理不会覆盖该顺序。矩形、圆角与描边共用 shape pipeline，文字、纹理与特效保留各自管线。只有相邻且 pipeline、几何页、资源、uniform 和 scissor 兼容的范围能够合批，不做空间重排或全局重叠依赖图。
 
+Dropdown 模块行在每个面板预留的层区间内显式保留旧版透明叠加关系：按钮填充/描边、半透明行表面、名称/按键文字、可见性图标。旧调度器隐式先画圆角和描边、后画矩形，因此行表面会压暗按钮；直接改为声明顺序会改变外观。局部分层保留压暗效果与浅色标签，后提交的面板仍覆盖先前面板。兼容范围保持相邻以进行间接合批；执行器在同一个 pass 内复用未变化的 buffer、scissor 与资源绑定。
+
 旧的 `layer()` / `LayerHandle` 已替换为 `canvas(layer)` / `Canvas`；`UiRenderBatch.layerHandle()` 改为 `canvas()`。
 
 ```kotlin

@@ -85,19 +85,34 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
                 { "Lumin Ordered 2D" }, color, Optional.empty(), LuminRenderSystem.resolveDepthView(), OptionalDouble.empty()
             ).use { pass ->
                 query?.let { pass.writeTimestamp(it, 0) }
+                RenderSystem.bindDefaultUniforms(pass)
+                pass.setUniform("DynamicTransforms", transform)
+                if (features.nonZeroFirstInstance()) pass.setVertexBuffer(1, checkNotNull(propertyBuffer).slice)
+                var previous: Binding? = null
+                var indexBuffer: GpuBuffer? = null
+                var indexType: IndexType? = null
                 for ((run, pipeline, commands) in prepared) {
                     val binding = run.binding
-                    pass.setPipeline(pipeline)
-                    RenderSystem.bindDefaultUniforms(pass)
-                    pass.setUniform("DynamicTransforms", transform)
-                    pass.setVertexBuffer(0, binding.vertices.slice())
-                    pass.setVertexBuffer(1, checkNotNull(propertyBuffer).slice)
-                    binding.indices?.let { pass.setIndexBuffer(it, checkNotNull(binding.indexType)) }
-                    val clip = binding.clip
-                    if (clip == null) pass.disableScissor()
-                    else pass.enableScissor(clip.x, clip.y, clip.width, clip.height)
-                    binding.textures.forEach { (name, texture) -> pass.setUniform(name, texture.view, texture.sampler) }
-                    binding.uniforms.forEach { (name, buffer) -> pass.setUniform(name, buffer) }
+                    val pipelineChanged = previous?.pipeline != binding.pipeline
+                    if (pipelineChanged) pass.setPipeline(pipeline)
+                    if (previous?.vertices != binding.vertices) pass.setVertexBuffer(0, binding.vertices.slice())
+                    if (binding.indices != null && (indexBuffer != binding.indices || indexType != binding.indexType)) {
+                        pass.setIndexBuffer(binding.indices, checkNotNull(binding.indexType))
+                        indexBuffer = binding.indices
+                        indexType = binding.indexType
+                    }
+                    if (previous == null || previous.clip != binding.clip) {
+                        val clip = binding.clip
+                        if (clip == null) pass.disableScissor()
+                        else pass.enableScissor(clip.x, clip.y, clip.width, clip.height)
+                    }
+                    binding.textures.forEach { (name, texture) ->
+                        if (pipelineChanged || previous.textures[name] != texture) pass.setUniform(name, texture.view, texture.sampler)
+                    }
+                    binding.uniforms.forEach { (name, buffer) ->
+                        if (pipelineChanged || previous.uniforms[name] != buffer) pass.setUniform(name, buffer)
+                    }
+                    previous = binding
                     if (commands != null) {
                         pass.drawIndexedIndirect(commands.slice, run.ranges.size)
                         stats.drawCalls++

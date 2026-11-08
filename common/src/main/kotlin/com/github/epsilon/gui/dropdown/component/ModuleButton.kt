@@ -8,6 +8,7 @@ import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.dropdown.widget.*
 import com.github.epsilon.gui.lib.*
+import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
@@ -78,15 +79,19 @@ class ModuleButton(val module: Module) : Component() {
         val headerHovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), x, y, width, DropdownTheme.MODULE_HEIGHT)
         hoverAnim.run(if (headerHovered) 1.0f else 0.0f)
 
-        Paint({ MD3Theme.lerp(DropdownTheme.moduleDisabled(hoverAnim.value), DropdownTheme.moduleEnabled(hoverAnim.value), toggleAnim.value) }) {
-            Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, Color.WHITE)
+        Layer(ROW_BACKGROUND) {
+            Paint({ MD3Theme.lerp(DropdownTheme.moduleDisabled(hoverAnim.value), DropdownTheme.moduleEnabled(hoverAnim.value), toggleAnim.value) }) {
+                Rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, Color.WHITE)
+            }
+            Rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
         }
-        Rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider())
 
         val textY = (DropdownTheme.MODULE_HEIGHT - metrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f
         val leftX = DropdownTheme.MODULE_PADDING_X
-        Paint({ MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hoverAnim.value), DropdownTheme.moduleTextEnabled(), toggleAnim.value) }) {
-            Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, Color.WHITE)
+        Layer(ROW_NAME) {
+            Paint({ MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hoverAnim.value), DropdownTheme.moduleTextEnabled(), toggleAnim.value) }) {
+                Text(module.translatedName, leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, Color.WHITE)
+            }
         }
 
         LuminUIGroup("keybind") { drawKeybindButton(mouseX, mouseY, toggleAnim.value) }
@@ -141,14 +146,18 @@ class ModuleButton(val module: Module) : Component() {
             outline = outline2
         }
 
-        RoundRect(btnX, btnY, btnW, btnH, radius, surface)
-        Outline(btnX, btnY, btnW, btnH, radius, 0.8f, outline)
+        Layer(ROW_BUTTON_SURFACE) {
+            RoundRect(btnX, btnY, btnW, btnH, radius, surface)
+            Outline(btnX, btnY, btnW, btnH, radius, 0.8f, outline)
+        }
 
         val textX = btnX + (btnW - textW) * 0.5f
         val textY = btnY + (btnH - textH) * 0.5f - 0.5f
-        Text(keyText, textX, textY, textScale, text)
-        if (module.bindMode == Module.BindMode.Hold && !listeningKeybind) {
-            Rect(textX, textY + textH + 0.5f, textW, 0.75f, text)
+        Layer(KEYBIND_LABEL) {
+            Text(keyText, textX, textY, textScale, text)
+            if (module.bindMode == Module.BindMode.Hold && !listeningKeybind) {
+                Rect(textX, textY + textH + 0.5f, textW, 0.75f, text)
+            }
         }
     }
 
@@ -189,18 +198,22 @@ class ModuleButton(val module: Module) : Component() {
         val btnY = (DropdownTheme.MODULE_HEIGHT - btnH) / 2.0f
         val hovered = isHovered(mouseX.toDouble(), mouseY.toDouble(), absoluteX(btnX), absoluteY(btnY), btnW, btnH)
         if (!module.isHidden) {
-            RoundRect(
-                btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS,
-                MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, if (hovered) 0.12f else 0.0f)
-            )
+            Layer(ROW_BUTTON_SURFACE) {
+                RoundRect(
+                    btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS,
+                    MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, if (hovered) 0.12f else 0.0f)
+                )
+            }
             val icon = IconChars.VISIBILITY
             val scale = 0.58f
             val iconW = metrics.textWidth(icon, scale, StaticFontLoader.ICONS)
             val iconH = metrics.textHeight(scale, StaticFontLoader.ICONS)
-            Text(
-                icon, btnX + (btnW - iconW) / 2.0f, btnY + (btnH - iconH) / 2.0f, scale,
-                MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
-            )
+            Layer(ROW_ICON) {
+                Text(
+                    icon, btnX + (btnW - iconW) / 2.0f, btnY + (btnH - iconH) / 2.0f, scale,
+                    MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS
+                )
+            }
         }
         if (hovered) {
             val hint = if (module.isHidden) {
@@ -313,6 +326,14 @@ class ModuleButton(val module: Module) : Component() {
 
 
     private companion object {
+
+        // 旧调度器先圆角/描边、后矩形、最后文字；行背景压暗按钮的效果须显式保留。
+        // 偏移保持在 Dropdown 每次提交预留的 10 层内，不能跨过相邻面板。
+        val ROW_BUTTON_SURFACE = LayerOffset(-3)
+        val ROW_BACKGROUND = LayerOffset(-2)
+        val ROW_NAME = LayerOffset(-1)
+        val KEYBIND_LABEL = LayerOffset(-1)
+        val ROW_ICON = LayerOffset(2)
 
         private fun createWidget(setting: Setting<*>): SettingWidget<*>? {
             if (setting is BoolSetting) return BoolWidget(setting)

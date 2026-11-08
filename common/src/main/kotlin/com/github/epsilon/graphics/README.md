@@ -45,6 +45,8 @@ Immediate canvas → transient geometry ─────────────�
 
 Within each flush, explicit layers sort ascending; submissions within a layer preserve declaration order, with child trees expanded at their insertion point. Viewports follow the same rule and submit through the host batch. Primitive types and textures never override this order. Shapes share a fill/outline pipeline; text, textures and effects use their own pipelines. Only adjacent ranges with compatible pipeline, geometry page, resources, uniforms and scissor can batch. No spatial reordering or global overlap graph is used.
 
+Dropdown module rows explicitly preserve their previous alpha composition inside each panel's reserved layer interval: button fills/outlines, translucent row surfaces, names/key labels, then visibility icons. The previous scheduler implicitly drew round rectangles and outlines before rectangles; the row surface therefore dimmed the buttons. Declaration order alone changes that appearance. These local layers retain the dimming and light labels while keeping later panels above earlier panels. Compatible ranges remain adjacent for indirect batching; the executor reuses unchanged buffer, scissor and resource bindings within a pass.
+
 The old `layer()` / `LayerHandle` entrypoints are replaced by `canvas(layer)` / `Canvas`; `UiRenderBatch.layerHandle()` becomes `canvas()`.
 
 ```kotlin
