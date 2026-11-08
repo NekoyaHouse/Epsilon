@@ -18,6 +18,7 @@ import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.cos
 
 object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
@@ -34,11 +35,12 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
     private const val MAX_TICK_DISPLACEMENT = 4.0
 
     /**
-     * 烟花盒上限的保守系数。
+     * 输出速度相对 Grim 单轴上限的保守比例。
      *
-     * 实测飞行中 Simulation 会稳定报出 0.2~0.3 的 offset：按 Grim 硬上限 1.7 算出的盒边界
-     * 比服务端实际接受的宽约 0.2 格/tick，持续超出会累积成复位。这里按比例收窄，
-     * 使每轴可用量落到 1.7 × 0.88 ≈ 1.5，正好对齐参考实现使用的默认值。
+     * 实测 Simulation 会稳定报出 0.2~0.3 的 offset，说明按 Grim 硬上限 1.7 顶格写入时
+     * 每 tick 都会越界约 0.2 格。这里不再收缩盒（收缩会让 max(0, 上限 - 上tick位移) 的余量
+     * 归零，预测速度逐 tick 走低，表现为越飞越慢），而是把实际写入的速度压到 1.7 × 0.88 ≈ 1.5：
+     * 盒仍按 1.7 计算，于是始终保留 0.2 的余量，速度既稳定又不越界。
      */
     private const val BOX_IMPACT_SCALE = 0.88
 
@@ -484,7 +486,16 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         // ratio > 2 说明盒过窄或期望方向无法缩入区间，这种情况下强推只会触发复位。
         if (ratio < 1.0E-6 || ratio > 2.0) return null
 
-        return box.clamp(if (ratio > 1.0) desired.scale(1.0 / ratio) else desired)
+        val result = if (ratio > 1.0) desired.scale(1.0 / ratio) else desired
+        return box.clamp(limitAxis(result, fireworkBoostMaxImpact * BOX_IMPACT_SCALE))
+    }
+
+    /**
+     * 把输出速度的单轴峰值压到 limit 以内，等比缩放保持方向。
+     */
+    private fun limitAxis(velocity: Vec3, limit: Double): Vec3 {
+        val peak = maxOf(abs(velocity.x), maxOf(abs(velocity.y), abs(velocity.z)))
+        return if (peak > limit) velocity.scale(limit / peak) else velocity
     }
 
     /**
@@ -499,7 +510,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         pitch: Float,
     ): VelocityBox {
         val anti = fireworkBoostAxisLimit
-        val cap = minOf(fireworkBoostMaxImpact, desired.length()) * BOX_IMPACT_SCALE
+        val cap = minOf(fireworkBoostMaxImpact, desired.length())
 
         val minX = axisClamp((minOf(-anti, look.x) + minOf(-anti, lastLook.x)) * cap, cap)
         val maxX = axisClamp((maxOf(anti, look.x) + maxOf(anti, lastLook.x)) * cap, cap)
