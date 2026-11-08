@@ -6,5 +6,7 @@ import java.util.concurrent.atomic.AtomicLong
 object Render2DResources {
     private val revision = AtomicLong()
     val generation: Long get() = revision.get()
-    fun invalidate() { revision.incrementAndGet() }
+    fun invalidate() {
+        revision.incrementAndGet()
+    }
 }

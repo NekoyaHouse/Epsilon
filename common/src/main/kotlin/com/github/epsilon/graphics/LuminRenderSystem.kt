@@ -49,7 +49,11 @@ object LuminRenderSystem {
     internal fun <T> withSharedGuiTransform(block: () -> T): T {
         val previous = sharedGuiTransform
         if (previous == null) sharedGuiTransform = writeDefaultGuiTransform()
-        return try { block() } finally { sharedGuiTransform = previous }
+        return try {
+            block()
+        } finally {
+            sharedGuiTransform = previous
+        }
     }
 
     fun setActiveTarget(target: LuminRenderTarget?) {

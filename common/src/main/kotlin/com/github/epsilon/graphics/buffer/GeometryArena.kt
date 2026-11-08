@@ -11,16 +11,21 @@ import java.nio.ByteBuffer
 import java.util.TreeMap
 
 /** 不覆盖已提交的分配；只有 fence 完成后空洞才重新进入分配器。 */
-class GeometryArena(private val stats: Render2DStats, private val budget: Long = 64L * 1024 * 1024,
-                    private val device: () -> GpuDevice = RenderSystem::getDevice) : AutoCloseable {
+class GeometryArena(
+    private val stats: Render2DStats, private val budget: Long = 64L * 1024 * 1024,
+    private val device: () -> GpuDevice = RenderSystem::getDevice
+) : AutoCloseable {
     private class Page(val buffer: GpuBuffer, val allocator: RangeAllocator, val stride: Int, val geometry: Boolean) {
         var writable = true
     }
+
     class Handle internal constructor(slice: GpuBufferSlice, generation: Long, internal var release: () -> Unit) {
         var slice = slice; internal set
         var generation = generation; internal set
     }
+
     private data class Retirement(val fence: GpuFence, val releases: List<() -> Unit>)
+
     private val pages = ArrayList<Page>()
     private val active = LinkedHashMap<Handle, Page>()
     private val retired = ArrayDeque<Retirement>()
@@ -35,7 +40,11 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
         check(!closed)
         if (uploadBatchDepth == 0) collect()
         uploadBatchDepth++
-        return try { block() } finally { uploadBatchDepth-- }
+        return try {
+            block()
+        } finally {
+            uploadBatchDepth--
+        }
     }
 
     fun upload(data: ByteBuffer, stride: Int): Handle = upload(data, stride, false)
@@ -54,7 +63,9 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             for (candidate in pages) {
                 if (candidate.stride != stride || candidate.geometry != geometry || !candidate.writable) continue
                 offset = candidate.allocator.allocate(bytes)
-                if (offset >= 0) { page = candidate; break }
+                if (offset >= 0) {
+                    page = candidate; break
+                }
             }
             if (page != null) break
             val capacity = ((maxOf(64 * 1024, bytes) + stride - 1) / stride) * stride
@@ -70,9 +81,13 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
         val selected = checkNotNull(page)
         val slice = selected.buffer.slice(offset.toLong(), bytes.toLong())
         val uploadStart = System.nanoTime()
-        try { device().createCommandEncoder().writeToBuffer(slice, data) }
-        catch (failure: Throwable) { selected.allocator.free(offset, bytes); throw failure }
-        finally { stats.uploadNanos += System.nanoTime() - uploadStart }
+        try {
+            device().createCommandEncoder().writeToBuffer(slice, data)
+        } catch (failure: Throwable) {
+            selected.allocator.free(offset, bytes); throw failure
+        } finally {
+            stats.uploadNanos += System.nanoTime() - uploadStart
+        }
         stats.uploadedBytes += bytes
         stats.liveBytes += bytes
         if (geometry) geometryDirty = true
@@ -80,9 +95,11 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     }
 
     private fun createPage(capacity: Int, stride: Int, geometry: Boolean): Page {
-        val buffer = device().createBuffer({ if (geometry) "Lumin Geometry Page" else "Lumin Draw Data Page" },
+        val buffer = device().createBuffer(
+            { if (geometry) "Lumin Geometry Page" else "Lumin Draw Data Page" },
             GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_INDIRECT_PARAMETERS or GpuBuffer.USAGE_COPY_DST or GpuBuffer.USAGE_COPY_SRC,
-            capacity.toLong())
+            capacity.toLong()
+        )
         return Page(buffer, RangeAllocator(capacity), stride, geometry).also {
             pages.add(it)
             stats.residentBytes += capacity
@@ -108,7 +125,9 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             val bytes = entries.sumOf { it.first.slice.length() }
             val available = minOf(budget - stats.residentBytes, Int.MAX_VALUE.toLong()) / stride * stride
             // 预算不足时保持原有分页；合批优化不能要求等待 GPU 或突破驻留上限。
-            if (available < bytes) { retry = true; continue }
+            if (available < bytes) {
+                retry = true; continue
+            }
             val desired = maxOf(64L * 1024, bytes * 2)
             val capacity = minOf((desired + stride - 1) / stride * stride, available).toInt()
             val target = createPage(capacity, stride, true)
@@ -128,10 +147,11 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
                     val previous = copies.lastOrNull()
                     if (previous != null && previous.first.buffer() === source.buffer() &&
                         previous.first.offset() + previous.first.length() == source.offset() &&
-                        previous.second.offset() + previous.second.length() == slice.offset()) {
+                        previous.second.offset() + previous.second.length() == slice.offset()
+                    ) {
                         val length = previous.first.length() + source.length()
                         copies[copies.lastIndex] = source.buffer().slice(previous.first.offset(), length) to
-                            target.buffer.slice(previous.second.offset(), length)
+                                target.buffer.slice(previous.second.offset(), length)
                     } else copies.add(source to slice)
                     replacements.add(handle to slice)
                 }
@@ -145,7 +165,9 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
                 target.writable = false
                 allocations.forEach { (offset, size) -> pending.add(release(target, offset, size)) }
                 throw failure
-            } finally { stats.geometryCopyNanos += System.nanoTime() - start }
+            } finally {
+                stats.geometryCopyNanos += System.nanoTime() - start
+            }
             for ((handle, slice) in replacements) {
                 pending.add(handle.release)
                 handle.slice = slice
@@ -194,7 +216,11 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     fun <T> recording(block: () -> T): T {
         val previous = current
         current = this
-        return try { block() } finally { current = previous }
+        return try {
+            block()
+        } finally {
+            current = previous
+        }
     }
 
     override fun close() {
@@ -214,7 +240,9 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
     }
 
     /** 编译作用域仅在渲染线程使用，普通 renderer 的环形缓冲不受影响。 */
-    companion object { internal var current: GeometryArena? = null; private set }
+    companion object {
+        internal var current: GeometryArena? = null; private set
+    }
 
     internal class RecordingBuffer(private val arena: GeometryArena, initialSize: Int, private val stride: Int) {
         private var data: ByteBuffer? = null
@@ -229,10 +257,12 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             capacity = ((maxOf(bytes, capacity * 2) + stride - 1) / stride) * stride
             data = data?.let { MemoryUtil.memRealloc(it, capacity) }
         }
+
         fun map(): ByteBuffer {
             check(handle == null)
             return data ?: MemoryUtil.memAlloc(capacity).also { data = it }
         }
+
         fun unmap() {
             val source = data ?: return
             val upload = source.duplicate().position(0).limit(((used + stride - 1) / stride) * stride)
@@ -241,7 +271,11 @@ class GeometryArena(private val stats: Render2DStats, private val budget: Long =
             MemoryUtil.memFree(source)
             data = null
         }
-        fun slice(): GpuBufferSlice { unmap(); return checkNotNull(handle).slice }
+
+        fun slice(): GpuBufferSlice {
+            unmap(); return checkNotNull(handle).slice
+        }
+
         fun reset() {
             data?.let { MemoryUtil.memFree(it) }; data = null
             handle?.let { arena.retire(it) }; handle = null; used = 0
@@ -264,6 +298,7 @@ internal class RangeAllocator(private val capacity: Int) {
         allocated[offset] = bytes
         return offset
     }
+
     fun free(offset: Int, bytes: Int) {
         check(allocated.remove(offset) == bytes) { "无效或重复的几何范围释放" }
         var start = offset

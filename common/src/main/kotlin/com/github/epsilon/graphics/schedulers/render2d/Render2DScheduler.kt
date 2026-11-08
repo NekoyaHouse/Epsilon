@@ -25,7 +25,9 @@ class Render2DScheduler : IRenderer {
     private val executor = Render2DExecutor(arena, stats)
     var measureGpu: Boolean
         get() = executor.measureGpu
-        set(value) { executor.measureGpu = value }
+        set(value) {
+            executor.measureGpu = value
+        }
     private val layerHandles = HashMap<Int, Canvas>()
     private val measureTextRenderer = TextRenderer.create(256 * 1024L)
     private val pending = OrderedSubmissionQueue<Queued>({ it.layer }, { it.sequence })
@@ -39,9 +41,14 @@ class Render2DScheduler : IRenderer {
     private val deferred = ArrayList<DisplayList>()
     private var frame = Long.MIN_VALUE
 
-    constructor() { RendererManager.unregister(measureTextRenderer); RendererManager.register(this) }
+    constructor() {
+        RendererManager.unregister(measureTextRenderer); RendererManager.register(this)
+    }
+
     @Deprecated("空间桶已由有序 display list 替代")
-    constructor(quadtreeThreshold: Int) : this() { require(quadtreeThreshold > 0) }
+    constructor(quadtreeThreshold: Int) : this() {
+        require(quadtreeThreshold > 0)
+    }
 
     fun canvas(layer: Int = 0): Canvas = layerHandles.getOrPut(layer) { Canvas(this, layer) }
     fun textMetrics(): TextRenderer = measureTextRenderer
@@ -58,7 +65,9 @@ class Render2DScheduler : IRenderer {
         val iterator = retained.values.iterator()
         while (iterator.hasNext()) {
             val list = iterator.next()
-            if (list.lastFrame < next - 1) { retireList(list); iterator.remove() }
+            if (list.lastFrame < next - 1) {
+                retireList(list); iterator.remove()
+            }
         }
         arena.seal()
     }
@@ -67,7 +76,9 @@ class Render2DScheduler : IRenderer {
         val iterator = retained.values.iterator()
         while (iterator.hasNext()) {
             val list = iterator.next()
-            if (list.lastFrame != frame) { retireList(list); iterator.remove() }
+            if (list.lastFrame != frame) {
+                retireList(list); iterator.remove()
+            }
         }
         releaseDeferred()
         arena.seal()
@@ -83,6 +94,7 @@ class Render2DScheduler : IRenderer {
         layerHandles.values.forEach { it.clearScissor() }
         sequence = 0
     }
+
     fun clearLayer(layer: Int) {
         pending.filter { it.layer == layer && it.batch.temporary }.forEach { it.batch.renderers.close() }
         pending.removeAll { it.layer == layer }
@@ -90,6 +102,7 @@ class Render2DScheduler : IRenderer {
         transient.removeAll { it.layer == layer }
         layerHandles[layer]?.clearScissor()
     }
+
     fun resetCache() {
         retained.values.forEach { retireList(it) }
         retained.clear()
@@ -98,8 +111,10 @@ class Render2DScheduler : IRenderer {
     }
 
     /** identity 使用引用身份；几何与外部属性分别缓存。 */
-    fun retain(identity: Any, part: Int, layer: Int, properties: Render2DProperties,
-               clip: Render2DScissor?, originX: Float = 0f, originY: Float = 0f, record: () -> Unit) {
+    fun retain(
+        identity: Any, part: Int, layer: Int, properties: Render2DProperties,
+        clip: Render2DScissor?, originX: Float = 0f, originY: Float = 0f, record: () -> Unit
+    ) {
         beginFrame()
         drainTransient()
         val key = RecordKey(identity, part, layer)
@@ -107,11 +122,16 @@ class Render2DScheduler : IRenderer {
         if (list == null || !list.resourcesCurrent()) {
             val commands = ArrayList<Render2DCommand>()
             val previous = capture
-            val oldX = captureX; val oldY = captureY
+            val oldX = captureX;
+            val oldY = captureY
             captureX = originX; captureY = originY
             capture = commands
             val start = System.nanoTime()
-            try { record() } finally { capture = previous; captureX = oldX; captureY = oldY; stats.recordingNanos += System.nanoTime() - start }
+            try {
+                record()
+            } finally {
+                capture = previous; captureX = oldX; captureY = oldY; stats.recordingNanos += System.nanoTime() - start
+            }
             stats.recordings++
             val compiled = compile(commands)
             val replacement = DisplayList(compiled, resources(commands), frame)
@@ -123,13 +143,23 @@ class Render2DScheduler : IRenderer {
             val bounds = batch.bounds
             if (clip != null) {
                 val transform = properties.transform
-                val xs = floatArrayOf(transform.mapX(bounds.x, bounds.y), transform.mapX(bounds.x + bounds.width, bounds.y),
-                    transform.mapX(bounds.x, bounds.y + bounds.height), transform.mapX(bounds.x + bounds.width, bounds.y + bounds.height))
-                val ys = floatArrayOf(transform.mapY(bounds.x, bounds.y), transform.mapY(bounds.x + bounds.width, bounds.y),
-                    transform.mapY(bounds.x, bounds.y + bounds.height), transform.mapY(bounds.x + bounds.width, bounds.y + bounds.height))
-                val area = LuminRenderSystem.toFramebufferScissor(xs.min(), ys.min(), xs.max() - xs.min(), ys.max() - ys.min())
+                val xs = floatArrayOf(
+                    transform.mapX(bounds.x, bounds.y),
+                    transform.mapX(bounds.x + bounds.width, bounds.y),
+                    transform.mapX(bounds.x, bounds.y + bounds.height),
+                    transform.mapX(bounds.x + bounds.width, bounds.y + bounds.height)
+                )
+                val ys = floatArrayOf(
+                    transform.mapY(bounds.x, bounds.y),
+                    transform.mapY(bounds.x + bounds.width, bounds.y),
+                    transform.mapY(bounds.x, bounds.y + bounds.height),
+                    transform.mapY(bounds.x + bounds.width, bounds.y + bounds.height)
+                )
+                val area =
+                    LuminRenderSystem.toFramebufferScissor(xs.min(), ys.min(), xs.max() - xs.min(), ys.max() - ys.min())
                 if (area.x + area.width <= clip.x || area.y + area.height <= clip.y ||
-                    area.x >= clip.x + clip.width || area.y >= clip.y + clip.height) continue
+                    area.x >= clip.x + clip.width || area.y >= clip.y + clip.height
+                ) continue
             }
             pending.add(Queued(layer, nextSequence(), batch, properties, clip))
         }
@@ -137,7 +167,9 @@ class Render2DScheduler : IRenderer {
         val iterator = retained.values.iterator()
         while ((retained.size > 2048 || stats.liveBytes > 32L * 1024 * 1024) && iterator.hasNext()) {
             val candidate = iterator.next()
-            if (candidate.lastFrame != frame) { retireList(candidate); iterator.remove() }
+            if (candidate.lastFrame != frame) {
+                retireList(candidate); iterator.remove()
+            }
         }
         arena.seal()
     }
@@ -148,13 +180,27 @@ class Render2DScheduler : IRenderer {
         val commands = ArrayList<Render2DCommand>()
         val previous = capture
         capture = commands
-        try { record() } finally { capture = previous }
-        for (batch in compile(commands, temporary = true)) pending.add(Queued(layer, nextSequence(), batch, properties, clip))
+        try {
+            record()
+        } finally {
+            capture = previous
+        }
+        for (batch in compile(commands, temporary = true)) pending.add(
+            Queued(
+                layer,
+                nextSequence(),
+                batch,
+                properties,
+                clip
+            )
+        )
     }
 
     fun flush() = flushSelected(null)
     fun flushLayer(layer: Int) = flushSelected(layer)
-    fun flushAndClear() { flush(); clear() }
+    fun flushAndClear() {
+        flush(); clear()
+    }
 
     private fun flushSelected(layer: Int?) {
         beginFrame()
@@ -165,7 +211,8 @@ class Render2DScheduler : IRenderer {
         try {
             executor.execute(selected.map { queued ->
                 val clip = intersect(queued.batch.scissor, queued.clip)
-                Render2DExecutor.Draw(pipelineFor(queued.batch.kind), queued.properties,
+                Render2DExecutor.Draw(
+                    pipelineFor(queued.batch.kind), queued.properties,
                     { queued.batch.renderers.applyScissor(clip); queued.batch.renderers.prepareSharedDraw() },
                     { pass -> queued.batch.renderers.applyScissor(clip); queued.batch.renderers.draw(pass) })
             })
@@ -180,11 +227,14 @@ class Render2DScheduler : IRenderer {
     private fun retireList(list: DisplayList) {
         if (pending.any { queued -> list.batches.any { it === queued.batch } }) deferred.add(list) else list.close()
     }
+
     private fun releaseDeferred() {
         val iterator = deferred.iterator()
         while (iterator.hasNext()) {
             val list = iterator.next()
-            if (pending.none { queued -> list.batches.any { it === queued.batch } }) { list.close(); iterator.remove() }
+            if (pending.none { queued -> list.batches.any { it === queued.batch } }) {
+                list.close(); iterator.remove()
+            }
         }
     }
 
@@ -192,19 +242,120 @@ class Render2DScheduler : IRenderer {
         if (capture == null) transient.add(command)
         else capture!!.add(command.local(captureX, captureY))
     }
+
     private fun Render2DCommand.local(ox: Float, oy: Float): Render2DCommand = when (this) {
-        is Render2DCommand.Shadow -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
-        is Render2DCommand.SegmentedShadow -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, segmentRects = segmentRects.copyOf().also { values -> for (i in 0 until minOf(segmentCount, values.size / 4)) { values[i * 4] -= ox; values[i * 4 + 1] -= oy } })
-        is Render2DCommand.RoundRect -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
-        is Render2DCommand.RoundRectOutline -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
-        is Render2DCommand.Rect -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null)
-        is Render2DCommand.Triangle -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, centerX = centerX - ox, centerY = centerY - oy)
-        is Render2DCommand.Arc -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, centerX = centerX - ox, centerY = centerY - oy)
-        is Render2DCommand.Texture -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, originX = originX - ox, originY = originY - oy)
-        is Render2DCommand.Text -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy, originX = originX - ox, originY = originY - oy)
-        is Render2DCommand.GradientText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
-        is Render2DCommand.BlurText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
-        is Render2DCommand.GlitchText -> copy(bounds = Render2DBounds.of(bounds.x - ox, bounds.y - oy, bounds.width, bounds.height), scissor = null, x = x - ox, y = y - oy)
+        is Render2DCommand.Shadow -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null
+        )
+
+        is Render2DCommand.SegmentedShadow -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ),
+            scissor = null,
+            segmentRects = segmentRects.copyOf().also { values ->
+                for (i in 0 until minOf(segmentCount, values.size / 4)) {
+                    values[i * 4] -= ox; values[i * 4 + 1] -= oy
+                }
+            })
+
+        is Render2DCommand.RoundRect -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null
+        )
+
+        is Render2DCommand.RoundRectOutline -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null
+        )
+
+        is Render2DCommand.Rect -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null
+        )
+
+        is Render2DCommand.Triangle -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, centerX = centerX - ox, centerY = centerY - oy
+        )
+
+        is Render2DCommand.Arc -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, centerX = centerX - ox, centerY = centerY - oy
+        )
+
+        is Render2DCommand.Texture -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, originX = originX - ox, originY = originY - oy
+        )
+
+        is Render2DCommand.Text -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, x = x - ox, y = y - oy, originX = originX - ox, originY = originY - oy
+        )
+
+        is Render2DCommand.GradientText -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, x = x - ox, y = y - oy
+        )
+
+        is Render2DCommand.BlurText -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, x = x - ox, y = y - oy
+        )
+
+        is Render2DCommand.GlitchText -> copy(
+            bounds = Render2DBounds.of(
+                bounds.x - ox,
+                bounds.y - oy,
+                bounds.width,
+                bounds.height
+            ), scissor = null, x = x - ox, y = y - oy
+        )
     }
 
     private fun nextSequence(): Long = sequence++
@@ -235,7 +386,9 @@ class Render2DScheduler : IRenderer {
                     stats.geometryNanos += System.nanoTime() - buildStart
                     val bounds = group.commands.map { it.orderingBounds() }.reduce { a, b -> a.include(b) }
                     result.add(CompiledBatch(first.kind(), first.scissor, first.sequence, bundle, temporary, bounds))
-                } catch (failure: Throwable) { bundle.close(); throw failure }
+                } catch (failure: Throwable) {
+                    bundle.close(); throw failure
+                }
             }
             return result
         } catch (failure: Throwable) {
@@ -249,37 +402,70 @@ class Render2DScheduler : IRenderer {
         val text: String
         val explicit: TtfFontLoader?
         when (command) {
-            is Render2DCommand.Text -> { text = command.text; explicit = command.fontLoader }
-            is Render2DCommand.GradientText -> { text = command.text; explicit = command.fontLoader }
-            is Render2DCommand.BlurText -> { text = command.text; explicit = command.fontLoader }
-            is Render2DCommand.GlitchText -> { text = command.text; explicit = command.fontLoader }
+            is Render2DCommand.Text -> {
+                text = command.text; explicit = command.fontLoader
+            }
+
+            is Render2DCommand.GradientText -> {
+                text = command.text; explicit = command.fontLoader
+            }
+
+            is Render2DCommand.BlurText -> {
+                text = command.text; explicit = command.fontLoader
+            }
+
+            is Render2DCommand.GlitchText -> {
+                text = command.text; explicit = command.fontLoader
+            }
+
             else -> return@mapNotNull null
         }
         val loader = explicit ?: StaticFontLoader.defaultFont()
-        FontStamp(loader, text, explicit == null, loader.getGlyphRevision(), loader.getAtlasRevision(), loader.getRenderScale())
+        FontStamp(
+            loader,
+            text,
+            explicit == null,
+            loader.getGlyphRevision(),
+            loader.getAtlasRevision(),
+            loader.getRenderScale()
+        )
     }
 
-    private data class FontStamp(val loader: TtfFontLoader, val text: String, val default: Boolean,
-                                 val glyph: Long, val atlas: Long, val scale: Float) {
+    private data class FontStamp(
+        val loader: TtfFontLoader, val text: String, val default: Boolean,
+        val glyph: Long, val atlas: Long, val scale: Float
+    ) {
         fun current(): Boolean {
             if (default && loader !== StaticFontLoader.defaultFont()) return false
             loader.prepareChars(text)
             return glyph == loader.getGlyphRevision() && atlas == loader.getAtlasRevision() && scale == loader.getRenderScale()
         }
     }
+
     private class RecordKey(val identity: Any, val part: Int, val layer: Int) {
         override fun hashCode() = (System.identityHashCode(identity) * 31 + part) * 31 + layer
-        override fun equals(other: Any?) = other is RecordKey && identity === other.identity && part == other.part && layer == other.layer
+        override fun equals(other: Any?) =
+            other is RecordKey && identity === other.identity && part == other.part && layer == other.layer
     }
-    private class DisplayList(val batches: List<CompiledBatch>, val fonts: List<FontStamp>, var lastFrame: Long) : AutoCloseable {
+
+    private class DisplayList(val batches: List<CompiledBatch>, val fonts: List<FontStamp>, var lastFrame: Long) :
+        AutoCloseable {
         private val resources = Render2DResources.generation
         fun resourcesCurrent() = resources == Render2DResources.generation && fonts.all { it.current() }
-        override fun close() { batches.forEach { it.renderers.close() } }
+        override fun close() {
+            batches.forEach { it.renderers.close() }
+        }
     }
-    private data class CompiledBatch(val kind: Render2DCommandKind, val scissor: Render2DScissor?, val sequence: Long,
-                                     val renderers: RendererBundle, val temporary: Boolean, val bounds: Render2DBounds)
-    private data class Queued(val layer: Int, val sequence: Long, val batch: CompiledBatch,
-                              val properties: Render2DProperties, val clip: Render2DScissor?)
+
+    private data class CompiledBatch(
+        val kind: Render2DCommandKind, val scissor: Render2DScissor?, val sequence: Long,
+        val renderers: RendererBundle, val temporary: Boolean, val bounds: Render2DBounds
+    )
+
+    private data class Queued(
+        val layer: Int, val sequence: Long, val batch: CompiledBatch,
+        val properties: Render2DProperties, val clip: Render2DScissor?
+    )
 
     override fun close() {
         if (closed) return
@@ -1022,9 +1208,12 @@ class Render2DScheduler : IRenderer {
         private fun intersect(a: Render2DScissor?, b: Render2DScissor?): Render2DScissor? {
             if (a == null) return b
             if (b == null) return a
-            val x = maxOf(a.x, b.x); val y = maxOf(a.y, b.y)
-            return Render2DScissor(x, y, maxOf(0, minOf(a.x + a.width, b.x + b.width) - x),
-                maxOf(0, minOf(a.y + a.height, b.y + b.height) - y))
+            val x = maxOf(a.x, b.x);
+            val y = maxOf(a.y, b.y)
+            return Render2DScissor(
+                x, y, maxOf(0, minOf(a.x + a.width, b.x + b.width) - x),
+                maxOf(0, minOf(a.y + a.height, b.y + b.height) - y)
+            )
         }
     }
 }

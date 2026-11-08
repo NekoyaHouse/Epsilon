@@ -23,14 +23,19 @@ import java.util.function.Supplier
 
 /** 先完成准备和上传，再打开真实 pass；录制 pass 不持有 GPU 命令编码器。 */
 internal class Render2DExecutor(private val arena: GeometryArena, private val stats: Render2DStats) : AutoCloseable {
-    data class Draw(val pipeline: RenderPipeline, val properties: Render2DProperties,
-                    val prepare: () -> Boolean, val submit: (RenderPass) -> Unit)
+    data class Draw(
+        val pipeline: RenderPipeline, val properties: Render2DProperties,
+        val prepare: () -> Boolean, val submit: (RenderPass) -> Unit
+    )
+
     private data class Instance(val properties: Render2DProperties, val textureSlot: Int)
+
     private var properties = emptyList<Instance>()
     private var propertyBuffer: GeometryArena.Handle? = null
     private var packets = emptyList<Packet>()
     private var plan = Render2DDrawPlan.Plan(emptyList(), emptyList())
     private val indirect = LinkedHashMap<List<Range>, GeometryArena.Handle>(32, 0.75f, true)
+
     /** 可关闭 GPU 时间查询；读取结果从不等待 GPU。 */
     var measureGpu = false
     private val queries = ArrayDeque<GpuQueryPool>()
@@ -65,7 +70,8 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         updateProperties(plan.properties.map { Instance(resolved[it.source].properties, it.textureSlot) })
         val prepared = plan.runs.map { run ->
             val compiled = RenderSystem.getCompiledPipeline(Render2DPipelines.variant(run.binding.pipeline))
-            val commands = if (useIndirect && run.ranges.size > 1 && run.binding.indices != null) indirect(run.ranges) else null
+            val commands =
+                if (useIndirect && run.ranges.size > 1 && run.binding.indices != null) indirect(run.ranges) else null
             Triple(run, compiled, commands)
         }
         pollQueries()
@@ -73,7 +79,11 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         val transform = LuminRenderSystem.writeDefaultGuiTransform()
         try {
             RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                { "Lumin Ordered 2D" }, color, Optional.empty(), LuminRenderSystem.resolveDepthView(), OptionalDouble.empty()
+                { "Lumin Ordered 2D" },
+                color,
+                Optional.empty(),
+                LuminRenderSystem.resolveDepthView(),
+                OptionalDouble.empty()
             ).use { pass ->
                 query?.let { pass.writeTimestamp(it, 0) }
                 RenderSystem.bindDefaultUniforms(pass)
@@ -98,7 +108,11 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
                         else pass.enableScissor(clip.x, clip.y, clip.width, clip.height)
                     }
                     binding.textures.forEach { (name, texture) ->
-                        if (pipelineChanged || previous.textures[name] != texture) pass.setUniform(name, texture.view, texture.sampler)
+                        if (pipelineChanged || previous.textures[name] != texture) pass.setUniform(
+                            name,
+                            texture.view,
+                            texture.sampler
+                        )
                     }
                     binding.uniforms.forEach { (name, buffer) ->
                         if (pipelineChanged || previous.uniforms[name] != buffer) pass.setUniform(name, buffer)
@@ -122,7 +136,9 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
                 query?.let { pass.writeTimestamp(it, 1) }
             }
             query?.let { queries.addLast(it) }
-        } catch (failure: Throwable) { query?.close(); throw failure }
+        } catch (failure: Throwable) {
+            query?.close(); throw failure
+        }
     }
 
     private fun updateProperties(next: List<Instance>) {
@@ -140,16 +156,22 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
             propertyBuffer?.let { arena.retire(it) }
             propertyBuffer = replacement
             properties = next
-        } finally { MemoryUtil.memFree(data) }
+        } finally {
+            MemoryUtil.memFree(data)
+        }
     }
 
     private fun indirect(ranges: List<Range>): GeometryArena.Handle = indirect.getOrPut(ranges) {
         val data = MemoryUtil.memAlloc(ranges.size * 20)
         try {
-            ranges.forEach { data.putInt(it.count).putInt(1).putInt(it.first).putInt(it.baseVertex).putInt(it.property) }
+            ranges.forEach {
+                data.putInt(it.count).putInt(1).putInt(it.first).putInt(it.baseVertex).putInt(it.property)
+            }
             data.flip()
             arena.upload(data, 20)
-        } finally { MemoryUtil.memFree(data) }
+        } finally {
+            MemoryUtil.memFree(data)
+        }
     }.also {
         while (indirect.size > 128) {
             val first = indirect.entries.first()
@@ -160,20 +182,27 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
     private fun pollQueries() {
         while (queries.isNotEmpty()) {
             val query = queries.first()
-            val start = query.getValue(0); val end = query.getValue(1)
+            val start = query.getValue(0);
+            val end = query.getValue(1)
             if (start.isEmpty || end.isEmpty) break
-            stats.gpuNanos = ((end.asLong - start.asLong) * RenderSystem.getDevice().deviceInfo.timestampPeriod()).toLong()
+            stats.gpuNanos =
+                ((end.asLong - start.asLong) * RenderSystem.getDevice().deviceInfo.timestampPeriod()).toLong()
             queries.removeFirst().close()
         }
     }
+
     fun resetCache() {
         propertyBuffer?.let { arena.retire(it) }; propertyBuffer = null
         properties = emptyList(); packets = emptyList(); plan = Render2DDrawPlan.Plan(emptyList(), emptyList())
         indirect.values.forEach { arena.retire(it) }; indirect.clear()
     }
-    override fun close() { resetCache(); queries.forEach { it.close() }; queries.clear() }
 
-    internal class RecordingPass(private val originals: Map<CompiledRenderPipeline, RenderPipeline>) : AbstractRecordingPass() {
+    override fun close() {
+        resetCache(); queries.forEach { it.close() }; queries.clear()
+    }
+
+    internal class RecordingPass(private val originals: Map<CompiledRenderPipeline, RenderPipeline>) :
+        AbstractRecordingPass() {
         lateinit var source: RenderPipeline
         private var cachedBinding: Binding? = null
         private var cachedIndexed = false
@@ -185,65 +214,125 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         private var clip: Render2DScissor? = null
         private val textures = HashMap<String, Texture>()
         private val uniforms = HashMap<String, GpuBufferSlice>()
-        override fun setPipeline(pipeline: CompiledRenderPipeline) { source = originals.getValue(pipeline) }
+        override fun setPipeline(pipeline: CompiledRenderPipeline) {
+            source = originals.getValue(pipeline)
+        }
+
         override fun setVertexBuffer(slot: Int, vertexBuffer: GpuBufferSlice?) {
             check(slot == 0)
             if (vertices?.buffer() !== vertexBuffer?.buffer()) cachedBinding = null
             vertices = vertexBuffer
         }
+
         override fun setIndexBuffer(indexBuffer: GpuBuffer, indexType: IndexType) {
             if (indices !== indexBuffer || this.indexType != indexType) cachedBinding = null
             indices = indexBuffer; this.indexType = indexType
         }
+
         override fun setUniform(name: String, textureView: GpuTextureView?, sampler: GpuSampler?) {
             val value = Texture(textureView, sampler)
             if (textures.put(name, value) != value) cachedBinding = null
         }
+
         override fun setUniform(name: String, value: GpuBuffer) = setUniform(name, value.slice())
         override fun setUniform(name: String, value: GpuBufferSlice) {
             if (name != "DynamicTransforms" && uniforms.put(name, value) != value) cachedBinding = null
         }
+
         override fun enableScissor(x: Int, y: Int, width: Int, height: Int) {
             val next = Render2DScissor(x, y, width, height)
             if (clip != next) cachedBinding = null
             clip = next
         }
-        override fun disableScissor() { if (clip != null) cachedBinding = null; clip = null }
+
+        override fun disableScissor() {
+            if (clip != null) cachedBinding = null; clip = null
+        }
+
         private fun binding(indexed: Boolean): Binding {
             // packet 保留不可变快照，绑定未变化时复用；slice 偏移仍由每个 range 单独记录。
             cachedBinding?.let { if (it.pipeline === source && cachedIndexed == indexed) return it }
             val names = Render2DPipelines.uniformNames(source)
-            return Binding(source, checkNotNull(vertices).buffer(), if (indexed) indices else null,
+            return Binding(
+                source, checkNotNull(vertices).buffer(), if (indexed) indices else null,
                 if (indexed) indexType else null, clip,
                 if (textures.isEmpty()) emptyMap() else textures.filterKeys { it in names },
                 if (uniforms.isEmpty()) emptyMap() else uniforms.filterKeys { it in names }).also {
                 cachedBinding = it; cachedIndexed = indexed
             }
         }
-        override fun drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
+
+        override fun drawIndexed(
+            indexCount: Int,
+            instanceCount: Int,
+            firstIndex: Int,
+            vertexOffset: Int,
+            firstInstance: Int
+        ) {
             check(instanceCount == 1 && firstInstance == 0)
             if (clip?.visible() == false) return
             val stride = checkNotNull(source.getVertexFormatBinding(0)).vertexSize
             val offset = Math.toIntExact(checkNotNull(vertices).offset() / stride)
             packets.add(Packet(binding(true), Range(indexCount, firstIndex, vertexOffset + offset, property)))
         }
+
         override fun draw(vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
             check(instanceCount == 1 && firstInstance == 0)
             if (clip?.visible() == false) return
             val stride = checkNotNull(source.getVertexFormatBinding(0)).vertexSize
-            packets.add(Packet(binding(false), Range(vertexCount, firstVertex + Math.toIntExact(checkNotNull(vertices).offset() / stride), 0, property)))
+            packets.add(
+                Packet(
+                    binding(false),
+                    Range(
+                        vertexCount,
+                        firstVertex + Math.toIntExact(checkNotNull(vertices).offset() / stride),
+                        0,
+                        property
+                    )
+                )
+            )
         }
+
         override fun close() = Unit
         override fun pushDebugGroup(label: Supplier<String>) = Unit
         override fun popDebugGroup() = Unit
         override fun writeTimestamp(pool: GpuQueryPool, index: Int): Unit = error("录制 pass 不支持时间查询")
         override fun pushConstants(value: ByteBuffer): Unit = error("录制 pass 不支持 push constants")
-        override fun multiDrawIndexed(drawParameters: IntBuffer, instanceCount: Int, firstInstance: Int, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
-        override fun multiDrawIndexed(firstIndexOffsets: PointerBuffer, indexCounts: IntBuffer, vertexOffsets: IntBuffer, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
-        override fun drawIndexedIndirect(commands: GpuBufferSlice, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
-        override fun <T : Any> drawMultipleIndexed(draws: Collection<RenderPass.Draw<T>>, defaultIndexBuffer: GpuBuffer?, defaultIndexType: IndexType?, dynamicUniforms: Collection<String>, uniformArgument: T): Unit = error("录制 pass 只接受基础 draw")
-        override fun multiDraw(drawParameters: IntBuffer, instanceCount: Int, firstInstance: Int, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
-        override fun multiDraw(firstVertices: IntBuffer, vertexCounts: IntBuffer, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
+        override fun multiDrawIndexed(
+            drawParameters: IntBuffer,
+            instanceCount: Int,
+            firstInstance: Int,
+            drawCount: Int
+        ): Unit = error("录制 pass 只接受基础 draw")
+
+        override fun multiDrawIndexed(
+            firstIndexOffsets: PointerBuffer,
+            indexCounts: IntBuffer,
+            vertexOffsets: IntBuffer,
+            drawCount: Int
+        ): Unit = error("录制 pass 只接受基础 draw")
+
+        override fun drawIndexedIndirect(commands: GpuBufferSlice, drawCount: Int): Unit =
+            error("录制 pass 只接受基础 draw")
+
+        override fun <T : Any> drawMultipleIndexed(
+            draws: Collection<RenderPass.Draw<T>>,
+            defaultIndexBuffer: GpuBuffer?,
+            defaultIndexType: IndexType?,
+            dynamicUniforms: Collection<String>,
+            uniformArgument: T
+        ): Unit = error("录制 pass 只接受基础 draw")
+
+        override fun multiDraw(
+            drawParameters: IntBuffer,
+            instanceCount: Int,
+            firstInstance: Int,
+            drawCount: Int
+        ): Unit = error("录制 pass 只接受基础 draw")
+
+        override fun multiDraw(firstVertices: IntBuffer, vertexCounts: IntBuffer, drawCount: Int): Unit =
+            error("录制 pass 只接受基础 draw")
+
         override fun drawIndirect(commands: GpuBufferSlice, drawCount: Int): Unit = error("录制 pass 只接受基础 draw")
     }
 }

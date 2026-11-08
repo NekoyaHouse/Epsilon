@@ -18,7 +18,8 @@ import java.nio.ByteBuffer
  */
 open class LuminRingBuffer(size: Long, usage: @GpuBuffer.Usage Int, vertexStride: Int = 1) {
 
-    private val recording = GeometryArena.current?.let { GeometryArena.RecordingBuffer(it, checkedBufferSize(size), vertexStride) }
+    private val recording =
+        GeometryArena.current?.let { GeometryArena.RecordingBuffer(it, checkedBufferSize(size), vertexStride) }
     private var recordingMapped = false
 
     private val usage: Int

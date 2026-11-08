@@ -10,10 +10,14 @@ import com.mojang.renderpearl.api.textures.GpuTextureView
 /** 保留 packet 顺序；普通文字允许每个范围选择绑定表中的图集，不因字体切换拆批。 */
 internal object Render2DDrawPlan {
     const val TEXTURE_SLOTS = 8
+
     data class Texture(val view: GpuTextureView?, val sampler: GpuSampler?)
-    data class Binding(val pipeline: RenderPipeline, val vertices: GpuBuffer, val indices: GpuBuffer?,
-                       val indexType: IndexType?, val clip: Render2DScissor?,
-                       val textures: Map<String, Texture>, val uniforms: Map<String, GpuBufferSlice>)
+    data class Binding(
+        val pipeline: RenderPipeline, val vertices: GpuBuffer, val indices: GpuBuffer?,
+        val indexType: IndexType?, val clip: Render2DScissor?,
+        val textures: Map<String, Texture>, val uniforms: Map<String, GpuBufferSlice>
+    )
+
     data class Range(val count: Int, val first: Int, val baseVertex: Int, val property: Int)
     data class Packet(val binding: Binding, val range: Range)
     data class Run(val binding: Binding, val ranges: List<Range>)

@@ -578,7 +578,12 @@ class TtfTextRenderer : ITextRenderer {
         }
     }
 
-    private data class BatchKey(val atlas: TtfGlyphAtlas, val blurRadius: Float, val glitchEffect: TextGlitchEffect?, val order: Int)
+    private data class BatchKey(
+        val atlas: TtfGlyphAtlas,
+        val blurRadius: Float,
+        val glitchEffect: TextGlitchEffect?,
+        val order: Int
+    )
 
     private data class FontBlurUniforms(val blurRadius: Float) : DynamicGpuDataStorage.DynamicGpuData {
         override fun write(buffer: ByteBuffer) {
