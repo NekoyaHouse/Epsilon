@@ -13,6 +13,10 @@ val catalogNeoForgeVersion = libs.versions.project.neoforge.asProvider().get()
 val catalogNeoForgeLoaderVersionRange = libs.versions.project.neoforge.loader.range.get()
 
 allprojects {
+    extra["msdfgen_native_classifiers"] = listOf(
+        "natives-windows", "natives-windows-arm64", "natives-linux", "natives-linux-arm64",
+        "natives-macos", "natives-macos-arm64"
+    )
     extra["java_version"] = catalogJavaVersion
     extra["minecraft_version"] = catalogMinecraftVersion
     extra["minecraft_version_range"] = catalogMinecraftVersionRange

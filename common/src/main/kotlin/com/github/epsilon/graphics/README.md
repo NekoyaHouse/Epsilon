@@ -13,8 +13,14 @@ entrypoints. The ordered 2D canvas API below replaces the old layer-handle API.
 
 * **SDF Rounded Rectangles**: Smooth, anti-aliased corners calculated via fragment shaders. Supports dynamic radii
   without modifying vertex data.
-* **High-Performance TTF**: Advanced TrueType font rendering utilizing an atlas-based batching mechanism to
-  significantly reduce Draw Calls.
+* **MSDF TTF rendering**: STB_truetype supplies glyph metrics, outlines and effect coverage. The msdfgen core
+  colors linear/quadratic/cubic edges and generates RGB distance fields in a linear RGBA8 atlas; shaders reconstruct
+  coverage with the RGB median and an eight-texel distance range. A separate R8 atlas serves blur/glitch effects.
+  Glyph generation stays on the CPU worker and atlas uploads stay on the render thread. Missing-glyph boxes use the
+  same MSDF path. Fabric and NeoForge bundle LWJGL msdfgen 3.4.3 with Windows/Linux/macOS x64 and ARM64 natives;
+  font loading continues to use STB rather than the msdfgen FreeType extension.
+  `Font Anti Aliasing` enables four-sample supersampling. With it disabled, one MSDF sample still reconstructs
+  pixel coverage from the screen-space distance; both modes preserve a one-pixel edge transition.
 
 ---
 

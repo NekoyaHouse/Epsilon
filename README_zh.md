@@ -23,6 +23,8 @@
 
 ## 🎨 渲染系统
 
+TTF 字体使用 MSDF 图集，继续由 STB_truetype 提供轮廓，并通过内嵌的 msdfgen 核心生成距离场。
+
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
 ## ⚙️ 构建与运行

@@ -148,6 +148,7 @@ object ClientSetting : Module("Client Setting", null) {
         onChanged = { TranslationManager.refresh() }
     ).group(sgGeneral)
 
+    // 仅控制字体的四点超采样；关闭后仍保留 MSDF 的单点覆盖率重建。
     val fontAntiAliasing by boolSetting("Font Anti Aliasing", true).group(sgGeneral)
 
     val font: EnumSetting<FontMode> = enumSetting("Font", FontMode.Default).group(sgGeneral)

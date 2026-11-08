@@ -22,9 +22,9 @@ private const val FALLBACK_WIDTH_RATIO = 0.72f
 private const val FALLBACK_STROKE_RATIO = 1.0f / 8.0f
 
 /**
- * 占位框位图四周外扩的像素数，保住墨迹边缘之外的一圈 SDF 过渡带。
+ * 占位框位图四周外扩的像素数，保住墨迹边缘之外的 MSDF 过渡带。
  */
-private const val FALLBACK_PADDING = 2
+private const val FALLBACK_PADDING = 16
 
 class TtfFontFile private constructor(
     private val fontData: ByteBuffer,
@@ -34,6 +34,7 @@ class TtfFontFile private constructor(
 ) {
 
     private val fontInfo: STBTTFontinfo = STBTTFontinfo.create()
+    private var destroyed = false
 
     val scale: Float
 
@@ -87,88 +88,63 @@ class TtfFontFile private constructor(
 
     @Synchronized
     fun generateGlyph(codepoint: Int): TtfGlyph {
+        check(!destroyed) { "TTF font has been destroyed" }
         val glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint)
-
-        // (byte) 128 溢出为 -128，于是 pixelDistScale 为负：墨迹落在 128 以下（暗），外部落在 128 以上（亮），
-        // 与 ttf_font_* 着色器的 1 - r 解释一致。改动这里的符号会让所有文字反相。
-        val onEdgeValue: Byte = 128.toByte()
-        val pixelDistScale = onEdgeValue.toFloat() / padding
 
         val stack = MemoryStack.stackPush()
         try {
-            val width = stack.callocInt(1)
-            val height = stack.callocInt(1)
-            val xOff = stack.callocInt(1)
-            val yOff = stack.callocInt(1)
+            val x0 = stack.callocInt(1)
+            val y0 = stack.callocInt(1)
+            val x1 = stack.callocInt(1)
+            val y1 = stack.callocInt(1)
+            STBTruetype.stbtt_GetGlyphBitmapBox(fontInfo, glyphIndex, scale, scale, x0, y0, x1, y1)
+            val advance = stack.callocInt(1)
+            val lsb = stack.callocInt(1)
+            STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, advance, lsb)
+            val glyphAdvance = (advance[0] * scale).toInt()
+            // 空格等无轮廓字形只保留步进，不创建空的 atlas 单元。
+            if (x1[0] <= x0[0] || y1[0] <= y0[0]) {
+                return TtfGlyph(null, null, 0, 0, 0, 0, glyphAdvance)
+            }
 
-            val sdfPixels = STBTruetype.stbtt_GetGlyphSDF(
-                fontInfo,
-                scale,
-                glyphIndex,
-                padding,
-                onEdgeValue,
-                pixelDistScale,
-                width,
-                height,
-                xOff,
-                yOff
-            )
-
-            val glyphWidth = width.get(0)
-            val glyphHeight = height.get(0)
-            val alphaPixels = MemoryUtil.memCalloc(maxOf(1, glyphWidth * glyphHeight))
-            val bitmapStack = MemoryStack.stackPush()
+            val glyphWidth = x1[0] - x0[0] + padding * 2
+            val glyphHeight = y1[0] - y0[0] + padding * 2
+            val xOffset = x0[0] - padding
+            val yOffset = y0[0] - padding
+            val msdfPixels = MsdfGlyphGenerator.generate(fontInfo, glyphIndex, scale, glyphWidth, glyphHeight, xOffset, yOffset)
+            var alphaPixels: ByteBuffer? = null
             try {
-                val bitmapWidth = bitmapStack.callocInt(1)
-                val bitmapHeight = bitmapStack.callocInt(1)
-                val bitmapX = bitmapStack.callocInt(1)
-                val bitmapY = bitmapStack.callocInt(1)
+                alphaPixels = MemoryUtil.memCalloc(glyphWidth * glyphHeight)
+                val bitmapWidth = stack.callocInt(1)
+                val bitmapHeight = stack.callocInt(1)
+                val bitmapX = stack.callocInt(1)
+                val bitmapY = stack.callocInt(1)
                 val bitmap = STBTruetype.stbtt_GetGlyphBitmap(
-                    fontInfo, scale, scale, glyphIndex,
-                    bitmapWidth, bitmapHeight, bitmapX, bitmapY
+                    fontInfo, scale, scale, glyphIndex, bitmapWidth, bitmapHeight, bitmapX, bitmapY
                 )
                 try {
-                    if (bitmap != null && glyphWidth > 0 && glyphHeight > 0) {
-                        val copyWidth = minOf(bitmapWidth.get(0), glyphWidth)
-                        val copyHeight = minOf(bitmapHeight.get(0), glyphHeight)
-                        val dstX = bitmapX.get(0) - xOff.get(0)
-                        val dstY = bitmapY.get(0) - yOff.get(0)
-                        for (row in 0 until copyHeight) {
-                            val targetY = row + dstY
-                            if (targetY < 0 || targetY >= glyphHeight) continue
-                            for (column in 0 until copyWidth) {
+                    if (bitmap != null) {
+                        val dstX = bitmapX[0] - xOffset
+                        val dstY = bitmapY[0] - yOffset
+                        for (row in 0 until bitmapHeight[0]) {
+                            for (column in 0 until bitmapWidth[0]) {
                                 val targetX = column + dstX
-                                if (targetX >= 0 && targetX < glyphWidth) {
-                                    alphaPixels.put(
-                                        targetY * glyphWidth + targetX,
-                                        bitmap.get(row * bitmapWidth.get(0) + column)
-                                    )
+                                val targetY = row + dstY
+                                if (targetX in 0 until glyphWidth && targetY in 0 until glyphHeight) {
+                                    alphaPixels.put(targetY * glyphWidth + targetX, bitmap.get(row * bitmapWidth[0] + column))
                                 }
                             }
                         }
                     }
                 } finally {
-                    if (bitmap != null) {
-                        STBTruetype.stbtt_FreeBitmap(bitmap)
-                    }
+                    if (bitmap != null) STBTruetype.stbtt_FreeBitmap(bitmap)
                 }
-            } finally {
-                bitmapStack.close()
+                return TtfGlyph(msdfPixels, alphaPixels, glyphWidth, glyphHeight, xOffset, yOffset, glyphAdvance)
+            } catch (failure: Throwable) {
+                MemoryUtil.memFree(msdfPixels)
+                MemoryUtil.memFree(alphaPixels)
+                throw failure
             }
-
-            val advance = stack.callocInt(1)
-            val lsb = stack.callocInt(1)
-            STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, advance, lsb)
-
-            return TtfGlyph(
-                sdfPixels,
-                alphaPixels,
-                glyphWidth,
-                glyphHeight,
-                xOff.get(),
-                yOff.get(),
-                (advance.get() * scale).toInt()
-            )
         } finally {
             stack.close()
         }
@@ -177,12 +153,7 @@ class TtfFontFile private constructor(
     /**
      * 生成缺字占位字形：一个“口”字形方框，供字形尚未上传或字体缺失该字形时渲染。
      *
-     * 尺寸由字体 ascent 推导，与多数字体自带 `.notdef` 方框接近；位图四周外扩
-     * `FALLBACK_PADDING` 像素，让墨迹边缘外仍有 SDF 过渡带。
-     *
-     * SDF 极性必须与 [generateGlyph] 保持一致：那里的 `onEdgeValue` 是 byte 128
-     * （即 -128），使 `pixelDistScale` 为负，于是墨迹（内部距离为正）落在 128 以下、
-     * 外部落在 128 以上；着色器按 `1 - r` 解释该纹理，墨迹才是可见部分。
+     * 尺寸由字体 ascent 推导。轮廓交给与普通字形相同的 MSDF 生成器，特效覆盖率单独保存。
      */
     fun generateFallbackGlyph(): TtfGlyph {
         val ascent = maxOf(pixelAscent, 1)
@@ -200,7 +171,7 @@ class TtfFontFile private constructor(
         val xOffset = -FALLBACK_PADDING
         val yOffset = -boxHeight - FALLBACK_PADDING
 
-        val sdfPixels = MemoryUtil.memAlloc(bitmapWidth * bitmapHeight)
+        val msdfPixels = MsdfGlyphGenerator.generateFallback(boxWidth, boxHeight, stroke, FALLBACK_PADDING)
         val alphaPixels = MemoryUtil.memCalloc(bitmapWidth * bitmapHeight)
 
         val halfWidth = boxWidth / 2.0
@@ -209,26 +180,22 @@ class TtfFontFile private constructor(
         val centerY = -halfHeight
         val innerHalfWidth = maxOf(halfWidth - stroke, 0.0)
         val innerHalfHeight = maxOf(halfHeight - stroke, 0.0)
-        val onEdgeValue = 128.0
-        val pixelDistScale = -onEdgeValue / padding
 
         for (row in 0 until bitmapHeight) {
             val localY = yOffset + row + 0.5
             for (column in 0 until bitmapWidth) {
                 val localX = xOffset + column + 0.5
-                // ringDistance 是标准 SDF 约定（墨迹内为负），取负后才是 stb 在墨迹内为正的 min_dist。
                 val distance = ringDistance(
                     localX - centerX, localY - centerY,
                     halfWidth, halfHeight, innerHalfWidth, innerHalfHeight
                 )
                 val index = row * bitmapWidth + column
-                sdfPixels.put(index, (onEdgeValue + pixelDistScale * -distance).coerceIn(0.0, 255.0).toInt().toByte())
                 alphaPixels.put(index, ((0.5 - distance).coerceIn(0.0, 1.0) * 255.0).toInt().toByte())
             }
         }
 
         // advance 只作兜底：TtfFontLoader 对外会换成目标字符自身的步进宽度。
-        return TtfGlyph(sdfPixels, alphaPixels, bitmapWidth, bitmapHeight, xOffset, yOffset, boxWidth + stroke)
+        return TtfGlyph(msdfPixels, alphaPixels, bitmapWidth, bitmapHeight, xOffset, yOffset, boxWidth + stroke)
     }
 
     @Synchronized
@@ -238,6 +205,7 @@ class TtfFontFile private constructor(
 
     @Synchronized
     fun getAdvance(codepoint: Int): Int {
+        check(!destroyed) { "TTF font has been destroyed" }
         val glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint)
 
         val stack = MemoryStack.stackPush()
@@ -253,6 +221,7 @@ class TtfFontFile private constructor(
 
     @Synchronized
     fun getVisualHeight(sample: String?): Float {
+        check(!destroyed) { "TTF font has been destroyed" }
         if (sample == null || sample.isEmpty()) {
             return fontHeight.toFloat()
         }
@@ -294,7 +263,10 @@ class TtfFontFile private constructor(
         }
     }
 
+    @Synchronized
     fun destroy() {
+        if (destroyed) return
+        destroyed = true
         MemoryUtil.memFree(fontData)
     }
 

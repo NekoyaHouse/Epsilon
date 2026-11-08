@@ -7,16 +7,13 @@ layout(location = 1) in vec2 v_TexCoord;
 
 layout(location = 0) out vec4 f_Color;
 
-const float EDGE_THRESHOLD = 0.5;
-
 #ifdef EPSILON_RETAINED
 layout(location = 7) flat in vec4 epsilonTint;
 #define main epsilonOriginalMain
 #endif
 
 void main() {
-    float distance = 1.0 - epsilonFontDistance(v_TexCoord);
-    float alpha = step(EDGE_THRESHOLD, distance);
+    float alpha = epsilonFontCoverage(v_TexCoord, epsilonFontScreenRange(v_TexCoord));
 
     f_Color = vec4(v_Color.rgb, v_Color.a * alpha);
 
