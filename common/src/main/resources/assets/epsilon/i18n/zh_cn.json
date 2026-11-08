@@ -462,7 +462,6 @@
         "custom language": "自定义语言",
         "render scale": "界面缩放",
         "i18n fallback": "无国际化自动生成",
-        "font anti aliasing": "字体抗锯齿",
         "font": {
           "_value": "字体",
           "default": "默认",

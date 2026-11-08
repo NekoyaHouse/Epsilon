@@ -11,8 +11,7 @@ object EpsilonNeoForge {
     fun init() {
         if (ModList.get().isLoaded("iris")) {
             val iris = IrisApi.getInstance()
-            iris.assignPipeline(LuminRenderPipelines.TTF_FONT_AA, IrisProgram.TEXTURED)
-            iris.assignPipeline(LuminRenderPipelines.TTF_FONT_NO_AA, IrisProgram.TEXTURED)
+            iris.assignPipeline(LuminRenderPipelines.TTF_FONT, IrisProgram.TEXTURED)
         }
 
         EpsilonCommon.init()

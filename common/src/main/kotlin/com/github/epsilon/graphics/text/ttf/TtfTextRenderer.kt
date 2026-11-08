@@ -8,7 +8,6 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.ITextRenderer
 import com.github.epsilon.graphics.text.TextGlitchEffect
-import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.math.toRadians
 import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.buffers.Std140Builder
@@ -542,11 +541,7 @@ class TtfTextRenderer : ITextRenderer {
         } else if (mode == Mode.GLITCH) {
             LuminRenderPipelines.TTF_FONT_GLITCH
         } else {
-            if (ClientSetting.fontAntiAliasing) {
-                LuminRenderPipelines.TTF_FONT_AA
-            } else {
-                LuminRenderPipelines.TTF_FONT_NO_AA
-            }
+            LuminRenderPipelines.TTF_FONT
         }
     }
 

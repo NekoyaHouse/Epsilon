@@ -46,6 +46,6 @@ float epsilonFontScreenRange(vec2 uv) {
 }
 
 float epsilonFontCoverage(vec2 uv, float screenRange) {
-    // 基础 MSDF 重建始终保留一像素覆盖率过渡；AA 开关只控制额外采样。
+    // 单点 MSDF 重建保留一像素覆盖率过渡。
     return clamp((epsilonFontDistance(uv) - 0.5) * screenRange + 0.5, 0.0, 1.0);
 }

@@ -19,8 +19,8 @@ entrypoints. The ordered 2D canvas API below replaces the old layer-handle API.
   Glyph generation stays on the CPU worker and atlas uploads stay on the render thread. Missing-glyph boxes use the
   same MSDF path. Fabric and NeoForge bundle LWJGL msdfgen 3.4.3 with Windows/Linux/macOS x64 and ARM64 natives;
   font loading continues to use STB rather than the msdfgen FreeType extension.
-  `Font Anti Aliasing` enables four-sample supersampling. With it disabled, one MSDF sample still reconstructs
-  pixel coverage from the screen-space distance; both modes preserve a one-pixel edge transition.
+  All text uses the single-sample `TTF_FONT` pipeline (`ttf_font.fsh`), which reconstructs pixel coverage from
+  screen-space distance with a one-pixel edge transition. There is no font AA setting or supersampling branch.
 
 ---
 

@@ -39,11 +39,8 @@ object LuminRenderPipelines {
         .withCull(false)
         .build()
 
-    val TTF_FONT_AA: RenderPipeline =
-        textPipeline("pipelines/ttf_font_aa", "ttf_font_aa", DefaultVertexFormat.POSITION_TEX_COLOR, null)
-
-    val TTF_FONT_NO_AA: RenderPipeline =
-        textPipeline("pipelines/ttf_font_no_aa", "ttf_font_no_aa", DefaultVertexFormat.POSITION_TEX_COLOR, null)
+    val TTF_FONT: RenderPipeline =
+        textPipeline("pipelines/ttf_font", "ttf_font", DefaultVertexFormat.POSITION_TEX_COLOR, null)
 
     val TTF_FONT_BLUR: RenderPipeline =
         textPipeline(

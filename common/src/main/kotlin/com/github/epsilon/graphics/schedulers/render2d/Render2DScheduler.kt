@@ -9,7 +9,6 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.managers.RendererManager
-import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.utils.math.toRadians
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
@@ -489,11 +488,7 @@ class Render2DScheduler : IRenderer {
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
         Render2DCommandKind.BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR
         Render2DCommandKind.GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH
-        Render2DCommandKind.TEXT -> if (ClientSetting.fontAntiAliasing) {
-            LuminRenderPipelines.TTF_FONT_AA
-        } else {
-            LuminRenderPipelines.TTF_FONT_NO_AA
-        }
+        Render2DCommandKind.TEXT -> LuminRenderPipelines.TTF_FONT
     }
 
     private fun emit(command: Render2DCommand, renderers: RendererBundle) {

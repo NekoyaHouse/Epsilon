@@ -17,8 +17,8 @@ canvas API 替代旧 layer handle API。
   模糊和 glitch 继续使用独立 R8 覆盖率图集。字形在 CPU 工作线程生成，图集在渲染线程上传，缺字占位框也使用 MSDF。
   Fabric 与 NeoForge 均内嵌 LWJGL msdfgen 3.4.3 及 Windows/Linux/macOS 的 x64、ARM64 原生库；字体解析不调用
   msdfgen 的 FreeType 扩展。
-  `Font Anti Aliasing` 控制四点超采样。关闭后使用单点 MSDF 采样，仍按屏幕空间距离重建像素覆盖率，
-  两种模式均保留一像素的边缘过渡。
+  所有文本统一使用单点 `TTF_FONT` 管线（`ttf_font.fsh`），按屏幕空间距离重建像素覆盖率并保留一像素的边缘过渡。
+  字体抗锯齿开关与超采样分支已移除。
 
 ---
 

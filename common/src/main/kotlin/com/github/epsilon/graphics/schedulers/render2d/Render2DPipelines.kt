@@ -17,7 +17,7 @@ internal object Render2DPipelines {
         get() = listOf(
             LuminRenderPipelines.UI_SHAPE, LuminRenderPipelines.SHADOW, LuminRenderPipelines.SEGMENTED_SHADOW,
             LuminRenderPipelines.TRIANGLE, LuminRenderPipelines.ARC, LuminRenderPipelines.TEXTURE,
-            LuminRenderPipelines.TTF_FONT_AA, LuminRenderPipelines.TTF_FONT_NO_AA,
+            LuminRenderPipelines.TTF_FONT,
             LuminRenderPipelines.TTF_FONT_BLUR, LuminRenderPipelines.TTF_FONT_GLITCH,
         )
     private val variants = HashMap<RenderPipeline, RenderPipeline>()
@@ -31,7 +31,7 @@ internal object Render2DPipelines {
     }.build()
 
     fun usesTextureTable(source: RenderPipeline): Boolean =
-        source === LuminRenderPipelines.TTF_FONT_AA || source === LuminRenderPipelines.TTF_FONT_NO_AA
+        source === LuminRenderPipelines.TTF_FONT
 
     private val properties = VertexFormat.builder(1)
         .addAttribute("UiRow0", GpuFormat.RGBA32_FLOAT)

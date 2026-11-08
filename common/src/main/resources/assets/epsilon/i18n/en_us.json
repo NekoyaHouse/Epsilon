@@ -462,7 +462,6 @@
         "custom language": "Custom Language",
         "render scale": "Render Scale",
         "i18n fallback": "I18n Fallback",
-        "font anti aliasing": "Font Anti-Aliasing",
         "font": {
           "_value": "Font",
           "default": "Default",

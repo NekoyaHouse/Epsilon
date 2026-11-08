@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfGlyphAtlas
-import com.github.epsilon.modules.impl.ClientSetting
 import com.mojang.blaze3d.font.GlyphInfo
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
@@ -68,14 +67,10 @@ class EpsilonFontGlyph private constructor(
     private fun renderType(): RenderType {
         val descriptor = this.descriptor
             ?: throw IllegalStateException("Whitespace glyphs do not have render types")
-        val antiAliasing = ClientSetting.fontAntiAliasing
-        val renderTypes = if (antiAliasing) AA_RENDER_TYPES else NO_AA_RENDER_TYPES
-        val pipeline = if (antiAliasing) LuminRenderPipelines.TTF_FONT_AA else LuminRenderPipelines.TTF_FONT_NO_AA
-        val name = if (antiAliasing) "epsilon_ttf_text_aa" else "epsilon_ttf_text_no_aa"
-        return renderTypes.getOrPut(descriptor.atlas) {
+        return RENDER_TYPES.getOrPut(descriptor.atlas) {
             RenderType.create(
-                name,
-                RenderSetup.builder(pipeline)
+                "epsilon_ttf_text",
+                RenderSetup.builder(LuminRenderPipelines.TTF_FONT)
                     .withTexture(
                         "Sampler0",
                         descriptor.atlas.getTextureId(),
@@ -226,11 +221,7 @@ class EpsilonFontGlyph private constructor(
         }
 
         override fun guiPipeline(): RenderPipeline {
-            return if (ClientSetting.fontAntiAliasing) {
-                LuminRenderPipelines.TTF_FONT_AA
-            } else {
-                LuminRenderPipelines.TTF_FONT_NO_AA
-            }
+            return LuminRenderPipelines.TTF_FONT
         }
 
         override fun style(): Style {
@@ -283,8 +274,7 @@ class EpsilonFontGlyph private constructor(
 
     companion object {
 
-        private val AA_RENDER_TYPES: MutableMap<TtfGlyphAtlas, RenderType> = IdentityHashMap()
-        private val NO_AA_RENDER_TYPES: MutableMap<TtfGlyphAtlas, RenderType> = IdentityHashMap()
+        private val RENDER_TYPES: MutableMap<TtfGlyphAtlas, RenderType> = IdentityHashMap()
 
         fun create(codepoint: Int): EpsilonFontGlyph? {
             val font = EpsilonFontMetrics.font() ?: return null
