@@ -8,7 +8,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.settings.impl.EnumSetting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.minecraft.tags.ItemTags
@@ -43,15 +42,15 @@ object HandView : Module("Hand View", Category.RENDER) {
     val disableSwapOff by boolSetting("Disable Swap Off", true)
 
     private val blockingAnimation by boolSetting("Blocking Animation", true)
-    private val blockingMode: EnumSetting<BlockMode> = enumSetting(
+    private val blockingMode by enumSetting(
         "Blocking Mode", BlockMode.NewExhibition,
         { blockingAnimation }
     )
 
-    val swingMode: EnumSetting<SwingMode> = enumSetting("Swing Mode", SwingMode.Vanilla)
+    val swingMode by enumSetting("Swing Mode", SwingMode.Vanilla)
     val onlyWeapon by boolSetting(
         "Only Weapon", true,
-        { swingMode.`is`(SwingMode.Flux) }
+        { swingMode == SwingMode.Flux }
     )
 
     val modifySwingDuration by boolSetting("Modify Swing Duration", false)
@@ -121,7 +120,7 @@ object HandView : Module("Hand View", Category.RENDER) {
         val side = if (arm == HumanoidArm.RIGHT) 1 else -1
         val progress = Mth.sin(Mth.sqrt(attack).toDouble() * PI)
 
-        when (blockingMode.value) {
+        when (blockingMode) {
             BlockMode.V1_7 -> {
                 poseStack.translate(-side * 0.1F, 0.1F, 0.0F)
                 applyAttackTransform(poseStack, side, attack, 0.9F)

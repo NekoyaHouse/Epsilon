@@ -7,12 +7,10 @@ class StringListSetting(
     name: String,
     defaultValue: Collection<String>,
     visible: Visibility?,
-) : Setting<List<String>>(name, visible, null) {
+) : Setting<List<String>>(name, defaultValue.toList(), visible, null) {
 
     init {
-        val normalized = normalize(defaultValue)
-        initializeDefault(normalized)
-        initializeCurrent(normalized)
+        initializeValue(normalize(defaultValue))
     }
 
     override var value: List<String>

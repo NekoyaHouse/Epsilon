@@ -9,11 +9,7 @@ class IntSetting(
     val step: Int,
     visible: Visibility?,
     onChanged: ((Int) -> Unit)?,
-) : Setting<Int>(name, visible, onChanged) {
-
-    init {
-        initializeValue(defaultValue)
-    }
+) : Setting<Int>(name, defaultValue, visible, onChanged) {
 
     override var value: Int
         get() = super.value

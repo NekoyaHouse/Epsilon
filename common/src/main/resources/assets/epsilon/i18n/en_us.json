@@ -2295,34 +2295,6 @@
         "no dead entities": "No Dead Entities",
         "no nametags": "No Nametags"
       },
-      "particles": {
-        "_value": "Particles",
-        "fire flies": "Fire Flies",
-        "ff count": "FF Count",
-        "ff size": "FF Size",
-        "mode": {
-          "_value": "Mode",
-          "off": "Off",
-          "snowflake": "Snowflake",
-          "stars": "Stars",
-          "hearts": "Hearts",
-          "dollars": "Dollars",
-          "bloom": "Bloom"
-        },
-        "count": "Count",
-        "size": "Size",
-        "color mode": {
-          "_value": "Color Mode",
-          "custom": "Custom",
-          "sync": "Sync"
-        },
-        "color": "Color",
-        "physics": {
-          "_value": "Physics",
-          "drop": "Drop",
-          "fly": "Fly"
-        }
-      },
       "pop chams": {
         "_value": "Pop Chams",
         "ignore self": "Ignore Self",

@@ -1,7 +1,6 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.NoRender;
-import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.particles.ParticleOptions;
@@ -30,8 +29,7 @@ public class MixinParticleManager {
         if (particleOptions == null) return false;
         var type = particleOptions.getType();
         if (type == ParticleTypes.FLAME) return true; // LoyisaIsImposter
-        if (type == ParticleTypes.TOTEM_OF_UNDYING && MasEffects.INSTANCE.shouldHideVanillaTotemParticles())
-            return true;
+        if (type == ParticleTypes.TOTEM_OF_UNDYING) return true;
         if (NoRender.INSTANCE.isEnabled()) {
             if (NoRender.INSTANCE.getWeather() && type == ParticleTypes.RAIN) return true;
             return NoRender.INSTANCE.getFireworkExplosions() && type == ParticleTypes.FIREWORK;

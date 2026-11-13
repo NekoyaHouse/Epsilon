@@ -9,7 +9,6 @@ import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
@@ -43,12 +42,12 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         Sync
     }
 
-    private val mode: EnumSetting<Mode> = enumSetting("Mode", Mode.Stars)
-    private val physics: EnumSetting<Physics> = enumSetting("Physics", Physics.Fall)
-    private val colorMode: EnumSetting<ColorMode> = enumSetting("Color Mode", ColorMode.Sync)
+    private val mode by enumSetting("Mode", Mode.Stars)
+    private val physics by enumSetting("Physics", Physics.Fall)
+    private val colorMode by enumSetting("Color Mode", ColorMode.Sync)
     private val color by colorSetting(
         "Color", Color(255, 255, 255, 53), true,
-        { colorMode.`is`(ColorMode.Custom) }
+        { colorMode == ColorMode.Custom }
     )
     private val onlySelf by boolSetting("Only Self", false)
     private val amount by intSetting("Amount", 2, 1..5, 1)
@@ -101,7 +100,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         handler<Render3DEvent> { event ->
             if (particles.isEmpty()) return@handler
 
-            val texture = when (mode.value) {
+            val texture = when (mode) {
                 Mode.Stars -> STAR_TEXTURE
                 Mode.Hearts -> HEART_TEXTURE
                 Mode.Bloom -> BLOOM_TEXTURE
@@ -115,7 +114,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
     }
 
     private fun resolveColor(offset: Int): Color =
-        if (colorMode.`is`(ColorMode.Sync)) syncColor(offset) else color
+        if (colorMode == ColorMode.Sync) syncColor(offset) else color
 
     private fun syncColor(offset: Int): Color {
         val hue = Mth.frac((System.currentTimeMillis() + offset * 20L) / 4500.0f)
@@ -175,7 +174,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
                 motionZ = -motionZ
             }
 
-            if (physics.`is`(Physics.Fall)) {
+            if (physics == Physics.Fall) {
                 motionY -= 0.035f
             }
 

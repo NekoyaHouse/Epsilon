@@ -12,7 +12,6 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.group
-import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -41,7 +40,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
     }
 
     // General
-    private val alertMode: EnumSetting<AlertMode> = enumSetting("Alert Mode", AlertMode.Chat).group(sgGeneral)
+    private val alertMode by enumSetting("Alert Mode", AlertMode.Chat).group(sgGeneral)
     private val showGamemodeInChat by boolSetting("Show Gamemode In Chat", false).group(sgGeneral)
 
     private val names by stringListSetting("Names", listOf("ssy_", "e_2", "山水圆")).group(sgGeneral)
@@ -247,7 +246,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{name}", playerName)
                                         .replace("{old_gamemode}", translateGamemode(oldMode))
                                         .replace("{new_gamemode}", translateGamemode(newMode))
-                                    val mode = alertMode.value
+                                    val mode = alertMode
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
                                         ChatMessages.sendMessage(
                                             Component.literal(msg).withStyle(ChatFormatting.YELLOW)
@@ -335,7 +334,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         color: ChatFormatting
     ) {
         if (!enabled) return
-        val mode = alertMode.value
+        val mode = alertMode
         // Build full message
         var msg = template.getTranslatedName().replace("{name}", playerName)
         if (showGamemodeInChat && playerId != null) {

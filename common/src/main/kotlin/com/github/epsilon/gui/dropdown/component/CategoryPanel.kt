@@ -88,7 +88,7 @@ class CategoryPanel : AbstractDropdownPanel {
 
 
     private val visibleState = derivedStateOf {
-        moduleButtons.sortedWith(getComparator(ClientSetting.moduleSort.value)).filter { button ->
+        moduleButtons.sortedWith(getComparator(ClientSetting.moduleSort)).filter { button ->
             val module = button.module
             queryStore.isBlank() || (module.translatedName + "\n" + module.name + "\n" + module.category?.name)
                 .lowercase(Locale.ROOT).contains(queryStore)

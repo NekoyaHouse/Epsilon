@@ -88,11 +88,11 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         addRenderableWidget(
             CycleButton.builder<EpsilonLanguage>(
                 Function { language -> Component.literal(language.toString()) },
-                Supplier { ClientSetting.language.value }
+                Supplier { ClientSetting.language }
             )
                 .withValues(EpsilonLanguage.values().toList())
                 .create(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT, Component.literal(LANGUAGE)) { _, language ->
-                    ClientSetting.language.value = language
+                    ClientSetting.language = language
                     ConfigManager.saveNow()
                 }
         )

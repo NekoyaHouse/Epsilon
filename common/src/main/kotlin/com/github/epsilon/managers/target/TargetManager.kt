@@ -144,11 +144,11 @@ object TargetManager : AlwaysListening {
     fun isSameTeam(entity: Entity): Boolean {
         return runSafeOrFalse {
             val teams = ClientSetting.teams
-            if (teams.`is`(ClientSetting.Teams.None)) {
+            if (teams == ClientSetting.Teams.None) {
                 return@runSafeOrFalse false
             }
             if (entity is Player) {
-                return@runSafeOrFalse if (teams.`is`(ClientSetting.Teams.Color)) {
+                return@runSafeOrFalse if (teams == ClientSetting.Teams.Color) {
                     entity.teamColor == player.teamColor
                 } else {
                     Objects.equals(getTeam(entity), getTeam(player))

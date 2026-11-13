@@ -3,12 +3,9 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.Constants;
 import com.github.epsilon.events.impl.ClientEntityEvent;
 import com.github.epsilon.modules.impl.render.NoRender;
-import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,11 +35,6 @@ public abstract class MixinClientLevel {
     @Inject(method = "removeEntity", at = @At("TAIL"))
     private void onEntityRemoved(int id, Entity.RemovalReason reason, CallbackInfo ci) {
         new ClientEntityEvent.Removed((ClientLevel) (Object) this, id).post();
-    }
-
-    @Inject(method = "levelEvent", at = @At("HEAD"))
-    private void onLevelEvent(Entity source, int type, BlockPos pos, int data, CallbackInfo ci) {
-        MasEffects.INSTANCE.onLevelEvent(type, Vec3.atCenterOf(pos).add(0.0, 0.5, 0.0));
     }
 
     @ModifyArgs(method = "animateTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;doAnimateTick(IIIILnet/minecraft/util/RandomSource;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos$MutableBlockPos;)V"))

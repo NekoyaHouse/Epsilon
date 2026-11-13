@@ -6,10 +6,4 @@ class KeybindSetting(
     name: String,
     defaultValue: Int,
     visible: Visibility?,
-) : Setting<Int>(name, visible, null) {
-
-    init {
-        initializeValue(defaultValue)
-    }
-
-}
+) : Setting<Int>(name, defaultValue, visible, null)

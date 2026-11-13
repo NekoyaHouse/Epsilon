@@ -12,7 +12,6 @@ import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.tags.ItemTags
@@ -30,7 +29,7 @@ object Xray : Module("Xray", Category.RENDER) {
         New
     }
 
-    private val plugin: EnumSetting<Plugin> = enumSetting("Plugin", Plugin.New)
+    private val plugin by enumSetting("Plugin", Plugin.New)
     val wallHack by boolSetting("WallHack", false, onChanged = { _ -> mc.levelExtractor.allChanged() })
     private val brutForce by boolSetting("Ore Deobf", false)
     private val fast by boolSetting("Fast", false, { brutForce })
@@ -78,7 +77,7 @@ object Xray : Module("Xray", Category.RENDER) {
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
-            if (plugin.`is`(Plugin.New)) {
+            if (plugin == Plugin.New) {
                 checked.forEach { blockMemory ->
                     if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
                         ores.add(blockMemory.blockPos)
@@ -194,9 +193,9 @@ object Xray : Module("Xray", Category.RENDER) {
 
     private fun getArea(): AABB {
         val player = mc.player ?: return AABB(BlockPos.ZERO)
-        val radiusValue = if (plugin.`is`(Plugin.New)) minOf(4, radius) else radius
-        val downValue = if (plugin.`is`(Plugin.New)) minOf(3, down) else down
-        val upValue = if (plugin.`is`(Plugin.New)) minOf(4, up) else up
+        val radiusValue = if (plugin == Plugin.New) minOf(4, radius) else radius
+        val downValue = if (plugin == Plugin.New) minOf(3, down) else down
+        val upValue = if (plugin == Plugin.New) minOf(4, up) else up
         return AABB(
             player.x - radiusValue, player.y - downValue, player.z - radiusValue,
             player.x + radiusValue, player.y + upValue, player.z + radiusValue
@@ -229,9 +228,9 @@ object Xray : Module("Xray", Category.RENDER) {
     private fun getBlocks(): MutableList<BlockPos> {
         val player = mc.player ?: return ArrayList()
         val level = mc.level ?: return ArrayList()
-        val radiusValue = if (plugin.`is`(Plugin.New)) minOf(4, radius) else radius
-        val downValue = if (plugin.`is`(Plugin.New)) minOf(3, down) else down
-        val upValue = if (plugin.`is`(Plugin.New)) minOf(4, up) else up
+        val radiusValue = if (plugin == Plugin.New) minOf(4, radius) else radius
+        val downValue = if (plugin == Plugin.New) minOf(3, down) else down
+        val upValue = if (plugin == Plugin.New) minOf(4, up) else up
 
         val positions = ArrayList<BlockPos>()
         for (x in (player.x - radiusValue).toInt() until (player.x + radiusValue).toInt()) {
@@ -239,7 +238,7 @@ object Xray : Module("Xray", Category.RENDER) {
                 for (z in (player.z - radiusValue).toInt() until (player.z + radiusValue).toInt()) {
                     val pos = BlockPos(x, y, z)
                     if (level.getBlockState(pos).isAir ||
-                        (fast && plugin.`is`(Plugin.Old) && (x % 2 == 0 || y % 2 == 0 || z % 2 == 0))
+                        (fast && plugin == Plugin.Old && (x % 2 == 0 || y % 2 == 0 || z % 2 == 0))
                     ) {
                         continue
                     }

@@ -6,15 +6,17 @@ import com.github.epsilon.kernel.client.platform.PlatformRequirement
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /**
  * 设置基类。
  *
  * 值本身以 `var value` 暴露（Java 侧即 `getValue()/setValue(...)`），写入会触发 [onChanged]。
- * 同时提供**成员**委托运算符，因此 Kotlin 侧可以写成：
+ * 统一实现 [ReadWriteProperty]，所有设置（包括枚举）都可以直接委托：
  *
  * ```kotlin
+ * private var mode by enumSetting("Mode", Mode.Default)
  * private val aimStrength by intSetting("Aim Strength", 10, 1..20, 1)
  * if (aimStrength > 10) { ... }
  * ```
@@ -23,22 +25,19 @@ import kotlin.reflect.KProperty
  */
 abstract class Setting<V>(
     val name: String,
+    defaultValue: V,
     /** 可见性条件；为 null 时始终可见。 */
     val visible: Visibility?,
     var onChanged: ((V) -> Unit)?,
-) {
+) : ReadWriteProperty<Any?, V> {
 
     /** 设置当前值；默认写入后回调 [onChanged]（子类可覆盖 setter 做钳制/归一化）。 */
     open var value: V
-        get() = readValue()
+        get() = valueStore
         set(newValue) = writeValue(newValue)
 
-    /** 默认值，仅供子类在构造期写入与 [reset] 使用。 */
-    protected var defaultValue: V
-        get() = readDefaultValue()
-        set(newValue) {
-            defaultValueStore = newValue
-        }
+    /** 默认值，仅供子类在构造期归一化与 [reset] 使用。 */
+    protected var defaultValue: V = defaultValue
 
     var isGlobalSetting: Boolean = false
 
@@ -50,10 +49,7 @@ abstract class Setting<V>(
 
     var translateComponent: TranslateComponent? = null
 
-    // 泛型值用 Any? 存储：Java 版本同样是未初始化的泛型字段，子类构造期写入。
-    private var valueStore: Any? by mutableStateOf(null)
-
-    private var defaultValueStore: Any? = null
+    private var valueStore: V by mutableStateOf(defaultValue)
 
     val displayName: String
         get() = translateComponent?.getTranslatedName() ?: name
@@ -90,7 +86,7 @@ abstract class Setting<V>(
     }
 
     open fun reset() {
-        valueStore = defaultValueStore
+        valueStore = defaultValue
     }
 
     /** 直接写入当前值并触发回调，绕过子类对 [value] 的重写（对应原 Java 的 `super.setValue`）。 */
@@ -107,18 +103,8 @@ abstract class Setting<V>(
 
     /** 构造期初始化默认值与当前值，避免触发 [onChanged]。 */
     protected fun initializeValue(initial: V) {
-        defaultValueStore = initial
+        defaultValue = initial
         valueStore = initial
-    }
-
-    /** 构造期单独写入默认值（当前值另行 [initializeCurrent]）。 */
-    protected fun initializeDefault(initial: V) {
-        defaultValueStore = initial
-    }
-
-    /** 构造期单独写入当前值。 */
-    protected fun initializeCurrent(current: V) {
-        valueStore = current
     }
 
     /** recompose 用的变更监听；与 [onChanged] 独立，不改变既有的单回调语义。 */
@@ -143,18 +129,12 @@ abstract class Setting<V>(
     }
 
     /** 供状态适配器读取当前值而不触发任何副作用。 */
-    fun readCurrentValue(): V = readValue()
+    fun readCurrentValue(): V = valueStore
 
-    @Suppress("UNCHECKED_CAST")
-    private fun readValue(): V = valueStore as V
+    override fun getValue(thisRef: Any?, property: KProperty<*>): V = value
 
-    @Suppress("UNCHECKED_CAST")
-    private fun readDefaultValue(): V = defaultValueStore as V
-
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): V = value
-
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: V) {
-        value = newValue
+    override fun setValue(thisRef: Any?, property: KProperty<*>, value: V) {
+        this.value = value
     }
 
     /** 设置可见性条件。 */

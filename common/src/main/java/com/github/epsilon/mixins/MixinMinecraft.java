@@ -98,7 +98,7 @@ public abstract class MixinMinecraft {
 
     @ModifyArg(method = "updateTitle", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setTitle(Ljava/lang/String;)V"))
     private String onUpdateTitle(String title) {
-        ClientSetting.TitleMode mode = ClientSetting.INSTANCE.getCustomTitle().getValue();
+        ClientSetting.TitleMode mode = ClientSetting.INSTANCE.getCustomTitle();
         if (mode == ClientSetting.TitleMode.Vanilla) {
             return title;
         } else if (mode == ClientSetting.TitleMode.Sakura) {

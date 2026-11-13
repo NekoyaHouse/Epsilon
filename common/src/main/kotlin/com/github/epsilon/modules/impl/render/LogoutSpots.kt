@@ -17,7 +17,6 @@ import com.github.epsilon.kernel.render.WireframeEntityRenderer
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
@@ -43,7 +42,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
     private val notifications by boolSetting("Notifications", true)
     private val ignoreBots by boolSetting("Ignore Bots", true)
-    private val renderMode: EnumSetting<RenderMode> = enumSetting("Render Mode", RenderMode.Model)
+    private val renderMode by enumSetting("Render Mode", RenderMode.Model)
     private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 25))
     private val lineColor by colorSetting("Line Color", Color(255, 255, 255, 127))
 
@@ -106,7 +105,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
         }
 
         handler<Render3DEvent> { event ->
-            when (renderMode.value) {
+            when (renderMode) {
                 RenderMode.Model -> {
                     var batching = false
                     for (logoutPlayer in logoutCache.values) {

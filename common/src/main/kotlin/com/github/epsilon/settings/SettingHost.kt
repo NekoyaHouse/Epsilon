@@ -20,6 +20,7 @@ import java.awt.Color
  * 所有工厂方法都会把新建设置加入 [mutableSettings]，因此 Kotlin 侧可以直接用属性委托：
  *
  * ```kotlin
+ * private var mode by enumSetting("Mode", Mode.Default)
  * private val aimStrength by intSetting("Aim Strength", 10, 1..20, 1)
  * ```
  */

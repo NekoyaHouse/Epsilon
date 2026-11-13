@@ -9,7 +9,6 @@ import com.github.epsilon.kernel.render.WireframeEntityRenderer
 import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
@@ -26,7 +25,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
     private val ignoreSelf by boolSetting("Ignore Self", true)
     private val renderTime by doubleSetting("Render Time", 1.0, 0.1..6.0, 0.1)
     private val yModifier by doubleSetting("Y Modifier", 0.75, -4.0..4.0, 0.05)
-    private val yEasing: EnumSetting<Easing> = enumSetting("Y Easing", Easing.EASE_IN_OUT_EXPO)
+    private val yEasing by enumSetting("Y Easing", Easing.EASE_IN_OUT_EXPO)
     private val scaleModifier by doubleSetting("Scale Modifier", -0.25, -4.0..4.0, 0.05)
     private val fadeOut by boolSetting("Fade Out", true)
     private val sideColor by colorSetting("Side Color", Color(255, 255, 255, 25))
@@ -117,7 +116,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
             val progress = (timer / renderTime).toFloat().coerceIn(0.0f, 1.0f)
             setPos(
                 x, startY + yModifier * renderTime *
-                        yEasing.value.function.apply(progress), z
+                        yEasing.function.apply(progress), z
             )
             setOldPosAndRot()
             yHeadRotO = yHeadRot

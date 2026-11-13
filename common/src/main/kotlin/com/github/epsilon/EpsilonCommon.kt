@@ -35,7 +35,7 @@ object EpsilonCommon {
 
         // 恢复配置，随后按配置选定语言
         ConfigManager.initConfig()
-        EpsilonLanguageManager.selectLanguage(ClientSetting.language.value)
+        EpsilonLanguageManager.selectLanguage(ClientSetting.language)
 
         // 触发 Render3DScheduler 中的 RenderPipeline 初始化
         Render3DScheduler.hashCode()

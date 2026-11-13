@@ -21,7 +21,6 @@ import com.github.epsilon.modules.impl.movement.*
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.modules.impl.player.*
 import com.github.epsilon.modules.impl.render.*
-import com.github.epsilon.modules.impl.render.maseffects.MasEffects
 import com.mojang.blaze3d.platform.InputConstants
 
 object ModuleManager : AlwaysListening {
@@ -160,7 +159,6 @@ object ModuleManager : AlwaysListening {
         addModule(ItemPhysics)
         addModule(JumpCircle)
         addModule(LogoutSpots)
-        addModule(MasEffects)
         addModule(MotionBlur)
         addModule(NameTags)
         addModule(NoRender)

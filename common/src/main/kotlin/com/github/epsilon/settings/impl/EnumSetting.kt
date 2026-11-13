@@ -9,17 +9,13 @@ class EnumSetting<E : Enum<E>>(
     defaultValue: E,
     visible: Visibility?,
     onChanged: ((E) -> Unit)?,
-) : Setting<E>(name, visible, onChanged) {
+) : Setting<E>(name, defaultValue, visible, onChanged) {
 
     private val modeTranslations: MutableMap<E, TranslateComponent> = HashMap()
 
     private val modeRequirements: MutableMap<E, PlatformRequirement> = HashMap()
 
     val modes: Array<E> = defaultValue.declaringJavaClass.enumConstants
-
-    init {
-        initializeValue(defaultValue)
-    }
 
     override fun initTranslateComponent(component: TranslateComponent) {
         super.initTranslateComponent(component)
@@ -53,8 +49,6 @@ class EnumSetting<E : Enum<E>>(
         }
         return enumValue?.toString() ?: ""
     }
-
-    fun `is`(enumValue: E): Boolean = value == enumValue
 
     /**
      * 声明某个枚举选项只在指定平台上可用。
@@ -90,7 +84,7 @@ class EnumSetting<E : Enum<E>>(
     /**
      * 当前取值是否可以在本平台使用。
      */
-    fun isCurrentValueSupported(): Boolean = value == null || isModeSupported(value)
+    fun isCurrentValueSupported(): Boolean = isModeSupported(value)
 
     fun setMode(mode: String?) {
         for (candidate in modes) {

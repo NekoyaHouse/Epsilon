@@ -6,10 +6,4 @@ class ButtonSetting(
     name: String,
     func: Runnable,
     visible: Visibility?,
-) : Setting<Runnable>(name, visible, null) {
-
-    init {
-        initializeValue(func)
-    }
-
-}
+) : Setting<Runnable>(name, func, visible, null)

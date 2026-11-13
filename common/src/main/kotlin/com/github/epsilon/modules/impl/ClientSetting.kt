@@ -20,7 +20,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.settings.group
-import com.github.epsilon.settings.impl.EnumSetting
 import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.IconSet
 import com.mojang.blaze3d.platform.InputConstants
@@ -117,16 +116,18 @@ object ClientSetting : Module("Client Setting", null) {
     val guiKeybind by keybindSetting("Gui Keybind", InputConstants.KEY_RCONTROL)
         .group(sgGeneral)
 
-    val guiMode: EnumSetting<GuiMode> = enumSetting(
+    internal val guiModeSetting = enumSetting(
         "Gui Mode",
         GuiMode.Dropdown,
         onChanged = { _ -> mc.gui.setScreen(getGuiScreen()) }
     ).group(sgGeneral)
 
-    val moduleSort: EnumSetting<ModuleSort> = enumSetting("Module Sort", ModuleSort.Name)
+    val guiMode by guiModeSetting
+
+    val moduleSort by enumSetting("Module Sort", ModuleSort.Name)
         .group(sgGeneral)
 
-    val language: EnumSetting<EpsilonLanguage> = enumSetting(
+    var language by enumSetting(
         "Language",
         EpsilonLanguage.English,
         onChanged = { EpsilonLanguageManager.selectLanguage(it) }
@@ -134,7 +135,7 @@ object ClientSetting : Module("Client Setting", null) {
 
     val customLanguage by stringSetting(
         "Custom Language",
-        "", { language.`is`(EpsilonLanguage.Custom) },
+        "", { language == EpsilonLanguage.Custom },
         onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
     ).group(sgGeneral)
 
@@ -148,12 +149,12 @@ object ClientSetting : Module("Client Setting", null) {
         onChanged = { TranslationManager.refresh() }
     ).group(sgGeneral)
 
-    val font: EnumSetting<FontMode> = enumSetting("Font", FontMode.Default).group(sgGeneral)
+    val font by enumSetting("Font", FontMode.Default).group(sgGeneral)
 
     val customFont by stringSetting(
         "Custom Font",
         "",
-        { font.`is`(FontMode.Custom) }
+        { font == FontMode.Custom }
     ).group(sgGeneral)
 
     val fontGlyphsPerFrame by intSetting(
@@ -169,37 +170,37 @@ object ClientSetting : Module("Client Setting", null) {
     val closeOnOutside by boolSetting(
         "Close Gui On Outside",
         false,
-        { guiMode.`is`(GuiMode.Panel) }
+        { guiMode == GuiMode.Panel }
     ).group(sgGeneral)
 
     val dropdownHints by boolSetting(
         "Dropdown Hints",
         true,
-        { guiMode.`is`(GuiMode.Dropdown) }
+        { guiMode == GuiMode.Dropdown }
     ).group(sgGeneral)
 
     // Teams
-    val teams: EnumSetting<Teams> = enumSetting("Teams", Teams.None).group(sgTeams)
+    val teams by enumSetting("Teams", Teams.None).group(sgTeams)
 
     // Anti Cheat
     val modifyCrosshair by boolSetting("Modify Crosshair", true).group(sgAntiCheat)
 
-    val hideMode: EnumSetting<HideMode> = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat)
+    val hideMode by enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat)
 
     // Appearance
-    val themeMode: EnumSetting<ThemeMode> = enumSetting(
+    val themeMode by enumSetting(
         "Theme Mode",
         ThemeMode.Dark,
         onChanged = { MD3Theme.syncFromSettings() }
     ).group(sgAppearance)
 
-    val themePreset: EnumSetting<ThemePreset> = enumSetting(
+    val themePreset by enumSetting(
         "Theme Preset",
         ThemePreset.TonalSpot,
         onChanged = { MD3Theme.syncFromSettings() }
     ).group(sgAppearance)
 
-    val customIcon: EnumSetting<IconMode> = enumSetting(
+    val customIcon by enumSetting(
         "Custom Icon",
         IconMode.Epsilon,
         onChanged = {
@@ -213,7 +214,7 @@ object ClientSetting : Module("Client Setting", null) {
         }
     ).group(sgAppearance)
 
-    val customTitle: EnumSetting<TitleMode> = enumSetting(
+    val customTitle by enumSetting(
         "Custom Title",
         TitleMode.Epsilon,
         onChanged = { mc.updateTitle() }
@@ -221,7 +222,7 @@ object ClientSetting : Module("Client Setting", null) {
 
     val useMainMenu by boolSetting("Use MainMenu", true).group(sgAppearance)
 
-    val mainMenuStyle: EnumSetting<MainMenuStyle> = enumSetting(
+    var mainMenuStyle by enumSetting(
         "MainMenu Style",
         MainMenuStyle.Columbina, { useMainMenu },
         onChanged = { style ->
@@ -236,14 +237,13 @@ object ClientSetting : Module("Client Setting", null) {
                 )
             }
         }
-    )
-        .apply { restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64) }
+    ).apply { restrictMode(MainMenuStyle.Columbina, PlatformRequirement.WINDOWS_X64_OR_MACOS_ARM64) }
         .group(sgAppearance)
 
-    val mainMenuBackground: EnumSetting<MainMenuScreen.Background> = enumSetting(
+    val mainMenuBackground by enumSetting(
         "MainMenu Background",
         MainMenuScreen.Background.PLANET,
-        { useMainMenu && mainMenuStyle.`is`(MainMenuStyle.Classic) }
+        { useMainMenu && mainMenuStyle == MainMenuStyle.Classic }
     ).group(sgAppearance)
 
     val showWelcomeScreen by boolSetting("Show Welcome Screen", true)
@@ -351,7 +351,7 @@ object ClientSetting : Module("Client Setting", null) {
     ).group(sgNotification)
 
     fun getGuiScreen(): Screen {
-        return when (guiMode.value) {
+        return when (guiMode) {
             GuiMode.Dropdown -> DropdownScreen.INSTANCE
             GuiMode.Panel -> PanelScreen
             GuiMode.TrollHack -> TrollGuiScreen.INSTANCE

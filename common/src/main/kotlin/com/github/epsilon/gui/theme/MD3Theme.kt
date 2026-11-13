@@ -111,8 +111,8 @@ object MD3Theme {
     const val SWITCH_STATE_LAYER_SIZE = 20.0f
 
     fun syncFromSettings() {
-        val preset = ClientSetting.themePreset.value
-        val mode = ClientSetting.themeMode.value
+        val preset = ClientSetting.themePreset
+        val mode = ClientSetting.themeMode
         if (preset == appliedPreset && mode == appliedMode) {
             return
         }
@@ -167,7 +167,7 @@ object MD3Theme {
     }
 
     fun isLightTheme(): Boolean {
-        return ClientSetting.themeMode.`is`(ClientSetting.ThemeMode.Light)
+        return ClientSetting.themeMode == ClientSetting.ThemeMode.Light
     }
 
     fun stateLayer(color: Color, progress: Float, maxAlpha: Int): Color {

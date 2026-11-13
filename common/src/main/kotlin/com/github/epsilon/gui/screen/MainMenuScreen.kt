@@ -152,7 +152,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     override fun init() {
         super.init()
         val assets = AssetManager
-        val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
+        val columbinaStyle = ClientSetting.mainMenuStyle == ClientSetting.MainMenuStyle.Columbina
         updateBackgroundVideo()
         if (columbinaStyle && assets.isVideoSupported()) {
             // 视频叠层光效可以独立缺失，缺失时补提示；已就绪或本会话已拒绝时不会重复弹窗。
@@ -181,10 +181,10 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
 
     private fun updateBackgroundVideo() {
         val assets = AssetManager
-        val columbinaStyle = ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)
+        val columbinaStyle = ClientSetting.mainMenuStyle == ClientSetting.MainMenuStyle.Columbina
         if (!columbinaStyle || !assets.isVideoSupported()) {
             if (columbinaStyle) {
-                ClientSetting.mainMenuStyle.value = ClientSetting.MainMenuStyle.Classic
+                ClientSetting.mainMenuStyle = ClientSetting.MainMenuStyle.Classic
             }
             if (!VideoPlayer.isStopped()) {
                 VideoPlayer.stop()
@@ -208,12 +208,12 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 Constants.LOGGER.error("Unable to load the Columbina main-menu video", exception)
             }
             if (VideoPlayer.isStopped()) {
-                ClientSetting.mainMenuStyle.value = ClientSetting.MainMenuStyle.Classic
+                ClientSetting.mainMenuStyle = ClientSetting.MainMenuStyle.Classic
             }
         } else if ((!videoReady && assets.isDeclinedThisSession(AssetManager.Asset.VIDEO)) ||
             (!ffmpegReady && assets.isDeclinedThisSession(AssetManager.Asset.FFMPEG))
         ) {
-            ClientSetting.mainMenuStyle.value = ClientSetting.MainMenuStyle.Classic
+            ClientSetting.mainMenuStyle = ClientSetting.MainMenuStyle.Classic
         }
     }
 
@@ -327,7 +327,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         backgroundRenderTarget!!.clear()
         LuminRenderSystem.setActiveTarget(backgroundRenderTarget)
 
-        if (ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina) && drawColumbinaBackground()) {
+        if (ClientSetting.mainMenuStyle == ClientSetting.MainMenuStyle.Columbina && drawColumbinaBackground()) {
             LuminRenderSystem.setActiveTarget(null)
             graphics.blit(
                 backgroundRenderTarget!!.getIdentifier(),
@@ -341,7 +341,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                 0.0f
             )
         } else {
-            val background = when (ClientSetting.mainMenuBackground.value) {
+            val background = when (ClientSetting.mainMenuBackground) {
                 Background.SEA_LEVEL -> GlslSandBox.SEA_LEVEL
                 Background.CLOUDS -> GlslSandBox.CLOUDS
                 Background.ALIEN_TERRAIN -> GlslSandBox.ALIEN_TERRAIN
@@ -383,7 +383,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         uiRenderTarget!!.clear()
         LuminRenderSystem.setActiveTarget(uiRenderTarget)
 
-        if (ClientSetting.mainMenuStyle.`is`(ClientSetting.MainMenuStyle.Columbina)) {
+        if (ClientSetting.mainMenuStyle == ClientSetting.MainMenuStyle.Columbina) {
             drawColumbinaMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY))
         } else {
             scene.beginFrame()

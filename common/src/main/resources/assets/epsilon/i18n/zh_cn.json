@@ -2295,34 +2295,6 @@
         "no dead entities": "无死亡实体",
         "no nametags": "无名称标签"
       },
-      "particles": {
-        "_value": "粒子",
-        "fire flies": "萤火虫",
-        "ff count": "萤火虫数量",
-        "ff size": "萤火虫大小",
-        "mode": {
-          "_value": "模式",
-          "off": "关闭",
-          "snowflake": "雪花",
-          "stars": "星星",
-          "hearts": "爱心",
-          "dollars": "金币",
-          "bloom": "辉光"
-        },
-        "count": "数量",
-        "size": "大小",
-        "color mode": {
-          "_value": "颜色模式",
-          "custom": "自定义",
-          "sync": "同步"
-        },
-        "color": "颜色",
-        "physics": {
-          "_value": "物理",
-          "drop": "下落",
-          "fly": "漂浮"
-        }
-      },
       "pop chams": {
         "_value": "死亡透视",
         "ignore self": "忽略自身",

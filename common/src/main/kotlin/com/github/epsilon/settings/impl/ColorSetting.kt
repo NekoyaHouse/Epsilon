@@ -8,11 +8,7 @@ class ColorSetting(
     defaultValue: Color,
     private val allowAlpha: Boolean,
     visible: Visibility?,
-) : Setting<Color>(name, visible, null) {
-
-    init {
-        initializeValue(defaultValue)
-    }
+) : Setting<Color>(name, defaultValue, visible, null) {
 
     fun isAllowAlpha(): Boolean = allowAlpha
 

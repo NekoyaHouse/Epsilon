@@ -28,7 +28,7 @@ object ClientIdentityHider {
     fun filterServerboundPacket(packet: Packet<*>?): Packet<*>? {
         val customPayloadPacket = packet as? ServerboundCustomPayloadPacket ?: return packet
 
-        val mode = ClientSetting.hideMode.value
+        val mode = ClientSetting.hideMode
         if (mode == ClientSetting.HideMode.None) {
             return packet
         }
@@ -61,7 +61,7 @@ object ClientIdentityHider {
      * @return 操作结果
      */
     fun filterClientBrand(brand: String): String {
-        return if (ClientSetting.hideMode.`is`(ClientSetting.HideMode.Vanilla)) VANILLA_BRAND else brand
+        return if (ClientSetting.hideMode == ClientSetting.HideMode.Vanilla) VANILLA_BRAND else brand
     }
 
     private fun shouldHideAsVanilla(id: Identifier): Boolean {

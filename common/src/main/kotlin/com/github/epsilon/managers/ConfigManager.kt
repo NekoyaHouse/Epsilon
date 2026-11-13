@@ -534,8 +534,7 @@ object ConfigManager {
                 setting is IntSetting -> setting.setUnboundedValue(value.asInt)
                 setting is DoubleSetting -> setting.setUnboundedValue(value.asDouble)
                 setting is StringSetting -> setting.value = value.asString
-                setting === ClientSetting.guiMode && setting is EnumSetting<*> ->
-                    (setting as EnumSetting<*>).setModeSilently(value.asString)
+                setting === ClientSetting.guiModeSetting -> (setting as EnumSetting<*>).setModeSilently(value.asString)
 
                 setting is EnumSetting<*> -> setting.setMode(value.asString)
                 setting is ColorSetting -> {

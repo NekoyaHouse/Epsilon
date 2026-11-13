@@ -171,7 +171,7 @@ class PanelState {
     private fun getComparator(): Comparator<Module> {
         val nameComparator: Comparator<Module> =
             Comparator.comparing({ module: Module -> normalizedName(module) }, String.CASE_INSENSITIVE_ORDER)
-        return when (ClientSetting.moduleSort.value) {
+        return when (ClientSetting.moduleSort) {
             ClientSetting.ModuleSort.EnabledFirst ->
                 compareByDescending<Module> { it.isEnabled }.thenComparing(nameComparator)
 

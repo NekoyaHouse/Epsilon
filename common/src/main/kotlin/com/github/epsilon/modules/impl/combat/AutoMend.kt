@@ -12,7 +12,6 @@ import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.settings.impl.EnumSetting
 import net.minecraft.world.item.Items
 
 object AutoMend : Module("Auto Mend", Category.COMBAT) {
@@ -22,7 +21,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
         Silent,
     }
 
-    private val switchMode: EnumSetting<SwitchMode> = enumSetting("Switch Mode", SwitchMode.Normal)
+    private val switchMode by enumSetting("Switch Mode", SwitchMode.Normal)
     private val swingHand by boolSetting("Swing Hand", false)
 
     private var shouldSwapBack = false
@@ -51,7 +50,7 @@ object AutoMend : Module("Auto Mend", Category.COMBAT) {
             gameMode.useItem(player, hand)
             SwingMode.of(swingHand).interactSwing(hand)
 
-            if (switchMode.`is`(SwitchMode.Silent)) {
+            if (switchMode == SwitchMode.Silent) {
                 swapBack()
             } else {
                 shouldSwapBack = true

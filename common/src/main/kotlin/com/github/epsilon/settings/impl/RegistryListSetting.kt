@@ -19,7 +19,7 @@ class RegistryListSetting<T : Any>(
     val registryType: Type,
     filter: Predicate<T>?,
     visible: Visibility?,
-) : Setting<List<T>>(name, visible, null) {
+) : Setting<List<T>>(name, defaultValue?.toList().orEmpty(), visible, null) {
 
     enum class Type {
         BLOCK,
@@ -72,9 +72,7 @@ class RegistryListSetting<T : Any>(
     private val filterRef: Predicate<T> = filter ?: registryType.defaultFilter()
 
     init {
-        val normalized = normalize(defaultValue)
-        initializeDefault(normalized)
-        initializeCurrent(normalized)
+        initializeValue(normalize(defaultValue))
     }
 
     override var value: List<T>

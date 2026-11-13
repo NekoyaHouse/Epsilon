@@ -9,11 +9,7 @@ class DoubleSetting(
     val step: Double,
     visible: Visibility?,
     onChanged: ((Double) -> Unit)?,
-) : Setting<Double>(name, visible, onChanged) {
-
-    init {
-        initializeValue(defaultValue)
-    }
+) : Setting<Double>(name, defaultValue, visible, onChanged) {
 
     override var value: Double
         get() = super.value

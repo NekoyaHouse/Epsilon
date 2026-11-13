@@ -112,7 +112,7 @@ public abstract class MixinItemInHandRenderer {
     @WrapOperation(method = "swingArm", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
     private void wrapSwingArmTranslate(PoseStack poseStack, float xo, float yo, float zo, Operation<Void> original) {
         HandView handView = HandView.INSTANCE;
-        boolean skip = handView.isEnabled() && handView.getSwingMode().is(HandView.SwingMode.Flux);
+        boolean skip = handView.isEnabled() && handView.getSwingMode() == HandView.SwingMode.Flux;
 
         if (skip && handView.getOnlyWeapon()) {
             ItemStack item = mc.player.getMainHandItem();

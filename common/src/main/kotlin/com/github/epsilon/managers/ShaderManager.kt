@@ -112,14 +112,14 @@ object ShaderManager {
         }
 
         ensureProgram()
-        val useGlow = settings.outlineMode.`is`(Shaders.OutlineMode.Glow)
+        val useGlow = settings.outlineMode == Shaders.OutlineMode.Glow
         if (useGlow) {
             processGlowTarget(target, settings)
             return
         }
 
         ensureSwap(target.width, target.height)
-        val shader = settings.mode.value
+        val shader = settings.mode
         val shaderUniforms = writeShaderUniforms(
             target.width, target.height, settings, true, settings === Shaders.entityShader
         )
@@ -376,7 +376,7 @@ object ShaderManager {
         settings: Shaders.ShaderSettings, targetWidth: Int, targetHeight: Int,
         directionX: Float, directionY: Float,
     ): GpuBufferSlice {
-        val gradient = settings.glowColorMode.`is`(Shaders.GlowColorMode.Gradient)
+        val gradient = settings.glowColorMode == Shaders.GlowColorMode.Gradient
         val color: Color = if (gradient) settings.glowColor1 else settings.glowColor
         return LuminRenderSystem.writeDynamicUniform(
             "shader_glow_config",

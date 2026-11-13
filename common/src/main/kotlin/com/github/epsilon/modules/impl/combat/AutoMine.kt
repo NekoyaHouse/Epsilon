@@ -14,7 +14,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.settings.impl.EnumSetting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -87,7 +86,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
     private val sgBox: SettingGroup = settingGroup("Box Settings")
 
     private val range by doubleSetting("Range", 4.5, 1.0..8.0, 0.1).group(sgGeneral)
-    private val order: EnumSetting<TargetOrder> = enumSetting("Order", TargetOrder.Distance).group(sgGeneral)
+    private val order by enumSetting("Order", TargetOrder.Distance).group(sgGeneral)
     private val invisible by boolSetting("Invisible", false).group(sgGeneral)
     private val friends by boolSetting("Friends", false).group(sgGeneral)
     private val delay by intSetting("Switch Delay", 100, 0..1000, 10).group(sgGeneral)
@@ -101,8 +100,8 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         HeadMode.Both, { mineHead }).group(sgTargets)
 
     private val feetMode by enumSetting("Feet Mode", FeetMode.Below, { mineFeet }).group(sgFeet)
-    private val feetLogic: EnumSetting<FeetLogic> =
-        enumSetting("Feet Logic", FeetLogic.First, { mineFeet }).group(sgFeet)
+    private val feetLogic by
+    enumSetting("Feet Logic", FeetLogic.First, { mineFeet }).group(sgFeet)
     private val feetOnGround by boolSetting("Only On Ground", false, { mineFeet }).group(sgFeet)
 
     private val boxCorners by boolSetting("Box Corners", false, { mineBox }).group(sgBox)
@@ -254,7 +253,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
         val byDistance = Comparator<LivingEntity> { a, b ->
             player.distanceToSqr(a).compareTo(player.distanceToSqr(b))
         }
-        return when (order.value) {
+        return when (order) {
             TargetOrder.Distance -> byDistance
 
             TargetOrder.Health -> Comparator.comparingDouble<LivingEntity> { living -> living.health.toDouble() }
@@ -355,7 +354,7 @@ object AutoMine : Module("Auto Mine", Category.COMBAT) {
                 .compareTo(player.eyePosition.distanceToSqr(Vec3.atCenterOf(b.pos)))
         }
 
-        when (feetLogic.value) {
+        when (feetLogic) {
             FeetLogic.First -> {
                 val feetFirst = Comparator<Candidate> { a, b ->
                     (if (a.category == TargetCategory.Feet) 0 else 1).compareTo(if (b.category == TargetCategory.Feet) 0 else 1)
