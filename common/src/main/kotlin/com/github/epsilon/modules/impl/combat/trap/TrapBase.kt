@@ -4,7 +4,10 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.*
+import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.client.ChatMessages
 import com.github.epsilon.kernel.gameplay.grimac.C03Interact.placeBlock
@@ -105,7 +108,6 @@ abstract class TrapBase(
     // null 表示只有本地预测，非 null 表示已收到服务端方块状态
     private val pendingBlocks = mutableMapOf<BlockPos, BlockState?>()
 
-    @Volatile
     private var blockUpdates: ConcurrentLinkedQueue<BlockUpdate>? = null
 
     private val renderBoxes: MutableList<RenderInfo> = ArrayList()
@@ -113,22 +115,11 @@ abstract class TrapBase(
     init {
         onEnable {
             clearState()
-            renderBoxes.clear()
             runSafe { startPos = player.position() } ?: toggle()
         }
 
         onDisable {
             clearState()
-        }
-
-        handler<LevelUpdateEvent>(alwaysListening = true) {
-            clearState()
-            renderBoxes.clear()
-        }
-
-        handler<RespawnEvent>(alwaysListening = true) {
-            clearState()
-            renderBoxes.clear()
         }
 
         safeEventHandler<PacketEvent.Receive>(EventPriority.LOWEST) { event ->

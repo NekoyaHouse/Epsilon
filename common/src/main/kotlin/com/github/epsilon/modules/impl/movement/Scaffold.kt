@@ -207,7 +207,6 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        // 渲染调试框需要在模块禁用时继续绘制，因此保持常驻监听语义。
         handler<Render3DEvent>(alwaysListening = true) {
             if (!render || renderBoxes.isEmpty()) return@handler
 
